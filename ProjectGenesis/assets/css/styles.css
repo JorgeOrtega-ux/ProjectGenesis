@@ -1,3 +1,6 @@
+/* ====================================== */
+/* =========== STYLES.CSS =============== */
+/* ====================================== */
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
 
 /* ====================================== */
@@ -50,16 +53,6 @@ body {
 /* === OCULTAR NAV EN PÁGINAS DE AUTH === */
 /* ====================================== */
 
-/* Oculta los botones (izquierdo y derecho) del header */
-.main-content.is-auth-page .header-left,
-.main-content.is-auth-page .header-right {
-    display: none;
-}
-
-/* Oculta el menú lateral (sidebar) */
-.main-content.is-auth-page .general-content-bottom .module-surface {
-    display: none;
-}
 .general-content-top {
     width: 100%;
     height: auto;
@@ -68,9 +61,7 @@ body {
     transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
     position: relative;
 }
-/* --- AÑADIR ESTA NUEVA REGLA --- */
 .general-content-top.shadow {
-    /* Sombra suave apuntando hacia abajo */
     box-shadow: 0 4px 12px #0000001a;
 }
 .general-content-bottom {
@@ -252,7 +243,7 @@ body {
 .not-found-container {
     text-align: center;
     padding: 40px 24px;
-    max-width: 560px; /* Ancho máximo para el texto */
+    max-width: 560px;
     margin: 0 auto;
 }
 
@@ -270,13 +261,13 @@ body {
 .not-found-title {
     font-size: 36px;
     font-weight: 700;
-    color: #1f2937; /* Color gris oscuro (casi negro) */
+    color: #1f2937;
     margin-bottom: 16px;
 }
 
 .not-found-text {
     font-size: 18px;
-    color: #6b7280; /* Color gris medio */
+    color: #6b7280;
     line-height: 1.6;
 }
 /* ====================================== */
@@ -311,7 +302,6 @@ body {
     flex-direction: column;
 }
 
-/* 1. Estilo de la etiqueta (Label) - ESTADO "TRANSPARENTE" (Default) */
 .auth-input-group label {
     position: absolute;
     left: 12px;
@@ -324,7 +314,6 @@ body {
     transform-origin: top left;
 }
 
-/* 2. Estilo del Input - ESTADO "TRANSPARENTE" (Default) */
 .auth-input-group input[type="email"],
 .auth-input-group input[type="password"],
 .auth-input-group input[type="text"] {
@@ -340,7 +329,6 @@ body {
     color: #000; 
 }
 
-/* 3. Movimiento de la etiqueta (Float) */
 .auth-input-group input:focus ~ label,
 .auth-input-group input:not(:placeholder-shown) ~ label {
     top: 8px;
@@ -348,7 +336,6 @@ body {
     font-size: 12px;
 }
 
-/* 4. Estilo ACTIVO ("Negro") - Foco O Texto presente */
 .auth-input-group input:focus,
 .auth-input-group input:not(:placeholder-shown) {
     border-color: #000; 
@@ -359,13 +346,10 @@ body {
     color: #000; 
 }
 
-/* 5. Sombra de Foco (ELIMINADA) */
 .auth-input-group input:focus {
-    /* (sombra eliminada) */
 }
 
 
-/* --- ESTILOS PARA EL BOTÓN DEL OJO --- */
 .auth-toggle-password {
     position: absolute;
     right: 8px;
@@ -380,11 +364,10 @@ body {
     justify-content: center;
     color: #6b7280; 
     outline: none;
-    border-radius: 50%; /* <-- AÑADIDO PARA UN HOVER CIRCULAR */
-    transition: background-color 0.2s; /* <-- AÑADIDO PARA SUAVIDAD */
+    border-radius: 50%;
+    transition: background-color 0.2s;
 }
 
-/* --- ESTA ES LA REGLA QUE PEDISTE --- */
 .auth-toggle-password:hover {
     background-color: #f5f5fa;
 }
@@ -397,21 +380,18 @@ body {
 .auth-input-group input:not(:placeholder-shown) ~ .auth-toggle-password {
     color: #000;
 }
-/* --- FIN DE ESTILOS DEL BOTÓN --- */
 
-
-/* 6. Botón y enlace (REVERTIDO A SU ESTADO ORIGINAL) */
 
 .auth-button {
     height: 52px; 
     border: none;
     border-radius: 8px;
-    background-color: #000; /* <-- REVERTIDO A NEGRO */
+    background-color: #000;
     color: #ffffff;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s; /* <-- REVERTIDO */
+    transition: background-color 0.2s;
     margin-top: 8px;
 }
 
