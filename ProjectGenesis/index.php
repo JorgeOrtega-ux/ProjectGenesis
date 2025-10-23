@@ -18,7 +18,13 @@
                 </div>
                 <div class="general-content-bottom">
                     <?php include 'includes/modules/module-surface.php'; ?>
-                    <div class="general-content-scrolleable"></div>
+                    <div class="general-content-scrolleable">
+                        <div class="section-content">
+                            <div class="main-sections">
+                                
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
