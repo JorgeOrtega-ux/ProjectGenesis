@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
+
+/* ====================================== */
+/* =========== GENERAL STYLES =========== */
+/* ====================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    font-family: "Roboto Condensed", sans-serif;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    background-color: #f5f5fa;
+}
+
+.page-wrapper {
+    width: 100%;
+    height: 100%;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    background-color: #f5f5fa;
+}
+
+.general-content {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #00000020;
+}
+
+.general-content-top {
+    width: 100%;
+    height: auto;
+    border-bottom: 1px solid #00000020;
+    z-index: 999;
+    transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    position: relative;
+}
+
+.general-content-bottom {
+    position: relative;
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.general-content-scrolleable {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+}
+
+.header {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    padding: 8px;
+    gap: 8px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.header-left {
+    display: flex;
+    flex: 0 0 auto;
+}
+
+.header-right {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 0 0 auto;
+}
+
+.header-item {
+    display: flex;
+    flex-direction: row;
+    width: auto;
+    height: 100%;
+    gap: 8px;
+}
+
+.header-button {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    background-color: transparent;
+    border-radius: 8px;
+    border: 1px solid #00000020;
+    cursor: pointer;
+    outline: none;
+    user-select: none;
+}
+
+.header-button:hover {
+    background-color: #f5f5fa;
+}
+
+.header-button.header-profile {
+    border-radius: 50px;
+}
+
+.module-content.module-surface {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    padding: 8px;
+    z-index: 999;
+}
+
+.module-surface .menu-content {
+    width: 280px;
+    height: 100%;
+    background-color: #ffffff;
+    padding: 8px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #00000020;
+}
+
+.module-content.module-select {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: auto;
+    right: 5px;
+    width: auto;
+    z-index: 10;
+}
+
+.module-select .menu-content {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #00000020;
+    width: 325px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+}
