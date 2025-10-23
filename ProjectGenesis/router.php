@@ -6,6 +6,8 @@ $CURRENT_SECTION = $page;
 $allowedPages = [
     'home'     => 'includes/sections/main/home.php',
     'explorer' => 'includes/sections/main/explorer.php',
+    'login'    => 'includes/sections/auth/login.php', // <-- AÑADIR ESTA LÍNEA
+    'register' => 'includes/sections/auth/register.php', // <-- AÑADIR ESTA LÍNEA
     '404'      => 'includes/sections/main/404.php', 
 ];
 

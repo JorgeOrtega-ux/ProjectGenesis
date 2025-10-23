@@ -5,16 +5,21 @@ const contentContainer = document.querySelector('.main-sections');
 const routes = {
     'toggleSectionHome': 'home',
     'toggleSectionExplorer': 'explorer',
+    'toggleSectionLogin': 'login', // <-- AÑADIR ESTA LÍNEA
+    'toggleSectionRegister': 'register', // <-- AÑADIR ESTA LÍNEA
 };
 
 const paths = {
     '/': 'toggleSectionHome',
     '/explorer': 'toggleSectionExplorer',
+    '/login': 'toggleSectionLogin', // <-- AÑADIR ESTA LÍNEA
+    '/register': 'toggleSectionRegister', // <-- AÑADIR ESTA LÍNEA
 };
 
 const basePath = '/ProjectGenesis';
 
 async function loadPage(page) {
+// ... (el resto de la función 'loadPage' queda igual)
     if (!contentContainer) return;
 
     contentContainer.innerHTML = '';
@@ -32,6 +37,7 @@ async function loadPage(page) {
 }
 
 function handleNavigation() {
+// ... (el resto de la función 'handleNavigation' queda igual)
     let path = window.location.pathname.replace(basePath, '');
     if (path === '' || path === '/') path = '/'; 
 
@@ -57,6 +63,7 @@ function handleNavigation() {
 }
 
 function updateMenuState(currentAction) {
+// ... (el resto de la función 'updateMenuState' queda igual)
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
         const linkAction = link.getAttribute('data-action');
         
@@ -69,6 +76,7 @@ function updateMenuState(currentAction) {
 }
 
 export function initRouter() {
+// ... (el resto de la función 'initRouter' queda igual)
     
     document.body.addEventListener('click', e => {
         const link = e.target.closest('.menu-link[data-action*="toggleSection"]');
@@ -91,6 +99,26 @@ export function initRouter() {
             }
             
             deactivateAllModules();
+        }
+    });
+    // --- AÑADIR ESTE NUEVO LISTENER ---
+    document.body.addEventListener('click', e => {
+        const toggleBtn = e.target.closest('.auth-toggle-password');
+
+        if (toggleBtn) {
+            const inputId = toggleBtn.getAttribute('data-toggle');
+            const input = document.getElementById(inputId);
+            const icon = toggleBtn.querySelector('.material-symbols-rounded');
+
+            if (input) {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.textContent = 'visibility_off';
+                } else {
+                    input.type = 'password';
+                    icon.textContent = 'visibility';
+                }
+            }
         }
     });
 

@@ -64,4 +64,19 @@ export function initMainController() {
             }
         });
     }
+    // --- AÑADIR ESTE BLOQUE DE CÓDIGO ---
+    const scrollableContent = document.querySelector('.general-content-scrolleable');
+    const headerTop = document.querySelector('.general-content-top');
+
+    if (scrollableContent && headerTop) {
+        scrollableContent.addEventListener('scroll', function() {
+            // Si el scroll es mayor a 0 (es decir, se ha movido 1px o más)
+            if (this.scrollTop > 0) {
+                headerTop.classList.add('shadow');
+            } else {
+                // Si el scroll está en la posición 0 (arriba del todo)
+                headerTop.classList.remove('shadow');
+            }
+        });
+    }
 }

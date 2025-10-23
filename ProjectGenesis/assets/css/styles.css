@@ -55,7 +55,11 @@ body {
     transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
     position: relative;
 }
-
+/* --- AÑADIR ESTA NUEVA REGLA --- */
+.general-content-top.shadow {
+    /* Sombra suave apuntando hacia abajo */
+    box-shadow: 0 4px 12px #0000001a;
+}
 .general-content-bottom {
     position: relative;
     display: flex;
@@ -262,7 +266,162 @@ body {
     color: #6b7280; /* Color gris medio */
     line-height: 1.6;
 }
+/* ====================================== */
+/* =========== AUTH STYLES ============== */
+/* ====================================== */
 
+.auth-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 24px;
+    margin: 0 auto;
+}
+
+.auth-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.auth-input-group {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 1. Estilo de la etiqueta (Label) - ESTADO "TRANSPARENTE" (Default) */
+.auth-input-group label {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #6b7280; 
+    pointer-events: none;
+    transition: all 0.2s ease;
+    transform-origin: top left;
+}
+
+/* 2. Estilo del Input - ESTADO "TRANSPARENTE" (Default) */
+.auth-input-group input[type="email"],
+.auth-input-group input[type="password"],
+.auth-input-group input[type="text"] {
+    width: 100%;
+    height: 52px;
+    padding: 20px 48px 8px 12px; 
+    border: 1px solid #00000020; 
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: transparent; 
+    color: #1f2937; 
+}
+
+/* 3. Movimiento de la etiqueta (Float) */
+.auth-input-group input:focus ~ label,
+.auth-input-group input:not(:placeholder-shown) ~ label {
+    top: 8px;
+    transform: translateY(0);
+    font-size: 12px;
+}
+
+/* 4. Estilo ACTIVO ("Negro") - Foco O Texto presente */
+.auth-input-group input:focus,
+.auth-input-group input:not(:placeholder-shown) {
+    border-color: #1f2937; 
+}
+
+.auth-input-group input:focus ~ label,
+.auth-input-group input:not(:placeholder-shown) ~ label {
+    color: #1f2937; 
+}
+
+/* 5. Sombra de Foco (ELIMINADA) */
+.auth-input-group input:focus {
+    /* (sombra eliminada) */
+}
+
+
+/* --- ESTILOS PARA EL BOTÓN DEL OJO --- */
+.auth-toggle-password {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280; 
+    outline: none;
+    border-radius: 50%; /* <-- AÑADIDO PARA UN HOVER CIRCULAR */
+    transition: background-color 0.2s; /* <-- AÑADIDO PARA SUAVIDAD */
+}
+
+/* --- ESTA ES LA REGLA QUE PEDISTE --- */
+.auth-toggle-password:hover {
+    background-color: #f5f5fa;
+}
+
+.auth-toggle-password:focus-visible {
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px #1f293740;
+}
+
+.auth-input-group input:focus ~ .auth-toggle-password,
+.auth-input-group input:not(:placeholder-shown) ~ .auth-toggle-password {
+    color: #1f2937;
+}
+/* --- FIN DE ESTILOS DEL BOTÓN --- */
+
+
+/* 6. Botón y enlace (REVERTIDO A SU ESTADO ORIGINAL) */
+
+.auth-button {
+    height: 52px; 
+    border: none;
+    border-radius: 8px;
+    background-color: #1f2937; /* <-- REVERTIDO A NEGRO */
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s; /* <-- REVERTIDO */
+    margin-top: 8px;
+}
+
+.auth-button:hover {
+    background-color: #374151; /* <-- REVERTIDO A GRIS OSCURO */
+}
+
+.auth-link {
+    text-align: center;
+    font-size: 14px;
+    color: #374151;
+}
+
+.auth-link a {
+    color: #1f2937; 
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-link a:hover {
+    text-decoration: underline;
+}
 @media (max-width: 468px) {
     .module-content.module-surface {
         width: 100%;
