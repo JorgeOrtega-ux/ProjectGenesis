@@ -208,6 +208,10 @@ body {
     align-self: center;
 }
 
+.menu-link.active {
+    background-color: #f5f5fa;
+}
+
 .menu-link:hover {
     background-color: #f5f5fa;
 }

@@ -1,1 +1,60 @@
-.
+export function initMainController() {
+    let allowMultipleActiveModules = false;
+    let closeOnClickOutside = true;
+    let closeOnEscape = true;
+
+    const actionButtons = document.querySelectorAll('[data-action]');
+
+    const deactivateAllModules = (exceptionModule = null) => {
+        document.querySelectorAll('[data-module].active').forEach(activeModule => {
+            if (activeModule !== exceptionModule) {
+                activeModule.classList.add('disabled');
+                activeModule.classList.remove('active');
+            }
+        });
+    };
+
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            const action = this.getAttribute('data-action');
+
+            if (action.startsWith('toggle')) {
+                let moduleName = action.substring(6);
+                moduleName = moduleName.charAt(0).toLowerCase() + moduleName.slice(1);
+
+                const module = document.querySelector(`[data-module="${moduleName}"]`);
+
+                if (module) {
+                    const isOpening = module.classList.contains('disabled');
+
+                    if (isOpening && !allowMultipleActiveModules) {
+                        deactivateAllModules(module);
+                    }
+
+                    module.classList.toggle('disabled');
+                    module.classList.toggle('active');
+                }
+            }
+        });
+    });
+
+    if (closeOnClickOutside) {
+        document.addEventListener('click', function (event) {
+            const clickedOnModule = event.target.closest('[data-module].active');
+            const clickedOnButton = event.target.closest('[data-action]');
+
+            if (!clickedOnModule && !clickedOnButton) {
+                deactivateAllModules();
+            }
+        });
+    }
+
+    if (closeOnEscape) {
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                deactivateAllModules();
+            }
+        });
+    }
+}
