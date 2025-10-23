@@ -161,3 +161,11 @@ body {
     display: flex;
     flex-direction: column;
 }
+
+.active {
+    display: flex;
+}
+
+.disabled {
+    display: none;
+}

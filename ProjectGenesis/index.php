@@ -26,15 +26,15 @@
                             <div class="header-item">
                                 <div class="header-button header-profile"></div>
                             </div>
-                            
+
                         </div>
-                        <div class="module-content module-select">
-                                <div class="menu-content"></div>
-                            </div>
+                        <div class="module-content module-select disabled">
+                            <div class="menu-content"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="general-content-bottom">
-                    <div class="module-content module-surface">
+                    <div class="module-content module-surface disabled">
                         <div class="menu-content"></div>
                     </div>
                     <div class="general-content-scrolleable"></div>
