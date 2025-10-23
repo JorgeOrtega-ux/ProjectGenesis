@@ -70,9 +70,8 @@ $userRole = $_SESSION['role'] ?? 'user';
                     <div class="menu-link-text">
                         <span>Cerrar sesion</span>
                     </div>
+                    </div>
                 </div>
-
-            </div>
         </div>
     </div>
 </div>

@@ -515,6 +515,39 @@ body {
     display: none; /* Oculto por defecto */
 }
 
+/* --- ▼▼▼ NUEVOS ESTILOS PARA EL LOADER DE LOGOUT ▼▼▼ --- */
+
+/* 1. Estilos para el spinner que se crea con JS */
+.logout-spinner {
+    display: block; 
+    width: 24px;   
+    height: 24px;
+    border: 3px solid rgba(0, 0, 0, 0.1); 
+    border-top-color: #000; 
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* 2. Cuando el link está cargando... */
+.menu-link[data-action="logout"].loading {
+    /* Evitar que se pueda volver a clickear */
+    pointer-events: none; 
+    cursor: default;
+}
+
+/* 3. ¡REGLA ELIMINADA! 
+   Ya NO ocultamos el icono original.
+*/
+
+/* Animación de rotación */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS --- ▲▲▲ */
+
+
 @media (max-width: 468px) {
     .module-content.module-surface {
         width: 100%;

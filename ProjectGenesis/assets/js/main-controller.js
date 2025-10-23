@@ -18,13 +18,79 @@ export function initMainController() {
     const actionButtons = document.querySelectorAll('[data-action]');
 
     actionButtons.forEach(button => {
-        button.addEventListener('click', function (event) {
+        button.addEventListener('click', async function (event) {
             const action = this.getAttribute('data-action');
 
-            // --- MODIFICACIÓN: AÑADIR CASO DE LOGOUT ---
+            // --- MODIFICACIÓN: LÓGICA DE LOGOUT 100% DINÁMICA ---
             if (action === 'logout') {
-                // Usar la variable global de index.php
-                window.location.href = (window.projectBasePath || '') + '/logout.php';
+                event.preventDefault();
+                const logoutButton = this; 
+                
+                if (logoutButton.classList.contains('loading')) {
+                    return;
+                }
+
+                // 1. Añadir clase de carga (para evitar doble-click)
+                logoutButton.classList.add('loading');
+                
+                // 2. Crear el CONTENEDOR del spinner
+                const spinnerContainer = document.createElement('div');
+                spinnerContainer.className = 'menu-link-icon'; // El 2do contenedor
+                
+                // 3. Crear el SPINNER
+                const spinner = document.createElement('div');
+                spinner.className = 'logout-spinner';
+                
+                // 4. Añadirlos al DOM
+                spinnerContainer.appendChild(spinner);
+                logoutButton.appendChild(spinnerContainer);
+                
+                // (El icono original 'logout' no se toca y permanece visible)
+
+                // 5. Definir verificaciones (simuladas)
+                const checkNetwork = () => {
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            if (navigator.onLine) {
+                                console.log('Verificación: Conexión OK.');
+                                resolve(true);
+                            } else {
+                                console.log('Verificación: Sin conexión.');
+                                reject(new Error('No hay conexión a internet.'));
+                            }
+                        }, 800);
+                    });
+                };
+
+                const checkSession = () => {
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            console.log('Verificación: Sesión activa (simulado).');
+                            resolve(true);
+                        }, 500); 
+                    });
+                };
+
+                // 6. Ejecutar verificaciones
+                try {
+                    await checkSession();
+                    await checkNetwork();
+                    await new Promise(res => setTimeout(res, 1000)); 
+
+                    window.location.href = (window.projectBasePath || '') + '/logout.php';
+                    
+                } catch (error) {
+                    alert(`Error al cerrar sesión: ${error.message || 'Error desconocido'}`);
+                
+                } finally {
+                    // 7. Limpiar siempre (al final o si hay error)
+                    
+                    // Eliminar el CONTENEDOR del spinner (que se lleva el spinner)
+                    spinnerContainer.remove(); 
+                    
+                    // Quitar la clase de carga
+                    logoutButton.classList.remove('loading');
+                }
                 return;
             }
             // --- FIN DE LA MODIFICACIÓN ---
