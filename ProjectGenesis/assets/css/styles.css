@@ -216,6 +216,20 @@ body {
     background-color: #f5f5fa;
 }
 
+.main-sections {
+    display: flex;
+     width: 100%;
+    height: 100%;
+}
+
+.section-content {
+   flex: 1;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+}
+
+
 @media (max-width: 468px) {
     .module-content.module-surface {
         width: 100%;
