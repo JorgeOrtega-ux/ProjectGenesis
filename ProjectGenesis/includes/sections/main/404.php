@@ -1,7 +1,9 @@
 <div class="section-content <?php echo ($CURRENT_SECTION === '404') ? 'active' : 'disabled'; ?>" data-section="404">
-    <div style="padding: 24px; text-align: center;">
-        <span class="material-symbols-rounded" style="font-size: 80px;">error</span>
-        <h2 style="margin-top: 16px;">404 - Página no encontrada</h2>
-        <p style="margin-top: 8px;">La página que estás buscando no existe o ha sido movida.</p>
+    <div class="not-found-container">
+        <div class="not-found-badge">404</div>
+        <h1 class="not-found-title">¡Vaya! Página no encontrada.</h1>
+        <p class="not-found-text">
+            No pudimos encontrar la página que estás buscando. Es posible que se haya movido o que ya no exista.
+        </p>
     </div>
 </div>

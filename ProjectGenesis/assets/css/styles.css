@@ -228,7 +228,40 @@ body {
    justify-content: center;
    align-items: center;
 }
+/* ====================================== */
+/* =========== 404 PAGE STYLES ========== */
+/* ====================================== */
 
+.not-found-container {
+    text-align: center;
+    padding: 40px 24px;
+    max-width: 560px; /* Ancho máximo para el texto */
+    margin: 0 auto;
+}
+
+.not-found-badge {
+    display: inline-block;
+    background-color: transparent;
+    padding: 6px 16px;
+    border: 1px solid #00000020;
+    border-radius: 99px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+
+.not-found-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1f2937; /* Color gris oscuro (casi negro) */
+    margin-bottom: 16px;
+}
+
+.not-found-text {
+    font-size: 18px;
+    color: #6b7280; /* Color gris medio */
+    line-height: 1.6;
+}
 
 @media (max-width: 468px) {
     .module-content.module-surface {
