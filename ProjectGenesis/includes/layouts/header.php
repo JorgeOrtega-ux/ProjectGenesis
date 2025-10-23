@@ -1,3 +1,19 @@
+<?php
+// --- NUEVO BLOQUE PHP ---
+// Lógica para obtener la URL de la imagen de perfil
+
+// Definimos una URL de avatar por defecto
+$defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+
+// Obtenemos la URL de la sesión. Si no existe, usamos la de por defecto.
+$profileImageUrl = $_SESSION['profile_image_url'] ?? $defaultAvatar;
+
+// Asegurarnos de que no esté vacía (por si en la BD se guardó un NULL)
+if (empty($profileImageUrl)) {
+    $profileImageUrl = $defaultAvatar;
+}
+// --- FIN DEL NUEVO BLOQUE ---
+?>
 <div class="header">
     <div class="header-left">
         <div class="header-item">
@@ -8,8 +24,12 @@
     </div>
     <div class="header-right">
         <div class="header-item">
-            <div class="header-button header-profile" data-action="toggleModuleSelect"></div>
-        </div>
+            
+            <div class="header-button header-profile" 
+                 data-action="toggleModuleSelect"
+                 style="background-image: url('<?php echo htmlspecialchars($profileImageUrl); ?>');">
+            </div>
+            </div>
     </div>
     <div class="module-content module-select disabled" data-module="moduleSelect">
         <div class="menu-content">

@@ -7,7 +7,7 @@ include 'config.php';
 // Establecer la cabecera de respuesta como JSON
 header('Content-Type: application/json');
 
-// Preparar el array de respuesta
+// --- LÍNEA CORREGIDA ---
 $response = ['success' => false, 'message' => 'Acción no válida.'];
 
 // Asegurarse de que se está recibiendo un POST
@@ -31,15 +31,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     // 2. Comprobar si el email o usuario ya existen
                     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? OR username = ?");
                     $stmt->execute([$email, $username]);
+                    
                     if ($stmt->fetch()) {
                         $response['message'] = 'El correo o nombre de usuario ya están en uso.';
                     } else {
+                        
                         // 3. Hashear la contraseña
                         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-                        // 4. Insertar nuevo usuario
+                        // 4. Insertar nuevo usuario (SIN la URL del avatar todavía)
                         $stmt = $pdo->prepare("INSERT INTO users (email, username, password) VALUES (?, ?, ?)");
                         $stmt->execute([$email, $username, $hashedPassword]);
+
+                        // 5. Obtener el ID del usuario recién creado
+                        $userId = $pdo->lastInsertId();
+
+                        // --- MODIFICACIÓN: GENERAR Y GUARDAR AVATAR LOCALMENTE ---
+                        
+                        $localAvatarUrl = null;
+                        
+                        try {
+                            // Definir la ruta de guardado (física, en el servidor)
+                            // __DIR__ es el directorio de este archivo (/ProjectGenesis)
+                            $savePathDir = __DIR__ . '/assets/uploads/avatars';
+                            $fileName = "user-{$userId}.png";
+                            $fullSavePath = $savePathDir . '/' . $fileName;
+
+                            // Definir la URL de acceso (pública, para la web)
+                            // $basePath viene de config.php
+                            $publicUrl = $basePath . '/assets/uploads/avatars/' . $fileName;
+
+                            // 1. Crear el directorio de guardado si no existe
+                            if (!is_dir($savePathDir)) {
+                                // 0755 da permisos de escritura, recursivo = true
+                                mkdir($savePathDir, 0755, true); 
+                            }
+
+                            // 2. Generar la URL de la API
+                            $nameParam = urlencode($username);
+                            $apiUrl = "https://ui-avatars.com/api/?name={$nameParam}&size=100&background=random&color=ffffff&bold=true";
+
+                            // 3. Obtener el contenido (los bytes) de la imagen
+                            $imageData = file_get_contents($apiUrl);
+
+                            // 4. Guardar la imagen localmente
+                            if ($imageData !== false) {
+                                file_put_contents($fullSavePath, $imageData);
+                                $localAvatarUrl = $publicUrl; // ¡Éxito!
+                            }
+
+                        } catch (Exception $e) {
+                            // Si algo falla (API caída, permisos), no rompemos el registro
+                            // $localAvatarUrl se quedará como null
+                            // (Aquí podrías loggear el error: error_log($e->getMessage());)
+                        }
+
+                        // 6. Actualizar al usuario con la nueva URL local (si se generó)
+                        if ($localAvatarUrl) {
+                            $stmt = $pdo->prepare("UPDATE users SET profile_image_url = ? WHERE id = ?");
+                            $stmt->execute([$localAvatarUrl, $userId]);
+                        }
+                        
+                        // --- FIN DE LA MODIFICACIÓN ---
 
                         $response['success'] = true;
                         $response['message'] = '¡Registro completado! Ahora puedes iniciar sesión.';
@@ -73,6 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['email'] = $user['email'];
+                    $_SESSION['profile_image_url'] = $user['profile_image_url'];
 
                     $response['success'] = true;
                     $response['message'] = 'Inicio de sesión correcto.';

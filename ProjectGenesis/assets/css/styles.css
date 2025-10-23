@@ -130,17 +130,10 @@ body {
 }
 .header-button.header-profile {
     border-radius: 50px;
-
-    /* --- MODIFICACIONES AÑADIDAS --- */
-    /* Color de fondo para mientras carga o si no hay imagen */
-    background-color: #e0e0e0; 
-    /* Asegura que la imagen de fondo cubra el div */
-    background-size: cover;
-    /* Centra la imagen de fondo */
-    background-position: center;
-    /* Evita que la imagen se repita */
-    background-repeat: no-repeat;
-    /* Un borde ligero para que destaque del fondo del header */
+    background-color: #e0e0e0; /* Esto será ignorado por el style en línea */
+    background-size: cover; /* <- Perfecto para la imagen */
+    background-position: center; /* <- Perfecto para la imagen */
+    background-repeat: no-repeat; /* <- Perfecto para la imagen */
     border: 1px solid #ffffff40;
 }
 
