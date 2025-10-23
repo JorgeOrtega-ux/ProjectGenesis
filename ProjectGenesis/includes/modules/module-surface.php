@@ -1,7 +1,8 @@
 <div class="module-content module-surface disabled" data-module="moduleSurface">
     <div class="menu-content">
         <div class="menu-list">
-            <div class="menu-link active">
+            
+            <div class="menu-link active" data-action="toggleSectionHome">
                 <div class="menu-link-icon">
                     <span class="material-symbols-rounded">home</span>
                 </div>
@@ -9,7 +10,8 @@
                     <span>Pagina principal</span>
                 </div>
             </div>
-            <div class="menu-link">
+            
+            <div class="menu-link" data-action="toggleSectionExplorer">
                 <div class="menu-link-icon">
                     <span class="material-symbols-rounded">groups</span>
                 </div>
@@ -17,6 +19,7 @@
                     <span>Explorar comunidades</span>
                 </div>
             </div>
+
         </div>
     </div>
 </div>

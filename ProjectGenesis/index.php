@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded">
-    <link rel="stylesheet" type="text/css" href="assets/css/styles.css">
+    <link rel="stylesheet" type="text/css" href="/ProjectGenesis/assets/css/styles.css">
     <title>ProjectGenesis</title>
 </head>
 
@@ -19,10 +19,7 @@
                 <div class="general-content-bottom">
                     <?php include 'includes/modules/module-surface.php'; ?>
                     <div class="general-content-scrolleable">
-                        <div class="section-content">
-                            <div class="main-sections">
-                                
-                            </div>
+                        <div class="main-sections">
                         </div>
                     </div>
                 </div>
@@ -30,7 +27,7 @@
         </div>
     </div>
 
-    <script type="module" src="assets/js/app-init.js"></script>
+    <script type="module" src="/ProjectGenesis/assets/js/app-init.js"></script>
 </body>
 
 </html>

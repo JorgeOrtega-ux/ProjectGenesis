@@ -1,3 +1,12 @@
+export const deactivateAllModules = (exceptionModule = null) => {
+    document.querySelectorAll('[data-module].active').forEach(activeModule => {
+        if (activeModule !== exceptionModule) {
+            activeModule.classList.add('disabled');
+            activeModule.classList.remove('active');
+        }
+    });
+};
+
 export function initMainController() {
     let allowMultipleActiveModules = false;
     let closeOnClickOutside = true;
@@ -5,22 +14,20 @@ export function initMainController() {
 
     const actionButtons = document.querySelectorAll('[data-action]');
 
-    const deactivateAllModules = (exceptionModule = null) => {
-        document.querySelectorAll('[data-module].active').forEach(activeModule => {
-            if (activeModule !== exceptionModule) {
-                activeModule.classList.add('disabled');
-                activeModule.classList.remove('active');
-            }
-        });
-    };
-
     actionButtons.forEach(button => {
         button.addEventListener('click', function (event) {
-            event.stopPropagation();
             const action = this.getAttribute('data-action');
 
+            
+            if (action.startsWith('toggleSection')) {
+                return; 
+            }
+
+            event.stopPropagation();
+            
+
             if (action.startsWith('toggle')) {
-                let moduleName = action.substring(6);
+                let moduleName = action.substring(6); 
                 moduleName = moduleName.charAt(0).toLowerCase() + moduleName.slice(1);
 
                 const module = document.querySelector(`[data-module="${moduleName}"]`);
