@@ -67,14 +67,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                 mkdir($savePathDir, 0755, true); 
                             }
 
-                            // 2. Generar la URL de la API
-                            $nameParam = urlencode($username);
-                            $apiUrl = "https://ui-avatars.com/api/?name={$nameParam}&size=100&background=random&color=ffffff&bold=true";
+                            // --- MODIFICACIÓN: PALETA DE COLORES PERSONALIZADA ---
+                        
+                            // 1. Definir la paleta de colores (sin el #)
+                            // Colores con una tonalidad similar al azul que mencionaste.
+                            $avatarColors = [
+                                '206BD3', // Azul (El que pediste)
+                                'D32029', // Rojo
+                                '28A745', // Verde
+                                'E91E63', // Rosa
+                                'F57C00'  // Naranja
+                            ];
+                            
+                            // 2. Elegir un color al azar
+                            $randomColorKey = array_rand($avatarColors);
+                            $selectedColor = $avatarColors[$randomColorKey];
 
-                            // 3. Obtener el contenido (los bytes) de la imagen
+                            // 3. Generar la URL de la API (usando el color seleccionado)
+                            $nameParam = urlencode($username);
+                            // --- MODIFICACIÓN: Aumentar tamaño a 256 ---
+                            $apiUrl = "https://ui-avatars.com/api/?name={$nameParam}&size=256&background={$selectedColor}&color=ffffff&bold=true";
+                            
+                            // --- FIN DE LA MODIFICACIÓN ---
+
+                            // 4. Obtener el contenido (los bytes) de la imagen
                             $imageData = file_get_contents($apiUrl);
 
-                            // 4. Guardar la imagen localmente
+                            // 5. Guardar la imagen localmente
                             if ($imageData !== false) {
                                 file_put_contents($fullSavePath, $imageData);
                                 $localAvatarUrl = $publicUrl; // ¡Éxito!
@@ -92,10 +111,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             $stmt->execute([$localAvatarUrl, $userId]);
                         }
                         
-                        // --- FIN DE LA MODIFICACIÓN ---
+                        // --- FIN DE LA MODIFICACIÓN (GENERAR AVATAR) ---
+
+                        
+                        // --- MODIFICACIÓN: INICIAR SESIÓN AUTOMÁTICAMENTE ---
+                        $_SESSION['user_id'] = $userId;
+                        $_SESSION['username'] = $username;
+                        $_SESSION['email'] = $email;
+                        $_SESSION['profile_image_url'] = $localAvatarUrl; // Usar la URL que acabamos de generar
 
                         $response['success'] = true;
-                        $response['message'] = '¡Registro completado! Ahora puedes iniciar sesión.';
+                        $response['message'] = '¡Registro completado! Iniciando sesión...';
+                        // --- FIN DE LA MODIFICACIÓN ---
                     }
                 } catch (PDOException $e) {
                     $response['message'] = 'Error en la base de datos: ' . $e->getMessage();

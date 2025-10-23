@@ -38,16 +38,12 @@ async function handleAuthFormSubmit(e, action) {
         const result = await response.json();
 
         if (result.success) {
+            // --- MODIFICACIÓN ---
             // ¡Éxito!
-            if (action === 'login') {
-                // Redirigir a la página principal
-                window.location.href = window.projectBasePath + '/';
-            } else {
-                // Registro exitoso, redirigir a login
-                // (Podríamos mostrar el mensaje de éxito primero)
-                alert(result.message);
-                window.location.href = window.projectBasePath + '/login';
-            }
+            // Tanto login como register (con auto-login) ahora redirigen a home.
+            window.location.href = window.projectBasePath + '/';
+            // --- FIN DE LA MODIFICACIÓN ---
+            
         } else {
             // Mostrar error
             showAuthError(errorDiv, result.message || 'Ha ocurrido un error.');

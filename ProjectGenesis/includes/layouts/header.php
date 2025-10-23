@@ -12,6 +12,10 @@ $profileImageUrl = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 if (empty($profileImageUrl)) {
     $profileImageUrl = $defaultAvatar;
 }
+
+// --- MODIFICACIÓN: Obtener username para el ALT text ---
+$usernameForAlt = $_SESSION['username'] ?? 'Usuario';
+
 // --- FIN DEL NUEVO BLOQUE ---
 ?>
 <div class="header">
@@ -26,8 +30,11 @@ if (empty($profileImageUrl)) {
         <div class="header-item">
             
             <div class="header-button header-profile" 
-                 data-action="toggleModuleSelect"
-                 style="background-image: url('<?php echo htmlspecialchars($profileImageUrl); ?>');">
+                 data-action="toggleModuleSelect">
+                 
+                 <img src="<?php echo htmlspecialchars($profileImageUrl); ?>" 
+                      alt="Avatar de <?php echo htmlspecialchars($usernameForAlt); ?>"
+                      class="header-profile-image">
             </div>
             </div>
     </div>
