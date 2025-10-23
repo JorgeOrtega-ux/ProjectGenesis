@@ -16,7 +16,11 @@ if (empty($profileImageUrl)) {
 // --- MODIFICACIÓN: Obtener username para el ALT text ---
 $usernameForAlt = $_SESSION['username'] ?? 'Usuario';
 
+// --- ¡NUEVO BLOQUE PARA EL ROL! ---
+// Obtenemos el rol de la sesión, si no existe, 'user' por defecto
+$userRole = $_SESSION['role'] ?? 'user';
 // --- FIN DEL NUEVO BLOQUE ---
+
 ?>
 <div class="header">
     <div class="header-left">
@@ -30,7 +34,8 @@ $usernameForAlt = $_SESSION['username'] ?? 'Usuario';
         <div class="header-item">
             
             <div class="header-button header-profile" 
-                 data-action="toggleModuleSelect">
+                 data-action="toggleModuleSelect"
+                 data-role="<?php echo htmlspecialchars($userRole); ?>"> 
                  
                  <img src="<?php echo htmlspecialchars($profileImageUrl); ?>" 
                       alt="Avatar de <?php echo htmlspecialchars($usernameForAlt); ?>"

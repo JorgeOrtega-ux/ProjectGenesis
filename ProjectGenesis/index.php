@@ -6,6 +6,38 @@
 // Esto inicia la sesión (session_start()) y conecta a la BD ($pdo).
 include 'config.php';
 
+// --- ¡NUEVA MODIFICACIÓN! ACTUALIZAR DATOS DE SESIÓN EN CADA CARGA ---
+// Si el usuario ya tiene una sesión iniciada...
+if (isset($_SESSION['user_id'])) {
+    try {
+        // Volvemos a consultar la BD para obtener sus datos más frescos
+        $stmt = $pdo->prepare("SELECT username, email, profile_image_url, role FROM users WHERE id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        $freshUserData = $stmt->fetch();
+
+        if ($freshUserData) {
+            // Actualizamos la sesión con los datos frescos de la BD
+            $_SESSION['username'] = $freshUserData['username'];
+            $_SESSION['email'] = $freshUserData['email'];
+            $_SESSION['profile_image_url'] = $freshUserData['profile_image_url'];
+            $_SESSION['role'] = $freshUserData['role']; // <-- El rol se actualiza aquí
+        } else {
+            // Si el usuario no se encuentra (raro, quizás fue eliminado),
+            // forzamos el cierre de sesión.
+            session_unset();
+            session_destroy();
+            header('Location: ' . $basePath . '/login');
+            exit;
+        }
+    } catch (PDOException $e) {
+        // Si hay un error de BD, es mejor no hacer nada
+        // y seguir con los datos de sesión que ya teníamos.
+        // error_log("Error al refrescar sesión: " . $e->getMessage());
+    }
+}
+// --- FIN DE LA NUEVA MODIFICACIÓN ---
+
+
 // 1. Definir el base path de tu proyecto
 // $basePath = '/ProjectGenesis'; // <- Esta línea ya no es necesaria, viene de config.php
 
@@ -38,6 +70,7 @@ $isAuthPage = in_array($currentPage, $authPages);
 
 // A. Si el usuario NO está logueado Y NO está en una página de auth,
 //    redirigir forzosamente a /login.
+//    (Esta comprobación ahora se hace después de refrescar la sesión)
 if (!isset($_SESSION['user_id']) && !$isAuthPage) {
     header('Location: ' . $basePath . '/login');
     exit;

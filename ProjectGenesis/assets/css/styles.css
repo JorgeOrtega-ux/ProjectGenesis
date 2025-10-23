@@ -131,18 +131,97 @@ body {
 .header-button.header-profile {
     border-radius: 50px;
     border: 1px solid #ffffff40;
-    /* --- MODIFICACIÓN: Añadido para que la <img> no se desborde --- */
     padding: 0; 
-    overflow: hidden; 
-    /* --- FIN MODIFICACIÓN --- */
+    position: relative;
 }
 
-/* --- MODIFICACIÓN: NUEVO ESTILO PARA LA IMAGEN --- */
+/* --- ESTILOS PARA EL BORDE DE ROL --- */
+.header-profile::before {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    /* Configuración base para TODOS los roles:
+       Borde de 2px, separado 2px.
+       Total: 4px de espacio.
+    */
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 2px solid transparent; /* Borde de 2px por defecto */
+    transition: border-color 0.2s ease, border-width 0.2s ease;
+    pointer-events: none; 
+    z-index: 2; 
+    background-image: none; 
+}
+
+/* Rol: user (Gris) */
+.header-profile[data-role="user"]::before {
+    border-color: #cccccc; 
+}
+
+/* Rol: moderator (Azul) */
+.header-profile[data-role="moderator"]::before {
+    border-color: #0000FF;
+}
+
+/* Rol: administrator (Rojo) */
+.header-profile[data-role="administrator"]::before {
+    border-color: #FF0000;
+    /* --- CORRECCIÓN ---
+       Ya no necesita border-width ni top/left/right/bottom,
+       hereda el 2px y -4px de la regla base .header-profile::before
+    */
+}
+
+/* --- ¡MODIFICACIÓN PARA FOUNDER! --- */
+.header-profile[data-role="founder"]::before {
+    /* Quitamos el borde sólido para usar el background */
+    border: none; 
+    
+    /* --- CORRECCIÓN ---
+       Ajustamos el posicionamiento para que coincida con el borde de 2px + espacio de 2px
+    */
+    top: -4px; 
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+
+    /* Usamos un conic-gradient como background */
+    background-image: conic-gradient(
+        #206BD3 0deg 90deg,    /* Azul */
+        #D32029 90deg 180deg,  /* Rojo */
+        #28A745 180deg 270deg, /* Verde */
+        #FFC107 270deg 360deg  /* Amarillo */
+    );
+    
+    /* --- CORRECCIÓN ---
+       Cambiamos el grosor de la máscara de 3px a 2px
+    */
+    mask: radial-gradient(
+        farthest-side, 
+        transparent calc(100% - 2px), /* Centro transparente, 2px es el grosor deseado */
+        #fff 0                    
+    );
+    -webkit-mask: radial-gradient(
+        farthest-side, 
+        transparent calc(100% - 2px), 
+        #fff 0
+    );
+}
+/* --- FIN DE MODIFICACIÓN PARA FOUNDER --- */
+
+
+/* --- ESTILO PARA LA IMAGEN --- */
 .header-profile-image {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* <- Esta es la clave: "background-size: cover" para <img> */
-    display: block; /* Elimina espacios extra */
+    object-fit: cover; 
+    display: block; 
+    position: relative;
+    z-index: 1; 
+    
+    border-radius: 50%;
 }
 /* --- FIN NUEVO ESTILO --- */
 .module-content.module-surface {

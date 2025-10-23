@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
                         // 4. Insertar nuevo usuario (SIN la URL del avatar todavía)
+                        // NOTA: La columna 'role' tomará su valor 'user' por defecto (de la BD)
                         $stmt = $pdo->prepare("INSERT INTO users (email, username, password) VALUES (?, ?, ?)");
                         $stmt->execute([$email, $username, $hashedPassword]);
 
@@ -119,6 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $_SESSION['username'] = $username;
                         $_SESSION['email'] = $email;
                         $_SESSION['profile_image_url'] = $localAvatarUrl; // Usar la URL que acabamos de generar
+                        $_SESSION['role'] = 'user'; // Asignar el rol por defecto en la sesión
 
                         $response['success'] = true;
                         $response['message'] = '¡Registro completado! Iniciando sesión...';
@@ -154,6 +156,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['email'] = $user['email'];
                     $_SESSION['profile_image_url'] = $user['profile_image_url'];
+                    
+                    // --- ¡MODIFICACIÓN AÑADIDA! ---
+                    // Guardamos el nuevo rol en la sesión
+                    $_SESSION['role'] = $user['role']; 
+                    // --- FIN DE LA MODIFICACIÓN ---
 
                     $response['success'] = true;
                     $response['message'] = 'Inicio de sesión correcto.';
