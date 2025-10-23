@@ -179,25 +179,26 @@ body {
     /* Quitamos el borde sólido para usar el background */
     border: none; 
     
-    /* --- CORRECCIÓN ---
-       Ajustamos el posicionamiento para que coincida con el borde de 2px + espacio de 2px
-    */
+    /* Ajustamos el posicionamiento para que coincida con el borde de 2px + espacio de 2px */
     top: -4px; 
     left: -4px;
     right: -4px;
     bottom: -4px;
 
-    /* Usamos un conic-gradient como background */
+    /* Usamos un conic-gradient con las nuevas proporciones:
+      - Rojo: 90 grados (0 a 90)
+      - Azul: 120 grados (90 a 210)
+      - Verde: 90 grados (210 a 300)
+      - Amarillo: 60 grados (300 a 360)
+    */
     background-image: conic-gradient(
-        #206BD3 0deg 90deg,    /* Azul */
-        #D32029 90deg 180deg,  /* Rojo */
-        #28A745 180deg 270deg, /* Verde */
-        #FFC107 270deg 360deg  /* Amarillo */
+        #D32029 0deg 90deg,    /* Rojo (90°) */
+        #206BD3 90deg 210deg,  /* Azul (120°) */
+        #28A745 210deg 300deg, /* Verde (90°) */
+        #FFC107 300deg 360deg  /* Amarillo (60°) */
     );
     
-    /* --- CORRECCIÓN ---
-       Cambiamos el grosor de la máscara de 3px a 2px
-    */
+    /* Usamos una máscara para crear el "anillo" de 2px de grosor. */
     mask: radial-gradient(
         farthest-side, 
         transparent calc(100% - 2px), /* Centro transparente, 2px es el grosor deseado */
@@ -209,6 +210,7 @@ body {
         #fff 0
     );
 }
+/* --- FIN DE MODIFICACIÓN PARA FOUNDER --- */
 /* --- FIN DE MODIFICACIÓN PARA FOUNDER --- */
 
 
