@@ -1,8 +1,11 @@
 <div class="section-content <?php echo ($CURRENT_SECTION === 'register') ? 'active' : 'disabled'; ?>" data-section="register">
     <div class="auth-container">
         <h1 class="auth-title">Crea una cuenta</h1>
-        <form class="auth-form" onsubmit="event.preventDefault();">
+        
+        <form class="auth-form" id="register-form" onsubmit="event.preventDefault();" novalidate>
             
+            <div class="auth-error-message" id="register-error" style="display: none;"></div>
+
             <div class="auth-input-group">
                 <input type="email" id="register-email" name="email" required placeholder=" ">
                 <label for="register-email">Dirección de correo electrónico*</label>

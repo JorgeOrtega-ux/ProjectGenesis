@@ -19,7 +19,8 @@ const paths = {
     '/register': 'toggleSectionRegister',
 };
 
-const basePath = '/ProjectGenesis';
+// Usar la variable global definida en index.php
+const basePath = window.projectBasePath || '/ProjectGenesis'; 
 
 async function loadPage(page) {
 
@@ -28,6 +29,7 @@ async function loadPage(page) {
     contentContainer.innerHTML = '';
 
     try {
+        // Modificación: Usar basePath en el fetch
         const response = await fetch(`${basePath}/router.php?page=${page}`);
         const html = await response.text();
         
@@ -46,14 +48,12 @@ function handleNavigation() {
 
     const action = paths[path];
 
-
     if (!action) {
         loadPage('404');          
         updateMenuState(null);  
         return;                   
     }
     
-
     const page = routes[action]; 
 
     if (page) {
@@ -66,7 +66,6 @@ function handleNavigation() {
 }
 
 function updateMenuState(currentAction) {
-
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
         const linkAction = link.getAttribute('data-action');
         
@@ -79,7 +78,6 @@ function updateMenuState(currentAction) {
 }
 
 export function initRouter() {
-
     
     document.body.addEventListener('click', e => {
         const link = e.target.closest('.menu-link[data-action*="toggleSection"]');
@@ -105,25 +103,15 @@ export function initRouter() {
         }
     });
     
+    // --- MODIFICACIÓN: ELIMINAR ESTE BLOQUE ---
+    // La lógica del 'auth-toggle-password' se ha movido a auth-manager.js
+    /*
     document.body.addEventListener('click', e => {
         const toggleBtn = e.target.closest('.auth-toggle-password');
-
-        if (toggleBtn) {
-            const inputId = toggleBtn.getAttribute('data-toggle');
-            const input = document.getElementById(inputId);
-            const icon = toggleBtn.querySelector('.material-symbols-rounded');
-
-            if (input) {
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    icon.textContent = 'visibility_off';
-                } else {
-                    input.type = 'password';
-                    icon.textContent = 'visibility';
-                }
-            }
-        }
+        // ... (todo el bloque eliminado) ...
     });
+    */
+    // --- FIN DE LA MODIFICACIÓN ---
 
     window.addEventListener('popstate', handleNavigation);
 

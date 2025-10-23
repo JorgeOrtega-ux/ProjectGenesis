@@ -1,8 +1,13 @@
 <?php
-// --- AÑADIR TODA ESTA LÓGICA PHP ---
+// /ProjectGenesis/index.php
+
+// --- MODIFICACIÓN 1: INCLUIR CONFIG ---
+// Incluir config.php ANTES DE CUALQUIER COSA.
+// Esto inicia la sesión (session_start()) y conecta a la BD ($pdo).
+include 'config.php';
 
 // 1. Definir el base path de tu proyecto
-$basePath = '/ProjectGenesis';
+// $basePath = '/ProjectGenesis'; // <- Esta línea ya no es necesaria, viene de config.php
 
 // 2. Obtener la ruta de la URL (sin query string)
 $requestUri = $_SERVER['REQUEST_URI'];
@@ -15,7 +20,6 @@ if (empty($path) || $path === '/') {
 }
 
 // 4. Replicar la lógica de rutas para saber la página actual
-// (Basado en tu 'paths' y 'routes' de url-manager.js)
 $pathsToPages = [
     '/'           => 'home',
     '/explorer'   => 'explorer',
@@ -23,12 +27,28 @@ $pathsToPages = [
     '/register'   => 'register'
 ];
 
-$currentPage = $pathsToPages[$path] ?? '404'; // default a 404
+$currentPage = $pathsToPages[$path] ?? '404';
 
 // 5. Definir qué páginas NO DEBEN mostrar el header/menu
 $authPages = ['login', 'register'];
 $isAuthPage = in_array($currentPage, $authPages);
 
+
+// --- MODIFICACIÓN 2: LÓGICA DE PROTECCIÓN DE RUTAS ---
+
+// A. Si el usuario NO está logueado Y NO está en una página de auth,
+//    redirigir forzosamente a /login.
+if (!isset($_SESSION['user_id']) && !$isAuthPage) {
+    header('Location: ' . $basePath . '/login');
+    exit;
+}
+
+// B. Si el usuario SÍ está logueado Y trata de visitar login/register,
+//    redirigir forzosamente a la página principal (home).
+if (isset($_SESSION['user_id']) && $isAuthPage) {
+    header('Location: ' . $basePath . '/');
+    exit;
+}
 // --- FIN DE LA LÓGICA AÑADIDA ---
 ?>
 <!DOCTYPE html>
@@ -38,7 +58,7 @@ $isAuthPage = in_array($currentPage, $authPages);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded">
-    <link rel="stylesheet" type="text/css" href="/ProjectGenesis/assets/css/styles.css">
+    <link rel="stylesheet" type="text/css" href="<?php echo $basePath; ?>/assets/css/styles.css">
     <title>ProjectGenesis</title>
 </head>
 
@@ -62,13 +82,17 @@ $isAuthPage = in_array($currentPage, $authPages);
                     <div class="general-content-scrolleable">
                         <div class="main-sections">
                             </div>
-                    </div>
+                    
                 </div>
             </div>
         </div>
     </div>
 
-    <script type="module" src="/ProjectGenesis/assets/js/app-init.js"></script>
+    <script>
+        // Definir una variable global de JS para que auth-manager.js la use
+        window.projectBasePath = '<?php echo $basePath; ?>';
+    </script>
+    <script type="module" src="<?php echo $basePath; ?>/assets/js/app-init.js"></script>
 </body>
 
 </html>

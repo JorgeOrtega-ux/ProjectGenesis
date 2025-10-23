@@ -21,6 +21,13 @@ export function initMainController() {
         button.addEventListener('click', function (event) {
             const action = this.getAttribute('data-action');
 
+            // --- MODIFICACIÓN: AÑADIR CASO DE LOGOUT ---
+            if (action === 'logout') {
+                // Usar la variable global de index.php
+                window.location.href = (window.projectBasePath || '') + '/logout.php';
+                return;
+            }
+            // --- FIN DE LA MODIFICACIÓN ---
             
             if (action.startsWith('toggleSection')) {
                 return; 
@@ -28,7 +35,6 @@ export function initMainController() {
 
             event.stopPropagation();
             
-
             if (action.startsWith('toggle')) {
                 let moduleName = action.substring(6); 
                 moduleName = moduleName.charAt(0).toLowerCase() + moduleName.slice(1);

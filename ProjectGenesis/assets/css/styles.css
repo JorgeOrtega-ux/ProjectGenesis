@@ -346,10 +346,6 @@ body {
     color: #000; 
 }
 
-.auth-input-group input:focus {
-}
-
-
 .auth-toggle-password {
     position: absolute;
     right: 8px;
@@ -410,6 +406,22 @@ body {
 .auth-link a:hover {
     text-decoration: underline;
 }
+
+/* ====================================== */
+/* ======= ESTILOS DE ERROR AUTH ======== */
+/* ====================================== */
+
+.auth-error-message {
+    padding: 12px;
+    background-color: #fbebee; /* Rojo claro */
+    color: #c62828; /* Rojo oscuro */
+    border: 1px solid #ef9a9a;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 8px; /* Espacio antes del primer input */
+    display: none; /* Oculto por defecto */
+}
+
 @media (max-width: 468px) {
     .module-content.module-surface {
         width: 100%;
