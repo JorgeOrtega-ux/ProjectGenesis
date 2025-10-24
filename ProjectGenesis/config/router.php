@@ -44,7 +44,7 @@ if (!isset($_SESSION['user_id']) && !$isAuthPage && $page !== '404') {
 
 if (array_key_exists($page, $allowedPages)) {
 
-    // --- ▼▼▼ INICIO DE LA LÓGICA MOVIDA ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE LA LÓGICA MOVIDA (Y MODIFICADA) ▼▼▼ ---
     // Pre-procesamos las variables solo para la página que las necesita.
     if ($page === 'settings-profile') {
         
@@ -61,6 +61,10 @@ if (array_key_exists($page, $allowedPages)) {
 
         $usernameForAlt = $_SESSION['username'] ?? 'Usuario';
         $userRole = $_SESSION['role'] ?? 'user';
+        
+        // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+        $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
+        // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
     }
     // --- ▲▲▲ FIN DE LA LÓGICA MOVIDA ▲▲▲ ---
 

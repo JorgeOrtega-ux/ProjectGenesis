@@ -96,5 +96,44 @@
 
             </div>
         </form>
+
+        <form id="email-form" onsubmit="event.preventDefault();" novalidate>
+            <?php outputCsrfInput(); ?>
+            <input type="hidden" name="action" value="update-email">
+            
+            <div class="settings-card">
+                
+                <div class="settings-card-left" id="email-view-state" style="display: flex;">
+                    <div class="settings-text-content">
+                        <h2 class="settings-text-title">Correo Electrónico</h2>
+                        <p class="settings-text-description" 
+                           id="email-display-text" 
+                           data-original-email="<?php echo htmlspecialchars($userEmail); ?>">
+                           <?php echo htmlspecialchars($userEmail); ?>
+                        </p>
+                    </div>
+                </div>
+                <div class="settings-card-right" id="email-actions-view" style="display: flex;">
+                    <button type="button" class="settings-button" id="email-edit-trigger">Editar</button>
+                </div>
+
+                <div class="settings-card-left" id="email-edit-state" style="display: none;">
+                    <div class="settings-text-content" style="width: 100%;">
+                        <h2 class="settings-text-title">Correo Electrónico</h2>
+                        <input type="email" 
+                               class="settings-username-input" 
+                               id="email-input" 
+                               name="email" 
+                               value="<?php echo htmlspecialchars($userEmail); ?>"
+                               required>
+                    </div>
+                </div>
+                <div class="settings-card-right-actions" id="email-actions-edit" style="display: none;">
+                    <button type="button" class="settings-button" id="email-cancel-trigger">Cancelar</button>
+                    <button type="submit" class="settings-button" id="email-save-trigger">Guardar</button>
+                </div>
+
+            </div>
+        </form>
         </div>
 </div>

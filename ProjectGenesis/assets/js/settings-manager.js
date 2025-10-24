@@ -42,6 +42,27 @@ function toggleButtonSpinner(button, text, isLoading) {
     }
 }
 
+// --- ▼▼▼ NUEVA FUNCIÓN HELPER PARA EL CURSOR ▼▼▼ ---
+/**
+ * Enfoca un input y posiciona el cursor al final del texto.
+ * @param {HTMLInputElement} inputElement El elemento input a enfocar.
+ */
+function focusInputAndMoveCursorToEnd(inputElement) {
+    if (!inputElement) return;
+    
+    const length = inputElement.value.length;
+    
+    inputElement.focus();
+    
+    // Mover el cursor al final
+    // (Algunos navegadores antiguos pueden necesitar un pequeño timeout)
+    setTimeout(() => {
+        inputElement.setSelectionRange(length, length);
+    }, 0);
+}
+// --- ▲▲▲ FIN NUEVA FUNCIÓN HELPER ▲▲▲ ---
+
+
 // --- FUNCIÓN DE INICIALIZACIÓN REFACTORIZADA ---
 
 export function initSettingsManager() {
@@ -144,7 +165,7 @@ export function initSettingsManager() {
         // --- Fin Lógica de Avatar ---
 
 
-        // --- ▼▼▼ NUEVA LÓGICA PARA NOMBRE DE USUARIO ▼▼▼ ---
+        // --- LÓGICA PARA NOMBRE DE USUARIO ---
 
         // Click en "Editar" nombre de usuario
         if (e.target.closest('#username-edit-trigger')) {
@@ -155,7 +176,7 @@ export function initSettingsManager() {
             document.getElementById('username-edit-state').style.display = 'flex';
             document.getElementById('username-actions-edit').style.display = 'flex';
             
-            document.getElementById('username-input').focus();
+            focusInputAndMoveCursorToEnd(document.getElementById('username-input'));
             return;
         }
 
@@ -177,7 +198,43 @@ export function initSettingsManager() {
             document.getElementById('username-actions-view').style.display = 'flex';
             return;
         }
-        // --- ▲▲▲ FIN NUEVA LÓGICA DE CLICS ▲▲▲ ---
+        
+        // --- ▼▼▼ LÓGICA PARA EMAIL (CORREGIDA) ▼▼▼ ---
+
+        // Click en "Editar" email
+        if (e.target.closest('#email-edit-trigger')) {
+            e.preventDefault();
+            document.getElementById('email-view-state').style.display = 'none';
+            document.getElementById('email-actions-view').style.display = 'none';
+            
+            document.getElementById('email-edit-state').style.display = 'flex';
+            document.getElementById('email-actions-edit').style.display = 'flex';
+            
+            // --- ▼▼▼ ¡ESTA ES LA LÍNEA CORREGIDA! ▼▼▼ ---
+            focusInputAndMoveCursorToEnd(document.getElementById('email-input'));
+            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+            return;
+        }
+
+        // Click en "Cancelar" edición de email
+        if (e.target.closest('#email-cancel-trigger')) {
+            e.preventDefault();
+            
+            // Resetear el valor del input al original
+            const displayElement = document.getElementById('email-display-text');
+            const inputElement = document.getElementById('email-input');
+            if (displayElement && inputElement) {
+                inputElement.value = displayElement.dataset.originalEmail;
+            }
+
+            document.getElementById('email-edit-state').style.display = 'none';
+            document.getElementById('email-actions-edit').style.display = 'none';
+
+            document.getElementById('email-view-state').style.display = 'flex';
+            document.getElementById('email-actions-view').style.display = 'flex';
+            return;
+        }
+        // --- ▲▲▲ FIN LÓGICA DE CLICS ▲▲▲ ---
     });
 
     // 2. Delegación para el evento SUBMIT del formulario
@@ -227,7 +284,7 @@ export function initSettingsManager() {
         // --- Fin Lógica de Avatar ---
 
 
-        // --- ▼▼▼ NUEVA LÓGICA PARA NOMBRE DE USUARIO ▼▼▼ ---
+        // --- LÓGICA PARA NOMBRE DE USUARIO ---
         if (e.target.id === 'username-form') {
             e.preventDefault();
             const usernameForm = e.target;
@@ -261,6 +318,58 @@ export function initSettingsManager() {
                     window.showAlert(result.message || 'Nombre de usuario actualizado.', 'success');
                     // Recargar la página para ver todos los cambios (header, alt text, etc.)
                     // Sigue el mismo patrón que el éxito del avatar.
+                    setTimeout(() => location.reload(), 1500); 
+                } else {
+                    window.showAlert(result.message || 'Error desconocido al guardar.', 'error');
+                    toggleButtonSpinner(saveTrigger, 'Guardar', false);
+                }
+
+            } catch (error) {
+                window.showAlert(error.message, 'error');
+                toggleButtonSpinner(saveTrigger, 'Guardar', false);
+            }
+        }
+        
+        // --- LÓGICA PARA EMAIL ---
+        if (e.target.id === 'email-form') {
+            e.preventDefault();
+            const emailForm = e.target;
+            const saveTrigger = document.getElementById('email-save-trigger');
+            const inputElement = document.getElementById('email-input');
+            const newEmail = inputElement.value;
+
+            // Validación de email en cliente (regex simple)
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(newEmail)) {
+                window.showAlert('Por favor, introduce un correo electrónico válido.', 'error');
+                return;
+            }
+            
+            // Validación de dominios en cliente (copia la lógica del servidor)
+            const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i;
+            if (!allowedDomains.test(newEmail)) {
+                 window.showAlert('Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.', 'error');
+                return;
+            }
+
+            toggleButtonSpinner(saveTrigger, 'Guardar', true);
+
+            try {
+                const formData = new FormData(emailForm);
+                formData.append('action', 'update-email'); 
+
+                const response = await fetch(SETTINGS_ENDPOINT, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) throw new Error('Error de conexión con el servidor.');
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.showAlert(result.message || 'Correo actualizado.', 'success');
+                    // Recargar la página para que se actualice en todos lados
                     setTimeout(() => location.reload(), 1500); 
                 } else {
                     window.showAlert(result.message || 'Error desconocido al guardar.', 'error');

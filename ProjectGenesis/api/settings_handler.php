@@ -188,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // --- ▼▼▼ NUEVA ACCIÓN: ACTUALIZAR NOMBRE DE USUARIO ▼▼▼ ---
+        // --- ACCIÓN: ACTUALIZAR NOMBRE DE USUARIO ---
         elseif ($action === 'update-username') {
             try {
                 $newUsername = trim($_POST['username'] ?? '');
@@ -221,6 +221,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = 'Nombre de usuario actualizado con éxito.';
                 $response['newUsername'] = $newUsername;
 
+            } catch (Exception $e) {
+                $response['message'] = $e->getMessage();
+            }
+        }
+        
+        // --- ▼▼▼ NUEVA ACCIÓN: ACTUALIZAR EMAIL ▼▼▼ ---
+        elseif ($action === 'update-email') {
+            try {
+                $newEmail = trim($_POST['email'] ?? '');
+                
+                // 1. Validar formato de email
+                if (empty($newEmail) || !filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
+                    throw new Exception('El formato de correo no es válido.');
+                }
+        
+                // 2. Validar dominio (misma lógica que en el registro)
+                $allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com'];
+                $emailDomain = substr($newEmail, strrpos($newEmail, '@') + 1);
+                
+                if (!in_array(strtolower($emailDomain), $allowedDomains)) {
+                    throw new Exception('Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.');
+                }
+        
+                // 3. Validar que el email no esté en uso POR OTRO USUARIO
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+                $stmt->execute([$newEmail, $userId]);
+                
+                if ($stmt->fetch()) {
+                    throw new Exception('Ese correo electrónico ya está en uso.');
+                }
+        
+                // 4. Actualizar la base de datos
+                $stmt = $pdo->prepare("UPDATE users SET email = ? WHERE id = ?");
+                $stmt->execute([$newEmail, $userId]);
+        
+                // 5. Actualizar la sesión
+                $_SESSION['email'] = $newEmail;
+        
+                $response['success'] = true;
+                $response['message'] = 'Correo electrónico actualizado con éxito.';
+                $response['newEmail'] = $newEmail;
+        
             } catch (Exception $e) {
                 $response['message'] = $e->getMessage();
             }
