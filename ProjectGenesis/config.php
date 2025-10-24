@@ -1,8 +1,29 @@
 <?php
 // /ProjectGenesis/config.php
 
+// --- ▼▼▼ SOLUCIÓN DE SEGURIDAD: CONFIGURAR COOKIES DE SESIÓN ▼▼▼ ---
+
+// 1. Usar solo cookies (previene ataques de fijación de sesión)
+ini_set('session.use_only_cookies', 1);
+
+// 2. Cookie HttpOnly (previene acceso por JavaScript - XSS)
+// Esta es la línea clave que soluciona el problema que mencionaste.
+ini_set('session.cookie_httponly', 1);
+
+// 3. Cookie Secure (solo enviar sobre HTTPS)
+// ¡IMPORTANTE! Descomenta esto en producción cuando tengas SSL/HTTPS.
+// En un entorno 'localhost' sin HTTPS, dejarlo activo puede impedir el login.
+// ini_set('session.cookie_secure', 1);
+
+// 4. Cookie SameSite (previene CSRF)
+// 'Lax' es un estándar moderno y balanceado.
+ini_set('session.cookie_samesite', 'Lax');
+
+// --- ▲▲▲ FIN DE LA SOLUCIÓN DE SEGURIDAD ▲▲▲ ---
+
+
 // 1. INICIAR LA SESIÓN
-// Esto debe ir ANTES de CUALQUIER salida HTML.
+// Ahora se inicia después de la configuración segura.
 session_start();
 
 // --- ¡¡¡ESTA ES LA LÍNEA CORREGIDA!!! ---
