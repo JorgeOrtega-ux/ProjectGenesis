@@ -1,8 +1,9 @@
 /* ====================================== */
 /* ========= AUTH-MANAGER.JS ============ */
 /* ====================================== */
+import { callAuthApi } from './api-service.js'; // <-- AÑADIDO
 
-const AUTH_ENDPOINT = `${window.projectBasePath}/api/auth_handler.php`;
+// const AUTH_ENDPOINT = ...; // <-- ELIMINADO
 
 async function handleRegistrationSubmit(e) {
     e.preventDefault();
@@ -12,36 +13,22 @@ async function handleRegistrationSubmit(e) {
 
     button.disabled = true;
     button.textContent = 'Verificando...';
-    // errorDiv.style.display = 'none'; // <-- Ya no es necesario con la nueva función
 
-    try {
-        const formData = new FormData(form);
-        formData.append('action', 'register-verify');
+    const formData = new FormData(form);
+    formData.append('action', 'register-verify');
 
-        const response = await fetch(AUTH_ENDPOINT, {
-            method: 'POST',
-            body: formData,
-        });
+    // --- LÓGICA DE FETCH REFACTORIZADA ---
+    const result = await callAuthApi(formData);
 
-        if (!response.ok) {
-            throw new Error('Error en la respuesta del servidor.');
-        }
-
-        const result = await response.json();
-
-        if (result.success) {
-            window.location.href = window.projectBasePath + '/';
-        } else {
-            showAuthError(errorDiv, result.message || 'Ha ocurrido un error.');
-        }
-
-    } catch (error) {
-        console.error('Error en fetch:', error);
-        showAuthError(errorDiv, 'No se pudo conectar con el servidor.');
-    } finally {
-        button.disabled = false;
-        button.textContent = 'Verificar y Crear Cuenta';
+    if (result.success) {
+        window.location.href = window.projectBasePath + '/';
+    } else {
+        showAuthError(errorDiv, result.message || 'Ha ocurrido un error.');
     }
+    // --- FIN DEL REFACTOR ---
+
+    button.disabled = false;
+    button.textContent = 'Verificar y Crear Cuenta';
 }
 
 async function handleResetSubmit(e) {
@@ -64,38 +51,25 @@ async function handleResetSubmit(e) {
 
     button.disabled = true;
     button.textContent = 'Guardando...';
-    // errorDiv.style.display = 'none'; // <-- Ya no es necesario
 
-    try {
-        const formData = new FormData(form);
-        formData.append('action', 'reset-update-password');
+    const formData = new FormData(form);
+    formData.append('action', 'reset-update-password');
 
-        const response = await fetch(AUTH_ENDPOINT, {
-            method: 'POST',
-            body: formData,
-        });
+    // --- LÓGICA DE FETCH REFACTORIZADA ---
+    const result = await callAuthApi(formData);
 
-        if (!response.ok) throw new Error('Error en la respuesta del servidor.');
-
-        const result = await response.json();
-
-        if (result.success) {
-            // alert(result.message || '¡Contraseña actualizada! Ya puedes iniciar sesión.'); // <-- Reemplazado
-            window.showAlert(result.message || '¡Contraseña actualizada!', 'success'); // <-- NUEVO
-            setTimeout(() => {
-                window.location.href = window.projectBasePath + '/login';
-            }, 2000); // Dar tiempo a leer la alerta
-        } else {
-            showAuthError(errorDiv, result.message || 'Ha ocurrido un error.');
-        }
-
-    } catch (error) {
-        console.error('Error en fetch:', error);
-        showAuthError(errorDiv, 'No se pudo conectar con el servidor.');
-    } finally {
-        button.disabled = false;
-        button.textContent = 'Guardar y Continuar';
+    if (result.success) {
+        window.showAlert(result.message || '¡Contraseña actualizada!', 'success');
+        setTimeout(() => {
+            window.location.href = window.projectBasePath + '/login';
+        }, 2000);
+    } else {
+        showAuthError(errorDiv, result.message || 'Ha ocurrido un error.');
     }
+    // --- FIN DEL REFACTOR ---
+
+    button.disabled = false;
+    button.textContent = 'Guardar y Continuar';
 }
 
 async function handleLoginFinalSubmit(e) {
@@ -106,50 +80,30 @@ async function handleLoginFinalSubmit(e) {
 
     button.disabled = true;
     button.textContent = 'Verificando...';
-    // errorDiv.style.display = 'none'; // <-- Ya no es necesario
 
-    try {
-        const formData = new FormData(form);
-        formData.append('action', 'login-verify-2fa');
+    const formData = new FormData(form);
+    formData.append('action', 'login-verify-2fa');
 
-        const response = await fetch(AUTH_ENDPOINT, {
-            method: 'POST',
-            body: formData,
-        });
+    // --- LÓGICA DE FETCH REFACTORIZADA ---
+    const result = await callAuthApi(formData);
 
-        if (!response.ok) {
-            throw new Error('Error en la respuesta del servidor.');
-        }
-
-        const result = await response.json();
-
-        if (result.success) {
-            window.location.href = window.projectBasePath + '/';
-        } else {
-            showAuthError(errorDiv, result.message || 'Ha ocurrido un error.');
-        }
-
-    } catch (error) {
-        console.error('Error en fetch:', error);
-        showAuthError(errorDiv, 'No se pudo conectar con el servidor.');
-    } finally {
-        button.disabled = false;
-        button.textContent = 'Verificar e Ingresar';
+    if (result.success) {
+        window.location.href = window.projectBasePath + '/';
+    } else {
+        showAuthError(errorDiv, result.message || 'Ha ocurrido un error.');
     }
+    // --- FIN DEL REFACTOR ---
+
+    button.disabled = false;
+    button.textContent = 'Verificar e Ingresar';
 }
 
-// --- ▼▼▼ FUNCIÓN MODIFICADA ▼▼▼ ---
 function showAuthError(errorDiv, message) {
-    // Oculta el div de error del formulario (si existe)
     if (errorDiv) {
-        // errorDiv.textContent = message; // Ya no es necesario
-        errorDiv.style.display = 'none'; // Nos aseguramos que esté oculto
+        errorDiv.style.display = 'none';
     }
-    // Muestra la nueva alerta global
     window.showAlert(message, 'error');
 }
-// --- ▲▲▲ FIN FUNCIÓN MODIFICADA ▲▲▲ ---
-
 
 function initPasswordToggles() {
     document.body.addEventListener('click', e => {
@@ -195,13 +149,12 @@ function initRegisterWizard() {
             if (prevStepEl) {
                 currentStepEl.style.display = 'none';
                 prevStepEl.style.display = 'block';
-                errorDiv.style.display = 'none'; // Ocultar error al cambiar de paso
+                errorDiv.style.display = 'none';
             }
             return;
         }
 
         if (action === 'next-step') {
-
             let isValid = true;
             let clientErrorMessage = 'Por favor, completa todos los campos correctamente.';
 
@@ -234,71 +187,53 @@ function initRegisterWizard() {
             }
 
             if (!isValid) {
-                showAuthError(errorDiv, clientErrorMessage); // Usará la nueva alerta
+                showAuthError(errorDiv, clientErrorMessage);
                 return;
             }
 
-            errorDiv.style.display = 'none'; // Ocultar error en-formulario
-
+            errorDiv.style.display = 'none';
             button.disabled = true;
             button.textContent = 'Verificando...';
 
-            try {
-                const formData = new FormData(registerForm);
-                let fetchAction = '';
+            // --- LÓGICA DE FETCH REFACTORIZADA ---
+            const formData = new FormData(registerForm);
+            let fetchAction = '';
 
-                if (currentStep === 1) {
-                    fetchAction = 'register-check-email';
-                }
-                else if (currentStep === 2) {
-                    fetchAction = 'register-check-username-and-generate-code';
-                }
-
-                formData.append('action', fetchAction);
-
-                const response = await fetch(AUTH_ENDPOINT, {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (!response.ok) throw new Error('Error de servidor.');
-
-                const result = await response.json();
-
-                if (result.success) {
-                    const nextStepEl = registerForm.querySelector(`[data-step="${currentStep + 1}"]`);
-                    if (nextStepEl) {
-                        currentStepEl.style.display = 'none';
-                        nextStepEl.style.display = 'block';
-                    }
-                } else {
-                    showAuthError(errorDiv, result.message || 'Error desconocido.');
-                }
-
-            } catch (error) {
-                showAuthError(errorDiv, 'No se pudo conectar con el servidor.');
-            } finally {
-                button.disabled = false;
-                button.textContent = 'Continuar';
+            if (currentStep === 1) {
+                fetchAction = 'register-check-email';
             }
+            else if (currentStep === 2) {
+                fetchAction = 'register-check-username-and-generate-code';
+            }
+            formData.append('action', fetchAction);
+
+            const result = await callAuthApi(formData);
+
+            if (result.success) {
+                const nextStepEl = registerForm.querySelector(`[data-step="${currentStep + 1}"]`);
+                if (nextStepEl) {
+                    currentStepEl.style.display = 'none';
+                    nextStepEl.style.display = 'block';
+                }
+            } else {
+                showAuthError(errorDiv, result.message || 'Error desconocido.');
+            }
+            // --- FIN DEL REFACTOR ---
+
+            button.disabled = false;
+            button.textContent = 'Continuar';
         }
     });
 
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
     document.body.addEventListener('input', e => {
         const isRegisterCode = (e.target.id === 'register-code' && e.target.closest('#register-form'));
         const isResetCode = (e.target.id === 'reset-code' && e.target.closest('#reset-form'));
         const isLoginCode = (e.target.id === 'login-code' && e.target.closest('#login-form'));
-        // Añadimos el nuevo ID del modal de settings
         const isSettingsEmailCode = (e.target.id === 'email-verify-code' && e.target.closest('#email-verify-modal'));
 
-        // Actualizamos la condición para incluir el nuevo campo
         if (isRegisterCode || isResetCode || isLoginCode || isSettingsEmailCode) {
-
             let input = e.target.value.replace(/[^0-9a-zA-Z]/g, '');
-
             input = input.toUpperCase();
-
             input = input.substring(0, 12);
 
             let formatted = '';
@@ -308,11 +243,9 @@ function initRegisterWizard() {
                 }
                 formatted += input[i];
             }
-
             e.target.value = formatted;
         }
     });
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 }
 
 function initResetWizard() {
@@ -344,7 +277,6 @@ function initResetWizard() {
         }
 
         if (action === 'next-step') {
-
             let isValid = true;
             let clientErrorMessage = 'Por favor, completa todos los campos.';
 
@@ -369,52 +301,39 @@ function initResetWizard() {
             }
 
             errorDiv.style.display = 'none';
-
             button.disabled = true;
             button.textContent = 'Verificando...';
 
-            try {
-                const formData = new FormData(resetForm);
-                let fetchAction = '';
+            // --- LÓGICA DE FETCH REFACTORIZADA ---
+            const formData = new FormData(resetForm);
+            let fetchAction = '';
 
-                if (currentStep === 1) {
-                    fetchAction = 'reset-check-email';
-                }
-                else if (currentStep === 2) {
-                    fetchAction = 'reset-check-code';
-                }
-
-                formData.append('action', fetchAction);
-
-                const response = await fetch(AUTH_ENDPOINT, {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (!response.ok) throw new Error('Error de servidor.');
-
-                const result = await response.json();
-
-                if (result.success) {
-                    const nextStepEl = resetForm.querySelector(`[data-step="${currentStep + 1}"]`);
-                    if (nextStepEl) {
-                        currentStepEl.style.display = 'none';
-                        nextStepEl.style.display = 'block';
-                    }
-                    if (currentStep === 1 && result.message) {
-                        // alert(result.message); // <-- Reemplazado
-                        window.showAlert(result.message, 'info'); // <-- NUEVO
-                    }
-                } else {
-                    showAuthError(errorDiv, result.message || 'Error desconocido.');
-                }
-
-            } catch (error) {
-                showAuthError(errorDiv, 'No se pudo conectar con el servidor.');
-            } finally {
-                button.disabled = false;
-                button.textContent = (currentStep === 1) ? 'Enviar Código' : 'Verificar';
+            if (currentStep === 1) {
+                fetchAction = 'reset-check-email';
             }
+            else if (currentStep === 2) {
+                fetchAction = 'reset-check-code';
+            }
+            formData.append('action', fetchAction);
+
+            const result = await callAuthApi(formData);
+
+            if (result.success) {
+                const nextStepEl = resetForm.querySelector(`[data-step="${currentStep + 1}"]`);
+                if (nextStepEl) {
+                    currentStepEl.style.display = 'none';
+                    nextStepEl.style.display = 'block';
+                }
+                if (currentStep === 1 && result.message) {
+                    window.showAlert(result.message, 'info');
+                }
+            } else {
+                showAuthError(errorDiv, result.message || 'Error desconocido.');
+            }
+            // --- FIN DEL REFACTOR ---
+
+            button.disabled = false;
+            button.textContent = (currentStep === 1) ? 'Enviar Código' : 'Verificar';
         }
     });
 }
@@ -448,7 +367,6 @@ function initLoginWizard() {
         }
 
         if (action === 'next-step') {
-
             const emailInput = currentStepEl.querySelector('#login-email');
             const passwordInput = currentStepEl.querySelector('#login-password');
             if (!emailInput.value || !passwordInput.value) {
@@ -460,39 +378,29 @@ function initLoginWizard() {
             button.disabled = true;
             button.textContent = 'Procesando...';
 
-            try {
-                const formData = new FormData(loginForm);
-                formData.append('action', 'login-check-credentials');
+            // --- LÓGICA DE FETCH REFACTORIZADA ---
+            const formData = new FormData(loginForm);
+            formData.append('action', 'login-check-credentials');
 
-                const response = await fetch(AUTH_ENDPOINT, {
-                    method: 'POST',
-                    body: formData,
-                });
+            const result = await callAuthApi(formData);
 
-                if (!response.ok) throw new Error('Error de servidor.');
-
-                const result = await response.json();
-
-                if (result.success) {
-                    if (result.is_2fa_required) {
-                        const nextStepEl = loginForm.querySelector(`[data-step="${currentStep + 1}"]`);
-                        if (nextStepEl) {
-                            currentStepEl.style.display = 'none';
-                            nextStepEl.style.display = 'block';
-                        }
-                    } else {
-                        window.location.href = window.projectBasePath + '/';
+            if (result.success) {
+                if (result.is_2fa_required) {
+                    const nextStepEl = loginForm.querySelector(`[data-step="${currentStep + 1}"]`);
+                    if (nextStepEl) {
+                        currentStepEl.style.display = 'none';
+                        nextStepEl.style.display = 'block';
                     }
                 } else {
-                    showAuthError(errorDiv, result.message || 'Error desconocido.');
+                    window.location.href = window.projectBasePath + '/';
                 }
-
-            } catch (error) {
-                showAuthError(errorDiv, 'No se pudo conectar con el servidor.');
-            } finally {
-                button.disabled = false;
-                button.textContent = 'Continuar';
+            } else {
+                showAuthError(errorDiv, result.message || 'Error desconocido.');
             }
+            // --- FIN DEL REFACTOR ---
+
+            button.disabled = false;
+            button.textContent = 'Continuar';
         }
     });
 }
