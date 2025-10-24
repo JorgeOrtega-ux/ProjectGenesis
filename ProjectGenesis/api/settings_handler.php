@@ -343,18 +343,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // --- ACCIÓN: VERIFICAR CÓDIGO PARA CAMBIAR EMAIL ---
+        // --- ACCIÓN: VERIFICAR CÓDIGO PARA CAMBIAR EMAIL (MODIFICADA) ---
         elseif ($action === 'verify-email-change-code') {
             try {
                 $submittedCode = str_replace('-', '', $_POST['verification_code'] ?? '');
-                $identifier = $userId;
+                $identifier = $userId; // $userId is from session
                 $codeType = 'email_change';
+                
+                // --- ▼▼▼ INICIO DE LA LÓGICA DE RATE LIMIT ▼▼▼ ---
+                $ip = getIpAddress(); // Obtener IP (de config.php)
+
+                // 1. VERIFICAR BLOQUEO
+                // (Usamos el $identifier = $userId para el log)
+                if (checkLockStatus($pdo, $identifier, $ip)) {
+                    throw new Exception('Demasiados intentos fallidos. Por favor, inténtalo de nuevo en ' . LOCKOUT_TIME_MINUTES . ' minutos.');
+                }
+                // --- ▲▲▲ FIN DE LA LÓGICA DE RATE LIMIT ▲▲▲ ---
+
 
                 if (empty($submittedCode)) {
                     throw new Exception('Por favor, introduce el código de verificación.');
                 }
 
-                // 1. Buscar el código válido (15 min de validez)
+                // 2. Buscar el código válido (15 min de validez)
                 $stmt = $pdo->prepare(
                     "SELECT * FROM verification_codes 
                      WHERE identifier = ? 
@@ -364,12 +375,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$identifier, $codeType]);
                 $codeData = $stmt->fetch();
 
-                // 2. Comparar
+                // 3. Comparar
                 if (!$codeData || strtolower($codeData['code']) !== strtolower($submittedCode)) {
+                    
+                    // --- ▼▼▼ INICIO DE LA LÓGICA DE RATE LIMIT ▼▼▼ ---
+                    // 3.5 LOG DE INTENTO FALLIDO
+                    logFailedAttempt($pdo, $identifier, $ip, 'email_change_fail');
+                    // --- ▲▲▲ FIN DE LA LÓGICA DE RATE LIMIT ▲▲▲ ---
+                    
                     throw new Exception('El código es incorrecto o ha expirado.');
                 }
 
-                // 3. ¡Éxito! Limpiar el código usado
+                // 4. ¡Éxito!
+                
+                // --- ▼▼▼ INICIO DE LA LÓGICA DE RATE LIMIT ▼▼▼ ---
+                // 4.1 LIMPIAR INTENTOS FALLIDOS (al tener éxito)
+                clearFailedAttempts($pdo, $identifier);
+                // --- ▲▲▲ FIN DE LA LÓGICA DE RATE LIMIT ▲▲▲ ---
+                
+                // 4.2 Limpiar el código usado
                 $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE id = ?");
                 $stmt->execute([$codeData['id']]);
 
