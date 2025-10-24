@@ -9,34 +9,61 @@
         </div>
 
         <?php
-        // --- NUEVO BLOQUE PHP ---
-        // Lógica para obtener la URL de la imagen de perfil
+        // --- BLOQUE PHP MEJORADO ---
         $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
         $profileImageUrl = $_SESSION['profile_image_url'] ?? $defaultAvatar;
         if (empty($profileImageUrl)) {
             $profileImageUrl = $defaultAvatar;
         }
+        
+        // Comprobar si la URL es un avatar por defecto (generado) o uno subido
+        $isDefaultAvatar = strpos($profileImageUrl, 'ui-avatars.com') !== false || 
+                           strpos($profileImageUrl, 'user-' . $_SESSION['user_id'] . '.png') !== false;
+
         $usernameForAlt = $_SESSION['username'] ?? 'Usuario';
         $userRole = $_SESSION['role'] ?? 'user';
-        // --- FIN DEL NUEVO BLOQUE ---
+        // --- FIN DEL BLOQUE ---
         ?>
         
-        <div class="settings-card">
-            <div class="settings-card-left">
-                <div class="settings-avatar" data-role="<?php echo htmlspecialchars($userRole); ?>">
-                    <img src="<?php echo htmlspecialchars($profileImageUrl); ?>" 
-                         alt="Avatar de <?php echo htmlspecialchars($usernameForAlt); ?>"
-                         class="settings-avatar-image">
-                </div>
-                <div class="settings-text-content">
-                    <h2 class="settings-text-title">Foto de perfil</h2>
-                    <p class="settings-text-description">Esto ayudará a tus compañeros a reconocerte.</p>
-                </div>
-            </div>
+        <form id="avatar-form" onsubmit="event.preventDefault();" novalidate>
             
-            <div class="settings-card-right">
-                <button type="button" class="settings-button">Subir foto</button>
+            <?php outputCsrfInput(); ?>
+            <input type="file" id="avatar-upload-input" name="avatar" class="visually-hidden" accept="image/png, image/jpeg">
+            
+            <div class="settings-card-avatar-error" id="avatar-error" style="display: none;"></div>
+
+            <div class="settings-card">
+                <div class="settings-card-left">
+                    <div class="settings-avatar" data-role="<?php echo htmlspecialchars($userRole); ?>" id="avatar-preview-container">
+                        <img src="<?php echo htmlspecialchars($profileImageUrl); ?>" 
+                             alt="Avatar de <?php echo htmlspecialchars($usernameForAlt); ?>"
+                             class="settings-avatar-image"
+                             id="avatar-preview-image">
+                    </div>
+                    <div class="settings-text-content">
+                        <h2 class="settings-text-title">Foto de perfil</h2>
+                        <p class="settings-text-description">Esto ayudará a tus compañeros a reconocerte.</p>
+                    </div>
+                </div>
+                
+                <div class="settings-card-right">
+                    
+                    <div class="settings-card-right-actions" id="avatar-actions-default" <?php echo $isDefaultAvatar ? '' : 'style="display: none;"'; ?>>
+                        <button type="button" class="settings-button" id="avatar-upload-trigger">Subir foto</button>
+                    </div>
+
+                    <div class="settings-card-right-actions" id="avatar-actions-custom" <?php echo !$isDefaultAvatar ? '' : 'style="display: none;"'; ?>>
+                        <button type="button" class="settings-button danger" id="avatar-remove-trigger">Eliminar foto</button>
+                        <button type="button" class="settings-button" id="avatar-change-trigger">Cambiar foto</button>
+                    </div>
+
+                    <div class="settings-card-right-actions" id="avatar-actions-preview" style="display: none;">
+                        <button type="button" class="settings-button" id="avatar-cancel-trigger">Cancelar</button>
+                        <button type="submit" class="settings-button" id="avatar-save-trigger">Guardar</button>
+                    </div>
+
+                </div>
             </div>
-        </div>
+        </form>
         </div>
 </div>

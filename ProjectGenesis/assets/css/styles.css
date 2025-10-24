@@ -588,13 +588,60 @@ body {
 /* ====================================== */
 /* ======== SETTINGS PAGE STYLES ======== */
 /* ====================================== */
+/* ... (estilos existentes) ... */
+
+/* --- ▲▲▲ FIN DE ESTILOS NUEVOS ▲▲▲ --- */
+
+/* ▼▼▼ NUEVOS ESTILOS PARA AVATAR SETTINGS ▼▼▼ */
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+.settings-card-right-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    flex-shrink: 0; /* Evita que se encojan en flex */
+}
+
+/* Estilo para el botón de "Eliminar" */
+.settings-button.danger {
+    color: #c62828; /* Rojo oscuro */
+    border-color: #ef9a9a; /* Borde rojo claro */
+}
+
+.settings-button.danger:hover {
+    background-color: #fbebee; /* Fondo rojo muy claro */
+    color: #c62828;
+    border-color: #c62828;
+}
+
+/* Contenedor de error de avatar */
+.settings-card-avatar-error {
+    padding: 12px;
+    background-color: #fbebee; 
+    color: #c62828; 
+    border: 1px solid #ef9a9a;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 16px; /* Separación de la tarjeta */
+    display: none; /* Oculto por defecto */
+}
 
 .settings-wrapper {
     width: 100%;
     max-width: 700px; /* Ancho máximo ajustado (antes 960px) */
     height: 100%; /* Alto añadido */
     margin: 0 auto;
-    padding: 24px 32px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -625,7 +672,6 @@ body {
     border-radius: 12px;
     padding: 24px;
     background-color: #ffffff;
-    margin-bottom: 16px; /* Para futura compatibilidad con contenido debajo */
 }/* ... (estilos existentes de settings) ... */
 
 .settings-header-card {
@@ -633,7 +679,6 @@ body {
     border-radius: 12px;
     padding: 24px;
     background-color: #ffffff;
-    margin-bottom: 16px; 
 }
 
 /* --- ▼▼▼ ESTILOS NUEVOS AÑADIDOS ▼▼▼ --- */
@@ -643,10 +688,10 @@ body {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 8px;
     border: 1px solid #00000020;
     border-radius: 12px;
-    padding: 16px;
+    padding: 24px;
     background-color: #ffffff;
 }
 
