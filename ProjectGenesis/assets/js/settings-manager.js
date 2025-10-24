@@ -4,22 +4,27 @@
 
 const SETTINGS_ENDPOINT = `${window.projectBasePath}/api/settings_handler.php`;
 
-// --- Funciones de Ayuda (sin cambios) ---
+// --- ▼▼▼ FUNCIONES MODIFICADAS ▼▼▼ ---
 
 function showAvatarError(message) {
+    // Oculta el div de error del formulario
     const errorDiv = document.getElementById('avatar-error');
     if (errorDiv) {
-        errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
+        // errorDiv.textContent = message; // Ya no es necesario
+        errorDiv.style.display = 'none'; // Nos aseguramos que esté oculto
     }
+    // Muestra la nueva alerta global
+    window.showAlert(message, 'error');
 }
 
 function hideAvatarError() {
+    // Esta función ahora solo oculta el div por si acaso
     const errorDiv = document.getElementById('avatar-error');
     if (errorDiv) {
         errorDiv.style.display = 'none';
     }
 }
+// --- ▲▲▲ FIN FUNCIONES MODIFICADAS ▲▲▲ ---
 
 function toggleButtonSpinner(button, text, isLoading) {
     if (!button) return;
@@ -48,7 +53,7 @@ export function initSettingsManager() {
         // Click en "Subir foto" o "Cambiar foto"
         if (e.target.closest('#avatar-upload-trigger') || e.target.closest('#avatar-change-trigger')) {
             e.preventDefault();
-            hideAvatarError();
+            hideAvatarError(); // Oculta errores antiguos
             if (fileInput) {
                 fileInput.click();
             }
@@ -68,7 +73,7 @@ export function initSettingsManager() {
             if (avatarForm) {
                 avatarForm.reset(); // <-- MODIFICADO: Ahora sí funciona
             }
-            hideAvatarError();
+            hideAvatarError(); // Oculta errores
 
             // Restaurar botones
             document.getElementById('avatar-actions-preview').style.display = 'none';
@@ -114,13 +119,15 @@ export function initSettingsManager() {
 
                 const result = await response.json();
                 if (result.success) {
-                    location.reload();
+                    window.showAlert(result.message || 'Avatar eliminado.', 'success'); // <-- NUEVO
+                    // Recargar la página para ver todos los cambios (avatar en header, etc.)
+                    setTimeout(() => location.reload(), 1500); // Dar tiempo a leer
                 } else {
-                    showAvatarError(result.message || 'Error desconocido al eliminar.');
+                    showAvatarError(result.message || 'Error desconocido al eliminar.'); // Usará la nueva alerta
                     toggleButtonSpinner(removeTrigger, 'Eliminar foto', false);
                 }
             } catch (error) {
-                showAvatarError(error.message);
+                showAvatarError(error.message); // Usará la nueva alerta
                 toggleButtonSpinner(removeTrigger, 'Eliminar foto', false);
             }
         }
@@ -137,7 +144,7 @@ export function initSettingsManager() {
             hideAvatarError();
             
             if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-                showAvatarError('Por favor, selecciona un archivo primero.');
+                showAvatarError('Por favor, selecciona un archivo primero.'); // Usará la nueva alerta
                 return;
             }
 
@@ -156,13 +163,15 @@ export function initSettingsManager() {
 
                 const result = await response.json();
                 if (result.success) {
-                    location.reload();
+                    window.showAlert(result.message || 'Avatar actualizado.', 'success'); // <-- NUEVO
+                    // Recargar la página para ver todos los cambios
+                    setTimeout(() => location.reload(), 1500); // Dar tiempo a leer
                 } else {
-                    showAvatarError(result.message || 'Error desconocido al guardar.');
+                    showAvatarError(result.message || 'Error desconocido al guardar.'); // Usará la nueva alerta
                     toggleButtonSpinner(saveTrigger, 'Guardar', false);
                 }
             } catch (error) {
-                showAvatarError(error.message);
+                showAvatarError(error.message); // Usará la nueva alerta
                 toggleButtonSpinner(saveTrigger, 'Guardar', false);
             }
         }
@@ -179,12 +188,12 @@ export function initSettingsManager() {
 
             // ... (validaciones de archivo) ...
             if (!['image/png', 'image/jpeg'].includes(file.type)) {
-                showAvatarError('Formato de archivo no válido (solo PNG o JPEG).');
+                showAvatarError('Formato de archivo no válido (solo PNG o JPEG).'); // Usará la nueva alerta
                 fileInput.form.reset();
                 return;
             }
             if (file.size > 2 * 1024 * 1024) {
-                showAvatarError('El archivo es demasiado grande (máx 2MB).');
+                showAvatarError('El archivo es demasiado grande (máx 2MB).'); // Usará la nueva alerta
                 fileInput.form.reset();
                 return;
             }

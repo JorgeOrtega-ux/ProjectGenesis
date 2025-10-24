@@ -837,4 +837,115 @@ body {
     .general-content {
         border-radius: 0;
     }
+}/* ====================================== */
+/* === ▼▼▼ NUEVOS ESTILOS DE ALERTAS ▼▼▼ === */
+/* ====================================== */
+
+@keyframes alertFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
+
+@keyframes alertFadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+}
+
+#alert-container {
+    position: fixed;
+    bottom: 12px; /* Ajustado desde 12px */
+    left: 12px;  /* Ajustado desde 12px */
+    width: 325px;
+    z-index: 2000; /* Alto para estar sobre todo */
+    display: flex;
+    flex-direction: column-reverse; /* Nuevas alertas aparecen abajo y empujan las viejas hacia arriba */
+    gap: 8px;
+}
+
+.alert-toast {
+    width: 100%;
+    min-height: 48px; /* Altura mínima de 48px */
+    background-color: #333; /* Color oscuro por defecto */
+    color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px #00000040;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    
+    /* Animación */
+    opacity: 0;
+    animation-duration: 0.3s;
+    animation-timing-function: ease-out;
+    animation-fill-mode: forwards;
+}
+
+.alert-toast.enter {
+    animation-name: alertFadeIn;
+}
+
+.alert-toast.exit {
+    animation-name: alertFadeOut;
+}
+
+.alert-toast-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.alert-toast-icon .material-symbols-rounded {
+    font-size: 20px;
+}
+
+.alert-toast-message {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.4;
+    word-break: break-word; /* Para mensajes largos */
+}
+
+/* --- Tipos de Alerta --- */
+
+/* info (default) */
+.alert-toast.alert-type-info {
+    background-color: #333;
+    color: #ffffff;
+}
+
+/* success */
+.alert-toast.alert-type-success {
+    background-color: #28a745; /* Verde */
+    color: #ffffff;
+}
+
+/* error */
+.alert-toast.alert-type-error {
+    background-color: #c62828; /* Rojo oscuro */
+    color: #ffffff;
+}
+
+/* Ajuste para móviles pequeños */
+@media (max-width: 400px) {
+    #alert-container {
+        left: 12px;
+        right: 12px;
+        width: auto; /* Ancho completo menos padding */
+    }
+}
+
+/* === ▲▲▲ FIN DE NUEVOS ESTILOS DE ALERTAS ▲▲▲ === */

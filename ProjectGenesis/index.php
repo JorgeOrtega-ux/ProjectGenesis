@@ -162,6 +162,8 @@ if ($path === '/settings') {
         // --- FIN DE LA NUEVA MODIFICACIÓN ---
     </script>
     <script type="module" src="<?php echo $basePath; ?>/assets/js/app-init.js"></script>
-</body>
+    
+    <div id="alert-container"></div>
+    </body>
 
 </html>

@@ -12,7 +12,7 @@ async function handleRegistrationSubmit(e) {
 
     button.disabled = true;
     button.textContent = 'Verificando...';
-    errorDiv.style.display = 'none';
+    // errorDiv.style.display = 'none'; // <-- Ya no es necesario con la nueva función
 
     try {
         const formData = new FormData(form);
@@ -64,7 +64,7 @@ async function handleResetSubmit(e) {
 
     button.disabled = true;
     button.textContent = 'Guardando...';
-    errorDiv.style.display = 'none';
+    // errorDiv.style.display = 'none'; // <-- Ya no es necesario
 
     try {
         const formData = new FormData(form);
@@ -80,8 +80,11 @@ async function handleResetSubmit(e) {
         const result = await response.json();
 
         if (result.success) {
-            alert(result.message || '¡Contraseña actualizada! Ya puedes iniciar sesión.');
-            window.location.href = window.projectBasePath + '/login';
+            // alert(result.message || '¡Contraseña actualizada! Ya puedes iniciar sesión.'); // <-- Reemplazado
+            window.showAlert(result.message || '¡Contraseña actualizada!', 'success'); // <-- NUEVO
+            setTimeout(() => {
+                window.location.href = window.projectBasePath + '/login';
+            }, 2000); // Dar tiempo a leer la alerta
         } else {
             showAuthError(errorDiv, result.message || 'Ha ocurrido un error.');
         }
@@ -103,7 +106,7 @@ async function handleLoginFinalSubmit(e) {
 
     button.disabled = true;
     button.textContent = 'Verificando...';
-    errorDiv.style.display = 'none';
+    // errorDiv.style.display = 'none'; // <-- Ya no es necesario
 
     try {
         const formData = new FormData(form);
@@ -135,12 +138,18 @@ async function handleLoginFinalSubmit(e) {
     }
 }
 
+// --- ▼▼▼ FUNCIÓN MODIFICADA ▼▼▼ ---
 function showAuthError(errorDiv, message) {
+    // Oculta el div de error del formulario (si existe)
     if (errorDiv) {
-        errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
+        // errorDiv.textContent = message; // Ya no es necesario
+        errorDiv.style.display = 'none'; // Nos aseguramos que esté oculto
     }
+    // Muestra la nueva alerta global
+    window.showAlert(message, 'error');
 }
+// --- ▲▲▲ FIN FUNCIÓN MODIFICADA ▲▲▲ ---
+
 
 function initPasswordToggles() {
     document.body.addEventListener('click', e => {
@@ -186,7 +195,7 @@ function initRegisterWizard() {
             if (prevStepEl) {
                 currentStepEl.style.display = 'none';
                 prevStepEl.style.display = 'block';
-                errorDiv.style.display = 'none';
+                errorDiv.style.display = 'none'; // Ocultar error al cambiar de paso
             }
             return;
         }
@@ -225,11 +234,11 @@ function initRegisterWizard() {
             }
 
             if (!isValid) {
-                showAuthError(errorDiv, clientErrorMessage);
+                showAuthError(errorDiv, clientErrorMessage); // Usará la nueva alerta
                 return;
             }
 
-            errorDiv.style.display = 'none';
+            errorDiv.style.display = 'none'; // Ocultar error en-formulario
 
             button.disabled = true;
             button.textContent = 'Verificando...';
@@ -388,7 +397,8 @@ function initResetWizard() {
                         nextStepEl.style.display = 'block';
                     }
                     if (currentStep === 1 && result.message) {
-                        alert(result.message);
+                        // alert(result.message); // <-- Reemplazado
+                        window.showAlert(result.message, 'info'); // <-- NUEVO
                     }
                 } else {
                     showAuthError(errorDiv, result.message || 'Error desconocido.');
