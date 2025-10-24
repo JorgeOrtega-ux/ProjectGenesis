@@ -279,11 +279,9 @@ body {
     display: block;
     flex: 1 1 auto;
     text-align: start;
-    /* --- INICIO DE MODIFICACIÓN ELLIPSIS --- */
-    white-space: nowrap; /* Mantiene el texto en una sola línea */
-    overflow: hidden;    /* Oculta el texto que se desborda */
-    text-overflow: ellipsis; /* Añade puntos suspensivos (...) */
-    /* --- FIN DE MODIFICACIÓN ELLIPSIS --- */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     align-self: center;
 }
 

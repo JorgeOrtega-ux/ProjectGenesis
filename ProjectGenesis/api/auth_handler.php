@@ -17,6 +17,38 @@ function generateVerificationCode() {
     return substr($code, 0, 4) . '-' . substr($code, 4, 4) . '-' . substr($code, 8, 4);
 }
 
+// --- ▼▼▼ NUEVA FUNCIÓN HELPER PARA METADATA ▼▼▼ ---
+/**
+ * Registra los metadatos de un inicio de sesión (IP, Dispositivo).
+ * @param PDO $pdo
+ * @param int $userId El ID del usuario que inicia sesión.
+ */
+function logUserMetadata($pdo, $userId) {
+    try {
+        // getIpAddress() ya está definida en config.php
+        $ip = getIpAddress(); 
+        $browserInfo = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+        
+        // Lógica simple para device_type, se puede expandir en el futuro
+        $deviceType = 'Desktop';
+        if (preg_match('/(mobile|android|iphone|ipad)/i', strtolower($browserInfo))) {
+            $deviceType = 'Mobile';
+        }
+
+        $stmt = $pdo->prepare(
+            "INSERT INTO user_metadata (user_id, ip_address, device_type, browser_info) 
+             VALUES (?, ?, ?, ?)"
+        );
+        $stmt->execute([$userId, $ip, $deviceType, $browserInfo]);
+
+    } catch (PDOException $e) {
+        // No hacer nada si falla el log de metadata.
+        // No queremos que un fallo aquí impida el inicio de sesión.
+    }
+}
+// --- ▲▲▲ FIN NUEVA FUNCIÓN HELPER ▲▲▲ ---
+
+
 // --- FUNCIÓN Creación de Usuario (MODIFICADA) ---
 function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $userIdFromVerification) {
     
@@ -72,6 +104,11 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
     $_SESSION['email'] = $email;
     $_SESSION['profile_image_url'] = $localAvatarUrl;
     $_SESSION['role'] = 'user'; // Rol por defecto
+    
+    // --- ▼▼▼ NUEVA LÍNEA ▼▼▼ ---
+    logUserMetadata($pdo, $userId); // Registrar metadatos en el primer login (registro)
+    // --- ▲▲▲ FIN NUEVA LÍNEA ▲▲▲ ---
+    
     // $_SESSION['is_2fa_enabled'] no es necesario aquí, se lee de la BD
 
     // 6. Limpiar el código de verificación
@@ -298,6 +335,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $_SESSION['email'] = $user['email'];
                             $_SESSION['profile_image_url'] = $user['profile_image_url'];
                             $_SESSION['role'] = $user['role']; 
+                            
+                            // --- ▼▼▼ NUEVA LÍNEA ▼▼▼ ---
+                            logUserMetadata($pdo, $user['id']); // Registrar metadatos en el login
+                            // --- ▲▲▲ FIN NUEVA LÍNEA ▲▲▲ ---
 
                             generateCsrfToken();
 
@@ -373,6 +414,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $_SESSION['email'] = $user['email'];
                             $_SESSION['profile_image_url'] = $user['profile_image_url'];
                             $_SESSION['role'] = $user['role']; 
+                            
+                            // --- ▼▼▼ NUEVA LÍNEA ▼▼▼ ---
+                            logUserMetadata($pdo, $user['id']); // Registrar metadatos en el login 2FA
+                            // --- ▲▲▲ FIN NUEVA LÍNEA ▲▲▲ ---
+                            
                             generateCsrfToken();
 
                             // Limpiar el código 2FA que ya se usó
