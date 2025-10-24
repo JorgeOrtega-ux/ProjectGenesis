@@ -6,6 +6,13 @@
 // Esto inicia la sesión (session_start()) y conecta a la BD ($pdo).
 include 'config.php';
 
+// --- ¡NUEVA MODIFICACIÓN! GENERAR TOKEN CSRF ---
+// Nos aseguramos de que un token CSRF exista para esta carga de página.
+// Las funciones CSRF ahora vienen de config.php
+getCsrfToken(); 
+// --- FIN DE LA NUEVA MODIFICACIÓN ---
+
+
 // --- ¡NUEVA MODIFICACIÓN! ACTUALIZAR DATOS DE SESIÓN EN CADA CARGA ---
 // Si el usuario ya tiene una sesión iniciada...
 if (isset($_SESSION['user_id'])) {
@@ -122,8 +129,13 @@ if (isset($_SESSION['user_id']) && $isAuthPage) {
     </div>
 
     <script>
-        // Definir una variable global de JS para que auth-manager.js la use
+        // Definir variables globales de JS para que los scripts las usen
         window.projectBasePath = '<?php echo $basePath; ?>';
+        
+        // --- ¡NUEVA MODIFICACIÓN! Pasar token a JS ---
+        // Usamos el token de la sesión que ya nos aseguramos de generar.
+        window.csrfToken = '<?php echo $_SESSION['csrf_token']; ?>';
+        // --- FIN DE LA NUEVA MODIFICACIÓN ---
     </script>
     <script type="module" src="<?php echo $basePath; ?>/assets/js/app-init.js"></script>
 </body>

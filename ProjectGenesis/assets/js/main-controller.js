@@ -77,7 +77,14 @@ export function initMainController() {
                     await checkNetwork();
                     await new Promise(res => setTimeout(res, 1000)); 
 
-                    window.location.href = (window.projectBasePath || '') + '/logout.php';
+                    // --- ¡NUEVA MODIFICACIÓN! Añadir token CSRF al logout ---
+                    // Obtenemos el token de la variable global definida en index.php
+                    const token = window.csrfToken || '';
+                    const logoutUrl = (window.projectBasePath || '') + '/logout.php';
+                    
+                    // Añadimos el token como parámetro GET
+                    window.location.href = `${logoutUrl}?csrf_token=${encodeURIComponent(token)}`;
+                    // --- FIN DE LA NUEVA MODIFICACIÓN ---
                     
                 } catch (error) {
                     alert(`Error al cerrar sesión: ${error.message || 'Error desconocido'}`);

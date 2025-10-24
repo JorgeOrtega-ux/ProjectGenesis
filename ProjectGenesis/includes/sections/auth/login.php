@@ -4,6 +4,7 @@
         
         <form class="auth-form" id="login-form" onsubmit="event.preventDefault();" novalidate>
             
+            <?php outputCsrfInput(); ?>
             <div class="auth-error-message" id="login-error" style="display: none;"></div>
 
             <div class="auth-input-group">

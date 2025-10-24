@@ -4,6 +4,7 @@
         
         <form class="auth-form" id="register-form" onsubmit="event.preventDefault();" novalidate>
             
+            <?php outputCsrfInput(); ?>
             <div class="auth-error-message" id="register-error" style="display: none;"></div>
 
             <fieldset class="auth-step active" data-step="1">

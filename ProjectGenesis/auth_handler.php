@@ -71,179 +71,203 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
     $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE id = ?");
     $stmt->execute([$userIdFromVerification]);
 
+    // 6. Regenerar el token CSRF después de un cambio de sesión (login)
+    generateCsrfToken();
+
     return true;
 }
 // --- FIN DE NUEVAS FUNCIONES ---
 
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    $action = $_POST['action'];
-
-    // --- LÓGICA DE REGISTRO PASO 1 (Sin cambios) ---
-    if ($action === 'register-check-email') {
-        // (Validaciones de email, contraseña y dominio)
-        $email = $_POST['email'] ?? '';
-        $password = $_POST['password'] ?? '';
-        $allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com'];
-        $emailDomain = substr($email, strrpos($email, '@') + 1);
-
-        if (empty($email) || empty($password)) {
-            $response['message'] = 'Por favor, completa email y contraseña.';
-        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $response['message'] = 'El formato de correo no es válido.';
-        } elseif (!in_array(strtolower($emailDomain), $allowedDomains)) {
-            $response['message'] = 'Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.';
-        } elseif (strlen($password) < 8) {
-            $response['message'] = 'La contraseña debe tener al menos 8 caracteres.';
-        } else {
-            try {
-                $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-                $stmt->execute([$email]);
-                if ($stmt->fetch()) {
-                    $response['message'] = 'Este correo electrónico ya está en uso.';
-                } else {
-                    $response['success'] = true;
-                }
-            } catch (PDOException $e) {
-                $response['message'] = 'Error en la base de datos.';
-            }
-        }
+    // --- ¡NUEVA MODIFICACIÓN! VALIDACIÓN CSRF ---
+    // Validamos el token en TODAS las peticiones POST a este handler.
+    // Las funciones CSRF vienen de config.php
+    $submittedToken = $_POST['csrf_token'] ?? '';
+    if (!validateCsrfToken($submittedToken)) {
+        // Si el token no es válido, rechazamos la petición.
+        $response['success'] = false;
+        $response['message'] = 'Error de seguridad. Por favor, recarga la página e inténtalo de nuevo.';
+        echo json_encode($response);
+        exit;
     }
+    // --- FIN DE LA NUEVA MODIFICACIÓN ---
 
-    // --- LÓGICA DE REGISTRO PASO 2 (MODIFICADO para usar `identifier` y `payload`) ---
-    elseif ($action === 'register-check-username-and-generate-code') {
-        
-        $email = $_POST['email'] ?? '';
-        $password = $_POST['password'] ?? '';
-        $username = $_POST['username'] ?? '';
 
-        if (empty($email) || empty($password) || empty($username)) {
-            $response['message'] = 'Faltan datos de los pasos anteriores.';
-        } elseif (strlen($username) < 6) {
-            $response['message'] = 'El nombre de usuario debe tener al menos 6 caracteres.';
-        } else {
-            try {
-                $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
-                $stmt->execute([$username]);
-                if ($stmt->fetch()) {
-                    $response['message'] = 'Ese nombre de usuario ya está en uso.';
-                } else {
-                    // 1. Limpiar códigos de 'registration' viejos para este email
-                    $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = 'registration'");
+    if (isset($_POST['action'])) {
+    
+        $action = $_POST['action'];
+
+        // --- LÓGICA DE REGISTRO PASO 1 (Sin cambios) ---
+        if ($action === 'register-check-email') {
+            // (Validaciones de email, contraseña y dominio)
+            $email = $_POST['email'] ?? '';
+            $password = $_POST['password'] ?? '';
+            $allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com'];
+            $emailDomain = substr($email, strrpos($email, '@') + 1);
+
+            if (empty($email) || empty($password)) {
+                $response['message'] = 'Por favor, completa email y contraseña.';
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $response['message'] = 'El formato de correo no es válido.';
+            } elseif (!in_array(strtolower($emailDomain), $allowedDomains)) {
+                $response['message'] = 'Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.';
+            } elseif (strlen($password) < 8) {
+                $response['message'] = 'La contraseña debe tener al menos 8 caracteres.';
+            } else {
+                try {
+                    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
                     $stmt->execute([$email]);
-
-                    // 2. Preparar los datos
-                    $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-                    $verificationCode = str_replace('-', '', generateVerificationCode());
-                    
-                    // 3. Crear el payload JSON con los datos temporales
-                    $payload = json_encode([
-                        'username' => $username,
-                        'password_hash' => $hashedPassword
-                    ]);
-
-                    // 4. Insertar en la nueva estructura de tabla
-                    $stmt = $pdo->prepare(
-                        "INSERT INTO verification_codes (identifier, code_type, code, payload) 
-                         VALUES (?, 'registration', ?, ?)"
-                    );
-                    $stmt->execute([$email, $verificationCode, $payload]);
-
-                    $response['success'] = true;
-                    $response['message'] = 'Código de verificación generado.';
+                    if ($stmt->fetch()) {
+                        $response['message'] = 'Este correo electrónico ya está en uso.';
+                    } else {
+                        $response['success'] = true;
+                    }
+                } catch (PDOException $e) {
+                    $response['message'] = 'Error en la base de datos.';
                 }
-            } catch (PDOException $e) {
-                $response['message'] = 'Error en la base de datos: ' . $e->getMessage();
             }
         }
-    }
 
-    // --- LÓGICA DE REGISTRO PASO 3 (MODIFICADO para leer `identifier` y `payload`) ---
-    elseif ($action === 'register-verify') {
-        if (empty($_POST['email']) || empty($_POST['verification_code'])) {
-            $response['message'] = 'Faltan el correo o el código de verificación.';
-        } else {
-            $email = $_POST['email'];
-            $submittedCode = str_replace('-', '', $_POST['verification_code']); 
+        // --- LÓGICA DE REGISTRO PASO 2 (MODIFICADO para usar `identifier` y `payload`) ---
+        elseif ($action === 'register-check-username-and-generate-code') {
+            
+            $email = $_POST['email'] ?? '';
+            $password = $_POST['password'] ?? '';
+            $username = $_POST['username'] ?? '';
 
-            try {
-                // 1. Buscar el código por 'identifier' (email) y 'code_type'
-                $stmt = $pdo->prepare(
-                    "SELECT * FROM verification_codes 
-                     WHERE identifier = ? 
-                     AND code_type = 'registration'
-                     AND created_at > (NOW() - INTERVAL 15 MINUTE)"
-                );
-                $stmt->execute([$email]);
-                $pendingUser = $stmt->fetch();
-
-                if (!$pendingUser) {
-                    $response['message'] = 'El código de verificación es incorrecto o ha expirado. Vuelve a empezar.';
-                
-                } else {
-                    // 2. Comparar el código
-                    if (strtolower($pendingUser['code']) !== strtolower($submittedCode)) {
-                        $response['message'] = 'El código de verificación es incorrecto.';
+            if (empty($email) || empty($password) || empty($username)) {
+                $response['message'] = 'Faltan datos de los pasos anteriores.';
+            } elseif (strlen($username) < 6) {
+                $response['message'] = 'El nombre de usuario debe tener al menos 6 caracteres.';
+            } else {
+                try {
+                    $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+                    $stmt->execute([$username]);
+                    if ($stmt->fetch()) {
+                        $response['message'] = 'Ese nombre de usuario ya está en uso.';
                     } else {
-                        // 3. ¡Éxito! Decodificar el payload
-                        $payloadData = json_decode($pendingUser['payload'], true);
+                        // 1. Limpiar códigos de 'registration' viejos para este email
+                        $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = 'registration'");
+                        $stmt->execute([$email]);
+
+                        // 2. Preparar los datos
+                        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+                        $verificationCode = str_replace('-', '', generateVerificationCode());
                         
-                        if (!$payloadData || empty($payloadData['username']) || empty($payloadData['password_hash'])) {
-                            $response['message'] = 'Error al procesar el registro. Datos corruptos.';
+                        // 3. Crear el payload JSON con los datos temporales
+                        $payload = json_encode([
+                            'username' => $username,
+                            'password_hash' => $hashedPassword
+                        ]);
+
+                        // 4. Insertar en la nueva estructura de tabla
+                        $stmt = $pdo->prepare(
+                            "INSERT INTO verification_codes (identifier, code_type, code, payload) 
+                             VALUES (?, 'registration', ?, ?)"
+                        );
+                        $stmt->execute([$email, $verificationCode, $payload]);
+
+                        $response['success'] = true;
+                        $response['message'] = 'Código de verificación generado.';
+                    }
+                } catch (PDOException $e) {
+                    $response['message'] = 'Error en la base de datos: ' . $e->getMessage();
+                }
+            }
+        }
+
+        // --- LÓGICA DE REGISTRO PASO 3 (MODIFICADO para leer `identifier` y `payload`) ---
+        elseif ($action === 'register-verify') {
+            if (empty($_POST['email']) || empty($_POST['verification_code'])) {
+                $response['message'] = 'Faltan el correo o el código de verificación.';
+            } else {
+                $email = $_POST['email'];
+                $submittedCode = str_replace('-', '', $_POST['verification_code']); 
+
+                try {
+                    // 1. Buscar el código por 'identifier' (email) y 'code_type'
+                    $stmt = $pdo->prepare(
+                        "SELECT * FROM verification_codes 
+                         WHERE identifier = ? 
+                         AND code_type = 'registration'
+                         AND created_at > (NOW() - INTERVAL 15 MINUTE)"
+                    );
+                    $stmt->execute([$email]);
+                    $pendingUser = $stmt->fetch();
+
+                    if (!$pendingUser) {
+                        $response['message'] = 'El código de verificación es incorrecto o ha expirado. Vuelve a empezar.';
+                    
+                    } else {
+                        // 2. Comparar el código
+                        if (strtolower($pendingUser['code']) !== strtolower($submittedCode)) {
+                            $response['message'] = 'El código de verificación es incorrecto.';
                         } else {
-                            // 4. Llamar a la función de creación con los datos del payload
-                            createUserAndLogin(
-                                $pdo, 
-                                $basePath, 
-                                $pendingUser['identifier'], // Este es el email
-                                $payloadData['username'], 
-                                $payloadData['password_hash'], 
-                                $pendingUser['id'] // ID de la fila para borrarla
-                            );
+                            // 3. ¡Éxito! Decodificar el payload
+                            $payloadData = json_decode($pendingUser['payload'], true);
                             
-                            $response['success'] = true;
-                            $response['message'] = '¡Registro completado! Iniciando sesión...';
+                            if (!$payloadData || empty($payloadData['username']) || empty($payloadData['password_hash'])) {
+                                $response['message'] = 'Error al procesar el registro. Datos corruptos.';
+                            } else {
+                                // 4. Llamar a la función de creación con los datos del payload
+                                createUserAndLogin(
+                                    $pdo, 
+                                    $basePath, 
+                                    $pendingUser['identifier'], // Este es el email
+                                    $payloadData['username'], 
+                                    $payloadData['password_hash'], 
+                                    $pendingUser['id'] // ID de la fila para borrarla
+                                );
+                                
+                                $response['success'] = true;
+                                $response['message'] = '¡Registro completado! Iniciando sesión...';
+                            }
                         }
                     }
+                } catch (PDOException $e) {
+                    $response['message'] = 'Error en la base de datos: ' . $e->getMessage();
                 }
-            } catch (PDOException $e) {
-                $response['message'] = 'Error en la base de datos: ' . $e->getMessage();
             }
         }
-    }
 
-    // --- LÓGICA DE LOGIN (Sin cambios) ---
-    elseif ($action === 'login') {
-        if (!empty($_POST['email']) && !empty($_POST['password'])) {
-            
-            $email = $_POST['email'];
-            $password = $_POST['password'];
-
-            try {
-                $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-                $stmt->execute([$email]);
-                $user = $stmt->fetch();
-
-                if ($user && password_verify($password, $user['password'])) {
-                    
-                    $_SESSION['user_id'] = $user['id'];
-                    $_SESSION['username'] = $user['username'];
-                    $_SESSION['email'] = $user['email'];
-                    $_SESSION['profile_image_url'] = $user['profile_image_url'];
-                    $_SESSION['role'] = $user['role']; 
-
-                    $response['success'] = true;
-                    $response['message'] = 'Inicio de sesión correcto.';
+        // --- LÓGICA DE LOGIN (Sin cambios) ---
+        elseif ($action === 'login') {
+            if (!empty($_POST['email']) && !empty($_POST['password'])) {
                 
-                } else {
-                    $response['message'] = 'Correo o contraseña incorrectos.';
+                $email = $_POST['email'];
+                $password = $_POST['password'];
+
+                try {
+                    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+                    $stmt->execute([$email]);
+                    $user = $stmt->fetch();
+
+                    if ($user && password_verify($password, $user['password'])) {
+                        
+                        $_SESSION['user_id'] = $user['id'];
+                        $_SESSION['username'] = $user['username'];
+                        $_SESSION['email'] = $user['email'];
+                        $_SESSION['profile_image_url'] = $user['profile_image_url'];
+                        $_SESSION['role'] = $user['role']; 
+
+                        // --- ¡NUEVA MODIFICACIÓN! Regenerar token al iniciar sesión ---
+                        generateCsrfToken();
+                        // --- FIN DE LA NUEVA MODIFICACIÓN ---
+
+                        $response['success'] = true;
+                        $response['message'] = 'Inicio de sesión correcto.';
+                    
+                    } else {
+                        $response['message'] = 'Correo o contraseña incorrectos.';
+                    }
+                } catch (PDOException $e) {
+                    $response['message'] = 'Error en la base de datos: ' . $e->getMessage();
                 }
-            } catch (PDOException $e) {
-                $response['message'] = 'Error en la base de datos: ' . $e->getMessage();
+            } else {
+                $response['message'] = 'Por favor, completa todos los campos.';
             }
-        } else {
-            $response['message'] = 'Por favor, completa todos los campos.';
         }
     }
 }
