@@ -284,12 +284,16 @@ function initRegisterWizard() {
         }
     });
 
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
     document.body.addEventListener('input', e => {
         const isRegisterCode = (e.target.id === 'register-code' && e.target.closest('#register-form'));
         const isResetCode = (e.target.id === 'reset-code' && e.target.closest('#reset-form'));
         const isLoginCode = (e.target.id === 'login-code' && e.target.closest('#login-form'));
+        // Añadimos el nuevo ID del modal de settings
+        const isSettingsEmailCode = (e.target.id === 'email-verify-code' && e.target.closest('#email-verify-modal'));
 
-        if (isRegisterCode || isResetCode || isLoginCode) {
+        // Actualizamos la condición para incluir el nuevo campo
+        if (isRegisterCode || isResetCode || isLoginCode || isSettingsEmailCode) {
 
             let input = e.target.value.replace(/[^0-9a-zA-Z]/g, '');
 
@@ -308,6 +312,7 @@ function initRegisterWizard() {
             e.target.value = formatted;
         }
     });
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 }
 
 function initResetWizard() {

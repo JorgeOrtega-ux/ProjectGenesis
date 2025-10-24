@@ -645,23 +645,11 @@ export function initSettingsManager() {
             document.getElementById('avatar-actions-preview').style.display = 'flex';
         }
 
-        // --- ▼▼▼ NUEVA LÓGICA PARA FORMATEAR CÓDIGO DE VERIFICACIÓN EN MODAL ▼▼▼ ---
-        if (e.target.id === 'email-verify-code') {
-             let input = e.target.value.replace(/[^0-9a-zA-Z]/g, '');
-
-            input = input.toUpperCase();
-            input = input.substring(0, 12);
-
-            let formatted = '';
-            for (let i = 0; i < input.length; i++) {
-                if (i > 0 && i % 4 === 0) {
-                    formatted += '-';
-                }
-                formatted += input[i];
-            }
-            e.target.value = formatted;
-        }
-        // --- ▲▲▲ FIN NUEVA LÓGICA ▲▲▲ ---
+        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (BLOQUE ELIMINADO) ▼▼▼ ---
+        // if (e.target.id === 'email-verify-code') {
+        //     ...
+        // }
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN (BLOQUE ELIMINADO) ▲▲▲ ---
     });
     
     // 4. Guardar la URL original (sin cambios)
