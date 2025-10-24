@@ -641,6 +641,20 @@ body {
     background-color: #ffffff;
 }
 
+/* --- INICIO DE LA CORRECCIÓN DE ALINEACIÓN --- */
+/*
+  Esto anula el 'align-items: center' de '.settings-card'
+  solo para los formularios de nombre de usuario y correo.
+  Al alinear los elementos al final (abajo), tanto el
+  texto (estado de vista) como el input (estado de edición)
+  se alinearán correctamente con los botones de la derecha.
+*/
+#username-form .settings-card,
+#email-form .settings-card {
+    align-items: flex-end;
+}
+/* --- FIN DE LA CORRECCIÓN DE ALINEACIÓN --- */
+
 .settings-card-left {
     display: flex;
     flex: 1 1 auto;
