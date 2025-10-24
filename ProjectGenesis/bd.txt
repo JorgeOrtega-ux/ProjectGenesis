@@ -1,0 +1,98 @@
+-- --- CREACIÓN DE LA BASE DE DATOS ---
+-- (El nombre 'project_genesis' se basa en config.php)
+
+DROP DATABASE IF EXISTS project_genesis;
+CREATE DATABASE project_genesis;
+USE project_genesis;
+
+-- --- Tabla de Usuarios ---
+-- Esta tabla almacena la información principal del usuario.
+DROP TABLE IF EXISTS users;
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    -- Almacena la contraseña hasheada (ej. PASSWORD_BCRYPT)
+    password VARCHAR(255) NOT NULL,
+    profile_image_url VARCHAR(255) NULL,
+    -- El ENUM se basa en los roles de styles.css y auth_handler.php
+    `role` ENUM('user', 'moderator', 'administrator', 'founder') NOT NULL DEFAULT 'user',
+    
+    -- --- ▼▼▼ COLUMNA 2FA ▼▼▼ ---
+    
+-- Columna para activar/desactivar 2FA (0 = off, 1 = on)
+    is_2fa_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    -- --- ▲▲▲ FIN DE LA COLUMNA ▲▲▲ ---
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+-- --- Tabla de Códigos de Verificación ---
+-- Almacena códigos temporales para registro, reseteo de contraseña, etc.
+DROP TABLE IF EXISTS verification_codes;
+CREATE TABLE verification_codes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    -- 'identifier' guarda el email (para registro/reset/2fa) o user_id (para email_change)
+    identifier VARCHAR(255) NOT NULL, 
+    
+    -- 'code_type' define el propósito del código
+    -- --- ▼▼▼ MODIFICACIÓN ENUM (con email_change) ▼▼▼ ---
+    code_type ENUM('registration', 'password_reset', '2fa', 'email_change') NOT NULL,
+    -- --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
+    code VARCHAR(255) NOT NULL,
+    
+    -- 'payload' guarda datos extra (ej. username, password_hash) 
+-- como JSON
+    payload TEXT, 
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    -- Índice para búsquedas rápidas de códigos
+    INDEX idx_identifier_type (identifier, code_type)
+);
+-- --- ▼▼▼ TABLA DE SEGURIDAD (RATE LIMIT) ▼▼▼ ---
+-- Almacena intentos fallidos para rate limiting
+DROP TABLE IF EXISTS security_logs;
+CREATE TABLE security_logs (
+  id INT NOT NULL AUTO_INCREMENT,
+  user_identifier VARCHAR(255) NOT NULL,
+  action_type ENUM('login_fail','reset_fail') NOT NULL,
+  ip_address VARCHAR(45) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  -- Índices para consultar rápidamente los intentos fallidos
+  INDEX idx_user_time (user_identifier, created_at),
+  INDEX idx_ip_time (ip_address, created_at)
+);
+-- --- ▲▲▲ FIN DE LA TABLA DE SEGURIDAD ▲▲▲ ---
+
+-- --- ▼▼▼ TABLA DE METADATOS DE USUARIO ▼▼▼ ---
+-- Almacena información de inicio de sesión (IP, Dispositivo)
+-- (Referenciada en api/auth_handler.php)
+DROP TABLE IF EXISTS user_metadata;
+CREATE TABLE user_metadata (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    device_type VARCHAR(50) DEFAULT 'Unknown',
+    browser_info TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+-- --- ▲▲▲ FIN DE LA TABLA DE METADATOS ▲▲▲ ---
+
+-- --- ▼▼▼ NUEVA TABLA DE AUDITORÍA DE CAMBIOS ▼▼▼ ---
+-- Almacena el historial de cambios de username y email para auditoría y rate-limit
+DROP TABLE IF EXISTS user_audit_logs;
+CREATE TABLE user_audit_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    change_type ENUM('username', 'email') NOT NULL,
+    old_value VARCHAR(255) NOT NULL,
+    new_value VARCHAR(255) NOT NULL,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    changed_by_ip VARCHAR(45) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    -- Índices para consultar rápidamente los últimos cambios del usuario
+    INDEX idx_user_type_time (user_id, change_type, changed_at)
+);
+-- --- ▲▲▲ FIN DE LA TABLA DE AUDITORÍA ▲▲▲ ---
