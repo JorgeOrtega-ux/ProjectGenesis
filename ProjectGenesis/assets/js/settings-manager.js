@@ -47,18 +47,44 @@ function toggleButtonSpinner(button, text, isLoading) {
  * Enfoca un input y posiciona el cursor al final del texto.
  * @param {HTMLInputElement} inputElement El elemento input a enfocar.
  */
+/**
+ * Enfoca un input y posiciona el cursor al final del texto.
+ * @param {HTMLInputElement} inputElement El elemento input a enfocar.
+ */
 function focusInputAndMoveCursorToEnd(inputElement) {
     if (!inputElement) return;
     
     const length = inputElement.value.length;
-    
-    inputElement.focus();
-    
-    // Mover el cursor al final
-    // (Algunos navegadores antiguos pueden necesitar un pequeño timeout)
-    setTimeout(() => {
-        inputElement.setSelectionRange(length, length);
-    }, 0);
+    const originalType = inputElement.type; // <-- 1. Guardar el tipo original
+
+    try {
+        // --- INICIO DE LA CORRECCIÓN ---
+        // Cambiar temporalmente a 'text' para asegurar que setSelectionRange
+        // funcione en todos los navegadores, especialmente con tipos como 'email'.
+        inputElement.type = 'text'; 
+        // --- FIN DE LA CORRECCIÓN ---
+
+        inputElement.focus();
+        
+        // Mover el cursor al final
+        setTimeout(() => {
+            try {
+                inputElement.setSelectionRange(length, length);
+            } catch (e) {
+                // Ignorar el error si falla, pero el focus ya está hecho
+            }
+            
+            // --- INICIO DE LA CORRECCIÓN ---
+            // Restaurar el tipo original después de establecer la selección
+            inputElement.type = originalType; 
+            // --- FIN DE LA CORRECCIÓN ---
+
+        }, 0);
+
+    } catch (e) {
+        // Si todo falla, al menos restaurar el tipo
+        inputElement.type = originalType;
+    }
 }
 // --- ▲▲▲ FIN NUEVA FUNCIÓN HELPER ▲▲▲ ---
 
