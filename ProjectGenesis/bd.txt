@@ -16,7 +16,8 @@ CREATE TABLE users (
     `role` ENUM('user', 'moderator', 'administrator', 'founder') NOT NULL DEFAULT 'user',
     
     -- --- ▼▼▼ NUEVA COLUMNA 2FA ▼▼▼ ---
-    -- Columna para activar/desactivar 2FA (0 = off, 1 = on)
+   
+ -- Columna para activar/desactivar 2FA (0 = off, 1 = on)
     is_2fa_enabled TINYINT(1) NOT NULL DEFAULT 0,
     -- --- ▲▲▲ FIN DE LA NUEVA COLUMNA ▲▲▲ ---
 
@@ -38,6 +39,7 @@ CREATE TABLE verification_codes (
     code VARCHAR(255) NOT NULL,
     -- 'payload' guarda datos extra (ej. username, password_hash) como JSON
     payload TEXT, 
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     -- Índice para búsquedas rápidas de códigos
     INDEX idx_identifier_type (identifier, code_type)
@@ -55,5 +57,20 @@ CREATE TABLE security_logs (
   -- Índices para consultar rápidamente los intentos fallidos
   INDEX idx_user_time (user_identifier, created_at),
   INDEX idx_ip_time (ip_address, created_at)
+);
+-- --- ▲▲▲ FIN DE LA NUEVA TABLA ▲▲▲ ---
+
+-- --- ▼▼▼ NUEVA TABLA DE METADATOS DE USUARIO ▼▼▼ ---
+-- Almacena información de inicio de sesión (IP, Dispositivo)
+-- (Referenciada en api/auth_handler.php)
+DROP TABLE IF EXISTS user_metadata;
+CREATE TABLE user_metadata (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    device_type VARCHAR(50) DEFAULT 'Unknown',
+    browser_info TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 -- --- ▲▲▲ FIN DE LA NUEVA TABLA ▲▲▲ ---
