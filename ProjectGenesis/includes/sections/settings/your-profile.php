@@ -9,20 +9,7 @@
         </div>
 
         <?php
-        // --- BLOQUE PHP MEJORADO ---
-        $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
-        $profileImageUrl = $_SESSION['profile_image_url'] ?? $defaultAvatar;
-        if (empty($profileImageUrl)) {
-            $profileImageUrl = $defaultAvatar;
-        }
-        
-        // Comprobar si la URL es un avatar por defecto (generado) o uno subido
-        $isDefaultAvatar = strpos($profileImageUrl, 'ui-avatars.com') !== false || 
-                           strpos($profileImageUrl, 'user-' . $_SESSION['user_id'] . '.png') !== false;
-
-        $usernameForAlt = $_SESSION['username'] ?? 'Usuario';
-        $userRole = $_SESSION['role'] ?? 'user';
-        // --- FIN DEL BLOQUE ---
+        // ¡Este bloque de lógica se ha ido!
         ?>
         
         <form id="avatar-form" onsubmit="event.preventDefault();" novalidate>

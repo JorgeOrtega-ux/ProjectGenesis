@@ -1,5 +1,5 @@
 <?php
-// /ProjectGenesis/router/router.php
+// /ProjectGenesis/config/router.php
 
 // --- MODIFICACIÓN 1: INCLUIR CONFIG ---
 include '../config/config.php'; // Inicia la sesión
@@ -43,7 +43,29 @@ if (!isset($_SESSION['user_id']) && !$isAuthPage && $page !== '404') {
 
 
 if (array_key_exists($page, $allowedPages)) {
+
+    // --- ▼▼▼ INICIO DE LA LÓGICA MOVIDA ▼▼▼ ---
+    // Pre-procesamos las variables solo para la página que las necesita.
+    if ($page === 'settings-profile') {
+        
+        $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+        $profileImageUrl = $_SESSION['profile_image_url'] ?? $defaultAvatar;
+        if (empty($profileImageUrl)) {
+            $profileImageUrl = $defaultAvatar;
+        }
+
+        // Comprobar si la URL es un avatar por defecto (generado) o uno subido
+        // (La protección de ruta anterior ya asegura que $_SESSION['user_id'] existe)
+        $isDefaultAvatar = strpos($profileImageUrl, 'ui-avatars.com') !== false || 
+                           strpos($profileImageUrl, 'user-' . $_SESSION['user_id'] . '.png') !== false;
+
+        $usernameForAlt = $_SESSION['username'] ?? 'Usuario';
+        $userRole = $_SESSION['role'] ?? 'user';
+    }
+    // --- ▲▲▲ FIN DE LA LÓGICA MOVIDA ▲▲▲ ---
+
     include $allowedPages[$page];
+
 } else {
     http_response_code(404);
     $CURRENT_SECTION = '404'; 
