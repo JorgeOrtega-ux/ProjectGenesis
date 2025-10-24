@@ -17,7 +17,7 @@ function generateVerificationCode() {
     return substr($code, 0, 4) . '-' . substr($code, 4, 4) . '-' . substr($code, 8, 4);
 }
 
-// --- FUNCIÓN Creación de Usuario (Sin cambios) ---
+// --- FUNCIÓN Creación de Usuario (MODIFICADA) ---
 function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $userIdFromVerification) {
     
     // 1. Insertar usuario final en la tabla 'users'
@@ -60,18 +60,23 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
         $stmt->execute([$localAvatarUrl, $userId]);
     }
 
-    // 4. Iniciar sesión automáticamente
+    // --- ¡¡¡INICIO DE LA SOLUCIÓN DE SEGURIDAD!!! ---
+    // 4. Regenerar el ID de sesión para prevenir Session Fixation
+    session_regenerate_id(true);
+    // --- ¡¡¡FIN DE LA SOLUCIÓN DE SEGURIDAD!!! ---
+
+    // 5. Iniciar sesión automáticamente
     $_SESSION['user_id'] = $userId;
     $_SESSION['username'] = $username;
     $_SESSION['email'] = $email;
     $_SESSION['profile_image_url'] = $localAvatarUrl;
     $_SESSION['role'] = 'user'; // Rol por defecto
 
-    // 5. Limpiar el código de verificación
+    // 6. Limpiar el código de verificación
     $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE id = ?");
     $stmt->execute([$userIdFromVerification]);
 
-    // 6. Regenerar el token CSRF después de un cambio de sesión (login)
+    // 7. Regenerar el token CSRF después de un cambio de sesión (login)
     generateCsrfToken();
 
     return true;
@@ -212,6 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $response['message'] = 'Error al procesar el registro. Datos corruptos.';
                             } else {
                                 // 4. Llamar a la función de creación con los datos del payload
+                                // (Esta función ya está corregida arriba)
                                 createUserAndLogin(
                                     $pdo, 
                                     $basePath, 
@@ -258,6 +264,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // --- ▼▼▼ NUEVA MODIFICACIÓN: Limpiar logs en éxito ▼▼▼ ---
                         clearFailedAttempts($pdo, $email);
                         // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
+                        // --- ¡¡¡INICIO DE LA SOLUCIÓN DE SEGURIDAD!!! ---
+                        // Regenerar el ID de sesión para prevenir Session Fixation
+                        session_regenerate_id(true);
+                        // --- ¡¡¡FIN DE LA SOLUCIÓN DE SEGURIDAD!!! ---
 
                         $_SESSION['user_id'] = $user['id'];
                         $_SESSION['username'] = $user['username'];
