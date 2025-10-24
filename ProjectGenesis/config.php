@@ -5,6 +5,13 @@
 // Esto debe ir ANTES de CUALQUIER salida HTML.
 session_start();
 
+// --- ¡¡¡ESTA ES LA LÍNEA CORREGIDA!!! ---
+// Forzar la zona horaria del servidor a UTC.
+// Esto soluciona los problemas de expiración de códigos.
+date_default_timezone_set('UTC');
+// --- FIN DE LA CORRECCIÓN ---
+
+
 // 2. CONFIGURACIÓN DE LA BASE DE DATOS
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'project_genesis'); 

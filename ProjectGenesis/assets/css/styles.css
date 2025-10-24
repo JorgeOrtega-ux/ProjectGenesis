@@ -482,6 +482,7 @@ body {
     cursor: pointer;
     transition: background-color 0.2s;
     margin-top: 8px;
+    flex: 1; /* Para los botones en fila */
 }
 
 .auth-link {
@@ -514,6 +515,73 @@ body {
     margin-bottom: 8px; /* Espacio antes del primer input */
     display: none; /* Oculto por defecto */
 }
+
+
+/* --- ▼▼▼ NUEVOS ESTILOS PARA REGISTRO MULTI-PASO ▼▼▼ --- */
+
+.auth-form fieldset.auth-step {
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: flex; /* Se usa 'flex' para que .active funcione */
+    flex-direction: column;
+    gap: 16px; /* Mismo gap que el form */
+}
+
+.auth-step:not(.active) {
+    display: none;
+}
+
+.auth-step-indicator {
+    font-size: 14px;
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.auth-verification-text {
+    font-size: 15px;
+    color: #1f2937;
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.auth-step-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.auth-button-back {
+    height: 52px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #000000;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    flex: 0 0 auto; /* No crecer */
+    padding: 0 20px;
+}
+
+.auth-button-back:hover {
+    background-color: #f5f5fa;
+}
+
+/* --- ¡¡¡ESTE BLOQUE HA SIDO ELIMINADO!!! ---
+#register-code {
+    text-align: center;
+    font-size: 18px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+*/
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS MULTI-PASO --- ▲▲▲ */
+
 
 /* --- ▼▼▼ NUEVOS ESTILOS PARA EL LOADER DE LOGOUT ▼▼▼ --- */
 

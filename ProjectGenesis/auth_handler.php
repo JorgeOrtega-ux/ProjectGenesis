@@ -1,141 +1,190 @@
 <?php
 // /ProjectGenesis/auth_handler.php
 
-// Incluir la configuración de sesión y BD
 include 'config.php';
-
-// Establecer la cabecera de respuesta como JSON
 header('Content-Type: application/json');
 
-// --- LÍNEA CORREGIDA ---
 $response = ['success' => false, 'message' => 'Acción no válida.'];
 
-// Asegurarse de que se está recibiendo un POST
+// --- FUNCIÓN Generador de Código (Sin cambios) ---
+function generateVerificationCode() {
+    $bytes = random_bytes(6); // 6 bytes = 12 hex chars
+    $code = bin2hex($bytes); 
+    return substr($code, 0, 4) . '-' . substr($code, 4, 4) . '-' . substr($code, 8, 4);
+}
+
+// --- FUNCIÓN Creación de Usuario (Sin cambios) ---
+function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $userIdFromVerification) {
+    
+    // 1. Insertar usuario final en la tabla 'users'
+    $stmt = $pdo->prepare("INSERT INTO users (email, username, password) VALUES (?, ?, ?)");
+    $stmt->execute([$email, $username, $passwordHash]);
+    $userId = $pdo->lastInsertId();
+
+    // 2. Generar y guardar avatar localmente
+    $localAvatarUrl = null;
+    try {
+        $savePathDir = __DIR__ . '/assets/uploads/avatars';
+        $fileName = "user-{$userId}.png";
+        $fullSavePath = $savePathDir . '/' . $fileName;
+        $publicUrl = $basePath . '/assets/uploads/avatars/' . $fileName;
+
+        if (!is_dir($savePathDir)) {
+            mkdir($savePathDir, 0755, true);
+        }
+        
+        $avatarColors = ['206BD3', 'D32029', '28A745', 'E91E63', 'F57C00'];
+        $selectedColor = $avatarColors[array_rand($avatarColors)];
+        $nameParam = urlencode($username);
+        
+        $apiUrl = "https://ui-avatars.com/api/?name={$nameParam}&size=256&background={$selectedColor}&color=ffffff&bold=true&length=1";
+        
+        $imageData = file_get_contents($apiUrl);
+
+        if ($imageData !== false) {
+            file_put_contents($fullSavePath, $imageData);
+            $localAvatarUrl = $publicUrl;
+        }
+
+    } catch (Exception $e) {
+        // No hacer nada si falla el avatar
+    }
+
+    // 3. Actualizar al usuario con la URL del avatar
+    if ($localAvatarUrl) {
+        $stmt = $pdo->prepare("UPDATE users SET profile_image_url = ? WHERE id = ?");
+        $stmt->execute([$localAvatarUrl, $userId]);
+    }
+
+    // 4. Iniciar sesión automáticamente
+    $_SESSION['user_id'] = $userId;
+    $_SESSION['username'] = $username;
+    $_SESSION['email'] = $email;
+    $_SESSION['profile_image_url'] = $localAvatarUrl;
+    $_SESSION['role'] = 'user'; // Rol por defecto
+
+    // 5. Limpiar el código de verificación
+    $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE id = ?");
+    $stmt->execute([$userIdFromVerification]);
+
+    return true;
+}
+// --- FIN DE NUEVAS FUNCIONES ---
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     
     $action = $_POST['action'];
 
-    // --- LÓGICA DE REGISTRO ---
-    if ($action === 'register') {
-        if (!empty($_POST['email']) && !empty($_POST['username']) && !empty($_POST['password'])) {
-            
+    // --- LÓGICA DE REGISTRO PASO 1 (Sin cambios) ---
+    if ($action === 'register-check-email') {
+        if (empty($_POST['email']) || empty($_POST['password'])) {
+            $response['message'] = 'Por favor, completa email y contraseña.';
+        } elseif (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+            $response['message'] = 'El formato de correo no es válido.';
+        } else {
+            $email = $_POST['email'];
+            try {
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+                $stmt->execute([$email]);
+                if ($stmt->fetch()) {
+                    $response['message'] = 'Este correo electrónico ya está en uso.';
+                } else {
+                    $response['success'] = true;
+                }
+            } catch (PDOException $e) {
+                $response['message'] = 'Error en la base de datos.';
+            }
+        }
+    }
+
+    // --- LÓGICA DE REGISTRO PASO 2 (Sin cambios) ---
+    elseif ($action === 'register-check-username-and-generate-code') {
+        if (empty($_POST['email']) || empty($_POST['password']) || empty($_POST['username'])) {
+            $response['message'] = 'Faltan datos de los pasos anteriores.';
+        } else {
             $email = $_POST['email'];
             $username = $_POST['username'];
             $password = $_POST['password'];
 
-            // 1. Validar formato de email (básico)
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $response['message'] = 'El formato de correo no es válido.';
-            } else {
-                try {
-                    // 2. Comprobar si el email o usuario ya existen
-                    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? OR username = ?");
-                    $stmt->execute([$email, $username]);
-                    
-                    if ($stmt->fetch()) {
-                        $response['message'] = 'El correo o nombre de usuario ya están en uso.';
-                    } else {
-                        
-                        // 3. Hashear la contraseña
-                        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+            try {
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+                $stmt->execute([$username]);
+                if ($stmt->fetch()) {
+                    $response['message'] = 'Ese nombre de usuario ya está en uso.';
+                } else {
+                    $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE email = ?");
+                    $stmt->execute([$email]);
 
-                        // 4. Insertar nuevo usuario (SIN la URL del avatar todavía)
-                        // NOTA: La columna 'role' tomará su valor 'user' por defecto (de la BD)
-                        $stmt = $pdo->prepare("INSERT INTO users (email, username, password) VALUES (?, ?, ?)");
-                        $stmt->execute([$email, $username, $hashedPassword]);
+                    $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+                    $verificationCode = str_replace('-', '', generateVerificationCode());
 
-                        // 5. Obtener el ID del usuario recién creado
-                        $userId = $pdo->lastInsertId();
+                    $stmt = $pdo->prepare("INSERT INTO verification_codes (email, username, password_hash, code) VALUES (?, ?, ?, ?)");
+                    $stmt->execute([$email, $username, $hashedPassword, $verificationCode]);
 
-                        // --- MODIFICACIÓN: GENERAR Y GUARDAR AVATAR LOCALMENTE ---
-                        
-                        $localAvatarUrl = null;
-                        
-                        try {
-                            // Definir la ruta de guardado (física, en el servidor)
-                            // __DIR__ es el directorio de este archivo (/ProjectGenesis)
-                            $savePathDir = __DIR__ . '/assets/uploads/avatars';
-                            $fileName = "user-{$userId}.png";
-                            $fullSavePath = $savePathDir . '/' . $fileName;
-
-                            // Definir la URL de acceso (pública, para la web)
-                            // $basePath viene de config.php
-                            $publicUrl = $basePath . '/assets/uploads/avatars/' . $fileName;
-
-                            // 1. Crear el directorio de guardado si no existe
-                            if (!is_dir($savePathDir)) {
-                                // 0755 da permisos de escritura, recursivo = true
-                                mkdir($savePathDir, 0755, true); 
-                            }
-
-                            // --- MODIFICACIÓN: PALETA DE COLORES PERSONALIZADA ---
-                        
-                            // 1. Definir la paleta de colores (sin el #)
-                            // Colores con una tonalidad similar al azul que mencionaste.
-                            $avatarColors = [
-                                '206BD3', // Azul (El que pediste)
-                                'D32029', // Rojo
-                                '28A745', // Verde
-                                'E91E63', // Rosa
-                                'F57C00'  // Naranja
-                            ];
-                            
-                            // 2. Elegir un color al azar
-                            $randomColorKey = array_rand($avatarColors);
-                            $selectedColor = $avatarColors[$randomColorKey];
-
-                            // 3. Generar la URL de la API (usando el color seleccionado)
-                            $nameParam = urlencode($username);
-                            // --- MODIFICACIÓN: Aumentar tamaño a 256 ---
-                            $apiUrl = "https://ui-avatars.com/api/?name={$nameParam}&size=256&background={$selectedColor}&color=ffffff&bold=true";
-                            
-                            // --- FIN DE LA MODIFICACIÓN ---
-
-                            // 4. Obtener el contenido (los bytes) de la imagen
-                            $imageData = file_get_contents($apiUrl);
-
-                            // 5. Guardar la imagen localmente
-                            if ($imageData !== false) {
-                                file_put_contents($fullSavePath, $imageData);
-                                $localAvatarUrl = $publicUrl; // ¡Éxito!
-                            }
-
-                        } catch (Exception $e) {
-                            // Si algo falla (API caída, permisos), no rompemos el registro
-                            // $localAvatarUrl se quedará como null
-                            // (Aquí podrías loggear el error: error_log($e->getMessage());)
-                        }
-
-                        // 6. Actualizar al usuario con la nueva URL local (si se generó)
-                        if ($localAvatarUrl) {
-                            $stmt = $pdo->prepare("UPDATE users SET profile_image_url = ? WHERE id = ?");
-                            $stmt->execute([$localAvatarUrl, $userId]);
-                        }
-                        
-                        // --- FIN DE LA MODIFICACIÓN (GENERAR AVATAR) ---
-
-                        
-                        // --- MODIFICACIÓN: INICIAR SESIÓN AUTOMÁTICAMENTE ---
-                        $_SESSION['user_id'] = $userId;
-                        $_SESSION['username'] = $username;
-                        $_SESSION['email'] = $email;
-                        $_SESSION['profile_image_url'] = $localAvatarUrl; // Usar la URL que acabamos de generar
-                        $_SESSION['role'] = 'user'; // Asignar el rol por defecto en la sesión
-
-                        $response['success'] = true;
-                        $response['message'] = '¡Registro completado! Iniciando sesión...';
-                        // --- FIN DE LA MODIFICACIÓN ---
-                    }
-                } catch (PDOException $e) {
-                    $response['message'] = 'Error en la base de datos: ' . $e->getMessage();
+                    $response['success'] = true;
+                    $response['message'] = 'Código de verificación generado.';
                 }
+            } catch (PDOException $e) {
+                $response['message'] = 'Error en la base de datos: ' . $e->getMessage();
             }
-        } else {
-            $response['message'] = 'Por favor, completa todos los campos requeridos.';
         }
     }
 
-    // --- LÓGICA DE LOGIN ---
+    // --- ¡¡¡LÓGICA DE REGISTRO PASO 3 CORREGIDA!!! ---
+    elseif ($action === 'register-verify') {
+        if (empty($_POST['email']) || empty($_POST['verification_code'])) {
+            $response['message'] = 'Faltan el correo o el código de verificación.';
+        } else {
+            $email = $_POST['email'];
+            $submittedCode = str_replace('-', '', $_POST['verification_code']); 
+
+            try {
+                // --- ¡ESTA ES LA CORRECCIÓN CLAVE! ---
+                // 1. Buscar el registro PENDIENTE Y VÁLIDO (menos de 15 min)
+                // Usamos NOW() de MySQL para que la BD haga la comparación de tiempo.
+                $stmt = $pdo->prepare(
+                    "SELECT * FROM verification_codes 
+                     WHERE email = ? 
+                     AND created_at > (NOW() - INTERVAL 15 MINUTE)"
+                );
+                // --- FIN DE LA CORRECCIÓN CLAVE ---
+
+                $stmt->execute([$email]);
+                $pendingUser = $stmt->fetch();
+
+                if (!$pendingUser) {
+                    // Si no se encuentra, es porque el email no existe O
+                    // el código SÍ EXISTÍA pero tenía más de 15 minutos (y la consulta no lo devolvió).
+                    $response['message'] = 'El código de verificación es incorrecto o ha expirado. Vuelve a empezar.';
+                
+                } else {
+                    // 2. Encontramos un registro VÁLIDO (no expirado). 
+                    // Ahora SÍ comparamos el código.
+                    if (strtolower($pendingUser['code']) !== strtolower($submittedCode)) {
+                        $response['message'] = 'El código de verificación es incorrecto.';
+                    } else {
+                        // 3. ¡ÉXITO! El código es correcto Y no ha expirado.
+                        createUserAndLogin(
+                            $pdo, 
+                            $basePath, 
+                            $pendingUser['email'], 
+                            $pendingUser['username'], 
+                            $pendingUser['password_hash'], 
+                            $pendingUser['id']
+                        );
+                        
+                        $response['success'] = true;
+                        $response['message'] = '¡Registro completado! Iniciando sesión...';
+                    }
+                }
+            } catch (PDOException $e) {
+                $response['message'] = 'Error en la base de datos: ' . $e->getMessage();
+            }
+        }
+    }
+
+    // --- LÓGICA DE LOGIN (Sin cambios) ---
     elseif ($action === 'login') {
         if (!empty($_POST['email']) && !empty($_POST['password'])) {
             
@@ -143,24 +192,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $password = $_POST['password'];
 
             try {
-                // 1. Buscar al usuario por email
                 $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
                 $stmt->execute([$email]);
                 $user = $stmt->fetch();
 
-                // 2. Verificar si el usuario existe y la contraseña es correcta
                 if ($user && password_verify($password, $user['password'])) {
                     
-                    // 3. ¡Éxito! Establecer variables de sesión
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['email'] = $user['email'];
                     $_SESSION['profile_image_url'] = $user['profile_image_url'];
-                    
-                    // --- ¡MODIFICACIÓN AÑADIDA! ---
-                    // Guardamos el nuevo rol en la sesión
                     $_SESSION['role'] = $user['role']; 
-                    // --- FIN DE LA MODIFICACIÓN ---
 
                     $response['success'] = true;
                     $response['message'] = 'Inicio de sesión correcto.';
@@ -177,7 +219,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Enviar la respuesta JSON final
 echo json_encode($response);
 exit;
 ?>
