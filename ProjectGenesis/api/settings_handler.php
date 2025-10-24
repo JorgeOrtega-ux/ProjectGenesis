@@ -199,38 +199,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // --- ACCIÓN: ACTUALIZAR NOMBRE DE USUARIO ---
+        // --- ACCIÓN: ACTUALIZAR NOMBRE DE USUARIO (MODIFICADA) ---
         elseif ($action === 'update-username') {
             try {
                 $newUsername = trim($_POST['username'] ?? '');
 
-                // 1. Validar longitud (igual que en el registro)
+                // 1. Validar longitud
                 if (empty($newUsername)) {
                     throw new Exception('El nombre de usuario no puede estar vacío.');
                 }
                 if (strlen($newUsername) < 6) {
                     throw new Exception('El nombre de usuario debe tener al menos 6 caracteres.');
                 }
-                // (Se podrían añadir más validaciones, ej. caracteres especiales)
 
                 // 2. Validar que el nombre no esté en uso POR OTRO USUARIO
                 $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
                 $stmt->execute([$newUsername, $userId]);
-                
                 if ($stmt->fetch()) {
                     throw new Exception('Ese nombre de usuario ya está en uso.');
                 }
+                
+                // --- ▼▼▼ INICIO DE LA LÓGICA SOLICITADA ▼▼▼ ---
 
-                // 3. Actualizar la base de datos
-                $stmt = $pdo->prepare("UPDATE users SET username = ? WHERE id = ?");
-                $stmt->execute([$newUsername, $userId]);
+                // 3. Obtener el avatar actual
+                $stmt = $pdo->prepare("SELECT profile_image_url FROM users WHERE id = ?");
+                $stmt->execute([$userId]);
+                $oldUrl = $stmt->fetchColumn();
 
-                // 4. Actualizar la sesión
+                // 4. Comprobar si es un avatar por defecto
+                $isDefaultAvatar = false;
+                if ($oldUrl) {
+                    // Esta lógica comprueba si es el avatar de ui-avatars O el user-ID.png local
+                    $isDefaultAvatar = strpos($oldUrl, 'ui-avatars.com') !== false || 
+                                       strpos($oldUrl, 'user-' . $userId . '.png') !== false;
+                } else {
+                    // Si no tiene URL, también cuenta como "por defecto" para regenerarlo
+                    $isDefaultAvatar = true; 
+                }
+
+                $newAvatarUrl = null;
+
+                // 5. Si es por defecto, regenerarlo con el nuevo nombre
+                if ($isDefaultAvatar) {
+                    // Llamamos a la función helper que ya existe en este archivo
+                    $newAvatarUrl = generateDefaultAvatar($pdo, $userId, $newUsername, $basePath);
+                }
+
+                // 6. Actualizar la base de datos
+                if ($newAvatarUrl) {
+                    // Si generamos un nuevo avatar, actualizamos ambos campos
+                    $stmt = $pdo->prepare("UPDATE users SET username = ?, profile_image_url = ? WHERE id = ?");
+                    $stmt->execute([$newUsername, $newAvatarUrl, $userId]);
+                } else {
+                    // Si no (era foto personalizada), actualizamos solo el nombre
+                    $stmt = $pdo->prepare("UPDATE users SET username = ? WHERE id = ?");
+                    $stmt->execute([$newUsername, $userId]);
+                }
+                
+                // 7. Actualizar la sesión
                 $_SESSION['username'] = $newUsername;
+                if ($newAvatarUrl) {
+                    // Actualizamos también la URL del avatar en la sesión
+                    $_SESSION['profile_image_url'] = $newAvatarUrl;
+                }
+                // --- ▲▲▲ FIN DE LA LÓGICA SOLICITADA ▲▲▲ ---
 
                 $response['success'] = true;
                 $response['message'] = 'Nombre de usuario actualizado con éxito.';
                 $response['newUsername'] = $newUsername;
+                
+                if ($newAvatarUrl) {
+                    // Devolvemos la nueva URL al frontend (aunque el JS actual solo recarga)
+                    $response['newAvatarUrl'] = $newAvatarUrl; 
+                }
 
             } catch (Exception $e) {
                 $response['message'] = $e->getMessage();
