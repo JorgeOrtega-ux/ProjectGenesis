@@ -202,7 +202,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // --- ACCIÓN: ACTUALIZAR NOMBRE DE USUARIO (MODIFICADA) ---
         elseif ($action === 'update-username') {
             try {
+                
+                // --- ▼▼▼ INICIO DE LA LÓGICA DE RATE LIMIT (USERNAME) ▼▼▼ ---
+                define('USERNAME_CHANGE_COOLDOWN_DAYS', 30);
+
+                $stmt_check = $pdo->prepare(
+                    "SELECT changed_at FROM user_audit_logs 
+                     WHERE user_id = ? AND change_type = 'username' 
+                     ORDER BY changed_at DESC LIMIT 1"
+                );
+                $stmt_check->execute([$userId]);
+                $lastLog = $stmt_check->fetch();
+
+                if ($lastLog) {
+                    $lastChangeTime = new DateTime($lastLog['changed_at'], new DateTimeZone('UTC'));
+                    $currentTime = new DateTime('now', new DateTimeZone('UTC'));
+                    $interval = $currentTime->diff($lastChangeTime);
+                    $daysPassed = (int)$interval->format('%a'); // Obtener días totales
+
+                    if ($daysPassed < USERNAME_CHANGE_COOLDOWN_DAYS) {
+                        $daysRemaining = USERNAME_CHANGE_COOLDOWN_DAYS - $daysPassed;
+                        $plural = ($daysRemaining == 1) ? 'día' : 'días';
+                        throw new Exception("Debes esperar. Podrás cambiar tu nombre de usuario de nuevo en {$daysRemaining} {$plural}.");
+                    }
+                }
+                // --- ▲▲▲ FIN DE LA LÓGICA DE RATE LIMIT ▲▲▲ ---
+
                 $newUsername = trim($_POST['username'] ?? '');
+                $oldUsername = $_SESSION['username']; // Capturar el valor antiguo ANTES de validar
 
                 // 1. Validar longitud
                 if (empty($newUsername)) {
@@ -210,6 +237,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 if (strlen($newUsername) < 6) {
                     throw new Exception('El nombre de usuario debe tener al menos 6 caracteres.');
+                }
+                
+                // 1.5 Validar si el nombre es el mismo
+                if ($newUsername === $oldUsername) {
+                     throw new Exception('Este ya es tu nombre de usuario.');
                 }
 
                 // 2. Validar que el nombre no esté en uso POR OTRO USUARIO
@@ -219,8 +251,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception('Ese nombre de usuario ya está en uso.');
                 }
                 
-                // --- ▼▼▼ INICIO DE LA LÓGICA SOLICITADA ▼▼▼ ---
-
                 // 3. Obtener el avatar actual
                 $stmt = $pdo->prepare("SELECT profile_image_url FROM users WHERE id = ?");
                 $stmt->execute([$userId]);
@@ -229,11 +259,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // 4. Comprobar si es un avatar por defecto
                 $isDefaultAvatar = false;
                 if ($oldUrl) {
-                    // Esta lógica comprueba si es el avatar de ui-avatars O el user-ID.png local
                     $isDefaultAvatar = strpos($oldUrl, 'ui-avatars.com') !== false || 
                                        strpos($oldUrl, 'user-' . $userId . '.png') !== false;
                 } else {
-                    // Si no tiene URL, también cuenta como "por defecto" para regenerarlo
                     $isDefaultAvatar = true; 
                 }
 
@@ -241,35 +269,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // 5. Si es por defecto, regenerarlo con el nuevo nombre
                 if ($isDefaultAvatar) {
-                    // Llamamos a la función helper que ya existe en este archivo
                     $newAvatarUrl = generateDefaultAvatar($pdo, $userId, $newUsername, $basePath);
                 }
 
                 // 6. Actualizar la base de datos
                 if ($newAvatarUrl) {
-                    // Si generamos un nuevo avatar, actualizamos ambos campos
                     $stmt = $pdo->prepare("UPDATE users SET username = ?, profile_image_url = ? WHERE id = ?");
                     $stmt->execute([$newUsername, $newAvatarUrl, $userId]);
                 } else {
-                    // Si no (era foto personalizada), actualizamos solo el nombre
                     $stmt = $pdo->prepare("UPDATE users SET username = ? WHERE id = ?");
                     $stmt->execute([$newUsername, $userId]);
                 }
                 
+                // --- ▼▼▼ INICIO DE LA LÓGICA DE AUDITORÍA (USERNAME) ▼▼▼ ---
+                $stmt_log = $pdo->prepare(
+                    "INSERT INTO user_audit_logs (user_id, change_type, old_value, new_value, changed_by_ip) 
+                     VALUES (?, 'username', ?, ?, ?)"
+                );
+                // getIpAddress() viene de config.php
+                $stmt_log->execute([$userId, $oldUsername, $newUsername, getIpAddress()]); 
+                // --- ▲▲▲ FIN DE LA LÓGICA DE AUDITORÍA ▲▲▲ ---
+                
                 // 7. Actualizar la sesión
                 $_SESSION['username'] = $newUsername;
                 if ($newAvatarUrl) {
-                    // Actualizamos también la URL del avatar en la sesión
                     $_SESSION['profile_image_url'] = $newAvatarUrl;
                 }
-                // --- ▲▲▲ FIN DE LA LÓGICA SOLICITADA ▲▲▲ ---
 
                 $response['success'] = true;
                 $response['message'] = 'Nombre de usuario actualizado con éxito.';
                 $response['newUsername'] = $newUsername;
                 
                 if ($newAvatarUrl) {
-                    // Devolvemos la nueva URL al frontend (aunque el JS actual solo recarga)
                     $response['newAvatarUrl'] = $newAvatarUrl; 
                 }
 
@@ -278,12 +309,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        // --- ▼▼▼ NUEVA ACCIÓN: SOLICITAR CÓDIGO PARA CAMBIAR EMAIL ▼▼▼ ---
+        // --- ACCIÓN: SOLICITAR CÓDIGO PARA CAMBIAR EMAIL ---
         elseif ($action === 'request-email-change-code') {
             try {
-                // El 'identifier' será el ID de usuario, es más seguro que el email
                 $identifier = $userId; 
-                $codeType = 'email_change'; // Como solicitaste
+                $codeType = 'email_change';
 
                 // 1. Limpiar códigos viejos de este tipo para este usuario
                 $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = ?");
@@ -300,13 +330,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$identifier, $codeType, $verificationCode]);
 
                 // 4. (Simulación de envío de email)
-                // En un caso real, aquí se enviaría el $verificationCode al email actual: $_SESSION['email']
 
                 $response['success'] = true;
                 $response['message'] = 'Se ha generado un código de verificación.';
 
             } catch (Exception $e) {
-                // Capturar error si, por ejemplo, el ENUM 'email_change' no existe
                 if (strpos($e->getMessage(), 'Data truncated') !== false) {
                      $response['message'] = "Error de BD: El tipo '{$codeType}' no existe en el ENUM 'code_type' de la tabla 'verification_codes'. Asegúrate de añadirlo.";
                 } else {
@@ -315,7 +343,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // --- ▼▼▼ NUEVA ACCIÓN: VERIFICAR CÓDIGO PARA CAMBIAR EMAIL ▼▼▼ ---
+        // --- ACCIÓN: VERIFICAR CÓDIGO PARA CAMBIAR EMAIL ---
         elseif ($action === 'verify-email-change-code') {
             try {
                 $submittedCode = str_replace('-', '', $_POST['verification_code'] ?? '');
@@ -338,7 +366,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // 2. Comparar
                 if (!$codeData || strtolower($codeData['code']) !== strtolower($submittedCode)) {
-                    // (Opcional: aquí se podría loguear un intento fallido)
                     throw new Exception('El código es incorrecto o ha expirado.');
                 }
 
@@ -354,14 +381,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // --- ▼▼▼ ACCIÓN EXISTENTE: ACTUALIZAR EMAIL (Sin cambios) ▼▼▼ ---
+        // --- ACCIÓN: ACTUALIZAR EMAIL (MODIFICADA) ---
         elseif ($action === 'update-email') {
             try {
+                
+                // --- ▼▼▼ INICIO DE LA LÓGICA DE RATE LIMIT (EMAIL) ▼▼▼ ---
+                define('EMAIL_CHANGE_COOLDOWN_DAYS', 12);
+
+                $stmt_check_email = $pdo->prepare(
+                    "SELECT changed_at FROM user_audit_logs 
+                     WHERE user_id = ? AND change_type = 'email' 
+                     ORDER BY changed_at DESC LIMIT 1"
+                );
+                $stmt_check_email->execute([$userId]);
+                $lastLogEmail = $stmt_check_email->fetch();
+
+                if ($lastLogEmail) {
+                    $lastChangeTime = new DateTime($lastLogEmail['changed_at'], new DateTimeZone('UTC'));
+                    $currentTime = new DateTime('now', new DateTimeZone('UTC'));
+                    $interval = $currentTime->diff($lastChangeTime);
+                    $daysPassed = (int)$interval->format('%a'); // Obtener días totales
+
+                    if ($daysPassed < EMAIL_CHANGE_COOLDOWN_DAYS) {
+                        $daysRemaining = EMAIL_CHANGE_COOLDOWN_DAYS - $daysPassed;
+                        $plural = ($daysRemaining == 1) ? 'día' : 'días';
+                        throw new Exception("Debes esperar. Podrás cambiar tu correo de nuevo en {$daysRemaining} {$plural}.");
+                    }
+                }
+                // --- ▲▲▲ FIN DE LA LÓGICA DE RATE LIMIT ▲▲▲ ---
+                
                 $newEmail = trim($_POST['email'] ?? '');
+                $oldEmail = $_SESSION['email']; // Capturar el valor antiguo
                 
                 // 1. Validar formato de email
                 if (empty($newEmail) || !filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
                     throw new Exception('El formato de correo no es válido.');
+                }
+                
+                // 1.5 Validar si el email es el mismo
+                if ($newEmail === $oldEmail) {
+                    throw new Exception('Este ya es tu correo electrónico.');
                 }
         
                 // 2. Validar dominio (misma lógica que en el registro)
@@ -383,6 +442,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // 4. Actualizar la base de datos
                 $stmt = $pdo->prepare("UPDATE users SET email = ? WHERE id = ?");
                 $stmt->execute([$newEmail, $userId]);
+                
+                // --- ▼▼▼ INICIO DE LA LÓGICA DE AUDITORÍA (EMAIL) ▼▼▼ ---
+                $stmt_log_email = $pdo->prepare(
+                    "INSERT INTO user_audit_logs (user_id, change_type, old_value, new_value, changed_by_ip) 
+                     VALUES (?, 'email', ?, ?, ?)"
+                );
+                // getIpAddress() viene de config.php
+                $stmt_log_email->execute([$userId, $oldEmail, $newEmail, getIpAddress()]);
+                // --- ▲▲▲ FIN DE LA LÓGICA DE AUDITORÍA ▲▲▲ ---
         
                 // 5. Actualizar la sesión
                 $_SESSION['email'] = $newEmail;
@@ -395,7 +463,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = $e->getMessage();
             }
         }
-        // --- ▲▲▲ FIN NUEVA ACCIÓN ▲▲▲ ---
     }
 }
 
