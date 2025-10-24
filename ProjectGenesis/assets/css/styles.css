@@ -1,11 +1,4 @@
-/* ====================================== */
-/* =========== STYLES.CSS =============== */
-/* ====================================== */
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
-
-/* ====================================== */
-/* =========== GENERAL STYLES =========== */
-/* ====================================== */
 
 * {
     margin: 0;
@@ -49,9 +42,6 @@ body {
     border-radius: 12px;
     box-shadow: 0 4px 12px #00000020;
 }
-/* ====================================== */
-/* === OCULTAR NAV EN PÁGINAS DE AUTH === */
-/* ====================================== */
 
 .general-content-top {
     width: 100%;
@@ -305,9 +295,6 @@ body {
    justify-content: center;
    align-items: center;
 }
-/* ====================================== */
-/* =========== 404 PAGE STYLES ========== */
-/* ====================================== */
 
 .not-found-container {
     text-align: center;
@@ -339,9 +326,6 @@ body {
     color: #6b7280;
     line-height: 1.6;
 }
-/* ====================================== */
-/* =========== AUTH STYLES ============== */
-/* ====================================== */
 
 .auth-container {
     width: 100%;
@@ -476,10 +460,6 @@ body {
     text-decoration: underline;
 }
 
-/* ====================================== */
-/* ======= ESTILOS DE ERROR AUTH ======== */
-/* ====================================== */
-
 .auth-error-message {
     padding: 12px;
     background-color: #fbebee; 
@@ -490,10 +470,6 @@ body {
     margin-bottom: 8px; 
     display: none; 
 }
-
-/* ====================================== */
-/* === NUEVOS ESTILOS PARA REGISTRO MULTI-PASO === */
-/* ====================================== */
 
 .auth-form fieldset.auth-step {
     border: none;
@@ -548,10 +524,6 @@ body {
     background-color: #f5f5fa;
 }
 
-/* ====================================== */
-/* === NUEVOS ESTILOS PARA EL LOADER DE LOGOUT === */
-/* ====================================== */
-
 .logout-spinner {
     display: block; 
     width: 24px;   
@@ -572,27 +544,10 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-/* ====================================== */
-/* === NUEVA CLASE PARA BLOQUEO INTERACTIVO === */
-/* ====================================== */
-
 .disabled-interactive {
     pointer-events: none !important;
     opacity: 0.5 !important;
 }
-
-/* ====================================== */
-/* ======== SETTINGS PAGE STYLES ======== */
-/* ====================================== */
-
-/* ====================================== */
-/* ======== SETTINGS PAGE STYLES ======== */
-/* ====================================== */
-/* ... (estilos existentes) ... */
-
-/* --- ▲▲▲ FIN DE ESTILOS NUEVOS ▲▲▲ --- */
-
-/* ▼▼▼ NUEVOS ESTILOS PARA AVATAR SETTINGS ▼▼▼ */
 
 .visually-hidden {
     position: absolute;
@@ -609,22 +564,20 @@ body {
     display: flex;
     flex-direction: row;
     gap: 12px;
-    flex-shrink: 0; /* Evita que se encojan en flex */
+    flex-shrink: 0;
 }
 
-/* Estilo para el botón de "Eliminar" */
 .settings-button.danger {
-    color: #c62828; /* Rojo oscuro */
-    border-color: #ef9a9a; /* Borde rojo claro */
+    color: #c62828;
+    border-color: #ef9a9a;
 }
 
 .settings-button.danger:hover {
-    background-color: #fbebee; /* Fondo rojo muy claro */
+    background-color: #fbebee;
     color: #c62828;
     border-color: #c62828;
 }
 
-/* Contenedor de error de avatar */
 .settings-card-avatar-error {
     padding: 12px;
     background-color: #fbebee; 
@@ -632,14 +585,14 @@ body {
     border: 1px solid #ef9a9a;
     border-radius: 8px;
     font-size: 14px;
-    margin-bottom: 16px; /* Separación de la tarjeta */
-    display: none; /* Oculto por defecto */
+    margin-bottom: 16px;
+    display: none;
 }
 
 .settings-wrapper {
     width: 100%;
-    max-width: 700px; /* Ancho máximo ajustado (antes 960px) */
-    height: 100%; /* Alto añadido */
+    max-width: 700px;
+    height: 100%;
     margin: 0 auto;
     padding: 16px;
     display: flex;
@@ -651,27 +604,16 @@ body {
     font-size: 28px;
     font-weight: 700;
     color: #1f2937;
-    /* border-bottom: 1px solid #00000020; <-- ELIMINADO */
-    /* padding-bottom: 16px; <-- ELIMINADO */
-    text-align: center; /* <-- AÑADIDO */
+    text-align: center;
 }
 
 .settings-description {
     font-size: 16px;
     color: #6b7280;
     line-height: 1.6;
-    /* margin-bottom: 16px; <-- CAMBIADO */
-    margin-bottom: 0; /* <-- AÑADIDO */
-    text-align: center; /* <-- AÑADIDO */
+    margin-bottom: 0;
+    text-align: center;
 }
-
-/* ▼▼▼ NUEVA CLASE AÑADIDA ▼▼▼ */
-.settings-header-card {
-    border: 1px solid #00000020;
-    border-radius: 12px;
-    padding: 24px;
-    background-color: #ffffff;
-}/* ... (estilos existentes de settings) ... */
 
 .settings-header-card {
     border: 1px solid #00000020;
@@ -680,7 +622,12 @@ body {
     background-color: #ffffff;
 }
 
-/* --- ▼▼▼ ESTILOS NUEVOS AÑADIDOS ▼▼▼ --- */
+.settings-header-card {
+    border: 1px solid #00000020;
+    border-radius: 12px;
+    padding: 24px;
+    background-color: #ffffff;
+}
 
 .settings-card {
     display: flex;
@@ -702,13 +649,13 @@ body {
 }
 
 .settings-avatar {
-    width: 60px; /* Más grande que el header */
+    width: 60px;
     height: 60px;
     border-radius: 50%;
     border: 1px solid #ffffff40;
     padding: 0; 
     position: relative;
-    flex-shrink: 0; /* Evita que se encoja */
+    flex-shrink: 0;
 }
 
 .settings-avatar-image {
@@ -721,7 +668,6 @@ body {
     border-radius: 50%;
 }
 
-/* Reutilizamos la lógica de bordes del .header-profile */
 .settings-avatar::before {
     content: '';
     position: absolute;
@@ -802,16 +748,38 @@ body {
     cursor: pointer;
     transition: background-color 0.2s;
     padding: 0 16px;
-    flex-shrink: 0; /* Evita que se encoja */
+    flex-shrink: 0;
 }
 
 .settings-button:hover {
     background-color: #f5f5fa;
 }
 
-/* --- ▲▲▲ FIN DE ESTILOS NUEVOS ▲▲▲ --- */
+.settings-avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.5); 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    opacity: 0; 
+    transition: opacity 0.2s ease-in-out;
+    z-index: 2; 
+    cursor: pointer; 
+}
 
-/* Ajuste para el menú lateral en pantallas más grandes */
+.settings-avatar-overlay .material-symbols-rounded {
+    font-size: 16px; 
+}
+
+.settings-avatar:hover .settings-avatar-overlay {
+    opacity: 1;
+}
 
 @media (max-width: 468px) {
     .module-content.module-surface {
@@ -837,9 +805,7 @@ body {
     .general-content {
         border-radius: 0;
     }
-}/* ====================================== */
-/* === ▼▼▼ NUEVOS ESTILOS DE ALERTAS ▼▼▼ === */
-/* ====================================== */
+}
 
 @keyframes alertFadeIn {
     from {
@@ -865,19 +831,19 @@ body {
 
 #alert-container {
     position: fixed;
-    bottom: 12px; /* Ajustado desde 12px */
-    left: 12px;  /* Ajustado desde 12px */
+    bottom: 12px;
+    left: 12px;
     width: 325px;
-    z-index: 2000; /* Alto para estar sobre todo */
+    z-index: 2000;
     display: flex;
-    flex-direction: column-reverse; /* Nuevas alertas aparecen abajo y empujan las viejas hacia arriba */
+    flex-direction: column-reverse;
     gap: 8px;
 }
 
 .alert-toast {
     width: 100%;
-    min-height: 48px; /* Altura mínima de 48px */
-    background-color: #333; /* Color oscuro por defecto */
+    min-height: 48px;
+    background-color: #333;
     color: #ffffff;
     border-radius: 8px;
     box-shadow: 0 4px 12px #00000040;
@@ -886,7 +852,6 @@ body {
     align-items: center;
     gap: 10px;
     
-    /* Animación */
     opacity: 0;
     animation-duration: 0.3s;
     animation-timing-function: ease-out;
@@ -916,36 +881,28 @@ body {
     font-size: 15px;
     font-weight: 500;
     line-height: 1.4;
-    word-break: break-word; /* Para mensajes largos */
+    word-break: break-word;
 }
 
-/* --- Tipos de Alerta --- */
-
-/* info (default) */
 .alert-toast.alert-type-info {
     background-color: #333;
     color: #ffffff;
 }
 
-/* success */
 .alert-toast.alert-type-success {
-    background-color: #28a745; /* Verde */
+    background-color: #28a745;
     color: #ffffff;
 }
 
-/* error */
 .alert-toast.alert-type-error {
-    background-color: #c62828; /* Rojo oscuro */
+    background-color: #c62828;
     color: #ffffff;
 }
 
-/* Ajuste para móviles pequeños */
 @media (max-width: 400px) {
     #alert-container {
         left: 12px;
         right: 12px;
-        width: auto; /* Ancho completo menos padding */
+        width: auto;
     }
 }
-
-/* === ▲▲▲ FIN DE NUEVOS ESTILOS DE ALERTAS ▲▲▲ === */

@@ -50,6 +50,18 @@ export function initSettingsManager() {
     document.body.addEventListener('click', async (e) => {
         const fileInput = document.getElementById('avatar-upload-input');
 
+        // --- ▼▼▼ LÓGICA AÑADIDA ▼▼▼ ---
+        // Click en el avatar (la imagen o el overlay)
+        if (e.target.closest('#avatar-preview-container')) {
+            e.preventDefault();
+            hideAvatarError(); // Oculta errores antiguos
+            if (fileInput) {
+                fileInput.click();
+            }
+            return;
+        }
+        // --- ▲▲▲ FIN DE LA LÓGICA AÑADIDA ▲▲▲ ---
+
         // Click en "Subir foto" o "Cambiar foto"
         if (e.target.closest('#avatar-upload-trigger') || e.target.closest('#avatar-change-trigger')) {
             e.preventDefault();

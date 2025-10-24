@@ -12,7 +12,7 @@
         // ¡Este bloque de lógica se ha ido!
         ?>
         
-        <form id="avatar-form" onsubmit="event.preventDefault();" novalidate>
+        <form id="avatar-form" onsubmit="event.preventDefault();" novovite>
             
             <?php outputCsrfInput(); ?>
             
@@ -26,7 +26,11 @@
                              alt="Avatar de <?php echo htmlspecialchars($usernameForAlt); ?>"
                              class="settings-avatar-image"
                              id="avatar-preview-image">
-                    </div>
+                        
+                        <div class="settings-avatar-overlay">
+                            <span class="material-symbols-rounded">photo_camera</span>
+                        </div>
+                        </div>
                     <div class="settings-text-content">
                         <h2 class="settings-text-title">Foto de perfil</h2>
                         <p class="settings-text-description">Esto ayudará a tus compañeros a reconocerte.</p>
