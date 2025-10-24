@@ -115,24 +115,25 @@ async function handleResetSubmit(e) {
 
 
 /**
- * Lógica para el formulario de LOGIN (CORREGIDO)
+ * Lógica para el envío FINAL del LOGIN (Paso 2: 2FA)
+ * (Anteriormente handleLoginFormSubmit)
  */
-async function handleLoginFormSubmit(e) {
+async function handleLoginFinalSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const button = form.querySelector('button[type="submit"]');
     const errorDiv = document.getElementById('login-error');
     
     button.disabled = true;
-    button.textContent = 'Procesando...';
+    button.textContent = 'Verificando...'; // Texto modificado
     errorDiv.style.display = 'none';
 
     try {
         const formData = new FormData(form);
-        formData.append('action', 'login');
+        formData.append('action', 'login-verify-2fa'); // Acción modificada
 
         const response = await fetch(AUTH_ENDPOINT, {
-            method: 'POST', // <-- ¡AQUÍ ESTABA EL ERROR!
+            method: 'POST',
             body: formData,
         });
 
@@ -143,6 +144,7 @@ async function handleLoginFormSubmit(e) {
         const result = await response.json();
 
         if (result.success) {
+            // Éxito final, redirigir a home
             window.location.href = window.projectBasePath + '/';
         } else {
             showAuthError(errorDiv, result.message || 'Ha ocurrido un error.');
@@ -153,7 +155,7 @@ async function handleLoginFormSubmit(e) {
         showAuthError(errorDiv, 'No se pudo conectar con el servidor.');
     } finally {
         button.disabled = false;
-        button.textContent = 'Continuar';
+        button.textContent = 'Verificar e Ingresar'; // Texto modificado
     }
 }
 
@@ -312,11 +314,12 @@ function initRegisterWizard() {
 
     // 2. DELEGAR EL INPUT AL BODY (--- ¡BLOQUE MODIFICADO! ---)
     document.body.addEventListener('input', e => {
-        // --- MODIFICADO: Añadido listener para #reset-code ---
+        // --- MODIFICADO: Añadido listener para #login-code ---
         const isRegisterCode = (e.target.id === 'register-code' && e.target.closest('#register-form'));
         const isResetCode = (e.target.id === 'reset-code' && e.target.closest('#reset-form'));
+        const isLoginCode = (e.target.id === 'login-code' && e.target.closest('#login-form')); // <-- AÑADIDO
 
-        if (isRegisterCode || isResetCode) {
+        if (isRegisterCode || isResetCode || isLoginCode) { // <-- AÑADIDO
             
             // --- ¡¡¡ESTA ES LA LÍNEA MODIFICADA!!! ---
             // 1. Quitar CUALQUIER COSA que no sea un número (0-9) o letra (a-z, A-Z)
@@ -458,6 +461,97 @@ function initResetWizard() {
 // --- ▲▲▲ FIN NUEVA FUNCIÓN ▲▲▲ ---
 
 
+// --- ▼▼▼ NUEVA FUNCIÓN PARA LOGIN WIZARD (2FA) ▼▼▼ ---
+/**
+ * Inicializa la lógica del asistente de Login (para 2FA)
+ */
+function initLoginWizard() {
+    
+    document.body.addEventListener('click', async e => {
+        const button = e.target.closest('[data-auth-action]');
+        if (!button) return; 
+
+        const loginForm = button.closest('#login-form');
+        if (!loginForm) return; // <-- IMPORTANTE: Solo actuar en login-form
+
+        const errorDiv = loginForm.querySelector('#login-error');
+        if (!errorDiv) return;
+
+        const action = button.getAttribute('data-auth-action');
+        const currentStepEl = button.closest('.auth-step');
+        if (!currentStepEl) return;
+        
+        const currentStep = parseInt(currentStepEl.getAttribute('data-step'), 10);
+        
+        // --- Lógica para ir hacia ATRÁS (Paso 2 a 1) ---
+        if (action === 'prev-step') {
+            const prevStepEl = loginForm.querySelector(`[data-step="${currentStep - 1}"]`);
+            if (prevStepEl) {
+                currentStepEl.style.display = 'none';
+                prevStepEl.style.display = 'block';
+                errorDiv.style.display = 'none'; 
+            }
+            return;
+        }
+
+        // --- Lógica para ir hacia ADELANTE (Paso 1 a 2) ---
+        if (action === 'next-step') {
+            
+            // Validación de cliente simple
+            const emailInput = currentStepEl.querySelector('#login-email');
+            const passwordInput = currentStepEl.querySelector('#login-password');
+            if (!emailInput.value || !passwordInput.value) {
+                showAuthError(errorDiv, 'Por favor, completa email y contraseña.');
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+            button.disabled = true;
+            button.textContent = 'Procesando...';
+
+            try {
+                const formData = new FormData(loginForm);
+                // Esta es la primera acción: verificar credenciales
+                formData.append('action', 'login-check-credentials');
+
+                const response = await fetch(AUTH_ENDPOINT, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) throw new Error('Error de servidor.');
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    if (result.is_2fa_required) {
+                        // ÉXITO (PARCIAL): Se necesita 2FA. Mostrar paso 2.
+                        const nextStepEl = loginForm.querySelector(`[data-step="${currentStep + 1}"]`);
+                        if (nextStepEl) {
+                            currentStepEl.style.display = 'none';
+                            nextStepEl.style.display = 'block';
+                        }
+                    } else {
+                        // ÉXITO (TOTAL): No se necesita 2FA. Redirigir.
+                        window.location.href = window.projectBasePath + '/';
+                    }
+                } else {
+                    // FRACASO: Credenciales incorrectas o error.
+                    showAuthError(errorDiv, result.message || 'Error desconocido.');
+                }
+
+            } catch (error) {
+                showAuthError(errorDiv, 'No se pudo conectar con el servidor.');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Continuar';
+            }
+        }
+    });
+}
+// --- ▲▲▲ FIN NUEVA FUNCIÓN LOGIN WIZARD ▲▲▲ ---
+
+
 /**
  * Inicializador principal del módulo de autenticación
  */
@@ -472,10 +566,14 @@ export function initAuthManager() {
     // --- AÑADIDO: Inicializar el asistente de reseteo ---
     initResetWizard();
 
+    // --- AÑADIDO: Inicializar el asistente de Login (2FA) ---
+    initLoginWizard();
+
     // Asignar listeners a los formularios (esto también usa delegación, está bien)
     document.body.addEventListener('submit', e => {
         if (e.target.id === 'login-form') {
-            handleLoginFormSubmit(e);
+            // Modificado: Llama a la función de envío final (Paso 2)
+            handleLoginFinalSubmit(e);
         } else if (e.target.id === 'register-form') {
             // El submit solo se dispara en el último paso
             handleRegistrationSubmit(e);

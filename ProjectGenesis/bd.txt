@@ -14,6 +14,12 @@ CREATE TABLE users (
     profile_image_url VARCHAR(255) NULL,
     -- El ENUM se basa en los roles de styles.css y auth_handler.php
     `role` ENUM('user', 'moderator', 'administrator', 'founder') NOT NULL DEFAULT 'user',
+    
+    -- --- ▼▼▼ NUEVA COLUMNA 2FA ▼▼▼ ---
+    -- Columna para activar/desactivar 2FA (0 = off, 1 = on)
+    is_2fa_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    -- --- ▲▲▲ FIN DE LA NUEVA COLUMNA ▲▲▲ ---
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 -- --- Tabla de Códigos de Verificación ---
@@ -21,10 +27,14 @@ CREATE TABLE users (
 DROP TABLE IF EXISTS verification_codes;
 CREATE TABLE verification_codes (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    -- 'identifier' guarda el email (para registro/reset)
+    -- 'identifier' guarda el email (para registro/reset/2fa)
     identifier VARCHAR(255) NOT NULL, 
+    
     -- 'code_type' define el propósito del código
-    code_type ENUM('registration', 'password_reset') NOT NULL,
+    -- --- ▼▼▼ MODIFICACIÓN ENUM ▼▼▼ ---
+    code_type ENUM('registration', 'password_reset', '2fa') NOT NULL,
+    -- --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
     code VARCHAR(255) NOT NULL,
     -- 'payload' guarda datos extra (ej. username, password_hash) como JSON
     payload TEXT, 
@@ -32,12 +42,9 @@ CREATE TABLE verification_codes (
     -- Índice para búsquedas rápidas de códigos
     INDEX idx_identifier_type (identifier, code_type)
 );
-
-
 -- --- ▼▼▼ NUEVA TABLA DE SEGURIDAD ▼▼▼ ---
 -- Almacena intentos fallidos para rate limiting
 DROP TABLE IF EXISTS security_logs;
-
 CREATE TABLE security_logs (
   id INT NOT NULL AUTO_INCREMENT,
   user_identifier VARCHAR(255) NOT NULL,
