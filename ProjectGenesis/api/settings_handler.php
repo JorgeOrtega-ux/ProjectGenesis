@@ -161,7 +161,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['newAvatarUrl'] = $newPublicUrl;
 
             } catch (Exception $e) {
-                $response['message'] = $e->getMessage();
+                // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - upload-avatar');
+                    $response['message'] = 'Error al guardar en la base de datos.';
+                } else {
+                    $response['message'] = $e->getMessage();
+                }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             }
         }
 
@@ -195,7 +202,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['newAvatarUrl'] = $newDefaultUrl;
 
             } catch (Exception $e) {
-                $response['message'] = $e->getMessage();
+                // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - remove-avatar');
+                    $response['message'] = 'Error al actualizar la base de datos.';
+                } else {
+                    $response['message'] = $e->getMessage();
+                }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             }
         }
 
@@ -305,7 +319,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
             } catch (Exception $e) {
-                $response['message'] = $e->getMessage();
+                // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - update-username');
+                    $response['message'] = 'Error al actualizar la base de datos.';
+                } else {
+                    $response['message'] = $e->getMessage();
+                }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             }
         }
         
@@ -335,11 +356,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = 'Se ha generado un código de verificación.';
 
             } catch (Exception $e) {
-                if (strpos($e->getMessage(), 'Data truncated') !== false) {
-                     $response['message'] = "Error de BD: El tipo '{$codeType}' no existe en el ENUM 'code_type' de la tabla 'verification_codes'. Asegúrate de añadirlo.";
+                // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - request-email-change-code');
+                    if (strpos($e->getMessage(), 'Data truncated') !== false) {
+                         $response['message'] = "Error de BD: El tipo '{$codeType}' no existe en el ENUM 'code_type' de la tabla 'verification_codes'. Asegúrate de añadirlo.";
+                    } else {
+                        $response['message'] = 'Error al generar el código en la base de datos.';
+                    }
                 } else {
-                    $response['message'] = 'Error al generar el código: ' . $e->getMessage();
+                    $response['message'] = 'Error: ' . $e->getMessage();
                 }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             }
         }
 
@@ -358,7 +386,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (checkLockStatus($pdo, $identifier, $ip)) {
                     throw new Exception('Demasiados intentos fallidos. Por favor, inténtalo de nuevo en ' . LOCKOUT_TIME_MINUTES . ' minutos.');
                 }
-                // --- ▲▲▲ FIN DE LA LÓGICA DE RATE LIMIT ▲▲▲ ---
+                // --- ▲▲▲ FIN DE LA LÓGICA DE RATE LIMIT ▼▼▼ ---
 
 
                 if (empty($submittedCode)) {
@@ -401,7 +429,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = 'Verificación correcta. Ya puedes editar tu email.';
 
             } catch (Exception $e) {
-                $response['message'] = $e->getMessage();
+                // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - verify-email-change-code');
+                    $response['message'] = 'Error al verificar en la base de datos.';
+                } else {
+                    $response['message'] = $e->getMessage();
+                }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             }
         }
 
@@ -484,7 +519,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['newEmail'] = $newEmail;
         
             } catch (Exception $e) {
-                $response['message'] = $e->getMessage();
+                // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - update-email');
+                    $response['message'] = 'Error al actualizar la base de datos.';
+                } else {
+                    $response['message'] = $e->getMessage();
+                }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             }
         }
     }

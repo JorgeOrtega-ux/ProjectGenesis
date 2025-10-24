@@ -42,8 +42,11 @@ function logUserMetadata($pdo, $userId) {
         $stmt->execute([$userId, $ip, $deviceType, $browserInfo]);
 
     } catch (PDOException $e) {
+        // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+        logDatabaseError($e, 'auth_handler - logUserMetadata');
         // No hacer nada si falla el log de metadata.
         // No queremos que un fallo aquí impida el inicio de sesión.
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
     }
 }
 // --- ▲▲▲ FIN NUEVA FUNCIÓN HELPER ▲▲▲ ---
@@ -169,7 +172,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $response['success'] = true;
                     }
                 } catch (PDOException $e) {
+                    // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+                    logDatabaseError($e, 'auth_handler - register-check-email');
                     $response['message'] = 'Error en la base de datos.';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
@@ -217,7 +223,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $response['message'] = 'Código de verificación generado.';
                     }
                 } catch (PDOException $e) {
-                    $response['message'] = 'Error en la base de datos: ' . $e->getMessage();
+                    // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+                    logDatabaseError($e, 'auth_handler - register-check-username');
+                    $response['message'] = 'Error en la base de datos.';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
@@ -272,7 +281,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
                 } catch (PDOException $e) {
-                    $response['message'] = 'Error en la base de datos: ' . $e->getMessage();
+                    // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+                    logDatabaseError($e, 'auth_handler - register-verify');
+                    $response['message'] = 'Error en la base de datos.';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
@@ -353,7 +365,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $response['message'] = 'Correo o contraseña incorrectos.';
                     }
                 } catch (PDOException $e) {
-                    $response['message'] = 'Error en la base de datos: ' . $e->getMessage();
+                    // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+                    logDatabaseError($e, 'auth_handler - login-check-credentials');
+                    $response['message'] = 'Error en la base de datos.';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             } else {
                 $response['message'] = 'Por favor, completa todos los campos.';
@@ -433,7 +448,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
                 } catch (PDOException $e) {
+                    // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+                    logDatabaseError($e, 'auth_handler - login-verify-2fa');
                     $response['message'] = 'Error en la base de datos.';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
@@ -471,7 +489,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $response['message'] = 'Código de recuperación generado.';
                     }
                 } catch (PDOException $e) {
+                    // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+                    logDatabaseError($e, 'auth_handler - reset-check-email');
                     $response['message'] = 'Error en la base de datos.';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
@@ -510,7 +531,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $response['success'] = true;
                     }
                 } catch (PDOException $e) {
+                    // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+                    logDatabaseError($e, 'auth_handler - reset-check-code');
                     $response['message'] = 'Error en la base de datos.';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
@@ -566,7 +590,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $response['message'] = 'Contraseña actualizada. Serás redirigido.';
                     }
                 } catch (PDOException $e) {
+                    // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
+                    logDatabaseError($e, 'auth_handler - reset-update-password');
                     $response['message'] = 'Error en la base de datos.';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
