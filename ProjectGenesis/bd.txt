@@ -20,7 +20,7 @@ CREATE TABLE users (
     
     -- --- ▼▼▼ COLUMNA 2FA ▼▼▼ ---
     
--- Columna para activar/desactivar 2FA (0 = off, 1 = on)
+    -- Columna para activar/desactivar 2FA (0 = off, 1 = on)
     is_2fa_enabled TINYINT(1) NOT NULL DEFAULT 0,
     -- --- ▲▲▲ FIN DE LA COLUMNA ▲▲▲ ---
 
@@ -55,7 +55,11 @@ DROP TABLE IF EXISTS security_logs;
 CREATE TABLE security_logs (
   id INT NOT NULL AUTO_INCREMENT,
   user_identifier VARCHAR(255) NOT NULL,
-  action_type ENUM('login_fail','reset_fail') NOT NULL,
+  
+  -- --- ▼▼▼ MODIFICACIÓN (password_verify_fail AÑADIDO) ▼▼▼ ---
+  action_type ENUM('login_fail','reset_fail','password_verify_fail') NOT NULL,
+  -- --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+  
   ip_address VARCHAR(45) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
