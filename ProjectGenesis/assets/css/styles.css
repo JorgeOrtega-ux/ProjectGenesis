@@ -606,7 +606,11 @@ body {
 /* 3. ¡REGLA ELIMINADA! 
    Ya NO ocultamos el icono original.
 */
-
+.body-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.0178571429em;
+}
 /* Animación de rotación */
 @keyframes spin {
     0% { transform: rotate(0deg); }

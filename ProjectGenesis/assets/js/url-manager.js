@@ -32,7 +32,7 @@ async function loadPage(page) {
 
     try {
         // Modificación: Usar basePath en el fetch
-        const response = await fetch(`${basePath}/router/router.php?page=${page}`);
+        const response = await fetch(`${basePath}/config/router.php?page=${page}`);
         const html = await response.text();
         
         contentContainer.innerHTML = html;

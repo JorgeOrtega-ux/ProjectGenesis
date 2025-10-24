@@ -1,4 +1,4 @@
-<div class="module-content module-surface disabled" data-module="moduleSurface">
+<div class="module-content module-surface body-title disabled" data-module="moduleSurface">
     <div class="menu-content">
         <div class="menu-list">
             

@@ -43,7 +43,7 @@ $userRole = $_SESSION['role'] ?? 'user';
             </div>
             </div>
     </div>
-    <div class="module-content module-select disabled" data-module="moduleSelect">
+    <div class="module-content module-select body-title disabled" data-module="moduleSelect">
         <div class="menu-content">
             <div class="menu-list">
                 <div class="menu-link">
