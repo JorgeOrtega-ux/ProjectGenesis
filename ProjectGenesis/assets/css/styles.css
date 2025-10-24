@@ -596,12 +596,13 @@ body {
     animation: spin 1s linear infinite;
 }
 
-/* 2. Cuando el link está cargando... */
+/* 2. Cuando el link está cargando... (REEMPLAZADO por .disabled-interactive) */
+/*
 .menu-link[data-action="logout"].loading {
-    /* Evitar que se pueda volver a clickear */
     pointer-events: none; 
     cursor: default;
 }
+*/
 
 /* 3. ¡REGLA ELIMINADA! 
    Ya NO ocultamos el icono original.
@@ -618,6 +619,14 @@ body {
 }
 
 /* --- ▲▲▲ FIN DE NUEVOS ESTILOS --- ▲▲▲ */
+
+
+/* --- ▼▼▼ NUEVA CLASE PARA BLOQUEO INTERACTIVO ▼▼▼ --- */
+.disabled-interactive {
+    pointer-events: none !important;
+    opacity: 0.5 !important;
+}
+/* --- ▲▲▲ FIN DE LA NUEVA CLASE ▲▲▲ --- */
 
 
 @media (max-width: 468px) {
