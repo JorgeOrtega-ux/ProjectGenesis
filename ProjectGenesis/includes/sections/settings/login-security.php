@@ -11,24 +11,30 @@
         <div class="settings-card">
             <div class="settings-card-left">
                 <div class="settings-card-icon">
-                     <span class="material-symbols-rounded">lock</span>
+                    <span class="material-symbols-rounded">lock</span>
                 </div>
                 <div class="settings-text-content">
                     <h2 class="settings-text-title">Contraseña</h2>
-                    <p class="settings-text-description">Actualiza tu contraseña periódicamente para mantener tu cuenta segura.</p>
+
+                    <p class="settings-text-description">
+                        <?php
+                        // Esta variable $lastPasswordUpdateText se define en config/router.php
+                        echo htmlspecialchars($lastPasswordUpdateText);
+                        ?>
+                    </p>
                 </div>
             </div>
-            
+
             <div class="settings-card-right">
                 <div class="settings-card-right-actions">
                     <button type="button" class="settings-button" id="password-edit-trigger">Actualizar</button>
                 </div>
             </div>
         </div>
-        </div>
+    </div>
 
     <div class="settings-modal-overlay" id="password-change-modal" style="display: none;">
-        
+
         <button type="button" class="settings-modal-close-btn" id="password-verify-close">
             <span class="material-symbols-rounded">close</span>
         </button>
@@ -54,7 +60,7 @@
                         <button type="button" class="auth-button" id="password-verify-continue">Continuar</button>
                     </div>
                 </fieldset>
-                
+
                 <fieldset class="auth-step" data-step="2" style="display: none;">
                     <h2 class="auth-title">Crea una nueva contraseña</h2>
                     <p class="auth-verification-text">
@@ -67,7 +73,7 @@
                         <input type="password" id="password-update-new" name="new_password" required placeholder=" ">
                         <label for="password-update-new">Nueva contraseña*</label>
                     </div>
-                    
+
                     <div class="auth-input-group">
                         <input type="password" id="password-update-confirm" name="confirm_password" required placeholder=" ">
                         <label for="password-update-confirm">Confirmar nueva contraseña*</label>
@@ -78,8 +84,8 @@
                         <button type="button" class="auth-button" id="password-update-save">Guardar Contraseña</button>
                     </div>
                 </fieldset>
-            
+
             </form>
-            </div>
+        </div>
     </div>
-    </div>
+</div>

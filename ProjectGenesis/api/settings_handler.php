@@ -574,13 +574,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         // --- ▲▲▲ FIN: NUEVA ACCIÓN (VERIFICAR CONTRASEÑA ACTUAL) ▲▲▲ ---
 
-        // --- ▼▼▼ INICIO: NUEVA ACCIÓN (ACTUALIZAR CONTRASEÑA) ▼▼▼ ---
-        elseif ($action === 'update-password') {
+ elseif ($action === 'update-password') {
             try {
+                
+                define('PASSWORD_CHANGE_COOLDOWN_HOURS', 24);
+
+                $stmt_check_pass = $pdo->prepare(
+                    "SELECT changed_at FROM user_audit_logs 
+                     WHERE user_id = ? AND change_type = 'password' 
+                     ORDER BY changed_at DESC LIMIT 1"
+                );
+                $stmt_check_pass->execute([$userId]);
+                $lastLogPass = $stmt_check_pass->fetch();
+
+                if ($lastLogPass) {
+                    $lastChangeTime = new DateTime($lastLogPass['changed_at'], new DateTimeZone('UTC'));
+                    $currentTime = new DateTime('now', new DateTimeZone('UTC'));
+                    $interval = $currentTime->diff($lastChangeTime);
+                    
+                    $hoursPassed = ($interval->d * 24) + $interval->h;
+                    
+                    if ($hoursPassed < PASSWORD_CHANGE_COOLDOWN_HOURS) {
+                        $hoursRemaining = PASSWORD_CHANGE_COOLDOWN_HOURS - $hoursPassed;
+                        $plural = ($hoursRemaining == 1) ? 'hora' : 'horas';
+                        throw new Exception("Debes esperar. Podrás cambiar tu contraseña de nuevo en {$hoursRemaining} {$plural}.");
+                    }
+                }
+
                 $newPassword = $_POST['new_password'] ?? '';
                 $confirmPassword = $_POST['confirm_password'] ?? '';
 
-                // 1. Validaciones
                 if (empty($newPassword) || empty($confirmPassword)) {
                     throw new Exception('Por favor, completa ambos campos de nueva contraseña.');
                 }
@@ -591,11 +614,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception('Las nuevas contraseñas no coinciden.');
                 }
 
-                // 2. Hashear y actualizar
+                $stmt_get_old = $pdo->prepare("SELECT password FROM users WHERE id = ?");
+                $stmt_get_old->execute([$userId]);
+                $oldHashedPassword = $stmt_get_old->fetchColumn();
+                if (!$oldHashedPassword) {
+                    $oldHashedPassword = 'hash_desconocido'; 
+                }
+
                 $newHashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
                 
                 $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
                 $stmt->execute([$newHashedPassword, $userId]);
+
+                $stmt_log_pass = $pdo->prepare(
+                    "INSERT INTO user_audit_logs (user_id, change_type, old_value, new_value, changed_by_ip) 
+                     VALUES (?, 'password', ?, ?, ?)"
+                );
+                $stmt_log_pass->execute([$userId, $oldHashedPassword, $newHashedPassword, getIpAddress()]);
 
                 $response['success'] = true;
                 $response['message'] = '¡Contraseña actualizada con éxito!';
@@ -603,13 +638,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } catch (Exception $e) {
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - update-password');
-                    $response['message'] = 'Error al actualizar la base de datos.';
+                    if (strpos($e->getMessage(), "Data truncated for column 'change_type'") !== false) {
+                        $response['message'] = "Error de BD: Asegúrate de añadir 'password' al ENUM 'change_type' en la tabla 'user_audit_logs'.";
+                    } else {
+                        $response['message'] = 'Error al actualizar la base de datos.';
+                    }
                 } else {
                     $response['message'] = $e->getMessage();
                 }
             }
         }
-        // --- ▲▲▲ FIN: NUEVA ACCIÓN (ACTUALIZAR CONTRASEÑA) ▲▲▲ ---
 
     }
 }
