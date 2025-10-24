@@ -39,7 +39,7 @@ if (isset($_SESSION['user_id'])) {
     } catch (PDOException $e) {
         // Si hay un error de BD, es mejor no hacer nada
         // y seguir con los datos de sesión que ya teníamos.
-        // error_log("Error al refrescar sesión: " . $e->getMessage());
+        // error_log("Error al refrescar sesión: "." . $e->getMessage());
     }
 }
 // --- FIN DE LA NUEVA MODIFICACIÓN ---
@@ -59,26 +59,38 @@ if (empty($path) || $path === '/') {
 }
 
 // 4. Replicar la lógica de rutas para saber la página actual
+// --- ▼▼▼ MODIFICACIÓN: AÑADIR RUTAS DE SETTINGS ▼▼▼ ---
 $pathsToPages = [
     '/'           => 'home',
     '/explorer'   => 'explorer',
     '/login'      => 'login',
     '/register'   => 'register',
-    '/reset-password' => 'reset-password' // <-- AÑADIDO
+    '/reset-password' => 'reset-password',
+    
+    // Nuevas rutas de Configuración
+    '/settings'                 => 'settings-profile', // Redirige /settings a /settings/your-profile
+    '/settings/your-profile'    => 'settings-profile',
+    '/settings/login-security'  => 'settings-login',
+    '/settings/accessibility'   => 'settings-accessibility'
 ];
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 $currentPage = $pathsToPages[$path] ?? '404';
 
 // 5. Definir qué páginas NO DEBEN mostrar el header/menu
-$authPages = ['login', 'register', 'reset-password']; // <-- AÑADIDO
+$authPages = ['login', 'register', 'reset-password'];
 $isAuthPage = in_array($currentPage, $authPages);
+
+
+// --- ▼▼▼ NUEVA LÓGICA: DETECTAR SI ES PÁGINA DE SETTINGS ▼▼▼ ---
+$isSettingsPage = strpos($currentPage, 'settings-') === 0;
+// --- ▲▲▲ FIN DE LA NUEVA LÓGICA ▲▲▲ ---
 
 
 // --- MODIFICACIÓN 2: LÓGICA DE PROTECCIÓN DE RUTAS ---
 
 // A. Si el usuario NO está logueado Y NO está en una página de auth,
 //    redirigir forzosamente a /login.
-//    (Esta comprobación ahora se hace después de refrescar la sesión)
 if (!isset($_SESSION['user_id']) && !$isAuthPage) {
     header('Location: ' . $basePath . '/login');
     exit;
@@ -90,7 +102,14 @@ if (isset($_SESSION['user_id']) && $isAuthPage) {
     header('Location: ' . $basePath . '/');
     exit;
 }
-// --- FIN DE LA LÓGICA AÑADIDA ---
+
+// --- ▼▼▼ NUEVA LÓGICA: REDIRIGIR /settings A /settings/your-profile ▼▼▼ ---
+// Si la ruta solicitada fue exactamente /settings, redirigimos
+if ($path === '/settings') {
+    header('Location: ' . $basePath . '/settings/your-profile');
+    exit;
+}
+// --- ▲▲▲ FIN DE LA NUEVA LÓGICA ▲▲▲ ---
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -117,7 +136,11 @@ if (isset($_SESSION['user_id']) && $isAuthPage) {
                 <div class="general-content-bottom">
                     
                     <?php if (!$isAuthPage): ?>
-                    <?php include 'includes/modules/module-surface.php'; ?>
+                    <?php 
+                    // Aquí pasamos la variable $isSettingsPage
+                    // para que el módulo de superficie sepa qué menú mostrar
+                    include 'includes/modules/module-surface.php'; 
+                    ?>
                     <?php endif; ?>
 
                     <div class="general-content-scrolleable">

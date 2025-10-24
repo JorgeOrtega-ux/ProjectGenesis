@@ -581,6 +581,63 @@ body {
     opacity: 0.5 !important;
 }
 
+/* ====================================== */
+/* ======== SETTINGS PAGE STYLES ======== */
+/* ====================================== */
+
+.settings-wrapper {
+    width: 100%;
+    max-width: 960px; /* Ancho máximo para el contenido de config */
+    margin: 0 auto;
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.settings-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    border-bottom: 1px solid #00000020;
+    padding-bottom: 16px;
+}
+
+.settings-description {
+    font-size: 16px;
+    color: #6b7280;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.settings-content-placeholder {
+    width: 100%;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5fa;
+    border: 1px dashed #00000020;
+    border-radius: 12px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+/* Ajuste para el menú lateral en pantallas más grandes */
+@media (min-width: 769px) {
+    .general-content-scrolleable {
+        /* Cuando estamos en settings, el scrollable debe */
+        /* estar consciente del menú lateral (moduleSurface) */
+        /* Esto es un ejemplo, puedes necesitar ajustar */
+        transition: padding-left 0.2s ease-in-out;
+    }
+    
+    /* Si el menú lateral está visible (no-móvil) */
+    .module-surface:not(.disabled) + .general-content-scrolleable {
+         /* No hacemos nada, el layout de flexbox ya lo maneja */
+    }
+}
+
 @media (max-width: 468px) {
     .module-content.module-surface {
         width: 100%;
