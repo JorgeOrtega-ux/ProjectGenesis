@@ -130,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // --- LÓGICA DE REGISTRO PASO 2 (MODIFICADO para usar `identifier` y `payload`) ---
+        // --- LÓGICA DE REGISTRO PASO 2 (Sin cambios) ---
         elseif ($action === 'register-check-username-and-generate-code') {
             
             $email = $_POST['email'] ?? '';
@@ -178,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // --- LÓGICA DE REGISTRO PASO 3 (MODIFICADO para leer `identifier` y `payload`) ---
+        // --- LÓGICA DE REGISTRO PASO 3 (Sin cambios) ---
         elseif ($action === 'register-verify') {
             if (empty($_POST['email']) || empty($_POST['verification_code'])) {
                 $response['message'] = 'Faltan el correo o el código de verificación.';
@@ -232,12 +232,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // --- LÓGICA DE LOGIN (Sin cambios) ---
+        // --- LÓGICA DE LOGIN (MODIFICADA) ---
         elseif ($action === 'login') {
             if (!empty($_POST['email']) && !empty($_POST['password'])) {
                 
                 $email = $_POST['email'];
                 $password = $_POST['password'];
+                $ip = getIpAddress(); // <-- MODIFICACIÓN: Obtener IP
+
+                // --- ▼▼▼ NUEVA MODIFICACIÓN: VERIFICAR BLOQUEO ▼▼▼ ---
+                if (checkLockStatus($pdo, $email, $ip)) {
+                    $response['message'] = 'Demasiados intentos fallidos. Por favor, inténtalo de nuevo en ' . LOCKOUT_TIME_MINUTES . ' minutos.';
+                    echo json_encode($response);
+                    exit;
+                }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
                 try {
                     $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
@@ -246,20 +255,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if ($user && password_verify($password, $user['password'])) {
                         
+                        // --- ▼▼▼ NUEVA MODIFICACIÓN: Limpiar logs en éxito ▼▼▼ ---
+                        clearFailedAttempts($pdo, $email);
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
                         $_SESSION['user_id'] = $user['id'];
                         $_SESSION['username'] = $user['username'];
                         $_SESSION['email'] = $user['email'];
                         $_SESSION['profile_image_url'] = $user['profile_image_url'];
                         $_SESSION['role'] = $user['role']; 
 
-                        // --- ¡NUEVA MODIFICACIÓN! Regenerar token al iniciar sesión ---
                         generateCsrfToken();
-                        // --- FIN DE LA NUEVA MODIFICACIÓN ---
 
                         $response['success'] = true;
                         $response['message'] = 'Inicio de sesión correcto.';
                     
                     } else {
+                        // --- ▼▼▼ NUEVA MODIFICACIÓN: Registrar fallo ▼▼▼ ---
+                        logFailedAttempt($pdo, $email, $ip, 'login_fail');
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                         $response['message'] = 'Correo o contraseña incorrectos.';
                     }
                 } catch (PDOException $e) {
@@ -270,9 +284,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // --- ▼▼▼ NUEVA LÓGICA PARA RESETEO DE CONTRASEÑA ▼▼▼ ---
+        // --- LÓGICA PARA RESETEO DE CONTRASEÑA ---
 
-        // PASO 1: Verificar email y generar código de reseteo
+        // PASO 1: Verificar email y generar código (Sin cambios de bloqueo)
         elseif ($action === 'reset-check-email') {
             $email = $_POST['email'] ?? '';
 
@@ -283,19 +297,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
                     $stmt->execute([$email]);
                     if (!$stmt->fetch()) {
-                        // No informamos al usuario si el email existe o no por seguridad
-                        // Pero internamente, solo continuamos si existe.
                         $response['success'] = true; 
                         $response['message'] = 'Si el correo existe, se enviará un código.';
                     } else {
-                        // 1. Limpiar códigos viejos de 'password_reset' para este email
                         $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = 'password_reset'");
                         $stmt->execute([$email]);
 
-                        // 2. Generar código (sin payload, no es necesario)
                         $verificationCode = str_replace('-', '', generateVerificationCode());
 
-                        // 3. Insertar código de reseteo
                         $stmt = $pdo->prepare(
                             "INSERT INTO verification_codes (identifier, code_type, code) 
                              VALUES (?, 'password_reset', ?)"
@@ -311,14 +320,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // PASO 2: Verificar el código de reseteo
+        // PASO 2: Verificar el código de reseteo (MODIFICADO)
         elseif ($action === 'reset-check-code') {
             $email = $_POST['email'] ?? '';
             $submittedCode = str_replace('-', '', $_POST['verification_code'] ?? '');
+            $ip = getIpAddress(); // <-- MODIFICACIÓN: Obtener IP
 
             if (empty($email) || empty($submittedCode)) {
                 $response['message'] = 'Faltan datos de verificación.';
             } else {
+                
+                // --- ▼▼▼ NUEVA MODIFICACIÓN: VERIFICAR BLOQUEO ▼▼▼ ---
+                if (checkLockStatus($pdo, $email, $ip)) {
+                    $response['message'] = 'Demasiados intentos fallidos. Por favor, inténtalo de nuevo en ' . LOCKOUT_TIME_MINUTES . ' minutos.';
+                    echo json_encode($response);
+                    exit;
+                }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                
                 try {
                     $stmt = $pdo->prepare(
                         "SELECT * FROM verification_codes 
@@ -330,9 +349,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $codeData = $stmt->fetch();
 
                     if (!$codeData || strtolower($codeData['code']) !== strtolower($submittedCode)) {
+                        // --- ▼▼▼ NUEVA MODIFICACIÓN: Registrar fallo ▼▼▼ ---
+                        logFailedAttempt($pdo, $email, $ip, 'reset_fail');
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                         $response['message'] = 'El código es incorrecto o ha expirado.';
                     } else {
-                        // El código es correcto, permitir avanzar
+                        // --- ▼▼▼ NUEVA MODIFICACIÓN: Limpiar logs en éxito ▼▼▼ ---
+                        clearFailedAttempts($pdo, $email);
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                         $response['success'] = true;
                     }
                 } catch (PDOException $e) {
@@ -341,17 +365,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // PASO 3: Verificar todo y actualizar la contraseña
+        // PASO 3: Verificar todo y actualizar la contraseña (MODIFICADO)
         elseif ($action === 'reset-update-password') {
             $email = $_POST['email'] ?? '';
             $submittedCode = str_replace('-', '', $_POST['verification_code'] ?? '');
             $newPassword = $_POST['password'] ?? '';
+            $ip = getIpAddress(); // <-- MODIFICACIÓN: Obtener IP
 
             if (empty($email) || empty($submittedCode) || empty($newPassword)) {
                 $response['message'] = 'Faltan datos. Por favor, vuelve a empezar.';
             } elseif (strlen($newPassword) < 8) {
                 $response['message'] = 'La nueva contraseña debe tener al menos 8 caracteres.';
             } else {
+                
+                // --- ▼▼▼ NUEVA MODIFICACIÓN: VERIFICAR BLOQUEO ▼▼▼ ---
+                if (checkLockStatus($pdo, $email, $ip)) {
+                    $response['message'] = 'Demasiados intentos fallidos. Por favor, inténtalo de nuevo en ' . LOCKOUT_TIME_MINUTES . ' minutos.';
+                    echo json_encode($response);
+                    exit;
+                }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
                 try {
                     // Re-verificamos el código por seguridad
                     $stmt = $pdo->prepare(
@@ -364,6 +398,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $codeData = $stmt->fetch();
 
                     if (!$codeData || strtolower($codeData['code']) !== strtolower($submittedCode)) {
+                        // --- ▼▼▼ NUEVA MODIFICACIÓN: Registrar fallo ▼▼▼ ---
+                        logFailedAttempt($pdo, $email, $ip, 'reset_fail');
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                         $response['message'] = 'El código es incorrecto o ha expirado. Vuelve a empezar.';
                     } else {
                         // ¡Éxito! Hashear nueva contraseña y actualizar usuario
@@ -376,6 +413,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE id = ?");
                         $stmt->execute([$codeData['id']]);
 
+                        // --- ▼▼▼ NUEVA MODIFICACIÓN: Limpiar logs en éxito ▼▼▼ ---
+                        clearFailedAttempts($pdo, $email);
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
                         $response['success'] = true;
                         $response['message'] = 'Contraseña actualizada. Serás redirigido.';
                     }
@@ -385,7 +426,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA ---
     }
 }
 

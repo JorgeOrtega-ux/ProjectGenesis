@@ -16,12 +16,9 @@ CREATE TABLE users (
     `role` ENUM('user', 'moderator', 'administrator', 'founder') NOT NULL DEFAULT 'user',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
-
-
 -- --- Tabla de Códigos de Verificación ---
 -- Almacena códigos temporales para registro, reseteo de contraseña, etc.
 DROP TABLE IF EXISTS verification_codes;
-
 CREATE TABLE verification_codes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     -- 'identifier' guarda el email (para registro/reset)
@@ -35,3 +32,21 @@ CREATE TABLE verification_codes (
     -- Índice para búsquedas rápidas de códigos
     INDEX idx_identifier_type (identifier, code_type)
 );
+
+
+-- --- ▼▼▼ NUEVA TABLA DE SEGURIDAD ▼▼▼ ---
+-- Almacena intentos fallidos para rate limiting
+DROP TABLE IF EXISTS security_logs;
+
+CREATE TABLE security_logs (
+  id INT NOT NULL AUTO_INCREMENT,
+  user_identifier VARCHAR(255) NOT NULL,
+  action_type ENUM('login_fail','reset_fail') NOT NULL,
+  ip_address VARCHAR(45) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  -- Índices para consultar rápidamente los intentos fallidos
+  INDEX idx_user_time (user_identifier, created_at),
+  INDEX idx_ip_time (ip_address, created_at)
+);
+-- --- ▲▲▲ FIN DE LA NUEVA TABLA ▲▲▲ ---
