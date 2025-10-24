@@ -409,7 +409,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // --- ▼▼▼ INICIO DE LA LÓGICA DE RATE LIMIT ▼▼▼ ---
                     // 3.5 LOG DE INTENTO FALLIDO
                     logFailedAttempt($pdo, $identifier, $ip, 'email_change_fail');
-                    // --- ▲▲▲ FIN DE LA LÓGICA DE RATE LIMIT ▲▲▲ ---
+                    // --- ▲▲▲ FIN DE LA LÓGICA DE RATE LIMIT ▼▼▼ ---
                     
                     throw new Exception('El código es incorrecto o ha expirado.');
                 }
@@ -419,7 +419,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // --- ▼▼▼ INICIO DE LA LÓGICA DE RATE LIMIT ▼▼▼ ---
                 // 4.1 LIMPIAR INTENTOS FALLIDOS (al tener éxito)
                 clearFailedAttempts($pdo, $identifier);
-                // --- ▲▲▲ FIN DE LA LÓGICA DE RATE LIMIT ▲▲▲ ---
+                // --- ▲▲▲ FIN DE LA LÓGICA DE RATE LIMIT ▼▼▼ ---
                 
                 // 4.2 Limpiar el código usado
                 $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE id = ?");
@@ -529,6 +529,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             }
         }
+
+        // --- ▼▼▼ INICIO: NUEVA ACCIÓN (VERIFICAR CONTRASEÑA ACTUAL) ▼▼▼ ---
+        elseif ($action === 'verify-current-password') {
+            try {
+                $ip = getIpAddress();
+                $identifier = $userId; // Usamos el ID de usuario como identificador para el rate limit
+                $currentPassword = $_POST['current_password'] ?? '';
+
+                // 1. VERIFICAR BLOQUEO
+                if (checkLockStatus($pdo, $identifier, $ip)) {
+                    throw new Exception('Demasiados intentos fallidos. Por favor, inténtalo de nuevo en ' . LOCKOUT_TIME_MINUTES . ' minutos.');
+                }
+                
+                if (empty($currentPassword)) {
+                    throw new Exception('Por favor, introduce tu contraseña actual.');
+                }
+
+                // 2. Obtener hash actual de la BD
+                $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ?");
+                $stmt->execute([$userId]);
+                $hashedPassword = $stmt->fetchColumn();
+
+                // 3. Verificar
+                if ($hashedPassword && password_verify($currentPassword, $hashedPassword)) {
+                    // Éxito
+                    clearFailedAttempts($pdo, $identifier);
+                    $response['success'] = true;
+                    $response['message'] = 'Contraseña actual correcta.';
+                } else {
+                    // Fallo
+                    logFailedAttempt($pdo, $identifier, $ip, 'password_verify_fail');
+                    throw new Exception('La contraseña actual es incorrecta.');
+                }
+
+            } catch (Exception $e) {
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - verify-current-password');
+                    $response['message'] = 'Error al verificar en la base de datos.';
+                } else {
+                    $response['message'] = $e->getMessage();
+                }
+            }
+        }
+        // --- ▲▲▲ FIN: NUEVA ACCIÓN (VERIFICAR CONTRASEÑA ACTUAL) ▲▲▲ ---
+
+        // --- ▼▼▼ INICIO: NUEVA ACCIÓN (ACTUALIZAR CONTRASEÑA) ▼▼▼ ---
+        elseif ($action === 'update-password') {
+            try {
+                $newPassword = $_POST['new_password'] ?? '';
+                $confirmPassword = $_POST['confirm_password'] ?? '';
+
+                // 1. Validaciones
+                if (empty($newPassword) || empty($confirmPassword)) {
+                    throw new Exception('Por favor, completa ambos campos de nueva contraseña.');
+                }
+                if (strlen($newPassword) < 8) {
+                    throw new Exception('La nueva contraseña debe tener al menos 8 caracteres.');
+                }
+                if ($newPassword !== $confirmPassword) {
+                    throw new Exception('Las nuevas contraseñas no coinciden.');
+                }
+
+                // 2. Hashear y actualizar
+                $newHashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
+                
+                $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+                $stmt->execute([$newHashedPassword, $userId]);
+
+                $response['success'] = true;
+                $response['message'] = '¡Contraseña actualizada con éxito!';
+
+            } catch (Exception $e) {
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - update-password');
+                    $response['message'] = 'Error al actualizar la base de datos.';
+                } else {
+                    $response['message'] = $e->getMessage();
+                }
+            }
+        }
+        // --- ▲▲▲ FIN: NUEVA ACCIÓN (ACTUALIZAR CONTRASEÑA) ▲▲▲ ---
+
     }
 }
 

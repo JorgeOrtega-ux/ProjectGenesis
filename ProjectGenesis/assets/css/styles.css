@@ -655,6 +655,24 @@ body {
 }
 /* --- FIN DE LA CORRECCIÓN DE ALINEACIÓN --- */
 
+/* --- ▼▼▼ NUEVA CLASE PARA EL ICONO DE CONTRASEÑA ▼▼▼ --- */
+.settings-card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5fa;
+    color: #000000;
+    flex-shrink: 0;
+}
+
+.settings-card-icon .material-symbols-rounded {
+    font-size: 28px;
+}
+/* --- ▲▲▲ FIN DE LA NUEVA CLASE ▲▲▲ --- */
+
 .settings-card-left {
     display: flex;
     flex: 1 1 auto;

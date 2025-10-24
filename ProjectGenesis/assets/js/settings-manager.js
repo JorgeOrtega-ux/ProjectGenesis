@@ -305,6 +305,135 @@ export function initSettingsManager() {
             document.getElementById('email-actions-view').style.display = 'flex';
             return;
         }
+
+        // --- ▼▼▼ INICIO: LÓGICA PARA CONTRASEÑA ▼▼▼ ---
+        if (e.target.closest('#password-edit-trigger')) {
+            e.preventDefault();
+            const modal = document.getElementById('password-change-modal');
+            if (!modal) return;
+
+            // Resetear modal al estado inicial
+            modal.querySelector('[data-step="1"]').style.display = 'flex';
+            modal.querySelector('[data-step="2"]').style.display = 'none';
+            
+            modal.querySelector('#password-verify-error').style.display = 'none';
+            modal.querySelector('#password-update-error').style.display = 'none';
+
+            modal.querySelector('#password-verify-current').value = '';
+            modal.querySelector('#password-update-new').value = '';
+            modal.querySelector('#password-update-confirm').value = '';
+            
+            modal.style.display = 'flex';
+            focusInputAndMoveCursorToEnd(modal.querySelector('#password-verify-current'));
+            return;
+        }
+
+        if (e.target.closest('#password-verify-close')) {
+            e.preventDefault();
+            const modal = document.getElementById('password-change-modal');
+            if(modal) modal.style.display = 'none';
+            return;
+        }
+
+        if (e.target.closest('#password-update-back')) {
+            e.preventDefault();
+            const modal = document.getElementById('password-change-modal');
+            if (!modal) return;
+            
+            modal.querySelector('[data-step="1"]').style.display = 'flex';
+            modal.querySelector('[data-step="2"]').style.display = 'none';
+            modal.querySelector('#password-update-error').style.display = 'none';
+            focusInputAndMoveCursorToEnd(modal.querySelector('#password-verify-current'));
+            return;
+        }
+        
+        if (e.target.closest('#password-verify-continue')) {
+            e.preventDefault();
+            const modal = document.getElementById('password-change-modal');
+            const verifyTrigger = e.target.closest('#password-verify-continue');
+            const errorDiv = document.getElementById('password-verify-error');
+            const currentPassInput = document.getElementById('password-verify-current');
+
+            if (!currentPassInput.value) {
+                if(errorDiv) {
+                    errorDiv.textContent = 'Por favor, introduce tu contraseña actual.';
+                    errorDiv.style.display = 'block';
+                }
+                return;
+            }
+            
+            toggleButtonSpinner(verifyTrigger, 'Continuar', true);
+            if(errorDiv) errorDiv.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('action', 'verify-current-password');
+            formData.append('current_password', currentPassInput.value);
+
+            const result = await callSettingsApi(formData);
+
+            if (result.success) {
+                modal.querySelector('[data-step="1"]').style.display = 'none';
+                modal.querySelector('[data-step="2"]').style.display = 'flex';
+                focusInputAndMoveCursorToEnd(modal.querySelector('#password-update-new'));
+            } else {
+                if(errorDiv) {
+                    errorDiv.textContent = result.message || 'Error al verificar.';
+                    errorDiv.style.display = 'block';
+                }
+            }
+            
+            toggleButtonSpinner(verifyTrigger, 'Continuar', false);
+            return;
+        }
+
+        if (e.target.closest('#password-update-save')) {
+            e.preventDefault();
+            const modal = document.getElementById('password-change-modal');
+            const saveTrigger = e.target.closest('#password-update-save');
+            const errorDiv = document.getElementById('password-update-error');
+            const newPassInput = document.getElementById('password-update-new');
+            const confirmPassInput = document.getElementById('password-update-confirm');
+
+            // Validación de cliente
+            if (newPassInput.value.length < 8) {
+                if(errorDiv) {
+                    errorDiv.textContent = 'La nueva contraseña debe tener al menos 8 caracteres.';
+                    errorDiv.style.display = 'block';
+                }
+                return;
+            }
+            if (newPassInput.value !== confirmPassInput.value) {
+                if(errorDiv) {
+                    errorDiv.textContent = 'Las nuevas contraseñas no coinciden.';
+                    errorDiv.style.display = 'block';
+                }
+                return;
+            }
+
+            toggleButtonSpinner(saveTrigger, 'Guardar Contraseña', true);
+            if(errorDiv) errorDiv.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('action', 'update-password');
+            formData.append('new_password', newPassInput.value);
+            formData.append('confirm_password', confirmPassInput.value);
+
+            const result = await callSettingsApi(formData);
+
+            if (result.success) {
+                if(modal) modal.style.display = 'none';
+                window.showAlert(result.message || 'Contraseña actualizada.', 'success');
+            } else {
+                if(errorDiv) {
+                    errorDiv.textContent = result.message || 'Error al guardar.';
+                    errorDiv.style.display = 'block';
+                }
+            }
+            
+            toggleButtonSpinner(saveTrigger, 'Guardar Contraseña', false);
+            return;
+        }
+        // --- ▲▲▲ FIN: LÓGICA PARA CONTRASEÑA ▲▲▲ ---
     });
 
     // 2. Delegación para SUBMIT
