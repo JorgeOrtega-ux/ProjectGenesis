@@ -3,7 +3,7 @@
 /* ====================================== */
 
 // URL del endpoint de PHP
-const AUTH_ENDPOINT = `${window.projectBasePath}/auth_handler.php`;
+const AUTH_ENDPOINT = `${window.projectBasePath}/api/auth_handler.php`;
 
 /**
  * Función genérica para manejar el envío FINAL del formulario de registro

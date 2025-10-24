@@ -80,7 +80,7 @@ export function initMainController() {
                     // --- ¡NUEVA MODIFICACIÓN! Añadir token CSRF al logout ---
                     // Obtenemos el token de la variable global definida en index.php
                     const token = window.csrfToken || '';
-                    const logoutUrl = (window.projectBasePath || '') + '/logout.php';
+                    const logoutUrl = (window.projectBasePath || '') + '/config/logout.php';
                     
                     // Añadimos el token como parámetro GET
                     window.location.href = `${logoutUrl}?csrf_token=${encodeURIComponent(token)}`;

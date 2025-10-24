@@ -4,7 +4,7 @@
 // --- MODIFICACIÓN 1: INCLUIR CONFIG ---
 // Incluir config.php ANTES DE CUALQUIER COSA.
 // Esto inicia la sesión (session_start()) y conecta a la BD ($pdo).
-include 'config.php';
+include 'config/config.php';
 
 // --- ¡NUEVA MODIFICACIÓN! GENERAR TOKEN CSRF ---
 // Nos aseguramos de que un token CSRF exista para esta carga de página.
