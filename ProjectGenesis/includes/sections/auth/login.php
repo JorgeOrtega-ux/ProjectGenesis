@@ -20,7 +20,9 @@
                 </button>
             </div>
 
-            <button type="submit" class="auth-button">Continuar</button>
+            <div class="auth-step-buttons">
+                <button type="submit" class="auth-button">Continuar</button>
+            </div>
         </form>
         <p class="auth-link">
             ¿No tienes una cuenta? <a href="/ProjectGenesis/register">Crea una</a>
