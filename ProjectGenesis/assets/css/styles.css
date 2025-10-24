@@ -781,6 +781,26 @@ body {
     opacity: 1;
 }
 
+/* ▼▼▼ NUEVOS ESTILOS PARA EL INPUT DE USERNAME ▼▼▼ */
+.settings-username-input {
+    width: 100%;
+    height: 40px; 
+    padding: 0 12px;
+    border: 1px solid #00000020; 
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: transparent; 
+    color: #000;
+    margin-top: 4px; /* Pequeña separación del label */
+}
+
+.settings-username-input:focus {
+    border-color: #000; 
+}
+/* ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ */
+
 @media (max-width: 468px) {
     .module-content.module-surface {
         width: 100%;

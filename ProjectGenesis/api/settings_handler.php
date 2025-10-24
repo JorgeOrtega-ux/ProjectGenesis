@@ -187,6 +187,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = $e->getMessage();
             }
         }
+
+        // --- ▼▼▼ NUEVA ACCIÓN: ACTUALIZAR NOMBRE DE USUARIO ▼▼▼ ---
+        elseif ($action === 'update-username') {
+            try {
+                $newUsername = trim($_POST['username'] ?? '');
+
+                // 1. Validar longitud (igual que en el registro)
+                if (empty($newUsername)) {
+                    throw new Exception('El nombre de usuario no puede estar vacío.');
+                }
+                if (strlen($newUsername) < 6) {
+                    throw new Exception('El nombre de usuario debe tener al menos 6 caracteres.');
+                }
+                // (Se podrían añadir más validaciones, ej. caracteres especiales)
+
+                // 2. Validar que el nombre no esté en uso POR OTRO USUARIO
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
+                $stmt->execute([$newUsername, $userId]);
+                
+                if ($stmt->fetch()) {
+                    throw new Exception('Ese nombre de usuario ya está en uso.');
+                }
+
+                // 3. Actualizar la base de datos
+                $stmt = $pdo->prepare("UPDATE users SET username = ? WHERE id = ?");
+                $stmt->execute([$newUsername, $userId]);
+
+                // 4. Actualizar la sesión
+                $_SESSION['username'] = $newUsername;
+
+                $response['success'] = true;
+                $response['message'] = 'Nombre de usuario actualizado con éxito.';
+                $response['newUsername'] = $newUsername;
+
+            } catch (Exception $e) {
+                $response['message'] = $e->getMessage();
+            }
+        }
+        // --- ▲▲▲ FIN NUEVA ACCIÓN ▲▲▲ ---
     }
 }
 

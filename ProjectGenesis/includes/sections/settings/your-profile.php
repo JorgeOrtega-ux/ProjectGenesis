@@ -56,5 +56,45 @@
                 </div>
             </div>
         </form>
+
+        <form id="username-form" onsubmit="event.preventDefault();" novalidate>
+            <?php outputCsrfInput(); ?>
+            <input type="hidden" name="action" value="update-username">
+            
+            <div class="settings-card">
+                
+                <div class="settings-card-left" id="username-view-state" style="display: flex;">
+                    <div class="settings-text-content">
+                        <h2 class="settings-text-title">Nombre de usuario</h2>
+                        <p class="settings-text-description" 
+                           id="username-display-text" 
+                           data-original-username="<?php echo htmlspecialchars($usernameForAlt); ?>">
+                           <?php echo htmlspecialchars($usernameForAlt); ?>
+                        </p>
+                    </div>
+                </div>
+                <div class="settings-card-right" id="username-actions-view" style="display: flex;">
+                    <button type="button" class="settings-button" id="username-edit-trigger">Editar</button>
+                </div>
+
+                <div class="settings-card-left" id="username-edit-state" style="display: none;">
+                    <div class="settings-text-content" style="width: 100%;">
+                        <h2 class="settings-text-title">Nombre de usuario</h2>
+                        <input type="text" 
+                               class="settings-username-input" 
+                               id="username-input" 
+                               name="username" 
+                               value="<?php echo htmlspecialchars($usernameForAlt); ?>"
+                               required
+                               minlength="6">
+                    </div>
+                </div>
+                <div class="settings-card-right-actions" id="username-actions-edit" style="display: none;">
+                    <button type="button" class="settings-button" id="username-cancel-trigger">Cancelar</button>
+                    <button type="submit" class="settings-button" id="username-save-trigger">Guardar</button>
+                </div>
+
+            </div>
+        </form>
         </div>
 </div>

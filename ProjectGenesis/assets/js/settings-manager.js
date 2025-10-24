@@ -50,8 +50,7 @@ export function initSettingsManager() {
     document.body.addEventListener('click', async (e) => {
         const fileInput = document.getElementById('avatar-upload-input');
 
-        // --- ▼▼▼ LÓGICA AÑADIDA ▼▼▼ ---
-        // Click en el avatar (la imagen o el overlay)
+        // --- Lógica de Avatar (EXISTENTE) ---
         if (e.target.closest('#avatar-preview-container')) {
             e.preventDefault();
             hideAvatarError(); // Oculta errores antiguos
@@ -60,7 +59,6 @@ export function initSettingsManager() {
             }
             return;
         }
-        // --- ▲▲▲ FIN DE LA LÓGICA AÑADIDA ▲▲▲ ---
 
         // Click en "Subir foto" o "Cambiar foto"
         if (e.target.closest('#avatar-upload-trigger') || e.target.closest('#avatar-change-trigger')) {
@@ -143,10 +141,49 @@ export function initSettingsManager() {
                 toggleButtonSpinner(removeTrigger, 'Eliminar foto', false);
             }
         }
+        // --- Fin Lógica de Avatar ---
+
+
+        // --- ▼▼▼ NUEVA LÓGICA PARA NOMBRE DE USUARIO ▼▼▼ ---
+
+        // Click en "Editar" nombre de usuario
+        if (e.target.closest('#username-edit-trigger')) {
+            e.preventDefault();
+            document.getElementById('username-view-state').style.display = 'none';
+            document.getElementById('username-actions-view').style.display = 'none';
+            
+            document.getElementById('username-edit-state').style.display = 'flex';
+            document.getElementById('username-actions-edit').style.display = 'flex';
+            
+            document.getElementById('username-input').focus();
+            return;
+        }
+
+        // Click en "Cancelar" edición de nombre
+        if (e.target.closest('#username-cancel-trigger')) {
+            e.preventDefault();
+            
+            // Resetear el valor del input al original
+            const displayElement = document.getElementById('username-display-text');
+            const inputElement = document.getElementById('username-input');
+            if (displayElement && inputElement) {
+                inputElement.value = displayElement.dataset.originalUsername;
+            }
+
+            document.getElementById('username-edit-state').style.display = 'none';
+            document.getElementById('username-actions-edit').style.display = 'none';
+
+            document.getElementById('username-view-state').style.display = 'flex';
+            document.getElementById('username-actions-view').style.display = 'flex';
+            return;
+        }
+        // --- ▲▲▲ FIN NUEVA LÓGICA DE CLICS ▲▲▲ ---
     });
 
-    // 2. Delegación para el evento SUBMIT del formulario (sin cambios)
+    // 2. Delegación para el evento SUBMIT del formulario
     document.body.addEventListener('submit', async (e) => {
+        
+        // --- Lógica de Avatar (EXISTENTE) ---
         if (e.target.id === 'avatar-form') {
             e.preventDefault();
             const avatarForm = e.target;
@@ -187,6 +224,55 @@ export function initSettingsManager() {
                 toggleButtonSpinner(saveTrigger, 'Guardar', false);
             }
         }
+        // --- Fin Lógica de Avatar ---
+
+
+        // --- ▼▼▼ NUEVA LÓGICA PARA NOMBRE DE USUARIO ▼▼▼ ---
+        if (e.target.id === 'username-form') {
+            e.preventDefault();
+            const usernameForm = e.target;
+            const saveTrigger = document.getElementById('username-save-trigger');
+            const inputElement = document.getElementById('username-input');
+            const newUsername = inputElement.value;
+
+            // Validación simple en cliente
+            if (newUsername.length < 6) {
+                window.showAlert('El nombre de usuario debe tener al menos 6 caracteres.', 'error');
+                return;
+            }
+
+            toggleButtonSpinner(saveTrigger, 'Guardar', true);
+
+            try {
+                const formData = new FormData(usernameForm);
+                // La acción ya está en el formulario, pero la agregamos por seguridad
+                formData.append('action', 'update-username'); 
+
+                const response = await fetch(SETTINGS_ENDPOINT, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) throw new Error('Error de conexión con el servidor.');
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.showAlert(result.message || 'Nombre de usuario actualizado.', 'success');
+                    // Recargar la página para ver todos los cambios (header, alt text, etc.)
+                    // Sigue el mismo patrón que el éxito del avatar.
+                    setTimeout(() => location.reload(), 1500); 
+                } else {
+                    window.showAlert(result.message || 'Error desconocido al guardar.', 'error');
+                    toggleButtonSpinner(saveTrigger, 'Guardar', false);
+                }
+
+            } catch (error) {
+                window.showAlert(error.message, 'error');
+                toggleButtonSpinner(saveTrigger, 'Guardar', false);
+            }
+        }
+        // --- ▲▲▲ FIN NUEVA LÓGICA DE SUBMIT ▲▲▲ ---
     });
 
     // 3. Delegación para el evento CHANGE del input de archivo
@@ -199,11 +285,13 @@ export function initSettingsManager() {
             if (!file) return;
 
             // ... (validaciones de archivo) ...
-            if (!['image/png', 'image/jpeg'].includes(file.type)) {
-                showAvatarError('Formato de archivo no válido (solo PNG o JPEG).'); // Usará la nueva alerta
+            // --- MODIFICACIÓN: Aceptar GIF y WebP ---
+            if (!['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(file.type)) {
+                showAvatarError('Formato no válido (solo PNG, JPEG, GIF o WebP).'); // Usará la nueva alerta
                 fileInput.form.reset();
                 return;
             }
+            // --- MODIFICACIÓN: Límite a 2MB ---
             if (file.size > 2 * 1024 * 1024) {
                 showAvatarError('El archivo es demasiado grande (máx 2MB).'); // Usará la nueva alerta
                 fileInput.form.reset();
