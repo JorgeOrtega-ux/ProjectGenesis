@@ -585,9 +585,14 @@ body {
 /* ======== SETTINGS PAGE STYLES ======== */
 /* ====================================== */
 
+/* ====================================== */
+/* ======== SETTINGS PAGE STYLES ======== */
+/* ====================================== */
+
 .settings-wrapper {
     width: 100%;
-    max-width: 960px; /* Ancho máximo para el contenido de config */
+    max-width: 700px; /* Ancho máximo ajustado (antes 960px) */
+    height: 100%; /* Alto añadido */
     margin: 0 auto;
     padding: 24px 32px;
     display: flex;
@@ -599,44 +604,169 @@ body {
     font-size: 28px;
     font-weight: 700;
     color: #1f2937;
-    border-bottom: 1px solid #00000020;
-    padding-bottom: 16px;
+    /* border-bottom: 1px solid #00000020; <-- ELIMINADO */
+    /* padding-bottom: 16px; <-- ELIMINADO */
+    text-align: center; /* <-- AÑADIDO */
+    margin-bottom: 8px; /* <-- AÑADIDO */
 }
 
 .settings-description {
     font-size: 16px;
     color: #6b7280;
     line-height: 1.6;
-    margin-bottom: 16px;
+    /* margin-bottom: 16px; <-- CAMBIADO */
+    margin-bottom: 0; /* <-- AÑADIDO */
+    text-align: center; /* <-- AÑADIDO */
 }
 
-.settings-content-placeholder {
-    width: 100%;
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f5f5fa;
-    border: 1px dashed #00000020;
+/* ▼▼▼ NUEVA CLASE AÑADIDA ▼▼▼ */
+.settings-header-card {
+    border: 1px solid #00000020;
     border-radius: 12px;
-    color: #6b7280;
-    font-weight: 500;
+    padding: 24px;
+    background-color: #ffffff;
+    margin-bottom: 16px; /* Para futura compatibilidad con contenido debajo */
+}/* ... (estilos existentes de settings) ... */
+
+.settings-header-card {
+    border: 1px solid #00000020;
+    border-radius: 12px;
+    padding: 24px;
+    background-color: #ffffff;
+    margin-bottom: 16px; 
 }
+
+/* --- ▼▼▼ ESTILOS NUEVOS AÑADIDOS ▼▼▼ --- */
+
+.settings-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border: 1px solid #00000020;
+    border-radius: 12px;
+    padding: 16px;
+    background-color: #ffffff;
+}
+
+.settings-card-left {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 16px;
+}
+
+.settings-avatar {
+    width: 60px; /* Más grande que el header */
+    height: 60px;
+    border-radius: 50%;
+    border: 1px solid #ffffff40;
+    padding: 0; 
+    position: relative;
+    flex-shrink: 0; /* Evita que se encoja */
+}
+
+.settings-avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; 
+    display: block; 
+    position: relative;
+    z-index: 1; 
+    border-radius: 50%;
+}
+
+/* Reutilizamos la lógica de bordes del .header-profile */
+.settings-avatar::before {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 2px solid transparent; 
+    transition: border-color 0.2s ease, border-width 0.2s ease;
+    pointer-events: none; 
+    z-index: 2; 
+    background-image: none; 
+}
+
+.settings-avatar[data-role="user"]::before {
+    border-color: #cccccc; 
+}
+
+.settings-avatar[data-role="moderator"]::before {
+    border-color: #0000FF;
+}
+
+.settings-avatar[data-role="administrator"]::before {
+    border-color: #FF0000;
+}
+
+.settings-avatar[data-role="founder"]::before {
+    border: none; 
+    top: -4px; 
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    background-image: conic-gradient(
+        #D32029 0deg 90deg,    
+        #206BD3 90deg 210deg,  
+        #28A745 210deg 300deg, 
+        #FFC107 300deg 360deg  
+    );
+    mask: radial-gradient(
+        farthest-side, 
+        transparent calc(100% - 2px), 
+        #fff 0                    
+    );
+    -webkit-mask: radial-gradient(
+        farthest-side, 
+        transparent calc(100% - 2px), 
+        #fff 0
+    );
+    transform: rotate(300deg);
+}
+
+.settings-text-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-text-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.settings-text-description {
+    font-size: 15px;
+    color: #6b7280;
+}
+
+.settings-button {
+    height: 40px; 
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #000000;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    padding: 0 16px;
+    flex-shrink: 0; /* Evita que se encoja */
+}
+
+.settings-button:hover {
+    background-color: #f5f5fa;
+}
+
+/* --- ▲▲▲ FIN DE ESTILOS NUEVOS ▲▲▲ --- */
 
 /* Ajuste para el menú lateral en pantallas más grandes */
-@media (min-width: 769px) {
-    .general-content-scrolleable {
-        /* Cuando estamos en settings, el scrollable debe */
-        /* estar consciente del menú lateral (moduleSurface) */
-        /* Esto es un ejemplo, puedes necesitar ajustar */
-        transition: padding-left 0.2s ease-in-out;
-    }
-    
-    /* Si el menú lateral está visible (no-móvil) */
-    .module-surface:not(.disabled) + .general-content-scrolleable {
-         /* No hacemos nada, el layout de flexbox ya lo maneja */
-    }
-}
 
 @media (max-width: 468px) {
     .module-content.module-surface {
