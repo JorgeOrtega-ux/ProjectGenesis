@@ -15,6 +15,17 @@ if (!isset($_SESSION['user_id'])) {
 $userId = $_SESSION['user_id'];
 $username = $_SESSION['username'];
 
+// --- FUNCIÓN Generador de Código (Alfanumérico) (AÑADIDA) ---
+function generateVerificationCode() {
+    $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $code = '';
+    $max = strlen($chars) - 1;
+    for ($i = 0; $i < 12; $i++) {
+        $code .= $chars[random_int(0, $max)];
+    }
+    return substr($code, 0, 4) . '-' . substr($code, 4, 4) . '-' . substr($code, 8, 4);
+}
+
 // --- FUNCIÓN HELPER PARA GENERAR AVATAR POR DEFECTO ---
 // (Esta lógica se ha extraído de api/auth_handler.php para reutilizarla)
 function generateDefaultAvatar($pdo, $userId, $username, $basePath) {
@@ -226,7 +237,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        // --- ▼▼▼ NUEVA ACCIÓN: ACTUALIZAR EMAIL ▼▼▼ ---
+        // --- ▼▼▼ NUEVA ACCIÓN: SOLICITAR CÓDIGO PARA CAMBIAR EMAIL ▼▼▼ ---
+        elseif ($action === 'request-email-change-code') {
+            try {
+                // El 'identifier' será el ID de usuario, es más seguro que el email
+                $identifier = $userId; 
+                $codeType = 'email_change'; // Como solicitaste
+
+                // 1. Limpiar códigos viejos de este tipo para este usuario
+                $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = ?");
+                $stmt->execute([$identifier, $codeType]);
+
+                // 2. Generar nuevo código
+                $verificationCode = str_replace('-', '', generateVerificationCode());
+
+                // 3. Insertar en la tabla
+                $stmt = $pdo->prepare(
+                    "INSERT INTO verification_codes (identifier, code_type, code) 
+                     VALUES (?, ?, ?)"
+                );
+                $stmt->execute([$identifier, $codeType, $verificationCode]);
+
+                // 4. (Simulación de envío de email)
+                // En un caso real, aquí se enviaría el $verificationCode al email actual: $_SESSION['email']
+
+                $response['success'] = true;
+                $response['message'] = 'Se ha generado un código de verificación.';
+
+            } catch (Exception $e) {
+                // Capturar error si, por ejemplo, el ENUM 'email_change' no existe
+                if (strpos($e->getMessage(), 'Data truncated') !== false) {
+                     $response['message'] = "Error de BD: El tipo '{$codeType}' no existe en el ENUM 'code_type' de la tabla 'verification_codes'. Asegúrate de añadirlo.";
+                } else {
+                    $response['message'] = 'Error al generar el código: ' . $e->getMessage();
+                }
+            }
+        }
+
+        // --- ▼▼▼ NUEVA ACCIÓN: VERIFICAR CÓDIGO PARA CAMBIAR EMAIL ▼▼▼ ---
+        elseif ($action === 'verify-email-change-code') {
+            try {
+                $submittedCode = str_replace('-', '', $_POST['verification_code'] ?? '');
+                $identifier = $userId;
+                $codeType = 'email_change';
+
+                if (empty($submittedCode)) {
+                    throw new Exception('Por favor, introduce el código de verificación.');
+                }
+
+                // 1. Buscar el código válido (15 min de validez)
+                $stmt = $pdo->prepare(
+                    "SELECT * FROM verification_codes 
+                     WHERE identifier = ? 
+                     AND code_type = ?
+                     AND created_at > (NOW() - INTERVAL 15 MINUTE)"
+                );
+                $stmt->execute([$identifier, $codeType]);
+                $codeData = $stmt->fetch();
+
+                // 2. Comparar
+                if (!$codeData || strtolower($codeData['code']) !== strtolower($submittedCode)) {
+                    // (Opcional: aquí se podría loguear un intento fallido)
+                    throw new Exception('El código es incorrecto o ha expirado.');
+                }
+
+                // 3. ¡Éxito! Limpiar el código usado
+                $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE id = ?");
+                $stmt->execute([$codeData['id']]);
+
+                $response['success'] = true;
+                $response['message'] = 'Verificación correcta. Ya puedes editar tu email.';
+
+            } catch (Exception $e) {
+                $response['message'] = $e->getMessage();
+            }
+        }
+
+        // --- ▼▼▼ ACCIÓN EXISTENTE: ACTUALIZAR EMAIL (Sin cambios) ▼▼▼ ---
         elseif ($action === 'update-email') {
             try {
                 $newEmail = trim($_POST['email'] ?? '');

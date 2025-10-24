@@ -1,10 +1,13 @@
--- Base de datos: project_genesis
--- (Según config.php)
+-- --- CREACIÓN DE LA BASE DE DATOS ---
+-- (El nombre 'project_genesis' se basa en config.php)
+
+DROP DATABASE IF EXISTS project_genesis;
+CREATE DATABASE project_genesis;
+USE project_genesis;
 
 -- --- Tabla de Usuarios ---
 -- Esta tabla almacena la información principal del usuario.
 DROP TABLE IF EXISTS users;
-
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -15,25 +18,25 @@ CREATE TABLE users (
     -- El ENUM se basa en los roles de styles.css y auth_handler.php
     `role` ENUM('user', 'moderator', 'administrator', 'founder') NOT NULL DEFAULT 'user',
     
-    -- --- ▼▼▼ NUEVA COLUMNA 2FA ▼▼▼ ---
-   
- -- Columna para activar/desactivar 2FA (0 = off, 1 = on)
+    -- --- ▼▼▼ COLUMNA 2FA ▼▼▼ ---
+    -- Columna para activar/desactivar 2FA (0 = off, 1 = on)
     is_2fa_enabled TINYINT(1) NOT NULL DEFAULT 0,
-    -- --- ▲▲▲ FIN DE LA NUEVA COLUMNA ▲▲▲ ---
+    -- --- ▲▲▲ FIN DE LA COLUMNA ▲▲▲ ---
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+
 -- --- Tabla de Códigos de Verificación ---
 -- Almacena códigos temporales para registro, reseteo de contraseña, etc.
 DROP TABLE IF EXISTS verification_codes;
 CREATE TABLE verification_codes (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    -- 'identifier' guarda el email (para registro/reset/2fa)
+    -- 'identifier' guarda el email (para registro/reset/2fa) o user_id (para email_change)
     identifier VARCHAR(255) NOT NULL, 
     
     -- 'code_type' define el propósito del código
-    -- --- ▼▼▼ MODIFICACIÓN ENUM ▼▼▼ ---
-    code_type ENUM('registration', 'password_reset', '2fa') NOT NULL,
+    -- --- ▼▼▼ MODIFICACIÓN ENUM (con email_change) ▼▼▼ ---
+    code_type ENUM('registration', 'password_reset', '2fa', 'email_change') NOT NULL,
     -- --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     code VARCHAR(255) NOT NULL,
@@ -44,7 +47,8 @@ CREATE TABLE verification_codes (
     -- Índice para búsquedas rápidas de códigos
     INDEX idx_identifier_type (identifier, code_type)
 );
--- --- ▼▼▼ NUEVA TABLA DE SEGURIDAD ▼▼▼ ---
+
+-- --- ▼▼▼ TABLA DE SEGURIDAD (RATE LIMIT) ▼▼▼ ---
 -- Almacena intentos fallidos para rate limiting
 DROP TABLE IF EXISTS security_logs;
 CREATE TABLE security_logs (
@@ -58,9 +62,9 @@ CREATE TABLE security_logs (
   INDEX idx_user_time (user_identifier, created_at),
   INDEX idx_ip_time (ip_address, created_at)
 );
--- --- ▲▲▲ FIN DE LA NUEVA TABLA ▲▲▲ ---
+-- --- ▲▲▲ FIN DE LA TABLA DE SEGURIDAD ▲▲▲ ---
 
--- --- ▼▼▼ NUEVA TABLA DE METADATOS DE USUARIO ▼▼▼ ---
+-- --- ▼▼▼ TABLA DE METADATOS DE USUARIO ▼▼▼ ---
 -- Almacena información de inicio de sesión (IP, Dispositivo)
 -- (Referenciada en api/auth_handler.php)
 DROP TABLE IF EXISTS user_metadata;
@@ -73,4 +77,4 @@ CREATE TABLE user_metadata (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
--- --- ▲▲▲ FIN DE LA NUEVA TABLA ▲▲▲ ---
+-- --- ▲▲▲ FIN DE LA TABLA DE METADATOS ▲▲▲ ---

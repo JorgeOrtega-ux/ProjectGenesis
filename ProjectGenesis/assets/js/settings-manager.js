@@ -61,7 +61,10 @@ function focusInputAndMoveCursorToEnd(inputElement) {
         // --- INICIO DE LA CORRECCIÓN ---
         // Cambiar temporalmente a 'text' para asegurar que setSelectionRange
         // funcione en todos los navegadores, especialmente con tipos como 'email'.
-        inputElement.type = 'text'; 
+        // O con tipos de input numéricos (como el código)
+        if (inputElement.type === 'email' || inputElement.type === 'text') {
+             inputElement.type = 'text'; 
+        }
         // --- FIN DE LA CORRECCIÓN ---
 
         inputElement.focus();
@@ -225,24 +228,140 @@ export function initSettingsManager() {
             return;
         }
         
-        // --- ▼▼▼ LÓGICA PARA EMAIL (CORREGIDA) ▼▼▼ ---
+        // --- ▼▼▼ LÓGICA PARA EMAIL (MODIFICADA) ▼▼▼ ---
 
         // Click en "Editar" email
         if (e.target.closest('#email-edit-trigger')) {
             e.preventDefault();
-            document.getElementById('email-view-state').style.display = 'none';
-            document.getElementById('email-actions-view').style.display = 'none';
+            const editTrigger = e.target.closest('#email-edit-trigger');
             
-            document.getElementById('email-edit-state').style.display = 'flex';
-            document.getElementById('email-actions-edit').style.display = 'flex';
-            
-            // --- ▼▼▼ ¡ESTA ES LA LÍNEA CORREGIDA! ▼▼▼ ---
-            focusInputAndMoveCursorToEnd(document.getElementById('email-input'));
-            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+            // Mostrar spinner en el botón "Editar"
+            toggleButtonSpinner(editTrigger, 'Editar', true);
+
+            try {
+                // 1. Crear FormData solo con lo necesario
+                const csrfToken = document.querySelector('#email-form [name="csrf_token"]');
+                const formData = new FormData();
+                formData.append('action', 'request-email-change-code');
+                formData.append('csrf_token', csrfToken ? csrfToken.value : '');
+
+                // 2. Llamar al backend para solicitar el código
+                const response = await fetch(SETTINGS_ENDPOINT, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) throw new Error('Error de conexión al solicitar código.');
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 3. Mostrar el modal de verificación
+                    const modal = document.getElementById('email-verify-modal');
+                    if(modal) modal.style.display = 'flex';
+                    // Enfocar el input del modal
+                    focusInputAndMoveCursorToEnd(document.getElementById('email-verify-code'));
+                    // Ocultar error (si había)
+                    const modalError = document.getElementById('email-verify-error');
+                    if(modalError) modalError.style.display = 'none';
+                    // Limpiar input
+                    const modalInput = document.getElementById('email-verify-code');
+                    if(modalInput) modalInput.value = '';
+
+                    window.showAlert('Se ha enviado (simulado) un código a tu correo actual.', 'info');
+                } else {
+                    // Si falla (ej. ENUM no existe), mostrar error
+                    window.showAlert(result.message || 'Error al solicitar el código.', 'error');
+                }
+
+            } catch (error) {
+                window.showAlert(error.message, 'error');
+            } finally {
+                // 4. Ocultar spinner del botón "Editar"
+                toggleButtonSpinner(editTrigger, 'Editar', false);
+            }
+            return; // Detener aquí
+        }
+        
+        // Click en "Cancelar" (en el modal de verificación)
+        if (e.target.closest('#email-verify-cancel')) {
+            e.preventDefault();
+            const modal = document.getElementById('email-verify-modal');
+            if(modal) modal.style.display = 'none';
             return;
         }
 
-        // Click en "Cancelar" edición de email
+        // Click en "Continuar" (en el modal de verificación)
+        if (e.target.closest('#email-verify-continue')) {
+            e.preventDefault();
+            const continueTrigger = e.target.closest('#email-verify-continue');
+            const modalError = document.getElementById('email-verify-error');
+            const modalInput = document.getElementById('email-verify-code');
+            const csrfToken = document.querySelector('#email-form [name="csrf_token"]');
+
+            if (!modalInput || !modalInput.value) {
+                if(modalError) {
+                    modalError.textContent = 'Por favor, introduce el código.';
+                    modalError.style.display = 'block';
+                }
+                return;
+            }
+
+            // Mostrar spinner en "Continuar"
+            toggleButtonSpinner(continueTrigger, 'Continuar', true);
+            if(modalError) modalError.style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'verify-email-change-code');
+                formData.append('csrf_token', csrfToken ? csrfToken.value : '');
+                formData.append('verification_code', modalInput.value);
+
+                const response = await fetch(SETTINGS_ENDPOINT, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) throw new Error('Error de conexión al verificar.');
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // ¡Éxito! Ocultar modal
+                    const modal = document.getElementById('email-verify-modal');
+                    if(modal) modal.style.display = 'none';
+
+                    // Mostrar la sección de edición de email
+                    document.getElementById('email-view-state').style.display = 'none';
+                    document.getElementById('email-actions-view').style.display = 'none';
+                    
+                    document.getElementById('email-edit-state').style.display = 'flex';
+                    document.getElementById('email-actions-edit').style.display = 'flex';
+                    
+                    focusInputAndMoveCursorToEnd(document.getElementById('email-input'));
+                    
+                    window.showAlert(result.message || 'Verificación correcta.', 'success');
+
+                } else {
+                    // Mostrar error DENTRO del modal
+                    if(modalError) {
+                        modalError.textContent = result.message || 'Error al verificar.';
+                        modalError.style.display = 'block';
+                    }
+                }
+
+            } catch (error) {
+                 if(modalError) {
+                    modalError.textContent = error.message;
+                    modalError.style.display = 'block';
+                }
+            } finally {
+                toggleButtonSpinner(continueTrigger, 'Continuar', false);
+            }
+            return;
+        }
+
+        // Click en "Cancelar" edición de email (el de la vista de input)
         if (e.target.closest('#email-cancel-trigger')) {
             e.preventDefault();
             
@@ -461,6 +580,24 @@ export function initSettingsManager() {
             document.getElementById('avatar-actions-custom').style.display = 'none';
             document.getElementById('avatar-actions-preview').style.display = 'flex';
         }
+
+        // --- ▼▼▼ NUEVA LÓGICA PARA FORMATEAR CÓDIGO DE VERIFICACIÓN EN MODAL ▼▼▼ ---
+        if (e.target.id === 'email-verify-code') {
+             let input = e.target.value.replace(/[^0-9a-zA-Z]/g, '');
+
+            input = input.toUpperCase();
+            input = input.substring(0, 12);
+
+            let formatted = '';
+            for (let i = 0; i < input.length; i++) {
+                if (i > 0 && i % 4 === 0) {
+                    formatted += '-';
+                }
+                formatted += input[i];
+            }
+            e.target.value = formatted;
+        }
+        // --- ▲▲▲ FIN NUEVA LÓGICA ▲▲▲ ---
     });
     
     // 4. Guardar la URL original (sin cambios)

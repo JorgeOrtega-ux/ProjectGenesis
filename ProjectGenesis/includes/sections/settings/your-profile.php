@@ -135,5 +135,30 @@
 
             </div>
         </form>
+        
+        <div class="settings-modal-overlay" id="email-verify-modal" style="display: none;">
+            <div class="settings-modal-content">
+                <h2 class="auth-title" style="margin-bottom: 16px;">Verifica tu identidad</h2>
+                
+                <p class="auth-verification-text" style="margin-bottom: 24px;">
+                    Para proteger tu cuenta, hemos enviado (simulado) un código de un solo uso
+                    a tu dirección de correo electrónico actual.
+                </p>
+
+                <div class="auth-error-message" id="email-verify-error" style="display: none; margin-bottom: 16px;"></div>
+
+                <form onsubmit="event.preventDefault();" novalidate>
+                    <div class="auth-input-group">
+                        <input type="text" id="email-verify-code" name="verification_code" required placeholder=" " maxlength="14">
+                        <label for="email-verify-code">Código de Verificación*</label>
+                    </div>
+
+                    <div class="auth-step-buttons" style="margin-top: 24px;">
+                        <button type="button" class="auth-button-back" id="email-verify-cancel">Cancelar</button>
+                        <button type="button" class="auth-button" id="email-verify-continue">Continuar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
         </div>
 </div>
