@@ -1,3 +1,6 @@
+<?php
+// FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-c8c3cdea53b7f937c4b912cae7954b420a451beb/ProjectGenesis/includes/sections/settings/login-security.php
+?>
 <div class="section-content <?php echo ($CURRENT_SECTION === 'settings-login') ? 'active' : 'disabled'; ?>" data-section="settings-login">
     <div class="settings-wrapper">
 
@@ -57,6 +60,37 @@
                         <?php echo $is2faEnabled ? 'Deshabilitar' : 'Habilitar'; ?>
                     </button>
                     </div>
+            </div>
+        </div>
+
+        <div class="settings-card settings-card-column">
+            
+            <div class="settings-text-content">
+                <h2 class="settings-text-title">Cerrar sesión en todos los dispositivos</h2>
+                <p class="settings-text-description">
+                    ¿Iniciaste sesión en un dispositivo de uso compartido y olvidaste cerrar sesión? No hay problema: puedes cerrar sesión en todos tus dispositivos.
+                </p>
+            </div>
+            
+            <div class="settings-card-bottom">
+                <div class="settings-card-right-actions">
+                    <button type="button" class="settings-button">Cerrar sesión en todos</button>
+                </div>
+            </div>
+        </div>
+        <div class="settings-card settings-card-column settings-card-danger">
+            
+            <div class="settings-text-content">
+                <h2 class="settings-text-title">Eliminar tu cuenta</h2>
+                <p class="settings-text-description">
+                    Si eliminas tu cuenta, ya no podrás acceder a ninguno de tus diseños ni iniciar sesión.
+                </p>
+            </div>
+            
+            <div class="settings-card-bottom">
+                <div class="settings-card-right-actions">
+                    <button type="button" class="settings-button danger">Eliminar cuenta</button>
+                </div>
             </div>
         </div>
         </div>

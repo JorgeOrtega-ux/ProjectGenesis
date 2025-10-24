@@ -1,3 +1,4 @@
+/* FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-c8c3cdea53b7f937c4b912cae7954b420a451beb/ProjectGenesis/assets/css/styles.css */
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
 
 * {
@@ -650,7 +651,8 @@ body {
   se alinearán correctamente con los botones de la derecha.
 */
 #username-form .settings-card,
-#email-form .settings-card {
+#email-form .settings-card,
+.settings-card-align-bottom { 
     align-items: flex-end;
 }
 /* --- FIN DE LA CORRECCIÓN DE ALINEACIÓN --- */
@@ -1103,3 +1105,26 @@ body {
     transition: .3s;
     border-radius: 50%; /* Círculo */
 }
+
+/* --- ▼▼▼ NUEVOS ESTILOS PARA LAYOUT DE TARJETA EN COLUMNA ▼▼▼ --- */
+.settings-card-column {
+    flex-direction: column;
+    align-items: stretch; /* Sobrescribe 'align-items: center' */
+}
+
+.settings-card-bottom {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    margin-top: 16px; /* Espacio entre el texto y el botón */
+}
+
+/* --- ▼▼▼ NUEVA CLASE DE PELIGRO PARA LA TARJETA ▼▼▼ --- */
+.settings-card-danger {
+    border-color: #ef9a9a; /* Borde rojo claro */
+}
+
+.settings-card-danger .settings-text-title {
+    color: #c62828; /* Título en rojo oscuro */
+}
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */
