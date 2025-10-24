@@ -659,11 +659,13 @@ body {
 .settings-card-icon {
     width: 60px;
     height: 60px;
-    border-radius: 50%;
-    display: flex;
+    border-radius: 8px;
+    display: flex
+;
     align-items: center;
     justify-content: center;
-    background-color: #f5f5fa;
+    border: 1px solid #00000020;
+    background-color: transparent;
     color: #000000;
     flex-shrink: 0;
 }
@@ -1070,4 +1072,34 @@ body {
         right: 12px;
         width: auto;
     }
+}/* --- ▼▼▼ NUEVOS ESTILOS PARA TOGGLE 2FA ▼▼▼ --- */
+.settings-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px; /* Ancho del contenedor */
+    height: 32px; /* Alto del contenedor */
+}
+
+.settings-toggle-switch .settings-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .3s;
+    border-radius: 34px; /* Bordes redondeados */
+}
+
+.settings-toggle-switch .settings-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 24px; /* Alto del círculo */
+    width: 24px; /* Ancho del círculo */
+    left: 4px; /* Posición inicial */
+    bottom: 4px; /* Posición inicial */
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%; /* Círculo */
 }

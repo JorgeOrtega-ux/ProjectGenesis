@@ -306,6 +306,141 @@ export function initSettingsManager() {
             return;
         }
 
+        // --- ▼▼▼ INICIO: LÓGICA PARA TFA MODAL (CORREGIDA) ▼▼▼ ---
+        if (e.target.closest('#tfa-verify-close')) {
+            e.preventDefault();
+            const modal = document.getElementById('tfa-verify-modal');
+            if(modal) modal.style.display = 'none';
+            // Ya no hay que revertir el checkbox
+            return;
+        }
+
+        // --- ▼▼▼ INICIO: NUEVA LÓGICA PARA BOTÓN 2FA ▼▼▼ ---
+        if (e.target.closest('#tfa-toggle-button')) {
+            e.preventDefault();
+            
+            const toggleButton = e.target.closest('#tfa-toggle-button');
+            const modal = document.getElementById('tfa-verify-modal');
+            
+            if (!modal) {
+                window.showAlert('Error: No se encontró el modal de verificación.', 'error');
+                return;
+            }
+
+            // Saber si estamos activando o desactivando
+            const isCurrentlyEnabled = toggleButton.dataset.isEnabled === '1';
+
+            // Resetear y mostrar el modal
+            const modalTitle = document.getElementById('tfa-modal-title');
+            const modalText = document.getElementById('tfa-modal-text');
+            const errorDiv = document.getElementById('tfa-verify-error');
+            const passInput = document.getElementById('tfa-verify-password');
+
+            if (!isCurrentlyEnabled) {
+                // El usuario está ACTIVANDO (porque no está habilitado)
+                if(modalTitle) modalTitle.textContent = 'Activar Verificación de dos pasos';
+                if(modalText) modalText.textContent = 'Para activar esta función, por favor ingresa tu contraseña actual.';
+            } else {
+                // El usuario está DESACTIVANDO (porque está habilitado)
+                if(modalTitle) modalTitle.textContent = 'Desactivar Verificación de dos pasos';
+                if(modalText) modalText.textContent = 'Para desactivar esta función, por favor ingresa tu contraseña actual.';
+            }
+
+            if(errorDiv) errorDiv.style.display = 'none';
+            if(passInput) passInput.value = '';
+
+            modal.style.display = 'flex';
+            focusInputAndMoveCursorToEnd(passInput);
+            return;
+        }
+        // --- ▲▲▲ FIN: NUEVA LÓGICA PARA BOTÓN 2FA ▲▲▲ ---
+
+        if (e.target.closest('#tfa-verify-continue')) {
+            e.preventDefault();
+            const modal = document.getElementById('tfa-verify-modal');
+            const verifyTrigger = e.target.closest('#tfa-verify-continue');
+            const errorDiv = document.getElementById('tfa-verify-error');
+            const currentPassInput = document.getElementById('tfa-verify-password');
+            
+            // --- ▼▼▼ MODIFICACIÓN: Buscar el BOTÓN, no el input ▼▼▼ ---
+            const toggleButton = document.getElementById('tfa-toggle-button');
+            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+
+            if (!currentPassInput.value) {
+                if(errorDiv) {
+                    errorDiv.textContent = 'Por favor, introduce tu contraseña actual.';
+                    errorDiv.style.display = 'block';
+                }
+                return;
+            }
+            
+            toggleButtonSpinner(verifyTrigger, 'Confirmar', true);
+            if(errorDiv) errorDiv.style.display = 'none';
+
+            // 1. VERIFICAR CONTRASEÑA
+            const passFormData = new FormData();
+            passFormData.append('action', 'verify-current-password');
+            passFormData.append('current_password', currentPassInput.value);
+
+            const passResult = await callSettingsApi(passFormData);
+
+            if (passResult.success) {
+                // 2. SI LA CONTRASEÑA ES CORRECTA, CAMBIAR EL 2FA
+                const twoFaFormData = new FormData();
+                twoFaFormData.append('action', 'toggle-2fa');
+                
+                const twoFaResult = await callSettingsApi(twoFaFormData);
+
+                if (twoFaResult.success) {
+                    if(modal) modal.style.display = 'none';
+                    window.showAlert(twoFaResult.message, 'success');
+                    
+                    const statusText = document.getElementById('tfa-status-text');
+                    
+                    // --- ▼▼▼ INICIO: Lógica para actualizar el botón ▼▼▼ ---
+                    if (twoFaResult.newState === 1) {
+                        // Se acaba de ACTIVAR
+                        if (statusText) statusText.textContent = 'La autenticación de dos pasos está activa.';
+                        if (toggleButton) {
+                            toggleButton.textContent = 'Deshabilitar';
+                            toggleButton.classList.add('danger');
+                            toggleButton.dataset.isEnabled = '1';
+                        }
+                    } else {
+                        // Se acaba de DESACTIVAR
+                        if (statusText) statusText.textContent = 'Añade una capa extra de seguridad a tu cuenta.';
+                        if (toggleButton) {
+                            toggleButton.textContent = 'Habilitar';
+                            toggleButton.classList.remove('danger');
+                            toggleButton.dataset.isEnabled = '0';
+                        }
+                    }
+                    // --- ▲▲▲ FIN: Lógica para actualizar el botón ▲▲▲ ---
+
+                } else {
+                    // Error al cambiar 2FA (raro)
+                    if(errorDiv) {
+                        errorDiv.textContent = twoFaResult.message || 'Error al cambiar 2FA.';
+                        errorDiv.style.display = 'block';
+                    }
+                    // Ya no hay checkbox que revertir
+                }
+                
+            } else {
+                // Contraseña incorrecta
+                if(errorDiv) {
+                    errorDiv.textContent = passResult.message || 'Error al verificar.';
+                    errorDiv.style.display = 'block';
+                }
+                // Ya no hay checkbox que revertir
+            }
+            
+            toggleButtonSpinner(verifyTrigger, 'Confirmar', false);
+            currentPassInput.value = ''; // Limpiar contraseña por seguridad
+            return;
+        }
+        // --- ▲▲▲ FIN: LÓGICA PARA TFA MODAL (CORREGIDA) ▲▲▲ ---
+
         // --- ▼▼▼ INICIO: LÓGICA PARA CONTRASEÑA ▼▼▼ ---
         if (e.target.closest('#password-edit-trigger')) {
             e.preventDefault();
@@ -580,6 +715,11 @@ export function initSettingsManager() {
             document.getElementById('avatar-actions-custom').style.display = 'none';
             document.getElementById('avatar-actions-preview').style.display = 'flex';
         }
+
+        // --- ▼▼▼ ¡MODIFICACIÓN! Se eliminó el listener 'change' para 'tfa-toggle-input' ▼▼▼ ---
+        // (La lógica ahora está en el 'click' listener de 'tfa-toggle-button')
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
     });
     
     // 4. Guardar la URL original

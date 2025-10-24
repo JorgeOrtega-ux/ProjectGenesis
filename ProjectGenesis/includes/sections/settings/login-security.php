@@ -31,7 +31,35 @@
                 </div>
             </div>
         </div>
-    </div>
+
+        <div class="settings-card">
+            <div class="settings-card-left">
+                <div class="settings-card-icon">
+                    <span class="material-symbols-rounded">shield_lock</span>
+                </div>
+                <div class="settings-text-content">
+                    <h2 class="settings-text-title">Verificación de dos pasos (2FA)</h2>
+                    <p class="settings-text-description" id="tfa-status-text">
+                        <?php
+                        // $is2faEnabled viene de config/router.php
+                        echo $is2faEnabled ? 'La autenticación de dos pasos está activa.' : 'Añade una capa extra de seguridad a tu cuenta.';
+                        ?>
+                    </p>
+                </div>
+            </div>
+
+            <div class="settings-card-right">
+                <div class="settings-card-right-actions">
+                    <button type="button" 
+                            class="settings-button <?php echo $is2faEnabled ? 'danger' : ''; ?>" 
+                            id="tfa-toggle-button"
+                            data-is-enabled="<?php echo $is2faEnabled ? '1' : '0'; ?>">
+                        <?php echo $is2faEnabled ? 'Deshabilitar' : 'Habilitar'; ?>
+                    </button>
+                    </div>
+            </div>
+        </div>
+        </div>
 
     <div class="settings-modal-overlay" id="password-change-modal" style="display: none;">
 
@@ -88,4 +116,28 @@
             </form>
         </div>
     </div>
-</div>
+
+    <div class="settings-modal-overlay" id="tfa-verify-modal" style="display: none;">
+        <button type="button" class="settings-modal-close-btn" id="tfa-verify-close">
+            <span class="material-symbols-rounded">close</span>
+        </button>
+        <div class="settings-modal-content">
+            <form class="auth-form" onsubmit="event.preventDefault();" novalidate>
+                <fieldset class="auth-step active">
+                    <h2 class="auth-title" id="tfa-modal-title">Verifica tu identidad</h2>
+                    <p class="auth-verification-text" id="tfa-modal-text">
+                        Para continuar, por favor ingresa tu contraseña actual.
+                    </p>
+                    <div class="auth-error-message" id="tfa-verify-error" style="display: none;"></div>
+                    <div class="auth-input-group">
+                        <input type="password" id="tfa-verify-password" name="current_password" required placeholder=" ">
+                        <label for="tfa-verify-password">Contraseña actual*</label>
+                    </div>
+                    <div class="auth-step-buttons">
+                        <button type="button" class="auth-button" id="tfa-verify-continue">Confirmar</button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+    </div>

@@ -408,8 +408,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     // --- ▼▼▼ INICIO DE LA LÓGICA DE RATE LIMIT ▼▼▼ ---
                     // 3.5 LOG DE INTENTO FALLIDO
-                    logFailedAttempt($pdo, $identifier, $ip, 'email_change_fail');
-                    // --- ▲▲▲ FIN DE LA LÓGICA DE RATE LIMIT ▼▼▼ ---
+                    // --- MODIFICACIÓN: El ENUM 'email_change_fail' no existe, usamos 'password_verify_fail' que es genérico ---
+                    logFailedAttempt($pdo, $identifier, $ip, 'password_verify_fail'); 
+                    // --- FIN DE LA MODIFICACIÓN ---
                     
                     throw new Exception('El código es incorrecto o ha expirado.');
                 }
@@ -574,9 +575,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         // --- ▲▲▲ FIN: NUEVA ACCIÓN (VERIFICAR CONTRASEÑA ACTUAL) ▲▲▲ ---
 
- elseif ($action === 'update-password') {
+        // --- ACCIÓN: ACTUALIZAR CONTRASEÑA (MODIFICADA) ---
+        elseif ($action === 'update-password') {
             try {
                 
+                // --- ▼▼▼ INICIO DE LA LÓGICA DE RATE LIMIT (PASSWORD) ▼▼▼ ---
                 define('PASSWORD_CHANGE_COOLDOWN_HOURS', 24);
 
                 $stmt_check_pass = $pdo->prepare(
@@ -592,6 +595,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $currentTime = new DateTime('now', new DateTimeZone('UTC'));
                     $interval = $currentTime->diff($lastChangeTime);
                     
+                    // Calcular horas totales
                     $hoursPassed = ($interval->d * 24) + $interval->h;
                     
                     if ($hoursPassed < PASSWORD_CHANGE_COOLDOWN_HOURS) {
@@ -600,10 +604,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception("Debes esperar. Podrás cambiar tu contraseña de nuevo en {$hoursRemaining} {$plural}.");
                     }
                 }
+                // --- ▲▲▲ FIN DE LA LÓGICA DE RATE LIMIT ▲▲▲ ---
 
                 $newPassword = $_POST['new_password'] ?? '';
                 $confirmPassword = $_POST['confirm_password'] ?? '';
 
+                // 1. Validaciones
                 if (empty($newPassword) || empty($confirmPassword)) {
                     throw new Exception('Por favor, completa ambos campos de nueva contraseña.');
                 }
@@ -614,18 +620,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception('Las nuevas contraseñas no coinciden.');
                 }
 
+                // 2. Obtener hash antiguo (para auditoría)
                 $stmt_get_old = $pdo->prepare("SELECT password FROM users WHERE id = ?");
                 $stmt_get_old->execute([$userId]);
                 $oldHashedPassword = $stmt_get_old->fetchColumn();
                 if (!$oldHashedPassword) {
-                    $oldHashedPassword = 'hash_desconocido'; 
+                    $oldHashedPassword = 'hash_desconocido'; // Fallback
                 }
 
+                // 3. Hashear y actualizar BD
                 $newHashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
                 
                 $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
                 $stmt->execute([$newHashedPassword, $userId]);
 
+                // 4. Registrar en auditoría
                 $stmt_log_pass = $pdo->prepare(
                     "INSERT INTO user_audit_logs (user_id, change_type, old_value, new_value, changed_by_ip) 
                      VALUES (?, 'password', ?, ?, ?)"
@@ -636,8 +645,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = '¡Contraseña actualizada con éxito!';
 
             } catch (Exception $e) {
+                // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - update-password');
+                    // Comprobación específica por si falta el ENUM 'password'
                     if (strpos($e->getMessage(), "Data truncated for column 'change_type'") !== false) {
                         $response['message'] = "Error de BD: Asegúrate de añadir 'password' al ENUM 'change_type' en la tabla 'user_audit_logs'.";
                     } else {
@@ -646,8 +657,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $response['message'] = $e->getMessage();
                 }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             }
         }
+
+        // --- ▼▼▼ ¡INICIO DE LA NUEVA ACCIÓN (TOGGLE 2FA)! ▼▼▼ ---
+        elseif ($action === 'toggle-2fa') {
+            try {
+                // 1. Obtener el estado actual
+                $stmt_get = $pdo->prepare("SELECT is_2fa_enabled FROM users WHERE id = ?");
+                $stmt_get->execute([$userId]);
+                $currentState = (int)$stmt_get->fetchColumn();
+
+                // 2. Determinar el nuevo estado (invertirlo)
+                $newState = $currentState === 1 ? 0 : 1;
+
+                // 3. Actualizar la base de datos
+                $stmt_set = $pdo->prepare("UPDATE users SET is_2fa_enabled = ? WHERE id = ?");
+                $stmt_set->execute([$newState, $userId]);
+
+                $response['success'] = true;
+                $response['newState'] = $newState; // Devolvemos el nuevo estado al JS
+                $response['message'] = $newState === 1 
+                    ? 'Verificación de dos pasos activada.' 
+                    : 'Verificación de dos pasos desactivada.';
+
+            } catch (Exception $e) {
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - toggle-2fa');
+                    $response['message'] = 'Error al actualizar la base de datos.';
+                } else {
+                    $response['message'] = $e->getMessage();
+                }
+            }
+        }
+        // --- ▲▲▲ ¡FIN DE LA NUEVA ACCIÓN (TOGGLE 2FA)! ▲▲▲ ---
 
     }
 }

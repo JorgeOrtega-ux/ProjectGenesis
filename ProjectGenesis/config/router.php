@@ -69,6 +69,7 @@ if (array_key_exists($page, $allowedPages)) {
     // --- ▼▼▼ INICIO DE LA NUEVA LÓGICA (settings-login) ▼▼▼ ---
     } elseif ($page === 'settings-login') {
         
+        // --- ▼▼▼ ¡INICIO DE LA MODIFICACIÓN! ▼▼▼ ---
         try {
             // 1. Consultar el último log de cambio de contraseña
             $stmt_pass_log = $pdo->prepare(
@@ -102,13 +103,21 @@ if (array_key_exists($page, $allowedPages)) {
                 $lastPasswordUpdateText = 'Nunca se ha actualizado la contraseña.';
             }
 
+            // 4. Obtener el estado de 2FA
+            $stmt_2fa = $pdo->prepare("SELECT is_2fa_enabled FROM users WHERE id = ?");
+            $stmt_2fa->execute([$_SESSION['user_id']]);
+            $is2faEnabled = (int)$stmt_2fa->fetchColumn(); // Cast a int (0 o 1)
+
         } catch (PDOException $e) {
             // En caso de error de BD (ej. tabla/columna aún no existe), mostrar mensaje genérico
             logDatabaseError($e, 'router - settings-login');
             $lastPasswordUpdateText = 'No se pudo cargar el historial de actualizaciones.';
+            $is2faEnabled = 0; // Por defecto 0 si hay error
         }
+        // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
+        // --- ▲▲▲ FIN DE LA NUEVA LÓGICA ▲▲▲ ---
+
     }
-    // --- ▲▲▲ FIN DE LA NUEVA LÓGICA ▲▲▲ ---
     // --- ▲▲▲ FIN DE LA LÓGICA MOVIDA ▲▲▲ ---
 
     include $allowedPages[$page];
