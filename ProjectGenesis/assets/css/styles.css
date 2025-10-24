@@ -654,7 +654,6 @@ body {
     /* border-bottom: 1px solid #00000020; <-- ELIMINADO */
     /* padding-bottom: 16px; <-- ELIMINADO */
     text-align: center; /* <-- AÑADIDO */
-    margin-bottom: 8px; /* <-- AÑADIDO */
 }
 
 .settings-description {
@@ -778,16 +777,17 @@ body {
 .settings-text-content {
     display: flex;
     flex-direction: column;
+    line-height: 25px;
 }
 
 .settings-text-title {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 600;
-    color: #1f2937;
+    color: #000000;
 }
 
 .settings-text-description {
-    font-size: 15px;
+    font-size: 14px;
     color: #6b7280;
 }
 

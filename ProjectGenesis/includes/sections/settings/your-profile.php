@@ -15,8 +15,8 @@
         <form id="avatar-form" onsubmit="event.preventDefault();" novalidate>
             
             <?php outputCsrfInput(); ?>
-            <input type="file" id="avatar-upload-input" name="avatar" class="visually-hidden" accept="image/png, image/jpeg">
             
+            <input type="file" id="avatar-upload-input" name="avatar" class="visually-hidden" accept="image/png, image/jpeg, image/gif, image/webp">
             <div class="settings-card-avatar-error" id="avatar-error" style="display: none;"></div>
 
             <div class="settings-card">

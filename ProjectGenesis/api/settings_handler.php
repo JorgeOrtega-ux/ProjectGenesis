@@ -99,20 +99,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $fileSize = $file['size'];
                 $fileTmpName = $file['tmp_name'];
 
-                // 2. Validar tamaño (ej: max 2MB)
+                // 2. Validar tamaño (MODIFICADO: max 2MB)
                 if ($fileSize > 2 * 1024 * 1024) {
                     throw new Exception('El archivo es demasiado grande (máx 2MB).');
                 }
 
-                // 3. Validar tipo de imagen
+                // 3. Validar tipo de imagen (con GIF y WebP)
                 $finfo = new finfo(FILEINFO_MIME_TYPE);
                 $mimeType = $finfo->file($fileTmpName);
-                $allowedTypes = ['image/png', 'image/jpeg'];
                 
-                if (!in_array($mimeType, $allowedTypes)) {
-                    throw new Exception('Formato de archivo no válido (solo PNG o JPEG).');
+                $allowedTypes = [
+                    'image/png'  => 'png',
+                    'image/jpeg' => 'jpg',
+                    'image/gif'  => 'gif',
+                    'image/webp' => 'webp'
+                ];
+                
+                if (!array_key_exists($mimeType, $allowedTypes)) {
+                    throw new Exception('Formato de archivo no válido (solo PNG, JPEG, GIF o WebP).');
                 }
-                $extension = ($mimeType == 'image/png') ? 'png' : 'jpg';
+                $extension = $allowedTypes[$mimeType]; 
 
                 // 4. Obtener el avatar antiguo para borrarlo después
                 $stmt = $pdo->prepare("SELECT profile_image_url FROM users WHERE id = ?");

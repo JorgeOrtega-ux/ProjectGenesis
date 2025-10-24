@@ -98,9 +98,9 @@ export function initSettingsManager() {
             const avatarForm = document.getElementById('avatar-form'); // <-- AÑADIDO
             if (!avatarForm) return; // <-- AÑADIDO
 
-            if (!confirm('¿Estás seguro de que quieres eliminar tu foto de perfil? Se restaurará la imagen por defecto.')) {
-                return;
-            }
+            // --- ▼▼▼ LÍNEA ELIMINADA ▼▼▼ ---
+            // if (!confirm('¿Estás seguro...')) { return; }
+            // --- ▲▲▲ LÍNEA ELIMINADA ▲▲▲ ---
 
             hideAvatarError();
             const removeTrigger = e.target.closest('#avatar-remove-trigger');
