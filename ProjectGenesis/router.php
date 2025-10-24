@@ -13,11 +13,12 @@ $allowedPages = [
     'explorer' => 'includes/sections/main/explorer.php',
     'login'    => 'includes/sections/auth/login.php',
     'register' => 'includes/sections/auth/register.php',
+    'reset-password' => 'includes/sections/auth/reset-password.php', // <-- AÑADIDO
     '404'      => 'includes/sections/main/404.php', 
 ];
 
 // --- MODIFICACIÓN 2: PROTEGER EL ROUTER ---
-$authPages = ['login', 'register'];
+$authPages = ['login', 'register', 'reset-password']; // <-- AÑADIDO
 $isAuthPage = in_array($page, $authPages);
 
 // Si pide una página protegida (que no es de auth ni 404) Y NO tiene sesión

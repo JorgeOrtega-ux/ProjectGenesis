@@ -63,13 +63,14 @@ $pathsToPages = [
     '/'           => 'home',
     '/explorer'   => 'explorer',
     '/login'      => 'login',
-    '/register'   => 'register'
+    '/register'   => 'register',
+    '/reset-password' => 'reset-password' // <-- AÑADIDO
 ];
 
 $currentPage = $pathsToPages[$path] ?? '404';
 
 // 5. Definir qué páginas NO DEBEN mostrar el header/menu
-$authPages = ['login', 'register'];
+$authPages = ['login', 'register', 'reset-password']; // <-- AÑADIDO
 $isAuthPage = in_array($currentPage, $authPages);
 
 

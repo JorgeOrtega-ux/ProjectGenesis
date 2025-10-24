@@ -24,6 +24,10 @@
                 <button type="submit" class="auth-button">Continuar</button>
             </div>
         </form>
+
+        <p class="auth-link" style="margin-top: 16px;">
+            <a href="/ProjectGenesis/reset-password">¿Olvidaste tu contraseña?</a>
+        </p>
         <p class="auth-link">
             ¿No tienes una cuenta? <a href="/ProjectGenesis/register">Crea una</a>
         </p>

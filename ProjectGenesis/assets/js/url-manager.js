@@ -10,6 +10,7 @@ const routes = {
     'toggleSectionExplorer': 'explorer',
     'toggleSectionLogin': 'login',
     'toggleSectionRegister': 'register',
+    'toggleSectionResetPassword': 'reset-password', // <-- AÑADIDO
 };
 
 const paths = {
@@ -17,6 +18,7 @@ const paths = {
     '/explorer': 'toggleSectionExplorer',
     '/login': 'toggleSectionLogin',
     '/register': 'toggleSectionRegister',
+    '/reset-password': 'toggleSectionResetPassword', // <-- AÑADIDO
 };
 
 // Usar la variable global definida en index.php
@@ -80,17 +82,29 @@ function updateMenuState(currentAction) {
 export function initRouter() {
     
     document.body.addEventListener('click', e => {
-        const link = e.target.closest('.menu-link[data-action*="toggleSection"]');
+        // --- MODIFICADO: Añadido "a[href*='/reset-password']" ---
+        const link = e.target.closest('.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"]');
         
         if (link) {
             e.preventDefault(); 
             
-            const action = link.getAttribute('data-action');
-            const page = routes[action];
+            let action, page, newPath;
+
+            if (link.hasAttribute('data-action')) {
+                // Es un link del menú
+                action = link.getAttribute('data-action');
+                page = routes[action];
+                newPath = Object.keys(paths).find(key => paths[key] === action);
+            } else {
+                // Es un link de auth (<a>)
+                const url = new URL(link.href);
+                newPath = url.pathname.replace(basePath, '') || '/';
+                action = paths[newPath];
+                page = routes[action];
+            }
 
             if (!page) return; 
 
-            const newPath = Object.keys(paths).find(key => paths[key] === action);
             const fullUrlPath = `${basePath}${newPath === '/' ? '/' : newPath}`;
 
             if (window.location.pathname !== fullUrlPath) {

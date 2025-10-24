@@ -52,8 +52,70 @@ async function handleRegistrationSubmit(e) {
     }
 }
 
+// --- ▼▼▼ NUEVA FUNCIÓN PARA RESET SUBMIT ▼▼▼ ---
 /**
- * Lógica para el formulario de LOGIN (sin cambios)
+ * Función genérica para manejar el envío FINAL del formulario de reseteo
+ * @param {Event} e - El evento de submit del formulario
+ */
+async function handleResetSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const button = form.querySelector('button[type="submit"]');
+    const errorDiv = document.getElementById('reset-error');
+    
+    // --- Validación de cliente ---
+    const password = form.querySelector('#reset-password').value;
+    const passwordConfirm = form.querySelector('#reset-password-confirm').value;
+
+    if (password.length < 8) {
+         showAuthError(errorDiv, 'La contraseña debe tener al menos 8 caracteres.');
+         return;
+    }
+    if (password !== passwordConfirm) {
+        showAuthError(errorDiv, 'Las contraseñas no coinciden.');
+        return;
+    }
+    // --- Fin Validación ---
+
+    button.disabled = true;
+    button.textContent = 'Guardando...';
+    errorDiv.style.display = 'none';
+
+    try {
+        const formData = new FormData(form);
+        // La acción final es 'reset-update-password'
+        formData.append('action', 'reset-update-password'); 
+
+        const response = await fetch(AUTH_ENDPOINT, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) throw new Error('Error en la respuesta del servidor.');
+        
+        const result = await response.json();
+
+        if (result.success) {
+            // ¡Éxito! Redirigir a login
+            alert(result.message || '¡Contraseña actualizada! Ya puedes iniciar sesión.');
+            window.location.href = window.projectBasePath + '/login';
+        } else {
+            showAuthError(errorDiv, result.message || 'Ha ocurrido un error.');
+        }
+
+    } catch (error) {
+        console.error('Error en fetch:', error);
+        showAuthError(errorDiv, 'No se pudo conectar con el servidor.');
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Guardar y Continuar';
+    }
+}
+// --- ▲▲▲ FIN NUEVA FUNCIÓN ▲▲▲ ---
+
+
+/**
+ * Lógica para el formulario de LOGIN (CORREGIDO)
  */
 async function handleLoginFormSubmit(e) {
     e.preventDefault();
@@ -70,7 +132,7 @@ async function handleLoginFormSubmit(e) {
         formData.append('action', 'login');
 
         const response = await fetch(AUTH_ENDPOINT, {
-            method: 'POST',
+            method: 'POST', // <-- ¡AQUÍ ESTABA EL ERROR!
             body: formData,
         });
 
@@ -139,7 +201,7 @@ function initRegisterWizard() {
         if (!button) return; 
 
         const registerForm = button.closest('#register-form');
-        if (!registerForm) return; 
+        if (!registerForm) return; // <-- IMPORTANTE: Solo actuar en register-form
 
         const errorDiv = registerForm.querySelector('#register-error');
         if (!errorDiv) return;
@@ -250,8 +312,11 @@ function initRegisterWizard() {
 
     // 2. DELEGAR EL INPUT AL BODY (--- ¡BLOQUE MODIFICADO! ---)
     document.body.addEventListener('input', e => {
-        // Asegurarse que el input es el de código Y está dentro del form de registro
-        if (e.target.id === 'register-code' && e.target.closest('#register-form')) {
+        // --- MODIFICADO: Añadido listener para #reset-code ---
+        const isRegisterCode = (e.target.id === 'register-code' && e.target.closest('#register-form'));
+        const isResetCode = (e.target.id === 'reset-code' && e.target.closest('#reset-form'));
+
+        if (isRegisterCode || isResetCode) {
             
             // --- ¡¡¡ESTA ES LA LÍNEA MODIFICADA!!! ---
             // 1. Quitar CUALQUIER COSA que no sea un número (0-9) o letra (a-z, A-Z)
@@ -278,6 +343,120 @@ function initRegisterWizard() {
     });
 }
 
+// --- ▼▼▼ NUEVA FUNCIÓN PARA RESET WIZARD ▼▼▼ ---
+/**
+ * Inicializa la lógica del asistente de reseteo de contraseña
+ */
+function initResetWizard() {
+    
+    document.body.addEventListener('click', async e => {
+        const button = e.target.closest('[data-auth-action]');
+        if (!button) return; 
+
+        const resetForm = button.closest('#reset-form');
+        if (!resetForm) return; // <-- IMPORTANTE: Solo actuar en reset-form
+
+        const errorDiv = resetForm.querySelector('#reset-error');
+        if (!errorDiv) return;
+
+        const action = button.getAttribute('data-auth-action');
+        const currentStepEl = button.closest('.auth-step');
+        if (!currentStepEl) return;
+        
+        const currentStep = parseInt(currentStepEl.getAttribute('data-step'), 10);
+        
+        // --- Lógica para ir hacia ATRÁS ---
+        if (action === 'prev-step') {
+            const prevStepEl = resetForm.querySelector(`[data-step="${currentStep - 1}"]`);
+            if (prevStepEl) {
+                currentStepEl.style.display = 'none';
+                prevStepEl.style.display = 'block';
+                errorDiv.style.display = 'none'; 
+            }
+            return;
+        }
+
+        // --- Lógica para ir hacia ADELANTE ---
+        if (action === 'next-step') {
+            
+            // --- VALIDACIÓN DE CLIENTE ---
+            let isValid = true;
+            let clientErrorMessage = 'Por favor, completa todos los campos.';
+
+            if (currentStep === 1) {
+                const emailInput = currentStepEl.querySelector('#reset-email');
+                if (!emailInput.value) {
+                    isValid = false;
+                    clientErrorMessage = 'Por favor, introduce tu email.';
+                }
+            }
+            else if (currentStep === 2) {
+                const codeInput = currentStepEl.querySelector('#reset-code');
+                if (!codeInput.value) {
+                    isValid = false;
+                    clientErrorMessage = 'Por favor, introduce el código de verificación.';
+                }
+            }
+
+            if (!isValid) {
+                showAuthError(errorDiv, clientErrorMessage); 
+                return;
+            }
+            // --- FIN VALIDACIÓN DE CLIENTE ---
+
+            errorDiv.style.display = 'none';
+            
+            button.disabled = true;
+            button.textContent = 'Verificando...';
+
+            try {
+                const formData = new FormData(resetForm);
+                let fetchAction = '';
+
+                if (currentStep === 1) {
+                    fetchAction = 'reset-check-email';
+                }
+                else if (currentStep === 2) {
+                    fetchAction = 'reset-check-code';
+                }
+
+                formData.append('action', fetchAction);
+
+                const response = await fetch(AUTH_ENDPOINT, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) throw new Error('Error de servidor.');
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    const nextStepEl = resetForm.querySelector(`[data-step="${currentStep + 1}"]`);
+                    if (nextStepEl) {
+                        currentStepEl.style.display = 'none';
+                        nextStepEl.style.display = 'block';
+                    }
+                    // Mensaje especial para el paso 1 (para ocultar si email existe o no)
+                    if (currentStep === 1 && result.message) {
+                         alert(result.message);
+                    }
+                } else {
+                    showAuthError(errorDiv, result.message || 'Error desconocido.');
+                }
+
+            } catch (error) {
+                showAuthError(errorDiv, 'No se pudo conectar con el servidor.');
+            } finally {
+                button.disabled = false;
+                // Restaurar texto correcto
+                button.textContent = (currentStep === 1) ? 'Enviar Código' : 'Verificar';
+            }
+        }
+    });
+}
+// --- ▲▲▲ FIN NUEVA FUNCIÓN ▲▲▲ ---
+
 
 /**
  * Inicializador principal del módulo de autenticación
@@ -290,6 +469,9 @@ export function initAuthManager() {
     // Inicializar el asistente de registro (ahora usa delegación)
     initRegisterWizard();
 
+    // --- AÑADIDO: Inicializar el asistente de reseteo ---
+    initResetWizard();
+
     // Asignar listeners a los formularios (esto también usa delegación, está bien)
     document.body.addEventListener('submit', e => {
         if (e.target.id === 'login-form') {
@@ -297,6 +479,9 @@ export function initAuthManager() {
         } else if (e.target.id === 'register-form') {
             // El submit solo se dispara en el último paso
             handleRegistrationSubmit(e);
+        } else if (e.target.id === 'reset-form') {
+            // --- AÑADIDO: Handler para el submit de reseteo ---
+            handleResetSubmit(e);
         }
     });
 }

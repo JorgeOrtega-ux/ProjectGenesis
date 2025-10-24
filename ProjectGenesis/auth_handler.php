@@ -269,6 +269,123 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = 'Por favor, completa todos los campos.';
             }
         }
+
+        // --- ▼▼▼ NUEVA LÓGICA PARA RESETEO DE CONTRASEÑA ▼▼▼ ---
+
+        // PASO 1: Verificar email y generar código de reseteo
+        elseif ($action === 'reset-check-email') {
+            $email = $_POST['email'] ?? '';
+
+            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $response['message'] = 'Por favor, introduce un correo válido.';
+            } else {
+                try {
+                    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+                    $stmt->execute([$email]);
+                    if (!$stmt->fetch()) {
+                        // No informamos al usuario si el email existe o no por seguridad
+                        // Pero internamente, solo continuamos si existe.
+                        $response['success'] = true; 
+                        $response['message'] = 'Si el correo existe, se enviará un código.';
+                    } else {
+                        // 1. Limpiar códigos viejos de 'password_reset' para este email
+                        $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = 'password_reset'");
+                        $stmt->execute([$email]);
+
+                        // 2. Generar código (sin payload, no es necesario)
+                        $verificationCode = str_replace('-', '', generateVerificationCode());
+
+                        // 3. Insertar código de reseteo
+                        $stmt = $pdo->prepare(
+                            "INSERT INTO verification_codes (identifier, code_type, code) 
+                             VALUES (?, 'password_reset', ?)"
+                        );
+                        $stmt->execute([$email, $verificationCode]);
+
+                        $response['success'] = true;
+                        $response['message'] = 'Código de recuperación generado.';
+                    }
+                } catch (PDOException $e) {
+                    $response['message'] = 'Error en la base de datos.';
+                }
+            }
+        }
+
+        // PASO 2: Verificar el código de reseteo
+        elseif ($action === 'reset-check-code') {
+            $email = $_POST['email'] ?? '';
+            $submittedCode = str_replace('-', '', $_POST['verification_code'] ?? '');
+
+            if (empty($email) || empty($submittedCode)) {
+                $response['message'] = 'Faltan datos de verificación.';
+            } else {
+                try {
+                    $stmt = $pdo->prepare(
+                        "SELECT * FROM verification_codes 
+                         WHERE identifier = ? 
+                         AND code_type = 'password_reset'
+                         AND created_at > (NOW() - INTERVAL 15 MINUTE)"
+                    );
+                    $stmt->execute([$email]);
+                    $codeData = $stmt->fetch();
+
+                    if (!$codeData || strtolower($codeData['code']) !== strtolower($submittedCode)) {
+                        $response['message'] = 'El código es incorrecto o ha expirado.';
+                    } else {
+                        // El código es correcto, permitir avanzar
+                        $response['success'] = true;
+                    }
+                } catch (PDOException $e) {
+                    $response['message'] = 'Error en la base de datos.';
+                }
+            }
+        }
+
+        // PASO 3: Verificar todo y actualizar la contraseña
+        elseif ($action === 'reset-update-password') {
+            $email = $_POST['email'] ?? '';
+            $submittedCode = str_replace('-', '', $_POST['verification_code'] ?? '');
+            $newPassword = $_POST['password'] ?? '';
+
+            if (empty($email) || empty($submittedCode) || empty($newPassword)) {
+                $response['message'] = 'Faltan datos. Por favor, vuelve a empezar.';
+            } elseif (strlen($newPassword) < 8) {
+                $response['message'] = 'La nueva contraseña debe tener al menos 8 caracteres.';
+            } else {
+                try {
+                    // Re-verificamos el código por seguridad
+                    $stmt = $pdo->prepare(
+                        "SELECT * FROM verification_codes 
+                         WHERE identifier = ? 
+                         AND code_type = 'password_reset'
+                         AND created_at > (NOW() - INTERVAL 15 MINUTE)"
+                    );
+                    $stmt->execute([$email]);
+                    $codeData = $stmt->fetch();
+
+                    if (!$codeData || strtolower($codeData['code']) !== strtolower($submittedCode)) {
+                        $response['message'] = 'El código es incorrecto o ha expirado. Vuelve a empezar.';
+                    } else {
+                        // ¡Éxito! Hashear nueva contraseña y actualizar usuario
+                        $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
+                        
+                        $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE email = ?");
+                        $stmt->execute([$hashedPassword, $email]);
+
+                        // Limpiar el código usado
+                        $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE id = ?");
+                        $stmt->execute([$codeData['id']]);
+
+                        $response['success'] = true;
+                        $response['message'] = 'Contraseña actualizada. Serás redirigido.';
+                    }
+                } catch (PDOException $e) {
+                    $response['message'] = 'Error en la base de datos.';
+                }
+            }
+        }
+        
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA ---
     }
 }
 
