@@ -137,28 +137,43 @@
         </form>
         
         <div class="settings-modal-overlay" id="email-verify-modal" style="display: none;">
+            
+            <button type="button" class="settings-modal-close-btn" id="email-verify-close">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+
             <div class="settings-modal-content">
-                <h2 class="auth-title" style="margin-bottom: 16px;">Verifica tu identidad</h2>
+                <h2 class="auth-title" style="margin-bottom: 16px;">Busca el código que te enviamos</h2>
                 
                 <p class="auth-verification-text" style="margin-bottom: 24px;">
-                    Para proteger tu cuenta, hemos enviado (simulado) un código de un solo uso
-                    a tu dirección de correo electrónico actual.
+                    Para poder hacer cambios en tu cuenta, primero debes ingresar
+                    el código que te enviamos (simulado) a 
+                    <strong id="email-verify-modal-email"><?php echo htmlspecialchars($userEmail); ?></strong>.
                 </p>
 
                 <div class="auth-error-message" id="email-verify-error" style="display: none; margin-bottom: 16px;"></div>
 
                 <form onsubmit="event.preventDefault();" novalidate>
+                    
                     <div class="auth-input-group">
                         <input type="text" id="email-verify-code" name="verification_code" required placeholder=" " maxlength="14">
-                        <label for="email-verify-code">Código de Verificación*</label>
+                        <label for="email-verify-code">Código*</label>
                     </div>
 
-                    <div class="auth-step-buttons" style="margin-top: 24px;">
-                        <button type="button" class="auth-button-back" id="email-verify-cancel">Cancelar</button>
+                    <div class="auth-step-buttons">
                         <button type="button" class="auth-button" id="email-verify-continue">Continuar</button>
                     </div>
-                </form>
+                    </form>
+
+                <div class="settings-modal-footer">
+                    <p>
+                        ¿No recibiste el código? 
+                        <a id="email-verify-resend">Volver a enviarlo</a>
+                    </p>
+                </div>
+
             </div>
         </div>
+
         </div>
 </div>

@@ -256,6 +256,15 @@ export function initSettingsManager() {
                 const result = await response.json();
 
                 if (result.success) {
+                    
+                    // --- ▼▼▼ NUEVA LÓGICA PARA POPULAR EMAIL ▼▼▼ ---
+                    const currentEmail = document.getElementById('email-display-text')?.dataset.originalEmail;
+                    const modalEmailEl = document.getElementById('email-verify-modal-email');
+                    if (modalEmailEl && currentEmail) {
+                        modalEmailEl.textContent = currentEmail;
+                    }
+                    // --- ▲▲▲ FIN NUEVA LÓGICA ▲▲▲ ---
+
                     // 3. Mostrar el modal de verificación
                     const modal = document.getElementById('email-verify-modal');
                     if(modal) modal.style.display = 'flex';
@@ -282,14 +291,69 @@ export function initSettingsManager() {
             }
             return; // Detener aquí
         }
+
+        // --- ▼▼▼ NUEVA LÓGICA PARA REENVIAR CÓDIGO ▼▼▼ ---
+        // Click en "Reenviar código" (en el modal de verificación)
+        if (e.target.closest('#email-verify-resend')) {
+            e.preventDefault();
+            const resendTrigger = e.target.closest('#email-verify-resend');
+            const csrfToken = document.querySelector('#email-form [name="csrf_token"]');
+
+            // Usamos 'disabled-interactive' de styles.css
+            if (resendTrigger.classList.contains('disabled-interactive')) return;
+            
+            resendTrigger.classList.add('disabled-interactive');
+            const originalText = resendTrigger.textContent;
+            resendTrigger.textContent = 'Enviando...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('action', 'request-email-change-code');
+                formData.append('csrf_token', csrfToken ? csrfToken.value : '');
+
+                const response = await fetch(SETTINGS_ENDPOINT, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) throw new Error('Error de conexión.');
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    window.showAlert('Se ha reenviado (simulado) un nuevo código.', 'success');
+                } else {
+                    window.showAlert(result.message || 'Error al reenviar el código.', 'error');
+                }
+
+            } catch (error) {
+                window.showAlert(error.message, 'error');
+            } finally {
+                resendTrigger.classList.remove('disabled-interactive');
+                resendTrigger.textContent = originalText;
+            }
+            return;
+        }
+        // --- ▲▲▲ FIN NUEVA LÓGICA REENVIAR ▲▲▲ ---
         
-        // Click en "Cancelar" (en el modal de verificación)
-        if (e.target.closest('#email-verify-cancel')) {
+        // --- ▼▼▼ NUEVO: Click en 'X' para cerrar modal ▼▼▼ ---
+        if (e.target.closest('#email-verify-close')) {
             e.preventDefault();
             const modal = document.getElementById('email-verify-modal');
             if(modal) modal.style.display = 'none';
             return;
         }
+        // --- ▲▲▲ FIN NUEVO BLOQUE ▲▲▲ ---
+
+        // --- ▼▼▼ BLOQUE ELIMINADO ▼▼▼ ---
+        // Click en "Cancelar" (en el modal de verificación)
+        // if (e.target.closest('#email-verify-cancel')) {
+        //     e.preventDefault();
+        //     const modal = document.getElementById('email-verify-modal');
+        //     if(modal) modal.style.display = 'none';
+        //     return;
+        // }
+        // --- ▲▲▲ FIN BLOQUE ELIMINADO ▲▲▲ ---
 
         // Click en "Continuar" (en el modal de verificación)
         if (e.target.closest('#email-verify-continue')) {
