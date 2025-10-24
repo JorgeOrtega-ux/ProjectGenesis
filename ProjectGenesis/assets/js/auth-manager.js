@@ -133,15 +133,13 @@ function initPasswordToggles() {
  */
 function initRegisterWizard() {
     
-    // 1. DELEGAR EL CLICK AL BODY
+    // 1. DELEGAR EL CLICK AL BODY (Con validaciones de cliente)
     document.body.addEventListener('click', async e => {
-        // Buscar si el click fue en un botón de acción del wizard
         const button = e.target.closest('[data-auth-action]');
-        if (!button) return; // Click en otro lugar, ignorar
+        if (!button) return; 
 
-        // Encontrar el formulario y el div de error RELATIVO al botón
         const registerForm = button.closest('#register-form');
-        if (!registerForm) return; // No está dentro del formulario de registro, ignorar
+        if (!registerForm) return; 
 
         const errorDiv = registerForm.querySelector('#register-error');
         if (!errorDiv) return;
@@ -158,7 +156,7 @@ function initRegisterWizard() {
             if (prevStepEl) {
                 currentStepEl.style.display = 'none';
                 prevStepEl.style.display = 'block';
-                errorDiv.style.display = 'none'; // Ocultar errores
+                errorDiv.style.display = 'none'; 
             }
             return;
         }
@@ -166,27 +164,46 @@ function initRegisterWizard() {
         // --- Lógica para ir hacia ADELANTE ---
         if (action === 'next-step') {
             
-            // 1. Validar campos del paso actual (CLIENT-SIDE)
+            // --- VALIDACIÓN DE CLIENTE ---
             let isValid = true;
-            const inputs = currentStepEl.querySelectorAll('input[required]');
-            inputs.forEach(input => {
-                if (!input.value) {
-                    isValid = false;
-                }
-                if (input.type === 'email' && !/^\S+@\S+\.\S+$/.test(input.value)) {
-                    isValid = false;
-                }
-            });
+            let clientErrorMessage = 'Por favor, completa todos los campos correctamente.';
 
-            if (!isValid) {
-                showAuthError(errorDiv, 'Por favor, completa todos los campos correctamente.');
-                return;
+            if (currentStep === 1) {
+                const emailInput = currentStepEl.querySelector('#register-email');
+                const passwordInput = currentStepEl.querySelector('#register-password');
+                const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i;
+
+                if (!emailInput.value || !passwordInput.value) {
+                    isValid = false;
+                    clientErrorMessage = 'Por favor, completa email y contraseña.';
+                } else if (!allowedDomains.test(emailInput.value)) {
+                    isValid = false;
+                    clientErrorMessage = 'Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.';
+                } else if (passwordInput.value.length < 8) {
+                    isValid = false;
+                    clientErrorMessage = 'La contraseña debe tener al menos 8 caracteres.';
+                }
+            }
+            else if (currentStep === 2) {
+                const usernameInput = currentStepEl.querySelector('#register-username');
+                
+                if (!usernameInput.value) {
+                    isValid = false;
+                    clientErrorMessage = 'Por favor, introduce un nombre de usuario.';
+                } else if (usernameInput.value.length < 6) {
+                    isValid = false;
+                    clientErrorMessage = 'El nombre de usuario debe tener al menos 6 caracteres.';
+                }
             }
 
-            // Ocultar error si todo está bien
+            if (!isValid) {
+                showAuthError(errorDiv, clientErrorMessage); 
+                return;
+            }
+            // --- FIN VALIDACIÓN DE CLIENTE ---
+
             errorDiv.style.display = 'none';
             
-            // 2. Realizar llamadas al BACKEND para verificar
             button.disabled = true;
             button.textContent = 'Verificando...';
 
@@ -194,11 +211,9 @@ function initRegisterWizard() {
                 const formData = new FormData(registerForm);
                 let fetchAction = '';
 
-                // --- De Paso 1 a Paso 2 ---
                 if (currentStep === 1) {
                     fetchAction = 'register-check-email';
                 }
-                // --- De Paso 2 a Paso 3 ---
                 else if (currentStep === 2) {
                     fetchAction = 'register-check-username-and-generate-code';
                 }
@@ -215,7 +230,6 @@ function initRegisterWizard() {
                 const result = await response.json();
 
                 if (result.success) {
-                    // Éxito: Ocultar paso actual, mostrar el siguiente
                     const nextStepEl = registerForm.querySelector(`[data-step="${currentStep + 1}"]`);
                     if (nextStepEl) {
                         currentStepEl.style.display = 'none';
@@ -234,13 +248,14 @@ function initRegisterWizard() {
         }
     });
 
-    // 2. DELEGAR EL INPUT AL BODY (--- ¡BLOQUE CORREGIDO! ---)
+    // 2. DELEGAR EL INPUT AL BODY (--- ¡BLOQUE MODIFICADO! ---)
     document.body.addEventListener('input', e => {
         // Asegurarse que el input es el de código Y está dentro del form de registro
         if (e.target.id === 'register-code' && e.target.closest('#register-form')) {
             
-            // 1. Quitar CUALQUIER COSA que no sea un caracter hexadecimal (0-9, a-f, A-F)
-            let input = e.target.value.replace(/[^0-9a-fA-F]/g, '');
+            // --- ¡¡¡ESTA ES LA LÍNEA MODIFICADA!!! ---
+            // 1. Quitar CUALQUIER COSA que no sea un número (0-9) o letra (a-z, A-Z)
+            let input = e.target.value.replace(/[^0-9a-zA-Z]/g, '');
             
             // 2. Convertir a mayúsculas para consistencia visual
             input = input.toUpperCase();
