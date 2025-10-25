@@ -1,7 +1,7 @@
 <?php
 // --- ▼▼▼ INICIO DE NUEVO BLOQUE PHP ▼▼▼ ---
 
-// Estas variables ($userLanguage, $userUsageType) 
+// Estas variables ($userLanguage, $userUsageType, $openLinksInNewTab) 
 // son cargadas por config/router.php
 
 // 1. Definir los mapas de valores de BD a texto legible
@@ -334,7 +334,11 @@ $currentLanguageText = $languageMap[$userLanguage] ?? 'English (United States)';
             <div class="settings-card-right">
                 
                 <label class="settings-toggle-switch">
-                    <input type="checkbox" checked> 
+                    <input type="checkbox" 
+                           id="toggle-new-tab"
+                           data-preference-type="boolean"
+                           data-field-name="open_links_in_new_tab"
+                           <?php echo ($openLinksInNewTab == 1) ? 'checked' : ''; ?>> 
                     <span class="settings-toggle-slider"></span>
                 </label>
 

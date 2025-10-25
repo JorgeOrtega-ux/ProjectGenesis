@@ -1,7 +1,7 @@
 <?php
 // --- ▼▼▼ INICIO DE NUEVO BLOQUE PHP ▼▼▼ ---
 
-// $userTheme es cargado por config/router.php
+// $userTheme y $increaseMessageDuration son cargados por config/router.php
 
 $themeMap = [
     'system' => 'Sincronizar con el sistema',
@@ -81,6 +81,7 @@ $currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
 
             </div>
         </div>
+        
         <div class="settings-card settings-card-align-bottom">
             <div class="settings-card-left">
                 <div class="settings-text-content">
@@ -94,7 +95,11 @@ $currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
             <div class="settings-card-right">
                 
                 <label class="settings-toggle-switch">
-                    <input type="checkbox"> 
+                    <input type="checkbox" 
+                           id="toggle-message-duration"
+                           data-preference-type="boolean"
+                           data-field-name="increase_message_duration"
+                           <?php echo ($increaseMessageDuration == 1) ? 'checked' : ''; ?>> 
                     <span class="settings-toggle-slider"></span>
                 </label>
 

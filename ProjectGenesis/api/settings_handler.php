@@ -693,7 +693,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         // --- ▲▲▲ ¡FIN DE LA NUEVA ACCIÓN (TOGGLE 2FA)! ▲▲▲ ---
 
-        // --- ▼▼▼ ¡INICIO DE LA NUEVA ACCIÓN (UPDATE PREFERENCE)! ▼▼▼ ---
+        // --- ▼▼▼ ¡INICIO DE LA ACCIÓN MODIFICADA (UPDATE PREFERENCE)! ▼▼▼ ---
         elseif ($action === 'update-preference') {
             try {
                 $field = $_POST['field'] ?? '';
@@ -703,7 +703,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $allowedFields = [
                     'language' => ['en-us', 'fr-fr', 'es-latam', 'es-mx'],
                     'theme' => ['system', 'light', 'dark'],
-                    'usage_type' => ['personal', 'student', 'teacher', 'small_business', 'large_company', 'ngo']
+                    'usage_type' => ['personal', 'student', 'teacher', 'small_business', 'large_company', 'ngo'],
+                    // --- ¡NUEVOS CAMPOS! ---
+                    'open_links_in_new_tab' => ['0', '1'],
+                    'increase_message_duration' => ['0', '1']
                 ];
 
                 if (!array_key_exists($field, $allowedFields)) {
@@ -712,6 +715,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // 2. Validar el valor
                 if (!in_array($value, $allowedFields[$field])) {
+                    // --- ¡NUEVA VALIDACIÓN! ---
+                    // Comprobación específica para booleanos por si acaso
+                    if ($field === 'open_links_in_new_tab' || $field === 'increase_message_duration') {
+                         throw new Exception('El valor para un interruptor debe ser 0 o 1.');
+                    }
                     throw new Exception('Valor de preferencia no válido.');
                 }
 
@@ -719,7 +727,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Es seguro concatenar $field aquí porque ha sido validado contra una lista estricta.
                 $sql = "UPDATE user_preferences SET $field = ? WHERE user_id = ?";
                 $stmt = $pdo->prepare($sql);
-                $stmt->execute([$value, $userId]);
+                
+                // --- ¡NUEVA CONVERSIÓN! ---
+                // Convertir el valor a entero si es un campo booleano, si no, dejarlo como string
+                $finalValue = ($field === 'open_links_in_new_tab' || $field === 'increase_message_duration') 
+                                ? (int)$value 
+                                : $value;
+                
+                $stmt->execute([$finalValue, $userId]);
 
                 $response['success'] = true;
                 $response['message'] = 'Preferencia actualizada.';
@@ -733,12 +748,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-        // --- ▲▲▲ ¡FIN DE LA NUEVA ACCIÓN (UPDATE PREFERENCE)! ▲▲▲ ---
+        // --- ▲▲▲ ¡FIN DE LA ACCIÓN MODIFICADA (UPDATE PREFERENCE)! ▲▲▲ ---
 
-        // --- ▼▼▼ ¡INICIO DE LA NUEVA ACCIÓN (LOGOUT ALL DEVICES)! ▼▼▼ ---
+        // --- ▼▼▼ ¡INICIO DE LA ACCIÓN (LOGOUT ALL DEVICES) - CORREGIDA! ▼▼▼ ---
         elseif ($action === 'logout-all-devices') {
             try {
                 // 1. Generar un nuevo token de autenticación universal
+                // --- ¡ESTA ES LA LÍNEA CORREGIDA! ---
                 $newAuthToken = bin2hex(random_bytes(32));
                 
                 // 2. Actualizar este token en la base de datos para el usuario actual
@@ -763,7 +779,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-        // --- ▲▲▲ ¡FIN DE LA NUEVA ACCIÓN (LOGOUT ALL DEVICES)! ▲▲▲ ---
+        // --- ▲▲▲ ¡FIN DE LA ACCIÓN (LOGOUT ALL DEVICES) - CORREGIDA! ▲▲▲ ---
 
     }
 }

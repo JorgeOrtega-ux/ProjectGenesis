@@ -66,25 +66,31 @@ function focusInputAndMoveCursorToEnd(inputElement) {
     }
 }
 
-// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (ACTUALIZAR PREFERENCIA) ▼▼▼ ---
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (ACTUALIZAR PREFERENCIA) ▼▼▼ ---
 /**
  * Envía una actualización de preferencia a la API.
- * @param {string} preferenceType - El tipo de preferencia (ej. 'language', 'theme', 'usage_type').
- * @param {string} newValue - El nuevo valor a guardar (ej. 'es-mx', 'dark', 'student').
+ * @param {string} preferenceTypeOrField - El tipo de preferencia (ej. 'theme') O el nombre del campo (ej. 'open_links_in_new_tab').
+ * @param {string} newValue - El nuevo valor a guardar (ej. 'dark', '1').
  */
-async function handlePreferenceChange(preferenceType, newValue) {
-    if (!preferenceType || !newValue) return;
+async function handlePreferenceChange(preferenceTypeOrField, newValue) {
+    if (!preferenceTypeOrField || newValue === undefined) { // Comprobar undefined por si el valor es '0'
+        console.error('handlePreferenceChange: Faltan el tipo/campo o el valor.');
+        return;
+    }
 
-    // Mapear el tipo de preferencia al nombre del campo en la API/BD
+    // Mapear los tipos de los selectores a los nombres de campo de la BD
     const fieldMap = {
         'language': 'language',
         'theme': 'theme',
         'usage': 'usage_type' // 'usage' viene del data-module
     };
 
-    const fieldName = fieldMap[preferenceType];
+    // Si la clave existe en el mapa (ej. 'theme'), usa el valor ('theme').
+    // Si no (ej. 'open_links_in_new_tab'), asume que la clave ES el nombre del campo.
+    const fieldName = fieldMap[preferenceTypeOrField] || preferenceTypeOrField;
+
     if (!fieldName) {
-        console.error('Tipo de preferencia desconocido:', preferenceType);
+        console.error('Tipo de preferencia desconocido:', preferenceTypeOrField);
         return;
     }
 
@@ -97,9 +103,13 @@ async function handlePreferenceChange(preferenceType, newValue) {
     const result = await callSettingsApi(formData);
 
     if (result.success) {
-        window.showAlert(result.message || 'Preferencia actualizada.', 'success');
-        // Si el cambio es de idioma, podríamos querer recargar la página
-        if (preferenceType === 'language') {
+        // No mostramos alerta para los toggles, solo para los selects
+        if (preferenceTypeOrField === 'language' || preferenceTypeOrField === 'theme' || preferenceTypeOrField === 'usage') {
+             window.showAlert(result.message || 'Preferencia actualizada.', 'success');
+        }
+       
+        // Si el cambio es de idioma, recargamos la página
+        if (preferenceTypeOrField === 'language') {
             window.showAlert('Idioma actualizado. La página se recargará.', 'success');
             setTimeout(() => location.reload(), 1500);
         }
@@ -107,7 +117,7 @@ async function handlePreferenceChange(preferenceType, newValue) {
         window.showAlert(result.message || 'Error al guardar la preferencia.', 'error');
     }
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA ▲▲▲ ---
 
 
 export function initSettingsManager() {
@@ -834,6 +844,7 @@ export function initSettingsManager() {
 
     // 3. Delegación para CHANGE
     document.body.addEventListener('change', (e) => {
+        
         if (e.target.id === 'avatar-upload-input') {
             const fileInput = e.target;
             const previewImage = document.getElementById('avatar-preview-image');
@@ -875,6 +886,27 @@ export function initSettingsManager() {
             document.getElementById('avatar-actions-custom').style.display = 'none';
             document.getElementById('avatar-actions-preview').style.display = 'flex';
         }
+
+        // --- ▼▼▼ ¡INICIO DE LA NUEVA LÓGICA PARA TOGGLES! ▼▼▼ ---
+        
+        // Escucha cambios en CUALQUIER checkbox que sea un toggle de preferencia booleana
+        else if (e.target.matches('input[type="checkbox"][data-preference-type="boolean"]')) {
+            const checkbox = e.target;
+            const fieldName = checkbox.dataset.fieldName;
+            
+            // El valor es '1' (true) si está marcado, '0' (false) si no
+            const newValue = checkbox.checked ? '1' : '0';
+
+            if (fieldName) {
+                // Llama a la función de API genérica
+                // Pasamos el nombre del campo (ej. 'open_links_in_new_tab') directamente
+                handlePreferenceChange(fieldName, newValue);
+            } else {
+                console.error('Este toggle no tiene un data-field-name:', checkbox);
+            }
+        }
+        // --- ▲▲▲ ¡FIN DE LA NUEVA LÓGICA PARA TOGGLES! ▲▲▲ ---
+        
 
         // --- ▼▼▼ ¡MODIFICACIÓN! Se eliminó el listener 'change' para 'tfa-toggle-input' ▼▼▼ ---
         // (La lógica ahora está en el 'click' listener de 'tfa-toggle-button')

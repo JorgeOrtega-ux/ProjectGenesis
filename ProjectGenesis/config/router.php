@@ -176,7 +176,7 @@ if (array_key_exists($page, $allowedPages)) {
                 $initialCooldown = 0; 
             }
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA DE COOLDOWN ▲▲▲ ---
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA DE COOLDOWN ▼▼▼ ---
     }
     // --- ▲▲▲ FIN DE LA LÓGICA DE VALIDACIÓN ▲▲▲ ---
 
@@ -202,23 +202,24 @@ if (array_key_exists($page, $allowedPages)) {
         
         // --- ▼▼▼ INICIO DE NUEVA LÓGICA (CARGAR PREFERENCIAS) ▼▼▼ ---
         try {
-            $stmt_prefs = $pdo->prepare("SELECT * FROM user_preferences WHERE user_id = ?");
+            // --- ¡MODIFICADO! Se pide también 'open_links_in_new_tab' ---
+            $stmt_prefs = $pdo->prepare("SELECT language, usage_type, open_links_in_new_tab FROM user_preferences WHERE user_id = ?");
             $stmt_prefs->execute([$_SESSION['user_id']]);
             $userPreferences = $stmt_prefs->fetch(PDO::FETCH_ASSOC);
 
             // Definir fallbacks por si la fila no existe (ej. usuario antiguo)
             $userLanguage = $userPreferences['language'] ?? 'en-us';
-            // --- ▼▼▼ ¡LÍNEA ELIMINADA! ▼▼▼ ---
-            // $userTheme = $userPreferences['theme'] ?? 'system'; 
             $userUsageType = $userPreferences['usage_type'] ?? 'personal';
+            // --- ¡NUEVA LÍNEA! ---
+            $openLinksInNewTab = (int)($userPreferences['open_links_in_new_tab'] ?? 1); // Default a 1 (true)
 
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - settings-profile - preferences');
             // Fallbacks en caso de error de BD
             $userLanguage = 'en-us';
-            // --- ▼▼▼ ¡LÍNEA ELIMINADA! ▼▼▼ ---
-            // $userTheme = 'system';
             $userUsageType = 'personal';
+            // --- ¡NUEVA LÍNEA! ---
+            $openLinksInNewTab = 1;
         }
         // --- ▲▲▲ FIN DE NUEVA LÓGICA (CARGAR PREFERENCIAS) ▲▲▲ ---
         
@@ -274,23 +275,30 @@ if (array_key_exists($page, $allowedPages)) {
         // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
         // --- ▲▲▲ FIN DE LA NUEVA LÓGICA ▲▲▲ ---
 
-    // --- ▼▼▼ ¡INICIO DEL NUEVO BLOQUE! (settings-accessibility) ▼▼▼ ---
+    // --- ▼▼▼ ¡INICIO DEL BLOQUE MODIFICADO! (settings-accessibility) ▼▼▼ ---
     } elseif ($page === 'settings-accessibility') {
         
         // --- ▼▼▼ INICIO DE NUEVA LÓGICA (CARGAR PREFERENCIAS DE TEMA) ▼▼▼ ---
         try {
-            $stmt_prefs = $pdo->prepare("SELECT theme FROM user_preferences WHERE user_id = ?");
+            // --- ¡MODIFICADO! Se pide también 'increase_message_duration' ---
+            $stmt_prefs = $pdo->prepare("SELECT theme, increase_message_duration FROM user_preferences WHERE user_id = ?");
             $stmt_prefs->execute([$_SESSION['user_id']]);
-            $userTheme = $stmt_prefs->fetchColumn(); 
+            $userPreferences = $stmt_prefs->fetch(PDO::FETCH_ASSOC);
 
+            $userTheme = $userPreferences['theme'] ?? 'system'; 
             if ($userTheme === false) { 
                 $userTheme = 'system'; 
             }
+            
+            // --- ¡NUEVA LÍNEA! ---
+            $increaseMessageDuration = (int)($userPreferences['increase_message_duration'] ?? 0); // Default a 0 (false)
 
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - settings-accessibility - preferences');
             // Fallbacks en caso de error de BD
             $userTheme = 'system';
+            // --- ¡NUEVA LÍNEA! ---
+            $increaseMessageDuration = 0;
         }
         // --- ▲▲▲ FIN DE NUEVA LÓGICA (CARGAR PREFERENCIAS DE TEMA) ▲▲▲ ---
 
