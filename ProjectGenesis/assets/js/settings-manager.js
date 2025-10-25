@@ -632,13 +632,14 @@ export function initSettingsManager() {
 
         
         // --- ▼▼▼ ¡INICIO DE NUEVA LÓGICA PARA TRIGGER SELECTOR (USO)! ▼▼▼ ---
-        const clickedLink = e.target.closest('[data-module="moduleTriggerSelect"] .menu-link');
+        // --- MODIFICACIÓN: Generalizado para usar la clase .module-trigger-select ---
+        const clickedLink = e.target.closest('.module-trigger-select .menu-link');
         if (clickedLink) {
             e.preventDefault();
             
             // 1. Encontrar elementos
             const menuList = clickedLink.closest('.menu-list');
-            const module = clickedLink.closest('[data-module="moduleTriggerSelect"]');
+            const module = clickedLink.closest('.module-trigger-select'); // Modificado
             const wrapper = clickedLink.closest('.trigger-select-wrapper');
             const trigger = wrapper?.querySelector('.trigger-selector');
             const triggerTextEl = trigger?.querySelector('.trigger-select-text span');

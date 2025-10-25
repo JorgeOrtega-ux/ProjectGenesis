@@ -258,5 +258,141 @@
 
             </div>
         </div>
+        
+        <div class="settings-card settings-card-align-bottom">
+            <div class="settings-card-left">
+                <div class="settings-text-content">
+                    <h2 class="settings-text-title">Idioma</h2>
+                    <p class="settings-text-description">
+                        Selecciona tu idioma preferido.
+                    </p>
+                </div>
+            </div>
+
+            <div class="settings-card-right">
+                
+                <div class="trigger-select-wrapper">
+                    
+                    <div class="trigger-selector" 
+                         data-action="toggleModuleLanguageSelect">
+                        
+                        <div class="trigger-select-icon">
+                            <span class="material-symbols-rounded">language</span>
+                        </div>
+                        <div class="trigger-select-text">
+                            <span>Español (Latinoamérica)</span>
+                        </div>
+                        <div class="trigger-select-arrow">
+                            <span class="material-symbols-rounded">arrow_drop_down</span>
+                        </div>
+                    </div>
+
+                    <div class="module-content module-trigger-select body-title disabled" 
+                         data-module="moduleLanguageSelect">
+                        
+                        <div class="menu-content">
+                            <div class="menu-list">
+
+                                <div class="menu-link">
+                                    <div class="menu-link-icon"></div>
+                                    <div class="menu-link-text">
+                                        <span>English (United States)</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="menu-link">
+                                    <div class="menu-link-icon"></div>
+                                    <div class="menu-link-text">
+                                        <span>Français (France)</span>
+                                    </div>
+                                </div>
+
+                                <div class="menu-link active">
+                                    <div class="menu-link-icon">
+                                        <span class="material-symbols-rounded">check</span>
+                                    </div>
+                                    <div class="menu-link-text">
+                                        <span>Español (Latinoamérica)</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="menu-link">
+                                    <div class="menu-link-icon"></div>
+                                    <div class="menu-link-text">
+                                        <span>Español (México)</span>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="settings-card settings-card-align-bottom">
+            <div class="settings-card-left">
+                <div class="settings-text-content">
+                    <h2 class="settings-text-title">Tema</h2>
+                    <p class="settings-text-description">
+                        Elige cómo quieres que se vea la interfaz.
+                    </p>
+                </div>
+            </div>
+
+            <div class="settings-card-right">
+                
+                <div class="trigger-select-wrapper">
+                    
+                    <div class="trigger-selector" 
+                         data-action="toggleModuleThemeSelect">
+                        
+                        <div class="trigger-select-icon">
+                            <span class="material-symbols-rounded">brightness_medium</span>
+                        </div>
+                        <div class="trigger-select-text">
+                            <span>Sincronizar con el sistema</span>
+                        </div>
+                        <div class="trigger-select-arrow">
+                            <span class="material-symbols-rounded">arrow_drop_down</span>
+                        </div>
+                    </div>
+
+                    <div class="module-content module-trigger-select body-title disabled" 
+                         data-module="moduleThemeSelect">
+                        
+                        <div class="menu-content">
+                            <div class="menu-list">
+
+                                <div class="menu-link active">
+                                    <div class="menu-link-icon">
+                                        <span class="material-symbols-rounded">check</span>
+                                    </div>
+                                    <div class="menu-link-text">
+                                        <span>Sincronizar con el sistema</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="menu-link">
+                                    <div class="menu-link-icon"></div>
+                                    <div class="menu-link-text">
+                                        <span>Tema oscuro</span>
+                                    </div>
+                                </div>
+
+                                <div class="menu-link">
+                                    <div class="menu-link-icon"></div>
+                                    <div class="menu-link-text">
+                                        <span>Tema claro</span>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
         </div>
 </div>
