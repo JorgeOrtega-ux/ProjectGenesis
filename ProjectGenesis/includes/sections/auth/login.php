@@ -23,6 +23,9 @@
                     </button>
                 </div>
 
+                <p class="auth-link" style="text-align: right;">
+                    <a href="/ProjectGenesis/reset-password">¿Olvidaste tu contraseña?</a>
+                </p>
                 <div class="auth-step-buttons">
                     <button type="button" class="auth-button" data-auth-action="next-step">Continuar</button>
                 </div>
@@ -46,11 +49,8 @@
             </fieldset>
             </form>
 
-        <p class="auth-link" style="margin-top: 16px;">
-            <a href="/ProjectGenesis/reset-password">¿Olvidaste tu contraseña?</a>
-        </p>
         <p class="auth-link">
-            ¿No tienes una cuenta? <a href="/ProjectGenesis/register">Crea una</a>
+            ¿No tienes una cuenta? <a href="/ProjectGenesis/register">Crear cuenta</a>
         </p>
     </div>
 </div>

@@ -441,7 +441,6 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s;
-    margin-top: 8px;
     flex: 1; 
 }
 
@@ -504,7 +503,6 @@ body {
     display: flex;
     flex-direction: row;
     gap: 12px;
-    margin-top: 8px;
 }
 
 .auth-button-back {
