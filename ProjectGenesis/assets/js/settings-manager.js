@@ -1,10 +1,8 @@
 /* ====================================== */
 /* ======== SETTINGS-MANAGER.JS ========= */
 /* ====================================== */
-import { callSettingsApi } from './api-service.js'; // <-- AÑADIDO
-// --- ▼▼▼ ¡AÑADIDO! Importar el desactivador de módulos ▼▼▼ ---
+import { callSettingsApi } from './api-service.js'; 
 import { deactivateAllModules } from './main-controller.js';
-// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 // const SETTINGS_ENDPOINT = ...; // <-- ELIMINADO
 
@@ -85,8 +83,6 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue) {
         'usage': 'usage_type' // 'usage' viene del data-module
     };
 
-    // Si la clave existe en el mapa (ej. 'theme'), usa el valor ('theme').
-    // Si no (ej. 'open_links_in_new_tab'), asume que la clave ES el nombre del campo.
     const fieldName = fieldMap[preferenceTypeOrField] || preferenceTypeOrField;
 
     if (!fieldName) {
@@ -99,7 +95,6 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue) {
     formData.append('field', fieldName);
     formData.append('value', newValue);
 
-    // No mostramos un spinner para esto, es una acción rápida.
     const result = await callSettingsApi(formData);
 
     if (result.success) {
@@ -108,6 +103,27 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue) {
              window.showAlert(result.message || 'Preferencia actualizada.', 'success');
         }
        
+        // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN: APLICAR TEMA Y DURACIÓN! ▼▼▼ ---
+        
+        // 1. Aplicar cambio de TEMA
+        if (preferenceTypeOrField === 'theme') {
+            // Actualizar la variable global
+            window.userTheme = newValue;
+            // Aplicar el tema inmediatamente usando la función global
+            if (window.applyCurrentTheme) {
+                window.applyCurrentTheme(newValue);
+            }
+        }
+        
+        // 2. Aplicar cambio de DURACIÓN DE ALERTA
+        // (El campo es 'increase_message_duration', no 'theme' o 'language')
+        if (fieldName === 'increase_message_duration') {
+            // Actualizar la variable global (convertir '0'/'1' a número)
+            window.userIncreaseMessageDuration = Number(newValue);
+        }
+        
+        // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
+
         // Si el cambio es de idioma, recargamos la página
         if (preferenceTypeOrField === 'language') {
             window.showAlert('Idioma actualizado. La página se recargará.', 'success');

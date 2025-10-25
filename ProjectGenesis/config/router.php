@@ -63,7 +63,7 @@ function showResetError($basePath, $message, $details) {
     if (ob_get_level() > 0) ob_end_clean();
     http_response_code(400);
 
-    echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">';
+    echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=deVice-width, initial-scale=1.0">';
     echo '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded">';
     echo '<link rel="stylesheet" type="text/css" href="' . htmlspecialchars($basePath, ENT_QUOTES, 'UTF-8') . '/assets/css/styles.css">';
     echo '<title>Error en la recuperación</title></head>';
@@ -212,19 +212,12 @@ if (array_key_exists($page, $allowedPages)) {
         $userRole = $_SESSION['role'] ?? 'user';
         $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
         
-        try {
-            $stmt_prefs = $pdo->prepare("SELECT language, usage_type, open_links_in_new_tab FROM user_preferences WHERE user_id = ?");
-            $stmt_prefs->execute([$_SESSION['user_id']]);
-            $userPreferences = $stmt_prefs->fetch(PDO::FETCH_ASSOC);
-            $userLanguage = $userPreferences['language'] ?? 'en-us';
-            $userUsageType = $userPreferences['usage_type'] ?? 'personal';
-            $openLinksInNewTab = (int)($userPreferences['open_links_in_new_tab'] ?? 1); 
-        } catch (PDOException $e) {
-            logDatabaseError($e, 'router - settings-profile - preferences');
-            $userLanguage = 'en-us';
-            $userUsageType = 'personal';
-            $openLinksInNewTab = 1;
-        }
+        // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN: LEER PREFS DE SESIÓN! ▼▼▼ ---
+        $userLanguage = $_SESSION['language'] ?? 'en-us';
+        $userUsageType = $_SESSION['usage_type'] ?? 'personal';
+        $openLinksInNewTab = (int)($_SESSION['open_links_in_new_tab'] ?? 1); 
+        // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
+
     } elseif ($page === 'settings-login') {
         try {
             $stmt_pass_log = $pdo->prepare("SELECT changed_at FROM user_audit_logs WHERE user_id = ? AND change_type = 'password' ORDER BY changed_at DESC LIMIT 1");
@@ -253,18 +246,10 @@ if (array_key_exists($page, $allowedPages)) {
             $is2faEnabled = 0; 
         }
     } elseif ($page === 'settings-accessibility') {
-        try {
-            $stmt_prefs = $pdo->prepare("SELECT theme, increase_message_duration FROM user_preferences WHERE user_id = ?");
-            $stmt_prefs->execute([$_SESSION['user_id']]);
-            $userPreferences = $stmt_prefs->fetch(PDO::FETCH_ASSOC);
-            $userTheme = $userPreferences['theme'] ?? 'system'; 
-            if ($userTheme === false) $userTheme = 'system'; 
-            $increaseMessageDuration = (int)($userPreferences['increase_message_duration'] ?? 0); 
-        } catch (PDOException $e) {
-            logDatabaseError($e, 'router - settings-accessibility - preferences');
-            $userTheme = 'system';
-            $increaseMessageDuration = 0;
-        }
+        // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN: LEER PREFS DE SESIÓN! ▼▼▼ ---
+        $userTheme = $_SESSION['theme'] ?? 'system';
+        $increaseMessageDuration = (int)($_SESSION['increase_message_duration'] ?? 0);
+        // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
     }
     
     include $allowedPages[$page];

@@ -6,10 +6,23 @@
  * Muestra una alerta global (toast) en la esquina inferior izquierda.
  * @param {string} message El texto a mostrar.
  * @param {string} type 'info' (default), 'success', o 'error'.
- * @param {number} duration Duración en ms antes de desaparecer.
+ * @param {number | null} duration Duración en ms. Si es null, usa el default.
  */
-export function showAlert(message, type = 'info', duration = 5000) {
+// --- ▼▼▼ ¡INICIO DE MODIFICACIÓN: 'duration = null'! ▼▼▼ ---
+export function showAlert(message, type = 'info', duration = null) {
     
+    // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN: LÓGICA DE DURACIÓN! ▼▼▼ ---
+    // Leer la preferencia global (0 = false, 1 = true)
+    const isDurationIncreased = (window.userIncreaseMessageDuration == 1);
+    
+    // Si 'increase_message_duration' está activo, el default es 5000ms.
+    // Si está inactivo, el default es 2000ms.
+    const defaultDuration = isDurationIncreased ? 5000 : 2000;
+    
+    // Usar la duración pasada como parámetro, o el default que acabamos de calcular.
+    const finalDuration = duration ?? defaultDuration;
+    // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
+
     // Obtener el contenedor principal de alertas
     const container = document.getElementById('alert-container');
     if (!container) {
@@ -56,5 +69,7 @@ export function showAlert(message, type = 'info', duration = 5000) {
     };
 
     // 5. Iniciar temporizador para auto-eliminación
-    setTimeout(removeAlert, duration);
+    // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN: Usar finalDuration! ▼▼▼ ---
+    setTimeout(removeAlert, finalDuration);
+    // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
 }
