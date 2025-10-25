@@ -570,44 +570,38 @@ export function initSettingsManager() {
         }
         // --- ▲▲▲ FIN: LÓGICA PARA CONTRASEÑA ▲▲▲ ---
 
-        // --- ▼▼▼ ¡INICIO DE NUEVA LÓGICA: CERRAR SESIÓN EN DISPOSITIVOS! ▼▼▼ ---
+        // --- ▼▼▼ ¡INICIO DE LÓGICA MODIFICADA: CERRAR SESIÓN EN DISPOSITIVOS! ▼▼▼ ---
 
-        // Listener para "Cerrar en otros"
-        if (e.target.closest('#logout-others-trigger')) {
+        // PASO 1: El botón de la tarjeta AHORA ABRE EL MODAL
+        if (e.target.closest('#logout-all-devices-trigger')) {
             e.preventDefault();
-            
-            if (!confirm('¿Estás seguro de que deseas cerrar sesión en todos tus otros dispositivos? Tu sesión actual permanecerá activa.')) {
-                return;
+            const modal = document.getElementById('logout-all-modal');
+            if(modal) {
+                // Resetear el botón de confirmación por si se quedó en estado 'loading'
+                const confirmButton = modal.querySelector('#logout-all-confirm');
+                toggleButtonSpinner(confirmButton, 'Cerrar sesión', false);
+                
+                modal.style.display = 'flex';
             }
-
-            const button = e.target.closest('#logout-others-trigger');
-            toggleButtonSpinner(button, 'Cerrar en otros', true);
-
-            const formData = new FormData();
-            formData.append('action', 'logout-all-devices');
-
-            const result = await callSettingsApi(formData);
-
-            if (result.success) {
-                window.showAlert(result.message || 'Se ha cerrado la sesión en otros dispositivos.', 'success');
-            } else {
-                window.showAlert(result.message || 'Error al cerrar las sesiones.', 'error');
-            }
-            
-            toggleButtonSpinner(button, 'Cerrar en otros', false);
             return;
         }
 
-        // Listener para "Cerrar en todos"
-        if (e.target.closest('#logout-all-inclusive-trigger')) {
+        // PASO 2: Los botones de CERRAR o CANCELAR en el modal
+        if (e.target.closest('#logout-all-close') || e.target.closest('#logout-all-cancel')) {
+            e.preventDefault();
+            const modal = document.getElementById('logout-all-modal');
+            if(modal) {
+                modal.style.display = 'none';
+            }
+            return;
+        }
+
+        // PASO 3: El botón de CONFIRMAR en el modal
+        if (e.target.closest('#logout-all-confirm')) {
             e.preventDefault();
             
-            if (!confirm('¿Estás seguro de que deseas cerrar sesión en TODOS tus dispositivos, incluido este? Serás redirigido a la página de inicio de sesión.')) {
-                return;
-            }
-            
-            const button = e.target.closest('#logout-all-inclusive-trigger');
-            toggleButtonSpinner(button, 'Cerrar en todos', true);
+            const button = e.target.closest('#logout-all-confirm');
+            toggleButtonSpinner(button, 'Cerrar sesión', true);
 
             const formData = new FormData();
             formData.append('action', 'logout-all-devices');
@@ -627,11 +621,11 @@ export function initSettingsManager() {
 
             } else {
                 window.showAlert(result.message || 'Error al cerrar las sesiones.', 'error');
-                toggleButtonSpinner(button, 'Cerrar en todos', false);
+                toggleButtonSpinner(button, 'Cerrar sesión', false);
             }
             return;
         }
-        // --- ▲▲▲ ¡FIN DE NUEVA LÓGICA! ▲▲▲ ---
+        // --- ▲▲▲ ¡FIN DE LÓGICA MODIFICADA! ▲▲▲ ---
     });
 
     // 2. Delegación para SUBMIT
