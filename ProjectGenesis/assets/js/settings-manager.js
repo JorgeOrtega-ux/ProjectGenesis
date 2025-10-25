@@ -709,6 +709,16 @@ export function initSettingsManager() {
                 return;
             }
 
+            // --- ▼▼▼ ¡INICIO DE LA SOLUCIÓN! ▼▼▼ ---
+            // 2.5. Comprobar si ya está activo
+            // Si el link clickeado ya es el que está activo,
+            // no hacemos nada y solo cerramos el módulo.
+            if (clickedLink.classList.contains('active')) {
+                deactivateAllModules(); // Solo cerrar el módulo
+                return; // No enviar la petición
+            }
+            // --- ▲▲▲ ¡FIN DE LA SOLUCIÓN! ▲▲▲ ---
+
             // 3. Actualizar el texto del botón
             triggerTextEl.textContent = newText;
             

@@ -62,7 +62,7 @@ CREATE TABLE user_audit_logs (
     INDEX idx_user_type_time (user_id, change_type, changed_at)
 );
 
--- --- ▼▼▼ INICIO DE LA NUEVA TABLA ▼▼▼ ---
+-- --- ▼▼▼ INICIO DE LA TABLA MODIFICADA ▼▼▼ ---
 
 DROP TABLE IF EXISTS user_preferences;
 CREATE TABLE user_preferences (
@@ -78,7 +78,12 @@ CREATE TABLE user_preferences (
     -- Opciones: 'personal', 'student', 'teacher', 'small_business', 'large_company', 'ngo'
     usage_type VARCHAR(50) NOT NULL DEFAULT 'personal',
     
+    -- ¡NUEVAS COLUMNAS!
+    -- 0 = false, 1 = true
+    open_links_in_new_tab TINYINT(1) NOT NULL DEFAULT 1,
+    increase_message_duration TINYINT(1) NOT NULL DEFAULT 0,
+    
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- --- ▲▲▲ FIN DE LA NUEVA TABLA ▲▲▲ ---
+-- --- ▲▲▲ FIN DE LA TABLA MODIFICADA ▲▲▲ ---
