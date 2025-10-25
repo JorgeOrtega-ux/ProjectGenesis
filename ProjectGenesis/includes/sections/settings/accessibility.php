@@ -84,25 +84,6 @@ $currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
         <div class="settings-card settings-card-align-bottom">
             <div class="settings-card-left">
                 <div class="settings-text-content">
-                    <h2 class="settings-text-title">Contraste alto de colores</h2>
-                    <p class="settings-text-description">
-                        Se mantiene un mayor contraste entre el texto y el fondo, incluidos los fondos con degradados.
-                    </p>
-                </div>
-            </div>
-
-            <div class="settings-card-right">
-                
-                <label class="settings-toggle-switch">
-                    <input type="checkbox"> 
-                    <span class="settings-toggle-slider"></span>
-                </label>
-
-            </div>
-        </div>
-        <div class="settings-card settings-card-align-bottom">
-            <div class="settings-card-left">
-                <div class="settings-text-content">
                     <h2 class="settings-text-title">Aumenta el tiempo de permanencia de un mensaje en la pantalla.</h2>
                     <p class="settings-text-description">
                         Los mensajes permanecerán más tiempo en pantalla antes de desaparecer.

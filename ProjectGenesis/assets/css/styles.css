@@ -53,7 +53,8 @@ body {
     position: relative;
 }
 .general-content-top.shadow {
-    box-shadow: 0 4px 12px #0000001a;
+    box-shadow: 0 4px 12px #00000020;
+    border: transparent;
 }
 .general-content-bottom {
     position: relative;
@@ -1265,7 +1266,7 @@ body {
 
 .module-content.module-trigger-select {
     position: absolute;
-    bottom: calc(100% + 5px); /* Se abre hacia ARRIBA */
+    top: calc(100% + 5px); /* Se abre hacia ARRIBA */
     left: 0;
     right: 0; 
     width: 100%; /* Mismo ancho que el wrapper */
