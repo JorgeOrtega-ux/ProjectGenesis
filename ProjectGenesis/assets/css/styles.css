@@ -850,7 +850,7 @@ body {
     align-items: center;
     justify-content: center;
     padding: 16px;
-    animation: alertFadeIn 0.2s ease-out forwards;
+    animation: modalFadeIn 0.2s ease-out forwards; /* <-- MODIFICADO */
 }
 
 .settings-modal-content {
@@ -861,6 +861,8 @@ body {
     box-shadow: 0 8px 24px #00000040;
     padding: 24px;
     position: relative; /* Añadido para el posicionamiento del botón 'X' */
+    animation: modalContentScaleIn 0.2s ease-out forwards; /* <-- AÑADIDO */
+    transform-origin: center center; /* <-- AÑADIDO */
 }
 
 /* --- ▼▼▼ NUEVO ESTILO PARA BOTÓN 'X' ▼▼▼ --- */
@@ -997,6 +999,28 @@ body {
         transform: translateX(-20px);
     }
 }
+
+/* --- ▼▼▼ NUEVAS ANIMACIONES PARA EL MODAL ▼▼▼ --- */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modalContentScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+/* --- ▲▲▲ FIN DE NUEVAS ANIMACIONES ▲▲▲ --- */
 
 #alert-container {
     position: fixed;
