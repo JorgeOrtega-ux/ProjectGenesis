@@ -6,6 +6,44 @@ import { callAuthApi } from './api-service.js';
 import { handleNavigation } from './url-manager.js';
 // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
+// --- ▼▼▼ INICIO: NUEVA FUNCIÓN DE TEMPORIZADOR ▼▼▼ ---
+/**
+ * Inicia un temporizador de cooldown en un enlace de reenvío.
+ * @param {HTMLElement} linkElement El elemento <a> del enlace.
+ * @param {number} seconds Duración del cooldown en segundos.
+ */
+function startResendTimer(linkElement, seconds) {
+    if (!linkElement || linkElement.classList.contains('disabled-interactive')) {
+        return;
+    }
+
+    let secondsRemaining = seconds;
+    const originalText = linkElement.textContent;
+
+    // 1. Deshabilitar inmediatamente
+    linkElement.classList.add('disabled-interactive');
+    linkElement.style.opacity = '0.7';
+    linkElement.style.textDecoration = 'none';
+    linkElement.textContent = `Reenviar en ${secondsRemaining}s`;
+
+    // 2. Iniciar intervalo
+    const intervalId = setInterval(() => {
+        secondsRemaining--;
+        if (secondsRemaining > 0) {
+            linkElement.textContent = `Reenviar en ${secondsRemaining}s`;
+        } else {
+            // 3. Al terminar, limpiar y rehabilitar
+            clearInterval(intervalId);
+            linkElement.textContent = originalText;
+            linkElement.classList.remove('disabled-interactive');
+            linkElement.style.opacity = '1';
+            linkElement.style.textDecoration = ''; // Vuelve al default
+        }
+    }, 1000);
+}
+// --- ▲▲▲ FIN: NUEVA FUNCIÓN DE TEMPORIZADOR ▲▲▲ ---
+
+
 async function handleRegistrationSubmit(e) {
     e.preventDefault();
     const form = e.target;
@@ -152,13 +190,58 @@ function initRegisterWizard() {
         const button = e.target.closest('[data-auth-action]');
         if (!button) return;
 
+        const action = button.getAttribute('data-auth-action');
+
+        // --- ▼▼▼ INICIO: NUEVA LÓGICA PARA REENVIAR CÓDIGO ▼▼▼ ---
+        if (action === 'resend-code') {
+            e.preventDefault();
+            const linkElement = button;
+            
+            // 1. Evitar doble clic si ya está deshabilitado
+            if (linkElement.classList.contains('disabled-interactive')) {
+                return;
+            }
+
+            // 2. Obtener email de sessionStorage
+            const email = sessionStorage.getItem('regEmail');
+            if (!email) {
+                window.showAlert('Error: No se encontró tu email. Por favor, recarga la página.', 'error');
+                return;
+            }
+            
+            // 3. Iniciar temporizador (UX)
+            startResendTimer(linkElement, 60);
+
+            // 4. Preparar y llamar a la API
+            const formData = new FormData();
+            formData.append('action', 'register-resend-code');
+            formData.append('email', email);
+            
+            const result = await callAuthApi(formData);
+            
+            // 5. Mostrar resultado
+            if (result.success) {
+                window.showAlert(result.message || 'Se ha reenviado un nuevo código.', 'success');
+            } else {
+                // Si falla el servidor (ej. cooldown), el temporizador del cliente sigue
+                // por simplicidad, pero mostramos el error del servidor.
+                window.showAlert(result.message || 'Error al reenviar el código.', 'error');
+                // En un caso de uso más complejo, podríamos cancelar el timer si el servidor falla,
+                // pero por ahora, dejarlo correr evita spam.
+            }
+            return; // Fin de la acción de reenviar
+        }
+        // --- ▲▲▲ FIN: NUEVA LÓGICA PARA REENVIAR CÓDIGO ▲▲▲ ---
+
+
+        // --- Lógica existente para 'prev-step' y 'next-step' ---
+        
         const registerForm = button.closest('#register-form');
         if (!registerForm) return;
 
         const errorDiv = registerForm.querySelector('#register-error');
         if (!errorDiv) return;
 
-        const action = button.getAttribute('data-auth-action');
         const currentStepEl = button.closest('.auth-step');
         if (!currentStepEl) return;
 
@@ -484,4 +567,23 @@ export function initAuthManager() {
             handleResetSubmit(e);
         }
     });
+
+    // --- ▼▼▼ INICIO: NUEVA LÓGICA PARA INICIAR TIMER AL CARGAR PÁGINA ▼▼▼ ---
+    // Se ejecuta después de que DOMContentLoaded ha disparado
+    // y el router.php ha renderizado el HTML inicial.
+    try {
+        const step3Fieldset = document.querySelector('#register-form [data-step="3"]');
+        
+        // Comprobar si el fieldset 3 existe Y está activo
+        if (step3Fieldset && step3Fieldset.classList.contains('active')) {
+            const link = document.getElementById('register-resend-code-link');
+            if (link) {
+                // Iniciar el timer automáticamente al cargar la página
+                startResendTimer(link, 60); 
+            }
+        }
+    } catch (e) {
+        console.error("Error al iniciar el temporizador de reenvío:", e);
+    }
+    // --- ▲▲▲ FIN: NUEVA LÓGICA PARA INICIAR TIMER AL CARGAR PÁGINA ▲▲▲ ---
 }

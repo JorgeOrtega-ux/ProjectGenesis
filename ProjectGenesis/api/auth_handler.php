@@ -6,6 +6,9 @@ header('Content-Type: application/json');
 
 $response = ['success' => false, 'message' => 'Acción no válida.'];
 
+// --- Constante de Cooldown (NUEVO) ---
+define('CODE_RESEND_COOLDOWN_SECONDS', 60);
+
 // --- FUNCIÓN Generador de Código (Alfanumérico) ---
 function generateVerificationCode() {
     $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -309,6 +312,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
+        
+        // --- ▼▼▼ INICIO: NUEVA ACCIÓN (REENVIAR CÓDIGO DE REGISTRO) ▼▼▼ ---
+        elseif ($action === 'register-resend-code') {
+            $email = $_POST['email'] ?? '';
+
+            if (empty($email)) {
+                $response['message'] = 'No se ha proporcionado un email.';
+            } else {
+                try {
+                    // 1. Buscar el código de registro MÁS RECIENTE para este email
+                    $stmt = $pdo->prepare(
+                        "SELECT * FROM verification_codes 
+                         WHERE identifier = ? AND code_type = 'registration' 
+                         ORDER BY created_at DESC LIMIT 1"
+                    );
+                    $stmt->execute([$email]);
+                    $codeData = $stmt->fetch();
+
+                    if (!$codeData) {
+                        throw new Exception('No se encontraron datos de registro. Por favor, vuelve a empezar.');
+                    }
+
+                    // 2. Comprobar el Cooldown (Servidor)
+                    $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
+                    $currentTime = new DateTime('now', new DateTimeZone('UTC'));
+                    $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
+
+                    if ($secondsPassed < CODE_RESEND_COOLDOWN_SECONDS) {
+                        $secondsRemaining = CODE_RESEND_COOLDOWN_SECONDS - $secondsPassed;
+                        throw new Exception("Debes esperar {$secondsRemaining} segundos más para reenviar el código.");
+                    }
+
+                    // 3. Generar y ACTUALIZAR el código (reutilizando el payload)
+                    $newCode = str_replace('-', '', generateVerificationCode());
+                    
+                    // Actualizamos el código y la marca de tiempo
+                    $stmt = $pdo->prepare(
+                        "UPDATE verification_codes SET code = ?, created_at = NOW() WHERE id = ?"
+                    );
+                    $stmt->execute([$newCode, $codeData['id']]);
+
+                    // (Aquí iría la lógica de envío de email simulado)
+
+                    $response['success'] = true;
+                    $response['message'] = 'Se ha reenviado un nuevo código de verificación.';
+
+                } catch (Exception $e) {
+                    if ($e instanceof PDOException) {
+                        logDatabaseError($e, 'auth_handler - register-resend-code');
+                        $response['message'] = 'Error en la base de datos.';
+                    } else {
+                        $response['message'] = $e->getMessage();
+                    }
+                }
+            }
+        }
+        // --- ▲▲▲ FIN: NUEVA ACCIÓN (REENVIAR CÓDIGO DE REGISTRO) ▲▲▲ ---
 
         // --- ▼▼▼ LÓGICA DE LOGIN PASO 1 (MODIFICADA) ▼▼▼ ---
         elseif ($action === 'login-check-credentials') {

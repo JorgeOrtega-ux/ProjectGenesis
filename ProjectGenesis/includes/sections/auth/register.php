@@ -35,7 +35,6 @@
                 </div>
 
                 <div class="auth-step-buttons">
-                    <a href="<?php echo $basePath; ?>/register" class="auth-button-back" style="text-align: center; text-decoration: none; padding: 0 20px; line-height: 52px;">Atrás</a>
                     <button type="button" class="auth-button" data-auth-action="next-step">Continuar</button>
                 </div>
             </fieldset>
@@ -54,15 +53,20 @@
                 </div>
                 
                 <div class="auth-step-buttons">
-                    <a href="<?php echo $basePath; ?>/register/additional-data" class="auth-button-back" style="text-align: center; text-decoration: none; padding: 0 20px; line-height: 52px;">Atrás</a>
                     <button type="submit" class="auth-button">Verificar y Crear Cuenta</button>
                 </div>
-            </fieldset>
+                
+                <p class="auth-link" style="text-align: center; margin-top: 16px;">
+                    <a href="#" id="register-resend-code-link" data-auth-action="resend-code">Reenviar código de verificación</a>
+                </p>
+                </fieldset>
             
         </form>
         
+        <?php if ($CURRENT_REGISTER_STEP == 1): ?>
         <p class="auth-link">
             ¿Ya tienes una cuenta? <a href="/ProjectGenesis/login">Inicia sesión</a>
         </p>
+        <?php endif; ?>
     </div>
 </div>
