@@ -198,10 +198,28 @@ if (array_key_exists($page, $allowedPages)) {
 
         $usernameForAlt = $_SESSION['username'] ?? 'Usuario';
         $userRole = $_SESSION['role'] ?? 'user';
-        
-        // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
         $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
-        // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
+        
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (CARGAR PREFERENCIAS) ▼▼▼ ---
+        try {
+            $stmt_prefs = $pdo->prepare("SELECT * FROM user_preferences WHERE user_id = ?");
+            $stmt_prefs->execute([$_SESSION['user_id']]);
+            $userPreferences = $stmt_prefs->fetch(PDO::FETCH_ASSOC);
+
+            // Definir fallbacks por si la fila no existe (ej. usuario antiguo)
+            $userLanguage = $userPreferences['language'] ?? 'en-us';
+            $userTheme = $userPreferences['theme'] ?? 'system';
+            $userUsageType = $userPreferences['usage_type'] ?? 'personal';
+
+        } catch (PDOException $e) {
+            logDatabaseError($e, 'router - settings-profile - preferences');
+            // Fallbacks en caso de error de BD
+            $userLanguage = 'en-us';
+            $userTheme = 'system';
+            $userUsageType = 'personal';
+        }
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA (CARGAR PREFERENCIAS) ▲▲▲ ---
+        
 
     // --- ▼▼▼ INICIO DE LA NUEVA LÓGICA (settings-login) ▼▼▼ ---
     } elseif ($page === 'settings-login') {

@@ -693,6 +693,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         // --- ▲▲▲ ¡FIN DE LA NUEVA ACCIÓN (TOGGLE 2FA)! ▲▲▲ ---
 
+        // --- ▼▼▼ ¡INICIO DE LA NUEVA ACCIÓN (UPDATE PREFERENCE)! ▼▼▼ ---
+        elseif ($action === 'update-preference') {
+            try {
+                $field = $_POST['field'] ?? '';
+                $value = $_POST['value'] ?? '';
+
+                // 1. Validar el campo (para prevenir inyección SQL en el nombre de la columna)
+                $allowedFields = [
+                    'language' => ['en-us', 'fr-fr', 'es-latam', 'es-mx'],
+                    'theme' => ['system', 'light', 'dark'],
+                    'usage_type' => ['personal', 'student', 'teacher', 'small_business', 'large_company', 'ngo']
+                ];
+
+                if (!array_key_exists($field, $allowedFields)) {
+                    throw new Exception('Configuración de preferencia no válida.');
+                }
+
+                // 2. Validar el valor
+                if (!in_array($value, $allowedFields[$field])) {
+                    throw new Exception('Valor de preferencia no válido.');
+                }
+
+                // 3. Actualizar la base de datos
+                // Es seguro concatenar $field aquí porque ha sido validado contra una lista estricta.
+                $sql = "UPDATE user_preferences SET $field = ? WHERE user_id = ?";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([$value, $userId]);
+
+                $response['success'] = true;
+                $response['message'] = 'Preferencia actualizada.';
+
+            } catch (Exception $e) {
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - update-preference');
+                    $response['message'] = 'Error al guardar la preferencia en la base de datos.';
+                } else {
+                    $response['message'] = $e->getMessage();
+                }
+            }
+        }
+        // --- ▲▲▲ ¡FIN DE LA NUEVA ACCIÓN (UPDATE PREFERENCE)! ▲▲▲ ---
+
         // --- ▼▼▼ ¡INICIO DE LA NUEVA ACCIÓN (LOGOUT ALL DEVICES)! ▼▼▼ ---
         elseif ($action === 'logout-all-devices') {
             try {

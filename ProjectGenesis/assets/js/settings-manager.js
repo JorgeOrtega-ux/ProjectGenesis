@@ -66,6 +66,50 @@ function focusInputAndMoveCursorToEnd(inputElement) {
     }
 }
 
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (ACTUALIZAR PREFERENCIA) ▼▼▼ ---
+/**
+ * Envía una actualización de preferencia a la API.
+ * @param {string} preferenceType - El tipo de preferencia (ej. 'language', 'theme', 'usage_type').
+ * @param {string} newValue - El nuevo valor a guardar (ej. 'es-mx', 'dark', 'student').
+ */
+async function handlePreferenceChange(preferenceType, newValue) {
+    if (!preferenceType || !newValue) return;
+
+    // Mapear el tipo de preferencia al nombre del campo en la API/BD
+    const fieldMap = {
+        'language': 'language',
+        'theme': 'theme',
+        'usage': 'usage_type' // 'usage' viene del data-module
+    };
+
+    const fieldName = fieldMap[preferenceType];
+    if (!fieldName) {
+        console.error('Tipo de preferencia desconocido:', preferenceType);
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('action', 'update-preference');
+    formData.append('field', fieldName);
+    formData.append('value', newValue);
+
+    // No mostramos un spinner para esto, es una acción rápida.
+    const result = await callSettingsApi(formData);
+
+    if (result.success) {
+        window.showAlert(result.message || 'Preferencia actualizada.', 'success');
+        // Si el cambio es de idioma, podríamos querer recargar la página
+        if (preferenceType === 'language') {
+            window.showAlert('Idioma actualizado. La página se recargará.', 'success');
+            setTimeout(() => location.reload(), 1500);
+        }
+    } else {
+        window.showAlert(result.message || 'Error al guardar la preferencia.', 'error');
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+
+
 export function initSettingsManager() {
 
     document.body.addEventListener('click', async (e) => {
@@ -631,23 +675,29 @@ export function initSettingsManager() {
         // --- ▲▲▲ ¡FIN DE LÓGICA MODIFICADA! ▲▲▲ ---
 
         
-        // --- ▼▼▼ ¡INICIO DE NUEVA LÓGICA PARA TRIGGER SELECTOR (USO)! ▼▼▼ ---
-        // --- MODIFICACIÓN: Generalizado para usar la clase .module-trigger-select ---
+        // --- ▼▼▼ INICIO: LÓGICA MODIFICADA PARA PREFERENCE SELECTORS ▼▼▼ ---
+        // (Asumimos que el HTML tendrá data-preference-type y data-value)
         const clickedLink = e.target.closest('.module-trigger-select .menu-link');
         if (clickedLink) {
             e.preventDefault();
             
             // 1. Encontrar elementos
             const menuList = clickedLink.closest('.menu-list');
-            const module = clickedLink.closest('.module-trigger-select'); // Modificado
+            const module = clickedLink.closest('.module-content[data-preference-type]'); // <-- Modificado
             const wrapper = clickedLink.closest('.trigger-select-wrapper');
             const trigger = wrapper?.querySelector('.trigger-selector');
             const triggerTextEl = trigger?.querySelector('.trigger-select-text span');
             
-            // 2. Obtener nuevo valor
+            // 2. Obtener nuevo valor y tipo
             const newText = clickedLink.querySelector('.menu-link-text span')?.textContent;
+            const newValue = clickedLink.dataset.value; // <-- Nuevo
+            const prefType = module?.dataset.preferenceType; // <-- Nuevo
 
-            if (!menuList || !module || !triggerTextEl || !newText) return;
+            if (!menuList || !module || !triggerTextEl || !newText || !newValue || !prefType) {
+                 // Si falta algo, simplemente cerramos el módulo
+                 deactivateAllModules();
+                return;
+            }
 
             // 3. Actualizar el texto del botón
             triggerTextEl.textContent = newText;
@@ -669,19 +719,14 @@ export function initSettingsManager() {
             }
             
             // 6. Cerrar el módulo
-            // Usamos la función global que importamos
             deactivateAllModules(); 
 
-            // (Aquí podrías añadir una llamada a callSettingsApi si quisieras guardar la preferencia)
-            // ej: const formData = new FormData();
-            // formData.append('action', 'update-user-purpose');
-            // formData.append('purpose', newText);
-            // await callSettingsApi(formData);
-            // window.showAlert('Preferencia actualizada', 'success');
+            // 7. Enviar la actualización a la API
+            handlePreferenceChange(prefType, newValue); // <-- ¡NUEVA LLAMADA!
             
             return;
         }
-        // --- ▲▲▲ ¡FIN DE NUEVA LÓGICA! ▲▲▲ ---
+        // --- ▲▲▲ ¡FIN DE LÓGICA MODIFICADA! ▲▲▲ ---
 
 
     });

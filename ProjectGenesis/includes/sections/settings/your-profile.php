@@ -1,3 +1,39 @@
+<?php
+// --- ▼▼▼ INICIO DE NUEVO BLOQUE PHP ▼▼▼ ---
+
+// Estas variables ($userLanguage, $userTheme, $userUsageType) 
+// son cargadas por config/router.php
+
+// 1. Definir los mapas de valores de BD a texto legible
+$usageMap = [
+    'personal' => 'Uso personal',
+    'student' => 'Estudiante',
+    'teacher' => 'Docente',
+    'small_business' => 'Empresa pequeña',
+    'large_company' => 'Empresa grande',
+    'ngo' => 'ONG'
+];
+
+$languageMap = [
+    'es-latam' => 'Español (Latinoamérica)',
+    'es-mx' => 'Español (México)',
+    'en-us' => 'English (United States)',
+    'fr-fr' => 'Français (France)'
+];
+
+$themeMap = [
+    'system' => 'Sincronizar con el sistema',
+    'light' => 'Tema claro',
+    'dark' => 'Tema oscuro'
+];
+
+// 2. Obtener el texto actual para mostrar en el botón
+$currentUsageText = $usageMap[$userUsageType] ?? 'Uso personal';
+$currentLanguageText = $languageMap[$userLanguage] ?? 'English (United States)';
+$currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
+
+// --- ▲▲▲ FIN DE NUEVO BLOQUE PHP ▲▲▲ ---
+?>
 <div class="section-content <?php echo ($CURRENT_SECTION === 'settings-profile') ? 'active' : 'disabled'; ?>" data-section="settings-profile">
     <div class="settings-wrapper">
         
@@ -190,66 +226,41 @@
                 <div class="trigger-select-wrapper">
                     
                     <div class="trigger-selector" 
-                         data-action="toggleModuleTriggerSelect">
+                         data-action="toggleModuleUsageSelect">
                         
                         <div class="trigger-select-icon">
                             <span class="material-symbols-rounded">person</span>
                         </div>
                         <div class="trigger-select-text">
-                            <span>Estudiante</span> </div>
+                            <span><?php echo htmlspecialchars($currentUsageText); ?></span> 
+                        </div>
                         <div class="trigger-select-arrow">
                             <span class="material-symbols-rounded">arrow_drop_down</span>
                         </div>
                     </div>
 
                     <div class="module-content module-trigger-select body-title disabled" 
-                         data-module="moduleTriggerSelect">
+                         data-module="moduleUsageSelect"
+                         data-preference-type="usage">
                         
                         <div class="menu-content">
                             <div class="menu-list">
 
-                                <div class="menu-link">
-                                    <div class="menu-link-icon"></div>
-                                    <div class="menu-link-text">
-                                        <span>Empresa pequeña</span>
+                                <?php foreach ($usageMap as $key => $text): ?>
+                                    <?php $isActive = ($key === $userUsageType); ?>
+                                    <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                                         data-value="<?php echo htmlspecialchars($key); ?>">
+                                        
+                                        <div class="menu-link-icon">
+                                            <?php if ($isActive): ?>
+                                                <span class="material-symbols-rounded">check</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="menu-link-text">
+                                            <span><?php echo htmlspecialchars($text); ?></span>
+                                        </div>
                                     </div>
-                                </div>
-                                
-                                <div class="menu-link active"> <div class="menu-link-icon">
-                                        <span class="material-symbols-rounded">check</span>
-                                    </div>
-                                    <div class="menu-link-text">
-                                        <span>Estudiante</span>
-                                    </div>
-                                </div>
-
-                                <div class="menu-link">
-                                    <div class="menu-link-icon"></div>
-                                    <div class="menu-link-text">
-                                        <span>Docente</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="menu-link">
-                                    <div class="menu-link-icon"></div>
-                                    <div class="menu-link-text">
-                                        <span>Empresa grande</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="menu-link">
-                                    <div class="menu-link-icon"></div>
-                                    <div class="menu-link-text">
-                                        <span>ONG</span>
-                                    </div>
-                                </div>
-
-                                <div class="menu-link">
-                                    <div class="menu-link-icon"></div>
-                                    <div class="menu-link-text">
-                                        <span>Uso personal</span>
-                                    </div>
-                                </div>
+                                <?php endforeach; ?>
                                 
                             </div>
                         </div>
@@ -258,7 +269,6 @@
 
             </div>
         </div>
-        
         <div class="settings-card settings-card-align-bottom">
             <div class="settings-card-left">
                 <div class="settings-text-content">
@@ -280,7 +290,7 @@
                             <span class="material-symbols-rounded">language</span>
                         </div>
                         <div class="trigger-select-text">
-                            <span>Español (Latinoamérica)</span>
+                            <span><?php echo htmlspecialchars($currentLanguageText); ?></span>
                         </div>
                         <div class="trigger-select-arrow">
                             <span class="material-symbols-rounded">arrow_drop_down</span>
@@ -288,40 +298,27 @@
                     </div>
 
                     <div class="module-content module-trigger-select body-title disabled" 
-                         data-module="moduleLanguageSelect">
+                         data-module="moduleLanguageSelect"
+                         data-preference-type="language">
                         
                         <div class="menu-content">
                             <div class="menu-list">
 
-                                <div class="menu-link">
-                                    <div class="menu-link-icon"></div>
-                                    <div class="menu-link-text">
-                                        <span>English (United States)</span>
+                                <?php foreach ($languageMap as $key => $text): ?>
+                                    <?php $isActive = ($key === $userLanguage); ?>
+                                    <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                                         data-value="<?php echo htmlspecialchars($key); ?>">
+                                        
+                                        <div class="menu-link-icon">
+                                            <?php if ($isActive): ?>
+                                                <span class="material-symbols-rounded">check</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="menu-link-text">
+                                            <span><?php echo htmlspecialchars($text); ?></span>
+                                        </div>
                                     </div>
-                                </div>
-                                
-                                <div class="menu-link">
-                                    <div class="menu-link-icon"></div>
-                                    <div class="menu-link-text">
-                                        <span>Français (France)</span>
-                                    </div>
-                                </div>
-
-                                <div class="menu-link active">
-                                    <div class="menu-link-icon">
-                                        <span class="material-symbols-rounded">check</span>
-                                    </div>
-                                    <div class="menu-link-text">
-                                        <span>Español (Latinoamérica)</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="menu-link">
-                                    <div class="menu-link-icon"></div>
-                                    <div class="menu-link-text">
-                                        <span>Español (México)</span>
-                                    </div>
-                                </div>
+                                <?php endforeach; ?>
                                 
                             </div>
                         </div>
@@ -351,7 +348,7 @@
                             <span class="material-symbols-rounded">brightness_medium</span>
                         </div>
                         <div class="trigger-select-text">
-                            <span>Sincronizar con el sistema</span>
+                            <span><?php echo htmlspecialchars($currentThemeText); ?></span>
                         </div>
                         <div class="trigger-select-arrow">
                             <span class="material-symbols-rounded">arrow_drop_down</span>
@@ -359,33 +356,27 @@
                     </div>
 
                     <div class="module-content module-trigger-select body-title disabled" 
-                         data-module="moduleThemeSelect">
+                         data-module="moduleThemeSelect"
+                         data-preference-type="theme">
                         
                         <div class="menu-content">
                             <div class="menu-list">
 
-                                <div class="menu-link active">
-                                    <div class="menu-link-icon">
-                                        <span class="material-symbols-rounded">check</span>
+                                <?php foreach ($themeMap as $key => $text): ?>
+                                    <?php $isActive = ($key === $userTheme); ?>
+                                    <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                                         data-value="<?php echo htmlspecialchars($key); ?>">
+                                        
+                                        <div class="menu-link-icon">
+                                            <?php if ($isActive): ?>
+                                                <span class="material-symbols-rounded">check</span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="menu-link-text">
+                                            <span><?php echo htmlspecialchars($text); ?></span>
+                                        </div>
                                     </div>
-                                    <div class="menu-link-text">
-                                        <span>Sincronizar con el sistema</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="menu-link">
-                                    <div class="menu-link-icon"></div>
-                                    <div class="menu-link-text">
-                                        <span>Tema oscuro</span>
-                                    </div>
-                                </div>
-
-                                <div class="menu-link">
-                                    <div class="menu-link-icon"></div>
-                                    <div class="menu-link-text">
-                                        <span>Tema claro</span>
-                                    </div>
-                                </div>
+                                <?php endforeach; ?>
                                 
                             </div>
                         </div>

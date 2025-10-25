@@ -20,6 +20,69 @@ function generateVerificationCode() {
     return substr($code, 0, 4) . '-' . substr($code, 4, 4) . '-' . substr($code, 8, 4);
 }
 
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (DETECCIÓN DE IDIOMA) ▼▼▼ ---
+/**
+ * Analiza la cabecera HTTP_ACCEPT_LANGUAGE para encontrar el idioma compatible preferido.
+ * @param string $acceptLanguage La cabecera $_SERVER['HTTP_ACCEPT_LANGUAGE']
+ * @return string El código de idioma compatible (ej. 'es-mx', 'es-latam', 'en-us')
+ */
+function getPreferredLanguage($acceptLanguage) {
+    // 1. Lista de idiomas compatibles en tu sitio
+    $supportedLanguages = [
+        'en-us' => 'en-us',
+        'es-mx' => 'es-mx',
+        'es-latam' => 'es-latam',
+        'fr-fr' => 'fr-fr'
+    ];
+    
+    // 2. Mapeos de idiomas principales (ej. 'es' general -> 'es-latam')
+    $primaryLanguageMap = [
+        'es' => 'es-latam',
+        'en' => 'en-us',
+        'fr' => 'fr-fr'
+    ];
+    
+    // 3. Fallback por defecto
+    $defaultLanguage = 'en-us';
+
+    if (empty($acceptLanguage)) {
+        return $defaultLanguage;
+    }
+
+    // 4. Analizar la cabecera (ej. "es-MX,es;q=0.9,en;q=0.8,fr-FR;q=0.7")
+    $langs = [];
+    preg_match_all('/([a-z]{1,8}(-[a-z]{1,8})?)\s*(;\s*q\s*=\s*(1|0\.[0-9]+))?/i', $acceptLanguage, $matches);
+
+    if (!empty($matches[1])) {
+        $langs = array_map('strtolower', $matches[1]);
+    }
+
+    // 5. Buscar coincidencias
+    $primaryMatch = null;
+    foreach ($langs as $lang) {
+        // 5a. Buscar coincidencia exacta (ej. 'es-mx' == 'es-mx')
+        if (isset($supportedLanguages[$lang])) {
+            return $supportedLanguages[$lang];
+        }
+        
+        // 5b. Buscar coincidencia de idioma principal (ej. 'es' de 'es-ar')
+        $primary = substr($lang, 0, 2);
+        if ($primaryMatch === null && isset($primaryLanguageMap[$primary])) {
+            $primaryMatch = $primaryLanguageMap[$primary];
+        }
+    }
+    
+    // 6. Usar la coincidencia principal si se encontró
+    if ($primaryMatch !== null) {
+        return $primaryMatch;
+    }
+
+    // 7. Usar el idioma por defecto
+    return $defaultLanguage;
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+
+
 // --- ▼▼▼ NUEVA FUNCIÓN HELPER PARA METADATA ▼▼▼ ---
 /**
  * Registra los metadatos de un inicio de sesión (IP, Dispositivo).
@@ -101,12 +164,31 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
         $stmt->execute([$localAvatarUrl, $userId]);
     }
 
+    // --- ▼▼▼ INICIO DE NUEVA LÓGICA (GUARDAR PREFERENCIAS) ▼▼▼ ---
+    try {
+        // 4. Obtener el idioma preferido del navegador
+        $preferredLanguage = getPreferredLanguage($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'en');
+
+        // 5. Insertar las preferencias por defecto en la nueva tabla
+        $stmt_prefs = $pdo->prepare(
+            "INSERT INTO user_preferences (user_id, language, theme, usage_type) 
+             VALUES (?, ?, 'system', 'personal')"
+        );
+        $stmt_prefs->execute([$userId, $preferredLanguage]);
+
+    } catch (PDOException $e) {
+        // Si falla la inserción de preferencias, no detener el registro
+        logDatabaseError($e, 'auth_handler - createUser - preferences');
+    }
+    // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
+
+
     // --- ¡¡¡INICIO DE LA SOLUCIÓN DE SEGURIDAD!!! ---
-    // 4. Regenerar el ID de sesión para prevenir Session Fixation
+    // 6. Regenerar el ID de sesión para prevenir Session Fixation
     session_regenerate_id(true);
     // --- ¡¡¡FIN DE LA SOLUCIÓN DE SEGURIDAD!!! ---
 
-    // 5. Iniciar sesión automáticamente
+    // 7. Iniciar sesión automáticamente
     $_SESSION['user_id'] = $userId;
     $_SESSION['username'] = $username;
     $_SESSION['email'] = $email;
@@ -120,15 +202,15 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
     
     // $_SESSION['is_2fa_enabled'] no es necesario aquí, se lee de la BD
 
-    // 6. Limpiar el código de verificación
+    // 8. Limpiar el código de verificación
     $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE id = ?");
     $stmt->execute([$userIdFromVerification]);
 
-    // 7. Regenerar el token CSRF después de un cambio de sesión (login)
+    // 9. Regenerar el token CSRF después de un cambio de sesión (login)
     generateCsrfToken();
 
     // --- ▼▼▼ INICIO: MODIFICACIÓN (LIMPIAR FLAG DE REGISTRO) ▼▼▼ ---
-    // Limpiamos el flag de progreso de registro al completar exitosamente
+    // 10. Limpiamos el flag de progreso de registro al completar exitosamente
     unset($_SESSION['registration_step']);
     unset($_SESSION['registration_email']); // <-- MODIFICACIÓN
     // --- ▲▲▲ FIN: MODIFICACIÓN ▲▲▲ ---
