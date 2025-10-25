@@ -1,4 +1,4 @@
-<div class="section-content <?php echo ($CURRENT_SECTION === 'register') ? 'active' : 'disabled'; ?>" data-section="register">
+<div class="section-content <?php echo (strpos($CURRENT_SECTION, 'register-') === 0) ? 'active' : 'disabled'; ?>" data-section="<?php echo htmlspecialchars($CURRENT_SECTION); ?>">
     <div class="auth-container">
         <h1 class="auth-title">Crea una cuenta</h1>
         
@@ -7,7 +7,7 @@
             <?php outputCsrfInput(); ?>
             <div class="auth-error-message" id="register-error" style="display: none;"></div>
 
-            <fieldset class="auth-step active" data-step="1">
+            <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 1) ? 'active' : ''; ?>" data-step="1" <?php echo ($CURRENT_REGISTER_STEP != 1) ? 'style="display: none;"' : ''; ?>>
                 <p class="auth-step-indicator">Paso 1 de 3: Tu cuenta</p>
                 <div class="auth-input-group">
                     <input type="email" id="register-email" name="email" required placeholder=" ">
@@ -27,7 +27,7 @@
                 </div>
             </fieldset>
 
-            <fieldset class="auth-step" data-step="2" style="display: none;">
+            <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 2) ? 'active' : ''; ?>" data-step="2" <?php echo ($CURRENT_REGISTER_STEP != 2) ? 'style="display: none;"' : ''; ?>>
                 <p class="auth-step-indicator">Paso 2 de 3: Tu perfil</p>
                 <div class="auth-input-group">
                     <input type="text" id="register-username" name="username" required placeholder=" ">
@@ -35,12 +35,12 @@
                 </div>
 
                 <div class="auth-step-buttons">
-                    <button type="button" class="auth-button-back" data-auth-action="prev-step">Atrás</button>
+                    <a href="<?php echo $basePath; ?>/register" class="auth-button-back" style="text-align: center; text-decoration: none; padding: 0 20px; line-height: 52px;">Atrás</a>
                     <button type="button" class="auth-button" data-auth-action="next-step">Continuar</button>
                 </div>
             </fieldset>
 
-            <fieldset class="auth-step" data-step="3" style="display: none;">
+            <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 3) ? 'active' : ''; ?>" data-step="3" <?php echo ($CURRENT_REGISTER_STEP != 3) ? 'style="display: none;"' : ''; ?>>
                 <p class="auth-step-indicator">Paso 3 de 3: Verificación</p>
                 
                 <p class="auth-verification-text">
@@ -54,7 +54,7 @@
                 </div>
                 
                 <div class="auth-step-buttons">
-                    <button type="button" class="auth-button-back" data-auth-action="prev-step">Atrás</button>
+                    <a href="<?php echo $basePath; ?>/register/additional-data" class="auth-button-back" style="text-align: center; text-decoration: none; padding: 0 20px; line-height: 52px;">Atrás</a>
                     <button type="submit" class="auth-button">Verificar y Crear Cuenta</button>
                 </div>
             </fieldset>

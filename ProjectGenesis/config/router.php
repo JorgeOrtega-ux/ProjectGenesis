@@ -8,14 +8,19 @@ $page = $_GET['page'] ?? 'home';
 
 $CURRENT_SECTION = $page; 
 
-// --- ▼▼▼ MODIFICACIÓN: AÑADIR RUTAS DE SETTINGS ▼▼▼ ---
+// --- ▼▼▼ MODIFICACIÓN: AÑADIR RUTAS DE SETTINGS Y REGISTRO ▼▼▼ ---
 $allowedPages = [
     'home'     => '../includes/sections/main/home.php',
     'explorer' => '../includes/sections/main/explorer.php',
     'login'    => '../includes/sections/auth/login.php',
-    'register' => '../includes/sections/auth/register.php',
+    // 'register' => '../includes/sections/auth/register.php', // <-- Eliminado
     'reset-password' => '../includes/sections/auth/reset-password.php',
     '404'      => '../includes/sections/main/404.php', 
+
+    // Nuevas secciones de Registro
+    'register-step1' => '../includes/sections/auth/register.php',
+    'register-step2' => '../includes/sections/auth/register.php',
+    'register-step3' => '../includes/sections/auth/register.php',
 
     // Nuevas secciones de Configuración
     'settings-profile'       => '../includes/sections/settings/your-profile.php',
@@ -25,8 +30,10 @@ $allowedPages = [
 // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 // --- MODIFICACIÓN 2: PROTEGER EL ROUTER ---
-$authPages = ['login', 'register', 'reset-password'];
+// --- ▼▼▼ MODIFICACIÓN: ACTUALIZAR PÁGINAS DE AUTH ▼▼▼ ---
+$authPages = ['login', 'register-step1', 'register-step2', 'register-step3', 'reset-password'];
 $isAuthPage = in_array($page, $authPages);
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 // --- ▼▼▼ MODIFICACIÓN: PROTEGER TAMBIÉN LAS PÁGINAS DE SETTINGS ▼▼▼ ---
 // Si pide una página protegida (que no es de auth ni 404) Y NO tiene sesión
@@ -43,6 +50,19 @@ if (!isset($_SESSION['user_id']) && !$isAuthPage && $page !== '404') {
 
 
 if (array_key_exists($page, $allowedPages)) {
+
+    // --- ▼▼▼ INICIO DE LA NUEVA LÓGICA (REGISTRO) ▼▼▼ ---
+    // Definir qué paso del registro mostrar
+    $CURRENT_REGISTER_STEP = 1; // Default
+    if ($page === 'register-step1') {
+        $CURRENT_REGISTER_STEP = 1;
+    } elseif ($page === 'register-step2') {
+        $CURRENT_REGISTER_STEP = 2;
+    } elseif ($page === 'register-step3') {
+        $CURRENT_REGISTER_STEP = 3;
+    }
+    // --- ▲▲▲ FIN DE LA NUEVA LÓGICA ▲▲▲ ---
+
 
     // --- ▼▼▼ INICIO DE LA LÓGICA MOVIDA (Y MODIFICADA) ▼▼▼ ---
     // Pre-procesamos las variables solo para la página que las necesita.

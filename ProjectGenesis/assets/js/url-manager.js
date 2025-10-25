@@ -5,12 +5,18 @@ import { deactivateAllModules } from './main-controller.js';
 
 const contentContainer = document.querySelector('.main-sections');
 
+// --- ▼▼▼ MODIFICACIÓN: ACTUALIZAR RUTAS DE REGISTRO ▼▼▼ ---
 const routes = {
     'toggleSectionHome': 'home',
     'toggleSectionExplorer': 'explorer',
     'toggleSectionLogin': 'login',
-    'toggleSectionRegister': 'register',
+    // 'toggleSectionRegister': 'register', // <-- Eliminado
     'toggleSectionResetPassword': 'reset-password',
+
+    // Nuevas rutas de Registro
+    'toggleSectionRegisterStep1': 'register-step1',
+    'toggleSectionRegisterStep2': 'register-step2',
+    'toggleSectionRegisterStep3': 'register-step3',
 
     // Nuevas rutas de Configuración
     'toggleSectionSettingsProfile': 'settings-profile',
@@ -22,8 +28,13 @@ const paths = {
     '/': 'toggleSectionHome',
     '/explorer': 'toggleSectionExplorer',
     '/login': 'toggleSectionLogin',
-    '/register': 'toggleSectionRegister',
+    // '/register': 'toggleSectionRegister', // <-- Eliminado
     '/reset-password': 'toggleSectionResetPassword',
+
+    // Nuevas rutas de Registro
+    '/register': 'toggleSectionRegisterStep1',
+    '/register/additional-data': 'toggleSectionRegisterStep2',
+    '/register/verification-code': 'toggleSectionRegisterStep3',
 
     // --- ▼▼▼ MODIFICACIÓN: LÍNEA AMBIGUA ELIMINADA ▼▼▼ ---
     // '/settings': 'toggleSectionSettingsProfile', // <-- Esta línea causaba el bug
@@ -32,6 +43,7 @@ const paths = {
     '/settings/accessibility': 'toggleSectionSettingsAccess'
     // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 };
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
 
@@ -56,7 +68,9 @@ async function loadPage(page) {
     }
 }
 
-function handleNavigation() {
+// --- ▼▼▼ MODIFICACIÓN: EXPORTAR ESTA FUNCIÓN ▼▼▼ ---
+export function handleNavigation() {
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     let path = window.location.pathname.replace(basePath, '');
     if (path === '' || path === '/') path = '/';
@@ -76,13 +90,17 @@ function handleNavigation() {
 
     const page = routes[action];
 
+    // --- ▼▼▼ MODIFICACIÓN: Actualizar active para todos los pasos de registro ▼▼▼ ---
     if (page) {
         loadPage(page);
-        updateMenuState(action);
+        // Hacemos que cualquier página 'register-...' ponga 'register' como activo en el menú (si existiera)
+        const menuAction = action.startsWith('toggleSectionRegister') ? 'toggleSectionRegister' : action;
+        updateMenuState(menuAction);
     } else {
         loadPage('404');
         updateMenuState(null);
     }
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 }
 
 function updateMenuState(currentAction) {
@@ -106,9 +124,12 @@ async function updateGlobalMenuVisibility(isSettings) {
 export function initRouter() {
 
     document.body.addEventListener('click', e => {
+        // --- ▼▼▼ MODIFICACIÓN: AÑADIR a[href*="/register"] ▼▼▼ ---
+        // Esto capturará los nuevos botones <a> de "Atrás"
         const link = e.target.closest(
             '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[data-nav-js]'
         );
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
         if (link) {
             e.preventDefault();

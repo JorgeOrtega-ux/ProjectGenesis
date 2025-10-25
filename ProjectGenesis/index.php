@@ -59,14 +59,19 @@ if (empty($path) || $path === '/') {
 }
 
 // 4. Replicar la lógica de rutas para saber la página actual
-// --- ▼▼▼ MODIFICACIÓN: AÑADIR RUTAS DE SETTINGS ▼▼▼ ---
+// --- ▼▼▼ MODIFICACIÓN: AÑADIR RUTAS DE REGISTRO Y SETTINGS ▼▼▼ ---
 $pathsToPages = [
     '/'           => 'home',
     '/explorer'   => 'explorer',
     '/login'      => 'login',
-    '/register'   => 'register',
+    // '/register'   => 'register', // <-- Eliminado
     '/reset-password' => 'reset-password',
     
+    // Nuevas rutas de Registro
+    '/register'                 => 'register-step1',
+    '/register/additional-data' => 'register-step2',
+    '/register/verification-code' => 'register-step3',
+
     // Nuevas rutas de Configuración
     '/settings'                 => 'settings-profile', // Redirige /settings a /settings/your-profile
     '/settings/your-profile'    => 'settings-profile',
@@ -78,8 +83,10 @@ $pathsToPages = [
 $currentPage = $pathsToPages[$path] ?? '404';
 
 // 5. Definir qué páginas NO DEBEN mostrar el header/menu
-$authPages = ['login', 'register', 'reset-password'];
-$isAuthPage = in_array($currentPage, $authPages);
+// --- ▼▼▼ MODIFICACIÓN: ACTUALIZAR DETECCIÓN DE PÁGINAS DE AUTH ▼▼▼ ---
+$authPages = ['login', 'reset-password'];
+$isAuthPage = in_array($currentPage, $authPages) || strpos($currentPage, 'register-') === 0;
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 
 // --- ▼▼▼ NUEVA LÓGICA: DETECTAR SI ES PÁGINA DE SETTINGS ▼▼▼ ---

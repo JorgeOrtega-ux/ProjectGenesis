@@ -1,9 +1,10 @@
 /* ====================================== */
 /* ========= AUTH-MANAGER.JS ============ */
 /* ====================================== */
-import { callAuthApi } from './api-service.js'; // <-- AÑADIDO
-
-// const AUTH_ENDPOINT = ...; // <-- ELIMINADO
+import { callAuthApi } from './api-service.js';
+// --- ▼▼▼ MODIFICACIÓN: IMPORTAR EL MANEJADOR DE NAVEGACIÓN ▼▼▼ ---
+import { handleNavigation } from './url-manager.js';
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 async function handleRegistrationSubmit(e) {
     e.preventDefault();
@@ -16,11 +17,20 @@ async function handleRegistrationSubmit(e) {
 
     const formData = new FormData(form);
     formData.append('action', 'register-verify');
+    
+    // --- ▼▼▼ MODIFICACIÓN: AÑADIR EMAIL GUARDADO ▼▼▼ ---
+    formData.append('email', sessionStorage.getItem('regEmail') || '');
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     // --- LÓGICA DE FETCH REFACTORIZADA ---
     const result = await callAuthApi(formData);
 
     if (result.success) {
+        // --- ▼▼▼ MODIFICACIÓN: LIMPIAR STORAGE AL FINALIZAR ▼▼▼ ---
+        sessionStorage.removeItem('regEmail');
+        sessionStorage.removeItem('regPass');
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+        
         window.location.href = window.projectBasePath + '/';
     } else {
         showAuthError(errorDiv, result.message || 'Ha ocurrido un error.');
@@ -54,11 +64,21 @@ async function handleResetSubmit(e) {
 
     const formData = new FormData(form);
     formData.append('action', 'reset-update-password');
+    
+    // --- ▼▼▼ MODIFICACIÓN: AÑADIR DATOS GUARDADOS (EMAIL Y CÓDIGO) ▼▼▼ ---
+    formData.append('email', sessionStorage.getItem('resetEmail') || '');
+    formData.append('verification_code', sessionStorage.getItem('resetCode') || '');
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     // --- LÓGICA DE FETCH REFACTORIZADA ---
     const result = await callAuthApi(formData);
 
     if (result.success) {
+        // --- ▼▼▼ MODIFICACIÓN: LIMPIAR STORAGE AL FINALIZAR ▼▼▼ ---
+        sessionStorage.removeItem('resetEmail');
+        sessionStorage.removeItem('resetCode');
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+        
         window.showAlert(result.message || '¡Contraseña actualizada!', 'success');
         setTimeout(() => {
             window.location.href = window.projectBasePath + '/login';
@@ -145,11 +165,14 @@ function initRegisterWizard() {
         const currentStep = parseInt(currentStepEl.getAttribute('data-step'), 10);
 
         if (action === 'prev-step') {
-            const prevStepEl = registerForm.querySelector(`[data-step="${currentStep - 1}"]`);
+            // Esta lógica ahora solo la usa reset-password.php
+            // register.php usa <a> links que maneja url-manager.js
+            const form = button.closest('form');
+            const prevStepEl = form.querySelector(`[data-step="${currentStep - 1}"]`);
             if (prevStepEl) {
                 currentStepEl.style.display = 'none';
                 prevStepEl.style.display = 'block';
-                errorDiv.style.display = 'none';
+                if(errorDiv) errorDiv.style.display = 'none';
             }
             return;
         }
@@ -158,6 +181,7 @@ function initRegisterWizard() {
             let isValid = true;
             let clientErrorMessage = 'Por favor, completa todos los campos correctamente.';
 
+            // --- Validación de Cliente (sin cambios) ---
             if (currentStep === 1) {
                 const emailInput = currentStepEl.querySelector('#register-email');
                 const passwordInput = currentStepEl.querySelector('#register-password');
@@ -185,6 +209,7 @@ function initRegisterWizard() {
                     clientErrorMessage = 'El nombre de usuario debe tener al menos 6 caracteres.';
                 }
             }
+            // --- Fin Validación de Cliente ---
 
             if (!isValid) {
                 showAuthError(errorDiv, clientErrorMessage);
@@ -204,21 +229,45 @@ function initRegisterWizard() {
             }
             else if (currentStep === 2) {
                 fetchAction = 'register-check-username-and-generate-code';
+                
+                // --- ▼▼▼ MODIFICACIÓN: AÑADIR DATOS GUARDADOS ▼▼▼ ---
+                formData.append('email', sessionStorage.getItem('regEmail') || '');
+                formData.append('password', sessionStorage.getItem('regPass') || '');
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             }
             formData.append('action', fetchAction);
 
             const result = await callAuthApi(formData);
+            // --- FIN DEL REFACTOR ---
 
+            // --- ▼▼▼ MODIFICACIÓN: CAMBIAR URL EN LUGAR DE TOGGLE ▼▼▼ ---
             if (result.success) {
-                const nextStepEl = registerForm.querySelector(`[data-step="${currentStep + 1}"]`);
-                if (nextStepEl) {
-                    currentStepEl.style.display = 'none';
-                    nextStepEl.style.display = 'block';
+                
+                let nextPath = '';
+                if (currentStep === 1) {
+                    // --- ▼▼▼ MODIFICACIÓN: GUARDAR DATOS ▼▼▼ ---
+                    sessionStorage.setItem('regEmail', registerForm.querySelector('#register-email').value);
+                    sessionStorage.setItem('regPass', registerForm.querySelector('#register-password').value);
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                    nextPath = '/register/additional-data';
+
+                } else if (currentStep === 2) {
+                    // (No borramos nada aquí, lo necesitamos para el paso 3)
+                    nextPath = '/register/verification-code';
                 }
+
+                if (nextPath) {
+                    const fullUrlPath = window.projectBasePath + nextPath;
+                    // Cambiamos la URL en la barra de direcciones
+                    history.pushState(null, '', fullUrlPath);
+                    // Llamamos manualmente al router para que cargue el contenido del nuevo paso
+                    handleNavigation();
+                }
+                
             } else {
                 showAuthError(errorDiv, result.message || 'Error desconocido.');
             }
-            // --- FIN DEL REFACTOR ---
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
             button.disabled = false;
             button.textContent = 'Continuar';
@@ -313,20 +362,35 @@ function initResetWizard() {
             }
             else if (currentStep === 2) {
                 fetchAction = 'reset-check-code';
+                // --- ▼▼▼ MODIFICACIÓN: AÑADIR EMAIL GUARDADO ▼▼▼ ---
+                formData.append('email', sessionStorage.getItem('resetEmail') || '');
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             }
             formData.append('action', fetchAction);
 
             const result = await callAuthApi(formData);
 
             if (result.success) {
+                if (currentStep === 1) {
+                    // --- ▼▼▼ MODIFICACIÓN: GUARDAR EMAIL ▼▼▼ ---
+                    sessionStorage.setItem('resetEmail', resetForm.querySelector('#reset-email').value);
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                     if (result.message) {
+                        window.showAlert(result.message, 'info');
+                    }
+                }
+                else if (currentStep === 2) {
+                    // --- ▼▼▼ MODIFICACIÓN: GUARDAR CÓDIGO ▼▼▼ ---
+                    sessionStorage.setItem('resetCode', resetForm.querySelector('#reset-code').value);
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                }
+
                 const nextStepEl = resetForm.querySelector(`[data-step="${currentStep + 1}"]`);
                 if (nextStepEl) {
                     currentStepEl.style.display = 'none';
                     nextStepEl.style.display = 'block';
                 }
-                if (currentStep === 1 && result.message) {
-                    window.showAlert(result.message, 'info');
-                }
+
             } else {
                 showAuthError(errorDiv, result.message || 'Error desconocido.');
             }
