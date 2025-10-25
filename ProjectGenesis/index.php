@@ -18,16 +18,36 @@ getCsrfToken();
 if (isset($_SESSION['user_id'])) {
     try {
         // Volvemos a consultar la BD para obtener sus datos más frescos
-        $stmt = $pdo->prepare("SELECT username, email, profile_image_url, role FROM users WHERE id = ?");
+        // --- ▼▼▼ ¡MODIFICADO! Se añade auth_token a la consulta ▼▼▼ ---
+        $stmt = $pdo->prepare("SELECT username, email, profile_image_url, role, auth_token FROM users WHERE id = ?");
         $stmt->execute([$_SESSION['user_id']]);
         $freshUserData = $stmt->fetch();
 
         if ($freshUserData) {
-            // Actualizamos la sesión con los datos frescos de la BD
+            
+            // --- ▼▼▼ ¡INICIO DE LA VALIDACIÓN DE AUTH_TOKEN! ▼▼▼ ---
+            $dbAuthToken = $freshUserData['auth_token'];
+            $sessionAuthToken = $_SESSION['auth_token'] ?? null;
+
+            // Si el token de la sesión no existe, o está vacío, o no coincide con el de la BD,
+            // es una sesión inválida (ej. se activó "Cerrar sesión en todos").
+            if (empty($sessionAuthToken) || empty($dbAuthToken) || !hash_equals($dbAuthToken, $sessionAuthToken)) {
+                
+                // Forzamos el cierre de sesión
+                session_unset();
+                session_destroy();
+                header('Location: ' . $basePath . '/login');
+                exit;
+            }
+            // --- ▲▲▲ ¡FIN DE LA VALIDACIÓN DE AUTH_TOKEN! ▲▲▲ ---
+
+            // Si la validación pasa, actualizamos la sesión con los datos frescos
             $_SESSION['username'] = $freshUserData['username'];
             $_SESSION['email'] = $freshUserData['email'];
             $_SESSION['profile_image_url'] = $freshUserData['profile_image_url'];
             $_SESSION['role'] = $freshUserData['role']; // <-- El rol se actualiza aquí
+            // No es necesario re-setear $_SESSION['auth_token'] porque ya sabemos que es válido
+            
         } else {
             // Si el usuario no se encuentra (raro, quizás fue eliminado),
             // forzamos el cierre de sesión.

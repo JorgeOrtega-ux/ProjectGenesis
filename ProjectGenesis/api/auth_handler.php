@@ -57,8 +57,10 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
     
     // 1. Insertar usuario final en la tabla 'users'
     // --- MODIFICADO: Se incluye is_2fa_enabled (aunque el default 0 es de la BD) ---
-    $stmt = $pdo->prepare("INSERT INTO users (email, username, password, is_2fa_enabled) VALUES (?, ?, ?, 0)");
-    $stmt->execute([$email, $username, $passwordHash]);
+    // --- ¡MODIFICADO OTRA VEZ! Se añade auth_token ---
+    $authToken = bin2hex(random_bytes(32)); // Generar token
+    $stmt = $pdo->prepare("INSERT INTO users (email, username, password, is_2fa_enabled, auth_token) VALUES (?, ?, ?, 0, ?)");
+    $stmt->execute([$email, $username, $passwordHash, $authToken]);
     $userId = $pdo->lastInsertId();
 
     // 2. Generar y guardar avatar localmente
@@ -107,6 +109,7 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
     $_SESSION['email'] = $email;
     $_SESSION['profile_image_url'] = $localAvatarUrl;
     $_SESSION['role'] = 'user'; // Rol por defecto
+    $_SESSION['auth_token'] = $authToken; // <-- ¡NUEVA LÍNEA!
     
     // --- ▼▼▼ NUEVA LÍNEA ▼▼▼ ---
     logUserMetadata($pdo, $userId); // Registrar metadatos en el primer login (registro)
@@ -323,7 +326,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 try {
-                    // 2. OBTENER USUARIO (incluyendo el campo 2FA)
+                    // 2. OBTENER USUARIO (incluyendo el campo 2FA y auth_token)
                     $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
                     $stmt->execute([$email]);
                     $user = $stmt->fetch();
@@ -360,11 +363,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             // 2FA ESTÁ INACTIVO: Iniciar sesión directamente
                             session_regenerate_id(true);
 
+                            // --- ▼▼▼ ¡INICIO MODIFICACIÓN AUTH_TOKEN! ▼▼▼ ---
+                            $authToken = $user['auth_token'];
+                            if (empty($authToken)) {
+                                $authToken = bin2hex(random_bytes(32));
+                                $stmt_token = $pdo->prepare("UPDATE users SET auth_token = ? WHERE id = ?");
+                                $stmt_token->execute([$authToken, $user['id']]);
+                            }
+                            // --- ▲▲▲ ¡FIN MODIFICACIÓN AUTH_TOKEN! ▲▲▲ ---
+
                             $_SESSION['user_id'] = $user['id'];
                             $_SESSION['username'] = $user['username'];
                             $_SESSION['email'] = $user['email'];
                             $_SESSION['profile_image_url'] = $user['profile_image_url'];
                             $_SESSION['role'] = $user['role']; 
+                            $_SESSION['auth_token'] = $authToken; // <-- ¡NUEVA LÍNEA!
                             
                             // --- ▼▼▼ NUEVA LÍNEA ▼▼▼ ---
                             logUserMetadata($pdo, $user['id']); // Registrar metadatos en el login
@@ -442,11 +455,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($user) {
                             // Iniciar sesión
                             session_regenerate_id(true);
+
+                            // --- ▼▼▼ ¡INICIO MODIFICACIÓN AUTH_TOKEN! ▼▼▼ ---
+                            $authToken = $user['auth_token'];
+                            if (empty($authToken)) {
+                                $authToken = bin2hex(random_bytes(32));
+                                $stmt_token = $pdo->prepare("UPDATE users SET auth_token = ? WHERE id = ?");
+                                $stmt_token->execute([$authToken, $user['id']]);
+                            }
+                            // --- ▲▲▲ ¡FIN MODIFICACIÓN AUTH_TOKEN! ▲▲▲ ---
+
                             $_SESSION['user_id'] = $user['id'];
                             $_SESSION['username'] = $user['username'];
                             $_SESSION['email'] = $user['email'];
                             $_SESSION['profile_image_url'] = $user['profile_image_url'];
                             $_SESSION['role'] = $user['role']; 
+                            $_SESSION['auth_token'] = $authToken; // <-- ¡NUEVA LÍNEA!
                             
                             // --- ▼▼▼ NUEVA LÍNEA ▼▼▼ ---
                             logUserMetadata($pdo, $user['id']); // Registrar metadatos en el login 2FA

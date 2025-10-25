@@ -74,9 +74,10 @@
             
             <div class="settings-card-bottom">
                 <div class="settings-card-right-actions">
-                    <button type="button" class="settings-button">Cerrar sesión en todos</button>
+                    <button type="button" class="settings-button" id="logout-others-trigger">Cerrar en otros</button>
+                    <button type="button" class="settings-button danger" id="logout-all-inclusive-trigger">Cerrar en todos</button>
                 </div>
-            </div>
+                </div>
         </div>
         <div class="settings-card settings-card-column settings-card-danger">
             

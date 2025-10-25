@@ -569,6 +569,69 @@ export function initSettingsManager() {
             return;
         }
         // --- ▲▲▲ FIN: LÓGICA PARA CONTRASEÑA ▲▲▲ ---
+
+        // --- ▼▼▼ ¡INICIO DE NUEVA LÓGICA: CERRAR SESIÓN EN DISPOSITIVOS! ▼▼▼ ---
+
+        // Listener para "Cerrar en otros"
+        if (e.target.closest('#logout-others-trigger')) {
+            e.preventDefault();
+            
+            if (!confirm('¿Estás seguro de que deseas cerrar sesión en todos tus otros dispositivos? Tu sesión actual permanecerá activa.')) {
+                return;
+            }
+
+            const button = e.target.closest('#logout-others-trigger');
+            toggleButtonSpinner(button, 'Cerrar en otros', true);
+
+            const formData = new FormData();
+            formData.append('action', 'logout-all-devices');
+
+            const result = await callSettingsApi(formData);
+
+            if (result.success) {
+                window.showAlert(result.message || 'Se ha cerrado la sesión en otros dispositivos.', 'success');
+            } else {
+                window.showAlert(result.message || 'Error al cerrar las sesiones.', 'error');
+            }
+            
+            toggleButtonSpinner(button, 'Cerrar en otros', false);
+            return;
+        }
+
+        // Listener para "Cerrar en todos"
+        if (e.target.closest('#logout-all-inclusive-trigger')) {
+            e.preventDefault();
+            
+            if (!confirm('¿Estás seguro de que deseas cerrar sesión en TODOS tus dispositivos, incluido este? Serás redirigido a la página de inicio de sesión.')) {
+                return;
+            }
+            
+            const button = e.target.closest('#logout-all-inclusive-trigger');
+            toggleButtonSpinner(button, 'Cerrar en todos', true);
+
+            const formData = new FormData();
+            formData.append('action', 'logout-all-devices');
+
+            const result = await callSettingsApi(formData);
+
+            if (result.success) {
+                window.showAlert('Cerrando todas las sesiones...', 'info');
+                
+                // Redirigir al script de logout.php para matar la sesión actual
+                const token = window.csrfToken || '';
+                const logoutUrl = (window.projectBasePath || '') + '/config/logout.php';
+                
+                setTimeout(() => {
+                    window.location.href = `${logoutUrl}?csrf_token=${encodeURIComponent(token)}`;
+                }, 1000); // Dar tiempo para que se vea el toast
+
+            } else {
+                window.showAlert(result.message || 'Error al cerrar las sesiones.', 'error');
+                toggleButtonSpinner(button, 'Cerrar en todos', false);
+            }
+            return;
+        }
+        // --- ▲▲▲ ¡FIN DE NUEVA LÓGICA! ▲▲▲ ---
     });
 
     // 2. Delegación para SUBMIT

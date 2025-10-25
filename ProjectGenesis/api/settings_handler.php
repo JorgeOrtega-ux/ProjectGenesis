@@ -693,6 +693,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         // --- ▲▲▲ ¡FIN DE LA NUEVA ACCIÓN (TOGGLE 2FA)! ▲▲▲ ---
 
+        // --- ▼▼▼ ¡INICIO DE LA NUEVA ACCIÓN (LOGOUT ALL DEVICES)! ▼▼▼ ---
+        elseif ($action === 'logout-all-devices') {
+            try {
+                // 1. Generar un nuevo token de autenticación universal
+                $newAuthToken = bin2hex(random_bytes(32));
+                
+                // 2. Actualizar este token en la base de datos para el usuario actual
+                $stmt = $pdo->prepare("UPDATE users SET auth_token = ? WHERE id = ?");
+                $stmt->execute([$newAuthToken, $userId]);
+                
+                // 3. Actualizar la sesión ACTUAL con este nuevo token
+                // Esto asegura que la sesión actual siga siendo válida (para "Cerrar en otros")
+                // mientras que todas las demás sesiones (que tienen el token antiguo) se invalidarán
+                // la próxima vez que carguen index.php.
+                $_SESSION['auth_token'] = $newAuthToken;
+
+                $response['success'] = true;
+                $response['message'] = 'Se han invalidado todas las demás sesiones.';
+
+            } catch (Exception $e) {
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - logout-all-devices');
+                    $response['message'] = 'Error al actualizar el token de sesión en la base de datos.';
+                } else {
+                    $response['message'] = $e->getMessage();
+                }
+            }
+        }
+        // --- ▲▲▲ ¡FIN DE LA NUEVA ACCIÓN (LOGOUT ALL DEVICES)! ▲▲▲ ---
+
     }
 }
 
