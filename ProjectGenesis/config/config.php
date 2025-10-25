@@ -48,6 +48,13 @@ try {
     );
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
+    // --- ▼▼▼ ¡¡¡MODIFICACIÓN IMPORTANTE!!! ▼▼▼ ---
+    // Forzar la zona horaria de la CONEXIÓN PDO a UTC.
+    // Esto asegura que NOW() y CURRENT_TIMESTAMP usen UTC.
+    $pdo->exec("SET time_zone = '+00:00'");
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
 } catch (PDOException $e) {
     // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
     // En lugar de exponer el error, lo guardamos en un log y mostramos un error genérico.

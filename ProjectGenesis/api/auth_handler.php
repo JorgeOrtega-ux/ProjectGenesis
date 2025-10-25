@@ -130,6 +130,7 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
     // --- ▼▼▼ INICIO: MODIFICACIÓN (LIMPIAR FLAG DE REGISTRO) ▼▼▼ ---
     // Limpiamos el flag de progreso de registro al completar exitosamente
     unset($_SESSION['registration_step']);
+    unset($_SESSION['registration_email']); // <-- MODIFICACIÓN
     // --- ▲▲▲ FIN: MODIFICACIÓN ▲▲▲ ---
 
     return true;
@@ -183,6 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // --- ▼▼▼ INICIO: MODIFICACIÓN (AÑADIR FLAG DE PASO 1) ▼▼▼ ---
                         // El usuario ha pasado el paso 1, le damos permiso para el paso 2
                         $_SESSION['registration_step'] = 2;
+                        $_SESSION['registration_email'] = $email; // <-- MODIFICACIÓN
                         // --- ▲▲▲ FIN: MODIFICACIÓN ▲▲▲ ---
                         $response['success'] = true;
                     }
@@ -275,6 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // --- ▼▼▼ INICIO: MODIFICACIÓN (LIMPIAR FLAG DE REGISTRO) ▼▼▼ ---
                         // Si el código falla o expira, forzamos el reinicio del flujo
                         unset($_SESSION['registration_step']);
+                        unset($_SESSION['registration_email']); // <-- MODIFICACIÓN
                         // --- ▲▲▲ FIN: MODIFICACIÓN ▲▲▲ ---
                     
                     } else {

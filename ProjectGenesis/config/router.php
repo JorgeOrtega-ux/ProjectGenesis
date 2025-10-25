@@ -102,11 +102,13 @@ if (array_key_exists($page, $allowedPages)) {
     // --- ▼▼▼ INICIO DE LA LÓGICA DE VALIDACIÓN DE PASOS DE REGISTRO (MODIFICADA) ▼▼▼ ---
     
     $CURRENT_REGISTER_STEP = 1; // Default
-    
+    $initialCooldown = 0; // <-- MODIFICACIÓN: Añadir valor por defecto
+
     if ($page === 'register-step1') {
         $CURRENT_REGISTER_STEP = 1;
         // Si el usuario vuelve al paso 1, se reinicia el proceso
         unset($_SESSION['registration_step']);
+        unset($_SESSION['registration_email']); // <-- MODIFICACIÓN: Limpiar email
         // También limpiamos el sessionStorage del cliente para evitar conflictos
         echo '<script>
                 try {
@@ -142,6 +144,39 @@ if (array_key_exists($page, $allowedPages)) {
             exit; // Detener la ejecución
         }
         $CURRENT_REGISTER_STEP = 3;
+
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE COOLDOWN ▼▼▼ ---
+        if (isset($_SESSION['registration_email'])) {
+            try {
+                $email = $_SESSION['registration_email'];
+                $stmt = $pdo->prepare(
+                    "SELECT created_at FROM verification_codes 
+                     WHERE identifier = ? AND code_type = 'registration' 
+                     ORDER BY created_at DESC LIMIT 1"
+                );
+                $stmt->execute([$email]);
+                $codeData = $stmt->fetch();
+
+                if ($codeData) {
+                    // Ambas fechas están en UTC (gracias a config.php)
+                    $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
+                    $currentTime = new DateTime('now', new DateTimeZone('UTC'));
+                    
+                    $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
+                    $cooldownConstant = 60; // Debe coincidir con CODE_RESEND_COOLDOWN_SECONDS
+
+                    if ($secondsPassed < $cooldownConstant) {
+                        $initialCooldown = $cooldownConstant - $secondsPassed;
+                    }
+                    // Si $secondsPassed >= 60, $initialCooldown se queda en 0 (default)
+                }
+            } catch (PDOException $e) {
+                // Si falla la BD, no iniciar el timer por precaución
+                logDatabaseError($e, 'router - register-step3-cooldown');
+                $initialCooldown = 0; 
+            }
+        }
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA DE COOLDOWN ▲▲▲ ---
     }
     // --- ▲▲▲ FIN DE LA LÓGICA DE VALIDACIÓN ▲▲▲ ---
 

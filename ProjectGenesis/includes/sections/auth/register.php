@@ -57,7 +57,27 @@
                 </div>
                 
                 <p class="auth-link" style="text-align: center; margin-top: 16px;">
-                    <a href="#" id="register-resend-code-link" data-auth-action="resend-code">Reenviar código de verificación</a>
+                    <a href="#" 
+                       id="register-resend-code-link" 
+                       data-auth-action="resend-code"
+                       data-cooldown="<?php echo isset($initialCooldown) ? $initialCooldown : 0; ?>"
+                       class="<?php echo (isset($initialCooldown) && $initialCooldown > 0) ? 'disabled-interactive' : ''; ?>"
+                       style="<?php echo (isset($initialCooldown) && $initialCooldown > 0) ? 'opacity: 0.7; text-decoration: none;' : ''; ?>"
+                    >
+                       <?php // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ --- ?>
+                       <?php 
+                       $linkText = "Reenviar código de verificación";
+                       if (isset($initialCooldown) && $initialCooldown > 0) {
+                           // Ya está en cooldown al cargar, muestra el tiempo
+                           // (JS lo actualizará dinámicamente)
+                           echo htmlspecialchars($linkText . " (" . $initialCooldown . "s)");
+                       } else {
+                           // No hay cooldown, muestra el texto normal
+                           echo htmlspecialchars($linkText);
+                       }
+                       ?>
+                       <?php // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ --- ?>
+                    </a>
                 </p>
                 </fieldset>
             
