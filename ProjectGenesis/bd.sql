@@ -53,7 +53,7 @@ DROP TABLE IF EXISTS user_audit_logs;
 CREATE TABLE user_audit_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    change_type ENUM('username', 'email') NOT NULL,
+    change_type ENUM('username', 'email', 'password') NOT NULL,
     old_value VARCHAR(255) NOT NULL,
     new_value VARCHAR(255) NOT NULL,
     changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -61,3 +61,24 @@ CREATE TABLE user_audit_logs (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_user_type_time (user_id, change_type, changed_at)
 );
+
+-- --- ▼▼▼ INICIO DE LA NUEVA TABLA ▼▼▼ ---
+
+DROP TABLE IF EXISTS user_preferences;
+CREATE TABLE user_preferences (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE,
+    
+    -- Opciones: 'en-us', 'fr-fr', 'es-latam', 'es-mx'
+    language VARCHAR(10) NOT NULL DEFAULT 'en-us', 
+    
+    -- Opciones: 'system', 'light', 'dark'
+    theme ENUM('system', 'light', 'dark') NOT NULL DEFAULT 'system',
+    
+    -- Opciones: 'personal', 'student', 'teacher', 'small_business', 'large_company', 'ngo'
+    usage_type VARCHAR(50) NOT NULL DEFAULT 'personal',
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- --- ▲▲▲ FIN DE LA NUEVA TABLA ▲▲▲ ---
