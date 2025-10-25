@@ -647,7 +647,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // --- LÓGICA PARA RESETEO DE CONTRASEÑA ---
 
-        // PASO 1: Verificar email y generar código (Sin cambios)
+        // PASO 1: Verificar email y generar código
         elseif ($action === 'reset-check-email') {
             $email = $_POST['email'] ?? '';
 
@@ -660,6 +660,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!$stmt->fetch()) {
                         $response['success'] = true; 
                         $response['message'] = 'Si el correo existe, se enviará un código.';
+                        
+                        // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+                        // Preparamos los flags de sesión incluso si el email no existe
+                        // para evitar que un atacante sepa qué emails están registrados.
+                        $_SESSION['reset_step'] = 2;
+                        $_SESSION['reset_email'] = $email;
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                        
                     } else {
                         $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = 'password_reset'");
                         $stmt->execute([$email]);
@@ -674,17 +682,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         $response['success'] = true;
                         $response['message'] = 'Código de recuperación generado.';
+                        
+                        // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+                        $_SESSION['reset_step'] = 2;
+                        $_SESSION['reset_email'] = $email;
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     }
                 } catch (PDOException $e) {
-                    // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
                     logDatabaseError($e, 'auth_handler - reset-check-email');
                     $response['message'] = 'Error en la base de datos.';
-                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
 
-        // PASO 2: Verificar el código de reseteo (Sin cambios)
+        // PASO 1.5: Reenviar código de reseteo
+        elseif ($action === 'reset-resend-code') {
+            $email = $_POST['email'] ?? '';
+
+            if (empty($email)) {
+                $response['message'] = 'No se ha proporcionado un email.';
+            } else {
+                try {
+                    // 1. Buscar el código de reseteo MÁS RECIENTE para este email
+                    $stmt = $pdo->prepare(
+                        "SELECT * FROM verification_codes 
+                         WHERE identifier = ? AND code_type = 'password_reset' 
+                         ORDER BY created_at DESC LIMIT 1"
+                    );
+                    $stmt->execute([$email]);
+                    $codeData = $stmt->fetch();
+
+                    if (!$codeData) {
+                        throw new Exception('No se encontraron datos de reseteo. Por favor, vuelve a empezar.');
+                    }
+
+                    // 2. Comprobar el Cooldown (Servidor)
+                    $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
+                    $currentTime = new DateTime('now', new DateTimeZone('UTC'));
+                    $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
+
+                    if ($secondsPassed < CODE_RESEND_COOLDOWN_SECONDS) {
+                        $secondsRemaining = CODE_RESEND_COOLDOWN_SECONDS - $secondsPassed;
+                        throw new Exception("Debes esperar {$secondsRemaining} segundos más para reenviar el código.");
+                    }
+
+                    // 3. Generar y ACTUALIZAR el código
+                    $newCode = str_replace('-', '', generateVerificationCode());
+                    
+                    // Actualizamos el código y la marca de tiempo
+                    $stmt = $pdo->prepare(
+                        "UPDATE verification_codes SET code = ?, created_at = NOW() WHERE id = ?"
+                    );
+                    $stmt->execute([$newCode, $codeData['id']]);
+
+                    $response['success'] = true;
+                    $response['message'] = 'Se ha reenviado un nuevo código de verificación.';
+
+                } catch (Exception $e) {
+                    if ($e instanceof PDOException) {
+                        logDatabaseError($e, 'auth_handler - reset-resend-code');
+                        $response['message'] = 'Error en la base de datos.';
+                    } else {
+                        $response['message'] = $e->getMessage();
+                    }
+                }
+            }
+        }
+
+        // PASO 2: Verificar el código de reseteo
         elseif ($action === 'reset-check-code') {
             $email = $_POST['email'] ?? '';
             $submittedCode = str_replace('-', '', $_POST['verification_code'] ?? '');
@@ -716,20 +781,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } else {
                         clearFailedAttempts($pdo, $email);
                         $response['success'] = true;
+                        
+                        // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+                        $_SESSION['reset_step'] = 3;
+                        // Guardamos el código verificado para el paso 3
+                        $_SESSION['reset_code'] = $submittedCode; 
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     }
                 } catch (PDOException $e) {
-                    // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
                     logDatabaseError($e, 'auth_handler - reset-check-code');
                     $response['message'] = 'Error en la base de datos.';
-                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
 
-        // PASO 3: Verificar todo y actualizar la contraseña (Sin cambios)
+        // PASO 3: Verificar todo y actualizar la contraseña
         elseif ($action === 'reset-update-password') {
-            $email = $_POST['email'] ?? '';
-            $submittedCode = str_replace('-', '', $_POST['verification_code'] ?? '');
+            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+            // El email y el código ahora vienen de la SESIÓN, no del POST
+            $email = $_SESSION['reset_email'] ?? '';
+            $submittedCode = $_SESSION['reset_code'] ?? '';
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            
             $newPassword = $_POST['password'] ?? '';
             $ip = getIpAddress(); 
 
@@ -751,14 +824,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         "SELECT * FROM verification_codes 
                          WHERE identifier = ? 
                          AND code_type = 'password_reset'
-                         AND created_at > (NOW() - INTERVAL 15 MINUTE)"
+                         AND code = ?" // Comprobamos el código exacto
                     );
-                    $stmt->execute([$email]);
+                    $stmt->execute([$email, $submittedCode]);
                     $codeData = $stmt->fetch();
 
-                    if (!$codeData || strtolower($codeData['code']) !== strtolower($submittedCode)) {
+                    if (!$codeData) {
                         logFailedAttempt($pdo, $email, $ip, 'reset_fail');
-                        $response['message'] = 'El código es incorrecto o ha expirado. Vuelve a empezar.';
+                        $response['message'] = 'La sesión de reseteo es inválida. Vuelve a empezar.';
+                        
+                        // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+                        unset($_SESSION['reset_step']);
+                        unset($_SESSION['reset_email']);
+                        unset($_SESSION['reset_code']);
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                        
                     } else {
                         // ¡Éxito! Hashear nueva contraseña y actualizar usuario
                         $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
@@ -775,12 +855,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         $response['success'] = true;
                         $response['message'] = 'Contraseña actualizada. Serás redirigido.';
+                        
+                        // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+                        unset($_SESSION['reset_step']);
+                        unset($_SESSION['reset_email']);
+                        unset($_SESSION['reset_code']);
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     }
                 } catch (PDOException $e) {
-                    // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
                     logDatabaseError($e, 'auth_handler - reset-update-password');
                     $response['message'] = 'Error en la base de datos.';
-                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }

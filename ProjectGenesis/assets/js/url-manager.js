@@ -2,21 +2,25 @@
 /* ========== URL-MANAGER.JS ============ */
 /* ====================================== */
 import { deactivateAllModules } from './main-controller.js';
+import { startResendTimer } from './auth-manager.js';
 
 const contentContainer = document.querySelector('.main-sections');
 
-// --- ▼▼▼ MODIFICACIÓN: ACTUALIZAR RUTAS DE REGISTRO ▼▼▼ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
 const routes = {
     'toggleSectionHome': 'home',
     'toggleSectionExplorer': 'explorer',
     'toggleSectionLogin': 'login',
-    // 'toggleSectionRegister': 'register', // <-- Eliminado
-    'toggleSectionResetPassword': 'reset-password',
 
     // Nuevas rutas de Registro
     'toggleSectionRegisterStep1': 'register-step1',
     'toggleSectionRegisterStep2': 'register-step2',
     'toggleSectionRegisterStep3': 'register-step3',
+
+    // Nuevas rutas de Reseteo
+    'toggleSectionResetStep1': 'reset-step1',
+    'toggleSectionResetStep2': 'reset-step2',
+    'toggleSectionResetStep3': 'reset-step3',
 
     // Nuevas rutas de Configuración
     'toggleSectionSettingsProfile': 'settings-profile',
@@ -28,22 +32,23 @@ const paths = {
     '/': 'toggleSectionHome',
     '/explorer': 'toggleSectionExplorer',
     '/login': 'toggleSectionLogin',
-    // '/register': 'toggleSectionRegister', // <-- Eliminado
-    '/reset-password': 'toggleSectionResetPassword',
 
     // Nuevas rutas de Registro
     '/register': 'toggleSectionRegisterStep1',
     '/register/additional-data': 'toggleSectionRegisterStep2',
     '/register/verification-code': 'toggleSectionRegisterStep3',
+    
+    // Nuevas rutas de Reseteo
+    '/reset-password': 'toggleSectionResetStep1',
+    '/reset-password/verify-code': 'toggleSectionResetStep2',
+    '/reset-password/new-password': 'toggleSectionResetStep3',
 
-    // --- ▼▼▼ MODIFICACIÓN: LÍNEA AMBIGUA ELIMINADA ▼▼▼ ---
-    // '/settings': 'toggleSectionSettingsProfile', // <-- Esta línea causaba el bug
+    // Rutas de Configuración
     '/settings/your-profile': 'toggleSectionSettingsProfile',
     '/settings/login-security': 'toggleSectionSettingsLogin',
     '/settings/accessibility': 'toggleSectionSettingsAccess'
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 };
-// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
 
@@ -62,15 +67,31 @@ async function loadPage(page) {
 
         contentContainer.innerHTML = html;
 
+        // Después de cargar el contenido, buscar si hay un timer que iniciar.
+        if (page === 'register-step3') {
+            const link = document.getElementById('register-resend-code-link');
+            if (link) {
+                const cooldownSeconds = parseInt(link.dataset.cooldown || '0', 10);
+                if (cooldownSeconds > 0) {
+                    startResendTimer(link, cooldownSeconds);
+                }
+            }
+        }
+        
+        // --- ▼▼▼ ¡NUEVO BLOQUE! Iniciar timer si cargamos el paso 2 de reseteo ▼▼▼ ---
+        // (No necesitamos cooldown al cargar, porque el usuario acaba de llegar
+        // del paso 1, así que la API acaba de generar el código.
+        // Pero SÍ necesitamos que el botón de reenviar inicie un timer al hacer clic,
+        // lo cual ya está manejado en auth-manager.js)
+        // --- ▲▲▲ FIN DE BLOQUE NUEVO ▲▲▲ ---
+
     } catch (error) {
         console.error('Error al cargar la página:', error);
         contentContainer.innerHTML = '<h2>Error al cargar el contenido</h2>';
     }
 }
 
-// --- ▼▼▼ MODIFICACIÓN: EXPORTAR ESTA FUNCIÓN ▼▼▼ ---
 export function handleNavigation() {
-// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     let path = window.location.pathname.replace(basePath, '');
     if (path === '' || path === '/') path = '/';
@@ -90,17 +111,19 @@ export function handleNavigation() {
 
     const page = routes[action];
 
-    // --- ▼▼▼ MODIFICACIÓN: Actualizar active para todos los pasos de registro ▼▼▼ ---
     if (page) {
         loadPage(page);
-        // Hacemos que cualquier página 'register-...' ponga 'register' como activo en el menú (si existiera)
-        const menuAction = action.startsWith('toggleSectionRegister') ? 'toggleSectionRegister' : action;
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        // Agrupar visualmente los menús
+        let menuAction = action;
+        if (action.startsWith('toggleSectionRegister')) menuAction = 'toggleSectionRegister';
+        if (action.startsWith('toggleSectionReset')) menuAction = 'toggleSectionResetPassword'; 
         updateMenuState(menuAction);
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     } else {
         loadPage('404');
         updateMenuState(null);
     }
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 }
 
 function updateMenuState(currentAction) {
@@ -116,20 +139,19 @@ function updateMenuState(currentAction) {
 }
 
 async function updateGlobalMenuVisibility(isSettings) {
-    // (Esta función sigue vacía por ahora, pero la lógica de recarga
-    // de página completa al cambiar de contexto previene problemas)
+    // (Esta función sigue vacía por ahora)
 }
 
 
 export function initRouter() {
 
     document.body.addEventListener('click', e => {
-        // --- ▼▼▼ MODIFICACIÓN: AÑADIR a[href*="/register"] ▼▼▼ ---
-        // Esto capturará los nuevos botones <a> de "Atrás"
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        // Ahora también escucha por `a[href*="/reset-password"]`
         const link = e.target.closest(
             '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[data-nav-js]'
         );
-        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         if (link) {
             e.preventDefault();
@@ -139,10 +161,7 @@ export function initRouter() {
             if (link.hasAttribute('data-action')) {
                 action = link.getAttribute('data-action');
                 page = routes[action];
-                // --- ▼▼▼ MODIFICACIÓN: AHORA ENCONTRARÁ LA URL CORRECTA ▼▼▼ ---
                 newPath = Object.keys(paths).find(key => paths[key] === action);
-                // (Ahora 'newPath' será '/settings/your-profile' correctamente)
-                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } else {
                 const url = new URL(link.href);
                 newPath = url.pathname.replace(basePath, '') || '/';

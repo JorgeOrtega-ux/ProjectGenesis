@@ -52,17 +52,45 @@ function showRegistrationError($basePath, $message, $details) {
 // --- ▲▲▲ FIN: NUEVA FUNCIÓN DE ERROR DE REGISTRO ▲▲▲ ---
 
 
+// --- ▼▼▼ ¡NUEVA FUNCIÓN DE ERROR DE RESETEO! ▼▼▼ ---
+/**
+ * Muestra una página de error HTML personalizada para el flujo de reseteo.
+ * @param string $basePath
+ * @param string $message
+ * @param string $details
+ */
+function showResetError($basePath, $message, $details) {
+    if (ob_get_level() > 0) ob_end_clean();
+    http_response_code(400);
+
+    echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">';
+    echo '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded">';
+    echo '<link rel="stylesheet" type="text/css" href="' . htmlspecialchars($basePath, ENT_QUOTES, 'UTF-8') . '/assets/css/styles.css">';
+    echo '<title>Error en la recuperación</title></head>';
+    echo '<body style="background-color: #f5f5fa;">';
+    echo '<div class="section-content active" style="align-items: center; justify-content: center; height: 100vh;">';
+    echo '<div class="auth-container" style="max-width: 460px;">';
+    echo '<h1 class="auth-title" style="font-size: 36px; margin-bottom: 16px;">¡Uy! Faltan datos.</h1>';
+    echo '<div class="auth-error-message" style="display: block; background-color: #ffffff; border: 1px solid #00000020; color: #1f2937; margin-bottom: 24px; text-align: left; padding: 16px;">';
+    echo '<strong style="display: block; font-size: 16px; margin-bottom: 8px; color: #000;">' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . '</strong>';
+    echo '<p style="font-size: 14px; margin: 0; color: #6b7280; line-height: 1.5;">' . htmlspecialchars($details, ENT_QUOTES, 'UTF-8') . '</p>';
+    echo '</div>';
+    echo '<a href="' . htmlspecialchars($basePath, ENT_QUOTES, 'UTF-8') . '/reset-password" class="auth-button" style="text-decoration: none; text-align: center; line-height: 52px; display: block; width: 100%;">Volver al inicio de la recuperación</a>';
+    echo '</div></div>';
+    echo '</body></html>';
+}
+// --- ▲▲▲ FIN: NUEVA FUNCIÓN DE ERROR DE RESETEO ▲▲▲ ---
+
+
 $page = $_GET['page'] ?? 'home';
 
 $CURRENT_SECTION = $page; 
 
-// --- ▼▼▼ MODIFICACIÓN: AÑADIR RUTAS DE SETTINGS Y REGISTRO ▼▼▼ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
 $allowedPages = [
     'home'     => '../includes/sections/main/home.php',
     'explorer' => '../includes/sections/main/explorer.php',
     'login'    => '../includes/sections/auth/login.php',
-    // 'register' => '../includes/sections/auth/register.php', // <-- Eliminado
-    'reset-password' => '../includes/sections/auth/reset-password.php',
     '404'      => '../includes/sections/main/404.php', 
 
     // Nuevas secciones de Registro
@@ -70,241 +98,175 @@ $allowedPages = [
     'register-step2' => '../includes/sections/auth/register.php',
     'register-step3' => '../includes/sections/auth/register.php',
 
+    // Nuevas secciones de Reseteo
+    'reset-step1' => '../includes/sections/auth/reset-password.php',
+    'reset-step2' => '../includes/sections/auth/reset-password.php',
+    'reset-step3' => '../includes/sections/auth/reset-password.php',
+
     // Nuevas secciones de Configuración
     'settings-profile'       => '../includes/sections/settings/your-profile.php',
     'settings-login'         => '../includes/sections/settings/login-security.php',
     'settings-accessibility' => '../includes/sections/settings/accessibility.php',
 ];
-// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
-// --- MODIFICACIÓN 2: PROTEGER EL ROUTER ---
-// --- ▼▼▼ MODIFICACIÓN: ACTUALIZAR PÁGINAS DE AUTH ▼▼▼ ---
-$authPages = ['login', 'register-step1', 'register-step2', 'register-step3', 'reset-password'];
-$isAuthPage = in_array($page, $authPages);
-// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+$authPages = ['login'];
+$isAuthPage = in_array($page, $authPages) || 
+              strpos($page, 'register-') === 0 ||
+              strpos($page, 'reset-') === 0;
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
-// --- ▼▼▼ MODIFICACIÓN: PROTEGER TAMBIÉN LAS PÁGINAS DE SETTINGS ▼▼▼ ---
-// Si pide una página protegida (que no es de auth ni 404) Y NO tiene sesión
 $isSettingsPage = strpos($page, 'settings-') === 0;
 
 if (!isset($_SESSION['user_id']) && !$isAuthPage && $page !== '404') {
-    // No le damos la página.
     http_response_code(403); // 403 Forbidden
     $CURRENT_SECTION = '404'; 
     include $allowedPages['404'];
     exit; // Detener script
 }
-// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
-
 
 if (array_key_exists($page, $allowedPages)) {
 
-    // --- ▼▼▼ INICIO DE LA LÓGICA DE VALIDACIÓN DE PASOS DE REGISTRO (MODIFICADA) ▼▼▼ ---
-    
+    // --- LÓGICA DE VALIDACIÓN DE PASOS DE REGISTRO ---
     $CURRENT_REGISTER_STEP = 1; // Default
-    $initialCooldown = 0; // <-- MODIFICACIÓN: Añadir valor por defecto
+    $initialCooldown = 0; 
 
     if ($page === 'register-step1') {
         $CURRENT_REGISTER_STEP = 1;
-        // Si el usuario vuelve al paso 1, se reinicia el proceso
         unset($_SESSION['registration_step']);
-        unset($_SESSION['registration_email']); // <-- MODIFICACIÓN: Limpiar email
-        // También limpiamos el sessionStorage del cliente para evitar conflictos
-        echo '<script>
-                try {
-                    sessionStorage.removeItem("regEmail");
-                    sessionStorage.removeItem("regPass");
-                } catch (e) {
-                    console.warn("No se pudo limpiar sessionStorage.");
-                }
-              </script>';
+        unset($_SESSION['registration_email']); 
+        echo '<script>sessionStorage.removeItem("regEmail"); sessionStorage.removeItem("regPass");</script>';
 
     } elseif ($page === 'register-step2') {
-        // Comprobar si tiene permiso para estar en el paso 2
         if (!isset($_SESSION['registration_step']) || $_SESSION['registration_step'] < 2) {
-            // No tiene permiso, mostrar error y salir
-            showRegistrationError(
-                $basePath,
-                'Route Error (400 Missing step 1 data):',
-                'No has completado el paso 1 (email y contraseña) antes de acceder a esta página.'
-            );
-            exit; // Detener la ejecución
+            showRegistrationError($basePath, 'Error 400: Faltan datos del paso 1.', 'No has completado el paso 1 (email y contraseña) antes de acceder a esta página.');
+            exit; 
         }
         $CURRENT_REGISTER_STEP = 2;
 
     } elseif ($page === 'register-step3') {
-        // Comprobar si tiene permiso para estar en el paso 3
         if (!isset($_SESSION['registration_step']) || $_SESSION['registration_step'] < 3) {
-            // No tiene permiso, mostrar error y salir
-            showRegistrationError(
-                $basePath,
-                'Route Error (400 Missing step 2 data):',
-                'No has completado el paso 2 (nombre de usuario) antes de acceder a esta página.'
-            );
-            exit; // Detener la ejecución
+            showRegistrationError($basePath, 'Error 400: Faltan datos del paso 2.', 'No has completado el paso 2 (nombre de usuario) antes de acceder a esta página.');
+            exit;
         }
         $CURRENT_REGISTER_STEP = 3;
 
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE COOLDOWN ▼▼▼ ---
         if (isset($_SESSION['registration_email'])) {
             try {
                 $email = $_SESSION['registration_email'];
-                $stmt = $pdo->prepare(
-                    "SELECT created_at FROM verification_codes 
-                     WHERE identifier = ? AND code_type = 'registration' 
-                     ORDER BY created_at DESC LIMIT 1"
-                );
+                $stmt = $pdo->prepare("SELECT created_at FROM verification_codes WHERE identifier = ? AND code_type = 'registration' ORDER BY created_at DESC LIMIT 1");
                 $stmt->execute([$email]);
                 $codeData = $stmt->fetch();
 
                 if ($codeData) {
-                    // Ambas fechas están en UTC (gracias a config.php)
                     $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
                     $currentTime = new DateTime('now', new DateTimeZone('UTC'));
-                    
                     $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
-                    $cooldownConstant = 60; // Debe coincidir con CODE_RESEND_COOLDOWN_SECONDS
+                    $cooldownConstant = 60; 
 
                     if ($secondsPassed < $cooldownConstant) {
                         $initialCooldown = $cooldownConstant - $secondsPassed;
                     }
-                    // Si $secondsPassed >= 60, $initialCooldown se queda en 0 (default)
                 }
             } catch (PDOException $e) {
-                // Si falla la BD, no iniciar el timer por precaución
                 logDatabaseError($e, 'router - register-step3-cooldown');
                 $initialCooldown = 0; 
             }
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA DE COOLDOWN ▼▼▼ ---
     }
-    // --- ▲▲▲ FIN DE LA LÓGICA DE VALIDACIÓN ▲▲▲ ---
+    
+    // --- ▼▼▼ ¡NUEVA LÓGICA DE VALIDACIÓN DE PASOS DE RESETEO! ▼▼▼ ---
+    $CURRENT_RESET_STEP = 1; // Default
+
+    if ($page === 'reset-step1') {
+        $CURRENT_RESET_STEP = 1;
+        unset($_SESSION['reset_step']);
+        unset($_SESSION['reset_email']); // Guardaremos el email aquí
+        echo '<script>sessionStorage.removeItem("resetEmail"); sessionStorage.removeItem("resetCode");</script>';
+
+    } elseif ($page === 'reset-step2') {
+        if (!isset($_SESSION['reset_step']) || $_SESSION['reset_step'] < 2) {
+            showResetError($basePath, 'Error 400: Faltan datos del paso 1.', 'No has completado el paso 1 (email) antes de acceder a esta página.');
+            exit;
+        }
+        $CURRENT_RESET_STEP = 2;
+
+    } elseif ($page === 'reset-step3') {
+        if (!isset($_SESSION['reset_step']) || $_SESSION['reset_step'] < 3) {
+            showResetError($basePath, 'Error 400: Faltan datos del paso 2.', 'No has completado el paso 2 (código) antes de acceder a esta página.');
+            exit;
+        }
+        $CURRENT_RESET_STEP = 3;
+    }
+    // --- ▲▲▲ FIN DE LA LÓGICA DE VALIDACIÓN DE RESETEO ▲▲▲ ---
 
 
-    // --- ▼▼▼ INICIO DE LA LÓGICA MOVIDA (Y MODIFICADA) ▼▼▼ ---
-    // Pre-procesamos las variables solo para la página que las necesita.
+    // --- LÓGICA DE PRE-PROCESAMIENTO DE PÁGINAS DE SETTINGS ---
     if ($page === 'settings-profile') {
-        
         $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
         $profileImageUrl = $_SESSION['profile_image_url'] ?? $defaultAvatar;
-        if (empty($profileImageUrl)) {
-            $profileImageUrl = $defaultAvatar;
-        }
-
-        // Comprobar si la URL es un avatar por defecto (generado) o uno subido
-        // (La protección de ruta anterior ya asegura que $_SESSION['user_id'] existe)
-        $isDefaultAvatar = strpos($profileImageUrl, 'ui-avatars.com') !== false || 
-                           strpos($profileImageUrl, 'user-' . $_SESSION['user_id'] . '.png') !== false;
-
+        if (empty($profileImageUrl)) $profileImageUrl = $defaultAvatar;
+        $isDefaultAvatar = strpos($profileImageUrl, 'ui-avatars.com') !== false || strpos($profileImageUrl, 'user-' . $_SESSION['user_id'] . '.png') !== false;
         $usernameForAlt = $_SESSION['username'] ?? 'Usuario';
         $userRole = $_SESSION['role'] ?? 'user';
         $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
         
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (CARGAR PREFERENCIAS) ▼▼▼ ---
         try {
-            // --- ¡MODIFICADO! Se pide también 'open_links_in_new_tab' ---
             $stmt_prefs = $pdo->prepare("SELECT language, usage_type, open_links_in_new_tab FROM user_preferences WHERE user_id = ?");
             $stmt_prefs->execute([$_SESSION['user_id']]);
             $userPreferences = $stmt_prefs->fetch(PDO::FETCH_ASSOC);
-
-            // Definir fallbacks por si la fila no existe (ej. usuario antiguo)
             $userLanguage = $userPreferences['language'] ?? 'en-us';
             $userUsageType = $userPreferences['usage_type'] ?? 'personal';
-            // --- ¡NUEVA LÍNEA! ---
-            $openLinksInNewTab = (int)($userPreferences['open_links_in_new_tab'] ?? 1); // Default a 1 (true)
-
+            $openLinksInNewTab = (int)($userPreferences['open_links_in_new_tab'] ?? 1); 
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - settings-profile - preferences');
-            // Fallbacks en caso de error de BD
             $userLanguage = 'en-us';
             $userUsageType = 'personal';
-            // --- ¡NUEVA LÍNEA! ---
             $openLinksInNewTab = 1;
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA (CARGAR PREFERENCIAS) ▲▲▲ ---
-        
-
-    // --- ▼▼▼ INICIO DE LA NUEVA LÓGICA (settings-login) ▼▼▼ ---
     } elseif ($page === 'settings-login') {
-        
-        // --- ▼▼▼ ¡INICIO DE LA MODIFICACIÓN! ▼▼▼ ---
         try {
-            // 1. Consultar el último log de cambio de contraseña
-            $stmt_pass_log = $pdo->prepare(
-                "SELECT changed_at FROM user_audit_logs 
-                 WHERE user_id = ? AND change_type = 'password' 
-                 ORDER BY changed_at DESC LIMIT 1"
-            );
+            $stmt_pass_log = $pdo->prepare("SELECT changed_at FROM user_audit_logs WHERE user_id = ? AND change_type = 'password' ORDER BY changed_at DESC LIMIT 1");
             $stmt_pass_log->execute([$_SESSION['user_id']]);
             $lastLog = $stmt_pass_log->fetch();
 
             if ($lastLog) {
-                // 2. Formatear la fecha
-                // Comprobar si la extensión 'intl' está cargada
                 if (!class_exists('IntlDateFormatter')) {
-                     // Fallback simple si 'intl' no está
                     $date = new DateTime($lastLog['changed_at']);
                     $lastPasswordUpdateText = 'Última actualización: ' . $date->format('d/m/Y');
                 } else {
-                    // Formato localizado (ej: 30 de septiembre de 2024)
-                    $formatter = new IntlDateFormatter(
-                        'es_ES', // Locale español
-                        IntlDateFormatter::LONG, // Formato de fecha (largo)
-                        IntlDateFormatter::NONE, // Formato de hora (ninguno)
-                        'UTC' // Zona horaria (la BD guarda en UTC)
-                    );
+                    $formatter = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::NONE, 'UTC');
                     $timestamp = strtotime($lastLog['changed_at']);
                     $lastPasswordUpdateText = 'Última actualización: ' . $formatter->format($timestamp);
                 }
             } else {
-                // 3. Mensaje por defecto si no hay logs
                 $lastPasswordUpdateText = 'Nunca se ha actualizado la contraseña.';
             }
 
-            // 4. Obtener el estado de 2FA
             $stmt_2fa = $pdo->prepare("SELECT is_2fa_enabled FROM users WHERE id = ?");
             $stmt_2fa->execute([$_SESSION['user_id']]);
-            $is2faEnabled = (int)$stmt_2fa->fetchColumn(); // Cast a int (0 o 1)
-
+            $is2faEnabled = (int)$stmt_2fa->fetchColumn(); 
         } catch (PDOException $e) {
-            // En caso de error de BD (ej. tabla/columna aún no existe), mostrar mensaje genérico
             logDatabaseError($e, 'router - settings-login');
             $lastPasswordUpdateText = 'No se pudo cargar el historial de actualizaciones.';
-            $is2faEnabled = 0; // Por defecto 0 si hay error
+            $is2faEnabled = 0; 
         }
-        // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
-        // --- ▲▲▲ FIN DE LA NUEVA LÓGICA ▲▲▲ ---
-
-    // --- ▼▼▼ ¡INICIO DEL BLOQUE MODIFICADO! (settings-accessibility) ▼▼▼ ---
     } elseif ($page === 'settings-accessibility') {
-        
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (CARGAR PREFERENCIAS DE TEMA) ▼▼▼ ---
         try {
-            // --- ¡MODIFICADO! Se pide también 'increase_message_duration' ---
             $stmt_prefs = $pdo->prepare("SELECT theme, increase_message_duration FROM user_preferences WHERE user_id = ?");
             $stmt_prefs->execute([$_SESSION['user_id']]);
             $userPreferences = $stmt_prefs->fetch(PDO::FETCH_ASSOC);
-
             $userTheme = $userPreferences['theme'] ?? 'system'; 
-            if ($userTheme === false) { 
-                $userTheme = 'system'; 
-            }
-            
-            // --- ¡NUEVA LÍNEA! ---
-            $increaseMessageDuration = (int)($userPreferences['increase_message_duration'] ?? 0); // Default a 0 (false)
-
+            if ($userTheme === false) $userTheme = 'system'; 
+            $increaseMessageDuration = (int)($userPreferences['increase_message_duration'] ?? 0); 
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - settings-accessibility - preferences');
-            // Fallbacks en caso de error de BD
             $userTheme = 'system';
-            // --- ¡NUEVA LÍNEA! ---
             $increaseMessageDuration = 0;
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA (CARGAR PREFERENCIAS DE TEMA) ▲▲▲ ---
-
     }
-    // --- ▲▲▲ FIN DE LA LÓGICA MOVIDA ▲▲▲ ---
-
+    
     include $allowedPages[$page];
 
 } else {

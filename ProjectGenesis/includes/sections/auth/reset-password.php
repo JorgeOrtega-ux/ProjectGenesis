@@ -1,4 +1,4 @@
-<div class="section-content <?php echo ($CURRENT_SECTION === 'reset-password') ? 'active' : 'disabled'; ?>" data-section="reset-password">
+<div class="section-content <?php echo (strpos($CURRENT_SECTION, 'reset-') === 0) ? 'active' : 'disabled'; ?>" data-section="<?php echo htmlspecialchars($CURRENT_SECTION); ?>">
     <div class="auth-container">
         <h1 class="auth-title">Recuperar Contraseña</h1>
         
@@ -7,7 +7,7 @@
             <?php outputCsrfInput(); ?>
             <div class="auth-error-message" id="reset-error" style="display: none;"></div>
 
-            <fieldset class="auth-step active" data-step="1">
+            <fieldset class="auth-step <?php echo ($CURRENT_RESET_STEP == 1) ? 'active' : ''; ?>" data-step="1" <?php echo ($CURRENT_RESET_STEP != 1) ? 'style="display: none;"' : ''; ?>>
                 <p class="auth-step-indicator">Paso 1 de 3: Verifica tu cuenta</p>
                  <p class="auth-verification-text" style="margin-bottom: 16px;">
                     Ingresa tu correo electrónico y te enviaremos (simulado) un código de recuperación.
@@ -20,9 +20,13 @@
                 <div class="auth-step-buttons">
                     <button type="button" class="auth-button" data-auth-action="next-step">Enviar Código</button>
                 </div>
+                
+                <p class="auth-link" style="text-align: center; margin-top: 16px;">
+                    ¿Recordaste tu contraseña? <a href="/ProjectGenesis/login">Inicia sesión</a>
+                </p>
             </fieldset>
 
-            <fieldset class="auth-step" data-step="2" style="display: none;">
+            <fieldset class="auth-step <?php echo ($CURRENT_RESET_STEP == 2) ? 'active' : ''; ?>" data-step="2" <?php echo ($CURRENT_RESET_STEP != 2) ? 'style="display: none;"' : ''; ?>>
                 <p class="auth-step-indicator">Paso 2 de 3: Código de Verificación</p>
                 <p class="auth-verification-text" style="margin-bottom: 16px;">
                     Revisa tu bandeja de entrada e ingresa el código.
@@ -33,12 +37,21 @@
                 </div>
 
                 <div class="auth-step-buttons">
-                    <button type="button" class="auth-button-back" data-auth-action="prev-step">Atrás</button>
+                    <a href="/ProjectGenesis/reset-password" class="auth-button-back">Atrás</a>
                     <button type="button" class="auth-button" data-auth-action="next-step">Verificar</button>
                 </div>
+                
+                <p class="auth-link" style="text-align: center; margin-top: 16px;">
+                    <a href="#" 
+                       id="reset-resend-code-link" 
+                       data-auth-action="resend-code"
+                    >
+                       Reenviar código de verificación
+                    </a>
+                </p>
             </fieldset>
 
-            <fieldset class="auth-step" data-step="3" style="display: none;">
+            <fieldset class="auth-step <?php echo ($CURRENT_RESET_STEP == 3) ? 'active' : ''; ?>" data-step="3" <?php echo ($CURRENT_RESET_STEP != 3) ? 'style="display: none;"' : ''; ?>>
                 <p class="auth-step-indicator">Paso 3 de 3: Nueva Contraseña</p>
                 <p class="auth-verification-text" style="margin-bottom: 16px;">
                     Ingresa tu nueva contraseña. Debe tener al menos 8 caracteres.
@@ -61,15 +74,11 @@
                 </div>
                 
                 <div class="auth-step-buttons">
-                    <button type="button" class="auth-button-back" data-auth-action="prev-step">Atrás</button>
+                     <a href="/ProjectGenesis/reset-password/verify-code" class="auth-button-back">Atrás</a>
                     <button type="submit" class="auth-button">Guardar y Continuar</button>
                 </div>
             </fieldset>
             
-        </form>
-        
-        <p class="auth-link">
-            ¿Recordaste tu contraseña? <a href="/ProjectGenesis/login">Inicia sesión</a>
-        </p>
+            </form>
     </div>
 </div>
