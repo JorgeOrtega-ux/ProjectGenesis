@@ -281,10 +281,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $newAvatarUrl = null;
 
-                // 5. Si es por defecto, regenerarlo con el nuevo nombre
+                // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+                // 5. Si es por defecto, regenerarlo SÓLO SI LA INICIAL CAMBIA
                 if ($isDefaultAvatar) {
-                    $newAvatarUrl = generateDefaultAvatar($pdo, $userId, $newUsername, $basePath);
+                    
+                    // Usamos mb_substr para seguridad con caracteres multibyte (ej. tildes)
+                    $oldInitial = mb_substr($oldUsername, 0, 1, 'UTF-8');
+                    $newInitial = mb_substr($newUsername, 0, 1, 'UTF-8');
+
+                    // Comparamos las iniciales (ignorando mayúsculas/minúsculas)
+                    if (strcasecmp($oldInitial, $newInitial) !== 0) {
+                        // Solo si las iniciales son DIFERENTES, regeneramos el avatar
+                        $newAvatarUrl = generateDefaultAvatar($pdo, $userId, $newUsername, $basePath);
+                    }
+                    // Si las iniciales son iguales (Jop -> Jorge), $newAvatarUrl se queda en null
+                    // y la BD no actualizará la URL, conservando el avatar y color original.
                 }
+                // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+
 
                 // 6. Actualizar la base de datos
                 if ($newAvatarUrl) {
