@@ -121,6 +121,11 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
     // 7. Regenerar el token CSRF después de un cambio de sesión (login)
     generateCsrfToken();
 
+    // --- ▼▼▼ INICIO: MODIFICACIÓN (LIMPIAR FLAG DE REGISTRO) ▼▼▼ ---
+    // Limpiamos el flag de progreso de registro al completar exitosamente
+    unset($_SESSION['registration_step']);
+    // --- ▲▲▲ FIN: MODIFICACIÓN ▲▲▲ ---
+
     return true;
 }
 // --- FIN DE NUEVAS FUNCIONES ---
@@ -146,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
         $action = $_POST['action'];
 
-        // --- LÓGICA DE REGISTRO PASO 1 (Sin cambios) ---
+        // --- LÓGICA DE REGISTRO PASO 1 (Modificado) ---
         if ($action === 'register-check-email') {
             // (Validaciones de email, contraseña y dominio)
             $email = $_POST['email'] ?? '';
@@ -169,6 +174,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($stmt->fetch()) {
                         $response['message'] = 'Este correo electrónico ya está en uso.';
                     } else {
+                        // --- ▼▼▼ INICIO: MODIFICACIÓN (AÑADIR FLAG DE PASO 1) ▼▼▼ ---
+                        // El usuario ha pasado el paso 1, le damos permiso para el paso 2
+                        $_SESSION['registration_step'] = 2;
+                        // --- ▲▲▲ FIN: MODIFICACIÓN ▲▲▲ ---
                         $response['success'] = true;
                     }
                 } catch (PDOException $e) {
@@ -180,7 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // --- LÓGICA DE REGISTRO PASO 2 (Sin cambios) ---
+        // --- LÓGICA DE REGISTRO PASO 2 (Modificado) ---
         elseif ($action === 'register-check-username-and-generate-code') {
             
             $email = $_POST['email'] ?? '';
@@ -219,6 +228,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         );
                         $stmt->execute([$email, $verificationCode, $payload]);
 
+                        // --- ▼▼▼ INICIO: MODIFICACIÓN (AÑADIR FLAG DE PASO 2) ▼▼▼ ---
+                        // El usuario ha pasado el paso 2, le damos permiso para el paso 3
+                        $_SESSION['registration_step'] = 3;
+                        // --- ▲▲▲ FIN: MODIFICACIÓN ▲▲▲ ---
+
                         $response['success'] = true;
                         $response['message'] = 'Código de verificación generado.';
                     }
@@ -231,7 +245,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // --- LÓGICA DE REGISTRO PASO 3 (Sin cambios) ---
+        // --- LÓGICA DE REGISTRO PASO 3 (Modificado) ---
         elseif ($action === 'register-verify') {
             if (empty($_POST['email']) || empty($_POST['verification_code'])) {
                 $response['message'] = 'Faltan el correo o el código de verificación.';
@@ -252,6 +266,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if (!$pendingUser) {
                         $response['message'] = 'El código de verificación es incorrecto o ha expirado. Vuelve a empezar.';
+                        // --- ▼▼▼ INICIO: MODIFICACIÓN (LIMPIAR FLAG DE REGISTRO) ▼▼▼ ---
+                        // Si el código falla o expira, forzamos el reinicio del flujo
+                        unset($_SESSION['registration_step']);
+                        // --- ▲▲▲ FIN: MODIFICACIÓN ▲▲▲ ---
                     
                     } else {
                         // 2. Comparar el código

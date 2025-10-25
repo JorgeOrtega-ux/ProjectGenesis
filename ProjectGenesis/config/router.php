@@ -4,6 +4,54 @@
 // --- MODIFICACIÓN 1: INCLUIR CONFIG ---
 include '../config/config.php'; // Inicia la sesión
 
+// --- ▼▼▼ INICIO: NUEVA FUNCIÓN DE ERROR DE REGISTRO ▼▼▼ ---
+/**
+ * Muestra una página de error HTML personalizada para el flujo de registro.
+ * Detiene la ejecución del script.
+ *
+ * @param string $basePath El path base del proyecto (viene de config.php).
+ * @param string $message El mensaje principal del error (ej. "Error 400").
+ * @param string $details La explicación del error.
+ */
+function showRegistrationError($basePath, $message, $details) {
+    // Limpiamos cualquier salida de HTML anterior
+    if (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    
+    // Enviamos un código de error HTTP (Bad Request)
+    http_response_code(400);
+
+    // Imprimimos la página de error
+    echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">';
+    // Cargamos los CSS existentes para mantener el estilo
+    echo '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded">';
+    echo '<link rel="stylesheet" type="text/css" href="' . htmlspecialchars($basePath, ENT_QUOTES, 'UTF-8') . '/assets/css/styles.css">';
+    echo '<title>Error en el registro</title></head>';
+    echo '<body style="background-color: #f5f5fa;">'; // Fondo gris como el resto
+    
+    // Usamos las clases CSS de 'auth-container' y 'not-found' para el estilo
+    echo '<div class="section-content active" style="align-items: center; justify-content: center; height: 100vh;">';
+    echo '<div class="auth-container" style="max-width: 460px;">';
+    
+    // Título (similar a tu imagen)
+    echo '<h1 class="auth-title" style="font-size: 36px; margin-bottom: 16px;">¡Uy! Faltan datos.</h1>';
+    
+    // Contenedor del error (similar a tu imagen)
+    echo '<div class="auth-error-message" style="display: block; background-color: #ffffff; border: 1px solid #00000020; color: #1f2937; margin-bottom: 24px; text-align: left; padding: 16px;">';
+    echo '<strong style="display: block; font-size: 16px; margin-bottom: 8px; color: #000;">' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . '</strong>';
+    echo '<p style="font-size: 14px; margin: 0; color: #6b7280; line-height: 1.5;">' . htmlspecialchars($details, ENT_QUOTES, 'UTF-8') . '</p>';
+    echo '</div>';
+    
+    // Botón para volver
+    echo '<a href="' . htmlspecialchars($basePath, ENT_QUOTES, 'UTF-8') . '/register" class="auth-button" style="text-decoration: none; text-align: center; line-height: 52px; display: block; width: 100%;">Volver al inicio del registro</a>';
+    
+    echo '</div></div>';
+    echo '</body></html>';
+}
+// --- ▲▲▲ FIN: NUEVA FUNCIÓN DE ERROR DE REGISTRO ▲▲▲ ---
+
+
 $page = $_GET['page'] ?? 'home';
 
 $CURRENT_SECTION = $page; 
@@ -51,17 +99,51 @@ if (!isset($_SESSION['user_id']) && !$isAuthPage && $page !== '404') {
 
 if (array_key_exists($page, $allowedPages)) {
 
-    // --- ▼▼▼ INICIO DE LA NUEVA LÓGICA (REGISTRO) ▼▼▼ ---
-    // Definir qué paso del registro mostrar
+    // --- ▼▼▼ INICIO DE LA LÓGICA DE VALIDACIÓN DE PASOS DE REGISTRO (MODIFICADA) ▼▼▼ ---
+    
     $CURRENT_REGISTER_STEP = 1; // Default
+    
     if ($page === 'register-step1') {
         $CURRENT_REGISTER_STEP = 1;
+        // Si el usuario vuelve al paso 1, se reinicia el proceso
+        unset($_SESSION['registration_step']);
+        // También limpiamos el sessionStorage del cliente para evitar conflictos
+        echo '<script>
+                try {
+                    sessionStorage.removeItem("regEmail");
+                    sessionStorage.removeItem("regPass");
+                } catch (e) {
+                    console.warn("No se pudo limpiar sessionStorage.");
+                }
+              </script>';
+
     } elseif ($page === 'register-step2') {
+        // Comprobar si tiene permiso para estar en el paso 2
+        if (!isset($_SESSION['registration_step']) || $_SESSION['registration_step'] < 2) {
+            // No tiene permiso, mostrar error y salir
+            showRegistrationError(
+                $basePath,
+                'Route Error (400 Missing step 1 data):',
+                'No has completado el paso 1 (email y contraseña) antes de acceder a esta página.'
+            );
+            exit; // Detener la ejecución
+        }
         $CURRENT_REGISTER_STEP = 2;
+
     } elseif ($page === 'register-step3') {
+        // Comprobar si tiene permiso para estar en el paso 3
+        if (!isset($_SESSION['registration_step']) || $_SESSION['registration_step'] < 3) {
+            // No tiene permiso, mostrar error y salir
+            showRegistrationError(
+                $basePath,
+                'Route Error (400 Missing step 2 data):',
+                'No has completado el paso 2 (nombre de usuario) antes de acceder a esta página.'
+            );
+            exit; // Detener la ejecución
+        }
         $CURRENT_REGISTER_STEP = 3;
     }
-    // --- ▲▲▲ FIN DE LA NUEVA LÓGICA ▲▲▲ ---
+    // --- ▲▲▲ FIN DE LA LÓGICA DE VALIDACIÓN ▲▲▲ ---
 
 
     // --- ▼▼▼ INICIO DE LA LÓGICA MOVIDA (Y MODIFICADA) ▼▼▼ ---
