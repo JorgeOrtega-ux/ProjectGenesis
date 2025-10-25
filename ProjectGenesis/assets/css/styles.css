@@ -1,4 +1,4 @@
-/* FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-c8c3cdea53b7f937c4b912cae7954b420a451beb/ProjectGenesis/assets/css/styles.css */
+/* FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-7300a5fd6f01e7d34a06974ab7b5375a342a6ccc/ProjectGenesis/assets/css/styles.css */
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
 
 * {
@@ -655,6 +655,32 @@ body {
 }
 /* --- FIN DE LA CORRECCIÓN DE ALINEACIÓN --- */
 
+/* --- ▼▼▼ ¡INICIO DEL NUEVO BLOQUE AÑADIDO! ▼▼▼ --- */
+/* Esto anula 'align-items' y cambia la dirección
+  para los selectores de "Tema", "Idioma", etc.
+*/
+.settings-card-trigger-column {
+    flex-direction: column;
+    align-items: stretch; /* Hace que los hijos (left/right) ocupen todo el ancho */
+}
+
+/* Anula el ancho fijo de 265px para que ocupe
+  el 100% del contenedor de la tarjeta.
+*/
+
+/* Anula el flex: 1 1 auto de 'left' para que no 
+  empuje al 'right' y añade un espacio.
+*/
+.settings-card-trigger-column .settings-card-left {
+    flex: unset;
+    /* El 'gap: 16px' (o 'gap: 8px' en la definición de .settings-card) 
+      se aplicará verticalmente gracias a flex-direction: column,
+      así que no necesitamos padding extra.
+    */
+}
+/* --- ▲▲▲ ¡FIN DEL NUEVO BLOQUE AÑADIDO! ▲▲▲ --- */
+
+
 /* --- ▼▼▼ NUEVA CLASE PARA EL ICONO DE CONTRASEÑA ▼▼▼ --- */
 .settings-card-icon {
     width: 60px;
@@ -1096,12 +1122,12 @@ body {
         right: 12px;
         width: auto;
     }
-}/* --- ▼▼▼ NUEVOS ESTILOS PARA TOGGLE 2FA ▼▼▼ --- */
+}/* --- ▼▼▼ NUEVOS ESTILOS PARA TOGGLE 2FA (¡MODIFICADOS!) ▼▼▼ --- */
 .settings-toggle-switch {
     position: relative;
     display: inline-block;
-    width: 52px; /* Ancho del contenedor */
-    height: 32px; /* Alto del contenedor */
+    width: 40px; /* Ancho del contenedor (MODIFICADO) */
+    height: 24px; /* Alto del contenedor (MODIFICADO) */
 }
 
 .settings-toggle-switch .settings-toggle-slider {
@@ -1119,14 +1145,41 @@ body {
 .settings-toggle-switch .settings-toggle-slider:before {
     position: absolute;
     content: "";
-    height: 24px; /* Alto del círculo */
-    width: 24px; /* Ancho del círculo */
-    left: 4px; /* Posición inicial */
-    bottom: 4px; /* Posición inicial */
+    height: 20px; /* Alto del círculo (MODIFICADO) */
+    width: 20px; /* Ancho del círculo (MODIFICADO) */
+    left: 2px; /* Posición inicial (MODIFICADO) */
+    bottom: 2px; /* Posición inicial (MODIFICADO) */
     background-color: white;
     transition: .3s;
     border-radius: 50%; /* Círculo */
 }
+/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
+
+/* --- ▼▼▼ ¡ESTILOS AÑADIDOS PARA COMPLETAR EL TOGGLE! ▼▼▼ --- */
+
+/* Ocultar el checkbox real */
+.settings-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+/* Estilos cuando está 'checked' (encendido) */
+.settings-toggle-switch input:checked + .settings-toggle-slider {
+    background-color: #7B1AF7; /* Un color morado similar al de la imagen */
+}
+
+.settings-toggle-switch input:focus + .settings-toggle-slider {
+    box-shadow: 0 0 1px #7B1AF7; /* Opcional: un 'focus ring' */
+}
+
+/* Mover el círculo cuando está 'checked' */
+.settings-toggle-switch input:checked + .settings-toggle-slider:before {
+    transform: translateX(16px); /* Mueve el círculo (40 - 20 - 2 - 2) = 16px (MODIFICADO) */
+}
+/* --- ▲▲▲ FIN DE ESTILOS AÑADIDOS ▲▲▲ --- */
+
 
 /* --- ▼▼▼ NUEVOS ESTILOS PARA LAYOUT DE TARJETA EN COLUMNA ▼▼▼ --- */
 .settings-card-column {

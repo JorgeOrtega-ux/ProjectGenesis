@@ -208,14 +208,16 @@ if (array_key_exists($page, $allowedPages)) {
 
             // Definir fallbacks por si la fila no existe (ej. usuario antiguo)
             $userLanguage = $userPreferences['language'] ?? 'en-us';
-            $userTheme = $userPreferences['theme'] ?? 'system';
+            // --- ▼▼▼ ¡LÍNEA ELIMINADA! ▼▼▼ ---
+            // $userTheme = $userPreferences['theme'] ?? 'system'; 
             $userUsageType = $userPreferences['usage_type'] ?? 'personal';
 
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - settings-profile - preferences');
             // Fallbacks en caso de error de BD
             $userLanguage = 'en-us';
-            $userTheme = 'system';
+            // --- ▼▼▼ ¡LÍNEA ELIMINADA! ▼▼▼ ---
+            // $userTheme = 'system';
             $userUsageType = 'personal';
         }
         // --- ▲▲▲ FIN DE NUEVA LÓGICA (CARGAR PREFERENCIAS) ▲▲▲ ---
@@ -271,6 +273,26 @@ if (array_key_exists($page, $allowedPages)) {
         }
         // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
         // --- ▲▲▲ FIN DE LA NUEVA LÓGICA ▲▲▲ ---
+
+    // --- ▼▼▼ ¡INICIO DEL NUEVO BLOQUE! (settings-accessibility) ▼▼▼ ---
+    } elseif ($page === 'settings-accessibility') {
+        
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (CARGAR PREFERENCIAS DE TEMA) ▼▼▼ ---
+        try {
+            $stmt_prefs = $pdo->prepare("SELECT theme FROM user_preferences WHERE user_id = ?");
+            $stmt_prefs->execute([$_SESSION['user_id']]);
+            $userTheme = $stmt_prefs->fetchColumn(); 
+
+            if ($userTheme === false) { 
+                $userTheme = 'system'; 
+            }
+
+        } catch (PDOException $e) {
+            logDatabaseError($e, 'router - settings-accessibility - preferences');
+            // Fallbacks en caso de error de BD
+            $userTheme = 'system';
+        }
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA (CARGAR PREFERENCIAS DE TEMA) ▲▲▲ ---
 
     }
     // --- ▲▲▲ FIN DE LA LÓGICA MOVIDA ▲▲▲ ---

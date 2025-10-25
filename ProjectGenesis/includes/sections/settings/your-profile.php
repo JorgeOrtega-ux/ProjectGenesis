@@ -1,7 +1,7 @@
 <?php
 // --- ▼▼▼ INICIO DE NUEVO BLOQUE PHP ▼▼▼ ---
 
-// Estas variables ($userLanguage, $userTheme, $userUsageType) 
+// Estas variables ($userLanguage, $userUsageType) 
 // son cargadas por config/router.php
 
 // 1. Definir los mapas de valores de BD a texto legible
@@ -21,16 +21,9 @@ $languageMap = [
     'fr-fr' => 'Français (France)'
 ];
 
-$themeMap = [
-    'system' => 'Sincronizar con el sistema',
-    'light' => 'Tema claro',
-    'dark' => 'Tema oscuro'
-];
-
 // 2. Obtener el texto actual para mostrar en el botón
 $currentUsageText = $usageMap[$userUsageType] ?? 'Uso personal';
 $currentLanguageText = $languageMap[$userLanguage] ?? 'English (United States)';
-$currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
 
 // --- ▲▲▲ FIN DE NUEVO BLOQUE PHP ▲▲▲ ---
 ?>
@@ -211,7 +204,7 @@ $currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
             </div>
         </div>
 
-        <div class="settings-card settings-card-align-bottom">
+        <div class="settings-card settings-card-trigger-column">
             <div class="settings-card-left">
                 <div class="settings-text-content">
                     <h2 class="settings-text-title">¿Para qué usarás ProjectGenesis?</h2>
@@ -269,7 +262,7 @@ $currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
 
             </div>
         </div>
-        <div class="settings-card settings-card-align-bottom">
+        <div class="settings-card settings-card-trigger-column">
             <div class="settings-card-left">
                 <div class="settings-text-content">
                     <h2 class="settings-text-title">Idioma</h2>
@@ -327,61 +320,23 @@ $currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
 
             </div>
         </div>
+        
         <div class="settings-card settings-card-align-bottom">
             <div class="settings-card-left">
                 <div class="settings-text-content">
-                    <h2 class="settings-text-title">Tema</h2>
+                    <h2 class="settings-text-title">Abrir los enlaces en una pestaña nueva</h2>
                     <p class="settings-text-description">
-                        Elige cómo quieres que se vea la interfaz.
+                        En el navegador web, los enlaces siempre se abrirán en una pestaña nueva.
                     </p>
                 </div>
             </div>
 
             <div class="settings-card-right">
                 
-                <div class="trigger-select-wrapper">
-                    
-                    <div class="trigger-selector" 
-                         data-action="toggleModuleThemeSelect">
-                        
-                        <div class="trigger-select-icon">
-                            <span class="material-symbols-rounded">brightness_medium</span>
-                        </div>
-                        <div class="trigger-select-text">
-                            <span><?php echo htmlspecialchars($currentThemeText); ?></span>
-                        </div>
-                        <div class="trigger-select-arrow">
-                            <span class="material-symbols-rounded">arrow_drop_down</span>
-                        </div>
-                    </div>
-
-                    <div class="module-content module-trigger-select body-title disabled" 
-                         data-module="moduleThemeSelect"
-                         data-preference-type="theme">
-                        
-                        <div class="menu-content">
-                            <div class="menu-list">
-
-                                <?php foreach ($themeMap as $key => $text): ?>
-                                    <?php $isActive = ($key === $userTheme); ?>
-                                    <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
-                                         data-value="<?php echo htmlspecialchars($key); ?>">
-                                        
-                                        <div class="menu-link-icon">
-                                            <?php if ($isActive): ?>
-                                                <span class="material-symbols-rounded">check</span>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="menu-link-text">
-                                            <span><?php echo htmlspecialchars($text); ?></span>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                                
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <label class="settings-toggle-switch">
+                    <input type="checkbox" checked> 
+                    <span class="settings-toggle-slider"></span>
+                </label>
 
             </div>
         </div>
