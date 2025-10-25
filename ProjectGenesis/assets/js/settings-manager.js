@@ -2,6 +2,9 @@
 /* ======== SETTINGS-MANAGER.JS ========= */
 /* ====================================== */
 import { callSettingsApi } from './api-service.js'; // <-- AÑADIDO
+// --- ▼▼▼ ¡AÑADIDO! Importar el desactivador de módulos ▼▼▼ ---
+import { deactivateAllModules } from './main-controller.js';
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 // const SETTINGS_ENDPOINT = ...; // <-- ELIMINADO
 
@@ -626,6 +629,60 @@ export function initSettingsManager() {
             return;
         }
         // --- ▲▲▲ ¡FIN DE LÓGICA MODIFICADA! ▲▲▲ ---
+
+        
+        // --- ▼▼▼ ¡INICIO DE NUEVA LÓGICA PARA TRIGGER SELECTOR (USO)! ▼▼▼ ---
+        const clickedLink = e.target.closest('[data-module="moduleTriggerSelect"] .menu-link');
+        if (clickedLink) {
+            e.preventDefault();
+            
+            // 1. Encontrar elementos
+            const menuList = clickedLink.closest('.menu-list');
+            const module = clickedLink.closest('[data-module="moduleTriggerSelect"]');
+            const wrapper = clickedLink.closest('.trigger-select-wrapper');
+            const trigger = wrapper?.querySelector('.trigger-selector');
+            const triggerTextEl = trigger?.querySelector('.trigger-select-text span');
+            
+            // 2. Obtener nuevo valor
+            const newText = clickedLink.querySelector('.menu-link-text span')?.textContent;
+
+            if (!menuList || !module || !triggerTextEl || !newText) return;
+
+            // 3. Actualizar el texto del botón
+            triggerTextEl.textContent = newText;
+            
+            // 4. Quitar 'active' y 'check' de todos los links
+            menuList.querySelectorAll('.menu-link').forEach(link => {
+                link.classList.remove('active');
+                const icon = link.querySelector('.menu-link-icon');
+                if (icon) {
+                    icon.innerHTML = ''; // Limpiar icono
+                }
+            });
+            
+            // 5. Añadir 'active' y 'check' al link clickeado
+            clickedLink.classList.add('active');
+            const iconContainer = clickedLink.querySelector('.menu-link-icon');
+            if (iconContainer) {
+                iconContainer.innerHTML = '<span class="material-symbols-rounded">check</span>';
+            }
+            
+            // 6. Cerrar el módulo
+            // Usamos la función global que importamos
+            deactivateAllModules(); 
+
+            // (Aquí podrías añadir una llamada a callSettingsApi si quisieras guardar la preferencia)
+            // ej: const formData = new FormData();
+            // formData.append('action', 'update-user-purpose');
+            // formData.append('purpose', newText);
+            // await callSettingsApi(formData);
+            // window.showAlert('Preferencia actualizada', 'success');
+            
+            return;
+        }
+        // --- ▲▲▲ ¡FIN DE NUEVA LÓGICA! ▲▲▲ ---
+
+
     });
 
     // 2. Delegación para SUBMIT

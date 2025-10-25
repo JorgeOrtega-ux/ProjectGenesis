@@ -1150,3 +1150,92 @@ body {
     color: #c62828; /* Título en rojo oscuro */
 }
 /* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */
+
+
+/* ===== INICIO DE NUEVOS ESTILOS PARA TRIGGER SELECTOR ===== */
+
+.trigger-select-wrapper {
+    position: relative;
+    width: 265px; 
+    height: 45px;
+}
+
+.trigger-selector {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    background-color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    padding: 0 8px 0 12px;
+    user-select: none;
+}
+
+.trigger-selector:hover {
+    background-color: #f5f5fa;
+}
+
+.trigger-select-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 12px;
+    color: #6b7280; /* Color gris para el icono */
+}
+
+.trigger-select-icon .material-symbols-rounded {
+    font-size: 20px;
+}
+
+.trigger-select-text {
+    flex-grow: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.trigger-select-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: 8px;
+    color: #6b7280;
+}
+
+.module-content.module-trigger-select {
+    position: absolute;
+    bottom: calc(100% + 5px); /* Se abre hacia ARRIBA */
+    left: 0;
+    right: 0; 
+    width: 100%; /* Mismo ancho que el wrapper */
+    z-index: 10;
+}
+
+.module-trigger-select .menu-content {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #00000020;
+    width: 100%;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ajuste para el icono de check en el menú */
+.module-trigger-select .menu-link .menu-link-icon {
+    color: #000;
+}
+
+.module-trigger-select .menu-link:not(.active) .menu-link-icon {
+    width: 45px; /* Mantiene el espacio aunque esté vacío */
+}
+
+/* ===== FIN DE NUEVOS ESTILOS ===== */
