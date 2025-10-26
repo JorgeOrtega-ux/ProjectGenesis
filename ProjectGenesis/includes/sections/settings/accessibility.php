@@ -3,10 +3,11 @@
 
 // $userTheme y $increaseMessageDuration son cargados por config/router.php
 
+// 1. Definir los mapas de valores de BD a *CLAVES DE TRADUCCIÓN*
 $themeMap = [
-    'system' => 'Sincronizar con el sistema',
-    'light' => 'Tema claro',
-    'dark' => 'Tema oscuro'
+    'system' => 'settings.accessibility.themeSystem',
+    'light' => 'settings.accessibility.themeLight',
+    'dark' => 'settings.accessibility.themeDark'
 ];
 
 // --- ¡NUEVO MAPA DE ICONOS AÑADIDO! ---
@@ -16,7 +17,8 @@ $themeIconMap = [
     'dark' => 'dark_mode'
 ];
 
-$currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
+// 2. Obtener la *CLAVE* actual para mostrar en el botón
+$currentThemeKey = $themeMap[$userTheme] ?? 'settings.accessibility.themeSystem';
 
 // --- ▲▲▲ FIN DE NUEVO BLOQUE PHP ▲▲▲ ---
 ?>
@@ -24,19 +26,15 @@ $currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
     <div class="settings-wrapper">
         
         <div class="settings-header-card">
-            <h1 class="settings-title">Accesibilidad</h1>
-            <p class="settings-description">
-                Ajusta las configuraciones de visualización, como el tamaño del texto o el contraste de colores.
-            </p>
+            <h1 class="settings-title" data-i18n="settings.accessibility.title"></h1>
+            <p class="settings-description" data-i18n="settings.accessibility.description"></p>
         </div>
 
         <div class="settings-card settings-card-trigger-column">
             <div class="settings-card-left">
                 <div class="settings-text-content">
-                    <h2 class="settings-text-title">Tema</h2>
-                    <p class="settings-text-description">
-                        Elige cómo quieres que se vea la interfaz.
-                    </p>
+                    <h2 class="settings-text-title" data-i18n="settings.accessibility.themeTitle"></h2>
+                    <p class="settings-text-description" data-i18n="settings.accessibility.themeDesc"></p>
                 </div>
             </div>
 
@@ -51,7 +49,7 @@ $currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
                             <span class="material-symbols-rounded">brightness_medium</span>
                         </div>
                         <div class="trigger-select-text">
-                            <span><?php echo htmlspecialchars($currentThemeText); ?></span>
+                            <span data-i18n="<?php echo htmlspecialchars($currentThemeKey); ?>"></span>
                         </div>
                         <div class="trigger-select-arrow">
                             <span class="material-symbols-rounded">arrow_drop_down</span>
@@ -67,7 +65,7 @@ $currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
 
                                 <?php 
                                 // --- ▼▼▼ INICIO DE MODIFICACIÓN DEL BUCLE ▼▼▼ ---
-                                foreach ($themeMap as $key => $text): 
+                                foreach ($themeMap as $key => $textKey): 
                                     $isActive = ($key === $userTheme); 
                                     $iconName = $themeIconMap[$key] ?? 'desktop_windows'; // Icono por defecto
                                 ?>
@@ -78,7 +76,7 @@ $currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
                                             <span class="material-symbols-rounded"><?php echo $iconName; ?></span>
                                         </div>
                                         <div class="menu-link-text">
-                                            <span><?php echo htmlspecialchars($text); ?></span>
+                                            <span data-i18n="<?php echo htmlspecialchars($textKey); ?>"></span>
                                         </div>
                                         <div class="menu-link-check-icon">
                                             <?php if ($isActive): ?>
@@ -101,10 +99,8 @@ $currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
         <div class="settings-card settings-card-align-bottom">
             <div class="settings-card-left">
                 <div class="settings-text-content">
-                    <h2 class="settings-text-title">Aumenta el tiempo de permanencia de un mensaje en la pantalla.</h2>
-                    <p class="settings-text-description">
-                        Los mensajes permanecerán más tiempo en pantalla antes de desaparecer.
-                    </p>
+                    <h2 class="settings-text-title" data-i18n="settings.accessibility.durationTitle"></h2>
+                    <p class="settings-text-description" data-i18n="settings.accessibility.durationDesc"></p>
                 </div>
             </div>
 

@@ -99,7 +99,7 @@ $pathsToPages = [
     '/settings/your-profile'    => 'settings-profile',
     '/settings/login-security'  => 'settings-login',
     '/settings/accessibility'   => 'settings-accessibility',
-    '/settings/device-sessions' => 'settings-devices' // <-- AÑADIDO
+    '/settings/device-sessions' => 'settings-devices', // <-- AÑADIDO
 ];
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
@@ -138,9 +138,20 @@ if (isset($_SESSION['theme'])) {
     // Si es 'system', la clase se deja vacía y el JS (app-init.js) se encargará
 }
 // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
+
+// --- ▼▼▼ ¡NUEVA MODIFICACIÓN: LÓGICA DE IDIOMA PARA HTML! ▼▼▼ ---
+// Mapea el código de idioma de la BD a un código estándar HTML
+$langMap = [
+    'es-latam' => 'es-419',
+    'es-mx' => 'es-MX',
+    'en-us' => 'en-US',
+    'fr-fr' => 'fr-FR'
+];
+$htmlLang = $langMap[$_SESSION['language']] ?? 'en'; // Default 'en'
+// --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
 ?>
 <!DOCTYPE html>
-<html lang="en" class="<?php echo $themeClass; ?>">
+<html lang="<?php echo $htmlLang; ?>" class="<?php echo $themeClass; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -185,6 +196,8 @@ if (isset($_SESSION['theme'])) {
         // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN: INYECTAR PREFERENCIAS! ▼▼▼ ---
         window.userTheme = '<?php echo $_SESSION['theme'] ?? 'system'; ?>';
         window.userIncreaseMessageDuration = <?php echo $_SESSION['increase_message_duration'] ?? 0; ?>;
+        // --- ¡NUEVA MODIFICACIÓN! Inyectar idioma actual ---
+        window.userLanguage = '<?php echo $_SESSION['language'] ?? 'en-us'; ?>'; 
         // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
     </script>
     <script type="module" src="<?php echo $basePath; ?>/assets/js/app-init.js"></script>

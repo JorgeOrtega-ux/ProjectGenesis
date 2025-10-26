@@ -1,5 +1,6 @@
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from './auth-manager.js';
+import { applyTranslations } from './i18n-manager.js'; // <-- NUEVA IMPORTACIÓN
 
 const contentContainer = document.querySelector('.main-sections');
 
@@ -57,6 +58,11 @@ async function loadPage(page) {
         const html = await response.text();
 
         contentContainer.innerHTML = html;
+
+        // --- ▼▼▼ NUEVA MODIFICACIÓN ▼▼▼ ---
+        // Aplica las traducciones al contenido recién cargado
+        applyTranslations(contentContainer);
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
         if (page === 'register-step3') {
             const link = document.getElementById('register-resend-code-link');

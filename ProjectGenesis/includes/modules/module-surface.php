@@ -14,7 +14,7 @@
                         <span class="material-symbols-rounded">arrow_back</span>
                     </div>
                     <div class="menu-link-text">
-                        <span>Volver a Inicio</span>
+                        <span data-i18n="sidebar.settings.backToHome"></span>
                     </div>
                 </div>
                 
@@ -23,7 +23,7 @@
                         <span class="material-symbols-rounded">account_circle</span>
                     </div>
                     <div class="menu-link-text">
-                        <span>Tu Perfil</span>
+                        <span data-i18n="sidebar.settings.yourProfile"></span>
                     </div>
                 </div>
 
@@ -32,7 +32,7 @@
                         <span class="material-symbols-rounded">security</span>
                     </div>
                     <div class="menu-link-text">
-                        <span>Inicio de Sesión y Seguridad</span>
+                        <span data-i18n="sidebar.settings.loginSecurity"></span>
                     </div>
                 </div>
 
@@ -41,17 +41,16 @@
                         <span class="material-symbols-rounded">accessibility</span>
                     </div>
                     <div class="menu-link-text">
-                        <span>Accesibilidad</span>
+                        <span data-i18n="sidebar.settings.accessibility"></span>
                     </div>
                 </div>
                 <?php else: ?>
-
                 <div class="menu-link active" data-action="toggleSectionHome">
                     <div class="menu-link-icon">
                         <span class="material-symbols-rounded">home</span>
                     </div>
                     <div class="menu-link-text">
-                        <span>Página principal</span>
+                        <span data-i18n="sidebar.main.home"></span>
                     </div>
                 </div>
                 
@@ -60,7 +59,7 @@
                         <span class="material-symbols-rounded">groups</span>
                     </div>
                     <div class="menu-link-text">
-                        <span>Explorar comunidades</span>
+                        <span data-i18n="sidebar.main.explore"></span>
                     </div>
                 </div>
                 <?php endif; ?>

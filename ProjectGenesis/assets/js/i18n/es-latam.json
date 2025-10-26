@@ -1,0 +1,161 @@
+{
+  "header": {
+    "profile": {
+      "altPrefix": "Avatar de",
+      "settings": "Configuración",
+      "help": "Ayuda y comentarios",
+      "logout": "Cerrar sesión"
+    }
+  },
+  "sidebar": {
+    "settings": {
+      "backToHome": "Volver a Inicio",
+      "yourProfile": "Tu Perfil",
+      "loginSecurity": "Inicio de Sesión y Seguridad",
+      "accessibility": "Accesibilidad"
+    },
+    "main": {
+      "home": "Página principal",
+      "explore": "Explorar comunidades"
+    }
+  },
+  "settings": {
+    "profile": {
+      "title": "Tu Perfil",
+      "description": "Aquí podrás editar tu información de perfil, cambiar tu avatar y nombre de usuario.",
+      "avatarTitle": "Foto de perfil",
+      "avatarDesc": "Esto ayudará a tus compañeros a reconocerte.",
+      "uploadPhoto": "Subir foto",
+      "removePhoto": "Eliminar foto",
+      "changePhoto": "Cambiar foto",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "username": "Nombre de usuario",
+      "edit": "Editar",
+      "email": "Correo Electrónico",
+      "modalCodeTitle": "Busca el código que te enviamos",
+      "modalCodeDesc": "Para poder hacer cambios en tu cuenta, primero debes ingresar el código que te enviamos (simulado) a",
+      "modalCodeLabel": "Código*",
+      "continue": "Continuar",
+      "modalCodeResendP": "¿No recibiste el código?",
+      "modalCodeResendA": "Volver a enviarlo",
+      "usageTitle": "¿Para qué usarás ProjectGenesis?",
+      "usageDesc": "Esto nos ayudará a personalizar tu experiencia.",
+      "usagePersonal": "Uso personal",
+      "usageStudent": "Estudiante",
+      "usageTeacher": "Docente",
+      "usageSmallBusiness": "Empresa pequeña",
+      "usageLargeCompany": "Empresa grande",
+      "langTitle": "Idioma",
+      "langDesc": "Selecciona tu idioma preferido.",
+      "langEsLatam": "Español (Latinoamérica)",
+      "langEsMx": "Español (México)",
+      "langEnUs": "English (United States)",
+      "langFrFr": "Français (France)",
+      "newTabTitle": "Abrir los enlaces en una pestaña nueva",
+      "newTabDesc": "En el navegador web, los enlaces siempre se abrirán en una pestaña nueva."
+    },
+    "login": {
+      "title": "Inicio de Sesión y Seguridad",
+      "description": "Gestiona tu contraseña, activa la verificación de dos pasos (2FA) y revisa tu historial de inicio de sesión.",
+      "password": "Contraseña",
+      "update": "Actualizar",
+      "2fa": "Verificación de dos pasos (2FA)",
+      "2faEnabled": "La autenticación de dos pasos está activa.",
+      "2faDisabled": "Añade una capa extra de seguridad a tu cuenta.",
+      "enable": "Habilitar",
+      "disable": "Deshabilitar",
+      "deviceSessions": "Sesiones de dispositivos",
+      "deviceSessionsDesc": "Revisa y administra los dispositivos donde has iniciado sesión.",
+      "manageDevices": "Administrar dispositivos",
+      "deleteAccount": "Eliminar tu cuenta",
+      "deleteAccountDesc": "Si eliminas tu cuenta, ya no podrás acceder a ninguno de tus diseños ni iniciar sesión.",
+      "deleteAccountButton": "Eliminar cuenta",
+      "modalVerifyTitle": "Verifica tu identidad",
+      "modalVerifyDesc": "Para continuar, por favor ingresa tu contraseña actual.",
+      "modalCurrentPass": "Contraseña actual*",
+      "modalNewPassTitle": "Crea una nueva contraseña",
+      "modalNewPassDesc": "Tu nueva contraseña debe tener al menos 8 caracteres.",
+      "modalNewPass": "Nueva contraseña*",
+      "modalConfirmPass": "Confirmar nueva contraseña*",
+      "back": "Atrás",
+      "savePassword": "Guardar Contraseña",
+      "confirm": "Confirmar"
+    },
+    "accessibility": {
+      "title": "Accesibilidad",
+      "description": "Ajusta las configuraciones de visualización, como el tamaño del texto o el contraste de colores.",
+      "themeTitle": "Tema",
+      "themeDesc": "Elige cómo quieres que se vea la interfaz.",
+      "themeSystem": "Sincronizar con el sistema",
+      "themeLight": "Tema claro",
+      "themeDark": "Tema oscuro",
+      "durationTitle": "Aumenta el tiempo de permanencia de un mensaje en la pantalla.",
+      "durationDesc": "Los mensajes permanecerán más tiempo en pantalla antes de desaparecer."
+    },
+    "devices": {
+      "title": "Sesiones de Dispositivos",
+      "description": "Estos son los dispositivos que han iniciado sesión en tu cuenta. Puedes cerrar la sesión en todos los dispositivos a la vez.",
+      "invalidateTitle": "Invalidar todas las sesiones",
+      "invalidateDesc": "Cierra la sesión en todos tus dispositivos, incluida esta sesión actual. Serás redirigido a la página de inicio de sesión.",
+      "invalidateButton": "Cerrar sesión",
+      "activeSessionsTitle": "Dispositivos con sesión activa",
+      "noSessionsTitle": "No se encontraron sesiones",
+      "noSessionsDesc": "No hay un historial de inicio de sesión para mostrar.",
+      "lastAccess": "Último acceso:",
+      "modalTitle": "Cerrar sesión en todos los dispositivos",
+      "modalDesc": "¿Estás seguro de que deseas cerrar sesión en TODOS tus dispositivos, incluido este? Serás redirigido a la página de inicio de sesión.",
+      "modalCancel": "Cancelar",
+      "modalConfirm": "Cerrar sesión"
+    }
+  },
+  "page": {
+    "404": {
+      "title": "¡Vaya! Página no encontrada.",
+      "description": "No pudimos encontrar la página que estás buscando. Es posible que se haya movido o que ya no exista."
+    },
+    "login": {
+      "title": "Iniciar sesión",
+      "emailLabel": "Dirección de correo electrónico*",
+      "passwordLabel": "Contraseña*",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "continueButton": "Continuar",
+      "2faDescription": "Se ha enviado un código de verificación a tu correo. Por favor, ingrésalo para continuar.",
+      "2faCodeLabel": "Código de Verificación*",
+      "backButton": "Atrás",
+      "verifyButton": "Verificar e Ingresar",
+      "noAccount": "¿No tienes una cuenta?",
+      "createAccount": "Crear cuenta"
+    },
+    "register": {
+      "title": "Crea una cuenta",
+      "emailLabel": "Dirección de correo electrónico*",
+      "passwordLabel": "Contraseña*",
+      "continueButton": "Continuar",
+      "usernameLabel": "Nombre de usuario*",
+      "verificationDesc": "Te hemos enviado un código de verificación al correo <strong>%email%</strong>. Por favor, ingrésalo para finalizar tu registro.",
+      "verificationCodeLabel": "Código de Verificación*",
+      "verifyButton": "Verificar y Crear Cuenta",
+      "resendCode": "Reenviar código de verificación",
+      "hasAccount": "¿Ya tienes una cuenta?",
+      "login": "Inicia sesión"
+    },
+    "reset": {
+      "title": "Recuperar Contraseña",
+      "step1Desc": "Ingresa tu correo electrónico y te enviaremos un código de recuperación.",
+      "emailLabel": "Dirección de correo electrónico*",
+      "sendCodeButton": "Enviar Código",
+      "rememberedPassword": "¿Recordaste tu contraseña?",
+      "login": "Inicia sesión",
+      "step2Desc": "Revisa tu bandeja de entrada e ingresa el código.",
+      "verificationCodeLabel": "Código de Verificación*",
+      "verifyButton": "Verificar",
+      "resendCode": "Reenviar código de verificación",
+      "step3Desc": "Ingresa tu nueva contraseña. Debe tener al menos 8 caracteres.",
+      "newPasswordLabel": "Nueva Contraseña*",
+      "confirmPasswordLabel": "Confirmar Contraseña*",
+      "backButton": "Atrás",
+      "saveButton": "Guardar y Continuar"
+    }
+  }
+}

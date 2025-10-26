@@ -1,6 +1,6 @@
 <div class="section-content <?php echo (strpos($CURRENT_SECTION, 'register-') === 0) ? 'active' : 'disabled'; ?>" data-section="<?php echo htmlspecialchars($CURRENT_SECTION); ?>">
     <div class="auth-container">
-        <h1 class="auth-title">Crea una cuenta</h1>
+        <h1 class="auth-title" data-i18n="page.register.title"></h1>
         
         <form class="auth-form" id="register-form" onsubmit="event.preventDefault();" novalidate>
             
@@ -9,19 +9,19 @@
             <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 1) ? 'active' : ''; ?>" data-step="1" <?php echo ($CURRENT_REGISTER_STEP != 1) ? 'style="display: none;"' : ''; ?>>
                 <div class="auth-input-group">
                     <input type="email" id="register-email" name="email" required placeholder=" " maxlength="255">
-                    <label for="register-email">Dirección de correo electrónico*</label>
+                    <label for="register-email" data-i18n="page.register.emailLabel"></label>
                 </div>
 
                 <div class="auth-input-group">
                     <input type="password" id="register-password" name="password" required placeholder=" " minlength="8" maxlength="72">
-                    <label for="register-password">Contraseña*</label>
+                    <label for="register-password" data-i18n="page.register.passwordLabel"></label>
                     <button type="button" class="auth-toggle-password" data-toggle="register-password">
                         <span class="material-symbols-rounded">visibility</span>
                     </button>
                 </div>
                 
                 <div class="auth-step-buttons">
-                    <button type="button" class="auth-button" data-auth-action="next-step">Continuar</button>
+                    <button type="button" class="auth-button" data-auth-action="next-step" data-i18n="page.register.continueButton"></button>
                 </div>
                 <div class="auth-error-message" style="display: none;"></div>
             </fieldset>
@@ -29,30 +29,28 @@
             <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 2) ? 'active' : ''; ?>" data-step="2" <?php echo ($CURRENT_REGISTER_STEP != 2) ? 'style="display: none;"' : ''; ?>>
                 <div class="auth-input-group">
                     <input type="text" id="register-username" name="username" required placeholder=" " minlength="6" maxlength="32">
-                    <label for="register-username">Nombre de usuario*</label>
+                    <label for="register-username" data-i18n="page.register.usernameLabel"></label>
                 </div>
 
                 <div class="auth-step-buttons">
-                    <button type="button" class="auth-button" data-auth-action="next-step">Continuar</button>
+                    <button type="button" class="auth-button" data-auth-action="next-step" data-i18n="page.register.continueButton"></button>
                 </div>
                 <div class="auth-error-message" style="display: none;"></div>
             </fieldset>
 
             <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 3) ? 'active' : ''; ?>" data-step="3" <?php echo ($CURRENT_REGISTER_STEP != 3) ? 'style="display: none;"' : ''; ?>>
                 
-                <p class="auth-verification-text">
-                    Te hemos enviado un código de verificación al correo
+                <p class="auth-verification-text" data-i18n="page.register.verificationDesc">
                     <strong><?php echo htmlspecialchars($_SESSION['registration_email'] ?? 'tu correo'); ?></strong>.
-                    Por favor, ingrésalo para finalizar tu registro.
-                </p>
+                    </p>
 
                 <div class="auth-input-group">
                     <input type="text" id="register-code" name="verification_code" required placeholder=" " maxlength="14">
-                    <label for="register-code">Código de Verificación*</label>
+                    <label for="register-code" data-i18n="page.register.verificationCodeLabel"></label>
                 </div>
                 
                 <div class="auth-step-buttons">
-                    <button type="submit" class="auth-button">Verificar y Crear Cuenta</button>
+                    <button type="submit" class="auth-button" data-i18n="page.register.verifyButton"></button>
                 </div>
                 
                 <div class="auth-error-message" style="display: none;"></div>
@@ -64,20 +62,15 @@
                        data-cooldown="<?php echo isset($initialCooldown) ? $initialCooldown : 0; ?>"
                        class="<?php echo (isset($initialCooldown) && $initialCooldown > 0) ? 'disabled-interactive' : ''; ?>"
                        style="<?php echo (isset($initialCooldown) && $initialCooldown > 0) ? 'opacity: 0.7; text-decoration: none;' : ''; ?>"
+                       data-i18n="page.register.resendCode"
                     >
-                       <?php // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ --- ?>
                        <?php 
-                       $linkText = "Reenviar código de verificación";
+                       // El JS se encargará de poner el texto de la clave "page.register.resendCode"
+                       // Este PHP solo maneja el cooldown inicial si existe
                        if (isset($initialCooldown) && $initialCooldown > 0) {
-                           // Ya está en cooldown al cargar, muestra el tiempo
-                           // (JS lo actualizará dinámicamente)
-                           echo htmlspecialchars($linkText . " (" . $initialCooldown . "s)");
-                       } else {
-                           // No hay cooldown, muestra el texto normal
-                           echo htmlspecialchars($linkText);
+                           echo " (" . $initialCooldown . "s)";
                        }
                        ?>
-                       <?php // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ --- ?>
                     </a>
                 </p>
                 </fieldset>
@@ -86,7 +79,7 @@
         
         <?php if ($CURRENT_REGISTER_STEP == 1): ?>
         <p class="auth-link">
-            ¿Ya tienes una cuenta? <a href="/ProjectGenesis/login">Inicia sesión</a>
+            <span data-i18n="page.register.hasAccount"></span> <a href="/ProjectGenesis/login" data-i18n="page.register.login"></a>
         </p>
         <?php endif; ?>
     </div>

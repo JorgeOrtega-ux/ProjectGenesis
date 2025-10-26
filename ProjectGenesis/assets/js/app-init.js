@@ -3,6 +3,7 @@ import { initRouter } from './url-manager.js';
 import { initAuthManager } from './auth-manager.js';
 import { initSettingsManager } from './settings-manager.js';
 import { showAlert } from './alert-manager.js'; 
+import { initI18nManager } from './i18n-manager.js'; // <-- NUEVA IMPORTACIÓN
 
 const htmlEl = document.documentElement;
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -38,9 +39,14 @@ function initThemeManager() {
 }
 
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () { // <-- CONVERTIDO A ASYNC
     
     window.showAlert = showAlert;
+
+    // --- ▼▼▼ NUEVA MODIFICACIÓN ▼▼▼ ---
+    // Carga las traducciones ANTES de inicializar el resto de la UI
+    await initI18nManager();
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     initThemeManager();
 

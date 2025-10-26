@@ -33,6 +33,9 @@ function formatUserAgent($userAgent) {
     // Esta es una función MUY simplificada. 
     // Para producción, se recomienda usar una librería como 'whichbrowser/parser'
     
+    // NOTA: Estas cadenas (Navegador Desconocido, en) se podrían traducir
+    // pasando el array de traducciones a esta función, pero
+    // por ahora se quedan estáticas en español.
     $browser = 'Navegador Desconocido';
     $os = 'SO Desconocido';
 
@@ -60,6 +63,8 @@ function formatUserAgent($userAgent) {
  */
 function formatSessionDate($dateTimeString) {
     try {
+        // NOTA: Estas cadenas (hace, año, etc.) también se podrían
+        // traducir pasando el array de traducciones.
         $date = new DateTime($dateTimeString, new DateTimeZone('UTC'));
         // (Asumimos que el usuario quiere ver la hora en su zona horaria local)
         // (Pero sin su zona, solo podemos mostrar UTC o un 'hace X tiempo')
@@ -86,42 +91,33 @@ function formatSessionDate($dateTimeString) {
     <div class="settings-wrapper">
 
         <div class="settings-header-card">
-            <h1 class="settings-title">Sesiones de Dispositivos</h1>
-            <p class="settings-description">
-                Estos son los dispositivos que han iniciado sesión en tu cuenta.
-                Puedes cerrar la sesión en todos los dispositivos a la vez.
-            </p>
+            <h1 class="settings-title" data-i18n="settings.devices.title"></h1>
+            <p class="settings-description" data-i18n="settings.devices.description"></p>
         </div>
         
         <div class="settings-card settings-card-column">
             <div class="settings-text-content">
-                <h2 class="settings-text-title">Invalidar todas las sesiones</h2>
-                <p class="settings-text-description">
-                    Cierra la sesión en todos tus dispositivos, incluida esta sesión actual. Serás redirigido a la página de inicio de sesión.
-                </p>
+                <h2 class="settings-text-title" data-i18n="settings.devices.invalidateTitle"></h2>
+                <p class="settings-text-description" data-i18n="settings.devices.invalidateDesc"></p>
             </div>
             
             <div class="settings-card-bottom">
                 <div class="settings-card-right-actions">
-                    <button type="button" class="settings-button" id="logout-all-devices-trigger">
-                        Cerrar sesión
-                    </button>
+                    <button type="button" class="settings-button" id="logout-all-devices-trigger" data-i18n="settings.devices.invalidateButton"></button>
                 </div>
             </div>
         </div>
         
         <div style="padding: 16px 8px 0px 8px;">
-            <h2 class="settings-text-title" style="font-size: 18px;">Dispositivos con sesión activa</h2>
+            <h2 class="settings-text-title" style="font-size: 18px;" data-i18n="settings.devices.activeSessionsTitle"></h2>
         </div>
 
         <?php if (empty($sessions)): ?>
             <div class="settings-card">
                 <div class="settings-card-left">
                     <div class="settings-text-content">
-                        <h2 class="settings-text-title">No se encontraron sesiones</h2>
-                        <p class="settings-text-description">
-                            No hay un historial de inicio de sesión para mostrar.
-                        </p>
+                        <h2 class="settings-text-title" data-i18n="settings.devices.noSessionsTitle"></h2>
+                        <p class="settings-text-description" data-i18n="settings.devices.noSessionsDesc"></p>
                     </div>
                 </div>
             </div>
@@ -142,7 +138,7 @@ function formatSessionDate($dateTimeString) {
                             <h2 class="settings-text-title"><?php echo htmlspecialchars($deviceInfo); ?></h2>
                             <p class="settings-text-description">
                                 <?php echo htmlspecialchars($session['ip_address']); ?> - 
-                                Último acceso: <?php echo htmlspecialchars($sessionDate); ?>
+                                <span data-i18n="settings.devices.lastAccess"></span> <?php echo htmlspecialchars($sessionDate); ?>
                             </p>
                         </div>
                     </div>
@@ -160,15 +156,12 @@ function formatSessionDate($dateTimeString) {
         <div class="settings-modal-content">
             <div class="auth-form">
                 <fieldset class="auth-step active">
-                    <h2 class="auth-title">Cerrar sesión en todos los dispositivos</h2>
-                    <p class="auth-verification-text">
-                        ¿Estás seguro de que deseas cerrar sesión en TODOS tus dispositivos, incluido este?
-                        Serás redirigido a la página de inicio de sesión.
-                    </p>
+                    <h2 class="auth-title" data-i18n="settings.devices.modalTitle"></h2>
+                    <p class="auth-verification-text" data-i18n="settings.devices.modalDesc"></p>
                     
                     <div class="auth-step-buttons">
-                        <button type="button" class="auth-button-back" id="logout-all-cancel" style="flex: 1;">Cancelar</button>
-                        <button type="button" class="auth-button danger" id="logout-all-confirm" style="flex: 1; background-color: #c62828; border-color: #c62828;">Cerrar sesión</button>
+                        <button type="button" class="auth-button-back" id="logout-all-cancel" style="flex: 1;" data-i18n="settings.devices.modalCancel"></button>
+                        <button type="button" class="auth-button danger" id="logout-all-confirm" style="flex: 1; background-color: #c62828; border-color: #c62828;" data-i18n="settings.devices.modalConfirm"></button>
                     </div>
                 </fieldset>
             </div>

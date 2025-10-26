@@ -38,9 +38,10 @@ $userRole = $_SESSION['role'] ?? 'user';
                  data-role="<?php echo htmlspecialchars($userRole); ?>"> 
                  
                  <img src="<?php echo htmlspecialchars($profileImageUrl); ?>" 
-                      alt="Avatar de <?php echo htmlspecialchars($usernameForAlt); ?>"
-                      class="header-profile-image">
-            </div>
+                      alt="<?php echo htmlspecialchars($usernameForAlt); ?>"
+                      class="header-profile-image"
+                      data-i18n-alt-prefix="header.profile.altPrefix">
+                 </div>
             </div>
     </div>
     <div class="module-content module-select body-title disabled" data-module="moduleSelect">
@@ -52,7 +53,7 @@ $userRole = $_SESSION['role'] ?? 'user';
                         <span class="material-symbols-rounded">settings</span>
                     </div>
                     <div class="menu-link-text">
-                        <span>Configuración</span>
+                        <span data-i18n="header.profile.settings"></span>
                     </div>
                 </div>
                 <div class="menu-link">
@@ -60,7 +61,7 @@ $userRole = $_SESSION['role'] ?? 'user';
                         <span class="material-symbols-rounded">help</span>
                     </div>
                     <div class="menu-link-text">
-                        <span>Ayuda y comentarios</span>
+                        <span data-i18n="header.profile.help"></span>
                     </div>
                 </div>
                 
@@ -69,10 +70,10 @@ $userRole = $_SESSION['role'] ?? 'user';
                         <span class="material-symbols-rounded">logout</span>
                     </div>
                     <div class="menu-link-text">
-                        <span>Cerrar sesión</span>
+                        <span data-i18n="header.profile.logout"></span>
                     </div>
-                    </div>
-                </div>
+                 </div>
+                 </div>
         </div>
     </div>
 </div>
