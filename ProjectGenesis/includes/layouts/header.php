@@ -52,7 +52,7 @@ $userRole = $_SESSION['role'] ?? 'user';
                         <span class="material-symbols-rounded">settings</span>
                     </div>
                     <div class="menu-link-text">
-                        <span>Configuracion</span>
+                        <span>Configuración</span>
                     </div>
                 </div>
                 <div class="menu-link">
@@ -69,7 +69,7 @@ $userRole = $_SESSION['role'] ?? 'user';
                         <span class="material-symbols-rounded">logout</span>
                     </div>
                     <div class="menu-link-text">
-                        <span>Cerrar sesion</span>
+                        <span>Cerrar sesión</span>
                     </div>
                     </div>
                 </div>

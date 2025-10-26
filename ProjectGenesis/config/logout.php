@@ -11,7 +11,7 @@ $submittedToken = $_GET['csrf_token'] ?? '';
 if (!validateCsrfToken($submittedToken)) {
     // Si el token no es válido, simplemente morimos o redirigimos.
     // Esto previene que un sitio malicioso cierre la sesión del usuario.
-    die('Error de seguridad. Token inválido.');
+    die('Tu sesión ha expirado o es inválida.');
 }
 // --- FIN DE LA MODIFICACIÓN ---
 

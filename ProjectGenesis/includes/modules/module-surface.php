@@ -51,7 +51,7 @@
                         <span class="material-symbols-rounded">home</span>
                     </div>
                     <div class="menu-link-text">
-                        <span>Pagina principal</span>
+                        <span>Página principal</span>
                     </div>
                 </div>
                 

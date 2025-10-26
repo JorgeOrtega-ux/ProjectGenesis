@@ -240,7 +240,7 @@ export function initSettingsManager() {
                 const modalInput = document.getElementById('email-verify-code');
                 if(modalInput) modalInput.value = '';
 
-                window.showAlert('Se ha enviado (simulado) un código a tu correo actual.', 'info');
+                window.showAlert('Se ha enviado un código a tu correo actual.', 'info');
             } else {
                 window.showAlert(result.message || 'Error al solicitar el código.', 'error');
             }
@@ -265,7 +265,7 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                window.showAlert('Se ha reenviado (simulado) un nuevo código.', 'success');
+                window.showAlert('Se ha reenviado un nuevo código.', 'success');
             } else {
                 window.showAlert(result.message || 'Error al reenviar el código.', 'error');
             }
