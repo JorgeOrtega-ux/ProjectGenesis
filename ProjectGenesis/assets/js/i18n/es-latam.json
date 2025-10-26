@@ -5,6 +5,10 @@
       "settings": "Configuración",
       "help": "Ayuda y comentarios",
       "logout": "Cerrar sesión"
+    },
+    "buttons": {
+      "menu": "Menú principal",
+      "profile": "Perfil y configuración"
     }
   },
   "sidebar": {

@@ -3,7 +3,8 @@ import { initRouter } from './url-manager.js';
 import { initAuthManager } from './auth-manager.js';
 import { initSettingsManager } from './settings-manager.js';
 import { showAlert } from './alert-manager.js'; 
-import { initI18nManager } from './i18n-manager.js'; // <-- NUEVA IMPORTACIÓN
+import { initI18nManager } from './i18n-manager.js'; // <-- IMPORTACIÓN EXISTENTE
+import { initTooltipManager } from './tooltip-manager.js'; // <-- NUEVA IMPORTACIÓN
 
 const htmlEl = document.documentElement;
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -54,4 +55,5 @@ document.addEventListener('DOMContentLoaded', async function () { // <-- CONVERT
     initRouter();
     initAuthManager();
     initSettingsManager();
+    initTooltipManager(); // <-- NUEVA LLAMADA
 });

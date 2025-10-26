@@ -25,23 +25,26 @@ $userRole = $_SESSION['role'] ?? 'user';
 <div class="header">
     <div class="header-left">
         <div class="header-item">
-            <div class="header-button" data-action="toggleModuleSurface">
+            <div class="header-button" 
+                 data-action="toggleModuleSurface" 
+                 data-tooltip="header.buttons.menu">
                 <span class="material-symbols-rounded">menu</span>
             </div>
-        </div>
+            </div>
     </div>
     <div class="header-right">
         <div class="header-item">
             
             <div class="header-button header-profile" 
                  data-action="toggleModuleSelect"
-                 data-role="<?php echo htmlspecialchars($userRole); ?>"> 
+                 data-role="<?php echo htmlspecialchars($userRole); ?>"
+                 data-tooltip="header.buttons.profile"> 
                  
                  <img src="<?php echo htmlspecialchars($profileImageUrl); ?>" 
                       alt="<?php echo htmlspecialchars($usernameForAlt); ?>"
                       class="header-profile-image"
                       data-i18n-alt-prefix="header.profile.altPrefix">
-                 </div>
+            </div>
             </div>
     </div>
     <div class="module-content module-select body-title disabled" data-module="moduleSelect">
