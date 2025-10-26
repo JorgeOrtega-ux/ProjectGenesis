@@ -104,7 +104,7 @@ function formatSessionDate($dateTimeString) {
             <div class="settings-card-bottom">
                 <div class="settings-card-right-actions">
                     <button type="button" class="settings-button" id="logout-all-devices-trigger">
-                        Cerrar sesión en todos los dispositivos
+                        Cerrar sesión
                     </button>
                 </div>
             </div>

@@ -1,3 +1,6 @@
+<?php
+// FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-98418948306e47bc505f1797114031c3351b5e33/ProjectGenesis/includes/modules/module-surface.php
+?>
 <div class="module-content module-surface body-title disabled" data-module="moduleSurface">
     <div class="menu-content">
         <div class="menu-list">
@@ -33,14 +36,6 @@
                     </div>
                 </div>
 
-                <div class="menu-link" data-action="toggleSectionSettingsDevices">
-                    <div class="menu-link-icon">
-                        <span class="material-symbols-rounded">devices</span>
-                    </div>
-                    <div class="menu-link-text">
-                        <span>Sesiones de Dispositivos</span>
-                    </div>
-                </div>
                 <div class="menu-link" data-action="toggleSectionSettingsAccess">
                     <div class="menu-link-icon">
                         <span class="material-symbols-rounded">accessibility</span>

@@ -1,5 +1,5 @@
 <?php
-// FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-c8c3cdea53b7f937c4b912cae7954b420a451beb/ProjectGenesis/includes/sections/settings/login-security.php
+// FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-98418948306e47bc505f1797114031c3351b5e33/ProjectGenesis/includes/sections/settings/login-security.php
 ?>
 <div class="section-content <?php echo ($CURRENT_SECTION === 'settings-login') ? 'active' : 'disabled'; ?>" data-section="settings-login">
     <div class="settings-wrapper">
@@ -63,7 +63,7 @@
             </div>
         </div>
 
-        <div class="settings-card">
+        <div class="settings-card settings-card-column">
             <div class="settings-card-left">
                 <div class="settings-card-icon">
                     <span class="material-symbols-rounded">devices</span>
@@ -76,7 +76,7 @@
                 </div>
             </div>
             
-            <div class="settings-card-right">
+            <div class="settings-card-bottom">
                 <div class="settings-card-right-actions">
                     <button type="button" 
                             class="settings-button" 
