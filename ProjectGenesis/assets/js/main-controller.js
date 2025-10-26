@@ -1,3 +1,5 @@
+import { getTranslation } from './i18n-manager.js';
+
 export const deactivateAllModules = (exceptionModule = null) => {
     document.querySelectorAll('[data-module].active').forEach(activeModule => {
         if (activeModule !== exceptionModule) {
@@ -49,7 +51,7 @@ export function initMainController() {
                             resolve(true);
                         } else {
                             console.log('Verificación: Sin conexión.');
-                            reject(new Error('No hay conexión a internet.'));
+                            reject(new Error(getTranslation('js.main.errorNetwork')));
                         }
                     }, 800);
                 });
@@ -75,7 +77,7 @@ export function initMainController() {
                 window.location.href = `${logoutUrl}?csrf_token=${encodeURIComponent(token)}`;
                 
             } catch (error) {
-                alert(`Error al cerrar sesión: ${error.message || 'Error desconocido'}`);
+                alert(getTranslation('js.main.errorLogout') + (error.message || getTranslation('js.auth.errorUnknown')));
             
             } finally {
 

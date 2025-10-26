@@ -33,11 +33,12 @@ function formatUserAgent($userAgent) {
     // Esta es una función MUY simplificada. 
     // Para producción, se recomienda usar una librería como 'whichbrowser/parser'
     
-    // NOTA: Estas cadenas (Navegador Desconocido, en) se podrían traducir
-    // pasando el array de traducciones a esta función, pero
-    // por ahora se quedan estáticas en español.
-    $browser = 'Navegador Desconocido';
-    $os = 'SO Desconocido';
+    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+    // NOTA: Estas cadenas ahora son CLAVES DE TRADUCCIÓN.
+    // Se necesitaría un sistema de i18n de PHP (ej. una función t($key))
+    // para que esto funcione realmente.
+    $browser = 'settings.devices.unknownBrowser';
+    $os = 'settings.devices.unknownOS';
 
     // Detectar OS
     if (preg_match('/windows nt 10/i', $userAgent)) $os = 'Windows 10/11';
@@ -53,7 +54,8 @@ function formatUserAgent($userAgent) {
     elseif (preg_match('/safari/i', $userAgent)) $browser = 'Safari';
     elseif (preg_match('/firefox/i', $userAgent)) $browser = 'Firefox';
     
-    return "$browser en $os";
+    return $browser . ' ' . 'settings.devices.browserOsSeparator' . ' ' . $os;
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
 
 /**
@@ -63,24 +65,25 @@ function formatUserAgent($userAgent) {
  */
 function formatSessionDate($dateTimeString) {
     try {
-        // NOTA: Estas cadenas (hace, año, etc.) también se podrían
-        // traducir pasando el array de traducciones.
+        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+        // NOTA: Estas cadenas ahora son CLAVES DE TRADUCCIÓN.
         $date = new DateTime($dateTimeString, new DateTimeZone('UTC'));
-        // (Asumimos que el usuario quiere ver la hora en su zona horaria local)
-        // (Pero sin su zona, solo podemos mostrar UTC o un 'hace X tiempo')
         
         $now = new DateTime('now', new DateTimeZone('UTC'));
         $interval = $now->diff($date);
 
-        if ($interval->y > 0) return 'hace ' . $interval->y . ' ' . ($interval->y == 1 ? 'año' : 'años');
-        if ($interval->m > 0) return 'hace ' . $interval->m . ' ' . ($interval->m == 1 ? 'mes' : 'meses');
-        if ($interval->d > 0) return 'hace ' . $interval->d . ' ' . ($interval->d == 1 ? 'día' : 'días');
-        if ($interval->h > 0) return 'hace ' . $interval->h . ' ' . ($interval->h == 1 ? 'hora' : 'horas');
-        if ($interval->i > 0) return 'hace ' . $interval->i . ' ' . ($interval->i == 1 ? 'minuto' : 'minutos');
-        return 'hace unos segundos';
+        $prefix = 'settings.devices.timeAgoPrefix';
+
+        if ($interval->y > 0) return $prefix . $interval->y . ' ' . ($interval->y == 1 ? 'settings.devices.timeYear' : 'settings.devices.timeYears');
+        if ($interval->m > 0) return $prefix . $interval->m . ' ' . ($interval->m == 1 ? 'settings.devices.timeMonth' : 'settings.devices.timeMonths');
+        if ($interval->d > 0) return $prefix . $interval->d . ' ' . ($interval->d == 1 ? 'settings.devices.timeDay' : 'settings.devices.timeDays');
+        if ($interval->h > 0) return $prefix . $interval->h . ' ' . ($interval->h == 1 ? 'settings.devices.timeHour' : 'settings.devices.timeHours');
+        if ($interval->i > 0) return $prefix . $interval->i . ' ' . ($interval->i == 1 ? 'settings.devices.timeMinute' : 'settings.devices.timeMinutes');
+        return 'settings.devices.timeSecondsAgo';
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     } catch (Exception $e) {
-        return 'fecha desconocida';
+        return 'settings.devices.timeUnknown'; // <-- MODIFICADO
     }
 }
 

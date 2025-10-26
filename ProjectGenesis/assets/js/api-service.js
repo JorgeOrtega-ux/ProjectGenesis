@@ -1,3 +1,5 @@
+import { getTranslation } from './i18n-manager.js';
+
 const API_ENDPOINTS = {
     AUTH: `${window.projectBasePath}/api/auth_handler.php`,
     SETTINGS: `${window.projectBasePath}/api/settings_handler.php`
@@ -15,13 +17,13 @@ async function _post(url, formData) {
 
         if (!response.ok) {
             console.error('Error de red o servidor:', response.statusText);
-            return { success: false, message: 'Error en la respuesta del servidor.' };
+            return { success: false, message: getTranslation('js.api.errorServer') };
         }
 
         const result = await response.json();
 
         if (result.success === false && result.message && result.message.includes('Error de seguridad')) {
-            window.showAlert('Error de seguridad. Recargando la página...', 'error');
+            window.showAlert(getTranslation('js.api.errorSecurity'), 'error');
             setTimeout(() => location.reload(), 2000);
         }
 
@@ -29,7 +31,7 @@ async function _post(url, formData) {
 
     } catch (error) {
         console.error('Error en la llamada fetch:', error);
-        return { success: false, message: 'No se pudo conectar con el servidor.' };
+        return { success: false, message: getTranslation('js.api.errorConnection') };
     }
 }
 

@@ -106,7 +106,23 @@
       "modalTitle": "Cerrar sesión en todos los dispositivos",
       "modalDesc": "¿Estás seguro de que deseas cerrar sesión en TODOS tus dispositivos, incluido este? Serás redirigido a la página de inicio de sesión.",
       "modalCancel": "Cancelar",
-      "modalConfirm": "Cerrar sesión"
+      "modalConfirm": "Cerrar sesión",
+      "unknownBrowser": "Navegador Desconocido",
+      "unknownOS": "SO Desconocido",
+      "browserOsSeparator": " en ",
+      "timeAgoPrefix": "hace ",
+      "timeYear": " año",
+      "timeYears": " años",
+      "timeMonth": " mes",
+      "timeMonths": " meses",
+      "timeDay": " día",
+      "timeDays": " días",
+      "timeHour": " hora",
+      "timeHours": " horas",
+      "timeMinute": " minuto",
+      "timeMinutes": " minutos",
+      "timeSecondsAgo": "hace unos segundos",
+      "timeUnknown": "fecha desconocida"
     }
   },
   "page": {
@@ -156,6 +172,77 @@
       "confirmPasswordLabel": "Confirmar Contraseña*",
       "backButton": "Atrás",
       "saveButton": "Guardar y Continuar"
+    }
+  },
+  "js": {
+    "auth": {
+      "verifying": "Verificando...",
+      "genericError": "Ha ocurrido un error.",
+      "errorPasswordLength": "La contraseña debe tener entre 8 y 72 caracteres.",
+      "errorPasswordMismatch": "Las contraseñas no coinciden.",
+      "saving": "Guardando...",
+      "successPasswordUpdate": "¡Contraseña actualizada!",
+      "saveAndContinue": "Guardar y Continuar",
+      "errorNoEmail": "Error: No se encontró tu email. Por favor, recarga la página.",
+      "successCodeResent": "Se ha reenviado un nuevo código.",
+      "errorCodeResent": "Error al reenviar el código.",
+      "errorCompleteFields": "Por favor, completa todos los campos correctamente.",
+      "errorCompleteEmailPass": "Por favor, completa email y contraseña.",
+      "errorInvalidEmail": "El formato de correo no es válido.",
+      "errorEmailLength": "El correo no puede tener más de 255 caracteres.",
+      "errorEmailDomain": "Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.",
+      "errorUsernameMissing": "Por favor, introduce un nombre de usuario.",
+      "errorUsernameLength": "El nombre de usuario debe tener entre 6 y 32 caracteres.",
+      "errorUnknown": "Error desconocido.",
+      "errorInvalidCode": "Por favor, introduce el código de verificación completo.",
+      "processing": "Procesando..."
+    },
+    "settings": {
+      "successPreference": "Preferencia actualizada.",
+      "successLang": "Idioma actualizado. La página se recargará.",
+      "errorPreference": "Error al guardar la preferencia.",
+      "successAvatarRemoved": "Avatar eliminado.",
+      "errorAvatarRemove": "Error desconocido al eliminar.",
+      "infoCodeSentCurrent": "Se ha enviado un código a tu correo actual.",
+      "errorCodeRequest": "Error al solicitar el código.",
+      "sending": "Enviando...",
+      "successCodeResent": "Se ha reenviado un nuevo código.",
+      "errorCodeResent": "Error al reenviar el código.",
+      "errorEnterCode": "Por favor, introduce el código.",
+      "successVerification": "Verificación correcta.",
+      "errorVerification": "Error al verificar.",
+      "errorModalNotFound": "Error: No se encontró el modal de verificación.",
+      "modal2faTitleEnable": "Activar Verificación de dos pasos",
+      "modal2faDescEnable": "Para activar esta función, por favor ingresa tu contraseña actual.",
+      "modal2faTitleDisable": "Desactivar Verificación de dos pasos",
+      "modal2faDescDisable": "Para desactivar esta función, por favor ingresa tu contraseña actual.",
+      "errorEnterCurrentPass": "Por favor, introduce tu contraseña actual.",
+      "error2faToggle": "Error al cambiar 2FA.",
+      "errorNewPassLength": "La nueva contraseña debe tener entre 8 y 72 caracteres.",
+      "errorNewPassMismatch": "Las nuevas contraseñas no coinciden.",
+      "successPassUpdate": "Contraseña actualizada.",
+      "errorSaving": "Error al guardar.",
+      "infoLogoutAll": "Se invalidaron las demás sesiones. Cerrando sesión actual...",
+      "errorLogoutAll": "Error al cerrar las sesiones.",
+      "errorAvatarSelect": "Por favor, selecciona un archivo primero.",
+      "successAvatarUpdate": "Avatar actualizado.",
+      "errorSaveUnknown": "Error desconocido al guardar.",
+      "successUsernameUpdate": "Nombre de usuario actualizado.",
+      "successEmailUpdate": "Correo actualizado.",
+      "errorAvatarFormat": "Formato no válido (solo PNG, JPEG, GIF o WebP).",
+      "errorAvatarSize": "El archivo es demasiado grande (máx 2MB)."
+    },
+    "api": {
+      "errorServer": "Error en la respuesta del servidor.",
+      "errorSecurity": "Error de seguridad. Recargando la página...",
+      "errorConnection": "No se pudo conectar con el servidor."
+    },
+    "main": {
+      "errorNetwork": "No hay conexión a internet.",
+      "errorLogout": "Error al cerrar sesión: "
+    },
+    "url": {
+      "errorLoad": "Error al cargar el contenido"
     }
   }
 }

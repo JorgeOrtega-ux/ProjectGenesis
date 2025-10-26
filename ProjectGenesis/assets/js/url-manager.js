@@ -1,6 +1,6 @@
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from './auth-manager.js';
-import { applyTranslations } from './i18n-manager.js'; // <-- NUEVA IMPORTACIÓN
+import { applyTranslations, getTranslation } from './i18n-manager.js'; // <-- MODIFICADO
 
 const contentContainer = document.querySelector('.main-sections');
 
@@ -77,7 +77,7 @@ async function loadPage(page) {
 
     } catch (error) {
         console.error('Error al cargar la página:', error);
-        contentContainer.innerHTML = '<h2>Error al cargar el contenido</h2>';
+        contentContainer.innerHTML = `<h2>${getTranslation('js.url.errorLoad')}</h2>`;
     }
 }
 

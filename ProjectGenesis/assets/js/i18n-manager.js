@@ -33,7 +33,7 @@ async function loadTranslations(lang) {
  * @param {string} key - La clave de traducción.
  * @returns {string|null} - El texto traducido o la clave si no se encuentra.
  */
-function getTranslation(key) {
+export function getTranslation(key) {
     try {
         return key.split('.').reduce((obj, k) => obj[k], translations) || key;
     } catch (e) {

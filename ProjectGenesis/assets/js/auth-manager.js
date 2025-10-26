@@ -1,5 +1,6 @@
 import { callAuthApi } from './api-service.js';
 import { handleNavigation } from './url-manager.js';
+import { getTranslation } from './i18n-manager.js';
 
 export function startResendTimer(linkElement, seconds) {
     if (!linkElement) {
@@ -39,7 +40,7 @@ async function handleRegistrationSubmit(e) {
     const errorDiv = activeStep.querySelector('.auth-error-message');
 
     button.disabled = true;
-    button.textContent = 'Verificando...';
+    button.textContent = getTranslation('js.auth.verifying');
 
     const formData = new FormData(form);
     formData.append('action', 'register-verify');
@@ -52,9 +53,9 @@ async function handleRegistrationSubmit(e) {
         sessionStorage.removeItem('regPass');
         window.location.href = window.projectBasePath + '/';
     } else {
-        showAuthError(errorDiv, result.message || 'Ha ocurrido un error.');
+        showAuthError(errorDiv, result.message || getTranslation('js.auth.genericError'));
         button.disabled = false;
-        button.textContent = 'Verificar y Crear Cuenta';
+        button.textContent = getTranslation('page.register.verifyButton');
     }
 }
 
@@ -69,16 +70,16 @@ async function handleResetSubmit(e) {
     const passwordConfirm = form.querySelector('#reset-password-confirm').value;
 
     if (password.length < 8 || password.length > 72) {
-        showAuthError(errorDiv, 'La contraseña debe tener entre 8 y 72 caracteres.');
+        showAuthError(errorDiv, getTranslation('js.auth.errorPasswordLength'));
         return;
     }
     if (password !== passwordConfirm) {
-        showAuthError(errorDiv, 'Las contraseñas no coinciden.');
+        showAuthError(errorDiv, getTranslation('js.auth.errorPasswordMismatch'));
         return;
     }
 
     button.disabled = true;
-    button.textContent = 'Guardando...';
+    button.textContent = getTranslation('js.auth.saving');
 
     const formData = new FormData(form);
     formData.append('action', 'reset-update-password');
@@ -88,14 +89,14 @@ async function handleResetSubmit(e) {
     if (result.success) {
         sessionStorage.removeItem('resetEmail');
         sessionStorage.removeItem('resetCode');
-        window.showAlert(result.message || '¡Contraseña actualizada!', 'success');
+        window.showAlert(result.message || getTranslation('js.auth.successPasswordUpdate'), 'success');
         setTimeout(() => {
             window.location.href = window.projectBasePath + '/login';
         }, 2000);
     } else {
-        showAuthError(errorDiv, result.message || 'Ha ocurrido un error.');
+        showAuthError(errorDiv, result.message || getTranslation('js.auth.genericError'));
         button.disabled = false;
-        button.textContent = 'Guardar y Continuar';
+        button.textContent = getTranslation('js.auth.saveAndContinue');
     }
 }
 
@@ -107,7 +108,7 @@ async function handleLoginFinalSubmit(e) {
     const errorDiv = activeStep.querySelector('.auth-error-message');
 
     button.disabled = true;
-    button.textContent = 'Verificando...';
+    button.textContent = getTranslation('js.auth.verifying');
 
     const formData = new FormData(form);
     formData.append('action', 'login-verify-2fa');
@@ -117,9 +118,9 @@ async function handleLoginFinalSubmit(e) {
     if (result.success) {
         window.location.href = window.projectBasePath + '/';
     } else {
-        showAuthError(errorDiv, result.message || 'Ha ocurrido un error.');
+        showAuthError(errorDiv, result.message || getTranslation('js.auth.genericError'));
         button.disabled = false;
-        button.textContent = 'Verificar e Ingresar';
+        button.textContent = getTranslation('page.login.verifyButton');
     }
 }
 
@@ -178,7 +179,7 @@ function initRegisterWizard() {
 
             const email = sessionStorage.getItem('regEmail');
             if (!email) {
-                showAuthError(errorDiv, 'Error: No se encontró tu email. Por favor, recarga la página.');
+                showAuthError(errorDiv, getTranslation('js.auth.errorNoEmail'));
                 return;
             }
             
@@ -199,9 +200,9 @@ function initRegisterWizard() {
             const result = await callAuthApi(formData);
 
             if (result.success) {
-                window.showAlert(result.message || 'Se ha reenviado un nuevo código.', 'success');
+                window.showAlert(result.message || getTranslation('js.auth.successCodeResent'), 'success');
             } else {
-                showAuthError(errorDiv, result.message || 'Error al reenviar el código.');
+                showAuthError(errorDiv, result.message || getTranslation('js.auth.errorCodeResent'));
                 
                 const timerId = linkElement.dataset.timerId;
                 if (timerId) {
@@ -233,7 +234,7 @@ function initRegisterWizard() {
 
         if (action === 'next-step') {
             let isValid = true;
-            let clientErrorMessage = 'Por favor, completa todos los campos correctamente.';
+            let clientErrorMessage = getTranslation('js.auth.errorCompleteFields');
 
             if (currentStep === 1) {
                 const emailInput = currentStepEl.querySelector('#register-email');
@@ -242,19 +243,19 @@ function initRegisterWizard() {
 
                 if (!emailInput.value || !passwordInput.value) {
                     isValid = false;
-                    clientErrorMessage = 'Por favor, completa email y contraseña.';
+                    clientErrorMessage = getTranslation('js.auth.errorCompleteEmailPass');
                 } else if (!emailInput.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { 
                     isValid = false;
-                    clientErrorMessage = 'El formato de correo no es válido.';
+                    clientErrorMessage = getTranslation('js.auth.errorInvalidEmail');
                 } else if (emailInput.value.length > 255) {
                     isValid = false;
-                    clientErrorMessage = 'El correo no puede tener más de 255 caracteres.';
+                    clientErrorMessage = getTranslation('js.auth.errorEmailLength');
                 } else if (!allowedDomains.test(emailInput.value)) {
                     isValid = false;
-                    clientErrorMessage = 'Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.';
+                    clientErrorMessage = getTranslation('js.auth.errorEmailDomain');
                 } else if (passwordInput.value.length < 8 || passwordInput.value.length > 72) {
                     isValid = false;
-                    clientErrorMessage = 'La contraseña debe tener entre 8 y 72 caracteres.';
+                    clientErrorMessage = getTranslation('js.auth.errorPasswordLength');
                 }
             }
             else if (currentStep === 2) {
@@ -262,10 +263,10 @@ function initRegisterWizard() {
 
                 if (!usernameInput.value) {
                     isValid = false;
-                    clientErrorMessage = 'Por favor, introduce un nombre de usuario.';
+                    clientErrorMessage = getTranslation('js.auth.errorUsernameMissing');
                 } else if (usernameInput.value.length < 6 || usernameInput.value.length > 32) {
                     isValid = false;
-                    clientErrorMessage = 'El nombre de usuario debe tener entre 6 y 32 caracteres.';
+                    clientErrorMessage = getTranslation('js.auth.errorUsernameLength');
                 }
             }
 
@@ -277,7 +278,7 @@ function initRegisterWizard() {
             if (errorDiv) errorDiv.style.display = 'none';
 
             button.disabled = true;
-            button.textContent = 'Verificando...';
+            button.textContent = getTranslation('js.auth.verifying');
 
             const formData = new FormData(registerForm);
             let fetchAction = '';
@@ -310,12 +311,12 @@ function initRegisterWizard() {
                     handleNavigation(); 
                 }
             } else {
-                showAuthError(errorDiv, result.message || 'Error desconocido.'); 
+                showAuthError(errorDiv, result.message || getTranslation('js.auth.errorUnknown')); 
             }
 
             if (!result.success || !nextPath) {
                  button.disabled = false;
-                 button.textContent = 'Continuar';
+                 button.textContent = getTranslation('page.register.continueButton');
             }
         }
     });
@@ -367,7 +368,7 @@ function initResetWizard() {
             
             const email = sessionStorage.getItem('resetEmail');
             if (!email) {
-                showAuthError(errorDiv, 'Error: No se encontró tu email. Por favor, vuelve al paso 1.');
+                showAuthError(errorDiv, getTranslation('js.auth.errorNoEmail'));
                 return;
             }
 
@@ -388,9 +389,9 @@ function initResetWizard() {
             const result = await callAuthApi(formData);
 
             if (result.success) {
-                window.showAlert(result.message || 'Se ha reenviado un nuevo código.', 'success');
+                window.showAlert(result.message || getTranslation('js.auth.successCodeResent'), 'success');
             } else {
-                showAuthError(errorDiv, result.message || 'Error al reenviar el código.');
+                showAuthError(errorDiv, result.message || getTranslation('js.auth.errorCodeResent'));
                 
                 const timerId = linkElement.dataset.timerId;
                 if (timerId) {
@@ -414,23 +415,23 @@ function initResetWizard() {
 
         if (action === 'next-step') {
             let isValid = true;
-            let clientErrorMessage = 'Por favor, completa todos los campos.';
+            let clientErrorMessage = getTranslation('js.auth.errorCompleteFields');
 
             if (currentStep === 1) {
                 const emailInput = currentStepEl.querySelector('#reset-email');
                 if (!emailInput.value || !emailInput.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { 
                     isValid = false;
-                    clientErrorMessage = 'Por favor, introduce un email válido.';
+                    clientErrorMessage = getTranslation('js.auth.errorInvalidEmail');
                 } else if (emailInput.value.length > 255) {
                     isValid = false;
-                    clientErrorMessage = 'El correo no puede tener más de 255 caracteres.';
+                    clientErrorMessage = getTranslation('js.auth.errorEmailLength');
                 }
             }
             else if (currentStep === 2) {
                 const codeInput = currentStepEl.querySelector('#reset-code');
                 if (!codeInput.value || codeInput.value.length < 14) {
                     isValid = false;
-                    clientErrorMessage = 'Por favor, introduce el código de verificación completo.';
+                    clientErrorMessage = getTranslation('js.auth.errorInvalidCode');
                 }
             }
 
@@ -441,7 +442,7 @@ function initResetWizard() {
 
             if(errorDiv) errorDiv.style.display = 'none'; 
             button.disabled = true;
-            button.textContent = 'Verificando...';
+            button.textContent = getTranslation('js.auth.verifying');
 
             const formData = new FormData(resetForm);
             let fetchAction = '';
@@ -474,12 +475,12 @@ function initResetWizard() {
                  }
 
             } else {
-                showAuthError(errorDiv, result.message || 'Error desconocido.'); 
+                showAuthError(errorDiv, result.message || getTranslation('js.auth.errorUnknown')); 
             }
 
             if (!result.success) {
                 button.disabled = false;
-                button.textContent = (currentStep === 1) ? 'Enviar Código' : 'Verificar';
+                button.textContent = (currentStep === 1) ? getTranslation('page.reset.sendCodeButton') : getTranslation('page.reset.verifyButton');
             }
         }
     });
@@ -514,13 +515,13 @@ function initLoginWizard() {
             const emailInput = currentStepEl.querySelector('#login-email');
             const passwordInput = currentStepEl.querySelector('#login-password');
             if (!emailInput.value || !passwordInput.value) {
-                showAuthError(errorDiv, 'Por favor, completa email y contraseña.'); 
+                showAuthError(errorDiv, getTranslation('js.auth.errorCompleteEmailPass')); 
                 return;
             }
 
             if(errorDiv) errorDiv.style.display = 'none'; 
             button.disabled = true;
-            button.textContent = 'Procesando...';
+            button.textContent = getTranslation('js.auth.processing');
 
             const formData = new FormData(loginForm);
             formData.append('action', 'login-check-credentials');
@@ -547,9 +548,9 @@ function initLoginWizard() {
                     window.location.href = window.projectBasePath + '/';
                 }
             } else {
-                showAuthError(errorDiv, result.message || 'Error desconocido.'); 
+                showAuthError(errorDiv, result.message || getTranslation('js.auth.errorUnknown')); 
                 button.disabled = false; 
-                button.textContent = 'Continuar';
+                button.textContent = getTranslation('page.login.continueButton');
             }
 
              if(result.success && result.is_2fa_required) {

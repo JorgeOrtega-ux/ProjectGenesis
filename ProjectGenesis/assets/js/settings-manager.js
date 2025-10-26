@@ -1,5 +1,6 @@
 import { callSettingsApi } from './api-service.js'; 
 import { deactivateAllModules } from './main-controller.js';
+import { getTranslation } from './i18n-manager.js';
 
 
 function showAvatarError(message) {
@@ -87,7 +88,7 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue) {
 
     if (result.success) {
         if (preferenceTypeOrField === 'language' || preferenceTypeOrField === 'theme' || preferenceTypeOrField === 'usage') {
-             window.showAlert(result.message || 'Preferencia actualizada.', 'success');
+             window.showAlert(result.message || getTranslation('js.settings.successPreference'), 'success');
         }
        
         
@@ -104,11 +105,11 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue) {
         
 
         if (preferenceTypeOrField === 'language') {
-            window.showAlert('Idioma actualizado. La página se recargará.', 'success');
+            window.showAlert(getTranslation('js.settings.successLang'), 'success');
             setTimeout(() => location.reload(), 1500);
         }
     } else {
-        window.showAlert(result.message || 'Error al guardar la preferencia.', 'error');
+        window.showAlert(result.message || getTranslation('js.settings.errorPreference'), 'error');
     }
 }
 
@@ -168,7 +169,7 @@ export function initSettingsManager() {
 
             hideAvatarError();
             const removeTrigger = e.target.closest('#avatar-remove-trigger');
-            toggleButtonSpinner(removeTrigger, 'Eliminar foto', true);
+            toggleButtonSpinner(removeTrigger, getTranslation('settings.profile.removePhoto'), true);
 
             const formData = new FormData(avatarForm);
             formData.append('action', 'remove-avatar');
@@ -176,11 +177,11 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
             
             if (result.success) {
-                window.showAlert(result.message || 'Avatar eliminado.', 'success');
+                window.showAlert(result.message || getTranslation('js.settings.successAvatarRemoved'), 'success');
                 setTimeout(() => location.reload(), 1500);
             } else {
-                showAvatarError(result.message || 'Error desconocido al eliminar.');
-                toggleButtonSpinner(removeTrigger, 'Eliminar foto', false);
+                showAvatarError(result.message || getTranslation('js.settings.errorAvatarRemove'));
+                toggleButtonSpinner(removeTrigger, getTranslation('settings.profile.removePhoto'), false);
             }
         }
 
@@ -216,7 +217,7 @@ export function initSettingsManager() {
         if (e.target.closest('#email-edit-trigger')) {
             e.preventDefault();
             const editTrigger = e.target.closest('#email-edit-trigger');
-            toggleButtonSpinner(editTrigger, 'Editar', true);
+            toggleButtonSpinner(editTrigger, getTranslation('settings.profile.edit'), true);
 
             const csrfToken = document.querySelector('#email-form [name="csrf_token"]');
             const formData = new FormData();
@@ -240,12 +241,12 @@ export function initSettingsManager() {
                 const modalInput = document.getElementById('email-verify-code');
                 if(modalInput) modalInput.value = '';
 
-                window.showAlert('Se ha enviado un código a tu correo actual.', 'info');
+                window.showAlert(getTranslation('js.settings.infoCodeSentCurrent'), 'info');
             } else {
-                window.showAlert(result.message || 'Error al solicitar el código.', 'error');
+                window.showAlert(result.message || getTranslation('js.settings.errorCodeRequest'), 'error');
             }
             
-            toggleButtonSpinner(editTrigger, 'Editar', false);
+            toggleButtonSpinner(editTrigger, getTranslation('settings.profile.edit'), false);
             return;
         }
 
@@ -257,7 +258,7 @@ export function initSettingsManager() {
             
             resendTrigger.classList.add('disabled-interactive');
             const originalText = resendTrigger.textContent;
-            resendTrigger.textContent = 'Enviando...';
+            resendTrigger.textContent = getTranslation('js.settings.sending');
             
             const formData = new FormData();
             formData.append('action', 'request-email-change-code');
@@ -265,9 +266,9 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                window.showAlert('Se ha reenviado un nuevo código.', 'success');
+                window.showAlert(getTranslation('js.settings.successCodeResent'), 'success');
             } else {
-                window.showAlert(result.message || 'Error al reenviar el código.', 'error');
+                window.showAlert(result.message || getTranslation('js.settings.errorCodeResent'), 'error');
             }
 
             resendTrigger.classList.remove('disabled-interactive');
@@ -290,13 +291,13 @@ export function initSettingsManager() {
 
             if (!modalInput || !modalInput.value) {
                 if(modalError) {
-                    modalError.textContent = 'Por favor, introduce el código.';
+                    modalError.textContent = getTranslation('js.settings.errorEnterCode');
                     modalError.style.display = 'block';
                 }
                 return;
             }
 
-            toggleButtonSpinner(continueTrigger, 'Continuar', true);
+            toggleButtonSpinner(continueTrigger, getTranslation('settings.profile.continue'), true);
             if(modalError) modalError.style.display = 'none';
 
             const formData = new FormData();
@@ -315,15 +316,15 @@ export function initSettingsManager() {
                 document.getElementById('email-actions-edit').style.display = 'flex';
                 
                 focusInputAndMoveCursorToEnd(document.getElementById('email-input'));
-                window.showAlert(result.message || 'Verificación correcta.', 'success');
+                window.showAlert(result.message || getTranslation('js.settings.successVerification'), 'success');
             } else {
                 if(modalError) {
-                    modalError.textContent = result.message || 'Error al verificar.';
+                    modalError.textContent = result.message || getTranslation('js.settings.errorVerification');
                     modalError.style.display = 'block';
                 }
             }
             
-            toggleButtonSpinner(continueTrigger, 'Continuar', false);
+            toggleButtonSpinner(continueTrigger, getTranslation('settings.profile.continue'), false);
             return;
         }
 
@@ -357,7 +358,7 @@ export function initSettingsManager() {
             const modal = document.getElementById('tfa-verify-modal');
             
             if (!modal) {
-                window.showAlert('Error: No se encontró el modal de verificación.', 'error');
+                window.showAlert(getTranslation('js.settings.errorModalNotFound'), 'error');
                 return;
             }
 
@@ -369,11 +370,11 @@ export function initSettingsManager() {
             const passInput = document.getElementById('tfa-verify-password');
 
             if (!isCurrentlyEnabled) {
-                if(modalTitle) modalTitle.textContent = 'Activar Verificación de dos pasos';
-                if(modalText) modalText.textContent = 'Para activar esta función, por favor ingresa tu contraseña actual.';
+                if(modalTitle) modalTitle.textContent = getTranslation('js.settings.modal2faTitleEnable');
+                if(modalText) modalText.textContent = getTranslation('js.settings.modal2faDescEnable');
             } else {
-                if(modalTitle) modalTitle.textContent = 'Desactivar Verificación de dos pasos';
-                if(modalText) modalText.textContent = 'Para desactivar esta función, por favor ingresa tu contraseña actual.';
+                if(modalTitle) modalTitle.textContent = getTranslation('js.settings.modal2faTitleDisable');
+                if(modalText) modalText.textContent = getTranslation('js.settings.modal2faDescDisable');
             }
 
             if(errorDiv) errorDiv.style.display = 'none';
@@ -395,13 +396,13 @@ export function initSettingsManager() {
 
             if (!currentPassInput.value) {
                 if(errorDiv) {
-                    errorDiv.textContent = 'Por favor, introduce tu contraseña actual.';
+                    errorDiv.textContent = getTranslation('js.settings.errorEnterCurrentPass');
                     errorDiv.style.display = 'block';
                 }
                 return;
             }
             
-            toggleButtonSpinner(verifyTrigger, 'Confirmar', true);
+            toggleButtonSpinner(verifyTrigger, getTranslation('settings.login.confirm'), true);
             if(errorDiv) errorDiv.style.display = 'none';
 
             const passFormData = new FormData();
@@ -423,16 +424,16 @@ export function initSettingsManager() {
                     const statusText = document.getElementById('tfa-status-text');
                     
                     if (twoFaResult.newState === 1) {
-                        if (statusText) statusText.textContent = 'La autenticación de dos pasos está activa.';
+                        if (statusText) statusText.textContent = getTranslation('settings.login.2faEnabled');
                         if (toggleButton) {
-                            toggleButton.textContent = 'Deshabilitar';
+                            toggleButton.textContent = getTranslation('settings.login.disable');
                             toggleButton.classList.add('danger');
                             toggleButton.dataset.isEnabled = '1';
                         }
                     } else {
-                        if (statusText) statusText.textContent = 'Añade una capa extra de seguridad a tu cuenta.';
+                        if (statusText) statusText.textContent = getTranslation('settings.login.2faDisabled');
                         if (toggleButton) {
-                            toggleButton.textContent = 'Habilitar';
+                            toggleButton.textContent = getTranslation('settings.login.enable');
                             toggleButton.classList.remove('danger');
                             toggleButton.dataset.isEnabled = '0';
                         }
@@ -440,19 +441,19 @@ export function initSettingsManager() {
 
                 } else {
                     if(errorDiv) {
-                        errorDiv.textContent = twoFaResult.message || 'Error al cambiar 2FA.';
+                        errorDiv.textContent = twoFaResult.message || getTranslation('js.settings.error2faToggle');
                         errorDiv.style.display = 'block';
                     }
                 }
                 
             } else {
                 if(errorDiv) {
-                    errorDiv.textContent = passResult.message || 'Error al verificar.';
+                    errorDiv.textContent = passResult.message || getTranslation('js.settings.errorVerification');
                     errorDiv.style.display = 'block';
                 }
             }
             
-            toggleButtonSpinner(verifyTrigger, 'Confirmar', false);
+            toggleButtonSpinner(verifyTrigger, getTranslation('settings.login.confirm'), false);
             currentPassInput.value = ''; 
             return;
         }
@@ -505,13 +506,13 @@ export function initSettingsManager() {
 
             if (!currentPassInput.value) {
                 if(errorDiv) {
-                    errorDiv.textContent = 'Por favor, introduce tu contraseña actual.';
+                    errorDiv.textContent = getTranslation('js.settings.errorEnterCurrentPass');
                     errorDiv.style.display = 'block';
                 }
                 return;
             }
             
-            toggleButtonSpinner(verifyTrigger, 'Continuar', true);
+            toggleButtonSpinner(verifyTrigger, getTranslation('settings.profile.continue'), true);
             if(errorDiv) errorDiv.style.display = 'none';
 
             const formData = new FormData();
@@ -526,12 +527,12 @@ export function initSettingsManager() {
                 focusInputAndMoveCursorToEnd(modal.querySelector('#password-update-new'));
             } else {
                 if(errorDiv) {
-                    errorDiv.textContent = result.message || 'Error al verificar.';
+                    errorDiv.textContent = result.message || getTranslation('js.settings.errorVerification');
                     errorDiv.style.display = 'block';
                 }
             }
             
-            toggleButtonSpinner(verifyTrigger, 'Continuar', false);
+            toggleButtonSpinner(verifyTrigger, getTranslation('settings.profile.continue'), false);
             return;
         }
 
@@ -545,20 +546,20 @@ export function initSettingsManager() {
 
             if (newPassInput.value.length < 8 || newPassInput.value.length > 72) {
                 if(errorDiv) {
-                    errorDiv.textContent = 'La nueva contraseña debe tener entre 8 y 72 caracteres.';
+                    errorDiv.textContent = getTranslation('js.settings.errorNewPassLength');
                     errorDiv.style.display = 'block';
                 }
                 return;
             }
             if (newPassInput.value !== confirmPassInput.value) {
                 if(errorDiv) {
-                    errorDiv.textContent = 'Las nuevas contraseñas no coinciden.';
+                    errorDiv.textContent = getTranslation('js.settings.errorNewPassMismatch');
                     errorDiv.style.display = 'block';
                 }
                 return;
             }
 
-            toggleButtonSpinner(saveTrigger, 'Guardar Contraseña', true);
+            toggleButtonSpinner(saveTrigger, getTranslation('settings.login.savePassword'), true);
             if(errorDiv) errorDiv.style.display = 'none';
 
             const formData = new FormData();
@@ -570,15 +571,15 @@ export function initSettingsManager() {
 
             if (result.success) {
                 if(modal) modal.style.display = 'none';
-                window.showAlert(result.message || 'Contraseña actualizada.', 'success');
+                window.showAlert(result.message || getTranslation('js.settings.successPassUpdate'), 'success');
             } else {
                 if(errorDiv) {
-                    errorDiv.textContent = result.message || 'Error al guardar.';
+                    errorDiv.textContent = result.message || getTranslation('js.settings.errorSaving');
                     errorDiv.style.display = 'block';
                 }
             }
             
-            toggleButtonSpinner(saveTrigger, 'Guardar Contraseña', false);
+            toggleButtonSpinner(saveTrigger, getTranslation('settings.login.savePassword'), false);
             return;
         }
 
@@ -590,7 +591,7 @@ export function initSettingsManager() {
             if(modal) {
                 const dangerBtn = modal.querySelector('#logout-all-confirm');
                 if(dangerBtn) {
-                     toggleButtonSpinner(dangerBtn, 'Cerrar sesión', false);
+                     toggleButtonSpinner(dangerBtn, getTranslation('settings.devices.invalidateButton'), false);
                 }
                 modal.style.display = 'flex';
             }
@@ -608,7 +609,7 @@ export function initSettingsManager() {
             e.preventDefault();
             const confirmButton = e.target.closest('#logout-all-confirm');
             
-            toggleButtonSpinner(confirmButton, 'Cerrar sesión', true);
+            toggleButtonSpinner(confirmButton, getTranslation('settings.devices.invalidateButton'), true);
 
             const formData = new FormData();
             formData.append('action', 'logout-all-devices');
@@ -616,7 +617,7 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                window.showAlert('Se invalidaron las demás sesiones. Cerrando sesión actual...', 'success');
+                window.showAlert(getTranslation('js.settings.infoLogoutAll'), 'success');
                 
                 setTimeout(() => {
                     const token = window.csrfToken || '';
@@ -625,8 +626,8 @@ export function initSettingsManager() {
                 }, 1500); 
 
             } else {
-                window.showAlert(result.message || 'Error al cerrar las sesiones.', 'error');
-                toggleButtonSpinner(confirmButton, 'Cerrar sesión', false);
+                window.showAlert(result.message || getTranslation('js.settings.errorLogoutAll'), 'error');
+                toggleButtonSpinner(confirmButton, getTranslation('settings.devices.invalidateButton'), false);
             }
             return;
         }
@@ -698,11 +699,11 @@ export function initSettingsManager() {
             hideAvatarError();
             
             if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-                showAvatarError('Por favor, selecciona un archivo primero.');
+                showAvatarError(getTranslation('js.settings.errorAvatarSelect'));
                 return;
             }
 
-            toggleButtonSpinner(saveTrigger, 'Guardar', true);
+            toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
 
             const formData = new FormData(avatarForm);
             formData.append('action', 'upload-avatar');
@@ -710,11 +711,11 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
             
             if (result.success) {
-                window.showAlert(result.message || 'Avatar actualizado.', 'success');
+                window.showAlert(result.message || getTranslation('js.settings.successAvatarUpdate'), 'success');
                 setTimeout(() => location.reload(), 1500);
             } else {
-                showAvatarError(result.message || 'Error desconocido al guardar.');
-                toggleButtonSpinner(saveTrigger, 'Guardar', false);
+                showAvatarError(result.message || getTranslation('js.settings.errorSaveUnknown'));
+                toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
             }
         }
 
@@ -725,11 +726,11 @@ export function initSettingsManager() {
             const inputElement = document.getElementById('username-input');
 
             if (inputElement.value.length < 6 || inputElement.value.length > 32) {
-                window.showAlert('El nombre de usuario debe tener entre 6 y 32 caracteres.', 'error');
+                window.showAlert(getTranslation('js.auth.errorUsernameLength'), 'error');
                 return;
             }
 
-            toggleButtonSpinner(saveTrigger, 'Guardar', true);
+            toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
 
             const formData = new FormData(usernameForm);
             formData.append('action', 'update-username'); 
@@ -737,11 +738,11 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
             
             if (result.success) {
-                window.showAlert(result.message || 'Nombre de usuario actualizado.', 'success');
+                window.showAlert(result.message || getTranslation('js.settings.successUsernameUpdate'), 'success');
                 setTimeout(() => location.reload(), 1500); 
             } else {
-                window.showAlert(result.message || 'Error desconocido al guardar.', 'error');
-                toggleButtonSpinner(saveTrigger, 'Guardar', false);
+                window.showAlert(result.message || getTranslation('js.settings.errorSaveUnknown'), 'error');
+                toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
             }
         }
         
@@ -754,22 +755,22 @@ export function initSettingsManager() {
 
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(newEmail)) {
-                window.showAlert('Por favor, introduce un correo electrónico válido.', 'error');
+                window.showAlert(getTranslation('js.auth.errorInvalidEmail'), 'error');
                 return;
             }
 
             if (newEmail.length > 255) {
-                window.showAlert('El correo no puede tener más de 255 caracteres.', 'error');
+                window.showAlert(getTranslation('js.auth.errorEmailLength'), 'error');
                 return;
             }
             
             const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i;
             if (!allowedDomains.test(newEmail)) {
-                 window.showAlert('Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.', 'error');
+                 window.showAlert(getTranslation('js.auth.errorEmailDomain'), 'error');
                 return;
             }
 
-            toggleButtonSpinner(saveTrigger, 'Guardar', true);
+            toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
 
             const formData = new FormData(emailForm);
             formData.append('action', 'update-email'); 
@@ -777,11 +778,11 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
             
             if (result.success) {
-                window.showAlert(result.message || 'Correo actualizado.', 'success');
+                window.showAlert(result.message || getTranslation('js.settings.successEmailUpdate'), 'success');
                 setTimeout(() => location.reload(), 1500); 
             } else {
-                window.showAlert(result.message || 'Error desconocido al guardar.', 'error');
-                toggleButtonSpinner(saveTrigger, 'Guardar', false);
+                window.showAlert(result.message || getTranslation('js.settings.errorSaveUnknown'), 'error');
+                toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
             }
         }
     });
@@ -796,12 +797,12 @@ export function initSettingsManager() {
             if (!file) return;
 
             if (!['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(file.type)) {
-                showAvatarError('Formato no válido (solo PNG, JPEG, GIF o WebP).');
+                showAvatarError(getTranslation('js.settings.errorAvatarFormat'));
                 fileInput.form.reset();
                 return;
             }
             if (file.size > 2 * 1024 * 1024) {
-                showAvatarError('El archivo es demasiado grande (máx 2MB).');
+                showAvatarError(getTranslation('js.settings.errorAvatarSize'));
                 fileInput.form.reset();
                 return;
             }
