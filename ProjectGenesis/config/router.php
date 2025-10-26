@@ -107,6 +107,7 @@ $allowedPages = [
     'settings-profile'       => '../includes/sections/settings/your-profile.php',
     'settings-login'         => '../includes/sections/settings/login-security.php',
     'settings-accessibility' => '../includes/sections/settings/accessibility.php',
+    'settings-devices'       => '../includes/sections/settings/device-sessions.php', // <-- AÑADIDO
 ];
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
@@ -251,6 +252,9 @@ if (array_key_exists($page, $allowedPages)) {
         $increaseMessageDuration = (int)($_SESSION['increase_message_duration'] ?? 0);
         // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
     }
+    
+    // (Añadir aquí la lógica de 'settings-devices' si es necesario, 
+    // pero ya la pusimos dentro del propio archivo 'device-sessions.php')
     
     include $allowedPages[$page];
 

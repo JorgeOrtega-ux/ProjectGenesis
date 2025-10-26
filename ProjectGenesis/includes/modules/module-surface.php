@@ -33,6 +33,14 @@
                     </div>
                 </div>
 
+                <div class="menu-link" data-action="toggleSectionSettingsDevices">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">devices</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span>Sesiones de Dispositivos</span>
+                    </div>
+                </div>
                 <div class="menu-link" data-action="toggleSectionSettingsAccess">
                     <div class="menu-link-icon">
                         <span class="material-symbols-rounded">accessibility</span>

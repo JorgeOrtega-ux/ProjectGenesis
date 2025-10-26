@@ -63,22 +63,29 @@
             </div>
         </div>
 
-        <div class="settings-card settings-card-column">
-            
-            <div class="settings-text-content">
-                <h2 class="settings-text-title">Sesiones de dispositivos</h2>
-                <p class="settings-text-description">
-                    Cierra la sesión en todos tus dispositivos, incluida esta sesión actual. Serás redirigido a la página de inicio de sesión.
-                </p>
+        <div class="settings-card">
+            <div class="settings-card-left">
+                <div class="settings-card-icon">
+                    <span class="material-symbols-rounded">devices</span>
+                </div>
+                <div class="settings-text-content">
+                    <h2 class="settings-text-title">Sesiones de dispositivos</h2>
+                    <p class="settings-text-description">
+                        Revisa y administra los dispositivos donde has iniciado sesión.
+                    </p>
+                </div>
             </div>
             
-            <div class="settings-card-bottom">
+            <div class="settings-card-right">
                 <div class="settings-card-right-actions">
-                    <button type="button" class="settings-button" id="logout-all-devices-trigger">Cerrar sesión</button>
+                    <button type="button" 
+                            class="settings-button" 
+                            data-action="toggleSectionSettingsDevices"> 
+                            Administrar dispositivos
+                    </button>
                 </div>
             </div>
         </div>
-
         <div class="settings-card settings-card-column settings-card-danger">
             
             <div class="settings-text-content">
@@ -176,25 +183,4 @@
         </div>
     </div>
 
-    <div class="settings-modal-overlay" id="logout-all-modal" style="display: none;">
-        <button type="button" class="settings-modal-close-btn" id="logout-all-close">
-            <span class="material-symbols-rounded">close</span>
-        </button>
-        <div class="settings-modal-content">
-            <div class="auth-form">
-                <fieldset class="auth-step active">
-                    <h2 class="auth-title">Cerrar sesión en todos los dispositivos</h2>
-                    <p class="auth-verification-text">
-                        ¿Estás seguro de que deseas cerrar sesión en TODOS tus dispositivos, incluido este?
-                        Serás redirigido a la página de inicio de sesión.
-                    </p>
-                    
-                    <div class="auth-step-buttons">
-                        <button type="button" class="auth-button-back" id="logout-all-cancel" style="flex: 1;">Cancelar</button>
-                        <button type="button" class="auth-button danger" id="logout-all-confirm" style="flex: 1; background-color: #c62828; border-color: #c62828;">Cerrar sesión</button>
-                    </div>
-                </fieldset>
-            </div>
-        </div>
-    </div>
     </div>

@@ -25,7 +25,8 @@ const routes = {
     // Nuevas rutas de Configuración
     'toggleSectionSettingsProfile': 'settings-profile',
     'toggleSectionSettingsLogin': 'settings-login',
-    'toggleSectionSettingsAccess': 'settings-accessibility'
+    'toggleSectionSettingsAccess': 'settings-accessibility',
+    'toggleSectionSettingsDevices': 'settings-devices' // <-- AÑADIDO
 };
 
 const paths = {
@@ -46,7 +47,8 @@ const paths = {
     // Rutas de Configuración
     '/settings/your-profile': 'toggleSectionSettingsProfile',
     '/settings/login-security': 'toggleSectionSettingsLogin',
-    '/settings/accessibility': 'toggleSectionSettingsAccess'
+    '/settings/accessibility': 'toggleSectionSettingsAccess',
+    '/settings/device-sessions': 'toggleSectionSettingsDevices' // <-- AÑADIDO
 };
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
@@ -146,12 +148,12 @@ async function updateGlobalMenuVisibility(isSettings) {
 export function initRouter() {
 
     document.body.addEventListener('click', e => {
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-        // Ahora también escucha por `a[href*="/reset-password"]`
+        // --- ▼▼▼ ¡INICIO DE LA CORRECCIÓN! ▼▼▼ ---
+        // Se añadió '.settings-button[data-action*="toggleSection"]' al selector
         const link = e.target.closest(
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[data-nav-js]'
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[data-nav-js], .settings-button[data-action*="toggleSection"]'
         );
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+        // --- ▲▲▲ ¡FIN DE LA CORRECCIÓN! ▲▲▲ ---
 
         if (link) {
             e.preventDefault();

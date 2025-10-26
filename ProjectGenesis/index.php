@@ -84,6 +84,7 @@ if (empty($path) || $path === '/') {
 }
 
 // 4. Replicar la lógica de rutas
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
 $pathsToPages = [
     '/'           => 'home',
     '/explorer'   => 'explorer',
@@ -97,8 +98,10 @@ $pathsToPages = [
     '/settings'                 => 'settings-profile', 
     '/settings/your-profile'    => 'settings-profile',
     '/settings/login-security'  => 'settings-login',
-    '/settings/accessibility'   => 'settings-accessibility'
+    '/settings/accessibility'   => 'settings-accessibility',
+    '/settings/device-sessions' => 'settings-devices' // <-- AÑADIDO
 ];
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 $currentPage = $pathsToPages[$path] ?? '404';
 

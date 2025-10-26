@@ -631,7 +631,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception('La nueva contraseña debe tener al menos 8 caracteres.');
                 }
                 if ($newPassword !== $confirmPassword) {
-                    throw new Exception('Las nuevas contraseñas no coinciden.');
+                    throw new Exception('Las nuevas contraseña no coinciden.');
                 }
 
                 // 2. Obtener hash antiguo (para auditoría)
@@ -795,6 +795,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         // --- ▲▲▲ ¡FIN DE LA ACCIÓN (LOGOUT ALL DEVICES) - CORREGIDA! ▲▲▲ ---
 
+        
+        // --- ▼▼▼ ¡BLOQUE ELIMINADO! ▼▼▼ ---
+        /*
+        elseif ($action === 'logout-single-device') {
+            try {
+                $sessionId = $_POST['session_id'] ?? null;
+
+                if (empty($sessionId)) {
+                    throw new Exception('No se ha proporcionado un ID de sesión.');
+                }
+
+                // Comprobación de seguridad: Asegurarse de que el ID de sesión
+                // que se está borrando pertenece al usuario que está logueado.
+                $stmt = $pdo->prepare(
+                    "DELETE FROM user_metadata 
+                     WHERE id = ? AND user_id = ?"
+                );
+                $stmt->execute([$sessionId, $userId]); // $userId viene de la sesión
+
+                // Comprobar si realmente se borró algo
+                if ($stmt->rowCount() === 0) {
+                    // Esto puede pasar si el ID de sesión no existe
+                    // o (más importante) si no pertenece al usuario actual.
+                    throw new Exception('No se pudo encontrar la sesión o no tienes permiso para eliminarla.');
+                }
+
+                $response['success'] = true;
+                $response['message'] = 'Se ha cerrado la sesión de ese dispositivo.';
+
+            } catch (Exception $e) {
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - logout-single-device');
+                    $response['message'] = 'Error al eliminar la sesión de la base de datos.';
+                } else {
+                    $response['message'] = $e->getMessage();
+                }
+            }
+        }
+        */
+        // --- ▲▲▲ ¡BLOQUE ELIMINADO! ▲▲▲ ---
+        
     }
 }
 
