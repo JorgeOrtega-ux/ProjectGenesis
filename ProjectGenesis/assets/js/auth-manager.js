@@ -1,14 +1,6 @@
-/* ====================================== */
-/* ========= AUTH-MANAGER.JS ============ */
-/* ====================================== */
 import { callAuthApi } from './api-service.js';
 import { handleNavigation } from './url-manager.js';
 
-/**
- * Inicia un temporizador de cooldown en un enlace de reenvío.
- * @param {HTMLElement} linkElement El elemento <a> del enlace.
- * @param {number} seconds Duración del cooldown en segundos.
- */
 export function startResendTimer(linkElement, seconds) {
     if (!linkElement) {
         return;
@@ -16,24 +8,18 @@ export function startResendTimer(linkElement, seconds) {
 
     let secondsRemaining = seconds;
     
-    // --- ▼▼▼ ¡ESTA ES LA LÍNEA CORREGIDA! ▼▼▼ ---
-    // Trimeamos ANTES de hacer el replace para eliminar el whitespace
     const originalBaseText = linkElement.textContent.trim().replace(/\s*\(\d+s?\)$/, '');
-    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
-    // 1. Deshabilitar inmediatamente y mostrar el timer
     linkElement.classList.add('disabled-interactive');
     linkElement.style.opacity = '0.7';
     linkElement.style.textDecoration = 'none';
     linkElement.textContent = `${originalBaseText} (${secondsRemaining}s)`;
 
-    // 2. Iniciar intervalo
     const intervalId = setInterval(() => {
         secondsRemaining--;
         if (secondsRemaining > 0) {
             linkElement.textContent = `${originalBaseText} (${secondsRemaining}s)`;
         } else {
-            // 3. Al terminar, limpiar y rehabilitar
             clearInterval(intervalId);
             linkElement.textContent = originalBaseText;
             linkElement.classList.remove('disabled-interactive');
@@ -42,7 +28,6 @@ export function startResendTimer(linkElement, seconds) {
         }
     }, 1000);
 
-    // Guardar referencia al intervalo para poder cancelarlo si falla la API
     linkElement.dataset.timerId = intervalId;
 }
 
@@ -50,10 +35,8 @@ async function handleRegistrationSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const button = form.querySelector('button[type="submit"]');
-    // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
     const activeStep = form.querySelector('.auth-step.active');
     const errorDiv = activeStep.querySelector('.auth-error-message');
-    // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
 
     button.disabled = true;
     button.textContent = 'Verificando...';
@@ -79,20 +62,16 @@ async function handleResetSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const button = form.querySelector('button[type="submit"]');
-    // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
     const activeStep = form.querySelector('.auth-step.active');
     const errorDiv = activeStep.querySelector('.auth-error-message');
-    // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
 
     const password = form.querySelector('#reset-password').value;
     const passwordConfirm = form.querySelector('#reset-password-confirm').value;
 
-    // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
     if (password.length < 8 || password.length > 72) {
         showAuthError(errorDiv, 'La contraseña debe tener entre 8 y 72 caracteres.');
         return;
     }
-    // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
     if (password !== passwordConfirm) {
         showAuthError(errorDiv, 'Las contraseñas no coinciden.');
         return;
@@ -103,11 +82,6 @@ async function handleResetSubmit(e) {
 
     const formData = new FormData(form);
     formData.append('action', 'reset-update-password');
-    // --- ▼▼▼ ¡MODIFICACIÓN! ▼▼▼ ---
-    // Ya no necesitamos enviar email/código, la API los toma de la SESIÓN
-    // formData.append('email', sessionStorage.getItem('resetEmail') || '');
-    // formData.append('verification_code', sessionStorage.getItem('resetCode') || '');
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     const result = await callAuthApi(formData);
 
@@ -129,10 +103,8 @@ async function handleLoginFinalSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const button = form.querySelector('button[type="submit"]');
-    // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
     const activeStep = form.querySelector('.auth-step.active');
     const errorDiv = activeStep.querySelector('.auth-error-message');
-    // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
 
     button.disabled = true;
     button.textContent = 'Verificando...';
@@ -151,22 +123,13 @@ async function handleLoginFinalSubmit(e) {
     }
 }
 
-// --- ▼▼▼ ¡INICIO DE LA MODIFICACIÓN PRINCIPAL! ▼▼▼ ---
-/**
- * Muestra un error en el div de error del formulario de autenticación.
- * @param {HTMLElement | null} errorDiv El elemento <div> donde mostrar el error.
- * @param {string} message El mensaje de error.
- */
 function showAuthError(errorDiv, message) {
-    // window.showAlert(message, 'error'); // <-- LÍNEA ELIMINADA
     
-    // Nueva lógica para mostrar el error en el div
     if (errorDiv) {
         errorDiv.textContent = message;
         errorDiv.style.display = 'block';
     }
 }
-// --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN PRINCIPAL! ▲▲▲ ---
 
 
 function initPasswordToggles() {
@@ -201,14 +164,11 @@ function initRegisterWizard() {
         if (action === 'resend-code') {
             e.preventDefault();
             
-            // Asegurarnos que solo afecte al formulario de REGISTRO
             const registerForm = button.closest('#register-form');
             if (!registerForm) return; 
 
-            // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
             const currentStepEl = button.closest('.auth-step');
             const errorDiv = currentStepEl.querySelector('.auth-error-message');
-            // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
             
             const linkElement = button;
 
@@ -218,23 +178,15 @@ function initRegisterWizard() {
 
             const email = sessionStorage.getItem('regEmail');
             if (!email) {
-                // --- MODIFICADO ---
-                // Usamos el errorDiv del formulario si no hay email (caso raro)
                 showAuthError(errorDiv, 'Error: No se encontró tu email. Por favor, recarga la página.');
-                // --- FIN MODIFICADO ---
                 return;
             }
             
-            // --- ▼▼▼ ¡INICIO DE LA MODIFICACIÓN! ▼▼▼ ---
             
-            // 1. Respaldar el texto original (por si falla la API)
             const originalText = linkElement.textContent.replace(/\s*\(\d+s?\)$/, '').trim();
             
-            // 2. Iniciar el temporizador INMEDIATAMENTE
-            // Esto cambia el texto a "Reenviar... (60s)" y deshabilita el link
             startResendTimer(linkElement, 60); 
 
-            // 3. Preparar la llamada a la API
             const formData = new FormData();
             formData.append('action', 'register-resend-code');
             formData.append('email', email);
@@ -244,51 +196,38 @@ function initRegisterWizard() {
                  formData.append('csrf_token', csrfToken.value);
             }
 
-            // 4. Llamar a la API (mientras el timer corre)
             const result = await callAuthApi(formData);
 
-            // 5. Manejar el resultado
             if (result.success) {
-                // ¡Éxito! El timer sigue corriendo. Solo mostramos el toast.
                 window.showAlert(result.message || 'Se ha reenviado un nuevo código.', 'success');
             } else {
-                // ¡Falló! Mostramos el error en el div
                 showAuthError(errorDiv, result.message || 'Error al reenviar el código.');
                 
-                // Detener el temporizador
                 const timerId = linkElement.dataset.timerId;
                 if (timerId) {
                     clearInterval(timerId);
                 }
                 
-                // Revertir el link a su estado original
                 linkElement.textContent = originalText; 
                 linkElement.classList.remove('disabled-interactive');
                 linkElement.style.opacity = '1';
                 linkElement.style.textDecoration = '';
             }
-            // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
             return;
         }
 
-        // --- Lógica existente para 'prev-step' y 'next-step' ---
 
         const registerForm = button.closest('#register-form');
         if (!registerForm) return;
 
-        // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
         const currentStepEl = button.closest('.auth-step');
         if (!currentStepEl) return;
         const errorDiv = currentStepEl.querySelector('.auth-error-message'); 
         if (!errorDiv) return; 
-        // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
 
         const currentStep = parseInt(currentStepEl.getAttribute('data-step'), 10);
 
         if (action === 'prev-step') {
-            // Esta acción ahora es manejada por <a> tags, pero
-            // la dejamos por si acaso (aunque debería ser eliminada
-            // del HTML de register.php)
             return;
         }
 
@@ -296,7 +235,6 @@ function initRegisterWizard() {
             let isValid = true;
             let clientErrorMessage = 'Por favor, completa todos los campos correctamente.';
 
-            // --- Validación de Cliente (sin cambios) ---
             if (currentStep === 1) {
                 const emailInput = currentStepEl.querySelector('#register-email');
                 const passwordInput = currentStepEl.querySelector('#register-password');
@@ -308,19 +246,15 @@ function initRegisterWizard() {
                 } else if (!emailInput.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { 
                     isValid = false;
                     clientErrorMessage = 'El formato de correo no es válido.';
-                // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
                 } else if (emailInput.value.length > 255) {
                     isValid = false;
                     clientErrorMessage = 'El correo no puede tener más de 255 caracteres.';
-                // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
                 } else if (!allowedDomains.test(emailInput.value)) {
                     isValid = false;
                     clientErrorMessage = 'Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.';
-                // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
                 } else if (passwordInput.value.length < 8 || passwordInput.value.length > 72) {
                     isValid = false;
                     clientErrorMessage = 'La contraseña debe tener entre 8 y 72 caracteres.';
-                // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
                 }
             }
             else if (currentStep === 2) {
@@ -329,33 +263,22 @@ function initRegisterWizard() {
                 if (!usernameInput.value) {
                     isValid = false;
                     clientErrorMessage = 'Por favor, introduce un nombre de usuario.';
-                // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
                 } else if (usernameInput.value.length < 6 || usernameInput.value.length > 32) {
                     isValid = false;
                     clientErrorMessage = 'El nombre de usuario debe tener entre 6 y 32 caracteres.';
-                // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
                 }
             }
-            // --- Fin Validación de Cliente ---
 
             if (!isValid) {
-                // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
-                // window.showAlert(clientErrorMessage, 'error'); // <-- LÍNEA ELIMINADA
-                showAuthError(errorDiv, clientErrorMessage); // <-- LÍNEA AÑADIDA
-                // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
+                showAuthError(errorDiv, clientErrorMessage); 
                 return;
             }
 
-            // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
-            // const errorDivElement = registerForm.querySelector('.auth-error-message');
-            // if (errorDivElement) errorDivElement.style.display = 'none';
             if (errorDiv) errorDiv.style.display = 'none';
-            // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
 
             button.disabled = true;
             button.textContent = 'Verificando...';
 
-            // --- LÓGICA DE FETCH REFACTORIZADA (sin cambios) ---
             const formData = new FormData(registerForm);
             let fetchAction = '';
 
@@ -370,7 +293,6 @@ function initRegisterWizard() {
             formData.append('action', fetchAction);
 
             const result = await callAuthApi(formData);
-            // --- FIN DEL REFACTOR ---
 
             if (result.success) {
                 let nextPath = '';
@@ -385,13 +307,10 @@ function initRegisterWizard() {
                 if (nextPath) {
                     const fullUrlPath = window.projectBasePath + nextPath;
                     history.pushState(null, '', fullUrlPath);
-                    handleNavigation(); // handleNavigation se encargará de cargar y mostrar
+                    handleNavigation(); 
                 }
             } else {
-                // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
-                // showAuthError(null, result.message || 'Error desconocido.'); // <-- LÍNEA ELIMINADA
-                showAuthError(errorDiv, result.message || 'Error desconocido.'); // <-- LÍNEA AÑADIDA
-                // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
+                showAuthError(errorDiv, result.message || 'Error desconocido.'); 
             }
 
             if (!result.success || !nextPath) {
@@ -402,7 +321,6 @@ function initRegisterWizard() {
     });
 
     document.body.addEventListener('input', e => {
-        // Lógica de formateo de código sin cambios
         const isRegisterCode = (e.target.id === 'register-code' && e.target.closest('#register-form'));
         const isResetCode = (e.target.id === 'reset-code' && e.target.closest('#reset-form'));
         const isLoginCode = (e.target.id === 'login-code' && e.target.closest('#login-form'));
@@ -433,15 +351,12 @@ function initResetWizard() {
         const resetForm = button.closest('#reset-form');
         if (!resetForm) return;
 
-        // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
         const currentStepEl = button.closest('.auth-step');
         if (!currentStepEl) return;
         const errorDiv = currentStepEl.querySelector('.auth-error-message'); 
-        // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
         
         const action = button.getAttribute('data-auth-action');
 
-        // --- LÓGICA DE REENVÍO (Corregida) ---
         if (action === 'resend-code') {
             e.preventDefault();
             const linkElement = button;
@@ -450,25 +365,17 @@ function initResetWizard() {
                 return;
             }
             
-            // --- ▼▼▼ ¡MODIFICACIÓN! Tomar email de sessionStorage ▼▼▼ ---
             const email = sessionStorage.getItem('resetEmail');
             if (!email) {
-                // --- MODIFICADO ---
                 showAuthError(errorDiv, 'Error: No se encontró tu email. Por favor, vuelve al paso 1.');
-                // --- FIN MODIFICADO ---
                 return;
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
-            // --- ▼▼▼ ¡INICIO DE LA MODIFICACIÓN! ▼▼▼ ---
 
-            // 1. Respaldar el texto original (por si falla la API)
             const originalText = linkElement.textContent.replace(/\s*\(\d+s?\)$/, '').trim();
             
-            // 2. Iniciar el temporizador INMEDIATAMENTE
             startResendTimer(linkElement, 60);
 
-            // 3. Preparar la llamada a la API
             const formData = new FormData();
             formData.append('action', 'reset-resend-code');
             formData.append('email', email);
@@ -478,30 +385,23 @@ function initResetWizard() {
                  formData.append('csrf_token', csrfToken.value);
             }
 
-            // 4. Llamar a la API (mientras el timer corre)
             const result = await callAuthApi(formData);
 
-            // 5. Manejar el resultado
             if (result.success) {
-                // ¡Éxito! El timer sigue corriendo. Solo mostramos el toast.
                 window.showAlert(result.message || 'Se ha reenviado un nuevo código.', 'success');
             } else {
-                // ¡Falló! Mostramos el error en el div
                 showAuthError(errorDiv, result.message || 'Error al reenviar el código.');
                 
-                // Detener el temporizador
                 const timerId = linkElement.dataset.timerId;
                 if (timerId) {
                     clearInterval(timerId);
                 }
                 
-                // Revertir el link a su estado original
                 linkElement.textContent = originalText; 
                 linkElement.classList.remove('disabled-interactive');
                 linkElement.style.opacity = '1';
                 linkElement.style.textDecoration = '';
             }
-            // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
             return;
         }
 
@@ -509,11 +409,9 @@ function initResetWizard() {
         const currentStep = parseInt(currentStepEl.getAttribute('data-step'), 10);
 
         if (action === 'prev-step') {
-            // Esta acción ahora es manejada por <a> tags
             return;
         }
 
-        // --- ▼▼▼ ¡INICIO DE LA MODIFICACIÓN GRANDE! ▼▼▼ ---
         if (action === 'next-step') {
             let isValid = true;
             let clientErrorMessage = 'Por favor, completa todos los campos.';
@@ -523,11 +421,9 @@ function initResetWizard() {
                 if (!emailInput.value || !emailInput.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { 
                     isValid = false;
                     clientErrorMessage = 'Por favor, introduce un email válido.';
-                // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
                 } else if (emailInput.value.length > 255) {
                     isValid = false;
                     clientErrorMessage = 'El correo no puede tener más de 255 caracteres.';
-                // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
                 }
             }
             else if (currentStep === 2) {
@@ -539,14 +435,11 @@ function initResetWizard() {
             }
 
             if (!isValid) {
-                // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
-                // showAuthError(null, clientErrorMessage); // <-- LÍNEA ELIMINADA
-                showAuthError(errorDiv, clientErrorMessage); // <-- LÍNEA AÑADIDA
-                // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
+                showAuthError(errorDiv, clientErrorMessage); 
                 return;
             }
 
-            if(errorDiv) errorDiv.style.display = 'none'; // Ocultar si existe
+            if(errorDiv) errorDiv.style.display = 'none'; 
             button.disabled = true;
             button.textContent = 'Verificando...';
 
@@ -558,7 +451,6 @@ function initResetWizard() {
             }
             else if (currentStep === 2) {
                 fetchAction = 'reset-check-code';
-                // Añadimos el email desde sessionStorage
                 formData.append('email', sessionStorage.getItem('resetEmail') || '');
             }
             formData.append('action', fetchAction);
@@ -578,28 +470,22 @@ function initResetWizard() {
                  if (nextPath) {
                     const fullUrlPath = window.projectBasePath + nextPath;
                     history.pushState(null, '', fullUrlPath);
-                    handleNavigation(); // handleNavigation se encargará de cargar y mostrar
+                    handleNavigation(); 
                  }
 
             } else {
-                // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
-                // showAuthError(null, result.message || 'Error desconocido.'); // <-- LÍNEA ELIMINADA
-                showAuthError(errorDiv, result.message || 'Error desconocido.'); // <-- LÍNEA AÑADIDA
-                // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
+                showAuthError(errorDiv, result.message || 'Error desconocido.'); 
             }
 
-            // Rehabilitar botón solo si falló
             if (!result.success) {
                 button.disabled = false;
                 button.textContent = (currentStep === 1) ? 'Enviar Código' : 'Verificar';
             }
         }
-        // --- ▲▲▲ FIN DE LA MODIFICACIÓN GRANDE ▲▲▲ ---
     });
 }
 
 function initLoginWizard() {
-    // Sin cambios
     document.body.addEventListener('click', async e => {
         const button = e.target.closest('[data-auth-action]');
         if (!button) return;
@@ -607,11 +493,9 @@ function initLoginWizard() {
         const loginForm = button.closest('#login-form');
         if (!loginForm) return;
 
-        // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
         const currentStepEl = button.closest('.auth-step');
         if (!currentStepEl) return;
         const errorDiv = currentStepEl.querySelector('.auth-error-message'); 
-        // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
 
         const action = button.getAttribute('data-auth-action');
         const currentStep = parseInt(currentStepEl.getAttribute('data-step'), 10);
@@ -630,10 +514,7 @@ function initLoginWizard() {
             const emailInput = currentStepEl.querySelector('#login-email');
             const passwordInput = currentStepEl.querySelector('#login-password');
             if (!emailInput.value || !passwordInput.value) {
-                // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
-                // showAuthError(null, 'Por favor, completa email y contraseña.'); // <-- LÍNEA ELIMINADA
-                showAuthError(errorDiv, 'Por favor, completa email y contraseña.'); // <-- LÍNEA AÑADIDA
-                // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
+                showAuthError(errorDiv, 'Por favor, completa email y contraseña.'); 
                 return;
             }
 
@@ -666,10 +547,7 @@ function initLoginWizard() {
                     window.location.href = window.projectBasePath + '/';
                 }
             } else {
-                // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
-                // showAuthError(null, result.message || 'Error desconocido.'); // <-- LÍNEA ELIMINADA
-                showAuthError(errorDiv, result.message || 'Error desconocido.'); // <-- LÍNEA AÑADIDA
-                // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
+                showAuthError(errorDiv, result.message || 'Error desconocido.'); 
                 button.disabled = false; 
                 button.textContent = 'Continuar';
             }

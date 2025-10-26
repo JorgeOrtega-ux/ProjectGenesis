@@ -1,10 +1,6 @@
-/* ====================================== */
-/* ======== SETTINGS-MANAGER.JS ========= */
-/* ====================================== */
 import { callSettingsApi } from './api-service.js'; 
 import { deactivateAllModules } from './main-controller.js';
 
-// const SETTINGS_ENDPOINT = ...; // <-- ELIMINADO
 
 function showAvatarError(message) {
     const errorDiv = document.getElementById('avatar-error');
@@ -54,7 +50,6 @@ function focusInputAndMoveCursorToEnd(inputElement) {
             try {
                 inputElement.setSelectionRange(length, length);
             } catch (e) {
-                // Ignorar
             }
             inputElement.type = originalType; 
         }, 0);
@@ -64,23 +59,16 @@ function focusInputAndMoveCursorToEnd(inputElement) {
     }
 }
 
-// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (ACTUALIZAR PREFERENCIA) ▼▼▼ ---
-/**
- * Envía una actualización de preferencia a la API.
- * @param {string} preferenceTypeOrField - El tipo de preferencia (ej. 'theme') O el nombre del campo (ej. 'open_links_in_new_tab').
- * @param {string} newValue - El nuevo valor a guardar (ej. 'dark', '1').
- */
 async function handlePreferenceChange(preferenceTypeOrField, newValue) {
-    if (!preferenceTypeOrField || newValue === undefined) { // Comprobar undefined por si el valor es '0'
+    if (!preferenceTypeOrField || newValue === undefined) { 
         console.error('handlePreferenceChange: Faltan el tipo/campo o el valor.');
         return;
     }
 
-    // Mapear los tipos de los selectores a los nombres de campo de la BD
     const fieldMap = {
         'language': 'language',
         'theme': 'theme',
-        'usage': 'usage_type' // 'usage' viene del data-module
+        'usage': 'usage_type' 
     };
 
     const fieldName = fieldMap[preferenceTypeOrField] || preferenceTypeOrField;
@@ -98,33 +86,23 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue) {
     const result = await callSettingsApi(formData);
 
     if (result.success) {
-        // No mostramos alerta para los toggles, solo para los selects
         if (preferenceTypeOrField === 'language' || preferenceTypeOrField === 'theme' || preferenceTypeOrField === 'usage') {
              window.showAlert(result.message || 'Preferencia actualizada.', 'success');
         }
        
-        // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN: APLICAR TEMA Y DURACIÓN! ▼▼▼ ---
         
-        // 1. Aplicar cambio de TEMA
         if (preferenceTypeOrField === 'theme') {
-            // Actualizar la variable global
             window.userTheme = newValue;
-            // Aplicar el tema inmediatamente usando la función global
             if (window.applyCurrentTheme) {
                 window.applyCurrentTheme(newValue);
             }
         }
         
-        // 2. Aplicar cambio de DURACIÓN DE ALERTA
-        // (El campo es 'increase_message_duration', no 'theme' o 'language')
         if (fieldName === 'increase_message_duration') {
-            // Actualizar la variable global (convertir '0'/'1' a número)
             window.userIncreaseMessageDuration = Number(newValue);
         }
         
-        // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
 
-        // Si el cambio es de idioma, recargamos la página
         if (preferenceTypeOrField === 'language') {
             window.showAlert('Idioma actualizado. La página se recargará.', 'success');
             setTimeout(() => location.reload(), 1500);
@@ -133,7 +111,6 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue) {
         window.showAlert(result.message || 'Error al guardar la preferencia.', 'error');
     }
 }
-// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA ▲▲▲ ---
 
 
 export function initSettingsManager() {
@@ -141,7 +118,6 @@ export function initSettingsManager() {
     document.body.addEventListener('click', async (e) => {
         const fileInput = document.getElementById('avatar-upload-input');
 
-        // --- Lógica de Avatar (Clics) ---
         if (e.target.closest('#avatar-preview-container')) {
             e.preventDefault();
             hideAvatarError();
@@ -194,7 +170,6 @@ export function initSettingsManager() {
             const removeTrigger = e.target.closest('#avatar-remove-trigger');
             toggleButtonSpinner(removeTrigger, 'Eliminar foto', true);
 
-            // --- LÓGICA DE FETCH REFACTORIZADA ---
             const formData = new FormData(avatarForm);
             formData.append('action', 'remove-avatar');
 
@@ -207,12 +182,9 @@ export function initSettingsManager() {
                 showAvatarError(result.message || 'Error desconocido al eliminar.');
                 toggleButtonSpinner(removeTrigger, 'Eliminar foto', false);
             }
-            // --- FIN DEL REFACTOR ---
         }
-        // --- Fin Lógica de Avatar ---
 
 
-        // --- LÓGICA PARA NOMBRE DE USUARIO ---
         if (e.target.closest('#username-edit-trigger')) {
             e.preventDefault();
             document.getElementById('username-view-state').style.display = 'none';
@@ -241,17 +213,14 @@ export function initSettingsManager() {
             return;
         }
         
-        // --- LÓGICA PARA EMAIL ---
         if (e.target.closest('#email-edit-trigger')) {
             e.preventDefault();
             const editTrigger = e.target.closest('#email-edit-trigger');
             toggleButtonSpinner(editTrigger, 'Editar', true);
 
-            // --- LÓGICA DE FETCH REFACTORIZADA ---
             const csrfToken = document.querySelector('#email-form [name="csrf_token"]');
             const formData = new FormData();
             formData.append('action', 'request-email-change-code');
-            // (El token CSRF se añadirá automáticamente en callSettingsApi)
 
             const result = await callSettingsApi(formData);
 
@@ -275,7 +244,6 @@ export function initSettingsManager() {
             } else {
                 window.showAlert(result.message || 'Error al solicitar el código.', 'error');
             }
-            // --- FIN DEL REFACTOR ---
             
             toggleButtonSpinner(editTrigger, 'Editar', false);
             return;
@@ -291,7 +259,6 @@ export function initSettingsManager() {
             const originalText = resendTrigger.textContent;
             resendTrigger.textContent = 'Enviando...';
             
-            // --- LÓGICA DE FETCH REFACTORIZADA ---
             const formData = new FormData();
             formData.append('action', 'request-email-change-code');
             
@@ -302,7 +269,6 @@ export function initSettingsManager() {
             } else {
                 window.showAlert(result.message || 'Error al reenviar el código.', 'error');
             }
-            // --- FIN DEL REFACTOR ---
 
             resendTrigger.classList.remove('disabled-interactive');
             resendTrigger.textContent = originalText;
@@ -333,7 +299,6 @@ export function initSettingsManager() {
             toggleButtonSpinner(continueTrigger, 'Continuar', true);
             if(modalError) modalError.style.display = 'none';
 
-            // --- LÓGICA DE FETCH REFACTORIZADA ---
             const formData = new FormData();
             formData.append('action', 'verify-email-change-code');
             formData.append('verification_code', modalInput.value);
@@ -357,7 +322,6 @@ export function initSettingsManager() {
                     modalError.style.display = 'block';
                 }
             }
-            // --- FIN DEL REFACTOR ---
             
             toggleButtonSpinner(continueTrigger, 'Continuar', false);
             return;
@@ -379,16 +343,13 @@ export function initSettingsManager() {
             return;
         }
 
-        // --- ▼▼▼ INICIO: LÓGICA PARA TFA MODAL (CORREGIDA) ▼▼▼ ---
         if (e.target.closest('#tfa-verify-close')) {
             e.preventDefault();
             const modal = document.getElementById('tfa-verify-modal');
             if(modal) modal.style.display = 'none';
-            // Ya no hay que revertir el checkbox
             return;
         }
 
-        // --- ▼▼▼ INICIO: NUEVA LÓGICA PARA BOTÓN 2FA ▼▼▼ ---
         if (e.target.closest('#tfa-toggle-button')) {
             e.preventDefault();
             
@@ -400,21 +361,17 @@ export function initSettingsManager() {
                 return;
             }
 
-            // Saber si estamos activando o desactivando
             const isCurrentlyEnabled = toggleButton.dataset.isEnabled === '1';
 
-            // Resetear y mostrar el modal
             const modalTitle = document.getElementById('tfa-modal-title');
             const modalText = document.getElementById('tfa-modal-text');
             const errorDiv = document.getElementById('tfa-verify-error');
             const passInput = document.getElementById('tfa-verify-password');
 
             if (!isCurrentlyEnabled) {
-                // El usuario está ACTIVANDO (porque no está habilitado)
                 if(modalTitle) modalTitle.textContent = 'Activar Verificación de dos pasos';
                 if(modalText) modalText.textContent = 'Para activar esta función, por favor ingresa tu contraseña actual.';
             } else {
-                // El usuario está DESACTIVANDO (porque está habilitado)
                 if(modalTitle) modalTitle.textContent = 'Desactivar Verificación de dos pasos';
                 if(modalText) modalText.textContent = 'Para desactivar esta función, por favor ingresa tu contraseña actual.';
             }
@@ -426,7 +383,6 @@ export function initSettingsManager() {
             focusInputAndMoveCursorToEnd(passInput);
             return;
         }
-        // --- ▲▲▲ FIN: NUEVA LÓGICA PARA BOTÓN 2FA ▲▲▲ ---
 
         if (e.target.closest('#tfa-verify-continue')) {
             e.preventDefault();
@@ -435,9 +391,7 @@ export function initSettingsManager() {
             const errorDiv = document.getElementById('tfa-verify-error');
             const currentPassInput = document.getElementById('tfa-verify-password');
             
-            // --- ▼▼▼ MODIFICACIÓN: Buscar el BOTÓN, no el input ▼▼▼ ---
             const toggleButton = document.getElementById('tfa-toggle-button');
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
 
             if (!currentPassInput.value) {
                 if(errorDiv) {
@@ -450,7 +404,6 @@ export function initSettingsManager() {
             toggleButtonSpinner(verifyTrigger, 'Confirmar', true);
             if(errorDiv) errorDiv.style.display = 'none';
 
-            // 1. VERIFICAR CONTRASEÑA
             const passFormData = new FormData();
             passFormData.append('action', 'verify-current-password');
             passFormData.append('current_password', currentPassInput.value);
@@ -458,7 +411,6 @@ export function initSettingsManager() {
             const passResult = await callSettingsApi(passFormData);
 
             if (passResult.success) {
-                // 2. SI LA CONTRASEÑA ES CORRECTA, CAMBIAR EL 2FA
                 const twoFaFormData = new FormData();
                 twoFaFormData.append('action', 'toggle-2fa');
                 
@@ -470,9 +422,7 @@ export function initSettingsManager() {
                     
                     const statusText = document.getElementById('tfa-status-text');
                     
-                    // --- ▼▼▼ INICIO: Lógica para actualizar el botón ▼▼▼ ---
                     if (twoFaResult.newState === 1) {
-                        // Se acaba de ACTIVAR
                         if (statusText) statusText.textContent = 'La autenticación de dos pasos está activa.';
                         if (toggleButton) {
                             toggleButton.textContent = 'Deshabilitar';
@@ -480,7 +430,6 @@ export function initSettingsManager() {
                             toggleButton.dataset.isEnabled = '1';
                         }
                     } else {
-                        // Se acaba de DESACTIVAR
                         if (statusText) statusText.textContent = 'Añade una capa extra de seguridad a tu cuenta.';
                         if (toggleButton) {
                             toggleButton.textContent = 'Habilitar';
@@ -488,39 +437,31 @@ export function initSettingsManager() {
                             toggleButton.dataset.isEnabled = '0';
                         }
                     }
-                    // --- ▲▲▲ FIN: Lógica para actualizar el botón ▲▲▲ ---
 
                 } else {
-                    // Error al cambiar 2FA (raro)
                     if(errorDiv) {
                         errorDiv.textContent = twoFaResult.message || 'Error al cambiar 2FA.';
                         errorDiv.style.display = 'block';
                     }
-                    // Ya no hay checkbox que revertir
                 }
                 
             } else {
-                // Contraseña incorrecta
                 if(errorDiv) {
                     errorDiv.textContent = passResult.message || 'Error al verificar.';
                     errorDiv.style.display = 'block';
                 }
-                // Ya no hay checkbox que revertir
             }
             
             toggleButtonSpinner(verifyTrigger, 'Confirmar', false);
-            currentPassInput.value = ''; // Limpiar contraseña por seguridad
+            currentPassInput.value = ''; 
             return;
         }
-        // --- ▲▲▲ FIN: LÓGICA PARA TFA MODAL (CORREGIDA) ▲▲▲ ---
 
-        // --- ▼▼▼ INICIO: LÓGICA PARA CONTRASEÑA ▼▼▼ ---
         if (e.target.closest('#password-edit-trigger')) {
             e.preventDefault();
             const modal = document.getElementById('password-change-modal');
             if (!modal) return;
 
-            // Resetear modal al estado inicial
             modal.querySelector('[data-step="1"]').style.display = 'flex';
             modal.querySelector('[data-step="2"]').style.display = 'none';
             
@@ -602,7 +543,6 @@ export function initSettingsManager() {
             const newPassInput = document.getElementById('password-update-new');
             const confirmPassInput = document.getElementById('password-update-confirm');
 
-            // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
             if (newPassInput.value.length < 8 || newPassInput.value.length > 72) {
                 if(errorDiv) {
                     errorDiv.textContent = 'La nueva contraseña debe tener entre 8 y 72 caracteres.';
@@ -610,7 +550,6 @@ export function initSettingsManager() {
                 }
                 return;
             }
-            // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
             if (newPassInput.value !== confirmPassInput.value) {
                 if(errorDiv) {
                     errorDiv.textContent = 'Las nuevas contraseñas no coinciden.';
@@ -642,17 +581,13 @@ export function initSettingsManager() {
             toggleButtonSpinner(saveTrigger, 'Guardar Contraseña', false);
             return;
         }
-        // --- ▲▲▲ FIN: LÓGICA PARA CONTRASEÑA ▲▲▲ ---
 
         
-        // --- ▼▼▼ ¡INICIO DE LA CORRECCIÓN! (RE-AÑADIR LÓGICA) ▼▼▼ ---
-        // Esta es la lógica que fue eliminada y ahora se re-introduce
         
         if (e.target.closest('#logout-all-devices-trigger')) {
             e.preventDefault();
             const modal = document.getElementById('logout-all-modal');
             if(modal) {
-                // Resetear el spinner del botón por si se cerró antes
                 const dangerBtn = modal.querySelector('#logout-all-confirm');
                 if(dangerBtn) {
                      toggleButtonSpinner(dangerBtn, 'Cerrar sesión', false);
@@ -675,194 +610,77 @@ export function initSettingsManager() {
             
             toggleButtonSpinner(confirmButton, 'Cerrar sesión', true);
 
-            // 1. Llamar a la API para invalidar otras sesiones
             const formData = new FormData();
             formData.append('action', 'logout-all-devices');
             
-            // callSettingsApi (de api-service.js) añadirá el CSRF token
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                // 2. Si tiene éxito, cerrar la sesión ACTUAL
                 window.showAlert('Se invalidaron las demás sesiones. Cerrando sesión actual...', 'success');
                 
-                // Esperar un poco para que el usuario lea el toast
                 setTimeout(() => {
                     const token = window.csrfToken || '';
                     const logoutUrl = (window.projectBasePath || '') + '/config/logout.php';
-                    // Redirigir para el logout manual
                     window.location.href = `${logoutUrl}?csrf_token=${encodeURIComponent(token)}`;
-                }, 1500); // 1.5 segundos
+                }, 1500); 
 
             } else {
-                // 3. Si falla, mostrar error y re-habilitar el botón
                 window.showAlert(result.message || 'Error al cerrar las sesiones.', 'error');
                 toggleButtonSpinner(confirmButton, 'Cerrar sesión', false);
             }
             return;
         }
-        // --- ▲▲▲ ¡FIN DE LA CORRECCIÓN! ▲▲▲ ---
         
-
-        // --- ▼▼▼ ¡BLOQUE ELIMINADO! ▼▼▼ ---
-        /*
-        // --- ▼▼▼ ¡INICIO DE NUEVA LÓGICA (LOGOUT SINGLE DEVICE)! ▼▼▼ ---
-
-        // 1. Abrir el modal de confirmación
-        if (e.target.closest('[data-action="logout-single-device"]')) {
-            e.preventDefault();
-            const button = e.target.closest('[data-action="logout-single-device"]');
-            const sessionId = button.dataset.sessionId;
-            const deviceInfo = button.dataset.deviceInfo;
-            
-            const modal = document.getElementById('logout-single-modal');
-            if (!modal) return;
-
-            // Rellenar el modal con la info del dispositivo
-            const infoText = modal.querySelector('#logout-single-device-info');
-            if (infoText) {
-                infoText.textContent = deviceInfo || 'este dispositivo';
-            }
-
-            // Limpiar errores y spinners
-            const errorDiv = modal.querySelector('#logout-single-error');
-            if(errorDiv) errorDiv.style.display = 'none';
-            
-            const confirmBtn = modal.querySelector('#logout-single-confirm');
-            if(confirmBtn) {
-                // Guardar el ID en el botón de confirmar
-                confirmBtn.dataset.sessionIdToLogout = sessionId;
-                toggleButtonSpinner(confirmBtn, 'Cerrar sesión', false);
-            }
-
-            modal.style.display = 'flex';
-            return;
-        }
-
-        // 2. Cerrar o cancelar el modal
-        if (e.target.closest('[data-action="logout-single-close"]') || e.target.closest('[data-action="logout-single-cancel"]')) {
-            e.preventDefault();
-            const modal = document.getElementById('logout-single-modal');
-            if (modal) modal.style.display = 'none';
-            return;
-        }
-
-        // 3. Confirmar el cierre de sesión único
-        if (e.target.closest('#logout-single-confirm')) {
-            e.preventDefault();
-            const confirmButton = e.target.closest('#logout-single-confirm');
-            const modal = confirmButton.closest('#logout-single-modal');
-            const errorDiv = modal ? modal.querySelector('#logout-single-error') : null;
-            const sessionId = confirmButton.dataset.sessionIdToLogout;
-
-            if (!sessionId) {
-                if (errorDiv) {
-                    errorDiv.textContent = 'Error: No se encontró el ID de la sesión. Recarga la página.';
-                    errorDiv.style.display = 'block';
-                }
-                return;
-            }
-
-            toggleButtonSpinner(confirmButton, 'Cerrar sesión', true);
-            if (errorDiv) errorDiv.style.display = 'none';
-
-            const formData = new FormData();
-            formData.append('action', 'logout-single-device');
-            formData.append('session_id', sessionId);
-
-            const result = await callSettingsApi(formData);
-
-            if (result.success) {
-                if (modal) modal.style.display = 'none';
-                window.showAlert(result.message || 'Sesión cerrada.', 'success');
-
-                // Eliminar la tarjeta del DOM
-                const cardToRemove = document.querySelector(`[data-session-card-id="${sessionId}"]`);
-                if (cardToRemove) {
-                    cardToRemove.remove();
-                }
-            } else {
-                if (errorDiv) {
-                    errorDiv.textContent = result.message || 'Error al cerrar la sesión.';
-                    errorDiv.style.display = 'block';
-                }
-                toggleButtonSpinner(confirmButton, 'Cerrar sesión', false);
-            }
-            return;
-        }
-        
-        // --- ▲▲▲ ¡FIN DE NUEVA LÓGICA! ▲▲▲ ---
-        */
-        // --- ▲▲▲ ¡BLOQUE ELIMINADO! ▲▲▲ ---
-
-        
-        // --- ▼▼▼ INICIO: LÓGICA MODIFICADA PARA PREFERENCE SELECTORS ▼▼▼ ---
-        // (Asumimos que el HTML tendrá data-preference-type y data-value)
         const clickedLink = e.target.closest('.module-trigger-select .menu-link');
         if (clickedLink) {
             e.preventDefault();
             
-            // 1. Encontrar elementos
             const menuList = clickedLink.closest('.menu-list');
-            const module = clickedLink.closest('.module-content[data-preference-type]'); // <-- Modificado
+            const module = clickedLink.closest('.module-content[data-preference-type]'); 
             const wrapper = clickedLink.closest('.trigger-select-wrapper');
             const trigger = wrapper?.querySelector('.trigger-selector');
             const triggerTextEl = trigger?.querySelector('.trigger-select-text span');
             
-            // 2. Obtener nuevo valor y tipo
             const newText = clickedLink.querySelector('.menu-link-text span')?.textContent;
-            const newValue = clickedLink.dataset.value; // <-- Nuevo
-            const prefType = module?.dataset.preferenceType; // <-- Nuevo
+            const newValue = clickedLink.dataset.value; 
+            const prefType = module?.dataset.preferenceType; 
 
             if (!menuList || !module || !triggerTextEl || !newText || !newValue || !prefType) {
-                 // Si falta algo, simplemente cerramos el módulo
                  deactivateAllModules();
                 return;
             }
 
-            // --- ▼▼▼ ¡INICIO DE LA SOLUCIÓN! ▼▼▼ ---
-            // 2.5. Comprobar si ya está activo
-            // Si el link clickeado ya es el que está activo,
-            // no hacemos nada y solo cerramos el módulo.
             if (clickedLink.classList.contains('active')) {
-                deactivateAllModules(); // Solo cerrar el módulo
-                return; // No enviar la petición
+                deactivateAllModules(); 
+                return; 
             }
-            // --- ▲▲▲ ¡FIN DE LA SOLUCIÓN! ▲▲▲ ---
 
-            // 3. Actualizar el texto del botón
             triggerTextEl.textContent = newText;
             
-            // 4. Quitar 'active' y 'check' de todos los links
             menuList.querySelectorAll('.menu-link').forEach(link => {
                 link.classList.remove('active');
                 const icon = link.querySelector('.menu-link-icon');
                 if (icon) {
-                    icon.innerHTML = ''; // Limpiar icono
+                    icon.innerHTML = ''; 
                 }
             });
             
-            // 5. Añadir 'active' y 'check' al link clickeado
             clickedLink.classList.add('active');
             const iconContainer = clickedLink.querySelector('.menu-link-icon');
             if (iconContainer) {
                 iconContainer.innerHTML = '<span class="material-symbols-rounded">check</span>';
             }
             
-            // 6. Cerrar el módulo
             deactivateAllModules(); 
 
-            // 7. Enviar la actualización a la API
-            handlePreferenceChange(prefType, newValue); // <-- ¡NUEVA LLAMADA!
+            handlePreferenceChange(prefType, newValue); 
             
             return;
         }
-        // --- ▲▲▲ ¡FIN DE LÓGICA MODIFICADA! ▲▲▲ ---
 
 
     });
 
-    // 2. Delegación para SUBMIT
     document.body.addEventListener('submit', async (e) => {
         
         if (e.target.id === 'avatar-form') {
@@ -880,7 +698,6 @@ export function initSettingsManager() {
 
             toggleButtonSpinner(saveTrigger, 'Guardar', true);
 
-            // --- LÓGICA DE FETCH REFACTORIZADA ---
             const formData = new FormData(avatarForm);
             formData.append('action', 'upload-avatar');
 
@@ -893,7 +710,6 @@ export function initSettingsManager() {
                 showAvatarError(result.message || 'Error desconocido al guardar.');
                 toggleButtonSpinner(saveTrigger, 'Guardar', false);
             }
-            // --- FIN DEL REFACTOR ---
         }
 
         if (e.target.id === 'username-form') {
@@ -902,16 +718,13 @@ export function initSettingsManager() {
             const saveTrigger = document.getElementById('username-save-trigger');
             const inputElement = document.getElementById('username-input');
 
-            // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
             if (inputElement.value.length < 6 || inputElement.value.length > 32) {
                 window.showAlert('El nombre de usuario debe tener entre 6 y 32 caracteres.', 'error');
                 return;
             }
-            // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
 
             toggleButtonSpinner(saveTrigger, 'Guardar', true);
 
-            // --- LÓGICA DE FETCH REFACTORIZADA ---
             const formData = new FormData(usernameForm);
             formData.append('action', 'update-username'); 
 
@@ -924,7 +737,6 @@ export function initSettingsManager() {
                 window.showAlert(result.message || 'Error desconocido al guardar.', 'error');
                 toggleButtonSpinner(saveTrigger, 'Guardar', false);
             }
-            // --- FIN DEL REFACTOR ---
         }
         
         if (e.target.id === 'email-form') {
@@ -940,12 +752,10 @@ export function initSettingsManager() {
                 return;
             }
 
-            // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
             if (newEmail.length > 255) {
                 window.showAlert('El correo no puede tener más de 255 caracteres.', 'error');
                 return;
             }
-            // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
             
             const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i;
             if (!allowedDomains.test(newEmail)) {
@@ -955,7 +765,6 @@ export function initSettingsManager() {
 
             toggleButtonSpinner(saveTrigger, 'Guardar', true);
 
-            // --- LÓGICA DE FETCH REFACTORIZADA ---
             const formData = new FormData(emailForm);
             formData.append('action', 'update-email'); 
 
@@ -968,11 +777,9 @@ export function initSettingsManager() {
                 window.showAlert(result.message || 'Error desconocido al guardar.', 'error');
                 toggleButtonSpinner(saveTrigger, 'Guardar', false);
             }
-            // --- FIN DEL REFACTOR ---
         }
     });
 
-    // 3. Delegación para CHANGE
     document.body.addEventListener('change', (e) => {
         
         if (e.target.id === 'avatar-upload-input') {
@@ -1017,34 +824,21 @@ export function initSettingsManager() {
             document.getElementById('avatar-actions-preview').style.display = 'flex';
         }
 
-        // --- ▼▼▼ ¡INICIO DE LA NUEVA LÓGICA PARA TOGGLES! ▼▼▼ ---
         
-        // Escucha cambios en CUALQUIER checkbox que sea un toggle de preferencia booleana
         else if (e.target.matches('input[type="checkbox"][data-preference-type="boolean"]')) {
             const checkbox = e.target;
             const fieldName = checkbox.dataset.fieldName;
             
-            // El valor es '1' (true) si está marcado, '0' (false) si no
             const newValue = checkbox.checked ? '1' : '0';
 
             if (fieldName) {
-                // Llama a la función de API genérica
-                // Pasamos el nombre del campo (ej. 'open_links_in_new_tab') directamente
                 handlePreferenceChange(fieldName, newValue);
             } else {
                 console.error('Este toggle no tiene un data-field-name:', checkbox);
             }
         }
-        // --- ▲▲▲ ¡FIN DE LA NUEVA LÓGICA PARA TOGGLES! ▲▲▲ ---
-        
-
-        // --- ▼▼▼ ¡MODIFICACIÓN! Se eliminó el listener 'change' para 'tfa-toggle-input' ▼▼▼ ---
-        // (La lógica ahora está en el 'click' listener de 'tfa-toggle-button')
-        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
-
     });
     
-    // 4. Guardar la URL original
     setTimeout(() => {
         const previewImage = document.getElementById('avatar-preview-image');
         if (previewImage && !previewImage.dataset.originalSrc) {
