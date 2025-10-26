@@ -1078,14 +1078,16 @@ body {
 /* ====================================== */
 
 #alert-container {
-    position: fixed;
-    bottom: 12px;
-    left: 12px;
+    position: absolute; /* MODIFICADO DE fixed A absolute */
+    bottom: 5px; /* MODIFICADO DE 12px */
+    left: 5px; /* MODIFICADO DE 12px */
     width: 325px;
     z-index: 2000;
     display: flex;
     flex-direction: column-reverse;
     gap: 8px;
+    /* Ya no es 'fixed', así que se posicionará
+       relativo a '.general-content' */
 }
 
 .alert-toast {
@@ -1382,8 +1384,8 @@ body {
 
 @media (max-width: 400px) {
     #alert-container {
-        left: 12px;
-        right: 12px;
+        left: 5px; /* MODIFICADO DE 12px */
+        right: 5px; /* MODIFICADO DE 12px */
         width: auto;
     }
 }

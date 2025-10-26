@@ -185,7 +185,9 @@ $htmlLang = $langMap[$_SESSION['language']] ?? 'en'; // Default 'en'
                     
                 </div>
             </div>
-        </div>
+            
+            <div id="alert-container"></div>
+            </div>
     </div>
 
     <script>
@@ -202,7 +204,6 @@ $htmlLang = $langMap[$_SESSION['language']] ?? 'en'; // Default 'en'
     </script>
     <script type="module" src="<?php echo $basePath; ?>/assets/js/app-init.js"></script>
     
-    <div id="alert-container"></div>
     </body>
 
 </html>
