@@ -163,22 +163,21 @@ body {
     left: -4px;
     right: -4px;
     bottom: -4px;
-
-    background-image: conic-gradient(#D32029 0deg 90deg,
-            #206BD3 90deg 210deg,
-            #28A745 210deg 300deg,
-            #FFC107 300deg 360deg);
-
-    mask: radial-gradient(farthest-side,
-            transparent calc(100% - 2px),
-            #fff 0);
-    -webkit-mask: radial-gradient(farthest-side,
-            transparent calc(100% - 2px),
-            #fff 0);
-
-    transform: rotate(300deg);
+    
+    /* --- MODIFICACIÓN AQUÍ --- */
+    /* Añadimos "from 300deg" para rotar el inicio del gradiente */
+    background-image: conic-gradient(from 300deg, 
+        #D32029 0deg 90deg, 
+        #206BD3 90deg 210deg, 
+        #28A745 210deg 300deg, 
+        #FFC107 300deg 360deg);
+    
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+    
+    /* --- LÍNEA ELIMINADA --- */
+    /* transform: rotate(300deg); */
 }
-
 .header-profile-image {
     width: 100%;
     height: 100%;
