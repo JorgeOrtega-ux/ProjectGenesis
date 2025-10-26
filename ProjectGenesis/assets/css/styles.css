@@ -1362,17 +1362,6 @@ body {
 /* ============== TOOLTIP =============== */
 /* ====================================== */
 
-/* --- Variables de color para Theming --- */
-:root {
-    --tooltip-bg: #333;
-    --tooltip-text-color: #ffffff;
-}
-
-.dark-theme {
-    --tooltip-bg: #f5f5fa;
-    --tooltip-text-color: #000000;
-}
-/* --- Fin de Variables --- */
 
 
 .tooltip {
@@ -1388,10 +1377,10 @@ body {
     line-height: 1.3;
     letter-spacing: 0.0178571429em;
     text-align: center;
-    color: var(--tooltip-text-color);
-    background-color: var(--tooltip-bg);
+    color: #fff;
+    background-color: #000;
     border-radius: 6px;
-    border: 1px solid var(--tooltip-bg);
+    border: 1px solid #ffffff20;
     box-sizing: border-box;
     pointer-events: none; /* Para que no interfiera con el mouse */
 }
@@ -1429,8 +1418,8 @@ body {
 
 .tooltip::before {
     position: absolute;
-    background-color: var(--tooltip-bg);
-    border: 1px solid var(--tooltip-bg);
+    background-color: #000;
+    border: 1px solid #ffffff20;
     content: "";
 }
 
