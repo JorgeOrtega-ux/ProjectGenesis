@@ -42,7 +42,8 @@ function showTooltip(target) {
     tooltipEl.style.display = 'block';
 
     popperInstance = createPopper(target, tooltipEl, {
-        placement: 'bottom',
+       placement: 'bottom',
+       placement: 'auto',
         modifiers: [
             {
                 name: 'offset',
@@ -71,30 +72,23 @@ function hideTooltip() {
 export function initTooltipManager() {
     createTooltipElement();
 
-    let enterTimer;
-    
     document.body.addEventListener('mouseover', (e) => {
         const target = e.target.closest('[data-tooltip]');
         if (!target) return;
 
-        // Pequeño retraso para que no aparezcan al pasar el ratón rápido
-        enterTimer = setTimeout(() => {
-            showTooltip(target);
-        }, 300); // 300ms de retraso
+        // Mostrar instantáneamente
+        showTooltip(target);
     });
 
     document.body.addEventListener('mouseout', (e) => {
         const target = e.target.closest('[data-tooltip]');
         if (!target) return;
         
-        // Limpiar el timer si el ratón sale antes de que aparezca
-        clearTimeout(enterTimer);
         hideTooltip();
     });
     
     // Ocultar si se hace clic en cualquier lugar (para botones de menú)
     document.body.addEventListener('click', () => {
-         clearTimeout(enterTimer);
          hideTooltip();
     });
 }
