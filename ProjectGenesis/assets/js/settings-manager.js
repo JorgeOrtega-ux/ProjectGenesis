@@ -631,6 +631,7 @@ export function initSettingsManager() {
             return;
         }
         
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN DEL CONTROLADOR ▼▼▼ ---
         const clickedLink = e.target.closest('.module-trigger-select .menu-link');
         if (clickedLink) {
             e.preventDefault();
@@ -659,14 +660,18 @@ export function initSettingsManager() {
             
             menuList.querySelectorAll('.menu-link').forEach(link => {
                 link.classList.remove('active');
-                const icon = link.querySelector('.menu-link-icon');
+                
+                // --- MODIFICADO: Apuntar al contenedor derecho ---
+                const icon = link.querySelector('.menu-link-check-icon'); 
                 if (icon) {
                     icon.innerHTML = ''; 
                 }
             });
             
             clickedLink.classList.add('active');
-            const iconContainer = clickedLink.querySelector('.menu-link-icon');
+            
+            // --- MODIFICADO: Apuntar al contenedor derecho ---
+            const iconContainer = clickedLink.querySelector('.menu-link-check-icon'); 
             if (iconContainer) {
                 iconContainer.innerHTML = '<span class="material-symbols-rounded">check</span>';
             }
@@ -677,6 +682,7 @@ export function initSettingsManager() {
             
             return;
         }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN DEL CONTROLADOR ▲▲▲ ---
 
 
     });

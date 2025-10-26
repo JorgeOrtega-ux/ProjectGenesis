@@ -1285,7 +1285,6 @@ body {
     justify-content: center;
     flex-shrink: 0;
     margin-right: 12px;
-    color: #6b7280;
     /* Color gris para el icono */
 }
 
@@ -1297,7 +1296,6 @@ body {
     flex-grow: 1;
     font-size: 14px;
     font-weight: 500;
-    color: #1f2937;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1309,7 +1307,6 @@ body {
     justify-content: center;
     flex-shrink: 0;
     margin-left: 8px;
-    color: #6b7280;
 }
 
 .module-content.module-trigger-select {
@@ -1333,14 +1330,32 @@ body {
     flex-direction: column;
 }
 
-/* Ajuste para el icono de check en el menú */
-.module-trigger-select .menu-link .menu-link-icon {
-    color: #000;
-}
-
-.module-trigger-select .menu-link:not(.active) .menu-link-icon {
+/* .module-trigger-select .menu-link:not(.active) .menu-link-icon {
     width: 45px;
-    /* Mantiene el espacio aunque esté vacío */
 }
+*/ /* --- ELIMINADO: Esta regla ya no es necesaria, todos los links tienen icono */
+
+
+/* Estilo para el contenedor del check (icono derecho) */
+.menu-link-check-icon {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    align-items: center;
+    width: 45px; /* Mismo espacio que el icono izquierdo */
+    height: 100%;
+    color: #000; /* Color negro para el check */
+}
+/* --- ▲▲▲ FIN DE MODIFICACIONES CSS ▲▲▲ --- */
 
 /* ===== FIN DE NUEVOS ESTILOS ===== */
+
+.overflow-y {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    scrollbar-color: #00000080 transparent;
+    scrollbar-width: thin;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+}

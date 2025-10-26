@@ -13,6 +13,15 @@ $usageMap = [
     'large_company' => 'Empresa grande'
 ];
 
+// --- ¡NUEVO MAPA DE ICONOS AÑADIDO! ---
+$usageIconMap = [
+    'personal' => 'person',
+    'student' => 'school',
+    'teacher' => 'history_edu',
+    'small_business' => 'storefront',
+    'large_company' => 'business'
+];
+
 $languageMap = [
     'es-latam' => 'Español (Latinoamérica)',
     'es-mx' => 'Español (México)',
@@ -240,21 +249,30 @@ $currentLanguageText = $languageMap[$userLanguage] ?? 'English (United States)';
                         <div class="menu-content">
                             <div class="menu-list">
 
-                                <?php foreach ($usageMap as $key => $text): ?>
-                                    <?php $isActive = ($key === $userUsageType); ?>
+                                <?php 
+                                // --- ▼▼▼ INICIO DE MODIFICACIÓN DEL BUCLE ▼▼▼ ---
+                                foreach ($usageMap as $key => $text): 
+                                    $isActive = ($key === $userUsageType); 
+                                    $iconName = $usageIconMap[$key] ?? 'person'; // Icono por defecto
+                                ?>
                                     <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
                                          data-value="<?php echo htmlspecialchars($key); ?>">
                                         
                                         <div class="menu-link-icon">
-                                            <?php if ($isActive): ?>
-                                                <span class="material-symbols-rounded">check</span>
-                                            <?php endif; ?>
+                                            <span class="material-symbols-rounded"><?php echo $iconName; ?></span>
                                         </div>
                                         <div class="menu-link-text">
                                             <span><?php echo htmlspecialchars($text); ?></span>
                                         </div>
+                                        <div class="menu-link-check-icon">
+                                            <?php if ($isActive): ?>
+                                                <span class="material-symbols-rounded">check</span>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
-                                <?php endforeach; ?>
+                                <?php endforeach; 
+                                // --- ▲▲▲ FIN DE MODIFICACIÓN DEL BUCLE ▲▲▲ ---
+                                ?>
                                 
                             </div>
                         </div>
@@ -298,21 +316,29 @@ $currentLanguageText = $languageMap[$userLanguage] ?? 'English (United States)';
                         <div class="menu-content">
                             <div class="menu-list">
 
-                                <?php foreach ($languageMap as $key => $text): ?>
-                                    <?php $isActive = ($key === $userLanguage); ?>
+                                <?php 
+                                // --- ▼▼▼ INICIO DE MODIFICACIÓN DEL BUCLE ▼▼▼ ---
+                                foreach ($languageMap as $key => $text): 
+                                    $isActive = ($key === $userLanguage); 
+                                ?>
                                     <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
                                          data-value="<?php echo htmlspecialchars($key); ?>">
                                         
                                         <div class="menu-link-icon">
-                                            <?php if ($isActive): ?>
-                                                <span class="material-symbols-rounded">check</span>
-                                            <?php endif; ?>
+                                            <span class="material-symbols-rounded">language</span>
                                         </div>
                                         <div class="menu-link-text">
                                             <span><?php echo htmlspecialchars($text); ?></span>
                                         </div>
+                                        <div class="menu-link-check-icon">
+                                            <?php if ($isActive): ?>
+                                                <span class="material-symbols-rounded">check</span>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
-                                <?php endforeach; ?>
+                                <?php endforeach; 
+                                // --- ▲▲▲ FIN DE MODIFICACIÓN DEL BUCLE ▲▲▲ ---
+                                ?>
                                 
                             </div>
                         </div>

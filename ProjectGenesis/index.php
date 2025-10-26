@@ -168,7 +168,7 @@ if (isset($_SESSION['theme'])) {
                     ?>
                     <?php endif; ?>
 
-                    <div class="general-content-scrolleable">
+                    <div class="general-content-scrolleable overflow-y">
                         <div class="main-sections">
                             </div>
                     

@@ -9,6 +9,13 @@ $themeMap = [
     'dark' => 'Tema oscuro'
 ];
 
+// --- ¡NUEVO MAPA DE ICONOS AÑADIDO! ---
+$themeIconMap = [
+    'system' => 'desktop_windows',
+    'light' => 'light_mode',
+    'dark' => 'dark_mode'
+];
+
 $currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
 
 // --- ▲▲▲ FIN DE NUEVO BLOQUE PHP ▲▲▲ ---
@@ -58,21 +65,30 @@ $currentThemeText = $themeMap[$userTheme] ?? 'Sincronizar con el sistema';
                         <div class="menu-content">
                             <div class="menu-list">
 
-                                <?php foreach ($themeMap as $key => $text): ?>
-                                    <?php $isActive = ($key === $userTheme); ?>
+                                <?php 
+                                // --- ▼▼▼ INICIO DE MODIFICACIÓN DEL BUCLE ▼▼▼ ---
+                                foreach ($themeMap as $key => $text): 
+                                    $isActive = ($key === $userTheme); 
+                                    $iconName = $themeIconMap[$key] ?? 'desktop_windows'; // Icono por defecto
+                                ?>
                                     <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
                                          data-value="<?php echo htmlspecialchars($key); ?>">
                                         
                                         <div class="menu-link-icon">
-                                            <?php if ($isActive): ?>
-                                                <span class="material-symbols-rounded">check</span>
-                                            <?php endif; ?>
+                                            <span class="material-symbols-rounded"><?php echo $iconName; ?></span>
                                         </div>
                                         <div class="menu-link-text">
                                             <span><?php echo htmlspecialchars($text); ?></span>
                                         </div>
+                                        <div class="menu-link-check-icon">
+                                            <?php if ($isActive): ?>
+                                                <span class="material-symbols-rounded">check</span>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
-                                <?php endforeach; ?>
+                                <?php endforeach; 
+                                // --- ▲▲▲ FIN DE MODIFICACIÓN DEL BUCLE ▲▲▲ ---
+                                ?>
                                 
                             </div>
                         </div>
