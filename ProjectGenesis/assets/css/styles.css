@@ -463,7 +463,7 @@ body {
 
 .auth-error-message {
     padding: 12px;
-    background-color: #fbebee;
+    background-color: transparent;
     color: #c62828;
     border: 1px solid #ef9a9a;
     border-radius: 8px;
@@ -1207,12 +1207,12 @@ body {
 
 /* Estilos cuando está 'checked' (encendido) */
 .settings-toggle-switch input:checked+.settings-toggle-slider {
-    background-color: #7B1AF7;
+    background-color: #000;
     /* Un color morado similar al de la imagen */
 }
 
 .settings-toggle-switch input:focus+.settings-toggle-slider {
-    box-shadow: 0 0 1px #7B1AF7;
+    box-shadow: 0 0 1px #000;
     /* Opcional: un 'focus ring' */
 }
 
@@ -1259,7 +1259,7 @@ body {
 .trigger-select-wrapper {
     position: relative;
     width: 265px;
-    height: 45px;
+    height: 40px;
 }
 
 .trigger-selector {

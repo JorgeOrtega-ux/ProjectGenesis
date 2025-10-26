@@ -75,7 +75,7 @@ CREATE TABLE user_preferences (
     -- Opciones: 'system', 'light', 'dark'
     theme ENUM('system', 'light', 'dark') NOT NULL DEFAULT 'system',
     
-    -- Opciones: 'personal', 'student', 'teacher', 'small_business', 'large_company', 'ngo'
+    -- Opciones: 'personal', 'student', 'teacher', 'small_business', 'large_company'
     usage_type VARCHAR(50) NOT NULL DEFAULT 'personal',
     
     -- ¡NUEVAS COLUMNAS!

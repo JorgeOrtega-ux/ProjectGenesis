@@ -717,7 +717,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $allowedFields = [
                     'language' => ['en-us', 'fr-fr', 'es-latam', 'es-mx'],
                     'theme' => ['system', 'light', 'dark'],
-                    'usage_type' => ['personal', 'student', 'teacher', 'small_business', 'large_company', 'ngo'],
+                    'usage_type' => ['personal', 'student', 'teacher', 'small_business', 'large_company'],
                     // --- ¡NUEVOS CAMPOS! ---
                     'open_links_in_new_tab' => ['0', '1'],
                     'increase_message_duration' => ['0', '1']

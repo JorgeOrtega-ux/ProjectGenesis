@@ -10,8 +10,7 @@ $usageMap = [
     'student' => 'Estudiante',
     'teacher' => 'Docente',
     'small_business' => 'Empresa pequeña',
-    'large_company' => 'Empresa grande',
-    'ngo' => 'ONG'
+    'large_company' => 'Empresa grande'
 ];
 
 $languageMap = [

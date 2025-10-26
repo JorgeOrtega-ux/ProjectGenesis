@@ -74,7 +74,7 @@
             
             <div class="settings-card-bottom">
                 <div class="settings-card-right-actions">
-                    <button type="button" class="settings-button" id="logout-all-devices-trigger">Cerrar sesión en todos los dispositivos</button>
+                    <button type="button" class="settings-button" id="logout-all-devices-trigger">Cerrar sesión</button>
                 </div>
             </div>
         </div>
