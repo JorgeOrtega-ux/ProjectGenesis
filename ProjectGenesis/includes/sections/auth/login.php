@@ -5,11 +5,8 @@
         <form class="auth-form" id="login-form" onsubmit="event.preventDefault();" novalidate>
             
             <?php outputCsrfInput(); ?>
-            <div class="auth-error-message" id="login-error" style="display: none;"></div>
 
             <fieldset class="auth-step active" data-step="1">
-                <p class="auth-step-indicator">Paso 1 de 2: Tus Credenciales</p>
-
                 <div class="auth-input-group">
                     <input type="email" id="login-email" name="email" required placeholder=" ">
                     <label for="login-email">Dirección de correo electrónico*</label>
@@ -29,11 +26,11 @@
                 <div class="auth-step-buttons">
                     <button type="button" class="auth-button" data-auth-action="next-step">Continuar</button>
                 </div>
+                <div class="auth-error-message" style="display: none;"></div>
             </fieldset>
             <fieldset class="auth-step" data-step="2" style="display: none;">
-                <p class="auth-step-indicator">Paso 2 de 2: Verificación de dos pasos</p>
                 <p class="auth-verification-text" style="margin-bottom: 16px;">
-                    Se ha enviado (simulado) un código de verificación a tu correo. 
+                    Se ha enviado un código de verificación a tu correo. 
                     Por favor, ingrésalo para continuar.
                 </p>
 
@@ -46,7 +43,9 @@
                     <button type="button" class="auth-button-back" data-auth-action="prev-step">Atrás</button>
                     <button type="submit" class="auth-button">Verificar e Ingresar</button>
                 </div>
+                <div class="auth-error-message" style="display: none;"></div>
             </fieldset>
+            
             </form>
 
         <p class="auth-link">

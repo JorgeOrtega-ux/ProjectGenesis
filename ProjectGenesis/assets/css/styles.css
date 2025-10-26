@@ -52,10 +52,12 @@ body {
     transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
     position: relative;
 }
+
 .general-content-top.shadow {
     box-shadow: 0 4px 12px #00000020;
     border: transparent;
 }
+
 .general-content-bottom {
     position: relative;
     display: flex;
@@ -120,10 +122,11 @@ body {
 .header-button:hover {
     background-color: #f5f5fa;
 }
+
 .header-button.header-profile {
     border-radius: 50px;
     border: 1px solid #ffffff40;
-    padding: 0; 
+    padding: 0;
     position: relative;
 }
 
@@ -135,15 +138,15 @@ body {
     left: -4px;
     right: -4px;
     bottom: -4px;
-    border: 2px solid transparent; 
+    border: 2px solid transparent;
     transition: border-color 0.2s ease, border-width 0.2s ease;
-    pointer-events: none; 
-    z-index: 2; 
-    background-image: none; 
+    pointer-events: none;
+    z-index: 2;
+    background-image: none;
 }
 
 .header-profile[data-role="user"]::before {
-    border-color: #cccccc; 
+    border-color: #cccccc;
 }
 
 .header-profile[data-role="moderator"]::before {
@@ -155,29 +158,23 @@ body {
 }
 
 .header-profile[data-role="founder"]::before {
-    border: none; 
-    top: -4px; 
+    border: none;
+    top: -4px;
     left: -4px;
     right: -4px;
     bottom: -4px;
 
-    background-image: conic-gradient(
-        #D32029 0deg 90deg,    
-        #206BD3 90deg 210deg,  
-        #28A745 210deg 300deg, 
-        #FFC107 300deg 360deg  
-    );
-    
-    mask: radial-gradient(
-        farthest-side, 
-        transparent calc(100% - 2px), 
-        #fff 0                    
-    );
-    -webkit-mask: radial-gradient(
-        farthest-side, 
-        transparent calc(100% - 2px), 
-        #fff 0
-    );
+    background-image: conic-gradient(#D32029 0deg 90deg,
+            #206BD3 90deg 210deg,
+            #28A745 210deg 300deg,
+            #FFC107 300deg 360deg);
+
+    mask: radial-gradient(farthest-side,
+            transparent calc(100% - 2px),
+            #fff 0);
+    -webkit-mask: radial-gradient(farthest-side,
+            transparent calc(100% - 2px),
+            #fff 0);
 
     transform: rotate(300deg);
 }
@@ -185,13 +182,14 @@ body {
 .header-profile-image {
     width: 100%;
     height: 100%;
-    object-fit: cover; 
-    display: block; 
+    object-fit: cover;
+    display: block;
     position: relative;
-    z-index: 1; 
-    
+    z-index: 1;
+
     border-radius: 50%;
 }
+
 .module-content.module-surface {
     position: absolute;
     top: 0;
@@ -287,15 +285,15 @@ body {
 
 .main-sections {
     display: flex;
-     width: 100%;
+    width: 100%;
     height: 100%;
 }
 
 .section-content {
-   flex: 1;
-   display: flex;
-   justify-content: center;
-   align-items: center;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .not-found-container {
@@ -363,7 +361,7 @@ body {
     top: 50%;
     transform: translateY(-50%);
     font-size: 16px;
-    color: #6b7280; 
+    color: #6b7280;
     pointer-events: none;
     transition: all 0.2s ease;
     transform-origin: top left;
@@ -374,18 +372,18 @@ body {
 .auth-input-group input[type="text"] {
     width: 100%;
     height: 52px;
-    padding: 20px 48px 8px 12px; 
-    border: 1px solid #00000020; 
+    padding: 20px 48px 8px 12px;
+    border: 1px solid #00000020;
     border-radius: 8px;
     font-size: 16px;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
-    background-color: transparent; 
-    color: #000; 
+    background-color: transparent;
+    color: #000;
 }
 
-.auth-input-group input:focus ~ label,
-.auth-input-group input:not(:placeholder-shown) ~ label {
+.auth-input-group input:focus~label,
+.auth-input-group input:not(:placeholder-shown)~label {
     top: 8px;
     transform: translateY(0);
     font-size: 12px;
@@ -393,27 +391,29 @@ body {
 
 .auth-input-group input:focus,
 .auth-input-group input:not(:placeholder-shown) {
-    border-color: #000; 
+    border-color: #000;
 }
 
-.auth-input-group input:focus ~ label,
-.auth-input-group input:not(:placeholder-shown) ~ label {
-    color: #000; 
+.auth-input-group input:focus~label,
+.auth-input-group input:not(:placeholder-shown)~label {
+    color: #000;
 }
 
 .auth-toggle-password {
     position: absolute;
-    right: 8px;
+    right: 5px;
     top: 50%;
     transform: translateY(-50%);
     background: transparent;
     border: none;
     cursor: pointer;
+    height: 40px;
+    width: 40px;
     padding: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #6b7280; 
+    color: #6b7280;
     outline: none;
     border-radius: 50%;
     transition: background-color 0.2s;
@@ -427,13 +427,13 @@ body {
     border-radius: 50%;
 }
 
-.auth-input-group input:focus ~ .auth-toggle-password,
-.auth-input-group input:not(:placeholder-shown) ~ .auth-toggle-password {
+.auth-input-group input:focus~.auth-toggle-password,
+.auth-input-group input:not(:placeholder-shown)~.auth-toggle-password {
     color: #000;
 }
 
 .auth-button {
-    height: 52px; 
+    height: 52px;
     border: none;
     border-radius: 8px;
     background-color: #000;
@@ -442,7 +442,7 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s;
-    flex: 1; 
+    flex: 1;
 }
 
 .auth-link {
@@ -452,7 +452,7 @@ body {
 }
 
 .auth-link a {
-    color: #000; 
+    color: #000;
     font-weight: 600;
     text-decoration: none;
 }
@@ -463,22 +463,21 @@ body {
 
 .auth-error-message {
     padding: 12px;
-    background-color: #fbebee; 
-    color: #c62828; 
+    background-color: #fbebee;
+    color: #c62828;
     border: 1px solid #ef9a9a;
     border-radius: 8px;
     font-size: 14px;
-    margin-bottom: 8px; 
-    display: none; 
+    display: none;
 }
 
 .auth-form fieldset.auth-step {
     border: none;
     padding: 0;
     margin: 0;
-    display: flex; 
+    display: flex;
     flex-direction: column;
-    gap: 16px; 
+    gap: 16px;
 }
 
 .auth-step:not(.active) {
@@ -516,7 +515,7 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s;
-    flex: 0 0 auto; 
+    flex: 0 0 auto;
     padding: 0 20px;
 }
 
@@ -525,11 +524,11 @@ body {
 }
 
 .logout-spinner {
-    display: block; 
-    width: 24px;   
+    display: block;
+    width: 24px;
     height: 24px;
-    border: 3px solid rgba(0, 0, 0, 0.1); 
-    border-top-color: #000; 
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #000;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -539,9 +538,15 @@ body {
     font-weight: 500;
     letter-spacing: 0.0178571429em;
 }
+
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .disabled-interactive {
@@ -580,8 +585,8 @@ body {
 
 .settings-card-avatar-error {
     padding: 12px;
-    background-color: #fbebee; 
-    color: #c62828; 
+    background-color: #fbebee;
+    color: #c62828;
     border: 1px solid #ef9a9a;
     border-radius: 8px;
     font-size: 14px;
@@ -651,9 +656,10 @@ body {
 */
 #username-form .settings-card,
 #email-form .settings-card,
-.settings-card-align-bottom { 
+.settings-card-align-bottom {
     align-items: flex-end;
 }
+
 /* --- FIN DE LA CORRECCIÓN DE ALINEACIÓN --- */
 
 /* --- ▼▼▼ ¡INICIO DEL NUEVO BLOQUE AÑADIDO! ▼▼▼ --- */
@@ -662,7 +668,8 @@ body {
 */
 .settings-card-trigger-column {
     flex-direction: column;
-    align-items: stretch; /* Hace que los hijos (left/right) ocupen todo el ancho */
+    align-items: stretch;
+    /* Hace que los hijos (left/right) ocupen todo el ancho */
 }
 
 /* Anula el ancho fijo de 265px para que ocupe
@@ -679,6 +686,7 @@ body {
       así que no necesitamos padding extra.
     */
 }
+
 /* --- ▲▲▲ ¡FIN DEL NUEVO BLOQUE AÑADIDO! ▲▲▲ --- */
 
 
@@ -687,8 +695,7 @@ body {
     width: 60px;
     height: 60px;
     border-radius: 8px;
-    display: flex
-;
+    display: flex;
     align-items: center;
     justify-content: center;
     border: 1px solid #00000020;
@@ -700,6 +707,7 @@ body {
 .settings-card-icon .material-symbols-rounded {
     font-size: 28px;
 }
+
 /* --- ▲▲▲ FIN DE LA NUEVA CLASE ▲▲▲ --- */
 
 .settings-card-left {
@@ -714,7 +722,7 @@ body {
     height: 60px;
     border-radius: 50%;
     border: 1px solid #ffffff40;
-    padding: 0; 
+    padding: 0;
     position: relative;
     flex-shrink: 0;
 }
@@ -722,10 +730,10 @@ body {
 .settings-avatar-image {
     width: 100%;
     height: 100%;
-    object-fit: cover; 
-    display: block; 
+    object-fit: cover;
+    display: block;
     position: relative;
-    z-index: 1; 
+    z-index: 1;
     border-radius: 50%;
 }
 
@@ -737,15 +745,15 @@ body {
     left: -4px;
     right: -4px;
     bottom: -4px;
-    border: 2px solid transparent; 
+    border: 2px solid transparent;
     transition: border-color 0.2s ease, border-width 0.2s ease;
-    pointer-events: none; 
-    z-index: 2; 
-    background-image: none; 
+    pointer-events: none;
+    z-index: 2;
+    background-image: none;
 }
 
 .settings-avatar[data-role="user"]::before {
-    border-color: #cccccc; 
+    border-color: #cccccc;
 }
 
 .settings-avatar[data-role="moderator"]::before {
@@ -757,27 +765,21 @@ body {
 }
 
 .settings-avatar[data-role="founder"]::before {
-    border: none; 
-    top: -4px; 
+    border: none;
+    top: -4px;
     left: -4px;
     right: -4px;
     bottom: -4px;
-    background-image: conic-gradient(
-        #D32029 0deg 90deg,    
-        #206BD3 90deg 210deg,  
-        #28A745 210deg 300deg, 
-        #FFC107 300deg 360deg  
-    );
-    mask: radial-gradient(
-        farthest-side, 
-        transparent calc(100% - 2px), 
-        #fff 0                    
-    );
-    -webkit-mask: radial-gradient(
-        farthest-side, 
-        transparent calc(100% - 2px), 
-        #fff 0
-    );
+    background-image: conic-gradient(#D32029 0deg 90deg,
+            #206BD3 90deg 210deg,
+            #28A745 210deg 300deg,
+            #FFC107 300deg 360deg);
+    mask: radial-gradient(farthest-side,
+            transparent calc(100% - 2px),
+            #fff 0);
+    -webkit-mask: radial-gradient(farthest-side,
+            transparent calc(100% - 2px),
+            #fff 0);
     transform: rotate(300deg);
 }
 
@@ -799,7 +801,7 @@ body {
 }
 
 .settings-button {
-    height: 40px; 
+    height: 40px;
     border: 1px solid #00000020;
     border-radius: 8px;
     background-color: #ffffff;
@@ -823,19 +825,19 @@ body {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.5); 
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #ffffff;
-    opacity: 0; 
+    opacity: 0;
     transition: opacity 0.2s ease-in-out;
-    z-index: 2; 
-    cursor: pointer; 
+    z-index: 2;
+    cursor: pointer;
 }
 
 .settings-avatar-overlay .material-symbols-rounded {
-    font-size: 16px; 
+    font-size: 16px;
 }
 
 .settings-avatar:hover .settings-avatar-overlay {
@@ -845,21 +847,23 @@ body {
 /* ▼▼▼ NUEVOS ESTILOS PARA EL INPUT DE USERNAME ▼▼▼ */
 .settings-username-input {
     width: 100%;
-    height: 40px; 
+    height: 40px;
     padding: 0 12px;
-    border: 1px solid #00000020; 
+    border: 1px solid #00000020;
     border-radius: 8px;
     font-size: 14px;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
-    background-color: transparent; 
+    background-color: transparent;
     color: #000;
-    margin-top: 4px; /* Pequeña separación del label */
+    margin-top: 4px;
+    /* Pequeña separación del label */
 }
 
 .settings-username-input:focus {
-    border-color: #000; 
+    border-color: #000;
 }
+
 /* ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ */
 
 /* --- ▼▼▼ NUEVOS ESTILOS PARA MODAL DE VERIFICACIÓN ▼▼▼ --- */
@@ -870,12 +874,14 @@ body {
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.6);
-    z-index: 1999; /* Debajo del alert-container */
+    z-index: 1999;
+    /* Debajo del alert-container */
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 16px;
-    animation: modalFadeIn 0.2s ease-out forwards; /* <-- MODIFICADO */
+    animation: modalFadeIn 0.2s ease-out forwards;
+    /* <-- MODIFICADO */
 }
 
 .settings-modal-content {
@@ -885,9 +891,12 @@ body {
     border-radius: 12px;
     box-shadow: 0 8px 24px #00000040;
     padding: 24px;
-    position: relative; /* Añadido para el posicionamiento del botón 'X' */
-    animation: modalContentScaleIn 0.2s ease-out forwards; /* <-- AÑADIDO */
-    transform-origin: center center; /* <-- AÑADIDO */
+    position: relative;
+    /* Añadido para el posicionamiento del botón 'X' */
+    animation: modalContentScaleIn 0.2s ease-out forwards;
+    /* <-- AÑADIDO */
+    transform-origin: center center;
+    /* <-- AÑADIDO */
 }
 
 /* --- ▼▼▼ NUEVO ESTILO PARA BOTÓN 'X' ▼▼▼ --- */
@@ -900,45 +909,56 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #f5f5fa; /* Fondo claro como el hover */
+    background-color: #f5f5fa;
+    /* Fondo claro como el hover */
     color: #000000;
     border-radius: 50%;
     border: none;
     cursor: pointer;
-    z-index: 2001; /* Encima del modal-content */
+    z-index: 2001;
+    /* Encima del modal-content */
     transition: background-color 0.2s;
 }
 
 .settings-modal-close-btn:hover {
-    background-color: #e0e0e0; /* Un gris un poco más oscuro */
+    background-color: #e0e0e0;
+    /* Un gris un poco más oscuro */
 }
 
 .settings-modal-close-btn .material-symbols-rounded {
     font-size: 20px;
 }
+
 /* --- ▲▲▲ FIN ESTILO BOTÓN 'X' ▲▲▲ --- */
 
 
 /* Reutilizamos el auth-error-message para el modal */
 .settings-modal-content .auth-error-message {
-    display: block; /* La visibilidad se controla por JS */
+    display: block;
+    /* La visibilidad se controla por JS */
 }
 
 /* ▼▼▼ ESTILOS PARA MODAL DE VERIFICACIÓN DE EMAIL ▼▼▼ */
 .settings-modal-content .auth-title {
-    text-align: left; /* Título alineado a la izquierda */
-    font-size: 24px; /* Un poco más pequeño que el auth-title genérico */
-    padding-right: 40px; /* Espacio para el botón 'X' */
+    text-align: left;
+    /* Título alineado a la izquierda */
+    font-size: 24px;
+    /* Un poco más pequeño que el auth-title genérico */
+    padding-right: 40px;
+    /* Espacio para el botón 'X' */
 }
 
 .settings-modal-content .auth-verification-text {
-    text-align: left; /* Texto alineado a la izquierda */
+    text-align: left;
+    /* Texto alineado a la izquierda */
     margin-bottom: 24px;
-    color: #6b7280; /* Color de texto secundario */
+    color: #6b7280;
+    /* Color de texto secundario */
 }
 
 .settings-modal-content .auth-verification-text strong {
-    color: #1f2937; /* Color de texto principal para el email */
+    color: #1f2937;
+    /* Color de texto principal para el email */
     font-weight: 600;
 }
 
@@ -973,6 +993,7 @@ body {
 .settings-modal-footer p a:hover {
     text-decoration: underline;
 }
+
 /* ▲▲▲ FIN ESTILOS DE MODAL ▲▲▲ */
 /* --- ▲▲▲ FIN DE ESTILOS DE MODAL ▲▲▲ --- */
 
@@ -1008,6 +1029,7 @@ body {
         opacity: 0;
         transform: translateX(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -1019,6 +1041,7 @@ body {
         opacity: 1;
         transform: translateX(0);
     }
+
     to {
         opacity: 0;
         transform: translateX(-20px);
@@ -1030,6 +1053,7 @@ body {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -1040,11 +1064,13 @@ body {
         opacity: 0;
         transform: scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
     }
 }
+
 /* --- ▲▲▲ FIN DE NUEVAS ANIMACIONES ▲▲▲ --- */
 
 #alert-container {
@@ -1069,7 +1095,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    
+
     opacity: 0;
     animation-duration: 0.3s;
     animation-timing-function: ease-out;
@@ -1108,12 +1134,14 @@ body {
 }
 
 .alert-toast.alert-type-success {
-    background-color: #333; /* MODIFICADO */
+    background-color: #333;
+    /* MODIFICADO */
     color: #ffffff;
 }
 
 .alert-toast.alert-type-error {
-    background-color: #333; /* MODIFICADO */
+    background-color: #333;
+    /* MODIFICADO */
     color: #ffffff;
 }
 
@@ -1123,12 +1151,16 @@ body {
         right: 12px;
         width: auto;
     }
-}/* --- ▼▼▼ NUEVOS ESTILOS PARA TOGGLE 2FA (¡MODIFICADOS!) ▼▼▼ --- */
+}
+
+/* --- ▼▼▼ NUEVOS ESTILOS PARA TOGGLE 2FA (¡MODIFICADOS!) ▼▼▼ --- */
 .settings-toggle-switch {
     position: relative;
     display: inline-block;
-    width: 40px; /* Ancho del contenedor (MODIFICADO) */
-    height: 24px; /* Alto del contenedor (MODIFICADO) */
+    width: 40px;
+    /* Ancho del contenedor (MODIFICADO) */
+    height: 24px;
+    /* Alto del contenedor (MODIFICADO) */
 }
 
 .settings-toggle-switch .settings-toggle-slider {
@@ -1140,20 +1172,27 @@ body {
     bottom: 0;
     background-color: #ccc;
     transition: .3s;
-    border-radius: 34px; /* Bordes redondeados */
+    border-radius: 34px;
+    /* Bordes redondeados */
 }
 
 .settings-toggle-switch .settings-toggle-slider:before {
     position: absolute;
     content: "";
-    height: 20px; /* Alto del círculo (MODIFICADO) */
-    width: 20px; /* Ancho del círculo (MODIFICADO) */
-    left: 2px; /* Posición inicial (MODIFICADO) */
-    bottom: 2px; /* Posición inicial (MODIFICADO) */
+    height: 20px;
+    /* Alto del círculo (MODIFICADO) */
+    width: 20px;
+    /* Ancho del círculo (MODIFICADO) */
+    left: 2px;
+    /* Posición inicial (MODIFICADO) */
+    bottom: 2px;
+    /* Posición inicial (MODIFICADO) */
     background-color: white;
     transition: .3s;
-    border-radius: 50%; /* Círculo */
+    border-radius: 50%;
+    /* Círculo */
 }
+
 /* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
 
 /* --- ▼▼▼ ¡ESTILOS AÑADIDOS PARA COMPLETAR EL TOGGLE! ▼▼▼ --- */
@@ -1167,42 +1206,51 @@ body {
 }
 
 /* Estilos cuando está 'checked' (encendido) */
-.settings-toggle-switch input:checked + .settings-toggle-slider {
-    background-color: #7B1AF7; /* Un color morado similar al de la imagen */
+.settings-toggle-switch input:checked+.settings-toggle-slider {
+    background-color: #7B1AF7;
+    /* Un color morado similar al de la imagen */
 }
 
-.settings-toggle-switch input:focus + .settings-toggle-slider {
-    box-shadow: 0 0 1px #7B1AF7; /* Opcional: un 'focus ring' */
+.settings-toggle-switch input:focus+.settings-toggle-slider {
+    box-shadow: 0 0 1px #7B1AF7;
+    /* Opcional: un 'focus ring' */
 }
 
 /* Mover el círculo cuando está 'checked' */
-.settings-toggle-switch input:checked + .settings-toggle-slider:before {
-    transform: translateX(16px); /* Mueve el círculo (40 - 20 - 2 - 2) = 16px (MODIFICADO) */
+.settings-toggle-switch input:checked+.settings-toggle-slider:before {
+    transform: translateX(16px);
+    /* Mueve el círculo (40 - 20 - 2 - 2) = 16px (MODIFICADO) */
 }
+
 /* --- ▲▲▲ FIN DE ESTILOS AÑADIDOS ▲▲▲ --- */
 
 
 /* --- ▼▼▼ NUEVOS ESTILOS PARA LAYOUT DE TARJETA EN COLUMNA ▼▼▼ --- */
 .settings-card-column {
     flex-direction: column;
-    align-items: stretch; /* Sobrescribe 'align-items: center' */
+    align-items: stretch;
+    /* Sobrescribe 'align-items: center' */
 }
 
 .settings-card-bottom {
     display: flex;
     justify-content: flex-end;
     width: 100%;
-    margin-top: 16px; /* Espacio entre el texto y el botón */
+    margin-top: 16px;
+    /* Espacio entre el texto y el botón */
 }
 
 /* --- ▼▼▼ NUEVA CLASE DE PELIGRO PARA LA TARJETA ▼▼▼ --- */
 .settings-card-danger {
-    border-color: #ef9a9a; /* Borde rojo claro */
+    border-color: #ef9a9a;
+    /* Borde rojo claro */
 }
 
 .settings-card-danger .settings-text-title {
-    color: #c62828; /* Título en rojo oscuro */
+    color: #c62828;
+    /* Título en rojo oscuro */
 }
+
 /* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */
 
 
@@ -1210,7 +1258,7 @@ body {
 
 .trigger-select-wrapper {
     position: relative;
-    width: 265px; 
+    width: 265px;
     height: 45px;
 }
 
@@ -1238,7 +1286,8 @@ body {
     justify-content: center;
     flex-shrink: 0;
     margin-right: 12px;
-    color: #6b7280; /* Color gris para el icono */
+    color: #6b7280;
+    /* Color gris para el icono */
 }
 
 .trigger-select-icon .material-symbols-rounded {
@@ -1266,10 +1315,12 @@ body {
 
 .module-content.module-trigger-select {
     position: absolute;
-    top: calc(100% + 5px); /* Se abre hacia ARRIBA */
+    top: calc(100% + 5px);
+    /* Se abre hacia ARRIBA */
     left: 0;
-    right: 0; 
-    width: 100%; /* Mismo ancho que el wrapper */
+    right: 0;
+    width: 100%;
+    /* Mismo ancho que el wrapper */
     z-index: 10;
 }
 
@@ -1289,7 +1340,8 @@ body {
 }
 
 .module-trigger-select .menu-link:not(.active) .menu-link-icon {
-    width: 45px; /* Mantiene el espacio aunque esté vacío */
+    width: 45px;
+    /* Mantiene el espacio aunque esté vacío */
 }
 
 /* ===== FIN DE NUEVOS ESTILOS ===== */

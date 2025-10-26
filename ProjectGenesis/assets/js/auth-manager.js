@@ -50,7 +50,10 @@ async function handleRegistrationSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const button = form.querySelector('button[type="submit"]');
-    const errorDiv = document.getElementById('register-error');
+    // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
+    const activeStep = form.querySelector('.auth-step.active');
+    const errorDiv = activeStep.querySelector('.auth-error-message');
+    // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
 
     button.disabled = true;
     button.textContent = 'Verificando...';
@@ -76,7 +79,10 @@ async function handleResetSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const button = form.querySelector('button[type="submit"]');
-    const errorDiv = document.getElementById('reset-error');
+    // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
+    const activeStep = form.querySelector('.auth-step.active');
+    const errorDiv = activeStep.querySelector('.auth-error-message');
+    // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
 
     const password = form.querySelector('#reset-password').value;
     const passwordConfirm = form.querySelector('#reset-password-confirm').value;
@@ -121,7 +127,10 @@ async function handleLoginFinalSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const button = form.querySelector('button[type="submit"]');
-    const errorDiv = document.getElementById('login-error');
+    // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
+    const activeStep = form.querySelector('.auth-step.active');
+    const errorDiv = activeStep.querySelector('.auth-error-message');
+    // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
 
     button.disabled = true;
     button.textContent = 'Verificando...';
@@ -140,9 +149,23 @@ async function handleLoginFinalSubmit(e) {
     }
 }
 
+// --- ▼▼▼ ¡INICIO DE LA MODIFICACIÓN PRINCIPAL! ▼▼▼ ---
+/**
+ * Muestra un error en el div de error del formulario de autenticación.
+ * @param {HTMLElement | null} errorDiv El elemento <div> donde mostrar el error.
+ * @param {string} message El mensaje de error.
+ */
 function showAuthError(errorDiv, message) {
-    window.showAlert(message, 'error');
+    // window.showAlert(message, 'error'); // <-- LÍNEA ELIMINADA
+    
+    // Nueva lógica para mostrar el error en el div
+    if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
 }
+// --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN PRINCIPAL! ▲▲▲ ---
+
 
 function initPasswordToggles() {
     document.body.addEventListener('click', e => {
@@ -180,6 +203,11 @@ function initRegisterWizard() {
             const registerForm = button.closest('#register-form');
             if (!registerForm) return; 
 
+            // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
+            const currentStepEl = button.closest('.auth-step');
+            const errorDiv = currentStepEl.querySelector('.auth-error-message');
+            // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
+            
             const linkElement = button;
 
             if (linkElement.classList.contains('disabled-interactive')) {
@@ -188,16 +216,23 @@ function initRegisterWizard() {
 
             const email = sessionStorage.getItem('regEmail');
             if (!email) {
-                window.showAlert('Error: No se encontró tu email. Por favor, recarga la página.', 'error');
+                // --- MODIFICADO ---
+                // Usamos el errorDiv del formulario si no hay email (caso raro)
+                showAuthError(errorDiv, 'Error: No se encontró tu email. Por favor, recarga la página.');
+                // --- FIN MODIFICADO ---
                 return;
             }
             
+            // --- ▼▼▼ ¡INICIO DE LA MODIFICACIÓN! ▼▼▼ ---
+            
+            // 1. Respaldar el texto original (por si falla la API)
             const originalText = linkElement.textContent.replace(/\s*\(\d+s?\)$/, '').trim();
-            linkElement.classList.add('disabled-interactive');
-            linkElement.style.opacity = '0.7';
-            linkElement.style.textDecoration = 'none';
-            linkElement.textContent = 'Enviando...';
+            
+            // 2. Iniciar el temporizador INMEDIATAMENTE
+            // Esto cambia el texto a "Reenviar... (60s)" y deshabilita el link
+            startResendTimer(linkElement, 60); 
 
+            // 3. Preparar la llamada a la API
             const formData = new FormData();
             formData.append('action', 'register-resend-code');
             formData.append('email', email);
@@ -207,18 +242,30 @@ function initRegisterWizard() {
                  formData.append('csrf_token', csrfToken.value);
             }
 
+            // 4. Llamar a la API (mientras el timer corre)
             const result = await callAuthApi(formData);
 
+            // 5. Manejar el resultado
             if (result.success) {
+                // ¡Éxito! El timer sigue corriendo. Solo mostramos el toast.
                 window.showAlert(result.message || 'Se ha reenviado un nuevo código.', 'success');
-                startResendTimer(linkElement, 60); 
             } else {
-                window.showAlert(result.message || 'Error al reenviar el código.', 'error');
+                // ¡Falló! Mostramos el error en el div
+                showAuthError(errorDiv, result.message || 'Error al reenviar el código.');
+                
+                // Detener el temporizador
+                const timerId = linkElement.dataset.timerId;
+                if (timerId) {
+                    clearInterval(timerId);
+                }
+                
+                // Revertir el link a su estado original
                 linkElement.textContent = originalText; 
                 linkElement.classList.remove('disabled-interactive');
                 linkElement.style.opacity = '1';
                 linkElement.style.textDecoration = '';
             }
+            // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
             return;
         }
 
@@ -227,11 +274,12 @@ function initRegisterWizard() {
         const registerForm = button.closest('#register-form');
         if (!registerForm) return;
 
-        const errorDiv = registerForm.querySelector('#register-error'); 
-        if (!errorDiv) return; 
-
+        // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
         const currentStepEl = button.closest('.auth-step');
         if (!currentStepEl) return;
+        const errorDiv = currentStepEl.querySelector('.auth-error-message'); 
+        if (!errorDiv) return; 
+        // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
 
         const currentStep = parseInt(currentStepEl.getAttribute('data-step'), 10);
 
@@ -280,12 +328,18 @@ function initRegisterWizard() {
             // --- Fin Validación de Cliente ---
 
             if (!isValid) {
-                window.showAlert(clientErrorMessage, 'error');
+                // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
+                // window.showAlert(clientErrorMessage, 'error'); // <-- LÍNEA ELIMINADA
+                showAuthError(errorDiv, clientErrorMessage); // <-- LÍNEA AÑADIDA
+                // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
                 return;
             }
 
-            const errorDivElement = registerForm.querySelector('.auth-error-message');
-            if (errorDivElement) errorDivElement.style.display = 'none';
+            // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
+            // const errorDivElement = registerForm.querySelector('.auth-error-message');
+            // if (errorDivElement) errorDivElement.style.display = 'none';
+            if (errorDiv) errorDiv.style.display = 'none';
+            // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
 
             button.disabled = true;
             button.textContent = 'Verificando...';
@@ -323,7 +377,10 @@ function initRegisterWizard() {
                     handleNavigation(); // handleNavigation se encargará de cargar y mostrar
                 }
             } else {
-                showAuthError(null, result.message || 'Error desconocido.'); // Pasar null a showAuthError
+                // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
+                // showAuthError(null, result.message || 'Error desconocido.'); // <-- LÍNEA ELIMINADA
+                showAuthError(errorDiv, result.message || 'Error desconocido.'); // <-- LÍNEA AÑADIDA
+                // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
             }
 
             if (!result.success || !nextPath) {
@@ -365,7 +422,12 @@ function initResetWizard() {
         const resetForm = button.closest('#reset-form');
         if (!resetForm) return;
 
-        const errorDiv = resetForm.querySelector('#reset-error'); 
+        // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
+        const currentStepEl = button.closest('.auth-step');
+        if (!currentStepEl) return;
+        const errorDiv = currentStepEl.querySelector('.auth-error-message'); 
+        // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
+        
         const action = button.getAttribute('data-auth-action');
 
         // --- LÓGICA DE REENVÍO (Corregida) ---
@@ -380,17 +442,22 @@ function initResetWizard() {
             // --- ▼▼▼ ¡MODIFICACIÓN! Tomar email de sessionStorage ▼▼▼ ---
             const email = sessionStorage.getItem('resetEmail');
             if (!email) {
-                window.showAlert('Error: No se encontró tu email. Por favor, vuelve al paso 1.', 'error');
+                // --- MODIFICADO ---
+                showAuthError(errorDiv, 'Error: No se encontró tu email. Por favor, vuelve al paso 1.');
+                // --- FIN MODIFICADO ---
                 return;
             }
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
-            const originalText = linkElement.textContent.replace(/\s*\(\d+s?\)$/, '').trim();
-            linkElement.classList.add('disabled-interactive');
-            linkElement.style.opacity = '0.7';
-            linkElement.style.textDecoration = 'none';
-            linkElement.textContent = 'Enviando...';
+            // --- ▼▼▼ ¡INICIO DE LA MODIFICACIÓN! ▼▼▼ ---
 
+            // 1. Respaldar el texto original (por si falla la API)
+            const originalText = linkElement.textContent.replace(/\s*\(\d+s?\)$/, '').trim();
+            
+            // 2. Iniciar el temporizador INMEDIATAMENTE
+            startResendTimer(linkElement, 60);
+
+            // 3. Preparar la llamada a la API
             const formData = new FormData();
             formData.append('action', 'reset-resend-code');
             formData.append('email', email);
@@ -400,24 +467,33 @@ function initResetWizard() {
                  formData.append('csrf_token', csrfToken.value);
             }
 
+            // 4. Llamar a la API (mientras el timer corre)
             const result = await callAuthApi(formData);
 
+            // 5. Manejar el resultado
             if (result.success) {
+                // ¡Éxito! El timer sigue corriendo. Solo mostramos el toast.
                 window.showAlert(result.message || 'Se ha reenviado un nuevo código.', 'success');
-                startResendTimer(linkElement, 60);
             } else {
-                window.showAlert(result.message || 'Error al reenviar el código.', 'error');
-                linkElement.textContent = originalText;
+                // ¡Falló! Mostramos el error en el div
+                showAuthError(errorDiv, result.message || 'Error al reenviar el código.');
+                
+                // Detener el temporizador
+                const timerId = linkElement.dataset.timerId;
+                if (timerId) {
+                    clearInterval(timerId);
+                }
+                
+                // Revertir el link a su estado original
+                linkElement.textContent = originalText; 
                 linkElement.classList.remove('disabled-interactive');
                 linkElement.style.opacity = '1';
                 linkElement.style.textDecoration = '';
             }
+            // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
             return;
         }
 
-
-        const currentStepEl = button.closest('.auth-step');
-        if (!currentStepEl) return;
 
         const currentStep = parseInt(currentStepEl.getAttribute('data-step'), 10);
 
@@ -447,7 +523,10 @@ function initResetWizard() {
             }
 
             if (!isValid) {
-                showAuthError(null, clientErrorMessage); // Pasar null
+                // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
+                // showAuthError(null, clientErrorMessage); // <-- LÍNEA ELIMINADA
+                showAuthError(errorDiv, clientErrorMessage); // <-- LÍNEA AÑADIDA
+                // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
                 return;
             }
 
@@ -487,7 +566,10 @@ function initResetWizard() {
                  }
 
             } else {
-                showAuthError(null, result.message || 'Error desconocido.'); // Pasar null
+                // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
+                // showAuthError(null, result.message || 'Error desconocido.'); // <-- LÍNEA ELIMINADA
+                showAuthError(errorDiv, result.message || 'Error desconocido.'); // <-- LÍNEA AÑADIDA
+                // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
             }
 
             // Rehabilitar botón solo si falló
@@ -509,12 +591,13 @@ function initLoginWizard() {
         const loginForm = button.closest('#login-form');
         if (!loginForm) return;
 
-        const errorDiv = loginForm.querySelector('#login-error'); 
-
-        const action = button.getAttribute('data-auth-action');
+        // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
         const currentStepEl = button.closest('.auth-step');
         if (!currentStepEl) return;
+        const errorDiv = currentStepEl.querySelector('.auth-error-message'); 
+        // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
 
+        const action = button.getAttribute('data-auth-action');
         const currentStep = parseInt(currentStepEl.getAttribute('data-step'), 10);
 
         if (action === 'prev-step') {
@@ -531,7 +614,10 @@ function initLoginWizard() {
             const emailInput = currentStepEl.querySelector('#login-email');
             const passwordInput = currentStepEl.querySelector('#login-password');
             if (!emailInput.value || !passwordInput.value) {
-                showAuthError(null, 'Por favor, completa email y contraseña.'); 
+                // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
+                // showAuthError(null, 'Por favor, completa email y contraseña.'); // <-- LÍNEA ELIMINADA
+                showAuthError(errorDiv, 'Por favor, completa email y contraseña.'); // <-- LÍNEA AÑADIDA
+                // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
                 return;
             }
 
@@ -564,7 +650,10 @@ function initLoginWizard() {
                     window.location.href = window.projectBasePath + '/';
                 }
             } else {
-                showAuthError(null, result.message || 'Error desconocido.'); 
+                // --- ▼▼▼ ¡MODIFICADO! ▼▼▼ ---
+                // showAuthError(null, result.message || 'Error desconocido.'); // <-- LÍNEA ELIMINADA
+                showAuthError(errorDiv, result.message || 'Error desconocido.'); // <-- LÍNEA AÑADIDA
+                // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
                 button.disabled = false; 
                 button.textContent = 'Continuar';
             }

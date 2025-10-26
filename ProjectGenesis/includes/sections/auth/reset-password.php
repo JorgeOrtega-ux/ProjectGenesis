@@ -5,12 +5,10 @@
         <form class="auth-form" id="reset-form" onsubmit="event.preventDefault();" novalidate>
             
             <?php outputCsrfInput(); ?>
-            <div class="auth-error-message" id="reset-error" style="display: none;"></div>
 
             <fieldset class="auth-step <?php echo ($CURRENT_RESET_STEP == 1) ? 'active' : ''; ?>" data-step="1" <?php echo ($CURRENT_RESET_STEP != 1) ? 'style="display: none;"' : ''; ?>>
-                <p class="auth-step-indicator">Paso 1 de 3: Verifica tu cuenta</p>
                  <p class="auth-verification-text" style="margin-bottom: 16px;">
-                    Ingresa tu correo electrónico y te enviaremos (simulado) un código de recuperación.
+                    Ingresa tu correo electrónico y te enviaremos un código de recuperación.
                 </p>
                 <div class="auth-input-group">
                     <input type="email" id="reset-email" name="email" required placeholder=" ">
@@ -21,13 +19,14 @@
                     <button type="button" class="auth-button" data-auth-action="next-step">Enviar Código</button>
                 </div>
                 
-                <p class="auth-link" style="text-align: center; margin-top: 16px;">
+                <div class="auth-error-message" style="display: none;"></div>
+                
+                <p class="auth-link" style="text-align: center;">
                     ¿Recordaste tu contraseña? <a href="/ProjectGenesis/login">Inicia sesión</a>
                 </p>
             </fieldset>
 
             <fieldset class="auth-step <?php echo ($CURRENT_RESET_STEP == 2) ? 'active' : ''; ?>" data-step="2" <?php echo ($CURRENT_RESET_STEP != 2) ? 'style="display: none;"' : ''; ?>>
-                <p class="auth-step-indicator">Paso 2 de 3: Código de Verificación</p>
                 <p class="auth-verification-text" style="margin-bottom: 16px;">
                     Revisa tu bandeja de entrada e ingresa el código.
                 </p>
@@ -37,11 +36,12 @@
                 </div>
 
                 <div class="auth-step-buttons">
-                    <a href="/ProjectGenesis/reset-password" class="auth-button-back">Atrás</a>
                     <button type="button" class="auth-button" data-auth-action="next-step">Verificar</button>
                 </div>
                 
-                <p class="auth-link" style="text-align: center; margin-top: 16px;">
+                <div class="auth-error-message" style="display: none;"></div>
+                
+                <p class="auth-link" style="text-align: center;">
                     <a href="#" 
                        id="reset-resend-code-link" 
                        data-auth-action="resend-code"
@@ -52,7 +52,6 @@
             </fieldset>
 
             <fieldset class="auth-step <?php echo ($CURRENT_RESET_STEP == 3) ? 'active' : ''; ?>" data-step="3" <?php echo ($CURRENT_RESET_STEP != 3) ? 'style="display: none;"' : ''; ?>>
-                <p class="auth-step-indicator">Paso 3 de 3: Nueva Contraseña</p>
                 <p class="auth-verification-text" style="margin-bottom: 16px;">
                     Ingresa tu nueva contraseña. Debe tener al menos 8 caracteres.
                 </p>
@@ -77,6 +76,9 @@
                      <a href="/ProjectGenesis/reset-password/verify-code" class="auth-button-back">Atrás</a>
                     <button type="submit" class="auth-button">Guardar y Continuar</button>
                 </div>
+                
+                <div class="auth-error-message" style="display: none;"></div>
+                
             </fieldset>
             
             </form>

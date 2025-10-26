@@ -5,10 +5,8 @@
         <form class="auth-form" id="register-form" onsubmit="event.preventDefault();" novalidate>
             
             <?php outputCsrfInput(); ?>
-            <div class="auth-error-message" id="register-error" style="display: none;"></div>
 
             <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 1) ? 'active' : ''; ?>" data-step="1" <?php echo ($CURRENT_REGISTER_STEP != 1) ? 'style="display: none;"' : ''; ?>>
-                <p class="auth-step-indicator">Paso 1 de 3: Tu cuenta</p>
                 <div class="auth-input-group">
                     <input type="email" id="register-email" name="email" required placeholder=" ">
                     <label for="register-email">Dirección de correo electrónico*</label>
@@ -25,10 +23,10 @@
                 <div class="auth-step-buttons">
                     <button type="button" class="auth-button" data-auth-action="next-step">Continuar</button>
                 </div>
+                <div class="auth-error-message" style="display: none;"></div>
             </fieldset>
 
             <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 2) ? 'active' : ''; ?>" data-step="2" <?php echo ($CURRENT_REGISTER_STEP != 2) ? 'style="display: none;"' : ''; ?>>
-                <p class="auth-step-indicator">Paso 2 de 3: Tu perfil</p>
                 <div class="auth-input-group">
                     <input type="text" id="register-username" name="username" required placeholder=" ">
                     <label for="register-username">Nombre de usuario*</label>
@@ -37,13 +35,14 @@
                 <div class="auth-step-buttons">
                     <button type="button" class="auth-button" data-auth-action="next-step">Continuar</button>
                 </div>
+                <div class="auth-error-message" style="display: none;"></div>
             </fieldset>
 
             <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 3) ? 'active' : ''; ?>" data-step="3" <?php echo ($CURRENT_REGISTER_STEP != 3) ? 'style="display: none;"' : ''; ?>>
-                <p class="auth-step-indicator">Paso 3 de 3: Verificación</p>
                 
                 <p class="auth-verification-text">
-                    Te hemos enviado (simulado) un código de verificación. 
+                    Te hemos enviado un código de verificación al correo
+                    <strong><?php echo htmlspecialchars($_SESSION['registration_email'] ?? 'tu correo'); ?></strong>.
                     Por favor, ingrésalo para finalizar tu registro.
                 </p>
 
@@ -56,7 +55,9 @@
                     <button type="submit" class="auth-button">Verificar y Crear Cuenta</button>
                 </div>
                 
-                <p class="auth-link" style="text-align: center; margin-top: 16px;">
+                <div class="auth-error-message" style="display: none;"></div>
+                
+                <p class="auth-link" style="text-align: center;">
                     <a href="#" 
                        id="register-resend-code-link" 
                        data-auth-action="resend-code"
@@ -81,7 +82,7 @@
                 </p>
                 </fieldset>
             
-        </form>
+            </form>
         
         <?php if ($CURRENT_REGISTER_STEP == 1): ?>
         <p class="auth-link">
