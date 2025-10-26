@@ -140,12 +140,12 @@
                     <div class="auth-error-message" id="password-update-error"></div>
 
                     <div class="auth-input-group">
-                        <input type="password" id="password-update-new" name="new_password" required placeholder=" ">
+                        <input type="password" id="password-update-new" name="new_password" required placeholder=" " minlength="8" maxlength="72">
                         <label for="password-update-new">Nueva contraseña*</label>
                     </div>
 
                     <div class="auth-input-group">
-                        <input type="password" id="password-update-confirm" name="confirm_password" required placeholder=" ">
+                        <input type="password" id="password-update-confirm" name="confirm_password" required placeholder=" " minlength="8" maxlength="72">
                         <label for="password-update-confirm">Confirmar nueva contraseña*</label>
                     </div>
 
@@ -167,7 +167,7 @@
             <form class="auth-form" onsubmit="event.preventDefault();" novalidate>
                 <fieldset class="auth-step active">
                     <h2 class="auth-title" id="tfa-modal-title">Verifica tu identidad</h2>
-                    <p class="auth-verification-text" id="tfa-modal-text">
+                    <p class_id="tfa-modal-text">
                         Para continuar, por favor ingresa tu contraseña actual.
                     </p>
                     <div class="auth-error-message" id="tfa-verify-error" style="display: none;"></div>
@@ -184,3 +184,4 @@
     </div>
 
     </div>
+</div>

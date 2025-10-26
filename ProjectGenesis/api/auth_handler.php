@@ -9,6 +9,15 @@ $response = ['success' => false, 'message' => 'Acción no válida.'];
 // --- Constante de Cooldown (NUEVO) ---
 define('CODE_RESEND_COOLDOWN_SECONDS', 60);
 
+// --- ▼▼▼ NUEVAS CONSTANTES DE LÍMITES ▼▼▼ ---
+define('MIN_PASSWORD_LENGTH', 8);
+define('MAX_PASSWORD_LENGTH', 72);
+define('MIN_USERNAME_LENGTH', 6);
+define('MAX_USERNAME_LENGTH', 32);
+define('MAX_EMAIL_LENGTH', 255);
+// --- ▲▲▲ FIN NUEVAS CONSTANTES ▲▲▲ ---
+
+
 // --- FUNCIÓN Generador de Código (Alfanumérico) ---
 function generateVerificationCode() {
     $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -252,10 +261,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = 'Por favor, completa email y contraseña.';
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $response['message'] = 'El formato de correo no es válido.';
+            // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+            } elseif (strlen($email) > MAX_EMAIL_LENGTH) {
+                $response['message'] = 'El correo no puede tener más de ' . MAX_EMAIL_LENGTH . ' caracteres.';
+            // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
             } elseif (!in_array(strtolower($emailDomain), $allowedDomains)) {
                 $response['message'] = 'Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.';
-            } elseif (strlen($password) < 8) {
-                $response['message'] = 'La contraseña debe tener al menos 8 caracteres.';
+            // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+            } elseif (strlen($password) < MIN_PASSWORD_LENGTH) {
+                $response['message'] = 'La contraseña debe tener al menos ' . MIN_PASSWORD_LENGTH . ' caracteres.';
+            } elseif (strlen($password) > MAX_PASSWORD_LENGTH) {
+                $response['message'] = 'La contraseña no puede tener más de ' . MAX_PASSWORD_LENGTH . ' caracteres.';
+            // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
             } else {
                 try {
                     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
@@ -288,8 +305,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (empty($email) || empty($password) || empty($username)) {
                 $response['message'] = 'Faltan datos de los pasos anteriores.';
-            } elseif (strlen($username) < 6) {
-                $response['message'] = 'El nombre de usuario debe tener al menos 6 caracteres.';
+            // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+            } elseif (strlen($password) < MIN_PASSWORD_LENGTH || strlen($password) > MAX_PASSWORD_LENGTH) {
+                 $response['message'] = 'La contraseña no cumple con los límites (debe tener entre ' . MIN_PASSWORD_LENGTH . ' y ' . MAX_PASSWORD_LENGTH . ' caracteres).';
+            } elseif (strlen($username) < MIN_USERNAME_LENGTH) {
+                $response['message'] = 'El nombre de usuario debe tener al menos ' . MIN_USERNAME_LENGTH . ' caracteres.';
+            } elseif (strlen($username) > MAX_USERNAME_LENGTH) {
+                $response['message'] = 'El nombre de usuario no puede tener más de ' . MAX_USERNAME_LENGTH . ' caracteres.';
+            // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
             } else {
                 try {
                     $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
@@ -808,8 +831,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (empty($email) || empty($submittedCode) || empty($newPassword)) {
                 $response['message'] = 'Faltan datos. Por favor, vuelve a empezar.';
-            } elseif (strlen($newPassword) < 8) {
-                $response['message'] = 'La nueva contraseña debe tener al menos 8 caracteres.';
+            // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+            } elseif (strlen($newPassword) < MIN_PASSWORD_LENGTH) {
+                $response['message'] = 'La nueva contraseña debe tener al menos ' . MIN_PASSWORD_LENGTH . ' caracteres.';
+            } elseif (strlen($newPassword) > MAX_PASSWORD_LENGTH) {
+                $response['message'] = 'La nueva contraseña no puede tener más de ' . MAX_PASSWORD_LENGTH . ' caracteres.';
+            // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
             } else {
                 
                 if (checkLockStatus($pdo, $email, $ip)) {

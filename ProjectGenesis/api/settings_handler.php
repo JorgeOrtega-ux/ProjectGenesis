@@ -6,6 +6,14 @@ header('Content-Type: application/json');
 
 $response = ['success' => false, 'message' => 'Acción no válida.'];
 
+// --- ▼▼▼ NUEVAS CONSTANTES DE LÍMITES ▼▼▼ ---
+define('MIN_PASSWORD_LENGTH', 8);
+define('MAX_PASSWORD_LENGTH', 72);
+define('MIN_USERNAME_LENGTH', 6);
+define('MAX_USERNAME_LENGTH', 32);
+define('MAX_EMAIL_LENGTH', 255);
+// --- ▲▲▲ FIN NUEVAS CONSTANTES ▲▲▲ ---
+
 // --- VALIDACIÓN DE SESIÓN ---
 if (!isset($_SESSION['user_id'])) {
     $response['message'] = 'Acceso denegado. No has iniciado sesión.';
@@ -249,9 +257,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($newUsername)) {
                     throw new Exception('El nombre de usuario no puede estar vacío.');
                 }
-                if (strlen($newUsername) < 6) {
-                    throw new Exception('El nombre de usuario debe tener al menos 6 caracteres.');
+                // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+                if (strlen($newUsername) < MIN_USERNAME_LENGTH) {
+                    throw new Exception('El nombre de usuario debe tener al menos ' . MIN_USERNAME_LENGTH . ' caracteres.');
                 }
+                if (strlen($newUsername) > MAX_USERNAME_LENGTH) {
+                    throw new Exception('El nombre de usuario no puede tener más de ' . MAX_USERNAME_LENGTH . ' caracteres.');
+                }
+                // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
                 
                 // 1.5 Validar si el nombre es el mismo
                 if ($newUsername === $oldUsername) {
@@ -491,6 +504,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($newEmail) || !filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
                     throw new Exception('El formato de correo no es válido.');
                 }
+                // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+                if (strlen($newEmail) > MAX_EMAIL_LENGTH) {
+                    throw new Exception('El correo no puede tener más de ' . MAX_EMAIL_LENGTH . ' caracteres.');
+                }
+                // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
                 
                 // 1.5 Validar si el email es el mismo
                 if ($newEmail === $oldEmail) {
@@ -627,9 +645,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($newPassword) || empty($confirmPassword)) {
                     throw new Exception('Por favor, completa ambos campos de nueva contraseña.');
                 }
-                if (strlen($newPassword) < 8) {
-                    throw new Exception('La nueva contraseña debe tener al menos 8 caracteres.');
+                // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+                if (strlen($newPassword) < MIN_PASSWORD_LENGTH) {
+                    throw new Exception('La nueva contraseña debe tener al menos ' . MIN_PASSWORD_LENGTH . ' caracteres.');
                 }
+                if (strlen($newPassword) > MAX_PASSWORD_LENGTH) {
+                    throw new Exception('La nueva contraseña no puede tener más de ' . MAX_PASSWORD_LENGTH . ' caracteres.');
+                }
+                // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
                 if ($newPassword !== $confirmPassword) {
                     throw new Exception('Las nuevas contraseña no coinciden.');
                 }

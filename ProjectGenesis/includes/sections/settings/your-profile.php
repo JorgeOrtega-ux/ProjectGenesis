@@ -114,8 +114,9 @@ $currentLanguageText = $languageMap[$userLanguage] ?? 'English (United States)';
                                name="username" 
                                value="<?php echo htmlspecialchars($usernameForAlt); ?>"
                                required
-                               minlength="6">
-                    </div>
+                               minlength="6"
+                               maxlength="32">
+                        </div>
                 </div>
                 <div class="settings-card-right-actions" id="username-actions-edit" style="display: none;">
                     <button type="button" class="settings-button" id="username-cancel-trigger">Cancelar</button>
@@ -153,8 +154,9 @@ $currentLanguageText = $languageMap[$userLanguage] ?? 'English (United States)';
                                id="email-input" 
                                name="email" 
                                value="<?php echo htmlspecialchars($userEmail); ?>"
-                               required>
-                    </div>
+                               required
+                               maxlength="255">
+                        </div>
                 </div>
                 <div class="settings-card-right-actions" id="email-actions-edit" style="display: none;">
                     <button type="button" class="settings-button" id="email-cancel-trigger">Cancelar</button>

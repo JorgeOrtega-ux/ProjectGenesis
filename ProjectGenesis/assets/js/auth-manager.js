@@ -87,10 +87,12 @@ async function handleResetSubmit(e) {
     const password = form.querySelector('#reset-password').value;
     const passwordConfirm = form.querySelector('#reset-password-confirm').value;
 
-    if (password.length < 8) {
-        showAuthError(errorDiv, 'La contraseña debe tener al menos 8 caracteres.');
+    // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+    if (password.length < 8 || password.length > 72) {
+        showAuthError(errorDiv, 'La contraseña debe tener entre 8 y 72 caracteres.');
         return;
     }
+    // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
     if (password !== passwordConfirm) {
         showAuthError(errorDiv, 'Las contraseñas no coinciden.');
         return;
@@ -306,12 +308,19 @@ function initRegisterWizard() {
                 } else if (!emailInput.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { 
                     isValid = false;
                     clientErrorMessage = 'El formato de correo no es válido.';
+                // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+                } else if (emailInput.value.length > 255) {
+                    isValid = false;
+                    clientErrorMessage = 'El correo no puede tener más de 255 caracteres.';
+                // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
                 } else if (!allowedDomains.test(emailInput.value)) {
                     isValid = false;
                     clientErrorMessage = 'Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.';
-                } else if (passwordInput.value.length < 8) {
+                // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+                } else if (passwordInput.value.length < 8 || passwordInput.value.length > 72) {
                     isValid = false;
-                    clientErrorMessage = 'La contraseña debe tener al menos 8 caracteres.';
+                    clientErrorMessage = 'La contraseña debe tener entre 8 y 72 caracteres.';
+                // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
                 }
             }
             else if (currentStep === 2) {
@@ -320,9 +329,11 @@ function initRegisterWizard() {
                 if (!usernameInput.value) {
                     isValid = false;
                     clientErrorMessage = 'Por favor, introduce un nombre de usuario.';
-                } else if (usernameInput.value.length < 6) {
+                // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+                } else if (usernameInput.value.length < 6 || usernameInput.value.length > 32) {
                     isValid = false;
-                    clientErrorMessage = 'El nombre de usuario debe tener al menos 6 caracteres.';
+                    clientErrorMessage = 'El nombre de usuario debe tener entre 6 y 32 caracteres.';
+                // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
                 }
             }
             // --- Fin Validación de Cliente ---
@@ -512,6 +523,11 @@ function initResetWizard() {
                 if (!emailInput.value || !emailInput.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { 
                     isValid = false;
                     clientErrorMessage = 'Por favor, introduce un email válido.';
+                // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+                } else if (emailInput.value.length > 255) {
+                    isValid = false;
+                    clientErrorMessage = 'El correo no puede tener más de 255 caracteres.';
+                // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
                 }
             }
             else if (currentStep === 2) {

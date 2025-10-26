@@ -11,7 +11,7 @@
                     Ingresa tu correo electrónico y te enviaremos un código de recuperación.
                 </p>
                 <div class="auth-input-group">
-                    <input type="email" id="reset-email" name="email" required placeholder=" ">
+                    <input type="email" id="reset-email" name="email" required placeholder=" " maxlength="255">
                     <label for="reset-email">Dirección de correo electrónico*</label>
                 </div>
                 
@@ -57,7 +57,7 @@
                 </p>
 
                 <div class="auth-input-group">
-                    <input type="password" id="reset-password" name="password" required placeholder=" ">
+                    <input type="password" id="reset-password" name="password" required placeholder=" " minlength="8" maxlength="72">
                     <label for="reset-password">Nueva Contraseña*</label>
                     <button type="button" class="auth-toggle-password" data-toggle="reset-password">
                         <span class="material-symbols-rounded">visibility</span>
@@ -65,7 +65,7 @@
                 </div>
 
                  <div class="auth-input-group">
-                    <input type="password" id="reset-password-confirm" name="password_confirm" required placeholder=" ">
+                    <input type="password" id="reset-password-confirm" name="password_confirm" required placeholder=" " minlength="8" maxlength="72">
                     <label for="reset-password-confirm">Confirmar Contraseña*</label>
                     <button type="button" class="auth-toggle-password" data-toggle="reset-password-confirm">
                         <span class="material-symbols-rounded">visibility</span>

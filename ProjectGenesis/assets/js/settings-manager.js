@@ -602,14 +602,15 @@ export function initSettingsManager() {
             const newPassInput = document.getElementById('password-update-new');
             const confirmPassInput = document.getElementById('password-update-confirm');
 
-            // Validación de cliente
-            if (newPassInput.value.length < 8) {
+            // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+            if (newPassInput.value.length < 8 || newPassInput.value.length > 72) {
                 if(errorDiv) {
-                    errorDiv.textContent = 'La nueva contraseña debe tener al menos 8 caracteres.';
+                    errorDiv.textContent = 'La nueva contraseña debe tener entre 8 y 72 caracteres.';
                     errorDiv.style.display = 'block';
                 }
                 return;
             }
+            // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
             if (newPassInput.value !== confirmPassInput.value) {
                 if(errorDiv) {
                     errorDiv.textContent = 'Las nuevas contraseñas no coinciden.';
@@ -901,10 +902,12 @@ export function initSettingsManager() {
             const saveTrigger = document.getElementById('username-save-trigger');
             const inputElement = document.getElementById('username-input');
 
-            if (inputElement.value.length < 6) {
-                window.showAlert('El nombre de usuario debe tener al menos 6 caracteres.', 'error');
+            // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+            if (inputElement.value.length < 6 || inputElement.value.length > 32) {
+                window.showAlert('El nombre de usuario debe tener entre 6 y 32 caracteres.', 'error');
                 return;
             }
+            // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
 
             toggleButtonSpinner(saveTrigger, 'Guardar', true);
 
@@ -936,6 +939,13 @@ export function initSettingsManager() {
                 window.showAlert('Por favor, introduce un correo electrónico válido.', 'error');
                 return;
             }
+
+            // --- ▼▼▼ INICIO MODIFICACIÓN LÍMITES ▼▼▼ ---
+            if (newEmail.length > 255) {
+                window.showAlert('El correo no puede tener más de 255 caracteres.', 'error');
+                return;
+            }
+            // --- ▲▲▲ FIN MODIFICACIÓN LÍMITES ▲▲▲ ---
             
             const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i;
             if (!allowedDomains.test(newEmail)) {

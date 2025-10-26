@@ -8,12 +8,12 @@
 
             <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 1) ? 'active' : ''; ?>" data-step="1" <?php echo ($CURRENT_REGISTER_STEP != 1) ? 'style="display: none;"' : ''; ?>>
                 <div class="auth-input-group">
-                    <input type="email" id="register-email" name="email" required placeholder=" ">
+                    <input type="email" id="register-email" name="email" required placeholder=" " maxlength="255">
                     <label for="register-email">Dirección de correo electrónico*</label>
                 </div>
 
                 <div class="auth-input-group">
-                    <input type="password" id="register-password" name="password" required placeholder=" ">
+                    <input type="password" id="register-password" name="password" required placeholder=" " minlength="8" maxlength="72">
                     <label for="register-password">Contraseña*</label>
                     <button type="button" class="auth-toggle-password" data-toggle="register-password">
                         <span class="material-symbols-rounded">visibility</span>
@@ -28,7 +28,7 @@
 
             <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 2) ? 'active' : ''; ?>" data-step="2" <?php echo ($CURRENT_REGISTER_STEP != 2) ? 'style="display: none;"' : ''; ?>>
                 <div class="auth-input-group">
-                    <input type="text" id="register-username" name="username" required placeholder=" ">
+                    <input type="text" id="register-username" name="username" required placeholder=" " minlength="6" maxlength="32">
                     <label for="register-username">Nombre de usuario*</label>
                 </div>
 
