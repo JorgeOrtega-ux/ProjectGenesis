@@ -1,9 +1,9 @@
 import { callSettingsApi } from './api-service.js';
 import { deactivateAllModules } from './main-controller.js';
 import { getTranslation, loadTranslations, applyTranslations } from './i18n-manager.js';
+import { startResendTimer } from './auth-manager.js';
 
-// --- ▼▼▼ NUEVAS FUNCIONES HELPER PARA ERRORES INLINE ▼▼▼ ---
-
+// --- (Helper functions showInlineError, hideInlineError, toggleButtonSpinner, focusInputAndMoveCursorToEnd remain the same) ---
 /**
  * Muestra un mensaje de error inline debajo de un elemento .settings-card.
  * @param {HTMLElement} cardElement El elemento .settings-card debajo del cual mostrar el error.
@@ -44,10 +44,7 @@ function hideInlineError(cardElement) {
     }
 }
 
-// --- ▲▲▲ FIN DE NUEVAS FUNCIONES HELPER ---
-
-
-// Función para spinner (sin cambios)
+// Función para spinner
 function toggleButtonSpinner(button, text, isLoading) {
     if (!button) return;
     button.disabled = isLoading;
@@ -59,9 +56,8 @@ function toggleButtonSpinner(button, text, isLoading) {
     }
 }
 
-// Función focusInputAndMoveCursorToEnd (sin cambios)
+// Función focusInputAndMoveCursorToEnd
 function focusInputAndMoveCursorToEnd(inputElement) {
-    // ... (código existente sin cambios)
     if (!inputElement) return;
 
     const length = inputElement.value.length;
@@ -78,24 +74,25 @@ function focusInputAndMoveCursorToEnd(inputElement) {
             try {
                 inputElement.setSelectionRange(length, length);
             } catch (e) {
+                // Ignore errors like "setSelectionRange is not supported"
             }
             inputElement.type = originalType;
         }, 0);
 
     } catch (e) {
         inputElement.type = originalType;
+        // Fallback or log error if needed
     }
 }
 
 
-// Función handlePreferenceChange (Modificada para usar showInlineError)
-async function handlePreferenceChange(preferenceTypeOrField, newValue, cardElement) { // Añadido cardElement
-    if (!preferenceTypeOrField || newValue === undefined || !cardElement) { // Añadida validación cardElement
+async function handlePreferenceChange(preferenceTypeOrField, newValue, cardElement) {
+    if (!preferenceTypeOrField || newValue === undefined || !cardElement) {
         console.error('handlePreferenceChange: Faltan tipo/campo, valor o elemento de tarjeta.');
         return;
     }
 
-    hideInlineError(cardElement); // Ocultar error previo al intentar guardar
+    hideInlineError(cardElement);
 
     const fieldMap = {
         'language': 'language',
@@ -107,7 +104,6 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue, cardEleme
 
     if (!fieldName) {
         console.error('Tipo de preferencia desconocido:', preferenceTypeOrField);
-        // Podríamos mostrar un error inline aquí si fuera necesario
         return;
     }
 
@@ -120,12 +116,8 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue, cardEleme
     const result = await callSettingsApi(formData);
 
     if (result.success) {
-        // Mostramos alerta de éxito (toast)
-        // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
         window.showAlert(getTranslation(result.message || 'js.settings.successPreference'), 'success');
-        // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
 
-        // Actualizar estado local (sin cambios)
         if (preferenceTypeOrField === 'theme') {
             window.userTheme = newValue;
             if (window.applyCurrentTheme) {
@@ -137,28 +129,37 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue, cardEleme
         }
         if (preferenceTypeOrField === 'language') {
             window.userLanguage = newValue;
-            await loadTranslations(newValue);
-            applyTranslations(document.body);
+            // Recargar la página para aplicar idioma completamente (más simple)
+            // await loadTranslations(newValue);
+            // applyTranslations(document.body);
+            window.showAlert(getTranslation('js.settings.successLang'), 'success'); // Nuevo mensaje
+            setTimeout(() => location.reload(), 1500); // Recargar
         }
 
     } else {
-        // Mostrar error inline debajo de la tarjeta correspondiente
         showInlineError(cardElement, result.message || 'js.settings.errorPreference');
     }
 }
 
-// Función principal
+// --- ▼▼▼ NUEVA FUNCIÓN HELPER PARA OBTENER CSRF TOKEN DE FORMA SEGURA ▼▼▼ ---
+function getCsrfTokenFromPage() {
+    // Intenta encontrar *cualquier* input CSRF en la página
+    const csrfInput = document.querySelector('input[name="csrf_token"]');
+    return csrfInput ? csrfInput.value : (window.csrfToken || ''); // Fallback al global
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN HELPER ▲▲▲ ---
+
 export function initSettingsManager() {
 
-    // Listener de Clics (Refactorizado masivamente)
     document.body.addEventListener('click', async (e) => {
         const target = e.target;
-        const card = target.closest('.settings-card'); // Encontrar la tarjeta padre
+        const card = target.closest('.settings-card');
 
-        // --- AVATAR ---
-        const avatarCard = document.getElementById('avatar-section'); // Usamos el ID del div padre
+        // --- (Avatar handlers remain the same) ---
+        const avatarCard = document.getElementById('avatar-section');
         if (avatarCard) {
-            if (target.closest('#avatar-preview-container') || target.closest('#avatar-upload-trigger') || target.closest('#avatar-change-trigger')) {
+            // ... (código avatar sin cambios) ...
+             if (target.closest('#avatar-preview-container') || target.closest('#avatar-upload-trigger') || target.closest('#avatar-change-trigger')) {
                 e.preventDefault();
                 hideInlineError(avatarCard); // Ocultar error al intentar abrir selector
                 document.getElementById('avatar-upload-input')?.click();
@@ -189,32 +190,29 @@ export function initSettingsManager() {
 
                 const formData = new FormData();
                 formData.append('action', 'remove-avatar');
-                formData.append('csrf_token', avatarCard.querySelector('[name="csrf_token"]').value); // Obtener token del input oculto
+                formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
 
                 const result = await callSettingsApi(formData);
 
                 if (result.success) {
-                    // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
                     window.showAlert(getTranslation(result.message || 'js.settings.successAvatarRemoved'), 'success');
-                    // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                     setTimeout(() => location.reload(), 1500);
                 } else {
-                    showInlineError(avatarCard, result.message || 'js.settings.errorAvatarRemove'); // Error inline
+                    showInlineError(avatarCard, result.message || 'js.settings.errorAvatarRemove');
                     toggleButtonSpinner(removeTrigger, getTranslation('settings.profile.removePhoto'), false);
                 }
-                return; // Importante añadir return aquí
+                return;
             }
 
-            // Guardar Avatar (movido del listener 'submit')
             if (target.closest('#avatar-save-trigger-btn')) {
                  e.preventDefault();
                 const fileInput = document.getElementById('avatar-upload-input');
                 const saveTrigger = target.closest('#avatar-save-trigger-btn');
 
-                hideInlineError(avatarCard); // Ocultar error al intentar guardar
+                hideInlineError(avatarCard);
 
                 if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-                    showInlineError(avatarCard, 'js.settings.errorAvatarSelect'); // Error inline
+                    showInlineError(avatarCard, 'js.settings.errorAvatarSelect');
                     return;
                 }
 
@@ -222,28 +220,27 @@ export function initSettingsManager() {
 
                 const formData = new FormData();
                 formData.append('action', 'upload-avatar');
-                formData.append('avatar', fileInput.files[0]); // Añadir el archivo
-                formData.append('csrf_token', avatarCard.querySelector('[name="csrf_token"]').value); // Añadir token
+                formData.append('avatar', fileInput.files[0]);
+                formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
 
                 const result = await callSettingsApi(formData);
 
                 if (result.success) {
-                    // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
                     window.showAlert(getTranslation(result.message || 'js.settings.successAvatarUpdate'), 'success');
-                    // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                     setTimeout(() => location.reload(), 1500);
                 } else {
-                    showInlineError(avatarCard, result.message || 'js.settings.errorSaveUnknown'); // Error inline
+                    showInlineError(avatarCard, result.message || 'js.settings.errorSaveUnknown');
                     toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 }
-                return; // Importante añadir return aquí
+                return;
             }
-        } // Fin if(avatarCard)
+        }
 
-        // --- USERNAME ---
+        // --- (Username handlers remain the same) ---
         const usernameCard = document.getElementById('username-section');
         if (usernameCard) {
-            hideInlineError(usernameCard); // Ocultar error si se interactúa con la tarjeta
+            // ... (código username sin cambios, excepto CSRF token) ...
+            hideInlineError(usernameCard);
 
             if (target.closest('#username-edit-trigger')) {
                 e.preventDefault();
@@ -266,50 +263,43 @@ export function initSettingsManager() {
                 document.getElementById('username-actions-view').style.display = 'flex';
                 return;
             }
-
-            // Guardar Username (movido del listener 'submit')
-            if (target.closest('#username-save-trigger-btn')) {
+             if (target.closest('#username-save-trigger-btn')) {
                 e.preventDefault();
                 const saveTrigger = target.closest('#username-save-trigger-btn');
                 const inputElement = document.getElementById('username-input');
-                const csrfTokenInput = usernameCard.querySelector('[name="csrf_token"]');
-                const actionInput = usernameCard.querySelector('[name="action"]'); // Obtener el input de acción
+                const actionInput = usernameCard.querySelector('[name="action"]');
 
-                // Validación simple de longitud
                 if (inputElement.value.length < 6 || inputElement.value.length > 32) {
-                    // Usamos la clave genérica, el backend dará el mensaje específico si falla por otra razón
-                    showInlineError(usernameCard, 'js.auth.errorUsernameLength', { min: 6, max: 32 }); // Error inline con datos
+                    showInlineError(usernameCard, 'js.auth.errorUsernameLength', { min: 6, max: 32 });
                     return;
                 }
 
                 toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
 
                 const formData = new FormData();
-                formData.append('action', actionInput.value); // Usar valor del input action
+                formData.append('action', actionInput.value);
                 formData.append('username', inputElement.value);
-                formData.append('csrf_token', csrfTokenInput.value);
+                formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
 
                 const result = await callSettingsApi(formData);
 
                 if (result.success) {
-                    // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
                     window.showAlert(getTranslation(result.message || 'js.settings.successUsernameUpdate'), 'success');
-                    // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                     setTimeout(() => location.reload(), 1500);
                 } else {
-                    showInlineError(usernameCard, result.message || 'js.settings.errorSaveUnknown', result.data); // Error inline con datos opcionales
+                    showInlineError(usernameCard, result.message || 'js.settings.errorSaveUnknown', result.data);
                     toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 }
-                 return; // Importante añadir return aquí
+                 return;
             }
-        } // Fin if(usernameCard)
+        }
 
-        // --- EMAIL ---
+        // --- (Email handlers remain the same, except CSRF token) ---
         const emailCard = document.getElementById('email-section');
         if (emailCard) {
-             hideInlineError(emailCard); // Ocultar error si se interactúa
+            // ... (código email sin cambios, excepto CSRF token y llamada a startResendTimer) ...
+            hideInlineError(emailCard);
 
-            // Abrir Modal de Verificación (botón Editar)
             if (target.closest('#email-edit-trigger')) {
                 e.preventDefault();
                 const editTrigger = target.closest('#email-edit-trigger');
@@ -317,33 +307,35 @@ export function initSettingsManager() {
 
                 const formData = new FormData();
                 formData.append('action', 'request-email-change-code');
-                formData.append('csrf_token', emailCard.querySelector('[name="csrf_token"]').value);
+                formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
 
                 const result = await callSettingsApi(formData);
 
                 if (result.success) {
-                    // Configurar y mostrar modal (sin cambios)
-                    const currentEmail = document.getElementById('email-display-text')?.dataset.originalEmail;
-                    const modalEmailEl = document.getElementById('email-verify-modal-email');
-                    if (modalEmailEl && currentEmail) modalEmailEl.textContent = currentEmail;
                     const modal = document.getElementById('email-verify-modal');
-                    if(modal) modal.style.display = 'flex';
-                    focusInputAndMoveCursorToEnd(document.getElementById('email-verify-code'));
-                    const modalError = document.getElementById('email-verify-error');
-                    if(modalError) modalError.style.display = 'none';
-                    const modalInput = document.getElementById('email-verify-code');
-                    if(modalInput) modalInput.value = '';
-                    window.showAlert(getTranslation('js.settings.infoCodeSentCurrent'), 'info'); // Usamos toast para info
+                    if(modal) {
+                        const resendLink = modal.querySelector('#email-verify-resend');
+                        if (resendLink) {
+                            startResendTimer(resendLink, 60); // Iniciar timer aquí
+                        }
+                        const currentEmail = document.getElementById('email-display-text')?.dataset.originalEmail;
+                        const modalEmailEl = document.getElementById('email-verify-modal-email');
+                        if (modalEmailEl && currentEmail) modalEmailEl.textContent = currentEmail;
+                        const modalError = document.getElementById('email-verify-error');
+                        if(modalError) modalError.style.display = 'none';
+                        const modalInput = document.getElementById('email-verify-code');
+                        if(modalInput) modalInput.value = '';
+                        modal.style.display = 'flex';
+                        focusInputAndMoveCursorToEnd(document.getElementById('email-verify-code'));
+                    }
+                    window.showAlert(getTranslation('js.settings.infoCodeSentCurrent'), 'info');
                 } else {
-                    // Error al solicitar código -> Error inline en la tarjeta de Email
-                    showInlineError(emailCard, result.message || 'js.settings.errorCodeRequest');
+                    showInlineError(emailCard, result.message || 'js.settings.errorCodeRequest', result.data);
                 }
                 toggleButtonSpinner(editTrigger, getTranslation('settings.profile.edit'), false);
                 return;
             }
-
-            // Cancelar edición de Email
-            if (target.closest('#email-cancel-trigger')) {
+             if (target.closest('#email-cancel-trigger')) {
                  e.preventDefault();
                 const displayElement = document.getElementById('email-display-text');
                 const inputElement = document.getElementById('email-input');
@@ -354,17 +346,13 @@ export function initSettingsManager() {
                 document.getElementById('email-actions-view').style.display = 'flex';
                 return;
             }
-
-             // Guardar Email (movido del listener 'submit')
             if (target.closest('#email-save-trigger-btn')) {
                 e.preventDefault();
                 const saveTrigger = target.closest('#email-save-trigger-btn');
                 const inputElement = document.getElementById('email-input');
                 const newEmail = inputElement.value;
-                const csrfTokenInput = emailCard.querySelector('[name="csrf_token"]');
                 const actionInput = emailCard.querySelector('[name="action"]');
 
-                // Validaciones de cliente
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(newEmail)) {
                     showInlineError(emailCard, 'js.auth.errorInvalidEmail'); return;
@@ -382,62 +370,57 @@ export function initSettingsManager() {
                 const formData = new FormData();
                 formData.append('action', actionInput.value);
                 formData.append('email', newEmail);
-                formData.append('csrf_token', csrfTokenInput.value);
+                formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
 
                 const result = await callSettingsApi(formData);
 
                 if (result.success) {
-                    // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
                     window.showAlert(getTranslation(result.message || 'js.settings.successEmailUpdate'), 'success');
-                    // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                     setTimeout(() => location.reload(), 1500);
                 } else {
                     showInlineError(emailCard, result.message || 'js.settings.errorSaveUnknown', result.data);
                     toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 }
-                return; // Importante
+                return;
             }
+        }
 
-        } // Fin if(emailCard)
-
-        // --- Clics dentro del Modal de Verificación de Email ---
+        // --- (Email Modal handlers remain the same, except CSRF token) ---
         const emailVerifyModal = document.getElementById('email-verify-modal');
         if (emailVerifyModal && emailVerifyModal.contains(target)) {
-             // Reenviar Código
              if (target.closest('#email-verify-resend')) {
                 e.preventDefault();
                 const resendTrigger = target.closest('#email-verify-resend');
                 const modalError = document.getElementById('email-verify-error');
                 if (resendTrigger.classList.contains('disabled-interactive')) return;
 
-                resendTrigger.classList.add('disabled-interactive');
-                const originalText = resendTrigger.textContent;
-                resendTrigger.textContent = getTranslation('js.settings.sending');
-                if(modalError) modalError.style.display = 'none'; // Ocultar error del modal
+                startResendTimer(resendTrigger, 60);
+
+                if(modalError) modalError.style.display = 'none';
 
                 const formData = new FormData();
                 formData.append('action', 'request-email-change-code');
-                // Necesitamos el token CSRF global o de alguna tarjeta visible
-                const anyVisibleCard = document.querySelector('.settings-card:not([style*="display: none"])');
-                formData.append('csrf_token', anyVisibleCard?.querySelector('[name="csrf_token"]').value || window.csrfToken);
+                formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
 
                 const result = await callSettingsApi(formData);
 
                 if (result.success) {
-                    window.showAlert(getTranslation('js.settings.successCodeResent'), 'success'); // Toast para éxito
+                    window.showAlert(getTranslation('js.settings.successCodeResent'), 'success');
                 } else {
-                    // Mostrar error DENTRO del modal
                     if(modalError) {
-                        modalError.textContent = result.message || getTranslation('js.settings.errorCodeResent');
+                        modalError.textContent = getTranslation(result.message || 'js.settings.errorCodeResent', result.data);
                         modalError.style.display = 'block';
                     }
+                    const timerId = resendTrigger.dataset.timerId;
+                    if (timerId) clearInterval(timerId);
+                    const originalBaseText = getTranslation('settings.profile.modalCodeResendA');
+                    resendTrigger.textContent = originalBaseText;
+                    resendTrigger.classList.remove('disabled-interactive');
+                    resendTrigger.style.opacity = '1';
+                    resendTrigger.style.textDecoration = '';
                 }
-                resendTrigger.classList.remove('disabled-interactive');
-                resendTrigger.textContent = originalText;
                 return;
             }
-
-            // Confirmar Código
             if (target.closest('#email-verify-continue')) {
                 e.preventDefault();
                 const continueTrigger = target.closest('#email-verify-continue');
@@ -458,25 +441,20 @@ export function initSettingsManager() {
                 const formData = new FormData();
                 formData.append('action', 'verify-email-change-code');
                 formData.append('verification_code', modalInput.value);
-                 const anyVisibleCard = document.querySelector('.settings-card:not([style*="display: none"])');
-                 formData.append('csrf_token', anyVisibleCard?.querySelector('[name="csrf_token"]').value || window.csrfToken);
+                formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
 
 
                 const result = await callSettingsApi(formData);
 
                 if (result.success) {
-                    emailVerifyModal.style.display = 'none'; // Ocultar modal
-                    // Mostrar estado de edición de email (sin cambios)
+                    emailVerifyModal.style.display = 'none';
                     document.getElementById('email-view-state').style.display = 'none';
                     document.getElementById('email-actions-view').style.display = 'none';
                     document.getElementById('email-edit-state').style.display = 'flex';
                     document.getElementById('email-actions-edit').style.display = 'flex';
                     focusInputAndMoveCursorToEnd(document.getElementById('email-input'));
-                    // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-                    window.showAlert(getTranslation(result.message || 'js.settings.successVerification'), 'success'); // Toast éxito
-                    // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
+                    window.showAlert(getTranslation(result.message || 'js.settings.successVerification'), 'success');
                 } else {
-                    // Error DENTRO del modal
                     if(modalError) {
                         modalError.textContent = result.message || getTranslation('js.settings.errorVerification');
                         modalError.style.display = 'block';
@@ -485,35 +463,35 @@ export function initSettingsManager() {
                 toggleButtonSpinner(continueTrigger, getTranslation('settings.profile.continue'), false);
                 return;
             }
-
-            // Cerrar Modal
             if (target.closest('#email-verify-close')) {
                 e.preventDefault();
                 emailVerifyModal.style.display = 'none';
                 return;
             }
-        } // Fin if emailVerifyModal
+        }
 
-        // --- PREFERENCES (Idioma, Tema, Uso, Toggles) ---
-        const clickedLink = target.closest('.module-trigger-select .menu-link');
+        // --- PREFERENCES (Dropdowns/Popovers) ---
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN DE SELECTORES ▼▼▼ ---
+        const clickedLink = target.closest('.popover-module .menu-link'); // <-- Selector actualizado
         if (clickedLink && card) { // Asegurarse de que estamos dentro de una tarjeta
             e.preventDefault();
             hideInlineError(card); // Ocultar error al cambiar preferencia
 
             const menuList = clickedLink.closest('.menu-list');
-            const module = clickedLink.closest('.module-content[data-preference-type]');
-            const wrapper = clickedLink.closest('.trigger-select-wrapper');
+            const module = clickedLink.closest('.popover-module[data-preference-type]'); // <-- Selector actualizado
+            const wrapper = card.querySelector('.trigger-select-wrapper'); // <-- Buscar wrapper en la tarjeta padre
             const trigger = wrapper?.querySelector('.trigger-selector');
             const triggerTextEl = trigger?.querySelector('.trigger-select-text span');
-            const triggerIconEl = trigger?.querySelector('.trigger-select-icon span'); // Icono del trigger
+            const triggerIconEl = trigger?.querySelector('.trigger-select-icon span');
 
-            const newTextKey = clickedLink.querySelector('.menu-link-text span')?.getAttribute('data-i18n'); // Clave i18n
+            const newTextKey = clickedLink.querySelector('.menu-link-text span')?.getAttribute('data-i18n');
             const newValue = clickedLink.dataset.value;
             const prefType = module?.dataset.preferenceType;
-            const newIconName = clickedLink.querySelector('.menu-link-icon span')?.textContent; // Icono del item seleccionado
+            const newIconName = clickedLink.querySelector('.menu-link-icon span')?.textContent;
 
 
-            if (!menuList || !module || !triggerTextEl || !newTextKey || !newValue || !prefType || !triggerIconEl) {
+            if (!menuList || !module || !wrapper || !trigger || !triggerTextEl || !newTextKey || !newValue || !prefType || !triggerIconEl) { // <-- Añadida validación de wrapper y trigger
+                 console.error("Error finding elements for preference change", {menuList, module, wrapper, trigger, triggerTextEl, newTextKey, newValue, prefType, triggerIconEl});
                  deactivateAllModules();
                 return;
             }
@@ -523,13 +501,11 @@ export function initSettingsManager() {
                 return;
             }
 
-            // Actualizar trigger con la CLAVE i18n y el icono
              triggerTextEl.setAttribute('data-i18n', newTextKey);
-             triggerTextEl.textContent = getTranslation(newTextKey); // Actualizar texto inmediatamente
-             triggerIconEl.textContent = newIconName; // Actualizar icono inmediatamente
+             triggerTextEl.textContent = getTranslation(newTextKey);
+             triggerIconEl.textContent = newIconName;
 
 
-            // Actualizar estado visual del menú (sin cambios)
             menuList.querySelectorAll('.menu-link').forEach(link => {
                 link.classList.remove('active');
                 const icon = link.querySelector('.menu-link-check-icon');
@@ -541,39 +517,28 @@ export function initSettingsManager() {
 
             deactivateAllModules();
 
-            // Llamar a handlePreferenceChange pasando la tarjeta actual
             handlePreferenceChange(prefType, newValue, card);
 
-            return;
+            return; // <-- Añadido return explícito
         }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN DE SELECTORES ▲▲▲ ---
 
-        // --- Clics en Toggles ---
-        // (Movido al listener 'change' más abajo, que es más apropiado)
 
-        // --- MANEJO DE OTROS MODALES (2FA, Contraseña, Logout All, Delete Account) ---
-        // Estos modales ya tienen su propio manejo de errores interno (ej. #tfa-verify-error)
-        // No necesitan usar showInlineError/hideInlineError para la tarjeta principal.
-        // El código existente para estos modales se mantiene aquí.
-
-        // ... (Código existente para #tfa-verify-close, #tfa-toggle-button, #tfa-verify-continue) ...
+        // --- (Modal 2FA handlers remain the same, except CSRF token) ---
          if (target.closest('#tfa-verify-close')) {
             e.preventDefault();
             const modal = document.getElementById('tfa-verify-modal');
             if(modal) modal.style.display = 'none';
             return;
         }
-
         if (target.closest('#tfa-toggle-button')) {
              e.preventDefault();
-             // ... (código existente sin cambios)
             const toggleButton = target.closest('#tfa-toggle-button');
             const modal = document.getElementById('tfa-verify-modal');
             if (!modal) {
-                // Usamos toast para este error porque no hay tarjeta obvia asociada
                 window.showAlert(getTranslation('js.settings.errorModalNotFound'), 'error');
                 return;
             }
-            // ... resto del código sin cambios
             const isCurrentlyEnabled = toggleButton.dataset.isEnabled === '1';
 
             const modalTitle = document.getElementById('tfa-modal-title');
@@ -588,7 +553,7 @@ export function initSettingsManager() {
                  if(modalTitle) modalTitle.dataset.i18n = 'js.settings.modal2faTitleDisable';
                  if(modalText) modalText.dataset.i18n = 'js.settings.modal2faDescDisable';
             }
-             applyTranslations(modal); // Aplicar traducciones al modal
+             applyTranslations(modal);
 
             if(errorDiv) errorDiv.style.display = 'none';
             if(passInput) passInput.value = '';
@@ -600,15 +565,13 @@ export function initSettingsManager() {
         }
          if (target.closest('#tfa-verify-continue')) {
              e.preventDefault();
-             // ... (código existente sin cambios)
                 const modal = document.getElementById('tfa-verify-modal');
                 const verifyTrigger = target.closest('#tfa-verify-continue');
                 const errorDiv = document.getElementById('tfa-verify-error');
                 const currentPassInput = document.getElementById('tfa-verify-password');
+                const toggleButton = document.getElementById('tfa-toggle-button'); // Necesario para actualizar su estado/texto
 
-                const toggleButton = document.getElementById('tfa-toggle-button');
-
-                if (!currentPassInput.value) {
+                if (!currentPassInput || !currentPassInput.value) { // Comprobar si existe el input
                     if(errorDiv) {
                         errorDiv.textContent = getTranslation('js.settings.errorEnterCurrentPass');
                         errorDiv.style.display = 'block';
@@ -622,63 +585,63 @@ export function initSettingsManager() {
                 const passFormData = new FormData();
                 passFormData.append('action', 'verify-current-password');
                 passFormData.append('current_password', currentPassInput.value);
-                 const anyVisibleCard = document.querySelector('.settings-card:not([style*="display: none"])');
-                 passFormData.append('csrf_token', anyVisibleCard?.querySelector('[name="csrf_token"]').value || window.csrfToken);
-
+                 passFormData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
 
                 const passResult = await callSettingsApi(passFormData);
 
                 if (passResult.success) {
                     const twoFaFormData = new FormData();
                     twoFaFormData.append('action', 'toggle-2fa');
-                    twoFaFormData.append('csrf_token', anyVisibleCard?.querySelector('[name="csrf_token"]').value || window.csrfToken);
+                    twoFaFormData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
 
                     const twoFaResult = await callSettingsApi(twoFaFormData);
 
                     if (twoFaResult.success) {
                         if(modal) modal.style.display = 'none';
-                        window.showAlert(getTranslation(twoFaResult.message), 'success'); // Traducir clave
+                        window.showAlert(getTranslation(twoFaResult.message), 'success');
 
                         const statusText = document.getElementById('tfa-status-text');
                         const statusKey = twoFaResult.newState === 1 ? 'settings.login.2faEnabled' : 'settings.login.2faDisabled';
                         const buttonKey = twoFaResult.newState === 1 ? 'settings.login.disable' : 'settings.login.enable';
 
                         if (statusText) statusText.setAttribute('data-i18n', statusKey);
-                        if (toggleButton) {
+                        if (toggleButton) { // Comprobar si existe el botón
                             toggleButton.setAttribute('data-i18n', buttonKey);
                             if (twoFaResult.newState === 1) toggleButton.classList.add('danger');
                             else toggleButton.classList.remove('danger');
                             toggleButton.dataset.isEnabled = twoFaResult.newState.toString();
                         }
-                        applyTranslations(toggleButton?.closest('.settings-card')); // Re-traducir tarjeta
+                         // Re-traducir la tarjeta completa o al menos el status y botón
+                        const tfaCard = document.getElementById('tfa-toggle-button')?.closest('.settings-card');
+                        if (tfaCard) applyTranslations(tfaCard);
+
 
                     } else {
                         if(errorDiv) {
-                            errorDiv.textContent = getTranslation(twoFaResult.message || 'js.settings.error2faToggle'); // Traducir clave
+                            errorDiv.textContent = getTranslation(twoFaResult.message || 'js.settings.error2faToggle');
                             errorDiv.style.display = 'block';
                         }
                     }
 
                 } else {
                     if(errorDiv) {
-                        errorDiv.textContent = getTranslation(passResult.message || 'js.settings.errorVerification'); // Traducir clave
+                        errorDiv.textContent = getTranslation(passResult.message || 'js.settings.errorVerification');
                         errorDiv.style.display = 'block';
                     }
                 }
 
                 toggleButtonSpinner(verifyTrigger, getTranslation('settings.login.confirm'), false);
-                if(currentPassInput) currentPassInput.value = '';
-            return;
+                if(currentPassInput) currentPassInput.value = ''; // Limpiar contraseña
+            return; // <-- Añadido return explícito
         }
 
-        // ... (Código existente para #password-edit-trigger, #password-verify-close, #password-update-back, #password-verify-continue, #password-update-save) ...
+        // --- (Password change handlers remain the same, except CSRF token) ---
          if (target.closest('#password-edit-trigger')) {
             e.preventDefault();
-            // ... (código existente sin cambios)
             const modal = document.getElementById('password-change-modal');
             if (!modal) return;
-
-            modal.querySelector('[data-step="1"]').style.display = 'flex';
+            // ... (resto del código sin cambios) ...
+             modal.querySelector('[data-step="1"]').style.display = 'flex';
             modal.querySelector('[data-step="2"]').style.display = 'none';
 
             const errorDiv1 = modal.querySelector('#password-verify-error');
@@ -704,14 +667,12 @@ export function initSettingsManager() {
             if(modal) modal.style.display = 'none';
             return;
         }
-
         if (target.closest('#password-update-back')) {
              e.preventDefault();
-             // ... (código existente sin cambios)
             const modal = document.getElementById('password-change-modal');
             if (!modal) return;
-
-            modal.querySelector('[data-step="1"]').style.display = 'flex';
+            // ... (resto del código sin cambios) ...
+             modal.querySelector('[data-step="1"]').style.display = 'flex';
             modal.querySelector('[data-step="2"]').style.display = 'none';
             const errorDiv = modal.querySelector('#password-update-error');
              if (errorDiv) errorDiv.style.display = 'none';
@@ -720,13 +681,13 @@ export function initSettingsManager() {
         }
          if (target.closest('#password-verify-continue')) {
             e.preventDefault();
-            // ... (código existente sin cambios)
             const modal = document.getElementById('password-change-modal');
+            if (!modal) return; // Añadido chequeo
             const verifyTrigger = target.closest('#password-verify-continue');
-            const errorDiv = document.getElementById('password-verify-error');
-            const currentPassInput = document.getElementById('password-verify-current');
+            const errorDiv = modal.querySelector('#password-verify-error'); // Corregido ID
+            const currentPassInput = modal.querySelector('#password-verify-current'); // Corregido selector
 
-            if (!currentPassInput || !currentPassInput.value) { // Añadido chequeo de existencia
+            if (!currentPassInput || !currentPassInput.value) {
                 if(errorDiv) {
                     errorDiv.textContent = getTranslation('js.settings.errorEnterCurrentPass');
                     errorDiv.style.display = 'block';
@@ -740,8 +701,7 @@ export function initSettingsManager() {
             const formData = new FormData();
             formData.append('action', 'verify-current-password');
             formData.append('current_password', currentPassInput.value);
-            const anyVisibleCard = document.querySelector('.settings-card:not([style*="display: none"])');
-            formData.append('csrf_token', anyVisibleCard?.querySelector('[name="csrf_token"]').value || window.csrfToken);
+            formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
 
             const result = await callSettingsApi(formData);
 
@@ -751,26 +711,25 @@ export function initSettingsManager() {
                 focusInputAndMoveCursorToEnd(modal.querySelector('#password-update-new'));
             } else {
                 if(errorDiv) {
-                    errorDiv.textContent = getTranslation(result.message || 'js.settings.errorVerification'); // Traducir clave
+                    errorDiv.textContent = getTranslation(result.message || 'js.settings.errorVerification');
                     errorDiv.style.display = 'block';
                 }
             }
 
             toggleButtonSpinner(verifyTrigger, getTranslation('settings.profile.continue'), false);
-            return;
+            return; // <-- Añadido return explícito
         }
          if (target.closest('#password-update-save')) {
             e.preventDefault();
-            // ... (código existente sin cambios)
              const modal = document.getElementById('password-change-modal');
+             if (!modal) return; // Añadido chequeo
             const saveTrigger = target.closest('#password-update-save');
-            const errorDiv = document.getElementById('password-update-error');
-            const newPassInput = document.getElementById('password-update-new');
-            const confirmPassInput = document.getElementById('password-update-confirm');
+            const errorDiv = modal.querySelector('#password-update-error'); // Corregido ID
+            const newPassInput = modal.querySelector('#password-update-new'); // Corregido selector
+            const confirmPassInput = modal.querySelector('#password-update-confirm'); // Corregido selector
 
-            if (!newPassInput || !confirmPassInput) return; // Añadido chequeo
+            if (!newPassInput || !confirmPassInput) return;
 
-             // Usar claves i18n para errores
              if (newPassInput.value.length < 8 || newPassInput.value.length > 72) {
                  if(errorDiv) {
                     errorDiv.textContent = getTranslation('js.auth.errorPasswordLength', {min: 8, max: 72});
@@ -793,36 +752,33 @@ export function initSettingsManager() {
             formData.append('action', 'update-password');
             formData.append('new_password', newPassInput.value);
             formData.append('confirm_password', confirmPassInput.value);
-            const anyVisibleCard = document.querySelector('.settings-card:not([style*="display: none"])');
-            formData.append('csrf_token', anyVisibleCard?.querySelector('[name="csrf_token"]').value || window.csrfToken);
+            formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
 
 
             const result = await callSettingsApi(formData);
 
             if (result.success) {
                 if(modal) modal.style.display = 'none';
-                window.showAlert(getTranslation(result.message || 'js.settings.successPassUpdate'), 'success'); // Traducir clave
+                window.showAlert(getTranslation(result.message || 'js.settings.successPassUpdate'), 'success');
             } else {
                 if(errorDiv) {
-                     // Traducir clave y añadir datos si existen
                     errorDiv.textContent = getTranslation(result.message || 'js.settings.errorSaving', result.data);
                     errorDiv.style.display = 'block';
                 }
             }
 
             toggleButtonSpinner(saveTrigger, getTranslation('settings.login.savePassword'), false);
-            return;
+            return; // <-- Añadido return explícito
         }
 
-        // ... (Código existente para #logout-all-devices-trigger, #logout-all-close, #logout-all-cancel, #logout-all-confirm) ...
+        // --- (Logout All handlers remain the same, except CSRF token) ---
          if (target.closest('#logout-all-devices-trigger')) {
             e.preventDefault();
-             // ... (código existente sin cambios)
             const modal = document.getElementById('logout-all-modal');
+            // ... (resto del código sin cambios) ...
             if(modal) {
                 const dangerBtn = modal.querySelector('#logout-all-confirm');
                 if(dangerBtn) {
-                     // Usar getTranslation para el texto del botón
                      toggleButtonSpinner(dangerBtn, getTranslation('settings.devices.modalConfirm'), false);
                 }
                 modal.style.display = 'flex';
@@ -835,44 +791,41 @@ export function initSettingsManager() {
             if(modal) modal.style.display = 'none';
             return;
         }
-
         if (target.closest('#logout-all-confirm')) {
              e.preventDefault();
-             // ... (código existente sin cambios)
              const confirmButton = target.closest('#logout-all-confirm');
+             if(!confirmButton) return; // Añadido chequeo
 
             toggleButtonSpinner(confirmButton, getTranslation('settings.devices.modalConfirm'), true);
 
             const formData = new FormData();
             formData.append('action', 'logout-all-devices');
-            const anyVisibleCard = document.querySelector('.settings-card:not([style*="display: none"])');
-            formData.append('csrf_token', anyVisibleCard?.querySelector('[name="csrf_token"]').value || window.csrfToken);
+            formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
 
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                window.showAlert(getTranslation('js.settings.infoLogoutAll'), 'success'); // Traducir
+                window.showAlert(getTranslation('js.settings.infoLogoutAll'), 'success');
 
                 setTimeout(() => {
-                    const token = window.csrfToken || '';
+                    const token = getCsrfTokenFromPage(); // Usar helper
                     const logoutUrl = (window.projectBasePath || '') + '/config/logout.php';
                     window.location.href = `${logoutUrl}?csrf_token=${encodeURIComponent(token)}`;
                 }, 1500);
 
             } else {
-                 // Usamos toast para este error porque no hay un lugar inline obvio
-                window.showAlert(getTranslation(result.message || 'js.settings.errorLogoutAll'), 'error'); // Traducir
+                window.showAlert(getTranslation(result.message || 'js.settings.errorLogoutAll'), 'error');
                 toggleButtonSpinner(confirmButton, getTranslation('settings.devices.modalConfirm'), false);
             }
-            return;
+            return; // <-- Añadido return explícito
         }
 
-        // ... (Código existente para #delete-account-trigger, #delete-account-close, #delete-account-cancel, #delete-account-confirm) ...
+        // --- (Delete Account handlers remain the same, except CSRF token) ---
          if (target.closest('#delete-account-trigger')) {
             e.preventDefault();
-             // ... (código existente sin cambios)
             const modal = document.getElementById('delete-account-modal');
-            if(modal) {
+            // ... (resto del código sin cambios) ...
+             if(modal) {
                 const passwordInput = modal.querySelector('#delete-account-password');
                 const errorDiv = modal.querySelector('#delete-account-error');
                 const confirmBtn = modal.querySelector('#delete-account-confirm');
@@ -894,16 +847,16 @@ export function initSettingsManager() {
             if(modal) modal.style.display = 'none';
             return;
         }
-
         if (target.closest('#delete-account-confirm')) {
              e.preventDefault();
-             // ... (código existente sin cambios)
              const confirmButton = target.closest('#delete-account-confirm');
+             if(!confirmButton) return; // Añadido chequeo
             const modal = document.getElementById('delete-account-modal');
+            if(!modal) return; // Añadido chequeo
             const errorDiv = modal.querySelector('#delete-account-error');
             const passwordInput = modal.querySelector('#delete-account-password');
 
-            if (!passwordInput || !passwordInput.value) { // Añadido chequeo
+            if (!passwordInput || !passwordInput.value) {
                 if(errorDiv) {
                     errorDiv.textContent = getTranslation('js.settings.errorEnterCurrentPass');
                     errorDiv.style.display = 'block';
@@ -917,32 +870,30 @@ export function initSettingsManager() {
             const formData = new FormData();
             formData.append('action', 'delete-account');
             formData.append('current_password', passwordInput.value);
-            const anyVisibleCard = document.querySelector('.settings-card:not([style*="display: none"])');
-            formData.append('csrf_token', anyVisibleCard?.querySelector('[name="csrf_token"]').value || window.csrfToken);
+            formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
 
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                window.showAlert(getTranslation(result.message || 'js.settings.successAccountDeleted'), 'success'); // Traducir
+                window.showAlert(getTranslation(result.message || 'js.settings.successAccountDeleted'), 'success');
                 setTimeout(() => {
                     window.location.href = (window.projectBasePath || '') + '/login';
                 }, 2000);
 
             } else {
                 if(errorDiv) {
-                     // Traducir clave y añadir datos si existen
                     errorDiv.textContent = getTranslation(result.message || 'js.settings.errorAccountDelete', result.data);
                     errorDiv.style.display = 'block';
                 }
                 toggleButtonSpinner(confirmButton, getTranslation('settings.login.modalDeleteConfirm'), false);
             }
-            return;
+            return; // <-- Añadido return explícito
         }
 
     }); // Fin listener 'click'
 
-    // Listener de Cambios (para avatar y toggles)
-    document.body.addEventListener('change', (e) => {
+    // --- (Listener 'change' and 'input' remain the same) ---
+     document.body.addEventListener('change', (e) => {
         const target = e.target;
         const card = target.closest('.settings-card');
 
@@ -1004,13 +955,13 @@ export function initSettingsManager() {
     document.body.addEventListener('input', (e) => {
         const target = e.target;
         // Ocultar error inline si se escribe en un input dentro de una tarjeta
-        if (target.matches('.settings-username-input') || target.matches('.auth-input-group input')) {
+        if (target.matches('.settings-username-input') || target.matches('.auth-input-group input') || target.matches('.modal__input')) { // Añadido .modal__input
             const card = target.closest('.settings-card');
             if (card) {
                 hideInlineError(card);
             }
             // También ocultar errores en modales
-            const modalContent = target.closest('.settings-modal-content');
+            const modalContent = target.closest('.modal-content');
             if (modalContent) {
                  const errorDiv = modalContent.querySelector('.auth-error-message');
                  if (errorDiv) errorDiv.style.display = 'none';
@@ -1018,8 +969,7 @@ export function initSettingsManager() {
         }
     }); // Fin listener 'input'
 
-
-    // Guardar src original del avatar al inicio (sin cambios)
+    // --- (setTimeout for original avatar src remains the same) ---
     setTimeout(() => {
         const previewImage = document.getElementById('avatar-preview-image');
         if (previewImage && !previewImage.dataset.originalSrc) {

@@ -250,6 +250,30 @@ if (array_key_exists($page, $allowedPages)) {
         $openLinksInNewTab = (int)($_SESSION['open_links_in_new_tab'] ?? 1); 
         // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
 
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (COOLDOWN EMAIL) ▼▼▼ ---
+        $initialEmailCooldown = 0;
+        try {
+            $stmt = $pdo->prepare("SELECT created_at FROM verification_codes WHERE identifier = ? AND code_type = 'email_change' ORDER BY created_at DESC LIMIT 1");
+            $stmt->execute([$_SESSION['user_id']]);
+            $codeData = $stmt->fetch();
+
+            if ($codeData) {
+                $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
+                $currentTime = new DateTime('now', new DateTimeZone('UTC'));
+                $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
+                $cooldownConstant = 60; // Debe coincidir con el del API handler
+
+                if ($secondsPassed < $cooldownConstant) {
+                    $initialEmailCooldown = $cooldownConstant - $secondsPassed;
+                }
+            }
+        } catch (PDOException $e) {
+            logDatabaseError($e, 'router - settings-profile-cooldown');
+            $initialEmailCooldown = 0; 
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (COOLDOWN EMAIL) ▲▲▲ ---
+
+
     } elseif ($page === 'settings-login') {
         try {
             $stmt_pass_log = $pdo->prepare("SELECT changed_at FROM user_audit_logs WHERE user_id = ? AND change_type = 'password' ORDER BY changed_at DESC LIMIT 1");

@@ -12,6 +12,7 @@ define('MAX_PASSWORD_LENGTH', 72);
 define('MIN_USERNAME_LENGTH', 6);
 define('MAX_USERNAME_LENGTH', 32);
 define('MAX_EMAIL_LENGTH', 255);
+define('CODE_RESEND_COOLDOWN_SECONDS', 60); // <-- AÑADIDO
 
 if (!isset($_SESSION['user_id'])) {
     // --- ▼▼▼ MODIFICADO ▼▼▼ ---
@@ -340,6 +341,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $identifier = $userId;
                 $codeType = 'email_change';
 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN CON COOLDOWN ▼▼▼ ---
+                $stmt_check = $pdo->prepare(
+                    "SELECT created_at FROM verification_codes 
+                     WHERE identifier = ? AND code_type = ? 
+                     ORDER BY created_at DESC LIMIT 1"
+                );
+                $stmt_check->execute([$identifier, $codeType]);
+                $codeData = $stmt_check->fetch();
+
+                if ($codeData) {
+                    $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
+                    $currentTime = new DateTime('now', new DateTimeZone('UTC'));
+                    $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
+
+                    if ($secondsPassed < CODE_RESEND_COOLDOWN_SECONDS) {
+                        $secondsRemaining = CODE_RESEND_COOLDOWN_SECONDS - $secondsPassed;
+                        throw new Exception('js.auth.errorCodeCooldown');
+                    }
+                }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN CON COOLDOWN ▲▲▲ ---
+
                 $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = ?");
                 $stmt->execute([$identifier, $codeType]);
 
@@ -369,7 +391,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
                 } else {
-                    $response['message'] = 'Error: ' . $e->getMessage();
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (MANEJO DE ERROR COOLDOWN) ▼▼▼ ---
+                    $response['message'] = $e->getMessage();
+                    if ($response['message'] === 'js.auth.errorCodeCooldown') {
+                        $response['data'] = ['seconds' => $secondsRemaining ?? CODE_RESEND_COOLDOWN_SECONDS];
+                    }
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN (MANEJO DE ERROR COOLDOWN) ▲▲▲ ---
                 }
             }
         } elseif ($action === 'verify-email-change-code') {

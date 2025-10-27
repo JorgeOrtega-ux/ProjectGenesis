@@ -1,7 +1,7 @@
 <?php
 // --- ▼▼▼ INICIO DE NUEVO BLOQUE PHP ▼▼▼ ---
 
-// Estas variables ($userLanguage, $userUsageType, $openLinksInNewTab)
+// Estas variables ($userLanguage, $userUsageType, $openLinksInNewTab, $initialEmailCooldown)
 // son cargadas por config/router.php
 
 // 1. Definir los mapas de valores de BD a *CLAVES DE TRADUCCIÓN*
@@ -167,8 +167,21 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                     <button type="button" class="modal__button modal__button--primary" id="email-verify-continue" data-i18n="settings.login.confirm"></button>
                     <p class="modal__footer-text" style="text-align: center;">
                         <span data-i18n="settings.profile.modalCodeResendP"></span>
-                        <a id="email-verify-resend" data-i18n="settings.profile.modalCodeResendA"></a>
-                    </p>
+                        
+                        <a id="email-verify-resend" 
+                           data-i18n="settings.profile.modalCodeResendA"
+                           data-cooldown="<?php echo isset($initialEmailCooldown) ? $initialEmailCooldown : 0; ?>"
+                           class="<?php echo (isset($initialEmailCooldown) && $initialEmailCooldown > 0) ? 'disabled-interactive' : ''; ?>"
+                           style="<?php echo (isset($initialEmailCooldown) && $initialEmailCooldown > 0) ? 'opacity: 0.7; text-decoration: none;' : ''; ?>"
+                        >
+                        <?php 
+                           if (isset($initialEmailCooldown) && $initialEmailCooldown > 0) {
+                               // El JS pondrá el texto base, aquí solo añadimos el contador
+                               echo " (" . $initialEmailCooldown . "s)";
+                           }
+                        ?>
+                        </a>
+                        </p>
                 </div>
             </div>
         </div>
