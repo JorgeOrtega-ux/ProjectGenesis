@@ -1397,6 +1397,22 @@ body {
         width: 100%;
     }
     /* --- ▲▲▲ FIN DE CÓDIGO AÑADIDO ▲▲▲ --- */
+
+    /* --- ▼▼▼ INICIO DE LA CORRECCIÓN SOLICITADA ▼▼▼ --- */
+    .settings-card-align-bottom {
+        flex-direction: column;
+        /* Reemplaza 'align-items: flex-end' para que el texto ocupe todo el ancho */
+        align-items: stretch; 
+        gap: 16px; /* Aumenta el espacio vertical entre el texto y el toggle */
+    }
+
+    .settings-card-align-bottom .settings-card-right {
+        /* Asegura que el contenedor del toggle sea flexible */
+        display: flex; 
+        /* Mueve el toggle (su hijo) al final (derecha) */
+        justify-content: flex-end; 
+    }
+    /* --- ▲▲▲ FIN DE LA CORRECCIÓN SOLICITADA ▲▲▲ --- */
 }
 
 @media (max-width: 768px) {
