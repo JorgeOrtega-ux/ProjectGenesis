@@ -94,8 +94,8 @@
             
             <div class="settings-card-bottom">
                 <div class="settings-card-right-actions">
-                    <button type="button" class="settings-button danger" data-i18n="settings.login.deleteAccountButton"></button>
-                </div>
+                    <button type="button" class="settings-button danger" id="delete-account-trigger" data-i18n="settings.login.deleteAccountButton"></button>
+                    </div>
             </div>
         </div>
         </div>
@@ -174,5 +174,30 @@
         </div>
     </div>
 
+    <div class="settings-modal-overlay" id="delete-account-modal" style="display: none;">
+        <button type="button" class="settings-modal-close-btn" id="delete-account-close">
+            <span class="material-symbols-rounded">close</span>
+        </button>
+        <div class="settings-modal-content">
+            <form class="auth-form" onsubmit="event.preventDefault();" novalidate>
+                <fieldset class="auth-step active">
+                    <h2 class="auth-title" data-i18n="settings.login.modalDeleteTitle">Eliminar tu cuenta</h2>
+                    <p class="auth-verification-text" data-i18n="settings.login.modalDeleteDesc">Esta acción es irreversible. Para confirmar, ingresa tu contraseña actual.</p>
+                    
+                    <div class="auth-error-message" id="delete-account-error" style="display: none;"></div>
+                    
+                    <div class="auth-input-group">
+                        <input type="password" id="delete-account-password" name="current_password" required placeholder=" ">
+                        <label for="delete-account-password" data-i18n="settings.login.modalCurrentPass">Contraseña actual*</label>
+                    </div>
+                    
+                    <div class="auth-step-buttons">
+                        <button type="button" class="auth-button-back" id="delete-account-cancel" style="flex: 1;" data-i18n="settings.devices.modalCancel">Cancelar</button>
+                        <button type="button" class="auth-button danger" id="delete-account-confirm" style="flex: 1; background-color: #c62828; border-color: #c62828;" data-i18n="settings.login.modalDeleteConfirm">Eliminar Cuenta</button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
     </div>
 </div>

@@ -66,6 +66,7 @@ if (isset($_SESSION['user_id'])) {
         }
     } catch (PDOException $e) {
         // Error al refrescar sesión
+        logDatabaseError($e, 'index - refresh session'); // Añadido log
     }
 }
 // --- FIN DE LA NUEVA MODIFICACIÓN ---
@@ -100,6 +101,10 @@ $pathsToPages = [
     '/settings/login-security'  => 'settings-login',
     '/settings/accessibility'   => 'settings-accessibility',
     '/settings/device-sessions' => 'settings-devices', // <-- AÑADIDO
+    
+    // ▼▼▼ AÑADIR ESTAS LÍNEAS ▼▼▼
+    '/account-status/deleted'   => 'account-status-deleted',
+    '/account-status/suspended' => 'account-status-suspended',
 ];
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
@@ -107,9 +112,12 @@ $currentPage = $pathsToPages[$path] ?? '404';
 
 // 5. Definir qué páginas NO DEBEN mostrar el header/menu
 $authPages = ['login'];
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
 $isAuthPage = in_array($currentPage, $authPages) || 
               strpos($currentPage, 'register-') === 0 ||
-              strpos($currentPage, 'reset-') === 0;
+              strpos($currentPage, 'reset-') === 0 ||
+              strpos($currentPage, 'account-status-') === 0; // <-- AÑADIR ESTO
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 $isSettingsPage = strpos($currentPage, 'settings-') === 0;
 
@@ -199,7 +207,7 @@ $htmlLang = $langMap[$currentLang] ?? 'en'; // Default 'en'
     <script>
         // Definir variables globales de JS
         window.projectBasePath = '<?php echo $basePath; ?>';
-        window.csrfToken = '<?php echo $_SESSION['csrf_token']; ?>';
+        window.csrfToken = '<?php echo $_SESSION['csrf_token'] ?? ''; ?>'; // Añadido ?? '' por si acaso
         
         // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN: INYECTAR PREFERENCIAS! ▼▼▼ ---
         window.userTheme = '<?php echo $_SESSION['theme'] ?? 'system'; ?>';

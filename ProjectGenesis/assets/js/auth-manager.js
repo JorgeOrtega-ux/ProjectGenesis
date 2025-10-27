@@ -528,6 +528,7 @@ function initLoginWizard() {
 
             const result = await callAuthApi(formData);
 
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN: CHEQUEO DE REDIRECCIÓN ▼▼▼ ---
             if (result.success) {
                 if (result.is_2fa_required) {
                     const nextStepEl = loginForm.querySelector(`[data-step="${currentStep + 1}"]`);
@@ -547,14 +548,20 @@ function initLoginWizard() {
                      }
                     window.location.href = window.projectBasePath + '/';
                 }
+            } else if (result.redirect_to_status) {
+                 // ¡NUEVA LÓGICA! Redirigir si el backend lo indica.
+                window.location.href = window.projectBasePath + '/account-status/' + result.redirect_to_status;
             } else {
+                // Lógica de error normal (ej. contraseña incorrecta)
                 showAuthError(errorDiv, result.message || getTranslation('js.auth.errorUnknown')); 
                 button.disabled = false; 
                 button.textContent = getTranslation('page.login.continueButton');
             }
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
              if(result.success && result.is_2fa_required) {
-             } else if (!result.success) {
+             } else if (!result.success && !result.redirect_to_status) { // Modificado para no reactivar botón si hay redirección
+                // No reactivar el botón si estamos redirigiendo
              }
         }
     });

@@ -86,7 +86,10 @@
       "savePassword": "Guardar Contraseña",
       "confirm": "Confirmar",
       "lastPassUpdateNever": "Nunca has actualizado tu contraseña.",
-      "lastPassUpdateError": "No se pudo cargar el historial de actualizaciones."
+      "lastPassUpdateError": "No se pudo cargar el historial de actualizaciones.",
+      "modalDeleteTitle": "Eliminar tu cuenta",
+      "modalDeleteDesc": "Esta acción es irreversible. Para confirmar, ingresa tu contraseña actual.",
+      "modalDeleteConfirm": "Eliminar Cuenta"
     },
     "accessibility": {
       "title": "Accesibilidad",
@@ -200,7 +203,17 @@
       "resetStep2": "No has completado el paso 2 (código) antes de acceder a esta página.",
       "backToRegister": "Volver al inicio del registro",
       "backToReset": "Volver al inicio de la recuperación"
+    },
+
+  
+    "status": {
+        "deletedTitle": "Cuenta Eliminada",
+        "deletedDesc": "Esta cuenta ha sido eliminada permanentemente. Si crees que esto es un error, por favor contacta a soporte.",
+        "suspendedTitle": "Cuenta Suspendida",
+        "suspendedDesc": "Esta cuenta ha sido suspendida. No podrás acceder hasta que la suspensión sea levantada. Si crees que esto es un error, por favor contacta a soporte.",
+        "backToLogin": "Volver a Inicio de Sesión"
     }
+
   },
   "js": {
     "auth": {
@@ -251,7 +264,9 @@
       "infoCodeSentIfExists": "Si el correo existe, se enviará un código.",
       "errorNoResetData": "No se encontraron datos de reseteo. Por favor, vuelve a empezar.",
       "errorMissingDataRestart": "Faltan datos. Por favor, vuelve a empezar.",
-      "errorInvalidResetSession": "La sesión de reseteo es inválida. Vuelve a empezar."
+      "errorInvalidResetSession": "La sesión de reseteo es inválida. Vuelve a empezar.",
+      "errorAccountDeleted": "Esta cuenta ha sido eliminada.",
+      "errorAccountSuspended": "Esta cuenta ha sido suspendida."
     },
     "settings": {
       "successPreference": "Preferencia actualizada.",
@@ -305,7 +320,9 @@
       "successUsernameUpdate": "Nombre de usuario actualizado.",
       "successEmailUpdate": "Correo actualizado.",
       "errorAvatarFormat": "Formato no válido (solo PNG, JPEG, GIF o WebP).",
-      "errorAvatarSize": "El archivo es demasiado grande (máx 2MB)."
+      "errorAvatarSize": "El archivo es demasiado grande (máx 2MB).",
+      "successAccountDeleted": "Cuenta eliminada. Serás redirigido.",
+      "errorAccountDelete": "Error al eliminar la cuenta."
     },
     "api": {
       "errorServer": "Error en la respuesta del servidor.",

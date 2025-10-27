@@ -771,6 +771,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response['message'] = $e->getMessage();
                 }
             }
+        // --- ▼▼▼ INICIO DEL NUEVO BLOQUE PARA ELIMINAR CUENTA ▼▼▼ ---
+        } elseif ($action === 'delete-account') {
+            try {
+                $ip = getIpAddress();
+                $identifier = $userId;
+                $currentPassword = $_POST['current_password'] ?? '';
+
+                if (checkLockStatus($pdo, $identifier, $ip)) {
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.auth.errorTooManyAttempts');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                }
+
+                if (empty($currentPassword)) {
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.settings.errorEnterCurrentPass');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                }
+
+                $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ?");
+                $stmt->execute([$userId]);
+                $hashedPassword = $stmt->fetchColumn();
+
+                if ($hashedPassword && password_verify($currentPassword, $hashedPassword)) {
+                    // Contraseña correcta
+                    clearFailedAttempts($pdo, $identifier);
+                    
+                    // Actualizar estado de la cuenta a 'deleted'
+                    $stmt_delete = $pdo->prepare("UPDATE users SET account_status = 'deleted' WHERE id = ?");
+                    $stmt_delete->execute([$userId]);
+
+                    // Destruir la sesión actual
+                    $_SESSION = [];
+                    session_destroy();
+                    
+                    $response['success'] = true;
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.settings.successAccountDeleted';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
+                } else {
+                    // Contraseña incorrecta
+                    logFailedAttempt($pdo, $identifier, $ip, 'password_verify_fail');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.settings.errorPasswordVerifyIncorrect');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                }
+            } catch (Exception $e) {
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - delete-account');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                } else {
+                    $response['message'] = $e->getMessage();
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    if ($response['message'] === 'js.auth.errorTooManyAttempts') {
+                        $response['data'] = ['minutes' => LOCKOUT_TIME_MINUTES];
+                    }
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                }
+            }
+        // --- ▲▲▲ FIN DEL NUEVO BLOQUE PARA ELIMINAR CUENTA ▲▲▲ ---
         }
     }
 }

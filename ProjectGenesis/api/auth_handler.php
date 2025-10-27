@@ -450,6 +450,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if ($user && password_verify($password, $user['password'])) {
                         
+                        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN: CHEQUEO DE ESTADO DE CUENTA ▼▼▼ ---
+                        if ($user['account_status'] === 'deleted') {
+                            $response['message'] = 'js.auth.errorAccountDeleted'; // Aún útil como fallback
+                            $response['redirect_to_status'] = 'deleted'; // ¡La clave mágica!
+                            echo json_encode($response);
+                            exit;
+                        }
+                        
+                        if ($user['account_status'] === 'suspended') {
+                            $response['message'] = 'js.auth.errorAccountSuspended';
+                            $response['redirect_to_status'] = 'suspended'; // ¡La clave mágica!
+                            echo json_encode($response);
+                            exit;
+                        }
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
                         clearFailedAttempts($pdo, $email);
 
                         if ($user['is_2fa_enabled'] == 1) {

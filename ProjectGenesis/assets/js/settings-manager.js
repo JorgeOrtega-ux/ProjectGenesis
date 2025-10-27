@@ -645,6 +645,80 @@ export function initSettingsManager() {
             return;
         }
         
+        // --- ▼▼▼ INICIO DE NUEVOS LISTENERS PARA ELIMINAR CUENTA ▼▼▼ ---
+
+        if (e.target.closest('#delete-account-trigger')) {
+            e.preventDefault();
+            const modal = document.getElementById('delete-account-modal');
+            if(modal) {
+                const passwordInput = modal.querySelector('#delete-account-password');
+                const errorDiv = modal.querySelector('#delete-account-error');
+                const confirmBtn = modal.querySelector('#delete-account-confirm');
+
+                if(passwordInput) passwordInput.value = '';
+                if(errorDiv) errorDiv.style.display = 'none';
+                if(confirmBtn) {
+                    // Asegurarse de que el spinner esté oculto al abrir
+                    toggleButtonSpinner(confirmBtn, getTranslation('settings.login.modalDeleteConfirm'), false);
+                }
+                
+                modal.style.display = 'flex';
+                if(passwordInput) focusInputAndMoveCursorToEnd(passwordInput);
+            }
+            return;
+        }
+
+        if (e.target.closest('#delete-account-close') || e.target.closest('#delete-account-cancel')) {
+            e.preventDefault();
+            const modal = document.getElementById('delete-account-modal');
+            if(modal) modal.style.display = 'none';
+            return;
+        }
+
+        if (e.target.closest('#delete-account-confirm')) {
+            e.preventDefault();
+            const confirmButton = e.target.closest('#delete-account-confirm');
+            const modal = document.getElementById('delete-account-modal');
+            const errorDiv = modal.querySelector('#delete-account-error');
+            const passwordInput = modal.querySelector('#delete-account-password');
+
+            if (!passwordInput.value) {
+                if(errorDiv) {
+                    errorDiv.textContent = getTranslation('js.settings.errorEnterCurrentPass');
+                    errorDiv.style.display = 'block';
+                }
+                return;
+            }
+            
+            toggleButtonSpinner(confirmButton, getTranslation('settings.login.modalDeleteConfirm'), true);
+            if(errorDiv) errorDiv.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('action', 'delete-account');
+            formData.append('current_password', passwordInput.value);
+            
+            const result = await callSettingsApi(formData);
+
+            if (result.success) {
+                // El backend (settings_handler) destruirá la sesión.
+                // Mostramos alerta y redirigimos a login.
+                window.showAlert(result.message || getTranslation('js.settings.successAccountDeleted'), 'success');
+                setTimeout(() => {
+                    window.location.href = (window.projectBasePath || '') + '/login';
+                }, 2000); 
+
+            } else {
+                if(errorDiv) {
+                    errorDiv.textContent = result.message || getTranslation('js.settings.errorAccountDelete');
+                    errorDiv.style.display = 'block';
+                }
+                toggleButtonSpinner(confirmButton, getTranslation('settings.login.modalDeleteConfirm'), false);
+            }
+            return;
+        }
+
+        // --- ▲▲▲ FIN DE NUEVOS LISTENERS PARA ELIMINAR CUENTA ▲▲▲ ---
+
         // --- ▼▼▼ INICIO DE MODIFICACIÓN DEL CONTROLADOR ▼▼▼ ---
         const clickedLink = e.target.closest('.module-trigger-select .menu-link');
         if (clickedLink) {

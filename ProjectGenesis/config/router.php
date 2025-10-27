@@ -117,6 +117,10 @@ $allowedPages = [
     'settings-login'         => '../includes/sections/settings/login-security.php',
     'settings-accessibility' => '../includes/sections/settings/accessibility.php',
     'settings-devices'       => '../includes/sections/settings/device-sessions.php', // <-- AÑADIDO
+    
+    // ▼▼▼ AÑADIR ESTAS LÍNEAS ▼▼▼
+    'account-status-deleted'   => '../includes/sections/auth/account-status.php',
+    'account-status-suspended' => '../includes/sections/auth/account-status.php',
 ];
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
@@ -124,10 +128,20 @@ $allowedPages = [
 $authPages = ['login'];
 $isAuthPage = in_array($page, $authPages) || 
               strpos($page, 'register-') === 0 ||
-              strpos($page, 'reset-') === 0;
+              strpos($page, 'reset-') === 0 ||
+              strpos($page, 'account-status-') === 0; // <-- AÑADIDO ESTO
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 $isSettingsPage = strpos($page, 'settings-') === 0;
+
+// --- ▼▼▼ INICIO DE MODIFICACIÓN: DETERMINAR TIPO DE ESTADO DE CUENTA ▼▼▼ ---
+$accountStatusType = 'none'; // Valor por defecto
+if ($page === 'account-status-deleted') {
+    $accountStatusType = 'deleted';
+} elseif ($page === 'account-status-suspended') {
+    $accountStatusType = 'suspended';
+}
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 if (!isset($_SESSION['user_id']) && !$isAuthPage && $page !== '404') {
     http_response_code(403); // 403 Forbidden
