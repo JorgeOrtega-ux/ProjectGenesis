@@ -175,6 +175,7 @@ $htmlLang = $langMap[$currentLang] ?? 'en'; // Default 'en'
 </head>
 
 <body>
+
     <div class="page-wrapper">
         <div class="main-content">
             <div class="general-content">
@@ -194,6 +195,10 @@ $htmlLang = $langMap[$currentLang] ?? 'en'; // Default 'en'
                     <?php endif; ?>
 
                     <div class="general-content-scrolleable overflow-y">
+                        
+                        <div class="page-loader" id="page-loader">
+                            <div class="spinner"></div>
+                        </div>
                         <div class="main-sections">
                             </div>
                     

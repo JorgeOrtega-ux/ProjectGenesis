@@ -52,8 +52,13 @@ document.addEventListener('DOMContentLoaded', async function () { // <-- CONVERT
     initThemeManager();
 
     initMainController();
-    initRouter();
+    initRouter(); // <-- Esta función llamará a handleNavigation, que llamará a loadPage (que activa el loader)
     initAuthManager();
     initSettingsManager();
     initTooltipManager(); // <-- NUEVA LLAMADA
+
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+    // Ya no necesitamos ocultar el loader aquí.
+    // loadPage() en url-manager.js se encarga de todo.
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 });

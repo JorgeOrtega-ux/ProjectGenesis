@@ -3,6 +3,12 @@ import { startResendTimer } from './auth-manager.js';
 import { applyTranslations, getTranslation } from './i18n-manager.js';
 
 const contentContainer = document.querySelector('.main-sections');
+const pageLoader = document.getElementById('page-loader');
+
+// --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+// Variable para guardar el temporizador del loader
+let loaderTimer = null;
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 const routes = {
     'toggleSectionHome': 'home',
@@ -22,10 +28,8 @@ const routes = {
     'toggleSectionSettingsAccess': 'settings-accessibility',
     'toggleSectionSettingsDevices': 'settings-devices',
     
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
     'toggleSectionAccountStatusDeleted': 'account-status-deleted',
     'toggleSectionAccountStatusSuspended': 'account-status-suspended'
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 };
 
 const paths = {
@@ -46,10 +50,8 @@ const paths = {
     '/settings/accessibility': 'toggleSectionSettingsAccess',
     '/settings/device-sessions': 'toggleSectionSettingsDevices',
     
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
     '/account-status/deleted': 'toggleSectionAccountStatusDeleted',
     '/account-status/suspended': 'toggleSectionAccountStatusSuspended'
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 };
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
@@ -58,10 +60,30 @@ async function loadPage(page) {
 
     if (!contentContainer) return;
 
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (LÓGICA DEL LOADER) ▼▼▼ ---
+
+    // 1. Limpiar el contenido anterior inmediatamente
+    contentContainer.innerHTML = ''; 
+
+    // 2. Limpiar cualquier loader timer anterior (por si acaso)
+    if (loaderTimer) {
+        clearTimeout(loaderTimer);
+    }
+
+    // 3. Iniciar un temporizador. El loader SÓLO se mostrará si la carga tarda más de 200ms
+    loaderTimer = setTimeout(() => {
+        if (pageLoader) {
+            pageLoader.classList.add('active');
+        }
+    }, 200); // 200ms de retraso
+
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
+
     const isSettingsPage = page.startsWith('settings-');
     updateGlobalMenuVisibility(isSettingsPage);
 
-    contentContainer.innerHTML = '';
+    // (Se eliminó el contentContainer.innerHTML = '' de aquí)
 
     try {
         const response = await fetch(`${basePath}/config/router.php?page=${page}`);
@@ -69,10 +91,7 @@ async function loadPage(page) {
 
         contentContainer.innerHTML = html;
 
-        // --- ▼▼▼ NUEVA MODIFICACIÓN ▼▼▼ ---
-        // Aplica las traducciones al contenido recién cargado
         applyTranslations(contentContainer);
-        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
         if (page === 'register-step3') {
             const link = document.getElementById('register-resend-code-link');
@@ -88,6 +107,20 @@ async function loadPage(page) {
     } catch (error) {
         console.error('Error al cargar la página:', error);
         contentContainer.innerHTML = `<h2>${getTranslation('js.url.errorLoad')}</h2>`;
+    } finally {
+        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (LIMPIEZA DEL LOADER) ▼▼▼ ---
+
+        // 4. Pase lo que pase, al final...
+        // 5. ...cancelar el temporizador (si aún no se ha disparado)
+        if (loaderTimer) {
+            clearTimeout(loaderTimer);
+            loaderTimer = null;
+        }
+        // 6. ...y ocultar el loader (si es que se llegó a mostrar)
+        if (pageLoader) {
+            pageLoader.classList.remove('active');
+        }
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
     }
 }
 
