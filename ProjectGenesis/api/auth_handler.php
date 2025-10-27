@@ -3,7 +3,10 @@
 include '../config/config.php';
 header('Content-Type: application/json');
 
-$response = ['success' => false, 'message' => 'Acción no válida.'];
+// --- ▼▼▼ MODIFICADO ▼▼▼ ---
+// $response ahora usa claves de traducción.
+$response = ['success' => false, 'message' => 'js.api.invalidAction'];
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 define('CODE_RESEND_COOLDOWN_SECONDS', 60);
 
@@ -175,7 +178,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $submittedToken = $_POST['csrf_token'] ?? '';
     if (!validateCsrfToken($submittedToken)) {
         $response['success'] = false;
-        $response['message'] = 'Error de seguridad. Por favor, recarga la página e inténtalo de nuevo.';
+        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+        $response['message'] = 'js.api.errorSecurityRefresh';
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
         echo json_encode($response);
         exit;
     }
@@ -191,24 +196,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com'];
             $emailDomain = substr($email, strrpos($email, '@') + 1);
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLAVES DE TRADUCCIÓN) ▼▼▼ ---
             if (empty($email) || empty($password)) {
-                $response['message'] = 'Por favor, completa email y contraseña.';
+                $response['message'] = 'js.auth.errorCompleteEmailPass';
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $response['message'] = 'El formato de correo no es válido.';
+                $response['message'] = 'js.auth.errorInvalidEmail';
             } elseif (strlen($email) > MAX_EMAIL_LENGTH) {
-                $response['message'] = 'El correo no puede tener más de ' . MAX_EMAIL_LENGTH . ' caracteres.';
+                $response['message'] = 'js.auth.errorEmailLength';
             } elseif (!in_array(strtolower($emailDomain), $allowedDomains)) {
-                $response['message'] = 'Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.';
+                $response['message'] = 'js.auth.errorEmailDomain';
             } elseif (strlen($password) < MIN_PASSWORD_LENGTH) {
-                $response['message'] = 'La contraseña debe tener al menos ' . MIN_PASSWORD_LENGTH . ' caracteres.';
+                $response['message'] = 'js.auth.errorPasswordMinLength';
+                $response['data'] = ['length' => MIN_PASSWORD_LENGTH];
             } elseif (strlen($password) > MAX_PASSWORD_LENGTH) {
-                $response['message'] = 'La contraseña no puede tener más de ' . MAX_PASSWORD_LENGTH . ' caracteres.';
+                $response['message'] = 'js.auth.errorPasswordMaxLength';
+                $response['data'] = ['length' => MAX_PASSWORD_LENGTH];
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } else {
                 try {
                     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
                     $stmt->execute([$email]);
                     if ($stmt->fetch()) {
-                        $response['message'] = 'Este correo electrónico ya está en uso.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.auth.errorEmailInUse';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     } else {
                         $_SESSION['registration_step'] = 2;
                         $_SESSION['registration_email'] = $email; 
@@ -216,7 +227,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 } catch (PDOException $e) {
                     logDatabaseError($e, 'auth_handler - register-check-email');
-                    $response['message'] = 'Error en la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
@@ -227,20 +240,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $password = $_POST['password'] ?? '';
             $username = $_POST['username'] ?? '';
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLAVES DE TRADUCCIÓN) ▼▼▼ ---
             if (empty($email) || empty($password) || empty($username)) {
-                $response['message'] = 'Faltan datos de los pasos anteriores.';
+                $response['message'] = 'js.auth.errorMissingSteps';
             } elseif (strlen($password) < MIN_PASSWORD_LENGTH || strlen($password) > MAX_PASSWORD_LENGTH) {
-                 $response['message'] = 'La contraseña no cumple con los límites (debe tener entre ' . MIN_PASSWORD_LENGTH . ' y ' . MAX_PASSWORD_LENGTH . ' caracteres).';
+                 $response['message'] = 'js.auth.errorPasswordLength';
+                 $response['data'] = ['min' => MIN_PASSWORD_LENGTH, 'max' => MAX_PASSWORD_LENGTH];
             } elseif (strlen($username) < MIN_USERNAME_LENGTH) {
-                $response['message'] = 'El nombre de usuario debe tener al menos ' . MIN_USERNAME_LENGTH . ' caracteres.';
+                $response['message'] = 'js.auth.errorUsernameMinLength';
+                $response['data'] = ['length' => MIN_USERNAME_LENGTH];
             } elseif (strlen($username) > MAX_USERNAME_LENGTH) {
-                $response['message'] = 'El nombre de usuario no puede tener más de ' . MAX_USERNAME_LENGTH . ' caracteres.';
+                $response['message'] = 'js.auth.errorUsernameMaxLength';
+                $response['data'] = ['length' => MAX_USERNAME_LENGTH];
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } else {
                 try {
                     $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
                     $stmt->execute([$username]);
                     if ($stmt->fetch()) {
-                        $response['message'] = 'Ese nombre de usuario ya está en uso.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.auth.errorUsernameInUse';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     } else {
                         $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = 'registration'");
                         $stmt->execute([$email]);
@@ -262,18 +282,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['registration_step'] = 3;
 
                         $response['success'] = true;
-                        $response['message'] = 'Código de verificación generado.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.auth.successCodeGenerated';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
                 } catch (PDOException $e) {
                     logDatabaseError($e, 'auth_handler - register-check-username');
-                    $response['message'] = 'Error en la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
 
         elseif ($action === 'register-verify') {
+            // --- ▼▼▼ MODIFICADO ▼▼▼ ---
             if (empty($_POST['email']) || empty($_POST['verification_code'])) {
-                $response['message'] = 'Faltan el correo o el código de verificación.';
+                $response['message'] = 'js.auth.errorMissingEmailOrCode';
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } else {
                 $email = $_POST['email'];
                 $submittedCode = str_replace('-', '', $_POST['verification_code']); 
@@ -289,18 +315,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pendingUser = $stmt->fetch();
 
                     if (!$pendingUser) {
-                        $response['message'] = 'El código de verificación es incorrecto o ha expirado. Vuelve a empezar.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.auth.errorCodeExpiredRestart';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                         unset($_SESSION['registration_step']);
                         unset($_SESSION['registration_email']); 
                     
                     } else {
                         if (strtolower($pendingUser['code']) !== strtolower($submittedCode)) {
-                            $response['message'] = 'El código de verificación es incorrecto.';
+                            // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                            $response['message'] = 'js.auth.errorCodeIncorrect';
+                            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                         } else {
                             $payloadData = json_decode($pendingUser['payload'], true);
                             
                             if (!$payloadData || empty($payloadData['username']) || empty($payloadData['password_hash'])) {
-                                $response['message'] = 'Error al procesar el registro. Datos corruptos.';
+                                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                                $response['message'] = 'js.auth.errorCorruptData';
+                                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                             } else {
                                 createUserAndLogin(
                                     $pdo, 
@@ -312,13 +344,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 );
                                 
                                 $response['success'] = true;
-                                $response['message'] = '¡Registro completado! Iniciando sesión...';
+                                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                                $response['message'] = 'js.auth.successRegistration';
+                                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                             }
                         }
                     }
                 } catch (PDOException $e) {
                     logDatabaseError($e, 'auth_handler - register-verify');
-                    $response['message'] = 'Error en la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
@@ -327,7 +363,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = $_POST['email'] ?? '';
 
             if (empty($email)) {
-                $response['message'] = 'No se ha proporcionado un email.';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.auth.errorNoEmail';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } else {
                 try {
                     $stmt = $pdo->prepare(
@@ -339,7 +377,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $codeData = $stmt->fetch();
 
                     if (!$codeData) {
-                        throw new Exception('No se encontraron datos de registro. Por favor, vuelve a empezar.');
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        throw new Exception('js.auth.errorNoRegistrationData');
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
 
                     $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
@@ -348,7 +388,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if ($secondsPassed < CODE_RESEND_COOLDOWN_SECONDS) {
                         $secondsRemaining = CODE_RESEND_COOLDOWN_SECONDS - $secondsPassed;
-                        throw new Exception("Debes esperar {$secondsRemaining} segundos más para reenviar el código.");
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        // Lanzamos la clave de traducción. El catch la procesará.
+                        throw new Exception('js.auth.errorCodeCooldown');
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
 
                     $newCode = str_replace('-', '', generateVerificationCode());
@@ -360,14 +403,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
                     $response['success'] = true;
-                    $response['message'] = 'Se ha reenviado un nuevo código de verificación.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.auth.successCodeResent';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
                 } catch (Exception $e) {
                     if ($e instanceof PDOException) {
                         logDatabaseError($e, 'auth_handler - register-resend-code');
-                        $response['message'] = 'Error en la base de datos.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.api.errorDatabase';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     } else {
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        // Asigna la clave de traducción desde la excepción
                         $response['message'] = $e->getMessage();
+                        // Pasamos los datos dinámicos si la clave es la de cooldown
+                        if ($response['message'] === 'js.auth.errorCodeCooldown') {
+                            $response['data'] = ['seconds' => $secondsRemaining ?? CODE_RESEND_COOLDOWN_SECONDS];
+                        }
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
                 }
             }
@@ -381,7 +435,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ip = getIpAddress(); 
 
                 if (checkLockStatus($pdo, $email, $ip)) {
-                    $response['message'] = 'Demasiados intentos fallidos. Por favor, inténtalo de nuevo en ' . LOCKOUT_TIME_MINUTES . ' minutos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.auth.errorTooManyAttempts';
+                    $response['data'] = ['minutes' => LOCKOUT_TIME_MINUTES];
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     echo json_encode($response);
                     exit;
                 }
@@ -409,7 +466,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
                             $response['success'] = true;
-                            $response['message'] = 'Verificación de dos pasos requerida.';
+                            // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                            $response['message'] = 'js.auth.info2faRequired';
+                            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                             $response['is_2fa_required'] = true; 
 
                         } else {
@@ -434,20 +493,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             generateCsrfToken();
 
                             $response['success'] = true;
-                            $response['message'] = 'Inicio de sesión correcto.';
+                            // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                            $response['message'] = 'js.auth.successLogin';
+                            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                             $response['is_2fa_required'] = false; 
                         }
                     
                     } else {
                         logFailedAttempt($pdo, $email, $ip, 'login_fail');
-                        $response['message'] = 'Correo o contraseña incorrectos.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.auth.errorInvalidCredentials';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
                 } catch (PDOException $e) {
                     logDatabaseError($e, 'auth_handler - login-check-credentials');
-                    $response['message'] = 'Error en la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             } else {
-                $response['message'] = 'Por favor, completa todos los campos.';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.auth.errorCompleteAllFields';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             }
         }
 
@@ -458,11 +525,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ip = getIpAddress();
 
             if (empty($email) || empty($submittedCode)) {
-                $response['message'] = 'Faltan datos de verificación.';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.auth.errorMissingVerificationData';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } else {
                 
                 if (checkLockStatus($pdo, $email, $ip)) {
-                    $response['message'] = 'Demasiados intentos fallidos. Por favor, inténtalo de nuevo en ' . LOCKOUT_TIME_MINUTES . ' minutos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.auth.errorTooManyAttempts';
+                    $response['data'] = ['minutes' => LOCKOUT_TIME_MINUTES];
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     echo json_encode($response);
                     exit;
                 }
@@ -479,7 +551,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if (!$codeData || strtolower($codeData['code']) !== strtolower($submittedCode)) {
                         logFailedAttempt($pdo, $email, $ip, 'login_fail');
-                        $response['message'] = 'El código es incorrecto o ha expirado.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.auth.errorCodeExpired';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     } else {
                         
                         clearFailedAttempts($pdo, $email);
@@ -513,14 +587,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $stmt_delete->execute([$codeData['id']]);
 
                             $response['success'] = true;
-                            $response['message'] = 'Inicio de sesión correcto.';
+                            // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                            $response['message'] = 'js.auth.successLogin';
+                            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                         } else {
-                            $response['message'] = 'Error: No se pudo encontrar el usuario.';
+                            // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                            $response['message'] = 'js.auth.errorUserNotFound';
+                            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                         }
                     }
                 } catch (PDOException $e) {
                     logDatabaseError($e, 'auth_handler - login-verify-2fa');
-                    $response['message'] = 'Error en la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
@@ -531,14 +611,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = $_POST['email'] ?? '';
 
             if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $response['message'] = 'Por favor, introduce un correo válido.';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.auth.errorInvalidEmail';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } else {
                 try {
                     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
                     $stmt->execute([$email]);
                     if (!$stmt->fetch()) {
                         $response['success'] = true; 
-                        $response['message'] = 'Si el correo existe, se enviará un código.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.auth.infoCodeSentIfExists';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                         
                         $_SESSION['reset_step'] = 2;
                         $_SESSION['reset_email'] = $email;
@@ -556,14 +640,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt->execute([$email, $verificationCode]);
 
                         $response['success'] = true;
-                        $response['message'] = 'Código de recuperación generado.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.auth.successCodeGenerated';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                         
                         $_SESSION['reset_step'] = 2;
                         $_SESSION['reset_email'] = $email;
                     }
                 } catch (PDOException $e) {
                     logDatabaseError($e, 'auth_handler - reset-check-email');
-                    $response['message'] = 'Error en la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
@@ -572,7 +660,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = $_POST['email'] ?? '';
 
             if (empty($email)) {
-                $response['message'] = 'No se ha proporcionado un email.';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.auth.errorNoEmail';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } else {
                 try {
                     $stmt = $pdo->prepare(
@@ -584,7 +674,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $codeData = $stmt->fetch();
 
                     if (!$codeData) {
-                        throw new Exception('No se encontraron datos de reseteo. Por favor, vuelve a empezar.');
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        throw new Exception('js.auth.errorNoResetData');
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
 
                     $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
@@ -593,7 +685,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if ($secondsPassed < CODE_RESEND_COOLDOWN_SECONDS) {
                         $secondsRemaining = CODE_RESEND_COOLDOWN_SECONDS - $secondsPassed;
-                        throw new Exception("Debes esperar {$secondsRemaining} segundos más para reenviar el código.");
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        throw new Exception('js.auth.errorCodeCooldown');
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
 
                     $newCode = str_replace('-', '', generateVerificationCode());
@@ -604,14 +698,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute([$newCode, $codeData['id']]);
 
                     $response['success'] = true;
-                    $response['message'] = 'Se ha reenviado un nuevo código de verificación.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.auth.successCodeResent';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
                 } catch (Exception $e) {
                     if ($e instanceof PDOException) {
                         logDatabaseError($e, 'auth_handler - reset-resend-code');
-                        $response['message'] = 'Error en la base de datos.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.api.errorDatabase';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     } else {
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
                         $response['message'] = $e->getMessage();
+                        if ($response['message'] === 'js.auth.errorCodeCooldown') {
+                            $response['data'] = ['seconds' => $secondsRemaining ?? CODE_RESEND_COOLDOWN_SECONDS];
+                        }
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
                 }
             }
@@ -623,11 +726,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ip = getIpAddress(); 
 
             if (empty($email) || empty($submittedCode)) {
-                $response['message'] = 'Faltan datos de verificación.';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.auth.errorMissingVerificationData';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } else {
                 
                 if (checkLockStatus($pdo, $email, $ip)) {
-                    $response['message'] = 'Demasiados intentos fallidos. Por favor, inténtalo de nuevo en ' . LOCKOUT_TIME_MINUTES . ' minutos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.auth.errorTooManyAttempts';
+                    $response['data'] = ['minutes' => LOCKOUT_TIME_MINUTES];
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     echo json_encode($response);
                     exit;
                 }
@@ -644,7 +752,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if (!$codeData || strtolower($codeData['code']) !== strtolower($submittedCode)) {
                         logFailedAttempt($pdo, $email, $ip, 'reset_fail');
-                        $response['message'] = 'El código es incorrecto o ha expirado.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.auth.errorCodeExpired';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     } else {
                         clearFailedAttempts($pdo, $email);
                         $response['success'] = true;
@@ -654,7 +764,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 } catch (PDOException $e) {
                     logDatabaseError($e, 'auth_handler - reset-check-code');
-                    $response['message'] = 'Error en la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }
@@ -666,16 +778,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $newPassword = $_POST['password'] ?? '';
             $ip = getIpAddress(); 
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLAVES DE TRADUCCIÓN) ▼▼▼ ---
             if (empty($email) || empty($submittedCode) || empty($newPassword)) {
-                $response['message'] = 'Faltan datos. Por favor, vuelve a empezar.';
+                $response['message'] = 'js.auth.errorMissingDataRestart';
             } elseif (strlen($newPassword) < MIN_PASSWORD_LENGTH) {
-                $response['message'] = 'La nueva contraseña debe tener al menos ' . MIN_PASSWORD_LENGTH . ' caracteres.';
+                $response['message'] = 'js.auth.errorPasswordMinLength';
+                $response['data'] = ['length' => MIN_PASSWORD_LENGTH];
             } elseif (strlen($newPassword) > MAX_PASSWORD_LENGTH) {
-                $response['message'] = 'La nueva contraseña no puede tener más de ' . MAX_PASSWORD_LENGTH . ' caracteres.';
+                $response['message'] = 'js.auth.errorPasswordMaxLength';
+                $response['data'] = ['length' => MAX_PASSWORD_LENGTH];
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } else {
                 
                 if (checkLockStatus($pdo, $email, $ip)) {
-                    $response['message'] = 'Demasiados intentos fallidos. Por favor, inténtalo de nuevo en ' . LOCKOUT_TIME_MINUTES . ' minutos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.auth.errorTooManyAttempts';
+                    $response['data'] = ['minutes' => LOCKOUT_TIME_MINUTES];
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     echo json_encode($response);
                     exit;
                 }
@@ -692,7 +811,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if (!$codeData) {
                         logFailedAttempt($pdo, $email, $ip, 'reset_fail');
-                        $response['message'] = 'La sesión de reseteo es inválida. Vuelve a empezar.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.auth.errorInvalidResetSession';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                         
                         unset($_SESSION['reset_step']);
                         unset($_SESSION['reset_email']);
@@ -710,7 +831,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         clearFailedAttempts($pdo, $email);
 
                         $response['success'] = true;
-                        $response['message'] = 'Contraseña actualizada. Serás redirigido.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.auth.successPasswordUpdateRedirect';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                         
                         unset($_SESSION['reset_step']);
                         unset($_SESSION['reset_email']);
@@ -718,7 +841,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 } catch (PDOException $e) {
                     logDatabaseError($e, 'auth_handler - reset-update-password');
-                    $response['message'] = 'Error en la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         }

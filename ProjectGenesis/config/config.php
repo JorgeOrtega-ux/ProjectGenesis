@@ -59,7 +59,10 @@ try {
     // --- ▼▼▼ MODIFICACIÓN DE SEGURIDAD (LOG) ▼▼▼ ---
     // En lugar de exponer el error, lo guardamos en un log y mostramos un error genérico.
     logDatabaseError($e, 'PDO Connection');
-    die("ERROR: No se pudo conectar a la base de datos. Por favor, contacta al administrador.");
+    // --- ▼▼▼ MODIFICADO (TEXTO A CLAVE) ▼▼▼ ---
+    // Esta es una página de error fatal, no se puede traducir con JS.
+    // Mostramos la clave y el texto en inglés como fallback.
+    die("db.connectionError: ERROR: Could not connect to the database. Please contact the administrator.");
     // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 }
 

@@ -84,7 +84,9 @@
       "modalConfirmPass": "Confirmar nueva contraseña*",
       "back": "Atrás",
       "savePassword": "Guardar Contraseña",
-      "confirm": "Confirmar"
+      "confirm": "Confirmar",
+      "lastPassUpdateNever": "Nunca has actualizado tu contraseña.",
+      "lastPassUpdateError": "No se pudo cargar el historial de actualizaciones."
     },
     "accessibility": {
       "title": "Accesibilidad",
@@ -126,7 +128,17 @@
       "timeMinute": " minuto",
       "timeMinutes": " minutos",
       "timeSecondsAgo": "hace unos segundos",
-      "timeUnknown": "fecha desconocida"
+      "timeUnknown": "fecha desconocida",
+      "osWindows11": "Windows 10/11",
+      "osWindows": "Windows",
+      "osMacOS": "macOS",
+      "osAndroid": "Android",
+      "osIOS": "iOS",
+      "osLinux": "Linux",
+      "browserEdge": "Edge",
+      "browserChrome": "Chrome",
+      "browserSafari": "Safari",
+      "browserFirefox": "Firefox"
     }
   },
   "page": {
@@ -176,37 +188,96 @@
       "confirmPasswordLabel": "Confirmar Contraseña*",
       "backButton": "Atrás",
       "saveButton": "Guardar y Continuar"
+    },
+    "error": {
+      "title": "Error en el registro",
+      "titleReset": "Error en la recuperación",
+      "oopsTitle": "¡Uy! Faltan datos.",
+      "400title": "Error 400: Faltan datos",
+      "regStep1": "No has completado el paso 1 (email y contraseña) antes de acceder a esta página.",
+      "regStep2": "No has completado el paso 2 (nombre de usuario) antes de acceder a esta página.",
+      "resetStep1": "No has completado el paso 1 (email) antes de acceder a esta página.",
+      "resetStep2": "No has completado el paso 2 (código) antes de acceder a esta página.",
+      "backToRegister": "Volver al inicio del registro",
+      "backToReset": "Volver al inicio de la recuperación"
     }
   },
   "js": {
     "auth": {
       "verifying": "Verificando...",
       "genericError": "Ha ocurrido un error.",
-      "errorPasswordLength": "La contraseña debe tener entre 8 y 72 caracteres.",
+      "errorPasswordLength": "La contraseña debe tener entre %min% y %max% caracteres.",
+      "errorPasswordMinLength": "La contraseña debe tener al menos %length% caracteres.",
+      "errorPasswordMaxLength": "La contraseña no puede tener más de %length% caracteres.",
       "errorPasswordMismatch": "Las contraseñas no coinciden.",
       "saving": "Guardando...",
       "successPasswordUpdate": "¡Contraseña actualizada!",
+      "successPasswordUpdateRedirect": "Contraseña actualizada. Serás redirigido.",
       "saveAndContinue": "Guardar y Continuar",
       "errorNoEmail": "Error: No se encontró tu email. Por favor, recarga la página.",
       "successCodeResent": "Se ha reenviado un nuevo código.",
       "errorCodeResent": "Error al reenviar el código.",
+      "errorCodeCooldown": "Debes esperar %seconds% segundos más para reenviar el código.",
       "errorCompleteFields": "Por favor, completa todos los campos correctamente.",
+      "errorCompleteAllFields": "Por favor, completa todos los campos.",
       "errorCompleteEmailPass": "Por favor, completa email y contraseña.",
       "errorInvalidEmail": "El formato de correo no es válido.",
       "errorEmailLength": "El correo no puede tener más de 255 caracteres.",
       "errorEmailDomain": "Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.",
+      "errorEmailInUse": "Este correo electrónico ya está en uso.",
       "errorUsernameMissing": "Por favor, introduce un nombre de usuario.",
-      "errorUsernameLength": "El nombre de usuario debe tener entre 6 y 32 caracteres.",
+      "errorUsernameLength": "El nombre de usuario debe tener entre %min% y %max% caracteres.",
+      "errorUsernameMinLength": "El nombre de usuario debe tener al menos %length% caracteres.",
+      "errorUsernameMaxLength": "El nombre de usuario no puede tener más de %length% caracteres.",
+      "errorUsernameInUse": "Ese nombre de usuario ya está en uso.",
       "errorUnknown": "Error desconocido.",
       "errorInvalidCode": "Por favor, introduce el código de verificación completo.",
-      "processing": "Procesando..."
+      "processing": "Procesando...",
+      "errorMissingSteps": "Faltan datos de los pasos anteriores.",
+      "successCodeGenerated": "Código de verificación generado.",
+      "errorMissingEmailOrCode": "Faltan el correo o el código de verificación.",
+      "errorCodeExpiredRestart": "El código de verificación es incorrecto o ha expirado. Vuelve a empezar.",
+      "errorCodeIncorrect": "El código de verificación es incorrecto.",
+      "errorCorruptData": "Error al procesar el registro. Datos corruptos.",
+      "successRegistration": "¡Registro completado! Iniciando sesión...",
+      "errorNoRegistrationData": "No se encontraron datos de registro. Por favor, vuelve a empezar.",
+      "errorTooManyAttempts": "Demasiados intentos fallidos. Por favor, inténtalo de nuevo en %minutes% minutos.",
+      "info2faRequired": "Verificación de dos pasos requerida.",
+      "successLogin": "Inicio de sesión correcto.",
+      "errorInvalidCredentials": "Correo o contraseña incorrectos.",
+      "errorMissingVerificationData": "Faltan datos de verificación.",
+      "errorCodeExpired": "El código es incorrecto o ha expirado.",
+      "errorUserNotFound": "Error: No se pudo encontrar el usuario.",
+      "infoCodeSentIfExists": "Si el correo existe, se enviará un código.",
+      "errorNoResetData": "No se encontraron datos de reseteo. Por favor, vuelve a empezar.",
+      "errorMissingDataRestart": "Faltan datos. Por favor, vuelve a empezar.",
+      "errorInvalidResetSession": "La sesión de reseteo es inválida. Vuelve a empezar."
     },
     "settings": {
       "successPreference": "Preferencia actualizada.",
       "successLang": "Idioma actualizado. La página se recargará.",
       "errorPreference": "Error al guardar la preferencia.",
-      "successAvatarRemoved": "Avatar eliminado.",
+      "errorPreferenceInvalid": "Configuración o valor de preferencia no válido.",
+      "errorPreferenceToggle": "El valor para un interruptor debe ser 0 o 1.",
+      "successAvatarRemoved": "Avatar eliminado. Se ha restaurado el avatar por defecto.",
       "errorAvatarRemove": "Error desconocido al eliminar.",
+      "errorAvatarUpload": "Error al subir el archivo.",
+      "errorAvatarSave": "No se pudo guardar el archivo en el servidor.",
+      "errorAvatarApi": "No se pudo generar el nuevo avatar por defecto desde la API.",
+      "errorUsernameCooldown": "Debes esperar. Podrás cambiar tu nombre de usuario de nuevo en %days% días.",
+      "errorUsernameEmpty": "El nombre de usuario no puede estar vacío.",
+      "errorUsernameIsCurrent": "Este ya es tu nombre de usuario.",
+      "successCodeGenerated": "Se ha generado un código de verificación.",
+      "errorEmailCooldown": "Debes esperar. Podrás cambiar tu correo de nuevo en %days% días.",
+      "errorEmailIsCurrent": "Este ya es tu correo electrónico.",
+      "successPasswordVerify": "Contraseña actual correcta.",
+      "errorPasswordVerifyIncorrect": "La contraseña actual es incorrecta.",
+      "errorPasswordCooldown": "Debes esperar. Podrás cambiar tu contraseña de nuevo en %hours% horas.",
+      "errorNewPasswordEmpty": "Por favor, completa ambos campos de nueva contraseña.",
+      "success2faEnabled": "Verificación de dos pasos activada.",
+      "success2faDisabled": "Verificación de dos pasos desactivada.",
+      "successLogoutAll": "Se han invalidado todas las demás sesiones.",
+      "errorNoSession": "Acceso denegado. No has iniciado sesión.",
       "infoCodeSentCurrent": "Se ha enviado un código a tu correo actual.",
       "errorCodeRequest": "Error al solicitar el código.",
       "sending": "Enviando...",
@@ -239,7 +310,11 @@
     "api": {
       "errorServer": "Error en la respuesta del servidor.",
       "errorSecurity": "Error de seguridad. Recargando la página...",
-      "errorConnection": "No se pudo conectar con el servidor."
+      "errorSecurityRefresh": "Error de seguridad. Por favor, recarga la página e inténtalo de nuevo.",
+      "errorConnection": "No se pudo conectar con el servidor.",
+      "invalidAction": "Acción no válida.",
+      "errorDatabase": "Error en la base de datos.",
+      "errorDatabaseEnum": "Error de BD: El tipo de acción no existe en la base de datos."
     },
     "main": {
       "errorNetwork": "No hay conexión a internet.",
@@ -248,5 +323,11 @@
     "url": {
       "errorLoad": "Error al cargar el contenido"
     }
+  },
+  "db": {
+    "connectionError": "ERROR: No se pudo conectar a la base de datos. Por favor, contacta al administrador."
+  },
+  "logout": {
+    "invalidSession": "Tu sesión ha expirado o es inválida."
   }
 }

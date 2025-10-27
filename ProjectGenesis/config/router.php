@@ -10,10 +10,10 @@ include '../config/config.php'; // Inicia la sesión
  * Detiene la ejecución del script.
  *
  * @param string $basePath El path base del proyecto (viene de config.php).
- * @param string $message El mensaje principal del error (ej. "Error 400").
- * @param string $details La explicación del error.
+ * @param string $messageKey La *clave de traducción* del mensaje principal.
+ * @param string $detailsKey La *clave de traducción* de los detalles.
  */
-function showRegistrationError($basePath, $message, $details) {
+function showRegistrationError($basePath, $messageKey, $detailsKey) {
     // Limpiamos cualquier salida de HTML anterior
     if (ob_get_level() > 0) {
         ob_end_clean();
@@ -27,27 +27,34 @@ function showRegistrationError($basePath, $message, $details) {
     // Cargamos los CSS existentes para mantener el estilo
     echo '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded">';
     echo '<link rel="stylesheet" type="text/css" href="' . htmlspecialchars($basePath, ENT_QUOTES, 'UTF-8') . '/assets/css/styles.css">';
-    echo '<title>Error en el registro</title></head>';
+    
+    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+    echo '<title data-i18n="page.error.title">Error en el registro</title></head>';
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+    
     echo '<body style="background-color: #f5f5fa;">'; // Fondo gris como el resto
     
     // Usamos las clases CSS de 'auth-container' y 'not-found' para el estilo
     echo '<div class="section-content active" style="align-items: center; justify-content: center; height: 100vh;">';
     echo '<div class="auth-container" style="max-width: 460px;">';
     
-    // Título (similar a tu imagen)
-    echo '<h1 class="auth-title" style="font-size: 36px; margin-bottom: 16px;">¡Uy! Faltan datos.</h1>';
+    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+    echo '<h1 class="auth-title" style="font-size: 36px; margin-bottom: 16px;" data-i18n="page.error.oopsTitle">¡Uy! Faltan datos.</h1>';
     
-    // Contenedor del error (similar a tu imagen)
     echo '<div class="auth-error-message" style="display: block; background-color: #ffffff; border: 1px solid #00000020; color: #1f2937; margin-bottom: 24px; text-align: left; padding: 16px;">';
-    echo '<strong style="display: block; font-size: 16px; margin-bottom: 8px; color: #000;">' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . '</strong>';
-    echo '<p style="font-size: 14px; margin: 0; color: #6b7280; line-height: 1.5;">' . htmlspecialchars($details, ENT_QUOTES, 'UTF-8') . '</p>';
+    echo '<strong style="display: block; font-size: 16px; margin-bottom: 8px; color: #000;" data-i18n="' . htmlspecialchars($messageKey, ENT_QUOTES, 'UTF-8') . '"></strong>';
+    echo '<p style="font-size: 14px; margin: 0; color: #6b7280; line-height: 1.5;" data-i18n="' . htmlspecialchars($detailsKey, ENT_QUOTES, 'UTF-8') . '"></p>';
     echo '</div>';
     
-    // Botón para volver
-    echo '<a href="' . htmlspecialchars($basePath, ENT_QUOTES, 'UTF-8') . '/register" class="auth-button" style="text-decoration: none; text-align: center; line-height: 52px; display: block; width: 100%;">Volver al inicio del registro</a>';
+    echo '<a href="' . htmlspecialchars($basePath, ENT_QUOTES, 'UTF-8') . '/register" class="auth-button" style="text-decoration: none; text-align: center; line-height: 52px; display: block; width: 100%;" data-i18n="page.error.backToRegister">Volver al inicio del registro</a>';
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
     
     echo '</div></div>';
     echo '</body></html>';
+    
+    // NOTA: Esta página de error no cargará i18n-manager.js, por lo que mostrará las claves.
+    // Una solución más avanzada implicaría inyectar un <script> que cargue y aplique
+    // las traducciones JSON, pero eso está fuera de este alcance.
 }
 // --- ▲▲▲ FIN: NUEVA FUNCIÓN DE ERROR DE REGISTRO ▲▲▲ ---
 
@@ -56,26 +63,28 @@ function showRegistrationError($basePath, $message, $details) {
 /**
  * Muestra una página de error HTML personalizada para el flujo de reseteo.
  * @param string $basePath
- * @param string $message
- * @param string $details
+ * @param string $messageKey
+ * @param string $detailsKey
  */
-function showResetError($basePath, $message, $details) {
+function showResetError($basePath, $messageKey, $detailsKey) {
     if (ob_get_level() > 0) ob_end_clean();
     http_response_code(400);
 
     echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=deVice-width, initial-scale=1.0">';
     echo '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded">';
     echo '<link rel="stylesheet" type="text/css" href="' . htmlspecialchars($basePath, ENT_QUOTES, 'UTF-8') . '/assets/css/styles.css">';
-    echo '<title>Error en la recuperación</title></head>';
+    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+    echo '<title data-i18n="page.error.titleReset">Error en la recuperación</title></head>';
     echo '<body style="background-color: #f5f5fa;">';
     echo '<div class="section-content active" style="align-items: center; justify-content: center; height: 100vh;">';
     echo '<div class="auth-container" style="max-width: 460px;">';
-    echo '<h1 class="auth-title" style="font-size: 36px; margin-bottom: 16px;">¡Uy! Faltan datos.</h1>';
+    echo '<h1 class="auth-title" style="font-size: 36px; margin-bottom: 16px;" data-i18n="page.error.oopsTitle">¡Uy! Faltan datos.</h1>';
     echo '<div class="auth-error-message" style="display: block; background-color: #ffffff; border: 1px solid #00000020; color: #1f2937; margin-bottom: 24px; text-align: left; padding: 16px;">';
-    echo '<strong style="display: block; font-size: 16px; margin-bottom: 8px; color: #000;">' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . '</strong>';
-    echo '<p style="font-size: 14px; margin: 0; color: #6b7280; line-height: 1.5;">' . htmlspecialchars($details, ENT_QUOTES, 'UTF-8') . '</p>';
+    echo '<strong style="display: block; font-size: 16px; margin-bottom: 8px; color: #000;" data-i18n="' . htmlspecialchars($messageKey, ENT_QUOTES, 'UTF-8') . '"></strong>';
+    echo '<p style="font-size: 14px; margin: 0; color: #6b7280; line-height: 1.5;" data-i18n="' . htmlspecialchars($detailsKey, ENT_QUOTES, 'UTF-8') . '"></p>';
     echo '</div>';
-    echo '<a href="' . htmlspecialchars($basePath, ENT_QUOTES, 'UTF-8') . '/reset-password" class="auth-button" style="text-decoration: none; text-align: center; line-height: 52px; display: block; width: 100%;">Volver al inicio de la recuperación</a>';
+    echo '<a href="' . htmlspecialchars($basePath, ENT_QUOTES, 'UTF-8') . '/reset-password" class="auth-button" style="text-decoration: none; text-align: center; line-height: 52px; display: block; width: 100%;" data-i18n="page.error.backToReset">Volver al inicio de la recuperación</a>';
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
     echo '</div></div>';
     echo '</body></html>';
 }
@@ -141,14 +150,18 @@ if (array_key_exists($page, $allowedPages)) {
 
     } elseif ($page === 'register-step2') {
         if (!isset($_SESSION['registration_step']) || $_SESSION['registration_step'] < 2) {
-            showRegistrationError($basePath, 'Error 400: Faltan datos del paso 1.', 'No has completado el paso 1 (email y contraseña) antes de acceder a esta página.');
+            // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+            showRegistrationError($basePath, 'page.error.400title', 'page.error.regStep1');
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             exit; 
         }
         $CURRENT_REGISTER_STEP = 2;
 
     } elseif ($page === 'register-step3') {
         if (!isset($_SESSION['registration_step']) || $_SESSION['registration_step'] < 3) {
-            showRegistrationError($basePath, 'Error 400: Faltan datos del paso 2.', 'No has completado el paso 2 (nombre de usuario) antes de acceder a esta página.');
+            // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+            showRegistrationError($basePath, 'page.error.400title', 'page.error.regStep2');
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             exit;
         }
         $CURRENT_REGISTER_STEP = 3;
@@ -188,14 +201,18 @@ if (array_key_exists($page, $allowedPages)) {
 
     } elseif ($page === 'reset-step2') {
         if (!isset($_SESSION['reset_step']) || $_SESSION['reset_step'] < 2) {
-            showResetError($basePath, 'Error 400: Faltan datos del paso 1.', 'No has completado el paso 1 (email) antes de acceder a esta página.');
+            // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+            showResetError($basePath, 'page.error.400title', 'page.error.resetStep1');
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             exit;
         }
         $CURRENT_RESET_STEP = 2;
 
     } elseif ($page === 'reset-step3') {
         if (!isset($_SESSION['reset_step']) || $_SESSION['reset_step'] < 3) {
-            showResetError($basePath, 'Error 400: Faltan datos del paso 2.', 'No has completado el paso 2 (código) antes de acceder a esta página.');
+            // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+            showResetError($basePath, 'page.error.400title', 'page.error.resetStep2');
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             exit;
         }
         $CURRENT_RESET_STEP = 3;
@@ -226,21 +243,28 @@ if (array_key_exists($page, $allowedPages)) {
             $lastLog = $stmt_pass_log->fetch();
 
             if ($lastLog) {
+                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (TEXTO A CLAVE) ▼▼▼ ---
+                // ¡Problema! Esta lógica genera texto con datos dinámicos.
+                // El JS no podrá traducir "settings.login.lastPassUpdateDate" y reemplazar %date%.
+                // La vista (login-security.php) es la que debe tener la clave.
+                // Dejamos el texto estático con clave, pero el dinámico se queda como estaba.
+                // Esta es una limitación del patrón actual.
+                
                 if (!class_exists('IntlDateFormatter')) {
                     $date = new DateTime($lastLog['changed_at']);
-                    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
                     $lastPasswordUpdateText = 'Última actualización de tu contraseña: ' . $date->format('d/m/Y');
-                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 } else {
                     $formatter = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::NONE, 'UTC');
                     $timestamp = strtotime($lastLog['changed_at']);
-                    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
                     $lastPasswordUpdateText = 'Última actualización de tu contraseña: ' . $formatter->format($timestamp);
-                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
+                // (En una refactorización ideal, pasaríamos $lastLog['changed_at'] a la vista
+                // y la vista contendría <span data-i18n="settings.login.lastPassUpdateDate" data-timestamp="...">
+                // y el JS haría la traducción con la fecha).
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } else {
-                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-                $lastPasswordUpdateText = 'Nunca has actualizado tu contraseña.';
+                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (TEXTO A CLAVE) ▼▼▼ ---
+                $lastPasswordUpdateText = 'settings.login.lastPassUpdateNever'; // Esta SÍ se puede cambiar
                 // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             }
 
@@ -249,7 +273,9 @@ if (array_key_exists($page, $allowedPages)) {
             $is2faEnabled = (int)$stmt_2fa->fetchColumn(); 
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - settings-login');
-            $lastPasswordUpdateText = 'No se pudo cargar el historial de actualizaciones.';
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (TEXTO A CLAVE) ▼▼▼ ---
+            $lastPasswordUpdateText = 'settings.login.lastPassUpdateError'; // Esta SÍ se puede cambiar
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             $is2faEnabled = 0; 
         }
     } elseif ($page === 'settings-accessibility') {

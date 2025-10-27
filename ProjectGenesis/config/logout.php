@@ -9,9 +9,11 @@ include 'config.php';
 $submittedToken = $_GET['csrf_token'] ?? '';
 
 if (!validateCsrfToken($submittedToken)) {
-    // Si el token no es válido, simplemente morimos o redirigimos.
-    // Esto previene que un sitio malicioso cierre la sesión del usuario.
-    die('Tu sesión ha expirado o es inválida.');
+    // --- ▼▼▼ MODIFICADO (TEXTO A CLAVE) ▼▼▼ ---
+    // Si el token no es válido, morimos.
+    // Esta es una página de error fatal, no se puede traducir con JS.
+    die('logout.invalidSession: Your session has expired or is invalid.');
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 }
 // --- FIN DE LA MODIFICACIÓN ---
 

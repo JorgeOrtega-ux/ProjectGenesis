@@ -32,32 +32,27 @@ function formatUserAgent($userAgent) {
     
     $browserKey = 'settings.devices.unknownBrowser';
     $osKey = 'settings.devices.unknownOS';
-    $browserText = ''; // Para texto que no es clave (ej. "Chrome")
-    $osText = ''; // Para texto que no es clave (ej. "Windows 10/11")
+    
+    // --- Quitamos $browserText y $osText ---
 
     // Detectar OS
-    if (preg_match('/windows nt 10/i', $userAgent)) { $osText = 'Windows 10/11'; $osKey = null; }
-    elseif (preg_match('/windows/i', $userAgent)) { $osText = 'Windows'; $osKey = null; }
-    elseif (preg_match('/macintosh|mac os x/i', $userAgent)) { $osText = 'macOS'; $osKey = null; }
-    elseif (preg_match('/android/i', $userAgent)) { $osText = 'Android'; $osKey = null; }
-    elseif (preg_match('/iphone|ipad|ipod/i', $userAgent)) { $osText = 'iOS'; $osKey = null; }
-    elseif (preg_match('/linux/i', $userAgent)) { $osText = 'Linux'; $osKey = null; }
+    if (preg_match('/windows nt 10/i', $userAgent)) { $osKey = 'settings.devices.osWindows11'; }
+    elseif (preg_match('/windows/i', $userAgent)) { $osKey = 'settings.devices.osWindows'; }
+    elseif (preg_match('/macintosh|mac os x/i', $userAgent)) { $osKey = 'settings.devices.osMacOS'; }
+    elseif (preg_match('/android/i', $userAgent)) { $osKey = 'settings.devices.osAndroid'; }
+    elseif (preg_match('/iphone|ipad|ipod/i', $userAgent)) { $osKey = 'settings.devices.osIOS'; }
+    elseif (preg_match('/linux/i', $userAgent)) { $osKey = 'settings.devices.osLinux'; }
 
     // Detectar Navegador
-    if (preg_match('/edg/i', $userAgent)) { $browserText = 'Edge'; $browserKey = null; }
-    elseif (preg_match('/chrome/i', $userAgent)) { $browserText = 'Chrome'; $browserKey = null; }
-    elseif (preg_match('/safari/i', $userAgent)) { $browserText = 'Safari'; $browserKey = null; }
-    elseif (preg_match('/firefox/i', $userAgent)) { $browserText = 'Firefox'; $browserKey = null; }
+    if (preg_match('/edg/i', $userAgent)) { $browserKey = 'settings.devices.browserEdge'; }
+    elseif (preg_match('/chrome/i', $userAgent)) { $browserKey = 'settings.devices.browserChrome'; }
+    elseif (preg_match('/safari/i', $userAgent)) { $browserKey = 'settings.devices.browserSafari'; }
+    elseif (preg_match('/firefox/i', $userAgent)) { $browserKey = 'settings.devices.browserFirefox'; }
     
     // Construir el HTML. 
-    // Si la clave existe, usa <span>. Si no, usa el texto escapado.
-    $browserHtml = $browserKey 
-        ? '<span data-i18n="' . $browserKey . '"></span>' 
-        : htmlspecialchars($browserText);
-        
-    $osHtml = $osKey 
-        ? '<span data-i18n="' . $osKey . '"></span>' 
-        : htmlspecialchars($osText);
+    // Ahora SIEMPRE usamos claves.
+    $browserHtml = '<span data-i18n="' . $browserKey . '"></span>';
+    $osHtml = '<span data-i18n="' . $osKey . '"></span>';
 
     // Devolver el string HTML listo para ser interpretado por i18n-manager.js
     return $browserHtml . ' <span data-i18n="settings.devices.browserOsSeparator"></span> ' . $osHtml;

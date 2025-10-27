@@ -3,7 +3,9 @@
 include '../config/config.php';
 header('Content-Type: application/json');
 
-$response = ['success' => false, 'message' => 'Acción no válida.'];
+// --- ▼▼▼ MODIFICADO ▼▼▼ ---
+$response = ['success' => false, 'message' => 'js.api.invalidAction'];
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 define('MIN_PASSWORD_LENGTH', 8);
 define('MAX_PASSWORD_LENGTH', 72);
@@ -12,7 +14,9 @@ define('MAX_USERNAME_LENGTH', 32);
 define('MAX_EMAIL_LENGTH', 255);
 
 if (!isset($_SESSION['user_id'])) {
-    $response['message'] = 'Acceso denegado. No has iniciado sesión.';
+    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+    $response['message'] = 'js.settings.errorNoSession';
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
     echo json_encode($response);
     exit;
 }
@@ -84,7 +88,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $submittedToken = $_POST['csrf_token'] ?? '';
     if (!validateCsrfToken($submittedToken)) {
-        $response['message'] = 'Error de seguridad. Por favor, recarga la página.';
+        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+        $response['message'] = 'js.api.errorSecurityRefresh';
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
         echo json_encode($response);
         exit;
     }
@@ -95,7 +101,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'upload-avatar') {
             try {
                 if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
-                    throw new Exception('Error al subir el archivo. Código: ' . ($_FILES['avatar']['error'] ?? 'N/A'));
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.settings.errorAvatarUpload');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
 
                 $file = $_FILES['avatar'];
@@ -103,7 +111,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $fileTmpName = $file['tmp_name'];
 
                 if ($fileSize > 2 * 1024 * 1024) {
-                    throw new Exception('El archivo es demasiado grande (máx 2MB).');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.settings.errorAvatarSize');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
 
                 $finfo = new finfo(FILEINFO_MIME_TYPE);
@@ -117,7 +127,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ];
 
                 if (!array_key_exists($mimeType, $allowedTypes)) {
-                    throw new Exception('Formato de archivo no válido (solo PNG, JPEG, GIF o WebP).');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.settings.errorAvatarFormat');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
                 $extension = $allowedTypes[$mimeType];
 
@@ -131,7 +143,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $newPublicUrl = $basePath . '/assets/uploads/avatars/' . $newFileName;
 
                 if (!move_uploaded_file($fileTmpName, $newFilePath)) {
-                    throw new Exception('No se pudo guardar el archivo en el servidor.');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.settings.errorAvatarSave');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
 
                 $stmt = $pdo->prepare("UPDATE users SET profile_image_url = ? WHERE id = ?");
@@ -142,12 +156,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 $response['success'] = true;
-                $response['message'] = 'Avatar actualizado con éxito.';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.settings.successAvatarUpdate';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 $response['newAvatarUrl'] = $newPublicUrl;
             } catch (Exception $e) {
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - upload-avatar');
-                    $response['message'] = 'Error al guardar en la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 } else {
                     $response['message'] = $e->getMessage();
                 }
@@ -161,7 +179,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $newDefaultUrl = generateDefaultAvatar($pdo, $userId, $username, $basePath);
 
                 if (!$newDefaultUrl) {
-                    throw new Exception('No se pudo generar el nuevo avatar por defecto desde la API.');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.settings.errorAvatarApi');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
 
                 $stmt = $pdo->prepare("UPDATE users SET profile_image_url = ? WHERE id = ?");
@@ -172,12 +192,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 $response['success'] = true;
-                $response['message'] = 'Avatar eliminado. Se ha restaurado el avatar por defecto.';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.settings.successAvatarRemoved';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 $response['newAvatarUrl'] = $newDefaultUrl;
             } catch (Exception $e) {
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - remove-avatar');
-                    $response['message'] = 'Error al actualizar la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 } else {
                     $response['message'] = $e->getMessage();
                 }
@@ -203,32 +227,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if ($daysPassed < USERNAME_CHANGE_COOLDOWN_DAYS) {
                         $daysRemaining = USERNAME_CHANGE_COOLDOWN_DAYS - $daysPassed;
-                        $plural = ($daysRemaining == 1) ? 'día' : 'días';
-                        throw new Exception("Debes esperar. Podrás cambiar tu nombre de usuario de nuevo en {$daysRemaining} {$plural}.");
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        // No podemos traducir "día" vs "días" aquí, lo dejamos para el JS
+                        // Pasamos la clave y los días restantes.
+                        $response['message'] = 'js.settings.errorUsernameCooldown';
+                        $response['data'] = ['days' => $daysRemaining];
+                        echo json_encode($response);
+                        exit;
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
                 }
 
                 $newUsername = trim($_POST['username'] ?? '');
                 $oldUsername = $_SESSION['username'];
 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLAVES DE TRADUCCIÓN) ▼▼▼ ---
                 if (empty($newUsername)) {
-                    throw new Exception('El nombre de usuario no puede estar vacío.');
+                    throw new Exception('js.settings.errorUsernameEmpty');
                 }
                 if (strlen($newUsername) < MIN_USERNAME_LENGTH) {
-                    throw new Exception('El nombre de usuario debe tener al menos ' . MIN_USERNAME_LENGTH . ' caracteres.');
+                    throw new Exception('js.auth.errorUsernameMinLength');
                 }
                 if (strlen($newUsername) > MAX_USERNAME_LENGTH) {
-                    throw new Exception('El nombre de usuario no puede tener más de ' . MAX_USERNAME_LENGTH . ' caracteres.');
+                    throw new Exception('js.auth.errorUsernameMaxLength');
                 }
-
                 if ($newUsername === $oldUsername) {
-                    throw new Exception('Este ya es tu nombre de usuario.');
+                    throw new Exception('js.settings.errorUsernameIsCurrent');
                 }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
                 $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
                 $stmt->execute([$newUsername, $userId]);
                 if ($stmt->fetch()) {
-                    throw new Exception('Ese nombre de usuario ya está en uso.');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.auth.errorUsernameInUse');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
 
                 $stmt = $pdo->prepare("SELECT profile_image_url FROM users WHERE id = ?");
@@ -276,7 +309,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 $response['success'] = true;
-                $response['message'] = 'Nombre de usuario actualizado con éxito.';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.settings.successUsernameUpdate';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 $response['newUsername'] = $newUsername;
 
                 if ($newAvatarUrl) {
@@ -285,9 +320,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } catch (Exception $e) {
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - update-username');
-                    $response['message'] = 'Error al actualizar la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 } else {
                     $response['message'] = $e->getMessage();
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    // Pasar datos dinámicos para las claves que lo necesiten
+                    if ($response['message'] === 'js.auth.errorUsernameMinLength') {
+                        $response['data'] = ['length' => MIN_USERNAME_LENGTH];
+                    } elseif ($response['message'] === 'js.auth.errorUsernameMaxLength') {
+                         $response['data'] = ['length' => MAX_USERNAME_LENGTH];
+                    }
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         } elseif ($action === 'request-email-change-code') {
@@ -308,14 +353,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
                 $response['success'] = true;
-                $response['message'] = 'Se ha generado un código de verificación.';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.settings.successCodeGenerated';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } catch (Exception $e) {
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - request-email-change-code');
                     if (strpos($e->getMessage(), 'Data truncated') !== false) {
-                        $response['message'] = "Error de BD: El tipo '{$codeType}' no existe en el ENUM 'code_type' de la tabla 'verification_codes'. Asegúrate de añadirlo.";
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = "js.api.errorDatabaseEnum";
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     } else {
-                        $response['message'] = 'Error al generar el código en la base de datos.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.api.errorDatabase';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
                 } else {
                     $response['message'] = 'Error: ' . $e->getMessage();
@@ -330,12 +381,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ip = getIpAddress();
 
                 if (checkLockStatus($pdo, $identifier, $ip)) {
-                    throw new Exception('Demasiados intentos fallidos. Por favor, inténtalo de nuevo en ' . LOCKOUT_TIME_MINUTES . ' minutos.');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.auth.errorTooManyAttempts');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
 
 
                 if (empty($submittedCode)) {
-                    throw new Exception('Por favor, introduce el código de verificación.');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.settings.errorEnterCode');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
 
                 $stmt = $pdo->prepare(
@@ -350,8 +405,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$codeData || strtolower($codeData['code']) !== strtolower($submittedCode)) {
 
                     logFailedAttempt($pdo, $identifier, $ip, 'password_verify_fail');
-
-                    throw new Exception('El código es incorrecto o ha expirado.');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.auth.errorCodeExpired');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
 
 
@@ -361,13 +417,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$codeData['id']]);
 
                 $response['success'] = true;
-                $response['message'] = 'Verificación correcta. Ya puedes editar tu email.';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.settings.successVerification';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } catch (Exception $e) {
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - verify-email-change-code');
-                    $response['message'] = 'Error al verificar en la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 } else {
                     $response['message'] = $e->getMessage();
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    if ($response['message'] === 'js.auth.errorTooManyAttempts') {
+                        $response['data'] = ['minutes' => LOCKOUT_TIME_MINUTES];
+                    }
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         } elseif ($action === 'update-email') {
@@ -391,37 +456,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if ($daysPassed < EMAIL_CHANGE_COOLDOWN_DAYS) {
                         $daysRemaining = EMAIL_CHANGE_COOLDOWN_DAYS - $daysPassed;
-                        $plural = ($daysRemaining == 1) ? 'día' : 'días';
-                        throw new Exception("Debes esperar. Podrás cambiar tu correo de nuevo en {$daysRemaining} {$plural}.");
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.settings.errorEmailCooldown';
+                        $response['data'] = ['days' => $daysRemaining];
+                        echo json_encode($response);
+                        exit;
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
                 }
 
                 $newEmail = trim($_POST['email'] ?? '');
                 $oldEmail = $_SESSION['email'];
 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLAVES DE TRADUCCIÓN) ▼▼▼ ---
                 if (empty($newEmail) || !filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
-                    throw new Exception('El formato de correo no es válido.');
+                    throw new Exception('js.auth.errorInvalidEmail');
                 }
                 if (strlen($newEmail) > MAX_EMAIL_LENGTH) {
-                    throw new Exception('El correo no puede tener más de ' . MAX_EMAIL_LENGTH . ' caracteres.');
+                    throw new Exception('js.auth.errorEmailLength');
                 }
-
                 if ($newEmail === $oldEmail) {
-                    throw new Exception('Este ya es tu correo electrónico.');
+                    throw new Exception('js.settings.errorEmailIsCurrent');
                 }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
                 $allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com'];
                 $emailDomain = substr($newEmail, strrpos($newEmail, '@') + 1);
 
                 if (!in_array(strtolower($emailDomain), $allowedDomains)) {
-                    throw new Exception('Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.auth.errorEmailDomain');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
 
                 $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
                 $stmt->execute([$newEmail, $userId]);
 
                 if ($stmt->fetch()) {
-                    throw new Exception('Ese correo electrónico ya está en uso.');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.auth.errorEmailInUse');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
 
                 $stmt = $pdo->prepare("UPDATE users SET email = ? WHERE id = ?");
@@ -436,12 +510,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['email'] = $newEmail;
 
                 $response['success'] = true;
-                $response['message'] = 'Correo electrónico actualizado con éxito.';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.settings.successEmailUpdate';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 $response['newEmail'] = $newEmail;
             } catch (Exception $e) {
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - update-email');
-                    $response['message'] = 'Error al actualizar la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 } else {
                     $response['message'] = $e->getMessage();
                 }
@@ -453,11 +531,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $currentPassword = $_POST['current_password'] ?? '';
 
                 if (checkLockStatus($pdo, $identifier, $ip)) {
-                    throw new Exception('Demasiados intentos fallidos. Por favor, inténtalo de nuevo en ' . LOCKOUT_TIME_MINUTES . ' minutos.');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.auth.errorTooManyAttempts');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
 
                 if (empty($currentPassword)) {
-                    throw new Exception('Por favor, introduce tu contraseña actual.');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.settings.errorEnterCurrentPass');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
 
                 $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ?");
@@ -467,17 +549,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($hashedPassword && password_verify($currentPassword, $hashedPassword)) {
                     clearFailedAttempts($pdo, $identifier);
                     $response['success'] = true;
-                    $response['message'] = 'Contraseña actual correcta.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.settings.successPasswordVerify';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 } else {
                     logFailedAttempt($pdo, $identifier, $ip, 'password_verify_fail');
-                    throw new Exception('La contraseña actual es incorrecta.');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.settings.errorPasswordVerifyIncorrect');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             } catch (Exception $e) {
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - verify-current-password');
-                    $response['message'] = 'Error al verificar en la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 } else {
                     $response['message'] = $e->getMessage();
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    if ($response['message'] === 'js.auth.errorTooManyAttempts') {
+                        $response['data'] = ['minutes' => LOCKOUT_TIME_MINUTES];
+                    }
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         } elseif ($action === 'update-password') {
@@ -502,26 +595,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if ($hoursPassed < PASSWORD_CHANGE_COOLDOWN_HOURS) {
                         $hoursRemaining = PASSWORD_CHANGE_COOLDOWN_HOURS - $hoursPassed;
-                        $plural = ($hoursRemaining == 1) ? 'hora' : 'horas';
-                        throw new Exception("Debes esperar. Podrás cambiar tu contraseña de nuevo en {$hoursRemaining} {$plural}.");
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.settings.errorPasswordCooldown';
+                        $response['data'] = ['hours' => $hoursRemaining];
+                        echo json_encode($response);
+                        exit;
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
                 }
 
                 $newPassword = $_POST['new_password'] ?? '';
                 $confirmPassword = $_POST['confirm_password'] ?? '';
 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLAVES DE TRADUCCIÓN) ▼▼▼ ---
                 if (empty($newPassword) || empty($confirmPassword)) {
-                    throw new Exception('Por favor, completa ambos campos de nueva contraseña.');
+                    throw new Exception('js.settings.errorNewPasswordEmpty');
                 }
                 if (strlen($newPassword) < MIN_PASSWORD_LENGTH) {
-                    throw new Exception('La nueva contraseña debe tener al menos ' . MIN_PASSWORD_LENGTH . ' caracteres.');
+                    throw new Exception('js.auth.errorPasswordMinLength');
                 }
                 if (strlen($newPassword) > MAX_PASSWORD_LENGTH) {
-                    throw new Exception('La nueva contraseña no puede tener más de ' . MAX_PASSWORD_LENGTH . ' caracteres.');
+                    throw new Exception('js.auth.errorPasswordMaxLength');
                 }
                 if ($newPassword !== $confirmPassword) {
-                    throw new Exception('Las nuevas contraseña no coinciden.');
+                    throw new Exception('js.auth.errorPasswordMismatch');
                 }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
                 $stmt_get_old = $pdo->prepare("SELECT password FROM users WHERE id = ?");
                 $stmt_get_old->execute([$userId]);
@@ -542,17 +641,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt_log_pass->execute([$userId, $oldHashedPassword, $newHashedPassword, getIpAddress()]);
 
                 $response['success'] = true;
-                $response['message'] = '¡Contraseña actualizada con éxito!';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.settings.successPassUpdate';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } catch (Exception $e) {
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - update-password');
                     if (strpos($e->getMessage(), "Data truncated for column 'change_type'") !== false) {
-                        $response['message'] = "Error de BD: Asegúrate de añadir 'password' al ENUM 'change_type' en la tabla 'user_audit_logs'.";
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.api.errorDatabaseEnum';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     } else {
-                        $response['message'] = 'Error al actualizar la base de datos.';
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        $response['message'] = 'js.api.errorDatabase';
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
                 } else {
                     $response['message'] = $e->getMessage();
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    if ($response['message'] === 'js.auth.errorPasswordMinLength') {
+                        $response['data'] = ['length' => MIN_PASSWORD_LENGTH];
+                    } elseif ($response['message'] === 'js.auth.errorPasswordMaxLength') {
+                         $response['data'] = ['length' => MAX_PASSWORD_LENGTH];
+                    }
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             }
         } elseif ($action === 'toggle-2fa') {
@@ -568,13 +680,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $response['success'] = true;
                 $response['newState'] = $newState;
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
                 $response['message'] = $newState === 1
-                    ? 'Verificación de dos pasos activada.'
-                    : 'Verificación de dos pasos desactivada.';
+                    ? 'js.settings.success2faEnabled'
+                    : 'js.settings.success2faDisabled';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } catch (Exception $e) {
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - toggle-2fa');
-                    $response['message'] = 'Error al actualizar la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 } else {
                     $response['message'] = $e->getMessage();
                 }
@@ -593,14 +709,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ];
 
                 if (!array_key_exists($field, $allowedFields)) {
-                    throw new Exception('Configuración de preferencia no válida.');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.settings.errorPreferenceInvalid');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
 
                 if (!in_array($value, $allowedFields[$field])) {
                     if ($field === 'open_links_in_new_tab' || $field === 'increase_message_duration') {
-                        throw new Exception('El valor para un interruptor debe ser 0 o 1.');
+                        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                        throw new Exception('js.settings.errorPreferenceToggle');
+                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                     }
-                    throw new Exception('Valor de preferencia no válido.');
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    throw new Exception('js.settings.errorPreferenceInvalid');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
 
                 $sql = "UPDATE user_preferences SET $field = ? WHERE user_id = ?";
@@ -613,11 +735,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$finalValue, $userId]);
 
                 $response['success'] = true;
-                $response['message'] = 'Preferencia actualizada.';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.settings.successPreference';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } catch (Exception $e) {
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - update-preference');
-                    $response['message'] = 'Error al guardar la preferencia en la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 } else {
                     $response['message'] = $e->getMessage();
                 }
@@ -632,11 +758,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['auth_token'] = $newAuthToken;
 
                 $response['success'] = true;
-                $response['message'] = 'Se han invalidado todas las demás sesiones.';
+                // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                $response['message'] = 'js.settings.successLogoutAll';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } catch (Exception $e) {
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - logout-all-devices');
-                    $response['message'] = 'Error al actualizar el token de sesión en la base de datos.';
+                    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
+                    $response['message'] = 'js.api.errorDatabase';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 } else {
                     $response['message'] = $e->getMessage();
                 }
@@ -647,3 +777,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 echo json_encode($response);
 exit;
+
+?>
