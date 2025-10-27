@@ -139,7 +139,7 @@ if (isset($_SESSION['theme'])) {
 }
 // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
 
-// --- ▼▼▼ ¡NUEVA MODIFICACIÓN: LÓGICA DE IDIOMA PARA HTML! ▼▼▼ ---
+// --- ▼▼▼ ¡INICIO DE MODIFICACIÓN: LÓGICA DE IDIOMA PARA HTML! ▼▼▼ ---
 // Mapea el código de idioma de la BD a un código estándar HTML
 $langMap = [
     'es-latam' => 'es-419',
@@ -147,7 +147,13 @@ $langMap = [
     'en-us' => 'en-US',
     'fr-fr' => 'fr-FR'
 ];
-$htmlLang = $langMap[$_SESSION['language']] ?? 'en'; // Default 'en'
+
+// --- ¡ESTA ES LA LÍNEA CORREGIDA! ---
+// 1. Primero, obtenemos el idioma de la sesión (o 'en-us' por defecto si no existe).
+$currentLang = $_SESSION['language'] ?? 'en-us'; 
+
+// 2. Luego, usamos esa variable (que ahora sabemos que SÍ existe) para buscar en el map.
+$htmlLang = $langMap[$currentLang] ?? 'en'; // Default 'en'
 // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
 ?>
 <!DOCTYPE html>
