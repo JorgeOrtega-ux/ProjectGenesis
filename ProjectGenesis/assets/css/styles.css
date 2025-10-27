@@ -1405,6 +1405,13 @@ body {
     #avatar-section.settings-card {
         align-items: center; /* Centrar el avatar y los botones */
     }
+    
+    /* --- ▼▼▼ ¡ESTA ES LA REGLA QUE AÑADIMOS! ▼▼▼ --- */
+    #avatar-section .settings-card__actions {
+        width: 100%;
+    }
+    /* --- ▲▲▲ ¡FIN DE LA REGLA AÑADIDA! ▲▲▲ --- */
+    
     #avatar-section .settings-card__content .settings-card__text {
         display: none; /* Oculta el texto "Foto de perfil" en móvil */
     }
@@ -1427,6 +1434,13 @@ body {
     }
     .trigger-select-wrapper {
         width: 100%; /* El selector de dropdown ocupa todo el ancho */
+    }/* 6. Regla específica para botones de Avatar */
+    #avatar-actions-default,
+    #avatar-actions-custom,
+    #avatar-actions-preview {
+        display: flex;
+        width: 100%;
+        gap: 12px;
     }
 
     /* --- ▲▲▲ FIN DE CÓDIGO RESPONSIVE CORREGIDO ▲▲▲ --- */
