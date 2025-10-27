@@ -1,6 +1,6 @@
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from './auth-manager.js';
-import { applyTranslations, getTranslation } from './i18n-manager.js'; // <-- MODIFICADO
+import { applyTranslations, getTranslation } from './i18n-manager.js';
 
 const contentContainer = document.querySelector('.main-sections');
 
@@ -20,7 +20,12 @@ const routes = {
     'toggleSectionSettingsProfile': 'settings-profile',
     'toggleSectionSettingsLogin': 'settings-login',
     'toggleSectionSettingsAccess': 'settings-accessibility',
-    'toggleSectionSettingsDevices': 'settings-devices' 
+    'toggleSectionSettingsDevices': 'settings-devices',
+    
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+    'toggleSectionAccountStatusDeleted': 'account-status-deleted',
+    'toggleSectionAccountStatusSuspended': 'account-status-suspended'
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 };
 
 const paths = {
@@ -39,7 +44,12 @@ const paths = {
     '/settings/your-profile': 'toggleSectionSettingsProfile',
     '/settings/login-security': 'toggleSectionSettingsLogin',
     '/settings/accessibility': 'toggleSectionSettingsAccess',
-    '/settings/device-sessions': 'toggleSectionSettingsDevices' 
+    '/settings/device-sessions': 'toggleSectionSettingsDevices',
+    
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+    '/account-status/deleted': 'toggleSectionAccountStatusDeleted',
+    '/account-status/suspended': 'toggleSectionAccountStatusSuspended'
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 };
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
