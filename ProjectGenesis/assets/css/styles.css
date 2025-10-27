@@ -1372,7 +1372,11 @@ body {
         transform: scale(1);
     }
 }
-
+/* Modificador para formularios y toggles */
+.settings-card--edit-mode {
+    align-items: flex-end;
+    gap: 8px; /* <--- AÑADE ESTA LÍNEA */
+}
 /* ====================================== */
 /* ============ MEDIA QUERIES =========== */
 /* ====================================== */
@@ -1411,10 +1415,6 @@ body {
         width: 100%;
     }
     /* --- ▲▲▲ ¡FIN DE LA REGLA AÑADIDA! ▲▲▲ --- */
-    
-    #avatar-section .settings-card__content .settings-card__text {
-        display: none; /* Oculta el texto "Foto de perfil" en móvil */
-    }
 
     /* 3. Contenedor de Acciones (Botones) */
     .settings-card__actions {
