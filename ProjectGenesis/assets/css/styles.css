@@ -1401,3 +1401,68 @@ body {
         width: auto;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+/* --- ▼▼▼ NUEVOS ESTILOS PARA MODAL ELIMINAR CUENTA (CORREGIDOS) ▼▼▼ --- */
+.delete-account-user-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px 8px 10px;
+    border-radius: 99px;
+    background-color: #f5f5fa;
+    border: 1px solid #00000020;
+    margin: 0 auto; /* Centrar el badge */
+    max-width: 100%;
+}
+
+.delete-account-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.delete-account-user-email {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- ESTILOS DE LISTA MODIFICADOS --- */
+.delete-account-bullets {
+    list-style-type: disc; /* Usar bullets estándar */
+    margin: 0 0 16px 0;
+    padding-left: 20px; /* Añadir indentación estándar para <ul> */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background-color: transparent; /* Sin fondo de advertencia */
+    border: none; /* Sin borde de advertencia */
+}
+
+.delete-account-bullets li {
+    position: static; /* Quitar posicionamiento */
+    padding-left: 0; /* Quitar padding personalizado */
+    font-size: 14px;
+    color: #1f2937; /* Color de texto normal */
+    line-height: 1.5;
+}
+
+.delete-account-bullets li::before {
+    display: none; /* Ocultar el ícono de 'warning' */
+}

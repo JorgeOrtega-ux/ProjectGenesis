@@ -88,7 +88,10 @@
       "lastPassUpdateNever": "Nunca has actualizado tu contraseña.",
       "lastPassUpdateError": "No se pudo cargar el historial de actualizaciones.",
       "modalDeleteTitle": "Eliminar tu cuenta",
-      "modalDeleteDesc": "Esta acción es irreversible. Para confirmar, ingresa tu contraseña actual.",
+      "modalDeleteDesc": "Esta acción es irreversible y no se puede deshacer. Estás a punto de eliminar permanentemente esta cuenta.",
+      "modalDeleteBullet1": "Se eliminarán todos tus proyectos y datos asociados.",
+      "modalDeleteBullet2": "Tu nombre de usuario y correo quedarán libres para un nuevo registro.",
+      "modalDeleteConfirmText": "Para confirmar la eliminación, ingresa tu contraseña actual:",
       "modalDeleteConfirm": "Eliminar Cuenta"
     },
     "accessibility": {
