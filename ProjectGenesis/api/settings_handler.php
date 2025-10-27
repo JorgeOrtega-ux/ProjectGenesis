@@ -667,10 +667,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 $stmt_log_pass->execute([$userId, $oldHashedPassword, $newHashedPassword, getIpAddress()]);
 
+                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (DEVOLVER FECHA) ▼▼▼ ---
+                // Obtener el timestamp actual (UTC) que se acaba de insertar
+                $newTimestamp = gmdate('Y-m-d H:i:s'); 
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
                 $response['success'] = true;
                 // --- ▼▼▼ MODIFICADO ▼▼▼ ---
                 $response['message'] = 'js.settings.successPassUpdate';
                 // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                
+                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (DEVOLVER FECHA) ▼▼▼ ---
+                $response['newTimestamp'] = $newTimestamp; // Devolver la fecha al JS
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
             } catch (Exception $e) {
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - update-password');

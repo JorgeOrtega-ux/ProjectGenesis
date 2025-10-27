@@ -85,6 +85,32 @@ function focusInputAndMoveCursorToEnd(inputElement) {
     }
 }
 
+// --- ▼▼▼ INICIO DE LA MODIFICACIÓN (NUEVA FUNCIÓN) ▼▼▼ ---
+/**
+ * Formatea una fecha UTC (ej. "2025-10-27 18:32:00") a un formato simple "dd/mm/yyyy".
+ * @param {string} utcTimestamp
+ * @returns {string}
+ */
+function formatTimestampToSimpleDate(utcTimestamp) {
+    try {
+        // Añadir 'Z' para asegurar que JS lo interprete como UTC
+        const date = new Date(utcTimestamp + 'Z'); 
+        if (isNaN(date.getTime())) {
+            throw new Error('Invalid date');
+        }
+        
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Enero es 0
+        const year = date.getUTCFullYear();
+        
+        return `${day}/${month}/${year}`;
+    } catch (e) {
+        console.error('Error al formatear la fecha:', e);
+        return 'fecha inválida';
+    }
+}
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN (NUEVA FUNCIÓN) ▲▲▲ ---
+
 
 async function handlePreferenceChange(preferenceTypeOrField, newValue, cardElement) {
     if (!preferenceTypeOrField || newValue === undefined || !cardElement) {
@@ -760,6 +786,26 @@ export function initSettingsManager() {
             if (result.success) {
                 if(modal) modal.style.display = 'none';
                 window.showAlert(getTranslation(result.message || 'js.settings.successPassUpdate'), 'success');
+
+                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (ACTUALIZAR TEXTO) ▼▼▼ ---
+                if (result.newTimestamp) {
+                    const passwordTextElement = document.getElementById('password-last-updated-text');
+                    if (passwordTextElement) {
+                        // Formatear la fecha (ej. "27/10/2025")
+                        const formattedDate = formatTimestampToSimpleDate(result.newTimestamp);
+                        
+                        // Construir el string (replicamos la lógica del PHP ya que no hay clave i18n para esto)
+                        const newText = `Última actualización de tu contraseña: ${formattedDate}`;
+                        
+                        // Actualizar el DOM
+                        passwordTextElement.textContent = newText;
+                        
+                        // Quitar el data-i18n para que no se sobreescriba
+                        passwordTextElement.removeAttribute('data-i18n');
+                    }
+                }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN (ACTUALIZAR TEXTO) ▲▲▲ ---
+
             } else {
                 if(errorDiv) {
                     errorDiv.textContent = getTranslation(result.message || 'js.settings.errorSaving', result.data);
