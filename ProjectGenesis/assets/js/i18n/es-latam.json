@@ -38,7 +38,9 @@
       "edit": "Editar",
       "email": "Correo Electrónico",
       "modalCodeTitle": "Busca el código que te enviamos",
-      "modalCodeDesc": "Para poder hacer cambios en tu cuenta, primero debes ingresar el código que te enviamos (simulado) a",
+      
+      "modalCodeDesc": "Para poder hacer cambios en tu cuenta, primero debes ingresar el código que te enviamos a",
+      
       "modalCodeLabel": "Código*",
       "continue": "Continuar",
       "modalCodeResendP": "¿No recibiste el código?",

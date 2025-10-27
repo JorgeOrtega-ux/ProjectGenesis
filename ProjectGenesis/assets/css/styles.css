@@ -1186,9 +1186,9 @@ body {
     display: flex;
     flex-direction: row; /* Default: row */
     gap: 12px;
-    margin-top: 8px; /* Reducido de 24px, el gap del modal-content ya da espacio */
-    border-top: 1px solid #00000020;
-    padding-top: 16px;
+    /* margin-top: 8px; */ /* <-- ELIMINADO */
+    /* border-top: 1px solid #00000020; */ /* <-- ELIMINADO */
+    /* padding-top: 16px; */ /* <-- ELIMINADO */
 }
 
 .modal__footer--column {
@@ -1221,7 +1221,7 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
-    flex: 1; /* Ocupar espacio disponible */
+    flex: auto; /* Ocupar espacio disponible */
     display: flex;
     align-items: center;
     justify-content: center;

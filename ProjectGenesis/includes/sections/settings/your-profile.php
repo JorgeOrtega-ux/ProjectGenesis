@@ -1,4 +1,7 @@
 <?php
+// FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-970f96c7c06ba42e4101b6d17ae77c332c6f3044/ProjectGenesis/includes/sections/settings/your-profile.php
+?>
+<?php
 // --- ▼▼▼ INICIO DE NUEVO BLOQUE PHP ▼▼▼ ---
 
 // Estas variables ($userLanguage, $userUsageType, $openLinksInNewTab, $initialEmailCooldown)
@@ -150,21 +153,26 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
         <div class="modal-overlay" id="email-verify-modal">
             <div class="modal-content">
                 <div class="modal__header">
-                    <h2 class="modal__title" data-i18n="settings.login.modalVerifyTitle"></h2>
+                    
+                    <h2 class="modal__title" data-i18n="settings.profile.modalCodeTitle"></h2>
                     <button type="button" class="modal-close-btn" id="email-verify-close">
                         <span class="material-symbols-rounded">close</span>
                     </button>
                 </div>
                 <div class="modal__body">
-                     <p class="modal__description" data-i18n="settings.login.modalVerifyDesc"></p>
-                    <div class="auth-error-message" id="email-verify-error" style="display: none;"></div>
+                     
+                     <p class="modal__description">
+                        <span data-i18n="settings.profile.modalCodeDesc"></span> 
+                        <strong><?php echo htmlspecialchars($userEmail); ?></strong>
+                     </p>
+                     <div class="auth-error-message" id="email-verify-error" style="display: none;"></div>
                     <div class="modal__input-group">
                         <input type="text" id="email-verify-code" name="verification_code" class="modal__input" required placeholder=" " maxlength="14">
-                        <label for="email-verify-code" data-i18n="settings.profile.modalCodeLabel"></label>
+                        <label for="email-verify-code" data-i1J="settings.profile.modalCodeLabel"></label>
                     </div>
                 </div>
                 <div class="modal__footer modal__footer--column">
-                    <button type="button" class="modal__button modal__button--primary" id="email-verify-continue" data-i18n="settings.login.confirm"></button>
+                    <button type="button" class="modal__button modal__button--primary" id="email-verify-continue" data-i18n="settings.profile.continue"></button>
                     <p class="modal__footer-text" style="text-align: center;">
                         <span data-i18n="settings.profile.modalCodeResendP"></span>
                         
