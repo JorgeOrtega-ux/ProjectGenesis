@@ -622,7 +622,7 @@ body {
     background-color: #ffffff;
 }
 
-/* --- ▼▼▼ INICIO DE LA SECCIÓN REFACTORIZADA (CON FIX) ▼▼▼ --- */
+/* --- ▼▼▼ INICIO DE LA SECCIÓN REFACTORIZADA (CON FIX FINAL) ▼▼▼ --- */
 
 /* 1. El Bloque Principal (Block) */
 .settings-card {
@@ -775,35 +775,30 @@ body {
     align-items: flex-end;
 }
 
-/* --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ --- */
-
 /* Modificador para selectores (Idioma, Tema) */
 .settings-card--column {
     flex-direction: column;
-    align-items: stretch; 
+    align-items: stretch;
 }
 .settings-card--column .settings-card__actions {
-    /* ¡SIN justify-content: flex-end! */
-    margin-top: 16px;
+    margin-top: 16px; /* Margen superior solo en desktop */
 }
 .settings-card--column .settings-card__content {
-    flex: unset; 
+    flex: unset;
 }
 
-/* NUEVO Modificador para tarjetas de acción (Adm. Dispositivos, Eliminar) */
+/* Modificador para tarjetas de acción (Adm. Dispositivos, Eliminar) */
 .settings-card--action {
     flex-direction: column;
     align-items: stretch;
 }
 .settings-card--action .settings-card__actions {
-    justify-content: flex-end; /* ESTA SÍ LLEVA EL JUSTIFY-CONTENT */
-    margin-top: 16px;
+    justify-content: flex-end; /* Alinear a la derecha */
+    margin-top: 16px; /* Margen superior solo en desktop */
 }
 .settings-card--action .settings-card__content {
     flex: unset;
 }
-
-/* --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ --- */
 
 
 /* Modificador para tarjetas de peligro */
@@ -814,7 +809,7 @@ body {
     color: #c62828;
 }
 
-/* --- ▼▼▼ CLASE PARA ERRORES INLINE (ACTUALIZADA) ▼▼▼ --- */
+/* Clase para errores inline */
 .settings-card__error {
     background-color: #fbebee;
     color: #c62828;
@@ -824,6 +819,7 @@ body {
     font-size: 14px;
     line-height: 1.5;
 }
+
 /* 4. Clases de componentes que viven DENTRO de las tarjetas */
 
 .settings-button {
@@ -1396,33 +1392,44 @@ body {
         border: none;
     }
 
-    /* --- ▼▼▼ CÓDIGO REFACTORIZADO ▼▼▼ --- */
-    
-    /* Regla para que el Avatar y sus botones ocupen todo el ancho */
-    #avatar-form.settings-card {
+    /* --- ▼▼▼ CÓDIGO RESPONSIVE CORREGIDO (QUINTA ITERACIÓN) ▼▼▼ --- */
+
+    /* 1. Regla general: Todas las tarjetas se apilan verticalmente */
+    .settings-wrapper .settings-card {
         flex-direction: column;
-        align-items: center;
-        gap: 16px;
+        align-items: stretch; /* Alinear al ancho completo */
+        gap: 8px; /* Espacio entre contenido y acciones (8px) */
     }
-    
-    #avatar-form .settings-card__content .settings-card__text {
+
+    /* 2. Regla para el Avatar */
+    #avatar-section.settings-card {
+        align-items: center; /* Centrar el avatar y los botones */
+    }
+    #avatar-section .settings-card__content .settings-card__text {
         display: none; /* Oculta el texto "Foto de perfil" en móvil */
     }
 
+    /* 3. Contenedor de Acciones (Botones) */
+    .settings-card__actions {
+        justify-content: flex-end; /* Alinear a la derecha por defecto */
+        width: 100%;
+        margin-top: 0 !important; /* Forzar eliminación de margin-top */
+    }
+
+    /* 4. Botones dentro de Acciones (100% ancho) */
+    .settings-card__actions .settings-button {
+        flex: 1; /* Los botones crecen para llenar el espacio */
+    }
+
+    /* 5. Reglas para dropdowns (selectores) */
+    .settings-card--column .settings-card__actions {
+        justify-content: flex-start; /* Alinear a la izquierda */
+    }
     .trigger-select-wrapper {
         width: 100%; /* El selector de dropdown ocupa todo el ancho */
     }
 
-    /* Regla para Toggles (como "Abrir en nueva pestaña") */
-    .settings-card--edit-mode {
-        flex-direction: column;
-        align-items: stretch; 
-        gap: 16px;
-    }
-    .settings-card--edit-mode .settings-card__actions {
-        justify-content: flex-end; 
-    }
-    /* --- ▲▲▲ FIN DE CÓDIGO REFACTORIZADO ▲▲▲ --- */
+    /* --- ▲▲▲ FIN DE CÓDIGO RESPONSIVE CORREGIDO ▲▲▲ --- */
 }
 
 @media (max-width: 768px) {
@@ -1437,8 +1444,8 @@ body {
 
 @media (max-width: 400px) {
     #alert-container {
-        left: 5px; /* MODIFICADO DE 12px */
-        right: 5px; /* MODIFICADO DE 12px */
+        left: 5px;
+        right: 5px;
         width: auto;
     }
 }
@@ -1512,24 +1519,24 @@ body {
 
 /* --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ --- */
 .page-loader {
-    position: absolute; 
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: none; 
-    
+    background-color: none;
+
     /* 1. Oculto por defecto */
-    display: none; 
-    
+    display: none;
+
     justify-content: center;
     align-items: center;
-    z-index: 9998; 
-    
+    z-index: 9998;
+
     /* 2. Sin opacity, sin transiciones */
-    
-    pointer-events: none; 
-    min-height: 300px; 
+
+    pointer-events: none;
+    min-height: 300px;
 }
 
 /* 3. La clase 'active' ahora usa display: flex */
@@ -1544,5 +1551,5 @@ body {
     border: 4px solid rgba(0, 0, 0, 0.1);
     border-top-color: #000;
     border-radius: 50%;
-    animation: spin 1s linear infinite; 
+    animation: spin 1s linear infinite;
 }
