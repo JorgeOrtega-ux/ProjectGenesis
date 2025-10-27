@@ -121,7 +121,9 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue, cardEleme
 
     if (result.success) {
         // Mostramos alerta de éxito (toast)
-        window.showAlert(result.message || getTranslation('js.settings.successPreference'), 'success');
+        // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+        window.showAlert(getTranslation(result.message || 'js.settings.successPreference'), 'success');
+        // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
 
         // Actualizar estado local (sin cambios)
         if (preferenceTypeOrField === 'theme') {
@@ -192,7 +194,9 @@ export function initSettingsManager() {
                 const result = await callSettingsApi(formData);
 
                 if (result.success) {
-                    window.showAlert(result.message || getTranslation('js.settings.successAvatarRemoved'), 'success');
+                    // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+                    window.showAlert(getTranslation(result.message || 'js.settings.successAvatarRemoved'), 'success');
+                    // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                     setTimeout(() => location.reload(), 1500);
                 } else {
                     showInlineError(avatarCard, result.message || 'js.settings.errorAvatarRemove'); // Error inline
@@ -224,7 +228,9 @@ export function initSettingsManager() {
                 const result = await callSettingsApi(formData);
 
                 if (result.success) {
-                    window.showAlert(result.message || getTranslation('js.settings.successAvatarUpdate'), 'success');
+                    // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+                    window.showAlert(getTranslation(result.message || 'js.settings.successAvatarUpdate'), 'success');
+                    // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                     setTimeout(() => location.reload(), 1500);
                 } else {
                     showInlineError(avatarCard, result.message || 'js.settings.errorSaveUnknown'); // Error inline
@@ -286,7 +292,9 @@ export function initSettingsManager() {
                 const result = await callSettingsApi(formData);
 
                 if (result.success) {
-                    window.showAlert(result.message || getTranslation('js.settings.successUsernameUpdate'), 'success');
+                    // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+                    window.showAlert(getTranslation(result.message || 'js.settings.successUsernameUpdate'), 'success');
+                    // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                     setTimeout(() => location.reload(), 1500);
                 } else {
                     showInlineError(usernameCard, result.message || 'js.settings.errorSaveUnknown', result.data); // Error inline con datos opcionales
@@ -379,7 +387,9 @@ export function initSettingsManager() {
                 const result = await callSettingsApi(formData);
 
                 if (result.success) {
-                    window.showAlert(result.message || getTranslation('js.settings.successEmailUpdate'), 'success');
+                    // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+                    window.showAlert(getTranslation(result.message || 'js.settings.successEmailUpdate'), 'success');
+                    // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                     setTimeout(() => location.reload(), 1500);
                 } else {
                     showInlineError(emailCard, result.message || 'js.settings.errorSaveUnknown', result.data);
@@ -462,7 +472,9 @@ export function initSettingsManager() {
                     document.getElementById('email-edit-state').style.display = 'flex';
                     document.getElementById('email-actions-edit').style.display = 'flex';
                     focusInputAndMoveCursorToEnd(document.getElementById('email-input'));
-                    window.showAlert(result.message || getTranslation('js.settings.successVerification'), 'success'); // Toast éxito
+                    // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+                    window.showAlert(getTranslation(result.message || 'js.settings.successVerification'), 'success'); // Toast éxito
+                    // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                 } else {
                     // Error DENTRO del modal
                     if(modalError) {

@@ -16,13 +16,19 @@
                 </div>
                 <div class="settings-card__text">
                     <h2 class="settings-card__title" data-i18n="settings.login.password"></h2>
-                    <p class="settings-card__description">
+                    
+                    <p class="settings-card__description" 
+                       data-i18n="<?php 
+                            // Si la variable es una clave (ej. 'settings.login...'), se traducirá.
+                            // Si es un texto dinámico (ej. 'Última actualización...'),
+                            // i18n-manager.js la usará como texto de fallback.
+                            echo htmlspecialchars($lastPasswordUpdateText); 
+                       ?>">
                         <?php
-                        // Esta variable $lastPasswordUpdateText se define en config/router.php
-                        echo htmlspecialchars($lastPasswordUpdateText);
+                        // El contenido se rellenará por JS.
                         ?>
                     </p>
-                </div>
+                    </div>
             </div>
             <div class="settings-card__actions">
                 <button type="button" class="settings-button" id="password-edit-trigger" data-i18n="settings.login.update"></button>
@@ -109,7 +115,7 @@
                     </div>
                     <div class="auth-step-buttons">
                         <button type="button" class="auth-button-back" id="password-update-back" data-i18n="settings.login.back"></button>
-                        <button type="button" class="auth-button" id="password-update-save" data-i18n="settings.login.savePassword"></button>
+                        <button type="button" class="auth-button" id="password-update-save" data-ii18n="settings.login.savePassword"></button>
                     </div>
                 </fieldset>
             </form>

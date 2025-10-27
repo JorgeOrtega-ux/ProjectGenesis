@@ -53,7 +53,9 @@ async function handleRegistrationSubmit(e) {
         sessionStorage.removeItem('regPass');
         window.location.href = window.projectBasePath + '/';
     } else {
-        showAuthError(errorDiv, result.message || getTranslation('js.auth.genericError'));
+        // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+        showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'));
+        // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
         button.disabled = false;
         button.textContent = getTranslation('page.register.verifyButton');
     }
@@ -89,12 +91,16 @@ async function handleResetSubmit(e) {
     if (result.success) {
         sessionStorage.removeItem('resetEmail');
         sessionStorage.removeItem('resetCode');
-        window.showAlert(result.message || getTranslation('js.auth.successPasswordUpdate'), 'success');
+        // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+        window.showAlert(getTranslation(result.message || 'js.auth.successPasswordUpdate'), 'success');
+        // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
         setTimeout(() => {
             window.location.href = window.projectBasePath + '/login';
         }, 2000);
     } else {
-        showAuthError(errorDiv, result.message || getTranslation('js.auth.genericError'));
+        // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+        showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'));
+        // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
         button.disabled = false;
         button.textContent = getTranslation('js.auth.saveAndContinue');
     }
@@ -118,7 +124,9 @@ async function handleLoginFinalSubmit(e) {
     if (result.success) {
         window.location.href = window.projectBasePath + '/';
     } else {
-        showAuthError(errorDiv, result.message || getTranslation('js.auth.genericError'));
+        // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+        showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'));
+        // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
         button.disabled = false;
         button.textContent = getTranslation('page.login.verifyButton');
     }
@@ -200,9 +208,13 @@ function initRegisterWizard() {
             const result = await callAuthApi(formData);
 
             if (result.success) {
-                window.showAlert(result.message || getTranslation('js.auth.successCodeResent'), 'success');
+                // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+                window.showAlert(getTranslation(result.message || 'js.auth.successCodeResent'), 'success');
+                // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
             } else {
-                showAuthError(errorDiv, result.message || getTranslation('js.auth.errorCodeResent'));
+                // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorCodeResent'));
+                // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                 
                 const timerId = linkElement.dataset.timerId;
                 if (timerId) {
@@ -311,7 +323,9 @@ function initRegisterWizard() {
                     handleNavigation(); 
                 }
             } else {
-                showAuthError(errorDiv, result.message || getTranslation('js.auth.errorUnknown')); 
+                // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown')); 
+                // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
             }
 
             if (!result.success || !nextPath) {
@@ -389,9 +403,13 @@ function initResetWizard() {
             const result = await callAuthApi(formData);
 
             if (result.success) {
-                window.showAlert(result.message || getTranslation('js.auth.successCodeResent'), 'success');
+                // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+                window.showAlert(getTranslation(result.message || 'js.auth.successCodeResent'), 'success');
+                // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
             } else {
-                showAuthError(errorDiv, result.message || getTranslation('js.auth.errorCodeResent'));
+                // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorCodeResent'));
+                // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                 
                 const timerId = linkElement.dataset.timerId;
                 if (timerId) {
@@ -475,7 +493,9 @@ function initResetWizard() {
                  }
 
             } else {
-                showAuthError(errorDiv, result.message || getTranslation('js.auth.errorUnknown')); 
+                // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown')); 
+                // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
             }
 
             if (!result.success) {
@@ -539,11 +559,15 @@ function initLoginWizard() {
                          if (nextInput) nextInput.focus();
                     }
                      if (result.message) {
-                        window.showAlert(result.message, 'info');
+                        // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+                        window.showAlert(getTranslation(result.message), 'info');
+                        // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                      }
                 } else {
                      if (result.message) {
-                         window.showAlert(result.message, 'success');
+                         // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+                         window.showAlert(getTranslation(result.message), 'success');
+                         // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                          await new Promise(resolve => setTimeout(resolve, 500)); 
                      }
                     window.location.href = window.projectBasePath + '/';
@@ -553,7 +577,9 @@ function initLoginWizard() {
                 window.location.href = window.projectBasePath + '/account-status/' + result.redirect_to_status;
             } else {
                 // Lógica de error normal (ej. contraseña incorrecta)
-                showAuthError(errorDiv, result.message || getTranslation('js.auth.errorUnknown')); 
+                // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown')); 
+                // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                 button.disabled = false; 
                 button.textContent = getTranslation('page.login.continueButton');
             }
