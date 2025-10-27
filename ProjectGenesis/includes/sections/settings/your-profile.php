@@ -43,191 +43,149 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
             <p class="settings-description" data-i18n="settings.profile.description"></p>
         </div>
 
-        <?php
-        // ¡Este bloque de lógica se ha ido!
-        ?>
-        
-        <form id="avatar-form" onsubmit="event.preventDefault();" novovite>
+        <div class="settings-card settings-card--edit-mode" id="avatar-section">
             
-            <?php outputCsrfInput(); ?>
-            
-            <input type="file" id="avatar-upload-input" name="avatar" class="visually-hidden" accept="image/png, image/jpeg, image/gif, image/webp">
-            <div class="settings-card-avatar-error" id="avatar-error" style="display: none;"></div>
+            <?php outputCsrfInput(); ?> <input type="file" class="visually-hidden" id="avatar-upload-input" name="avatar" accept="image/png, image/jpeg, image/gif, image/webp">
 
-            <div class="settings-card">
-                <div class="settings-card-left">
-                    <div class="settings-avatar" data-role="<?php echo htmlspecialchars($userRole); ?>" id="avatar-preview-container">
-                        <img src="<?php echo htmlspecialchars($profileImageUrl); ?>" 
-                             alt="<?php echo htmlspecialchars($usernameForAlt); ?>"
-                             class="settings-avatar-image"
-                             id="avatar-preview-image"
-                             data-i18n-alt-prefix="header.profile.altPrefix">
-                        
-                        <div class="settings-avatar-overlay">
-                            <span class="material-symbols-rounded">photo_camera</span>
-                        </div>
-                        </div>
-                    <div class="settings-text-content">
-                        <h2 class="settings-text-title" data-i18n="settings.profile.avatarTitle"></h2>
-                        <p class="settings-text-description" data-i18n="settings.profile.avatarDesc"></p>
-                    </div>
-                </div>
-                
-                <div class="settings-card-right">
+            <div class="settings-card__content">
+                <div class="settings-card__avatar" id="avatar-preview-container" data-role="<?php echo htmlspecialchars($userRole); ?>">
+                    <img src="<?php echo htmlspecialchars($profileImageUrl); ?>" 
+                         alt="<?php echo htmlspecialchars($usernameForAlt); ?>"
+                         class="settings-card__avatar-image"
+                         id="avatar-preview-image"
+                         data-i18n-alt-prefix="header.profile.altPrefix">
                     
-                    <div class="settings-card-right-actions" id="avatar-actions-default" <?php echo $isDefaultAvatar ? '' : 'style="display: none;"'; ?>>
-                        <button type="button" class="settings-button" id="avatar-upload-trigger" data-i18n="settings.profile.uploadPhoto"></button>
+                    <div class="settings-card__avatar-overlay">
+                        <span class="material-symbols-rounded">photo_camera</span>
                     </div>
-
-                    <div class="settings-card-right-actions" id="avatar-actions-custom" <?php echo !$isDefaultAvatar ? '' : 'style="display: none;"'; ?>>
-                        <button type="button" class="settings-button danger" id="avatar-remove-trigger" data-i18n="settings.profile.removePhoto"></button>
-                        <button type="button" class="settings-button" id="avatar-change-trigger" data-i18n="settings.profile.changePhoto"></button>
-                    </div>
-
-                    <div class="settings-card-right-actions" id="avatar-actions-preview" style="display: none;">
-                        <button type="button" class="settings-button" id="avatar-cancel-trigger" data-i18n="settings.profile.cancel"></button>
-                        <button type="submit" class="settings-button" id="avatar-save-trigger" data-i18n="settings.profile.save"></button>
-                    </div>
-
+                </div>
+                <div class="settings-card__text">
+                    <h2 class="settings-card__title" data-i18n="settings.profile.avatarTitle"></h2>
+                    <p class="settings-card__description" data-i18n="settings.profile.avatarDesc"></p>
                 </div>
             </div>
-        </form>
-
-        <form id="username-form" onsubmit="event.preventDefault();" novalidate>
-            <?php outputCsrfInput(); ?>
-            <input type="hidden" name="action" value="update-username">
             
-            <div class="settings-card">
-                
-                <div class="settings-card-left" id="username-view-state" style="display: flex;">
-                    <div class="settings-text-content">
-                        <h2 class="settings-text-title" data-i18n="settings.profile.username"></h2>
-                        <p class="settings-text-description" 
-                           id="username-display-text" 
-                           data-original-username="<?php echo htmlspecialchars($usernameForAlt); ?>">
-                           <?php echo htmlspecialchars($usernameForAlt); ?>
-                        </p>
-                    </div>
-                </div>
-                <div class="settings-card-right" id="username-actions-view" style="display: flex;">
-                    <button type="button" class="settings-button" id="username-edit-trigger" data-i18n="settings.profile.edit"></button>
+            <div class="settings-card__actions">
+                <div id="avatar-actions-default" <?php echo $isDefaultAvatar ? 'style="display: flex; gap: 12px;"' : 'style="display: none;"'; ?>>
+                    <button type="button" class="settings-button" id="avatar-upload-trigger" data-i18n="settings.profile.uploadPhoto"></button>
                 </div>
 
-                <div class="settings-card-left" id="username-edit-state" style="display: none;">
-                    <div class="settings-text-content" style="width: 100%;">
-                        <h2 class="settings-text-title" data-i18n="settings.profile.username"></h2>
-                        <input type="text" 
-                               class="settings-username-input" 
-                               id="username-input" 
-                               name="username" 
-                               value="<?php echo htmlspecialchars($usernameForAlt); ?>"
-                               required
-                               minlength="6"
-                               maxlength="32">
-                        </div>
-                </div>
-                <div class="settings-card-right-actions" id="username-actions-edit" style="display: none;">
-                    <button type="button" class="settings-button" id="username-cancel-trigger" data-i18n="settings.profile.cancel"></button>
-                    <button type="submit" class="settings-button" id="username-save-trigger" data-i18n="settings.profile.save"></button>
+                <div id="avatar-actions-custom" <?php echo !$isDefaultAvatar ? 'style="display: flex; gap: 12px;"' : 'style="display: none;"'; ?>>
+                    <button type="button" class="settings-button danger" id="avatar-remove-trigger" data-i18n="settings.profile.removePhoto"></button>
+                    <button type="button" class="settings-button" id="avatar-change-trigger" data-i18n="settings.profile.changePhoto"></button>
                 </div>
 
+                <div id="avatar-actions-preview" style="display: none; gap: 12px;">
+                    <button type="button" class="settings-button" id="avatar-cancel-trigger" data-i18n="settings.profile.cancel"></button>
+                    <button type="button" class="settings-button" id="avatar-save-trigger-btn" data-i18n="settings.profile.save"></button>
+                </div>
             </div>
-        </form>
-
-        <form id="email-form" onsubmit="event.preventDefault();" novalidate>
-            <?php outputCsrfInput(); ?>
-            <input type="hidden" name="action" value="update-email">
-            
-            <div class="settings-card">
-                
-                <div class="settings-card-left" id="email-view-state" style="display: flex;">
-                    <div class="settings-text-content">
-                        <h2 class="settings-text-title" data-i18n="settings.profile.email"></h2>
-                        <p class="settings-text-description" 
-                           id="email-display-text" 
-                           data-original-email="<?php echo htmlspecialchars($userEmail); ?>">
-                           <?php echo htmlspecialchars($userEmail); ?>
-                        </p>
-                    </div>
+        </div>
+        <div class="settings-card settings-card--edit-mode" id="username-section">
+            <?php outputCsrfInput(); ?> <input type="hidden" name="action" value="update-username"> <div class="settings-card__content" id="username-view-state" style="display: flex;">
+                <div class="settings-card__text">
+                    <h2 class="settings-card__title" data-i18n="settings.profile.username"></h2>
+                    <p class="settings-card__description" 
+                       id="username-display-text" 
+                       data-original-username="<?php echo htmlspecialchars($usernameForAlt); ?>">
+                       <?php echo htmlspecialchars($usernameForAlt); ?>
+                    </p>
                 </div>
-                <div class="settings-card-right" id="email-actions-view" style="display: flex;">
-                    <button type="button" class="settings-button" id="email-edit-trigger" data-i18n="settings.profile.edit"></button>
-                </div>
-
-                <div class="settings-card-left" id="email-edit-state" style="display: none;">
-                    <div class="settings-text-content" style="width: 100%;">
-                        <h2 class="settings-text-title" data-i18n="settings.profile.email"></h2>
-                        <input type="email" 
-                               class="settings-username-input" 
-                               id="email-input" 
-                               name="email" 
-                               value="<?php echo htmlspecialchars($userEmail); ?>"
-                               required
-                               maxlength="255">
-                        </div>
-                </div>
-                <div class="settings-card-right-actions" id="email-actions-edit" style="display: none;">
-                    <button type="button" class="settings-button" id="email-cancel-trigger" data-i18n="settings.profile.cancel"></button>
-                    <button type="submit" class="settings-button" id="email-save-trigger" data-i18n="settings.profile.save"></button>
-                </div>
-
             </div>
-        </form>
-        
+            <div class="settings-card__actions" id="username-actions-view" style="display: flex;">
+                <button type="button" class="settings-button" id="username-edit-trigger" data-i18n="settings.profile.edit"></button>
+            </div>
+
+            <div class="settings-card__content" id="username-edit-state" style="display: none;">
+                <div class="settings-card__text">
+                    <h2 class="settings-card__title" data-i18n="settings.profile.username"></h2>
+                    <input type="text" 
+                           class="settings-username-input" 
+                           id="username-input" 
+                           name="username" 
+                           value="<?php echo htmlspecialchars($usernameForAlt); ?>"
+                           required
+                           minlength="6"
+                           maxlength="32">
+                </div>
+            </div>
+            <div class="settings-card__actions" id="username-actions-edit" style="display: none;">
+                <button type="button" class="settings-button" id="username-cancel-trigger" data-i18n="settings.profile.cancel"></button>
+                <button type="button" class="settings-button" id="username-save-trigger-btn" data-i18n="settings.profile.save"></button>
+            </div>
+        </div>
+        <div class="settings-card settings-card--edit-mode" id="email-section">
+            <?php outputCsrfInput(); ?> <input type="hidden" name="action" value="update-email"> <div class="settings-card__content" id="email-view-state" style="display: flex;">
+                <div class="settings-card__text">
+                    <h2 class="settings-card__title" data-i18n="settings.profile.email"></h2>
+                    <p class="settings-card__description" 
+                       id="email-display-text" 
+                       data-original-email="<?php echo htmlspecialchars($userEmail); ?>">
+                       <?php echo htmlspecialchars($userEmail); ?>
+                    </p>
+                </div>
+            </div>
+            <div class="settings-card__actions" id="email-actions-view" style="display: flex;">
+                <button type="button" class="settings-button" id="email-edit-trigger" data-i18n="settings.profile.edit"></button>
+            </div>
+
+            <div class="settings-card__content" id="email-edit-state" style="display: none;">
+                <div class="settings-card__text">
+                    <h2 class="settings-card__title" data-i18n="settings.profile.email"></h2>
+                    <input type="email" 
+                           class="settings-username-input" 
+                           id="email-input" 
+                           name="email" 
+                           value="<?php echo htmlspecialchars($userEmail); ?>"
+                           required
+                           maxlength="255">
+                </div>
+            </div>
+            <div class="settings-card__actions" id="email-actions-edit" style="display: none;">
+                <button type="button" class="settings-button" id="email-cancel-trigger" data-i18n="settings.profile.cancel"></button>
+                <button type="button" class="settings-button" id="email-save-trigger-btn" data-i18n="settings.profile.save"></button>
+            </div>
+        </div>
         <div class="settings-modal-overlay" id="email-verify-modal" style="display: none;">
-            
             <button type="button" class="settings-modal-close-btn" id="email-verify-close">
                 <span class="material-symbols-rounded">close</span>
             </button>
-
             <div class="settings-modal-content">
                 <h2 class="auth-title" style="margin-bottom: 16px;" data-i18n="settings.profile.modalCodeTitle"></h2>
-                
                 <p class="auth-verification-text" style="margin-bottom: 24px;" data-i18n="settings.profile.modalCodeDesc">
                     <strong id="email-verify-modal-email"><?php echo htmlspecialchars($userEmail); ?></strong>.
                 </p>
-
                 <div class="auth-error-message" id="email-verify-error" style="display: none; margin-bottom: 16px;"></div>
-
                 <form onsubmit="event.preventDefault();" novalidate>
-                    
                     <div class="auth-input-group">
                         <input type="text" id="email-verify-code" name="verification_code" required placeholder=" " maxlength="14">
                         <label for="email-verify-code" data-i18n="settings.profile.modalCodeLabel"></label>
                     </div>
-
                     <div class="auth-step-buttons">
                         <button type="button" class="auth-button" id="email-verify-continue" data-i18n="settings.profile.continue"></button>
                     </div>
-                    </form>
-
+                </form>
                 <div class="settings-modal-footer">
                     <p>
                         <span data-i18n="settings.profile.modalCodeResendP"></span>
                         <a id="email-verify-resend" data-i18n="settings.profile.modalCodeResendA"></a>
                     </p>
                 </div>
-
             </div>
         </div>
 
-        <div class="settings-card settings-card-trigger-column">
-            <div class="settings-card-left">
-                <div class="settings-text-content">
-                    <h2 class="settings-text-title" data-i18n="settings.profile.usageTitle"></h2>
-                    <p class="settings-text-description" data-i18n="settings.profile.usageDesc"></p>
+        <div class="settings-card settings-card--column">
+            <div class="settings-card__content">
+                <div class="settings-card__text">
+                    <h2 class="settings-card__title" data-i18n="settings.profile.usageTitle"></h2>
+                    <p class="settings-card__description" data-i18n="settings.profile.usageDesc"></p>
                 </div>
             </div>
-
-            <div class="settings-card-right">
-                
+            <div class="settings-card__actions">
                 <div class="trigger-select-wrapper">
-                    
-                    <div class="trigger-selector" 
-                         data-action="toggleModuleUsageSelect">
-                        
+                    <div class="trigger-selector" data-action="toggleModuleUsageSelect">
                         <div class="trigger-select-icon">
-                            <span class="material-symbols-rounded">person</span>
+                            <span class="material-symbols-rounded"><?php echo $usageIconMap[$userUsageType] ?? 'person'; ?></span>
                         </div>
                         <div class="trigger-select-text">
                             <span data-i18n="<?php echo htmlspecialchars($currentUsageKey); ?>"></span>
@@ -236,23 +194,18 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                             <span class="material-symbols-rounded">arrow_drop_down</span>
                         </div>
                     </div>
-
                     <div class="module-content module-trigger-select body-title disabled" 
                          data-module="moduleUsageSelect"
                          data-preference-type="usage">
-                        
                         <div class="menu-content">
                             <div class="menu-list">
-
                                 <?php 
-                                // --- ▼▼▼ INICIO DE MODIFICACIÓN DEL BUCLE ▼▼▼ ---
                                 foreach ($usageMap as $key => $textKey): 
                                     $isActive = ($key === $userUsageType); 
-                                    $iconName = $usageIconMap[$key] ?? 'person'; // Icono por defecto
+                                    $iconName = $usageIconMap[$key] ?? 'person';
                                 ?>
                                     <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
                                          data-value="<?php echo htmlspecialchars($key); ?>">
-                                        
                                         <div class="menu-link-icon">
                                             <span class="material-symbols-rounded"><?php echo $iconName; ?></span>
                                         </div>
@@ -265,32 +218,23 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                                             <?php endif; ?>
                                         </div>
                                     </div>
-                                <?php endforeach; 
-                                // --- ▲▲▲ FIN DE MODIFICACIÓN DEL BUCLE ▲▲▲ ---
-                                ?>
-                                
+                                <?php endforeach; ?>
                             </div>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
-        <div class="settings-card settings-card-trigger-column">
-            <div class="settings-card-left">
-                <div class="settings-text-content">
-                    <h2 class="settings-text-title" data-i18n="settings.profile.langTitle"></h2>
-                    <p class="settings-text-description" data-i18n="settings.profile.langDesc"></p>
+        <div class="settings-card settings-card--column">
+            <div class="settings-card__content">
+                <div class="settings-card__text">
+                    <h2 class="settings-card__title" data-i18n="settings.profile.langTitle"></h2>
+                    <p class="settings-card__description" data-i18n="settings.profile.langDesc"></p>
                 </div>
             </div>
-
-            <div class="settings-card-right">
-                
+            <div class="settings-card__actions">
                 <div class="trigger-select-wrapper">
-                    
-                    <div class="trigger-selector" 
-                         data-action="toggleModuleLanguageSelect">
-                        
+                    <div class="trigger-selector" data-action="toggleModuleLanguageSelect">
                         <div class="trigger-select-icon">
                             <span class="material-symbols-rounded">language</span>
                         </div>
@@ -301,22 +245,17 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                             <span class="material-symbols-rounded">arrow_drop_down</span>
                         </div>
                     </div>
-
                     <div class="module-content module-trigger-select body-title disabled" 
                          data-module="moduleLanguageSelect"
                          data-preference-type="language">
-                        
                         <div class="menu-content">
                             <div class="menu-list">
-
                                 <?php 
-                                // --- ▼▼▼ INICIO DE MODIFICACIÓN DEL BUCLE ▼▼▼ ---
                                 foreach ($languageMap as $key => $textKey): 
                                     $isActive = ($key === $userLanguage); 
                                 ?>
                                     <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
                                          data-value="<?php echo htmlspecialchars($key); ?>">
-                                        
                                         <div class="menu-link-icon">
                                             <span class="material-symbols-rounded">language</span>
                                         </div>
@@ -329,28 +268,21 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                                             <?php endif; ?>
                                         </div>
                                     </div>
-                                <?php endforeach; 
-                                // --- ▲▲▲ FIN DE MODIFICACIÓN DEL BUCLE ▲▲▲ ---
-                                ?>
-                                
+                                <?php endforeach; ?>
                             </div>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
-        
-        <div class="settings-card settings-card-align-bottom">
-            <div class="settings-card-left">
-                <div class="settings-text-content">
-                    <h2 class="settings-text-title" data-i18n="settings.profile.newTabTitle"></h2>
-                    <p class="settings-text-description" data-i18n="settings.profile.newTabDesc"></p>
+        <div class="settings-card settings-card--edit-mode">
+            <div class="settings-card__content">
+                <div class="settings-card__text">
+                    <h2 class="settings-card__title" data-i18n="settings.profile.newTabTitle"></h2>
+                    <p class="settings-card__description" data-i18n="settings.profile.newTabDesc"></p>
                 </div>
             </div>
-
-            <div class="settings-card-right">
-                
+            <div class="settings-card__actions">
                 <label class="settings-toggle-switch">
                     <input type="checkbox" 
                            id="toggle-new-tab"
@@ -359,7 +291,6 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                            <?php echo ($openLinksInNewTab == 1) ? 'checked' : ''; ?>> 
                     <span class="settings-toggle-slider"></span>
                 </label>
-
             </div>
         </div>
         </div>

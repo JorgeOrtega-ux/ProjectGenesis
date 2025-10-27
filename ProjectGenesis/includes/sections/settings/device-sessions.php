@@ -113,63 +113,53 @@ function formatSessionDate($dateTimeString) {
             <p class="settings-description" data-i18n="settings.devices.description"></p>
         </div>
         
-        <div class="settings-card settings-card-column">
-            <div class="settings-text-content">
-                <h2 class="settings-text-title" data-i18n="settings.devices.invalidateTitle"></h2>
-                <p class="settings-text-description" data-i18n="settings.devices.invalidateDesc"></p>
-            </div>
-            
-            <div class="settings-card-bottom">
-                <div class="settings-card-right-actions">
-                    <button type="button" class="settings-button" id="logout-all-devices-trigger" data-i18n="settings.devices.invalidateButton"></button>
+        <div class="settings-card settings-card--action"> <div class="settings-card__content">
+                <div class="settings-card__text">
+                    <h2 class="settings-card__title" data-i18n="settings.devices.invalidateTitle"></h2>
+                    <p class="settings-card__description" data-i18n="settings.devices.invalidateDesc"></p>
                 </div>
             </div>
+            <div class="settings-card__actions">
+                <button type="button" class="settings-button" id="logout-all-devices-trigger" data-i18n="settings.devices.invalidateButton"></button>
+            </div>
         </div>
-        
         <div style="padding: 16px 8px 0px 8px;">
-            <h2 class="settings-text-title" style="font-size: 18px;" data-i18n="settings.devices.activeSessionsTitle"></h2>
+            <h2 class="settings-card__title" style="font-size: 18px;" data-i18n="settings.devices.activeSessionsTitle"></h2>
         </div>
 
         <?php if (empty($sessions)): ?>
             <div class="settings-card">
-                <div class="settings-card-left">
-                    <div class="settings-text-content">
-                        <h2 class="settings-text-title" data-i18n="settings.devices.noSessionsTitle"></h2>
-                        <p class="settings-text-description" data-i18n="settings.devices.noSessionsDesc"></p>
+                <div class="settings-card__content">
+                    <div class="settings-card__text">
+                        <h2 class="settings-card__title" data-i18n="settings.devices.noSessionsTitle"></h2>
+                        <p class="settings-card__description" data-i18n="settings.devices.noSessionsDesc"></p>
                     </div>
                 </div>
-            </div>
-        <?php else: ?>
+                </div>
+            <?php else: ?>
             <?php foreach ($sessions as $session): ?>
                 <?php
                     $deviceIcon = ($session['device_type'] === 'Mobile') ? 'smartphone' : 'computer';
-                    
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN DEL BUCLE ▼▼▼ ---
-                    // Estas funciones ahora devuelven HTML, no texto plano
                     $deviceInfo = formatUserAgent($session['browser_info']);
                     $sessionDate = formatSessionDate($session['created_at']);
                 ?>
                 <div class="settings-card" data-session-card-id="<?php echo $session['id']; ?>">
-                    <div class="settings-card-left">
-                        <div class="settings-card-icon">
+                    <div class="settings-card__content">
+                        <div class="settings-card__icon">
                             <span class="material-symbols-rounded"><?php echo $deviceIcon; ?></span>
                         </div>
-                        <div class="settings-text-content">
-                            
-                            <h2 class="settings-text-title"><?php echo $deviceInfo; ?></h2> 
-                            
-                            <p class="settings-text-description">
+                        <div class="settings-card__text">
+                            <h2 class="settings-card__title"><?php echo $deviceInfo; ?></h2> 
+                            <p class="settings-card__description">
                                 <?php echo htmlspecialchars($session['ip_address']); ?> - 
                                 <span data-i18n="settings.devices.lastAccess"></span> 
-                                
                                 <?php echo $sessionDate; ?> 
                             </p>
                         </div>
                     </div>
-
                     </div>
                 <?php endforeach; ?>
-            <?php endif; ?>
+        <?php endif; ?>
 
     </div>
 
@@ -192,4 +182,4 @@ function formatSessionDate($dateTimeString) {
         </div>
     </div>
     
-    </div>
+</div>

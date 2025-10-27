@@ -336,15 +336,9 @@ body {
     align-items: center;
 }
 
-/* --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ --- */
-/* Si un .section-content contiene un .settings-wrapper
-  (es decir, es una página de configuración),
-  alínealo al inicio (arriba) en lugar de al centro.
-*/
 .section-content:has(.settings-wrapper) {
     align-items: flex-start;
 }
-/* --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ --- */
 
 
 /* ====================================== */
@@ -599,7 +593,6 @@ body {
 .settings-wrapper {
     width: 100%;
     max-width: 700px;
-    /* height: 100%; */ /* <--- ESTA LÍNEA FUE ELIMINADA */
     margin: 0 auto;
     padding: 16px;
     display: flex;
@@ -629,34 +622,29 @@ body {
     background-color: #ffffff;
 }
 
+/* --- ▼▼▼ INICIO DE LA SECCIÓN REFACTORIZADA (CON FIX) ▼▼▼ --- */
+
+/* 1. El Bloque Principal (Block) */
 .settings-card {
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: center; /* Alineación por defecto para filas simples */
     justify-content: space-between;
-    gap: 8px;
     border: 1px solid #00000020;
     border-radius: 12px;
     padding: 24px;
     background-color: #ffffff;
 }
 
-#username-form .settings-card,
-#email-form .settings-card,
-.settings-card-align-bottom {
-    align-items: flex-end;
+/* 2. Los Elementos (Elements) */
+.settings-card__content {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 16px;
 }
 
-.settings-card-trigger-column {
-    flex-direction: column;
-    align-items: stretch;
-}
-
-.settings-card-trigger-column .settings-card-left {
-    flex: unset;
-}
-
-.settings-card-icon {
+.settings-card__icon {
     width: 60px;
     height: 60px;
     border-radius: 8px;
@@ -669,18 +657,11 @@ body {
     flex-shrink: 0;
 }
 
-.settings-card-icon .material-symbols-rounded {
+.settings-card__icon .material-symbols-rounded {
     font-size: 28px;
 }
 
-.settings-card-left {
-    display: flex;
-    flex: 1 1 auto;
-    align-items: center;
-    gap: 16px;
-}
-
-.settings-avatar {
+.settings-card__avatar {
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -690,7 +671,7 @@ body {
     flex-shrink: 0;
 }
 
-.settings-avatar-image {
+.settings-card__avatar-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -700,7 +681,7 @@ body {
     border-radius: 50%;
 }
 
-.settings-avatar::before {
+.settings-card__avatar::before {
     content: '';
     position: absolute;
     border-radius: 50%;
@@ -715,53 +696,135 @@ body {
     background-image: none;
 }
 
-.settings-avatar[data-role="user"]::before {
+.settings-card__avatar[data-role="user"]::before {
     border-color: #cccccc;
 }
-
-.settings-avatar[data-role="moderator"]::before {
+.settings-card__avatar[data-role="moderator"]::before {
     border-color: #0000FF;
 }
-
-.settings-avatar[data-role="administrator"]::before {
+.settings-card__avatar[data-role="administrator"]::before {
     border-color: #FF0000;
 }
-
-.settings-avatar[data-role="founder"]::before {
+.settings-card__avatar[data-role="founder"]::before {
     border: none;
     top: -4px;
     left: -4px;
     right: -4px;
     bottom: -4px;
-    background-image: conic-gradient(#D32029 0deg 90deg,
-            #206BD3 90deg 210deg,
-            #28A745 210deg 300deg,
-            #FFC107 300deg 360deg);
-    mask: radial-gradient(farthest-side,
-            transparent calc(100% - 2px),
-            #fff 0);
-    -webkit-mask: radial-gradient(farthest-side,
-            transparent calc(100% - 2px),
-            #fff 0);
+    background-image: conic-gradient(#D32029 0deg 90deg, #206BD3 90deg 210deg, #28A745 210deg 300deg, #FFC107 300deg 360deg);
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
     transform: rotate(300deg);
 }
 
-.settings-text-content {
+.settings-card__avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    z-index: 2;
+    cursor: pointer;
+}
+
+.settings-card__avatar-overlay .material-symbols-rounded {
+    font-size: 16px;
+}
+
+.settings-card__avatar:hover .settings-card__avatar-overlay {
+    opacity: 1;
+}
+
+.settings-card__text {
     display: flex;
     flex-direction: column;
     line-height: 25px;
+    width: 100%; /* Para que el input de username/email ocupe todo el ancho */
 }
 
-.settings-text-title {
+.settings-card__title {
     font-size: 14px;
     font-weight: 600;
     color: #000000;
 }
 
-.settings-text-description {
+.settings-card__description {
     font-size: 14px;
     color: #6b7280;
 }
+
+.settings-card__actions {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+/* 3. Los Modificadores (Modifiers) */
+
+/* Modificador para formularios y toggles */
+.settings-card--edit-mode {
+    align-items: flex-end;
+}
+
+/* --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ --- */
+
+/* Modificador para selectores (Idioma, Tema) */
+.settings-card--column {
+    flex-direction: column;
+    align-items: stretch; 
+}
+.settings-card--column .settings-card__actions {
+    /* ¡SIN justify-content: flex-end! */
+    margin-top: 16px;
+}
+.settings-card--column .settings-card__content {
+    flex: unset; 
+}
+
+/* NUEVO Modificador para tarjetas de acción (Adm. Dispositivos, Eliminar) */
+.settings-card--action {
+    flex-direction: column;
+    align-items: stretch;
+}
+.settings-card--action .settings-card__actions {
+    justify-content: flex-end; /* ESTA SÍ LLEVA EL JUSTIFY-CONTENT */
+    margin-top: 16px;
+}
+.settings-card--action .settings-card__content {
+    flex: unset;
+}
+
+/* --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ --- */
+
+
+/* Modificador para tarjetas de peligro */
+.settings-card--danger {
+    border-color: #ef9a9a;
+}
+.settings-card--danger .settings-card__title {
+    color: #c62828;
+}
+
+/* --- ▼▼▼ CLASE PARA ERRORES INLINE (ACTUALIZADA) ▼▼▼ --- */
+.settings-card__error {
+    background-color: #fbebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+/* 4. Clases de componentes que viven DENTRO de las tarjetas */
 
 .settings-button {
     height: 40px;
@@ -781,30 +844,15 @@ body {
     background-color: #f5f5fa;
 }
 
-.settings-avatar-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    opacity: 0;
-    transition: opacity 0.2s ease-in-out;
-    z-index: 2;
-    cursor: pointer;
+.settings-button.danger {
+    color: #c62828;
+    border-color: #ef9a9a;
 }
 
-.settings-avatar-overlay .material-symbols-rounded {
-    font-size: 16px;
-}
-
-.settings-avatar:hover .settings-avatar-overlay {
-    opacity: 1;
+.settings-button.danger:hover {
+    background-color: #fbebee;
+    color: #c62828;
+    border-color: #c62828;
 }
 
 .settings-username-input {
@@ -825,24 +873,6 @@ body {
     border-color: #000;
 }
 
-.settings-card-right-actions {
-    display: flex;
-    flex-direction: row;
-    gap: 12px;
-    flex-shrink: 0;
-}
-
-.settings-button.danger {
-    color: #c62828;
-    border-color: #ef9a9a;
-}
-
-.settings-button.danger:hover {
-    background-color: #fbebee;
-    color: #c62828;
-    border-color: #c62828;
-}
-
 .settings-card-avatar-error {
     padding: 12px;
     background-color: #fbebee;
@@ -852,26 +882,6 @@ body {
     font-size: 14px;
     margin-bottom: 16px;
     display: none;
-}
-
-.settings-card-column {
-    flex-direction: column;
-    align-items: stretch;
-}
-
-.settings-card-bottom {
-    display: flex;
-    justify-content: flex-end;
-    width: 100%;
-    margin-top: 16px;
-}
-
-.settings-card-danger {
-    border-color: #ef9a9a;
-}
-
-.settings-card-danger .settings-text-title {
-    color: #c62828;
 }
 
 .settings-toggle-switch {
@@ -923,6 +933,8 @@ body {
 .settings-toggle-switch input:checked+.settings-toggle-slider:before {
     transform: translateX(16px);
 }
+/* --- ▲▲▲ FIN DE LA SECCIÓN REFACTORIZADA ▲▲▲ --- */
+
 
 /* ====================================== */
 /* =========== SELECTOR TRIGGER ========= */
@@ -1384,36 +1396,33 @@ body {
         border: none;
     }
 
-    /* --- ▼▼▼ CÓDIGO AÑADIDO PARA TARJETA DE AVATAR ▼▼▼ --- */
-    #avatar-form .settings-card {
+    /* --- ▼▼▼ CÓDIGO REFACTORIZADO ▼▼▼ --- */
+    
+    /* Regla para que el Avatar y sus botones ocupen todo el ancho */
+    #avatar-form.settings-card {
         flex-direction: column;
         align-items: center;
         gap: 16px;
     }
-
-    #avatar-form .settings-card .settings-card-left .settings-text-content {
-        display: none;
+    
+    #avatar-form .settings-card__content .settings-card__text {
+        display: none; /* Oculta el texto "Foto de perfil" en móvil */
     }
+
     .trigger-select-wrapper {
-        width: 100%;
+        width: 100%; /* El selector de dropdown ocupa todo el ancho */
     }
-    /* --- ▲▲▲ FIN DE CÓDIGO AÑADIDO ▲▲▲ --- */
 
-    /* --- ▼▼▼ INICIO DE LA CORRECCIÓN SOLICITADA ▼▼▼ --- */
-    .settings-card-align-bottom {
+    /* Regla para Toggles (como "Abrir en nueva pestaña") */
+    .settings-card--edit-mode {
         flex-direction: column;
-        /* Reemplaza 'align-items: flex-end' para que el texto ocupe todo el ancho */
         align-items: stretch; 
-        gap: 16px; /* Aumenta el espacio vertical entre el texto y el toggle */
+        gap: 16px;
     }
-
-    .settings-card-align-bottom .settings-card-right {
-        /* Asegura que el contenedor del toggle sea flexible */
-        display: flex; 
-        /* Mueve el toggle (su hijo) al final (derecha) */
+    .settings-card--edit-mode .settings-card__actions {
         justify-content: flex-end; 
     }
-    /* --- ▲▲▲ FIN DE LA CORRECCIÓN SOLICITADA ▲▲▲ --- */
+    /* --- ▲▲▲ FIN DE CÓDIGO REFACTORIZADO ▲▲▲ --- */
 }
 
 @media (max-width: 768px) {
