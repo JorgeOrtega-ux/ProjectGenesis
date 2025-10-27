@@ -4,16 +4,9 @@ let translations = {};
  * Carga el archivo JSON de traducciones.
  * @param {string} lang - El código de idioma (ej. 'es-latam', 'en-us')
  */
-async function loadTranslations(lang) {
-    // Si el idioma es 'es-419' o 'es-MX', lo mapeamos a 'es-latam' por ahora
-    if (lang === 'es-419' || lang === 'es-mx') {
-        lang = 'es-latam';
-    }
-    // Si no es un idioma soportado (solo tenemos es-latam), usamos 'en-us' (aunque no tengamos el file)
-    // En el futuro, aquí cargaríamos 'en-us.json' como fallback
-    if (lang !== 'es-latam') {
-         lang = 'es-latam'; // Por ahora, forzamos español
-    }
+export async function loadTranslations(lang) {
+    
+    // --- (Quitamos los mapeos forzados en el paso anterior) ---
 
     try {
         const response = await fetch(`${window.projectBasePath}/assets/js/i18n/${lang}.json`);
@@ -24,6 +17,8 @@ async function loadTranslations(lang) {
         console.log(`Traducciones cargadas para: ${lang}`);
     } catch (error) {
         console.error('Error al cargar traducciones:', error);
+        // Si el fetch falla (ej. no existe en-us.json o es-mx.json), 
+        // translations se queda vacío, lo cual es correcto.
         translations = {}; // Dejar vacío para no romper la app
     }
 }
@@ -35,9 +30,10 @@ async function loadTranslations(lang) {
  */
 export function getTranslation(key) {
     try {
+        // Si translations está vacío, 'obj[k]' fallará y el catch devolverá la clave.
         return key.split('.').reduce((obj, k) => obj[k], translations) || key;
     } catch (e) {
-        console.warn(`No se encontró la clave de traducción: ${key}`);
+        // console.warn(`No se encontró la clave de traducción: ${key}`);
         return key;
     }
 }
@@ -47,8 +43,14 @@ export function getTranslation(key) {
  * @param {HTMLElement} container - El elemento contenedor (ej. document.body o el div de la sección)
  */
 export function applyTranslations(container = document) {
-    if (!container || !Object.keys(translations).length) {
+    if (!container) {
         return;
+    }
+    
+    // Si 'translations' está vacío, getTranslation devolverá la clave,
+    // por lo que esto funcionará bien para mostrar las claves.
+    if (!Object.keys(translations).length && container === document) {
+         console.warn("Objeto 'translations' está vacío. Mostrando claves.");
     }
 
     // 1. Traducir texto principal (data-i18n)
@@ -70,6 +72,8 @@ export function applyTranslations(container = document) {
         const originalAlt = element.getAttribute('alt') || '';
         
         if (translatedPrefix) {
+            // Si la traducción falló, 'translatedPrefix' será la clave,
+            // ej. "header.profile.altPrefix" + " " + "jorgeortega"
             element.setAttribute('alt', `${translatedPrefix} ${originalAlt}`);
         }
     });

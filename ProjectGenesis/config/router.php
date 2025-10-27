@@ -228,14 +228,20 @@ if (array_key_exists($page, $allowedPages)) {
             if ($lastLog) {
                 if (!class_exists('IntlDateFormatter')) {
                     $date = new DateTime($lastLog['changed_at']);
-                    $lastPasswordUpdateText = 'Última actualización: ' . $date->format('d/m/Y');
+                    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+                    $lastPasswordUpdateText = 'Última actualización de tu contraseña: ' . $date->format('d/m/Y');
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 } else {
                     $formatter = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::NONE, 'UTC');
                     $timestamp = strtotime($lastLog['changed_at']);
-                    $lastPasswordUpdateText = 'Última actualización: ' . $formatter->format($timestamp);
+                    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+                    $lastPasswordUpdateText = 'Última actualización de tu contraseña: ' . $formatter->format($timestamp);
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                 }
             } else {
-                $lastPasswordUpdateText = 'Nunca se ha actualizado la contraseña.';
+                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+                $lastPasswordUpdateText = 'Nunca has actualizado tu contraseña.';
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             }
 
             $stmt_2fa = $pdo->prepare("SELECT is_2fa_enabled FROM users WHERE id = ?");

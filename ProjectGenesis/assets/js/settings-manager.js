@@ -1,6 +1,6 @@
 import { callSettingsApi } from './api-service.js'; 
 import { deactivateAllModules } from './main-controller.js';
-import { getTranslation } from './i18n-manager.js';
+import { getTranslation, loadTranslations, applyTranslations } from './i18n-manager.js';
 
 
 function showAvatarError(message) {
@@ -87,6 +87,8 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue) {
     const result = await callSettingsApi(formData);
 
     if (result.success) {
+        
+        // Esta es la alerta genérica que se conservará.
         if (preferenceTypeOrField === 'language' || preferenceTypeOrField === 'theme' || preferenceTypeOrField === 'usage') {
              window.showAlert(result.message || getTranslation('js.settings.successPreference'), 'success');
         }
@@ -105,9 +107,20 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue) {
         
 
         if (preferenceTypeOrField === 'language') {
-            window.showAlert(getTranslation('js.settings.successLang'), 'success');
-            setTimeout(() => location.reload(), 1500);
+            
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+            // Se eliminó la alerta específica de idioma que estaba aquí.
+            // window.showAlert(getTranslation('js.settings.successLang'), 'success'); // <-- ELIMINADO
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
+            // Actualizar la variable global
+            window.userLanguage = newValue; 
+            
+            // Cargar nuevas traducciones y aplicarlas a toda la página
+            await loadTranslations(newValue);
+            applyTranslations(document.body); 
         }
+
     } else {
         window.showAlert(result.message || getTranslation('js.settings.errorPreference'), 'error');
     }
