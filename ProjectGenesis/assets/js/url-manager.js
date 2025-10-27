@@ -5,12 +5,11 @@ import { applyTranslations, getTranslation } from './i18n-manager.js';
 const contentContainer = document.querySelector('.main-sections');
 const pageLoader = document.getElementById('page-loader');
 
-// --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-// Variable para guardar el temporizador del loader
 let loaderTimer = null;
-// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+let currentIsSettings = null; 
 
 const routes = {
+    // ... (sin cambios)
     'toggleSectionHome': 'home',
     'toggleSectionExplorer': 'explorer',
     'toggleSectionLogin': 'login',
@@ -33,6 +32,7 @@ const routes = {
 };
 
 const paths = {
+    // ... (sin cambios)
     '/': 'toggleSectionHome',
     '/explorer': 'toggleSectionExplorer',
     '/login': 'toggleSectionLogin',
@@ -56,41 +56,60 @@ const paths = {
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
 
-async function loadPage(page) {
+
+// --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+
+// 1. Modificar la firma para aceptar 'action'
+async function loadPage(page, isSettingsPage, action) {
 
     if (!contentContainer) return;
 
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (LÓGICA DEL LOADER) ▼▼▼ ---
-
-    // 1. Limpiar el contenido anterior inmediatamente
+    // --- Lógica del Loader (sin cambios) ---
     contentContainer.innerHTML = ''; 
-
-    // 2. Limpiar cualquier loader timer anterior (por si acaso)
     if (loaderTimer) {
         clearTimeout(loaderTimer);
     }
-
-    // 3. Iniciar un temporizador. El loader SÓLO se mostrará si la carga tarda más de 200ms
     loaderTimer = setTimeout(() => {
         if (pageLoader) {
             pageLoader.classList.add('active');
         }
-    }, 200); // 200ms de retraso
+    }, 200);
 
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+    
+    // --- Lógica de Carga de Menú ---
+    if (currentIsSettings === null || currentIsSettings !== isSettingsPage) {
+        currentIsSettings = isSettingsPage; 
+        const menuType = isSettingsPage ? 'settings' : 'main';
+        
+        fetch(`${basePath}/config/menu_router.php?type=${menuType}`)
+            .then(res => res.text())
+            .then(menuHtml => {
+                const oldMenu = document.querySelector('[data-module="moduleSurface"]');
+                if (oldMenu) {
+                    oldMenu.outerHTML = menuHtml;
+                    const newMenu = document.querySelector('[data-module="moduleSurface"]');
+                    if (newMenu) {
+                        applyTranslations(newMenu);
+                    }
+                    
+                    // 2. LLAMAR A updateMenuState DESPUÉS de que el nuevo menú se inyectó
+                    updateMenuState(action); 
+                }
+            })
+            .catch(err => console.error('Error al cargar el menú lateral:', err));
+    } else {
+        // 3. LLAMAR A updateMenuState si el menú NO cambió (ej. settings -> settings)
+        updateMenuState(action);
+    }
+    // --- FIN DE LA LÓGICA DE MENÚ ---
 
 
-    const isSettingsPage = page.startsWith('settings-');
-    updateGlobalMenuVisibility(isSettingsPage);
-
-    // (Se eliminó el contentContainer.innerHTML = '' de aquí)
-
+    // --- Lógica de Carga de Página (sin cambios) ---
     try {
         const response = await fetch(`${basePath}/config/router.php?page=${page}`);
         const html = await response.text();
 
         contentContainer.innerHTML = html;
-
         applyTranslations(contentContainer);
 
         if (page === 'register-step3') {
@@ -103,26 +122,21 @@ async function loadPage(page) {
             }
         }
         
-
     } catch (error) {
         console.error('Error al cargar la página:', error);
         contentContainer.innerHTML = `<h2>${getTranslation('js.url.errorLoad')}</h2>`;
     } finally {
-        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (LIMPIEZA DEL LOADER) ▼▼▼ ---
-
-        // 4. Pase lo que pase, al final...
-        // 5. ...cancelar el temporizador (si aún no se ha disparado)
+        // --- Lógica de limpieza del Loader (sin cambios) ---
         if (loaderTimer) {
             clearTimeout(loaderTimer);
             loaderTimer = null;
         }
-        // 6. ...y ocultar el loader (si es que se llegó a mostrar)
         if (pageLoader) {
             pageLoader.classList.remove('active');
         }
-        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
     }
 }
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN (FUNCIÓN loadPage) ▲▲▲ ---
 
 export function handleNavigation() {
 
@@ -137,38 +151,52 @@ export function handleNavigation() {
     const action = paths[path];
 
     if (!action) {
-        loadPage('404');
-        updateMenuState(null);
+        const isSettings = path.startsWith('/settings');
+        // 4. Pasar 'action' (null en este caso) a loadPage
+        loadPage('404', isSettings, null); 
+        // 5. Eliminar la llamada de aquí
+        // updateMenuState(null); 
         return;
     }
 
     const page = routes[action];
 
     if (page) {
-        loadPage(page);
-        let menuAction = action;
-        if (action.startsWith('toggleSectionRegister')) menuAction = 'toggleSectionRegister';
-        if (action.startsWith('toggleSectionReset')) menuAction = 'toggleSectionResetPassword'; 
-        updateMenuState(menuAction);
+        const isSettings = path.startsWith('/settings');
+        // 6. Pasar 'action' a loadPage
+        loadPage(page, isSettings, action); 
+        
+        // 7. Eliminar la llamada de aquí
+        // let menuAction = action;
+        // if (action.startsWith('toggleSectionRegister')) menuAction = 'toggleSectionRegister';
+        // if (action.startsWith('toggleSectionReset')) menuAction = 'toggleSectionResetPassword'; 
+        // updateMenuState(menuAction);
     } else {
-        loadPage('404');
-        updateMenuState(null);
+        const isSettings = path.startsWith('/settings');
+        // 8. Pasar 'action' (null en este caso) a loadPage
+        loadPage('404', isSettings, null);
+        // 9. Eliminar la llamada de aquí
+        // updateMenuState(null);
     }
 }
 
 function updateMenuState(currentAction) {
+    
+    // 10. (Lógica de alias para register/reset)
+    // Esto lo podemos mover aquí para que funcione correctamente
+    let menuAction = currentAction;
+    if (currentAction && currentAction.startsWith('toggleSectionRegister')) menuAction = 'toggleSectionRegister';
+    if (currentAction && currentAction.startsWith('toggleSectionReset')) menuAction = 'toggleSectionResetPassword';
+
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
         const linkAction = link.getAttribute('data-action');
 
-        if (linkAction === currentAction) {
+        if (linkAction === menuAction) { // Usar la variable 'menuAction'
             link.classList.add('active');
         } else {
             link.classList.remove('active');
         }
     });
-}
-
-async function updateGlobalMenuVisibility(isSettings) {
 }
 
 
@@ -185,10 +213,12 @@ export function initRouter() {
             let action, page, newPath;
 
             if (link.hasAttribute('data-action')) {
+                // ... (sin cambios)
                 action = link.getAttribute('data-action');
                 page = routes[action];
                 newPath = Object.keys(paths).find(key => paths[key] === action);
             } else {
+                // ... (sin cambios)
                 const url = new URL(link.href);
                 newPath = url.pathname.replace(basePath, '') || '/';
                 
@@ -211,17 +241,15 @@ export function initRouter() {
 
             if (window.location.pathname !== fullUrlPath) {
                 
-                const isCurrentlySettings = window.location.pathname.startsWith(`${basePath}/settings`);
                 const isGoingToSettings = newPath.startsWith('/settings');
 
-                if (isCurrentlySettings !== isGoingToSettings) {
-                    window.location.href = fullUrlPath;
-                    return;
-                }
-
                 history.pushState(null, '', fullUrlPath);
-                loadPage(page);
-                updateMenuState(action);
+                
+                // 11. Pasar 'action' a loadPage
+                loadPage(page, isGoingToSettings, action); 
+                
+                // 12. Eliminar la llamada de aquí
+                // updateMenuState(action);
             }
 
             deactivateAllModules();
@@ -229,6 +257,9 @@ export function initRouter() {
     });
 
     window.addEventListener('popstate', handleNavigation);
+
+    const initialPath = window.location.pathname.replace(basePath, '') || '/';
+    currentIsSettings = initialPath.startsWith('/settings') || initialPath.startsWith('/settings');
 
     handleNavigation();
 }
