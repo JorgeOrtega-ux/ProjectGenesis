@@ -47,8 +47,9 @@ $userRole = $_SESSION['role'] ?? 'user';
             </div>
         </div>
     </div>
-    <div class="module-content module-select body-title disabled" data-module="moduleSelect">
-        <div class="menu-content">
+    
+    <div class="popover-module popover-module--anchor-right body-title disabled" data-module="moduleSelect">
+    <div class="menu-content">
             <div class="menu-list">
 
                 <div class="menu-link" data-action="toggleSectionSettingsProfile">

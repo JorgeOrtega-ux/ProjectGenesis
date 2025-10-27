@@ -163,23 +163,24 @@ function formatSessionDate($dateTimeString) {
 
     </div>
 
-    <div class="settings-modal-overlay" id="logout-all-modal" style="display: none;">
-        <button type="button" class="settings-modal-close-btn" id="logout-all-close">
-            <span class="material-symbols-rounded">close</span>
-        </button>
-        <div class="settings-modal-content">
-            <div class="auth-form">
-                <fieldset class="auth-step active">
-                    <h2 class="auth-title" data-i18n="settings.devices.modalTitle"></h2>
-                    <p class="auth-verification-text" data-i18n="settings.devices.modalDesc"></p>
-                    
-                    <div class="auth-step-buttons">
-                        <button type="button" class="auth-button-back" id="logout-all-cancel" style="flex: 1;" data-i18n="settings.devices.modalCancel"></button>
-                        <button type="button" class="auth-button danger" id="logout-all-confirm" style="flex: 1; background-color: #c62828; border-color: #c62828;" data-i18n="settings.devices.modalConfirm"></button>
-                    </div>
-                </fieldset>
+    <div class="modal-overlay" id="logout-all-modal">
+        <div class="modal-content">
+            <div class="modal__header">
+                <h2 class="modal__title" data-i18n="settings.devices.modalTitle"></h2>
+                <button type="button" class="modal-close-btn" id="logout-all-close">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
             </div>
+            
+            <form onsubmit="event.preventDefault();" novalidate>
+                <div class="modal__body">
+                    <p class="modal__description" data-i18n="settings.devices.modalDesc"></p>
+                </div>
+                <div class="modal__footer">
+                    <button type="button" class="modal__button modal__button--secondary" id="logout-all-cancel" data-i18n="settings.devices.modalCancel"></button>
+                    <button type="button" class="modal__button modal__button--danger" id="logout-all-confirm" data-i18n="settings.devices.modalConfirm"></button>
+                </div>
+            </form>
         </div>
     </div>
-    
-</div>
+    </div>

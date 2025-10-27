@@ -50,10 +50,11 @@ $currentThemeKey = $themeMap[$userTheme] ?? 'settings.accessibility.themeSystem'
                             <span class="material-symbols-rounded">arrow_drop_down</span>
                         </div>
                     </div>
-                    <div class="module-content module-trigger-select body-title disabled" 
+                    
+                    <div class="popover-module popover-module--anchor-width body-title disabled" 
                          data-module="moduleThemeSelect"
                          data-preference-type="theme">
-                        <div class="menu-content">
+                    <div class="menu-content">
                             <div class="menu-list">
                                 <?php 
                                 foreach ($themeMap as $key => $textKey): 

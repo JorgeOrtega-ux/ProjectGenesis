@@ -1,7 +1,7 @@
 <?php
 // --- ▼▼▼ INICIO DE NUEVO BLOQUE PHP ▼▼▼ ---
 
-// Estas variables ($userLanguage, $userUsageType, $openLinksInNewTab) 
+// Estas variables ($userLanguage, $userUsageType, $openLinksInNewTab)
 // son cargadas por config/router.php
 
 // 1. Definir los mapas de valores de BD a *CLAVES DE TRADUCCIÓN*
@@ -37,24 +37,24 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
 ?>
 <div class="section-content <?php echo ($CURRENT_SECTION === 'settings-profile') ? 'active' : 'disabled'; ?>" data-section="settings-profile">
     <div class="settings-wrapper">
-        
+
         <div class="settings-header-card">
             <h1 class="settings-title" data-i18n="settings.profile.title"></h1>
             <p class="settings-description" data-i18n="settings.profile.description"></p>
         </div>
 
         <div class="settings-card settings-card--edit-mode" id="avatar-section">
-            
+
             <?php outputCsrfInput(); ?> <input type="file" class="visually-hidden" id="avatar-upload-input" name="avatar" accept="image/png, image/jpeg, image/gif, image/webp">
 
             <div class="settings-card__content">
                 <div class="settings-card__avatar" id="avatar-preview-container" data-role="<?php echo htmlspecialchars($userRole); ?>">
-                    <img src="<?php echo htmlspecialchars($profileImageUrl); ?>" 
+                    <img src="<?php echo htmlspecialchars($profileImageUrl); ?>"
                          alt="<?php echo htmlspecialchars($usernameForAlt); ?>"
                          class="settings-card__avatar-image"
                          id="avatar-preview-image"
                          data-i18n-alt-prefix="header.profile.altPrefix">
-                    
+
                     <div class="settings-card__avatar-overlay">
                         <span class="material-symbols-rounded">photo_camera</span>
                     </div>
@@ -64,7 +64,7 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                     <p class="settings-card__description" data-i18n="settings.profile.avatarDesc"></p>
                 </div>
             </div>
-            
+
             <div class="settings-card__actions">
                 <div id="avatar-actions-default" <?php echo $isDefaultAvatar ? 'style="display: flex; gap: 12px;"' : 'style="display: none;"'; ?>>
                     <button type="button" class="settings-button" id="avatar-upload-trigger" data-i18n="settings.profile.uploadPhoto"></button>
@@ -85,8 +85,8 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
             <?php outputCsrfInput(); ?> <input type="hidden" name="action" value="update-username"> <div class="settings-card__content" id="username-view-state" style="display: flex;">
                 <div class="settings-card__text">
                     <h2 class="settings-card__title" data-i18n="settings.profile.username"></h2>
-                    <p class="settings-card__description" 
-                       id="username-display-text" 
+                    <p class="settings-card__description"
+                       id="username-display-text"
                        data-original-username="<?php echo htmlspecialchars($usernameForAlt); ?>">
                        <?php echo htmlspecialchars($usernameForAlt); ?>
                     </p>
@@ -99,10 +99,10 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
             <div class="settings-card__content" id="username-edit-state" style="display: none;">
                 <div class="settings-card__text">
                     <h2 class="settings-card__title" data-i18n="settings.profile.username"></h2>
-                    <input type="text" 
-                           class="settings-username-input" 
-                           id="username-input" 
-                           name="username" 
+                    <input type="text"
+                           class="settings-username-input"
+                           id="username-input"
+                           name="username"
                            value="<?php echo htmlspecialchars($usernameForAlt); ?>"
                            required
                            minlength="6"
@@ -118,8 +118,8 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
             <?php outputCsrfInput(); ?> <input type="hidden" name="action" value="update-email"> <div class="settings-card__content" id="email-view-state" style="display: flex;">
                 <div class="settings-card__text">
                     <h2 class="settings-card__title" data-i18n="settings.profile.email"></h2>
-                    <p class="settings-card__description" 
-                       id="email-display-text" 
+                    <p class="settings-card__description"
+                       id="email-display-text"
                        data-original-email="<?php echo htmlspecialchars($userEmail); ?>">
                        <?php echo htmlspecialchars($userEmail); ?>
                     </p>
@@ -132,10 +132,10 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
             <div class="settings-card__content" id="email-edit-state" style="display: none;">
                 <div class="settings-card__text">
                     <h2 class="settings-card__title" data-i18n="settings.profile.email"></h2>
-                    <input type="email" 
-                           class="settings-username-input" 
-                           id="email-input" 
-                           name="email" 
+                    <input type="email"
+                           class="settings-username-input"
+                           id="email-input"
+                           name="email"
                            value="<?php echo htmlspecialchars($userEmail); ?>"
                            required
                            maxlength="255">
@@ -146,34 +146,32 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                 <button type="button" class="settings-button" id="email-save-trigger-btn" data-i18n="settings.profile.save"></button>
             </div>
         </div>
-        <div class="settings-modal-overlay" id="email-verify-modal" style="display: none;">
-            <button type="button" class="settings-modal-close-btn" id="email-verify-close">
-                <span class="material-symbols-rounded">close</span>
-            </button>
-            <div class="settings-modal-content">
-                <h2 class="auth-title" style="margin-bottom: 16px;" data-i18n="settings.profile.modalCodeTitle"></h2>
-                <p class="auth-verification-text" style="margin-bottom: 24px;" data-i18n="settings.profile.modalCodeDesc">
-                    <strong id="email-verify-modal-email"><?php echo htmlspecialchars($userEmail); ?></strong>.
-                </p>
-                <div class="auth-error-message" id="email-verify-error" style="display: none; margin-bottom: 16px;"></div>
-                <form onsubmit="event.preventDefault();" novalidate>
-                    <div class="auth-input-group">
-                        <input type="text" id="email-verify-code" name="verification_code" required placeholder=" " maxlength="14">
+
+        <div class="modal-overlay" id="email-verify-modal">
+            <div class="modal-content">
+                <div class="modal__header">
+                    <h2 class="modal__title" data-i18n="settings.login.modalVerifyTitle"></h2>
+                    <button type="button" class="modal-close-btn" id="email-verify-close">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+                <div class="modal__body">
+                     <p class="modal__description" data-i18n="settings.login.modalVerifyDesc"></p>
+                    <div class="auth-error-message" id="email-verify-error" style="display: none;"></div>
+                    <div class="modal__input-group">
+                        <input type="text" id="email-verify-code" name="verification_code" class="modal__input" required placeholder=" " maxlength="14">
                         <label for="email-verify-code" data-i18n="settings.profile.modalCodeLabel"></label>
                     </div>
-                    <div class="auth-step-buttons">
-                        <button type="button" class="auth-button" id="email-verify-continue" data-i18n="settings.profile.continue"></button>
-                    </div>
-                </form>
-                <div class="settings-modal-footer">
-                    <p>
+                </div>
+                <div class="modal__footer modal__footer--column">
+                    <button type="button" class="modal__button modal__button--primary" id="email-verify-continue" data-i18n="settings.login.confirm"></button>
+                    <p class="modal__footer-text" style="text-align: center;">
                         <span data-i18n="settings.profile.modalCodeResendP"></span>
                         <a id="email-verify-resend" data-i18n="settings.profile.modalCodeResendA"></a>
                     </p>
                 </div>
             </div>
         </div>
-
         <div class="settings-card settings-card--column">
             <div class="settings-card__content">
                 <div class="settings-card__text">
@@ -194,17 +192,18 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                             <span class="material-symbols-rounded">arrow_drop_down</span>
                         </div>
                     </div>
-                    <div class="module-content module-trigger-select body-title disabled" 
+
+                    <div class="popover-module popover-module--anchor-width body-title disabled"
                          data-module="moduleUsageSelect"
                          data-preference-type="usage">
                         <div class="menu-content">
                             <div class="menu-list">
-                                <?php 
-                                foreach ($usageMap as $key => $textKey): 
-                                    $isActive = ($key === $userUsageType); 
+                                <?php
+                                foreach ($usageMap as $key => $textKey):
+                                    $isActive = ($key === $userUsageType);
                                     $iconName = $usageIconMap[$key] ?? 'person';
                                 ?>
-                                    <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                                    <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>"
                                          data-value="<?php echo htmlspecialchars($key); ?>">
                                         <div class="menu-link-icon">
                                             <span class="material-symbols-rounded"><?php echo $iconName; ?></span>
@@ -245,16 +244,17 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                             <span class="material-symbols-rounded">arrow_drop_down</span>
                         </div>
                     </div>
-                    <div class="module-content module-trigger-select body-title disabled" 
+
+                    <div class="popover-module popover-module--anchor-width body-title disabled"
                          data-module="moduleLanguageSelect"
                          data-preference-type="language">
                         <div class="menu-content">
                             <div class="menu-list">
-                                <?php 
-                                foreach ($languageMap as $key => $textKey): 
-                                    $isActive = ($key === $userLanguage); 
+                                <?php
+                                foreach ($languageMap as $key => $textKey):
+                                    $isActive = ($key === $userLanguage);
                                 ?>
-                                    <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                                    <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>"
                                          data-value="<?php echo htmlspecialchars($key); ?>">
                                         <div class="menu-link-icon">
                                             <span class="material-symbols-rounded">language</span>
@@ -284,11 +284,11 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
             </div>
             <div class="settings-card__actions">
                 <label class="settings-toggle-switch">
-                    <input type="checkbox" 
+                    <input type="checkbox"
                            id="toggle-new-tab"
                            data-preference-type="boolean"
                            data-field-name="open_links_in_new_tab"
-                           <?php echo ($openLinksInNewTab == 1) ? 'checked' : ''; ?>> 
+                           <?php echo ($openLinksInNewTab == 1) ? 'checked' : ''; ?>>
                     <span class="settings-toggle-slider"></span>
                 </label>
             </div>
