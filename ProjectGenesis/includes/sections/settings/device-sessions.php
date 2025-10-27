@@ -3,10 +3,9 @@
 
 // (Se asume que config/router.php ya ha iniciado $pdo y la sesión)
 $sessions = [];
-$currentSessionId = session_id(); // No lo usamos para la consulta, pero es útil saberlo
+$currentSessionId = session_id(); 
 
 try {
-    // 1. Obtener todas las sesiones de la tabla user_metadata
     $stmt = $pdo->prepare(
         "SELECT id, ip_address, device_type, browser_info, created_at 
          FROM user_metadata 
@@ -18,74 +17,95 @@ try {
 
 } catch (PDOException $e) {
     logDatabaseError($e, 'router - settings-devices');
-    // $sessions se quedará como un array vacío y el HTML mostrará un error
+    // $sessions se quedará como un array vacío
 }
 
 // 2. Funciones Helper para formatear los datos
-// (Estas pueden moverse a un archivo 'utils.php' si se reúsan)
 
 /**
  * Intenta parsear un User-Agent string para obtener Navegador y SO.
  * @param string $userAgent El string de $_SERVER['HTTP_USER_AGENT']
  * @return string
  */
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA ▼▼▼ ---
 function formatUserAgent($userAgent) {
-    // Esta es una función MUY simplificada. 
-    // Para producción, se recomienda usar una librería como 'whichbrowser/parser'
     
-    // --- ▼▼▼ MODIFICADO ▼▼▼ ---
-    // NOTA: Estas cadenas ahora son CLAVES DE TRADUCCIÓN.
-    // Se necesitaría un sistema de i18n de PHP (ej. una función t($key))
-    // para que esto funcione realmente.
-    $browser = 'settings.devices.unknownBrowser';
-    $os = 'settings.devices.unknownOS';
+    $browserKey = 'settings.devices.unknownBrowser';
+    $osKey = 'settings.devices.unknownOS';
+    $browserText = ''; // Para texto que no es clave (ej. "Chrome")
+    $osText = ''; // Para texto que no es clave (ej. "Windows 10/11")
 
     // Detectar OS
-    if (preg_match('/windows nt 10/i', $userAgent)) $os = 'Windows 10/11';
-    elseif (preg_match('/windows/i', $userAgent)) $os = 'Windows';
-    elseif (preg_match('/macintosh|mac os x/i', $userAgent)) $os = 'macOS';
-    elseif (preg_match('/android/i', $userAgent)) $os = 'Android';
-    elseif (preg_match('/iphone|ipad|ipod/i', $userAgent)) $os = 'iOS';
-    elseif (preg_match('/linux/i', $userAgent)) $os = 'Linux';
+    if (preg_match('/windows nt 10/i', $userAgent)) { $osText = 'Windows 10/11'; $osKey = null; }
+    elseif (preg_match('/windows/i', $userAgent)) { $osText = 'Windows'; $osKey = null; }
+    elseif (preg_match('/macintosh|mac os x/i', $userAgent)) { $osText = 'macOS'; $osKey = null; }
+    elseif (preg_match('/android/i', $userAgent)) { $osText = 'Android'; $osKey = null; }
+    elseif (preg_match('/iphone|ipad|ipod/i', $userAgent)) { $osText = 'iOS'; $osKey = null; }
+    elseif (preg_match('/linux/i', $userAgent)) { $osText = 'Linux'; $osKey = null; }
 
     // Detectar Navegador
-    if (preg_match('/edg/i', $userAgent)) $browser = 'Edge';
-    elseif (preg_match('/chrome/i', $userAgent)) $browser = 'Chrome';
-    elseif (preg_match('/safari/i', $userAgent)) $browser = 'Safari';
-    elseif (preg_match('/firefox/i', $userAgent)) $browser = 'Firefox';
+    if (preg_match('/edg/i', $userAgent)) { $browserText = 'Edge'; $browserKey = null; }
+    elseif (preg_match('/chrome/i', $userAgent)) { $browserText = 'Chrome'; $browserKey = null; }
+    elseif (preg_match('/safari/i', $userAgent)) { $browserText = 'Safari'; $browserKey = null; }
+    elseif (preg_match('/firefox/i', $userAgent)) { $browserText = 'Firefox'; $browserKey = null; }
     
-    return $browser . ' ' . 'settings.devices.browserOsSeparator' . ' ' . $os;
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    // Construir el HTML. 
+    // Si la clave existe, usa <span>. Si no, usa el texto escapado.
+    $browserHtml = $browserKey 
+        ? '<span data-i18n="' . $browserKey . '"></span>' 
+        : htmlspecialchars($browserText);
+        
+    $osHtml = $osKey 
+        ? '<span data-i18n="' . $osKey . '"></span>' 
+        : htmlspecialchars($osText);
+
+    // Devolver el string HTML listo para ser interpretado por i18n-manager.js
+    return $browserHtml . ' <span data-i18n="settings.devices.browserOsSeparator"></span> ' . $osHtml;
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA ▲▲▲ ---
+
 
 /**
  * Formatea una fecha/hora de la BD a un string legible.
  * @param string $dateTimeString
  * @return string
  */
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA ▼▼▼ ---
 function formatSessionDate($dateTimeString) {
     try {
-        // --- ▼▼▼ MODIFICADO ▼▼▼ ---
-        // NOTA: Estas cadenas ahora son CLAVES DE TRADUCCIÓN.
         $date = new DateTime($dateTimeString, new DateTimeZone('UTC'));
-        
         $now = new DateTime('now', new DateTimeZone('UTC'));
         $interval = $now->diff($date);
 
-        $prefix = 'settings.devices.timeAgoPrefix';
-
-        if ($interval->y > 0) return $prefix . $interval->y . ' ' . ($interval->y == 1 ? 'settings.devices.timeYear' : 'settings.devices.timeYears');
-        if ($interval->m > 0) return $prefix . $interval->m . ' ' . ($interval->m == 1 ? 'settings.devices.timeMonth' : 'settings.devices.timeMonths');
-        if ($interval->d > 0) return $prefix . $interval->d . ' ' . ($interval->d == 1 ? 'settings.devices.timeDay' : 'settings.devices.timeDays');
-        if ($interval->h > 0) return $prefix . $interval->h . ' ' . ($interval->h == 1 ? 'settings.devices.timeHour' : 'settings.devices.timeHours');
-        if ($interval->i > 0) return $prefix . $interval->i . ' ' . ($interval->i == 1 ? 'settings.devices.timeMinute' : 'settings.devices.timeMinutes');
-        return 'settings.devices.timeSecondsAgo';
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+        // Devolvemos HTML con los `data-i18n` correctos
+        if ($interval->y > 0) {
+            $key = ($interval->y == 1) ? 'settings.devices.timeYear' : 'settings.devices.timeYears';
+            return '<span data-i18n="settings.devices.timeAgoPrefix"></span> ' . $interval->y . ' <span data-i18n="' . $key . '"></span>';
+        }
+        if ($interval->m > 0) {
+            $key = ($interval->m == 1) ? 'settings.devices.timeMonth' : 'settings.devices.timeMonths';
+            return '<span data-i18n="settings.devices.timeAgoPrefix"></span> ' . $interval->m . ' <span data-i18n="' . $key . '"></span>';
+        }
+        if ($interval->d > 0) {
+            $key = ($interval->d == 1) ? 'settings.devices.timeDay' : 'settings.devices.timeDays';
+            return '<span data-i18n="settings.devices.timeAgoPrefix"></span> ' . $interval->d . ' <span data-i18n="' . $key . '"></span>';
+        }
+        if ($interval->h > 0) {
+            $key = ($interval->h == 1) ? 'settings.devices.timeHour' : 'settings.devices.timeHours';
+            return '<span data-i18n="settings.devices.timeAgoPrefix"></span> ' . $interval->h . ' <span data-i18n="' . $key . '"></span>';
+        }
+        if ($interval->i > 0) {
+            $key = ($interval->i == 1) ? 'settings.devices.timeMinute' : 'settings.devices.timeMinutes';
+            return '<span data-i18n="settings.devices.timeAgoPrefix"></span> ' . $interval->i . ' <span data-i18n="' . $key . '"></span>';
+        }
+        
+        return '<span data-i18n="settings.devices.timeSecondsAgo"></span>';
 
     } catch (Exception $e) {
-        return 'settings.devices.timeUnknown'; // <-- MODIFICADO
+        return '<span data-i18n="settings.devices.timeUnknown"></span>';
     }
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA ▲▲▲ ---
 
 // --- ▲▲▲ FIN DE LÓGICA PHP ▲▲▲ ---
 ?>
@@ -128,9 +148,11 @@ function formatSessionDate($dateTimeString) {
             <?php foreach ($sessions as $session): ?>
                 <?php
                     $deviceIcon = ($session['device_type'] === 'Mobile') ? 'smartphone' : 'computer';
+                    
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN DEL BUCLE ▼▼▼ ---
+                    // Estas funciones ahora devuelven HTML, no texto plano
                     $deviceInfo = formatUserAgent($session['browser_info']);
                     $sessionDate = formatSessionDate($session['created_at']);
-                    $deviceInfoWithIp = $deviceInfo . ' (' . $session['ip_address'] . ')';
                 ?>
                 <div class="settings-card" data-session-card-id="<?php echo $session['id']; ?>">
                     <div class="settings-card-left">
@@ -138,17 +160,21 @@ function formatSessionDate($dateTimeString) {
                             <span class="material-symbols-rounded"><?php echo $deviceIcon; ?></span>
                         </div>
                         <div class="settings-text-content">
-                            <h2 class="settings-text-title"><?php echo htmlspecialchars($deviceInfo); ?></h2>
+                            
+                            <h2 class="settings-text-title"><?php echo $deviceInfo; ?></h2> 
+                            
                             <p class="settings-text-description">
                                 <?php echo htmlspecialchars($session['ip_address']); ?> - 
-                                <span data-i18n="settings.devices.lastAccess"></span> <?php echo htmlspecialchars($sessionDate); ?>
+                                <span data-i18n="settings.devices.lastAccess"></span> 
+                                
+                                <?php echo $sessionDate; ?> 
                             </p>
                         </div>
                     </div>
 
                     </div>
                 <?php endforeach; ?>
-        <?php endif; ?>
+            <?php endif; ?>
 
     </div>
 
