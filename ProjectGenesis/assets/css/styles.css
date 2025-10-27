@@ -764,7 +764,7 @@ body {
 .settings-card__actions {
     display: flex;
     flex-direction: row;
-    gap: 12px;
+    gap: 8px;
     flex-shrink: 0;
 }
 
