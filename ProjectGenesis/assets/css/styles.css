@@ -1382,6 +1382,21 @@ body {
         box-shadow: unset;
         border: none;
     }
+
+    /* --- ▼▼▼ CÓDIGO AÑADIDO PARA TARJETA DE AVATAR ▼▼▼ --- */
+    #avatar-form .settings-card {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+    }
+
+    #avatar-form .settings-card .settings-card-left .settings-text-content {
+        display: none;
+    }
+    .trigger-select-wrapper {
+        width: 100%;
+    }
+    /* --- ▲▲▲ FIN DE CÓDIGO AÑADIDO ▲▲▲ --- */
 }
 
 @media (max-width: 768px) {
