@@ -25,27 +25,27 @@ $userRole = $_SESSION['role'] ?? 'user';
 <div class="header">
     <div class="header-left">
         <div class="header-item">
-            <div class="header-button" 
-                 data-action="toggleModuleSurface" 
-                 data-tooltip="header.buttons.menu">
+            <div class="header-button"
+                data-action="toggleModuleSurface"
+                data-tooltip="header.buttons.menu">
                 <span class="material-symbols-rounded">menu</span>
             </div>
-            </div>
+        </div>
     </div>
     <div class="header-right">
         <div class="header-item">
-            
-            <div class="header-button header-profile" 
-                 data-action="toggleModuleSelect"
-                 data-role="<?php echo htmlspecialchars($userRole); ?>"
-                 data-tooltip="header.buttons.profile"> 
-                 
-                 <img src="<?php echo htmlspecialchars($profileImageUrl); ?>" 
-                      alt="<?php echo htmlspecialchars($usernameForAlt); ?>"
-                      class="header-profile-image"
-                      data-i18n-alt-prefix="header.profile.altPrefix">
+
+            <div class="header-button header-profile"
+                data-action="toggleModuleSelect"
+                data-role="<?php echo htmlspecialchars($userRole); ?>"
+                data-tooltip="header.buttons.profile">
+
+                <img src="<?php echo htmlspecialchars($profileImageUrl); ?>"
+                    alt="<?php echo htmlspecialchars($usernameForAlt); ?>"
+                    class="header-profile-image"
+                    data-i18n-alt-prefix="header.profile.altPrefix">
             </div>
-            </div>
+        </div>
     </div>
     <div class="module-content module-select body-title disabled" data-module="moduleSelect">
         <div class="menu-content">
@@ -67,7 +67,7 @@ $userRole = $_SESSION['role'] ?? 'user';
                         <span data-i18n="header.profile.help"></span>
                     </div>
                 </div>
-                
+
                 <div class="menu-link" data-action="logout">
                     <div class="menu-link-icon">
                         <span class="material-symbols-rounded">logout</span>
@@ -75,8 +75,8 @@ $userRole = $_SESSION['role'] ?? 'user';
                     <div class="menu-link-text">
                         <span data-i18n="header.profile.logout"></span>
                     </div>
-                 </div>
-                 </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
