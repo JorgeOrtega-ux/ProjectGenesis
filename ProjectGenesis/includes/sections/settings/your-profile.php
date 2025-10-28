@@ -168,7 +168,7 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                      <div class="auth-error-message" id="email-verify-error" style="display: none;"></div>
                     <div class="modal__input-group">
                         <input type="text" id="email-verify-code" name="verification_code" class="modal__input" required placeholder=" " maxlength="14">
-                        <label for="email-verify-code" data-i1J="settings.profile.modalCodeLabel"></label>
+                        <label for="email-verify-code" data-i18n="settings.profile.modalCodeLabel"></label>
                     </div>
                 </div>
                 <div class="modal__footer modal__footer--column">

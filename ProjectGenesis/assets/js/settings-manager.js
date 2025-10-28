@@ -667,8 +667,11 @@ export function initSettingsManager() {
             const modal = document.getElementById('password-change-modal');
             if (!modal) return;
             // ... (resto del código sin cambios) ...
-             modal.querySelector('[data-step="1"]').style.display = 'flex';
+            
+            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+            modal.querySelector('[data-step="1"]').style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
             modal.querySelector('[data-step="2"]').style.display = 'none';
+            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
             const errorDiv1 = modal.querySelector('#password-verify-error');
             const errorDiv2 = modal.querySelector('#password-update-error');
@@ -698,8 +701,12 @@ export function initSettingsManager() {
             const modal = document.getElementById('password-change-modal');
             if (!modal) return;
             // ... (resto del código sin cambios) ...
-             modal.querySelector('[data-step="1"]').style.display = 'flex';
-            modal.querySelector('[data-step="2"]').style.display = 'none';
+            
+            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+             modal.querySelector('[data-step="1"]').style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
+             modal.querySelector('[data-step="2"]').style.display = 'none';
+            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+
             const errorDiv = modal.querySelector('#password-update-error');
              if (errorDiv) errorDiv.style.display = 'none';
             focusInputAndMoveCursorToEnd(modal.querySelector('#password-verify-current'));
@@ -732,8 +739,10 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
 
             if (result.success) {
+                // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
                 modal.querySelector('[data-step="1"]').style.display = 'none';
-                modal.querySelector('[data-step="2"]').style.display = 'flex';
+                modal.querySelector('[data-step="2"]').style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
+                // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
                 focusInputAndMoveCursorToEnd(modal.querySelector('#password-update-new'));
             } else {
                 if(errorDiv) {

@@ -141,7 +141,7 @@
                 <div class="auth-error-message" id="tfa-verify-error" style="display: none;"></div>
                 <div class="modal__input-group">
                     <input type="password" id="tfa-verify-password" name="current_password" class="modal__input" required placeholder=" ">
-                    <label for="tfa-verify-password" data-i1E="settings.login.modalCurrentPass"></label>
+                    <label for="tfa-verify-password" data-i18n="settings.login.modalCurrentPass"></label>
                 </div>
             </div>
             <div class="modal__footer">
@@ -187,3 +187,4 @@
         </div>
     </div>
     </div>
+</div>
