@@ -1,5 +1,5 @@
 <?php
-// FILE: includes/sections/settings/change-email.php
+// FILE: includes/sections/settings/actions/change-email.php
 
 // 1. OBTENER DATOS PRECARGADOS (de config/router.php)
 // Estas variables ($userEmail, $initialEmailCooldown)
@@ -20,7 +20,7 @@
         ?>
 
         <div class="settings-card settings-card--column" id="email-step-1-verify">
-        <div class="settings-card__content">
+            <div class="settings-card__content">
                 <div class="settings-card__icon">
                     <span class="material-symbols-rounded">password</span>
                 </div>
@@ -60,7 +60,7 @@
         </div>
 
         <div class="settings-card settings-card--column" id="email-step-2-update" style="display: none;">
-        <div class="settings-card__content">
+            <div class="settings-card__content">
                 <div class="settings-card__icon">
                     <span class="material-symbols-rounded">mark_email_read</span>
                 </div>
@@ -81,7 +81,7 @@
                 </div>
             </div>
             <div class="settings-card__actions">
-                <button type="button" class="settings-button" data-action="toggleSectionSettingsProfile" data-i18n="settings.profile.cancel"></button>
+                 <button type="button" class="settings-button" data-action="toggleSectionSettingsProfile" data-i18n="settings.profile.cancel"></button>
                 <button type="button" class="settings-button" id="email-save-trigger-btn" data-i18n="settings.profile.save"></button>
             </div>
         </div>

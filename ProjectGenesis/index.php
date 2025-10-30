@@ -125,9 +125,15 @@ $pathsToPages = [
     '/settings/your-profile'    => 'settings-profile',
     '/settings/login-security'  => 'settings-login',
     '/settings/accessibility'   => 'settings-accessibility',
-    '/settings/device-sessions' => 'settings-devices', // <-- AÑADIDO
+    '/settings/device-sessions' => 'settings-devices', 
     
-    // ▼▼▼ AÑADIR ESTAS LÍNEAS ▼▼▼
+    // ▼▼▼ ¡AQUÍ ESTÁ LA CORRECCIÓN! ▼▼▼
+    '/settings/change-password' => 'settings-change-password',
+    '/settings/change-email'    => 'settings-change-email',
+    '/settings/toggle-2fa'      => 'settings-toggle-2fa',
+    '/settings/delete-account'  => 'settings-delete-account',
+    // ▲▲▲ ¡FIN DE LA CORRECCIÓN! ▲▲▲
+    
     '/account-status/deleted'   => 'account-status-deleted',
     '/account-status/suspended' => 'account-status-suspended',
 ];

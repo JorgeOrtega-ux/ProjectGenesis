@@ -1,5 +1,5 @@
 <?php
-// FILE: includes/sections/settings/delete-account.php
+// FILE: includes/sections/settings/actions/delete-account.php
 
 // 1. OBTENER DATOS PRECARGADOS (de config/router.php)
 // Estas variables ($userEmail, $profileImageUrl)
@@ -13,12 +13,7 @@
             <h1 class="settings-title" data-i18n="settings.login.modalDeleteTitle"></h1>
             
             <p class="settings-description" data-i18n="settings.login.deleteAccountDesc"></p>
-            <div class="delete-account-user-badge" style="margin-top: 16px;">
-                <img src="<?php echo htmlspecialchars($profileImageUrl); ?>" 
-                     alt="<?php echo htmlspecialchars($userEmail); ?>" 
-                     class="delete-account-user-avatar">
-                <span class="delete-account-user-email"><?php echo htmlspecialchars($userEmail); ?></span>
-            </div>
+            
         </div>
 
         <?php
