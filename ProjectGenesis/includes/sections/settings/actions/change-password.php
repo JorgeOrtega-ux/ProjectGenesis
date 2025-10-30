@@ -12,12 +12,11 @@
         </div>
 
         <?php
-        // Incluir el input CSRF una vez en la parte superior
-        // para que esté disponible para todas las llamadas de API en esta página.
         outputCsrfInput();
         ?>
 
-        <div class="settings-card settings-card--column" id="password-step-1">
+        <div class="settings-card settings-card--column" id="password-step-1" style="gap: 16px;">
+            
             <div class="settings-card__content">
                 <div class="settings-card__icon">
                     <span class="material-symbols-rounded">password</span>
@@ -25,20 +24,21 @@
                 <div class="settings-card__text">
                     <h2 class="settings-card__title" data-i18n="settings.login.modalVerifyTitle"></h2>
                     <p class="settings-card__description" data-i18n="settings.login.modalVerifyDesc"></p>
-                    
-                    <div class="modal__input-group" style="margin-top: 8px;">
-                        <input type="password" id="password-verify-current" name="current_password" class="modal__input" required placeholder=" ">
-                        <label for="password-verify-current" data-i18n="settings.login.modalCurrentPass"></label>
-                    </div>
                 </div>
             </div>
+            
+            <div class="modal__input-group" style="width: 100%;">
+                <input type="password" id="password-verify-current" name="current_password" class="modal__input" required placeholder=" ">
+                <label for="password-verify-current" data-i18n="settings.login.modalCurrentPass"></label>
+            </div>
+
             <div class="settings-card__actions">
                 <button type="button" class="settings-button" data-action="toggleSectionSettingsLogin" data-i18n="settings.profile.cancel"></button>
                 <button type="button" class="settings-button" id="password-verify-continue" data-i18n="settings.profile.continue"></button>
             </div>
         </div>
-
-        <div class="settings-card settings-card--column" id="password-step-2" style="display: none;">
+        <div class="settings-card settings-card--column" id="password-step-2" style="display: none; gap: 16px;">
+            
             <div class="settings-card__content">
                 <div class="settings-card__icon">
                     <span class="material-symbols-rounded">lock_reset</span>
@@ -46,22 +46,22 @@
                 <div class="settings-card__text">
                     <h2 class="settings-card__title" data-i18n="settings.login.modalNewPassTitle"></h2>
                     <p class="settings-card__description" data-i18n="settings.login.modalNewPassDesc"></p>
-                    
-                    <div class="modal__input-group" style="margin-top: 8px;">
-                        <input type="password" id="password-update-new" name="new_password" class="modal__input" required placeholder=" " minlength="8" maxlength="72">
-                        <label for="password-update-new" data-i18n="settings.login.modalNewPass"></label>
-                    </div>
-                    <div class="modal__input-group" style="margin-top: 8px;">
-                        <input type="password" id="password-update-confirm" name="confirm_password" class="modal__input" required placeholder=" " minlength="8" maxlength="72">
-                        <label for="password-update-confirm" data-i18n="settings.login.modalConfirmPass"></label>
-                    </div>
                 </div>
             </div>
+            
+            <div class="modal__input-group" style="width: 100%;">
+                <input type="password" id="password-update-new" name="new_password" class="modal__input" required placeholder=" " minlength="8" maxlength="72">
+                <label for="password-update-new" data-i18n="settings.login.modalNewPass"></label>
+            </div>
+            <div class="modal__input-group" style="width: 100%;">
+                <input type="password" id="password-update-confirm" name="confirm_password" class="modal__input" required placeholder=" " minlength="8" maxlength="72">
+                <label for="password-update-confirm" data-i18n="settings.login.modalConfirmPass"></label>
+            </div>
+
             <div class="settings-card__actions">
                 <button type="button" class="settings-button" data-action="toggleSectionSettingsLogin" data-i18n="settings.profile.cancel"></button>
                 <button type="button" class="settings-button" id="password-update-save" data-i18n="settings.login.savePassword"></button>
             </div>
         </div>
-
-    </div>
-</div>11
+        </div>
+</div>
