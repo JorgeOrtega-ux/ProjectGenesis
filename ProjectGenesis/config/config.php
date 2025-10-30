@@ -1,5 +1,17 @@
 <?php
 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+// Configuración centralizada de errores
+error_reporting(E_ALL); // Reportar todos los errores
+ini_set('display_errors', 0); // NO mostrar errores en la salida
+ini_set('log_errors', 1); // SÍ registrarlos en el log
+
+// Definir la ruta del log en la carpeta /logs
+// dirname(__DIR__) apunta a la raíz del proyecto (ProjectGenesis/)
+$logPath = dirname(__DIR__) . '/logs/php_errors.log';
+ini_set('error_log', $logPath);
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
 ini_set('session.use_only_cookies', 1);
 

@@ -9,7 +9,10 @@ export async function loadTranslations(lang) {
     // --- (Quitamos los mapeos forzados en el paso anterior) ---
 
     try {
-        const response = await fetch(`${window.projectBasePath}/assets/js/i18n/${lang}.json`);
+        // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
+        const response = await fetch(`${window.projectBasePath}/assets/translations/${lang}.json`);
+        // --- ▲▲▲ MODIFICACIÓN ▲▲▲ ---
+        
         if (!response.ok) {
             throw new Error(`No se pudo cargar el archivo de idioma: ${lang}.json`);
         }

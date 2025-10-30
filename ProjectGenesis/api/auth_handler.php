@@ -3,10 +3,10 @@
 ?>
 <?php
 
-error_reporting(E_ALL); // Reportar todos los errores
-ini_set('display_errors', 0); // NO mostrar errores en la salida
-ini_set('log_errors', 1); // SÍ registrarlos en el log
-ini_set('error_log', 'log.log');
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+// Se eliminó el bloque ini_set y error_reporting.
+// La configuración de logs ahora se hereda de config.php
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 include '../config/config.php';
 header('Content-Type: application/json');
