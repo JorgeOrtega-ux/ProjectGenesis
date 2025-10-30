@@ -104,6 +104,18 @@
       "title": "Actualizar Contraseña",
       "description": "Para mayor seguridad, primero verifica tu identidad y luego crea tu nueva contraseña."
     },
+    "email": {
+      "description": "Verifica tu identidad para cambiar la dirección de correo electrónico asociada a tu cuenta.",
+      "newEmailTitle": "Ingresa tu nuevo correo",
+      "newEmailDesc": "Asegúrate de que sea una dirección válida a la que tengas acceso.",
+      "newEmailLabel": "Nuevo correo electrónico*"
+    },
+    "2fa": {
+      "descEnable": "Activa una capa extra de seguridad. Te pediremos un código de verificación al iniciar sesión.",
+      "descDisable": "La verificación de dos pasos está activa. Puedes desactivarla si lo deseas.",
+      "titleEnable": "Activar Verificación de dos pasos",
+      "titleDisable": "Desactivar Verificación de dos pasos"
+    },
     "accessibility": {
       "title": "Accesibilidad",
       "description": "Ajusta las configuraciones de visualización, como el tamaño del texto o el contraste de colores.",

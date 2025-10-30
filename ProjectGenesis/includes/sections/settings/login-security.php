@@ -1,16 +1,8 @@
 <?php
 // FILE: includes/sections/settings/login-security.php
 
-// La variable $lastPasswordUpdateText es cargada por config/router.php
-// Re-añadimos la carga de $is2faEnabled solo para esta página de resumen.
-try {
-    $stmt_2fa = $pdo->prepare("SELECT is_2fa_enabled FROM users WHERE id = ?");
-    $stmt_2fa->execute([$_SESSION['user_id']]);
-    $is2faEnabled = (int)$stmt_2fa->fetchColumn(); 
-} catch (PDOException $e) {
-    logDatabaseError($e, 'router - settings-login (recarga 2fa)');
-    $is2faEnabled = 0; 
-}
+// Estas variables ($lastPasswordUpdateText, $is2faEnabled, $deleteAccountDescText) 
+// son cargadas por config/router.php
 ?>
 <div class="section-content <?php echo ($CURRENT_SECTION === 'settings-login') ? 'active' : 'disabled'; ?>" data-section="settings-login">
     <div class="settings-wrapper">
@@ -38,11 +30,11 @@ try {
                     </div>
             </div>
             <div class="settings-card__actions">
-                <a href="<?php echo $basePath; ?>/settings/change-password"
+                <button type="button"
                    class="settings-button"
-                   data-nav-js
+                   data-action="toggleSectionSettingsPassword"
                    data-i18n="settings.login.update">
-                </a>
+                </button>
                 </div>
         </div>
         
@@ -58,11 +50,11 @@ try {
                 </div>
             </div>
             <div class="settings-card__actions">
-                <a href="<?php echo $basePath; ?>/settings/toggle-2fa"
+                <button type="button"
                    class="settings-button <?php echo $is2faEnabled ? 'danger' : ''; ?>"
-                   data-nav-js
+                   data-action="toggleSectionSettingsToggle2fa"
                    data-i18n="<?php echo $is2faEnabled ? 'settings.login.disable' : 'settings.login.enable'; ?>">
-                </a>
+                </button>
             </div>
         </div>
         <div class="settings-card settings-card--action"> <div class="settings-card__content">
@@ -86,15 +78,18 @@ try {
         <div class="settings-card settings-card--action settings-card--danger"> <div class="settings-card__content">
                 <div class="settings-card__text">
                     <h2 class="settings-card__title" data-i18n="settings.login.deleteAccount"></h2>
-                    <p class="settings-card__description" data-i18n="settings.login.deleteAccountDesc"></p>
-                </div>
+                    <p class="settings-card__description" 
+                       data-i18n="<?php echo htmlspecialchars($deleteAccountDescText); ?>">
+                        <?php /* Contenido rellenado por JS */ ?>
+                    </p>
+                    </div>
             </div>
             <div class="settings-card__actions">
-                <a href="<?php echo $basePath; ?>/settings/delete-account" 
+                <button type="button" 
                    class="settings-button danger" 
-                   data-nav-js
+                   data-action="toggleSectionSettingsDeleteAccount"
                    data-i18n="settings.login.deleteAccountButton">
-                </a>
+                </button>
             </div>
         </div>
         </div>

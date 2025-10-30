@@ -241,9 +241,9 @@ export function initRouter() {
 
     document.body.addEventListener('click', e => {
         const link = e.target.closest(
-            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Añadido 'a[href*="/settings/"]') ▼▼▼ ---
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/settings/"], a[data-nav-js], .settings-button[data-action*="toggleSection"]'
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Selector limpiado) ▼▼▼ ---
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], .settings-button[data-action*="toggleSection"]'
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN (Selector limpiado) ▲▲▲ ---
         );
 
         if (link) {

@@ -72,7 +72,7 @@ $allowedPages = [
     'explorer' => '../includes/sections/main/explorer.php',
     'login'    => '../includes/sections/auth/login.php',
     '404'      => '../includes/sections/main/404.php', 
-    'db-error' => '../includes/sections/main/db-error.php', // <-- Esto ya no se usará para errores de PDO
+    'db-error' => '../includes/sections/main/db-error.php', 
 
     'register-step1' => '../includes/sections/auth/register.php',
     'register-step2' => '../includes/sections/auth/register.php',
@@ -87,12 +87,10 @@ $allowedPages = [
     'settings-accessibility' => '../includes/sections/settings/accessibility.php',
     'settings-devices'       => '../includes/sections/settings/device-sessions.php', 
     
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-    'settings-change-password' => '../includes/sections/settings/change-password.php',
-    'settings-change-email'    => '../includes/sections/settings/change-email.php',
-    'settings-toggle-2fa'      => '../includes/sections/settings/toggle-2fa.php',
-    'settings-delete-account'  => '../includes/sections/settings/delete-account.php',
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+    'settings-change-password' => '../includes/sections/settings/actions/change-password.php',
+    'settings-change-email'    => '../includes/sections/settings/actions/change-email.php',
+    'settings-toggle-2fa'      => '../includes/sections/settings/actions/toggle-2fa.php',
+    'settings-delete-account'  => '../includes/sections/settings/actions/delete-account.php',
 
     'account-status-deleted'   => '../includes/sections/auth/account-status.php',
     'account-status-suspended' => '../includes/sections/auth/account-status.php',
@@ -184,8 +182,6 @@ if (array_key_exists($page, $allowedPages)) {
         }
         $CURRENT_RESET_STEP = 2;
 
-        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-        // Añadir lógica de cooldown para el reseteo de contraseña
         if (isset($_SESSION['reset_email'])) {
             try {
                 $email = $_SESSION['reset_email'];
@@ -208,7 +204,6 @@ if (array_key_exists($page, $allowedPages)) {
                 $initialCooldown = 0; 
             }
         }
-        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     } elseif ($page === 'reset-step3') {
         if (!isset($_SESSION['reset_step']) || $_SESSION['reset_step'] < 3) {
@@ -232,14 +227,22 @@ if (array_key_exists($page, $allowedPages)) {
         $userUsageType = $_SESSION['usage_type'] ?? 'personal';
         $openLinksInNewTab = (int)($_SESSION['open_links_in_new_tab'] ?? 1); 
 
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Lógica de 'settings-login' actualizada) ▼▼▼ ---
     } elseif ($page === 'settings-login') {
         try {
+            // 1. Fetch user data (2FA status and creation date)
+            $stmt_user = $pdo->prepare("SELECT is_2fa_enabled, created_at FROM users WHERE id = ?");
+            $stmt_user->execute([$_SESSION['user_id']]);
+            $userData = $stmt_user->fetch();
+            $is2faEnabled = $userData ? (int)$userData['is_2fa_enabled'] : 0;
+            $accountCreatedDate = $userData ? $userData['created_at'] : null;
+
+            // 2. Fetch password log
             $stmt_pass_log = $pdo->prepare("SELECT changed_at FROM user_audit_logs WHERE user_id = ? AND change_type = 'password' ORDER BY changed_at DESC LIMIT 1");
             $stmt_pass_log->execute([$_SESSION['user_id']]);
             $lastLog = $stmt_pass_log->fetch();
 
             if ($lastLog) {
-                
                 if (!class_exists('IntlDateFormatter')) {
                     $date = new DateTime($lastLog['changed_at']);
                     $lastPasswordUpdateText = 'Última actualización de tu contraseña: ' . $date->format('d/m/Y');
@@ -252,32 +255,87 @@ if (array_key_exists($page, $allowedPages)) {
                 $lastPasswordUpdateText = 'settings.login.lastPassUpdateNever'; 
             }
 
+            // 3. Format creation date for delete description
+            if ($accountCreatedDate) {
+                if (!class_exists('IntlDateFormatter')) {
+                     $date = new DateTime($accountCreatedDate);
+                     $deleteAccountDescText = 'Cuenta creada el ' . $date->format('d/m/Y');
+                } else {
+                    $formatter = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::NONE, 'UTC');
+                    $timestamp = strtotime($accountCreatedDate);
+                    // This will be our new description text
+                    $deleteAccountDescText = 'Cuenta creada el ' . $formatter->format($timestamp);
+                }
+            } else {
+                // Fallback to the original key if data fails
+                $deleteAccountDescText = 'settings.login.deleteAccountDesc'; 
+            }
+
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - settings-login');
+            $is2faEnabled = 0;
             $lastPasswordUpdateText = 'settings.login.lastPassUpdateError'; 
+            $deleteAccountDescText = 'settings.login.deleteAccountDesc'; // Fallback
         }
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
     } elseif ($page === 'settings-accessibility') {
         $userTheme = $_SESSION['theme'] ?? 'system';
         $increaseMessageDuration = (int)($_SESSION['increase_message_duration'] ?? 0);
     
     } elseif ($page === 'settings-change-email') {
-        $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
-        $initialEmailCooldown = 0;
-        try {
-            $stmt = $pdo->prepare("SELECT created_at FROM verification_codes WHERE identifier = ? AND code_type = 'email_change' ORDER BY created_at DESC LIMIT 1");
-            $stmt->execute([$_SESSION['user_id']]);
+         $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
+         $initialEmailCooldown = 0;
+         $cooldownConstant = 60; // 60 segundos
+         $identifier = $_SESSION['user_id'];
+         $codeType = 'email_change';
+
+         try {
+            // 1. Buscar el código más reciente
+            $stmt = $pdo->prepare("SELECT created_at FROM verification_codes WHERE identifier = ? AND code_type = ? ORDER BY created_at DESC LIMIT 1");
+            $stmt->execute([$identifier, $codeType]);
             $codeData = $stmt->fetch();
+
+            $secondsPassed = -1;
 
             if ($codeData) {
                 $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
                 $currentTime = new DateTime('now', new DateTimeZone('UTC'));
                 $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
-                $cooldownConstant = 60; 
-
-                if ($secondsPassed < $cooldownConstant) {
-                    $initialEmailCooldown = $cooldownConstant - $secondsPassed;
-                }
             }
+
+            // 2. Decidir si generar un código nuevo
+            if (!$codeData || $secondsPassed === -1 || $secondsPassed >= $cooldownConstant) {
+                // No hay código o el último ya expiró, generar uno nuevo
+                
+                // (Opcional: borrar códigos viejos de este tipo)
+                $stmt_delete = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = ?");
+                $stmt_delete->execute([$identifier, $codeType]);
+
+                // Generar nuevo código (lógica de settings_handler.php)
+                $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                $code = '';
+                $max = strlen($chars) - 1;
+                for ($i = 0; $i < 12; $i++) { $code .= $chars[random_int(0, $max)]; }
+                $verificationCode = substr($code, 0, 4) . '-' . substr($code, 4, 4) . '-' . substr($code, 8, 4);
+                $verificationCode = str_replace('-', '', $verificationCode); 
+
+                $stmt_insert = $pdo->prepare(
+                    "INSERT INTO verification_codes (identifier, code_type, code) 
+                     VALUES (?, ?, ?)"
+                );
+                $stmt_insert->execute([$identifier, $codeType, $verificationCode]);
+
+                // (Aquí iría la lógica de envío de email real)
+
+                // Establecer el cooldown completo
+                $initialEmailCooldown = $cooldownConstant;
+
+            } else {
+                // Ya hay un código reciente, solo calcular el tiempo restante
+                $initialEmailCooldown = $cooldownConstant - $secondsPassed;
+            }
+
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - settings-change-email-cooldown');
             $initialEmailCooldown = 0; 
@@ -292,7 +350,6 @@ if (array_key_exists($page, $allowedPages)) {
              logDatabaseError($e, 'router - settings-toggle-2fa');
              $is2faEnabled = 0;
          }
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
     } elseif ($page === 'settings-delete-account') {
          // Pre-cargar datos del usuario para la página de confirmación
          $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
@@ -300,7 +357,6 @@ if (array_key_exists($page, $allowedPages)) {
          $profileImageUrl = $_SESSION['profile_image_url'] ?? $defaultAvatar;
          if (empty($profileImageUrl)) $profileImageUrl = $defaultAvatar;
     }
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
     
     
     include $allowedPages[$page];

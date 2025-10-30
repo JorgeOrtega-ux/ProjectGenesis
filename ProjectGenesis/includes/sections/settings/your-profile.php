@@ -132,12 +132,12 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                 </div>
             </div>
             <div class="settings-card__actions" id="email-actions-view" style="display: flex;">
-                <a href="<?php echo $basePath; ?>/settings/change-email"
+                <button type="button"
                    class="settings-button"
-                   data-nav-js
+                   data-action="toggleSectionSettingsChangeEmail"
                    data-i18n="settings.profile.edit">
-                </a>
-            </div>
+                </button>
+                </div>
 
             </div>
 
