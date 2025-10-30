@@ -502,7 +502,12 @@ body {
 }
 
 .auth-button {
+    display: block; /* Asegura que <a> ocupe todo el ancho */
     height: 52px;
+    line-height: 52px; /* Centra verticalmente el texto en <a> */
+    padding: 0; /* Quitamos padding si usamos line-height */
+    text-align: center; /* Centra el texto */
+    text-decoration: none; /* Quita el subrayado de <a> */
     border: none;
     border-radius: 8px;
     background-color: #000;
@@ -513,6 +518,7 @@ body {
     transition: background-color 0.2s;
     flex: 1;
 }
+
 
 .auth-link {
     text-align: center;
@@ -530,6 +536,7 @@ body {
     text-decoration: underline;
 }
 
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- */
 .auth-error-message {
     padding: 12px;
     background-color: transparent;
@@ -537,14 +544,14 @@ body {
     border: 1px solid #ef9a9a;
     border-radius: 8px;
     font-size: 14px;
-    display: none;
+    /* display: none; */ /* <-- LÍNEA ELIMINADA */
 }
+/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
 
 .auth-form fieldset.auth-step {
     border: none;
     padding: 0;
     margin: 0;
-    display: flex;
     flex-direction: column;
     gap: 16px;
 }
@@ -1074,7 +1081,7 @@ body {
 
 /* Mantener esta regla para los errores */
 .modal-content .auth-error-message {
-    display: block;
+    /* display: block; */ /* <-- LÍNEA ELIMINADA */
     margin-bottom: 0; /* Ajuste */
 }
 
@@ -1467,6 +1474,24 @@ body {
     clip: rect(0, 0, 0, 0);
     border: 0;
 }
+
+/* --- ▼▼▼ NUEVAS CLASES DE UTILIDAD ▼▼▼ --- */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.mb-16 {
+    margin-bottom: 16px;
+}
+
+.mb-24 {
+    margin-bottom: 24px;
+}
+/* --- ▲▲▲ FIN NUEVAS CLASES ▲▲▲ --- */
 
 .overflow-y {
     overflow-x: hidden;

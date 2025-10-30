@@ -1,4 +1,3 @@
-
 import { callAuthApi } from './api-service.js';
 import { handleNavigation } from './url-manager.js';
 import { getTranslation } from './i18n-manager.js';
@@ -13,8 +12,8 @@ export function startResendTimer(linkElement, seconds) {
     const originalBaseText = linkElement.textContent.trim().replace(/\s*\(\d+s?\)$/, '');
 
     linkElement.classList.add('disabled-interactive');
-    linkElement.style.opacity = '0.7';
-    linkElement.style.textDecoration = 'none';
+    // linkElement.style.opacity = '0.7'; // ELIMINADO
+    // linkElement.style.textDecoration = 'none'; // ELIMINADO
     linkElement.textContent = `${originalBaseText} (${secondsRemaining}s)`;
 
     const intervalId = setInterval(() => {
@@ -25,8 +24,8 @@ export function startResendTimer(linkElement, seconds) {
             clearInterval(intervalId);
             linkElement.textContent = originalBaseText;
             linkElement.classList.remove('disabled-interactive');
-            linkElement.style.opacity = '1';
-            linkElement.style.textDecoration = '';
+            // linkElement.style.opacity = '1'; // ELIMINADO
+            // linkElement.style.textDecoration = ''; // ELIMINADO
         }
     }, 1000);
 
@@ -247,8 +246,8 @@ function initRegisterWizard() {
                 
                 linkElement.textContent = originalText; 
                 linkElement.classList.remove('disabled-interactive');
-                linkElement.style.opacity = '1';
-                linkElement.style.textDecoration = '';
+                // linkElement.style.opacity = '1'; // ELIMINADO
+                // linkElement.style.textDecoration = ''; // ELIMINADO
             }
             return;
         }
@@ -446,8 +445,8 @@ function initResetWizard() {
                 
                 linkElement.textContent = originalText; 
                 linkElement.classList.remove('disabled-interactive');
-                linkElement.style.opacity = '1';
-                linkElement.style.textDecoration = '';
+                // linkElement.style.opacity = '1'; // ELIMINADO
+                // linkElement.style.textDecoration = ''; // ELIMINADO
             }
             return;
         }
@@ -590,8 +589,8 @@ function initLoginWizard() {
                 
                 linkElement.textContent = originalText; 
                 linkElement.classList.remove('disabled-interactive');
-                linkElement.style.opacity = '1';
-                linkElement.style.textDecoration = '';
+                // linkElement.style.opacity = '1'; // ELIMINADO
+                // linkElement.style.textDecoration = ''; // ELIMINADO
             }
             return;
         }

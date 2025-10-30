@@ -16,16 +16,15 @@ if ($CURRENT_SECTION !== $CURRENT_SECTION_CLASS) {
 ?>
 
 <div class="section-content <?php echo ($CURRENT_SECTION === $CURRENT_SECTION_CLASS) ? 'active' : 'disabled'; ?>" data-section="<?php echo $CURRENT_SECTION_CLASS; ?>">
-    <div class="auth-container" style="text-align: center;">
+    <div class="auth-container text-center">
         
         <h1 class="auth-title" data-i18n="<?php echo htmlspecialchars($titleKey); ?>"></h1>
         
-        <p class="auth-verification-text" style="margin-bottom: 24px;" data-i18n="<?php echo htmlspecialchars($descKey); ?>"></p>
+        <p class="auth-verification-text mb-24" data-i18n="<?php echo htmlspecialchars($descKey); ?>"></p>
         
         <div class="auth-step-buttons">
             <a href="<?php echo htmlspecialchars($basePath); ?>/login" 
                class="auth-button" 
-               style="text-decoration: none; text-align: center; line-height: 52px;" 
                data-i18n="page.status.backToLogin">
                </a>
         </div>

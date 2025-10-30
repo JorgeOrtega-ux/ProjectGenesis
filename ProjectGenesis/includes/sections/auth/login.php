@@ -23,7 +23,7 @@
                     </button>
                 </div>
 
-                <p class="auth-link" style="text-align: right;">
+                <p class="auth-link text-right">
                     <a href="/ProjectGenesis/reset-password" data-i18n="page.login.forgotPassword"></a>
                 </p>
                 <div class="auth-step-buttons">
@@ -32,8 +32,8 @@
                 <div class="auth-error-message" style="display: none;"></div>
             </fieldset>
             
-            <fieldset class="auth-step" data-step="2" style="display: none;">
-                <p class="auth-verification-text" style="margin-bottom: 16px;" data-i18n="page.login.2faDescription"></p>
+            <fieldset class="auth-step" data-step="2">
+                <p class="auth-verification-text mb-16" data-i18n="page.login.2faDescription"></p>
 
                 <div class="auth-input-group">
                     <input type="text" id="login-code" name="verification_code" required placeholder=" " maxlength="14">
@@ -45,7 +45,7 @@
                 </div>
                 
                 <div class="auth-error-message" style="display: none;"></div>
-                <p class="auth-link" style="text-align: center;">
+                <p class="auth-link text-center">
                     <a href="#" 
                        id="login-resend-code-link" 
                        data-auth-action="resend-code"

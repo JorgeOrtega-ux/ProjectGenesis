@@ -6,8 +6,8 @@
             
             <?php outputCsrfInput(); ?>
 
-            <fieldset class="auth-step <?php echo ($CURRENT_RESET_STEP == 1) ? 'active' : ''; ?>" data-step="1" <?php echo ($CURRENT_RESET_STEP != 1) ? 'style="display: none;"' : ''; ?>>
-                 <p class="auth-verification-text" style="margin-bottom: 16px;" data-i18n="page.reset.step1Desc"></p>
+            <fieldset class="auth-step <?php echo ($CURRENT_RESET_STEP == 1) ? 'active' : ''; ?>" data-step="1">
+                 <p class="auth-verification-text mb-16" data-i18n="page.reset.step1Desc"></p>
                 <div class="auth-input-group">
                     <input type="email" id="reset-email" name="email" required placeholder=" " maxlength="255">
                     <label for="reset-email" data-i18n="page.reset.emailLabel"></label>
@@ -19,14 +19,14 @@
                 
                 <div class="auth-error-message" style="display: none;"></div>
                 
-                <p class="auth-link" style="text-align: center;">
+                <p class="auth-link text-center">
                     <span data-i18n="page.reset.rememberedPassword"></span> <a href="/ProjectGenesis/login" data-i18n="page.reset.login"></a>
                 </p>
             </fieldset>
 
-            <fieldset class="auth-step <?php echo ($CURRENT_RESET_STEP == 2) ? 'active' : ''; ?>" data-step="2" <?php echo ($CURRENT_RESET_STEP != 2) ? 'style="display: none;"' : ''; ?>>
+            <fieldset class="auth-step <?php echo ($CURRENT_RESET_STEP == 2) ? 'active' : ''; ?>" data-step="2">
                 
-                <p class="auth-verification-text" style="margin-bottom: 16px;">
+                <p class="auth-verification-text mb-16">
                     <span data-i18n="page.reset.step2Desc"></span> 
                     <strong><?php echo htmlspecialchars($_SESSION['reset_email'] ?? 'tu correo'); ?></strong>.
                 </p>
@@ -42,13 +42,12 @@
                 
                 <div class="auth-error-message" style="display: none;"></div>
                 
-                <p class="auth-link" style="text-align: center;">
+                <p class="auth-link text-center">
                     <a href="#" 
                        id="reset-resend-code-link" 
                        data-auth-action="resend-code"
                        data-cooldown="<?php echo isset($initialCooldown) ? $initialCooldown : 0; ?>"
                        class="<?php echo (isset($initialCooldown) && $initialCooldown > 0) ? 'disabled-interactive' : ''; ?>"
-                       style="<?php echo (isset($initialCooldown) && $initialCooldown > 0) ? 'opacity: 0.7; text-decoration: none;' : ''; ?>"
                        data-i18n="page.reset.resendCode"
                     >
                        <?php 
@@ -59,8 +58,8 @@
                     </a>
                 </p>
             </fieldset>
-            <fieldset class="auth-step <?php echo ($CURRENT_RESET_STEP == 3) ? 'active' : ''; ?>" data-step="3" <?php echo ($CURRENT_RESET_STEP != 3) ? 'style="display: none;"' : ''; ?>>
-                <p class="auth-verification-text" style="margin-bottom: 16px;" data-i18n="page.reset.step3Desc"></p>
+            <fieldset class="auth-step <?php echo ($CURRENT_RESET_STEP == 3) ? 'active' : ''; ?>" data-step="3">
+                <p class="auth-verification-text mb-16" data-i18n="page.reset.step3Desc"></p>
 
                 <div class="auth-input-group">
                     <input type="password" id="reset-password" name="password" required placeholder=" " minlength="8" maxlength="72">

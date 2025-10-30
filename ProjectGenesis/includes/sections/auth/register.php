@@ -6,7 +6,7 @@
             
             <?php outputCsrfInput(); ?>
 
-            <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 1) ? 'active' : ''; ?>" data-step="1" <?php echo ($CURRENT_REGISTER_STEP != 1) ? 'style="display: none;"' : ''; ?>>
+            <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 1) ? 'active' : ''; ?>" data-step="1">
                 <div class="auth-input-group">
                     <input type="email" id="register-email" name="email" required placeholder=" " maxlength="255">
                     <label for="register-email" data-i18n="page.register.emailLabel"></label>
@@ -26,7 +26,7 @@
                 <div class="auth-error-message" style="display: none;"></div>
             </fieldset>
 
-            <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 2) ? 'active' : ''; ?>" data-step="2" <?php echo ($CURRENT_REGISTER_STEP != 2) ? 'style="display: none;"' : ''; ?>>
+            <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 2) ? 'active' : ''; ?>" data-step="2">
                 <div class="auth-input-group">
                     <input type="text" id="register-username" name="username" required placeholder=" " minlength="6" maxlength="32">
                     <label for="register-username" data-i18n="page.register.usernameLabel"></label>
@@ -38,7 +38,7 @@
                 <div class="auth-error-message" style="display: none;"></div>
             </fieldset>
 
-            <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 3) ? 'active' : ''; ?>" data-step="3" <?php echo ($CURRENT_REGISTER_STEP != 3) ? 'style="display: none;"' : ''; ?>>
+            <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 3) ? 'active' : ''; ?>" data-step="3">
                 
                 <p class="auth-verification-text" data-i18n="page.register.verificationDesc">
                     <strong><?php echo htmlspecialchars($_SESSION['registration_email'] ?? 'tu correo'); ?></strong>.
@@ -55,13 +55,12 @@
                 
                 <div class="auth-error-message" style="display: none;"></div>
                 
-                <p class="auth-link" style="text-align: center;">
+                <p class="auth-link text-center">
                     <a href="#" 
                        id="register-resend-code-link" 
                        data-auth-action="resend-code"
                        data-cooldown="<?php echo isset($initialCooldown) ? $initialCooldown : 0; ?>"
                        class="<?php echo (isset($initialCooldown) && $initialCooldown > 0) ? 'disabled-interactive' : ''; ?>"
-                       style="<?php echo (isset($initialCooldown) && $initialCooldown > 0) ? 'opacity: 0.7; text-decoration: none;' : ''; ?>"
                        data-i18n="page.register.resendCode"
                     >
                        <?php 
