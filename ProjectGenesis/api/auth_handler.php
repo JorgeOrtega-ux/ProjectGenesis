@@ -520,14 +520,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
                     $stmt->execute([$email]);
+                    
+                    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
                     if (!$stmt->fetch()) {
-                        $response['success'] = true; 
-                        $response['message'] = 'js.auth.infoCodeSentIfExists';
-                        
-                        $_SESSION['reset_step'] = 2;
-                        $_SESSION['reset_email'] = $email;
-                        
+                        // Si no se encuentra el correo, enviar un error
+                        $response['success'] = false;
+                        $response['message'] = 'js.auth.errorUserNotFound';
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
                     } else {
+                        // Si el correo SÍ existe, proceder a enviar el código
                         $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = 'password_reset'");
                         $stmt->execute([$email]);
 

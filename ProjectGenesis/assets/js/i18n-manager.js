@@ -56,10 +56,27 @@ export function applyTranslations(container = document) {
     // 1. Traducir texto principal (data-i18n)
     container.querySelectorAll('[data-i18n]').forEach(element => {
         const key = element.getAttribute('data-i18n');
-        const translatedText = getTranslation(key);
+        
+        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+        
+        let translatedText = getTranslation(key); // Usar 'let'
+        
         if (translatedText) {
-            element.textContent = translatedText;
+            
+            // 1. Reemplazar placeholders comunes
+            // (El email se guarda en sessionStorage en el paso 1 del registro)
+            if (translatedText.includes('%email%')) {
+                const regEmail = sessionStorage.getItem('regEmail'); 
+                if (regEmail) {
+                     translatedText = translatedText.replace(/%email%/g, regEmail);
+                }
+            }
+
+            // 2. Usar innerHTML para renderizar etiquetas como <strong>
+            element.innerHTML = translatedText; 
         }
+        
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
     });
 
     // 2. Traducir atributos 'alt' (data-i18n-alt-prefix)
