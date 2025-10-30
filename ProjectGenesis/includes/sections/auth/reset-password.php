@@ -25,7 +25,12 @@
             </fieldset>
 
             <fieldset class="auth-step <?php echo ($CURRENT_RESET_STEP == 2) ? 'active' : ''; ?>" data-step="2" <?php echo ($CURRENT_RESET_STEP != 2) ? 'style="display: none;"' : ''; ?>>
-                <p class="auth-verification-text" style="margin-bottom: 16px;" data-i18n="page.reset.step2Desc"></p>
+                
+                <p class="auth-verification-text" style="margin-bottom: 16px;">
+                    <span data-i18n="page.reset.step2Desc"></span> 
+                    <strong><?php echo htmlspecialchars($_SESSION['reset_email'] ?? 'tu correo'); ?></strong>.
+                </p>
+
                 <div class="auth-input-group">
                     <input type="text" id="reset-code" name="verification_code" required placeholder=" " maxlength="14">
                     <label for="reset-code" data-i18n="page.reset.verificationCodeLabel"></label>
@@ -41,11 +46,19 @@
                     <a href="#" 
                        id="reset-resend-code-link" 
                        data-auth-action="resend-code"
+                       data-cooldown="<?php echo isset($initialCooldown) ? $initialCooldown : 0; ?>"
+                       class="<?php echo (isset($initialCooldown) && $initialCooldown > 0) ? 'disabled-interactive' : ''; ?>"
+                       style="<?php echo (isset($initialCooldown) && $initialCooldown > 0) ? 'opacity: 0.7; text-decoration: none;' : ''; ?>"
                        data-i18n="page.reset.resendCode"
-                    ></a>
+                    >
+                       <?php 
+                       if (isset($initialCooldown) && $initialCooldown > 0) {
+                           echo " (" . $initialCooldown . "s)";
+                       }
+                       ?>
+                    </a>
                 </p>
             </fieldset>
-
             <fieldset class="auth-step <?php echo ($CURRENT_RESET_STEP == 3) ? 'active' : ''; ?>" data-step="3" <?php echo ($CURRENT_RESET_STEP != 3) ? 'style="display: none;"' : ''; ?>>
                 <p class="auth-verification-text" style="margin-bottom: 16px;" data-i18n="page.reset.step3Desc"></p>
 

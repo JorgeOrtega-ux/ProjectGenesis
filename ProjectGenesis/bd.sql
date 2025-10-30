@@ -12,6 +12,9 @@ CREATE TABLE users (
     role ENUM('user', 'moderator', 'administrator', 'founder') NOT NULL DEFAULT 'user',
     is_2fa_enabled TINYINT(1) NOT NULL DEFAULT 0,
     auth_token VARCHAR(64) NULL DEFAULT NULL,
+    -- ▼▼▼ Columna añadida ▼▼▼
+    account_status ENUM('active', 'suspended', 'deleted') NOT NULL DEFAULT 'active',
+    -- ▲▲▲ Columna añadida ▲▲▲
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -62,28 +65,14 @@ CREATE TABLE user_audit_logs (
     INDEX idx_user_type_time (user_id, change_type, changed_at)
 );
 
--- --- ▼▼▼ INICIO DE LA TABLA MODIFICADA ▼▼▼ ---
-
 DROP TABLE IF EXISTS user_preferences;
 CREATE TABLE user_preferences (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
-    
-    -- Opciones: 'en-us', 'fr-fr', 'es-latam', 'es-mx'
-    language VARCHAR(10) NOT NULL DEFAULT 'en-us', 
-    
-    -- Opciones: 'system', 'light', 'dark'
+    language VARCHAR(10) NOT NULL DEFAULT 'en-us',
     theme ENUM('system', 'light', 'dark') NOT NULL DEFAULT 'system',
-    
-    -- Opciones: 'personal', 'student', 'teacher', 'small_business', 'large_company'
     usage_type VARCHAR(50) NOT NULL DEFAULT 'personal',
-    
-    -- ¡NUEVAS COLUMNAS!
-    -- 0 = false, 1 = true
     open_links_in_new_tab TINYINT(1) NOT NULL DEFAULT 1,
     increase_message_duration TINYINT(1) NOT NULL DEFAULT 0,
-    
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
--- --- ▲▲▲ FIN DE LA TABLA MODIFICADA ▲▲▲ ---

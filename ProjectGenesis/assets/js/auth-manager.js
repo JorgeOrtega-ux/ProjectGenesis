@@ -54,7 +54,7 @@ async function handleRegistrationSubmit(e) {
         window.location.href = window.projectBasePath + '/';
     } else {
         // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-        showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'));
+        showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'), result.data);
         // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
         button.disabled = false;
         button.textContent = getTranslation('page.register.verifyButton');
@@ -72,7 +72,7 @@ async function handleResetSubmit(e) {
     const passwordConfirm = form.querySelector('#reset-password-confirm').value;
 
     if (password.length < 8 || password.length > 72) {
-        showAuthError(errorDiv, getTranslation('js.auth.errorPasswordLength'));
+        showAuthError(errorDiv, getTranslation('js.auth.errorPasswordLength', {min: 8, max: 72}));
         return;
     }
     if (password !== passwordConfirm) {
@@ -99,7 +99,7 @@ async function handleResetSubmit(e) {
         }, 2000);
     } else {
         // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-        showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'));
+        showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'), result.data);
         // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
         button.disabled = false;
         button.textContent = getTranslation('js.auth.saveAndContinue');
@@ -125,20 +125,38 @@ async function handleLoginFinalSubmit(e) {
         window.location.href = window.projectBasePath + '/';
     } else {
         // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-        showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'));
+        showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'), result.data);
         // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
         button.disabled = false;
         button.textContent = getTranslation('page.login.verifyButton');
     }
 }
 
-function showAuthError(errorDiv, message) {
-    
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA ▼▼▼ ---
+/**
+ * Muestra un mensaje de error en un contenedor, reemplazando placeholders.
+ * @param {HTMLElement} errorDiv - El div donde se mostrará el error.
+ * @param {string} message - El mensaje (o clave i18n) a mostrar.
+ * @param {object|null} data - Datos opcionales para reemplazar (ej. {seconds: 5}).
+ */
+function showAuthError(errorDiv, message, data = null) {
     if (errorDiv) {
-        errorDiv.textContent = message;
+        let finalMessage = message;
+        
+        // Reemplazar placeholders si hay datos
+        if (data) {
+            Object.keys(data).forEach(key => {
+                // Usar un RegExp global (g) para reemplazar todas las instancias
+                const regex = new RegExp(`%${key}%`, 'g');
+                finalMessage = finalMessage.replace(regex, data[key]);
+            });
+        }
+        
+        errorDiv.textContent = finalMessage;
         errorDiv.style.display = 'block';
     }
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA ▲▲▲ ---
 
 
 function initPasswordToggles() {
@@ -213,7 +231,8 @@ function initRegisterWizard() {
                 // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
             } else {
                 // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorCodeResent'));
+                // Ahora pasa result.data para reemplazar %seconds%
+                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorCodeResent'), result.data);
                 // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                 
                 const timerId = linkElement.dataset.timerId;
@@ -247,6 +266,7 @@ function initRegisterWizard() {
         if (action === 'next-step') {
             let isValid = true;
             let clientErrorMessage = getTranslation('js.auth.errorCompleteFields');
+            let errorData = null;
 
             if (currentStep === 1) {
                 const emailInput = currentStepEl.querySelector('#register-email');
@@ -268,6 +288,7 @@ function initRegisterWizard() {
                 } else if (passwordInput.value.length < 8 || passwordInput.value.length > 72) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorPasswordLength');
+                    errorData = {min: 8, max: 72};
                 }
             }
             else if (currentStep === 2) {
@@ -279,11 +300,12 @@ function initRegisterWizard() {
                 } else if (usernameInput.value.length < 6 || usernameInput.value.length > 32) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorUsernameLength');
+                    errorData = {min: 6, max: 32};
                 }
             }
 
             if (!isValid) {
-                showAuthError(errorDiv, clientErrorMessage); 
+                showAuthError(errorDiv, clientErrorMessage, errorData); 
                 return;
             }
 
@@ -324,7 +346,7 @@ function initRegisterWizard() {
                 }
             } else {
                 // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown')); 
+                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown'), result.data); 
                 // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
             }
 
@@ -408,7 +430,8 @@ function initResetWizard() {
                 // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
             } else {
                 // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorCodeResent'));
+                // Ahora pasa result.data para reemplazar %seconds%
+                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorCodeResent'), result.data);
                 // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                 
                 const timerId = linkElement.dataset.timerId;
@@ -494,7 +517,7 @@ function initResetWizard() {
 
             } else {
                 // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown')); 
+                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown'), result.data); 
                 // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
             }
 
@@ -578,7 +601,7 @@ function initLoginWizard() {
             } else {
                 // Lógica de error normal (ej. contraseña incorrecta)
                 // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown')); 
+                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown'), result.data); 
                 // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                 button.disabled = false; 
                 button.textContent = getTranslation('page.login.continueButton');

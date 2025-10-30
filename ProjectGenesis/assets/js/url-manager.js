@@ -104,7 +104,7 @@ async function loadPage(page, isSettingsPage, action) {
     // --- FIN DE LA LÓGICA DE MENÚ ---
 
 
-    // --- Lógica de Carga de Página (sin cambios) ---
+    // --- Lógica de Carga de Página (con modificación) ---
     try {
         const response = await fetch(`${basePath}/config/router.php?page=${page}`);
         const html = await response.text();
@@ -112,8 +112,16 @@ async function loadPage(page, isSettingsPage, action) {
         contentContainer.innerHTML = html;
         applyTranslations(contentContainer);
 
-        if (page === 'register-step3') {
-            const link = document.getElementById('register-resend-code-link');
+        // --- INICIO DE BLOQUE MODIFICADO ---
+        // Ahora revisa tanto 'register-step3' como 'reset-step2'
+        if (page === 'register-step3' || page === 'reset-step2') {
+            let link;
+            if (page === 'register-step3') {
+                link = document.getElementById('register-resend-code-link');
+            } else if (page === 'reset-step2') {
+                link = document.getElementById('reset-resend-code-link');
+            }
+
             if (link) {
                 const cooldownSeconds = parseInt(link.dataset.cooldown || '0', 10);
                 if (cooldownSeconds > 0) {
@@ -121,6 +129,7 @@ async function loadPage(page, isSettingsPage, action) {
                 }
             }
         }
+        // --- FIN DE BLOQUE MODIFICADO ---
         
     } catch (error) {
         console.error('Error al cargar la página:', error);

@@ -170,6 +170,32 @@ if (array_key_exists($page, $allowedPages)) {
         }
         $CURRENT_RESET_STEP = 2;
 
+        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+        // Añadir lógica de cooldown para el reseteo de contraseña
+        if (isset($_SESSION['reset_email'])) {
+            try {
+                $email = $_SESSION['reset_email'];
+                $stmt = $pdo->prepare("SELECT created_at FROM verification_codes WHERE identifier = ? AND code_type = 'password_reset' ORDER BY created_at DESC LIMIT 1");
+                $stmt->execute([$email]);
+                $codeData = $stmt->fetch();
+
+                if ($codeData) {
+                    $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
+                    $currentTime = new DateTime('now', new DateTimeZone('UTC'));
+                    $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
+                    $cooldownConstant = 60; // 60 segundos
+
+                    if ($secondsPassed < $cooldownConstant) {
+                        $initialCooldown = $cooldownConstant - $secondsPassed;
+                    }
+                }
+            } catch (PDOException $e) {
+                logDatabaseError($e, 'router - reset-step2-cooldown');
+                $initialCooldown = 0; 
+            }
+        }
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
     } elseif ($page === 'reset-step3') {
         if (!isset($_SESSION['reset_step']) || $_SESSION['reset_step'] < 3) {
             showResetError($basePath, 'page.error.400title', 'page.error.resetStep2');
