@@ -90,12 +90,17 @@
       "confirm": "Confirmar",
       "lastPassUpdateNever": "Nunca has actualizado tu contraseña.",
       "lastPassUpdateError": "No se pudo cargar el historial de actualizaciones.",
-      "modalDeleteTitle": "Eliminar tu cuenta",
-      "modalDeleteDesc": "Esta acción es irreversible y no se puede deshacer. Estás a punto de eliminar permanentemente esta cuenta.",
-      "modalDeleteBullet1": "Se eliminarán todos tus proyectos y datos asociados.",
-      "modalDeleteBullet2": "Tu nombre de usuario y correo quedarán libres para un nuevo registro.",
-      "modalDeleteConfirmText": "Para confirmar la eliminación, ingresa tu contraseña actual:",
-      "modalDeleteConfirm": "Eliminar Cuenta"
+      
+      "modalDeleteTitle": "Estás a punto de eliminar tu cuenta",
+      "modalDeleteWarning": "Después de seleccionar “Eliminar cuenta”, tienes <strong>72 horas</strong> para volver a iniciar sesión y restaurarla.",
+      "modalDeleteLosingTitle": "<strong>Si eliminas tu cuenta, perderás lo siguiente:</strong>",
+      "modalDeleteBullet1": "Acceso a todas tus publicaciones, comentarios y contenido multimedia.",
+      "modalDeleteBullet2": "Tu lista de amigos, conexiones y mensajes.",
+      "modalDeletePrivacyTitle": "<strong>Cómo se eliminan tus datos</strong>",
+      "modalDeletePrivacyDesc": "<strong>Pasadas las 72 horas</strong>, tu contenido se eliminará de forma permanente y no se podrá recuperar. Tu nombre de usuario y correo electrónico no podrán ser usados para un nuevo registro en el futuro.",
+      "modalDeleteConfirmText": "Para continuar, confirma tu contraseña:",
+      "modalDeletePasswordLabel": "Ingresa tu contraseña",
+      "modalDeleteConfirm": "Eliminar cuenta"
     },
     "accessibility": {
       "title": "Accesibilidad",

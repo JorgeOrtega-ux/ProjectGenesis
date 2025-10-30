@@ -1783,3 +1783,144 @@ body {
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
+
+
+/* ====================================== */
+/* = MODAL ELIMINAR CUENTA (NUEVOS)     = */
+/* ====================================== */
+
+/* Título del modal (ajuste de tamaño) */
+#delete-account-modal .modal__title {
+    font-size: 24px; /* Más grande, como en la imagen */
+    font-weight: 600;
+}
+
+/* === INICIO DEL CAMBIO (COLOR BOX) === */
+/* Caja de advertencia azul cielo */
+.modal-warning-box {
+    background-color: #e3f2fd; /* Azul cielo */
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.modal-warning-box .material-symbols-rounded {
+    color: #0d6efd; /* Azul principal */
+    font-size: 20px;
+    margin-top: 2px;
+}
+
+.modal-warning-box p {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #3f3c33; /* Texto oscuro, no negro */
+    margin: 0; 
+}
+
+.modal-warning-box p strong {
+    font-weight: 700;
+    color: #1f2937; /* Texto strong más oscuro */
+}
+/* === FIN DEL CAMBIO (COLOR BOX) === */
+
+
+/* Párrafos de descripción */
+#delete-account-modal .modal__description {
+    font-size: 14px;
+    color: #333333; /* Gris oscuro, no negro */
+    font-weight: 400; /* Peso normal */
+    line-height: 1.5;
+    text-align: left;
+    margin: 0;
+}
+
+#delete-account-modal .modal__description strong {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+#delete-account-modal .modal__description a {
+    color: #0d6efd; /* Azul de link estándar */
+    text-decoration: none;
+    font-weight: 600;
+}
+
+#delete-account-modal .modal__description a:hover {
+    text-decoration: underline;
+}
+
+/* Lista de bullets */
+#delete-account-modal .modal__list {
+    list-style-type: disc;
+    margin: 0 0 0 20px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* Un poco menos de espacio */
+}
+ #delete-account-modal .modal__list li {
+    font-size: 14px;
+    color: #333333; /* Gris oscuro */
+    line-height: 1.5;
+}
+
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN (BOTONES PEQUEÑOS) ▼▼▼ --- */
+
+/* 1. Estilo para el footer de botones pequeños */
+.modal__footer--small-buttons {
+    justify-content: flex-end; /* Alinea los botones a la derecha */
+}
+
+/* 2. Clase base para los botones pequeños (inspirada en settings-button) */
+.modal__button-small {
+    height: 40px;
+    border-radius: 8px;
+    font-size: 14px; /* Más pequeño */
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
+    flex: none; /* No se expande */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    line-height: 1;
+    padding: 0 16px; /* Padding horizontal */
+}
+
+/* 3. Estilo Secundario (Cancelar) */
+.modal__button-small--secondary {
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #00000020;
+}
+.modal__button-small--secondary:hover {
+    background-color: #f5f5fa;
+}
+
+/* 4. Estilo Peligro (Eliminar) */
+.modal__button-small--danger {
+    background-color: #c62828;
+    color: #ffffff;
+    border: 1px solid #c62828;
+}
+.modal__button-small--danger:hover {
+    background-color: #b71c1c;
+}
+
+/* 5. Estilo Deshabilitado (para el botón de Eliminar) */
+.modal__button-small:disabled {
+    background-color: #f8f9fa; /* Gris muy claro */
+    color: #adb5bd; /* Texto gris pálido */
+    border-color: #e0e0e0;
+    cursor: not-allowed;
+    opacity: 1; 
+}
+.modal__button-small--danger:disabled {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    border-color: #e0e0e0;
+}
+/* --- ▲▲▲ FIN DE MODIFICACIÓN (BOTONES PEQUEÑOS) ▲▲▲ --- */

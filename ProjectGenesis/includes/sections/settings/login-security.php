@@ -149,40 +149,47 @@
             </div>
         </div>
     </div>
+
     <div class="modal-overlay" id="delete-account-modal">
         <div class="modal-content">
             <div class="modal__header">
-                <h2 class="modal__title" data-i18n="settings.login.modalDeleteTitle"></h2>
-                <button type="button" class="modal-close-btn" id="delete-account-close">
-                    <span class="material-symbols-rounded">close</span>
-                </button>
+                <h2 class="modal__title" data-i18n="settings.login.modalDeleteTitle" style="padding-right: 0;"></h2>
             </div>
+
             <div class="modal__body">
-                <div class="delete-account-user-badge" style="margin-bottom: 8px;">
-                    <img src="<?php echo htmlspecialchars($_SESSION['profile_image_url']); ?>"
-                         alt="Avatar"
-                         class="delete-account-user-avatar">
-                    <span class="delete-account-user-email"><?php echo htmlspecialchars($_SESSION['email']); ?></span>
+                
+                <div class="modal-warning-box">
+                    <span class="material-symbols-rounded">warning</span>
+                    <p data-i18n="settings.login.modalDeleteWarning"></p>
                 </div>
-                <p class="modal__description" data-i18n="settings.login.modalDeleteDesc"></p>
+
+                <p class="modal__description" data-i18n="settings.login.modalDeleteLosingTitle"></p>
 
                 <ul class="modal__list">
                     <li data-i18n="settings.login.modalDeleteBullet1"></li>
                     <li data-i18n="settings.login.modalDeleteBullet2"></li>
                 </ul>
 
+                <p class="modal__description" data-i18n="settings.login.modalDeletePrivacyTitle"></p>
+                <p class="modal__description" data-i18n="settings.login.modalDeletePrivacyDesc" style="margin-top: -8px;"></p>
                 <div class="auth-error-message" id="delete-account-error" style="display: none;"></div>
 
-                <p class="modal__description" data-i18n="settings.login.modalDeleteConfirmText" style="font-size: 14px; margin-top: 8px;"></p>
+                <p class="modal__description" style="margin-bottom: -8px;" data-i18n="settings.login.modalDeleteConfirmText"></p>
 
                 <div class="modal__input-group">
-                    <input type="password" id="delete-account-password" name="current_password" class="modal__input" required placeholder=" ">
-                    <label for="delete-account-password" data-i18n="settings.login.modalCurrentPass"></label>
+                    <input type="password" 
+                           id="delete-account-password" 
+                           name="current_password" 
+                           class="modal__input" 
+                           required 
+                           placeholder=" ">
+                    <label for="delete-account-password" data-i18n="settings.login.modalDeletePasswordLabel"></label>
                 </div>
             </div>
-            <div class="modal__footer">
-                 <button type="button" class="modal__button modal__button--secondary" id="delete-account-cancel" data-i18n="settings.devices.modalCancel"></button>
-                 <button type="button" class="modal__button modal__button--danger" id="delete-account-confirm" data-i18n="settings.login.modalDeleteConfirm"></button>
+
+            <div class="modal__footer modal__footer--small-buttons">
+                 <button type="button" class="modal__button-small modal__button-small--secondary" id="delete-account-cancel" data-i18n="settings.devices.modalCancel"></button>
+                 <button type="button" class="modal__button-small modal__button-small--danger" id="delete-account-confirm" data-i18n="settings.login.modalDeleteConfirm" disabled></button>
             </div>
         </div>
     </div>
