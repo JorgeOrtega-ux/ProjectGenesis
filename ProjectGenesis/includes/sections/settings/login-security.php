@@ -4,7 +4,7 @@
 // Estas variables ($lastPasswordUpdateText, $is2faEnabled, $deleteAccountDescText) 
 // son cargadas por config/router.php
 ?>
-<div class="section-content <?php echo ($CURRENT_SECTION === 'settings-login') ? 'active' : 'disabled'; ?>" data-section="settings-login">
+<div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'settings-login') ? 'active' : 'disabled'; ?>" data-section="settings-login">
     <div class="settings-wrapper">
 
         <div class="settings-header-card">

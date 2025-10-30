@@ -22,7 +22,7 @@ $currentThemeKey = $themeMap[$userTheme] ?? 'settings.accessibility.themeSystem'
 
 // --- ▲▲▲ FIN DE NUEVO BLOQUE PHP ▲▲▲ ---
 ?>
-<div class="section-content <?php echo ($CURRENT_SECTION === 'settings-accessibility') ? 'active' : 'disabled'; ?>" data-section="settings-accessibility">
+<div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'settings-accessibility') ? 'active' : 'disabled'; ?>" data-section="settings-accessibility">
     <div class="settings-wrapper">
         
         <div class="settings-header-card">

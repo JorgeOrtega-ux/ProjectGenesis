@@ -3,7 +3,7 @@
 // (Se asume que config/router.php ya ha iniciado $pdo y la sesión)
 ?>
 
-<div class="section-content <?php echo ($CURRENT_SECTION === 'settings-change-password') ? 'active' : 'disabled'; ?>" data-section="settings-change-password">
+<div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'settings-change-password') ? 'active' : 'disabled'; ?>" data-section="settings-change-password">
     <div class="settings-wrapper">
 
         <div class="settings-header-card">

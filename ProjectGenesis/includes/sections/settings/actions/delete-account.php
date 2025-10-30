@@ -6,7 +6,7 @@
 // son cargadas por config/router.php
 ?>
 
-<div class="section-content <?php echo ($CURRENT_SECTION === 'settings-delete-account') ? 'active' : 'disabled'; ?>" data-section="settings-delete-account">
+<div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'settings-delete-account') ? 'active' : 'disabled'; ?>" data-section="settings-delete-account">
     <div class="settings-wrapper">
 
         <div class="settings-header-card">

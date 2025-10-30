@@ -39,7 +39,7 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
 
 // --- ▲▲▲ FIN DE NUEVO BLOQUE PHP ▲▲▲ ---
 ?>
-<div class="section-content <?php echo ($CURRENT_SECTION === 'settings-profile') ? 'active' : 'disabled'; ?>" data-section="settings-profile">
+<div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'settings-profile') ? 'active' : 'disabled'; ?>" data-section="settings-profile">
     <div class="settings-wrapper">
 
         <div class="settings-header-card">

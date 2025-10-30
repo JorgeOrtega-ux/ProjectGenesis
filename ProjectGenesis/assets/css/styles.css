@@ -1175,7 +1175,7 @@ body {
 .modal__input-group input[type="text"] {
     width: 100%;
     height: 52px;
-    padding: 20px 12px 8px 12px; /* Padding derecho ajustado (sin icono de ojo) */
+    padding: 20px 12px 8px 12px;
     border: 1px solid #00000020;
     border-radius: 8px;
     font-size: 16px;
@@ -1589,10 +1589,9 @@ body {
         transform: scale(1);
     }
 }
-/* Modificador para formularios y toggles */
 .settings-card--edit-mode {
     align-items: flex-end;
-    gap: 8px; /* <--- AÑADE ESTA LÍNEA */
+    gap: 8px;
 }
 /* ====================================== */
 /* ============ MEDIA QUERIES =========== */
@@ -1613,45 +1612,35 @@ body {
         border: none;
     }
 
-    /* --- ▼▼▼ CÓDIGO RESPONSIVE CORREGIDO (QUINTA ITERACIÓN) ▼▼▼ --- */
-
-    /* 1. Regla general: Todas las tarjetas se apilan verticalmente */
     .settings-wrapper .settings-card {
         flex-direction: column;
-        align-items: stretch; /* Alinear al ancho completo */
-        gap: 8px; /* Espacio entre contenido y acciones (8px) */
+        align-items: stretch;
+        gap: 8px;
     }
 
-    /* 2. Regla para el Avatar */
     #avatar-section.settings-card {
-        align-items: center; /* Centrar el avatar y los botones */
+        align-items: center;
     }
-    
-    /* --- ▼▼▼ ¡ESTA ES LA REGLA QUE AÑADIMOS! ▼▼▼ --- */
+
     #avatar-section .settings-card__actions {
         width: 100%;
     }
-    /* --- ▲▲▲ ¡FIN DE LA REGLA AÑADIDA! ▲▲▲ --- */
-
-    /* 3. Contenedor de Acciones (Botones) */
     .settings-card__actions {
-        justify-content: flex-end; /* Alinear a la derecha por defecto */
+        justify-content: flex-end;
         width: 100%;
-        margin-top: 0 !important; /* Forzar eliminación de margin-top */
+        margin-top: 0 !important;
     }
 
-    /* 4. Botones dentro de Acciones (100% ancho) */
     .settings-card__actions .settings-button {
-        flex: 1; /* Los botones crecen para llenar el espacio */
+        flex: 1;
     }
 
-    /* 5. Reglas para dropdowns (selectores) */
     .settings-card--column .settings-card__actions {
-        justify-content: flex-start; /* Alinear a la izquierda */
+        justify-content: flex-start;
     }
     .trigger-select-wrapper {
-        width: 100%; /* El selector de dropdown ocupa todo el ancho */
-    }/* 6. Regla específica para botones de Avatar */
+        width: 100%;
+    }
     #avatar-actions-default,
     #avatar-actions-custom,
     #avatar-actions-preview {
@@ -1659,8 +1648,6 @@ body {
         width: 100%;
         gap: 12px;
     }
-
-    /* --- ▲▲▲ FIN DE CÓDIGO RESPONSIVE CORREGIDO ▲▲▲ --- */
 }
 
 @media (max-width: 768px) {
@@ -1681,21 +1668,8 @@ body {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-/* --- ▼▼▼ NUEVOS ESTILOS PARA MODAL ELIMINAR CUENTA (CORREGIDOS) ▼▼▼ --- */
 .delete-account-user-badge {
-    display: inline-flex
-;
+    display: inline-flex;
     align-items: center;
     height: 35px;
     gap: 6px;
@@ -1722,33 +1696,30 @@ body {
     text-overflow: ellipsis;
 }
 
-/* --- ESTILOS DE LISTA MODIFICADOS --- */
 .delete-account-bullets {
-    list-style-type: disc; /* Usar bullets estándar */
+    list-style-type: disc;
     margin: 0 0 16px 0;
-    padding-left: 20px; /* Añadir indentación estándar para <ul> */
+    padding-left: 20px;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    background-color: transparent; /* Sin fondo de advertencia */
-    border: none; /* Sin borde de advertencia */
+    background-color: transparent;
+    border: none;
 }
 
 .delete-account-bullets li {
-    position: static; /* Quitar posicionamiento */
-    padding-left: 0; /* Quitar padding personalizado */
+    position: static;
+    padding-left: 0;
     font-size: 14px;
-    color: #1f2937; /* Color de texto normal */
+    color: #1f2937;
     line-height: 1.5;
 }
 
 .delete-account-bullets li::before {
-    display: none; /* Ocultar el ícono de 'warning' */
+    display: none;
 }/* ====================================== */
 /* ============= PAGE LOADER ============= */
 /* ====================================== */
-
-/* --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ --- */
 .page-loader {
     position: absolute;
     top: 0;
@@ -1756,25 +1727,17 @@ body {
     right: 0;
     bottom: 0;
     background-color: none;
-
-    /* 1. Oculto por defecto */
     display: none;
-
     justify-content: center;
     align-items: center;
     z-index: 9998;
-
-    /* 2. Sin opacity, sin transiciones */
-
     pointer-events: none;
     min-height: 300px;
 }
 
-/* 3. La clase 'active' ahora usa display: flex */
 .page-loader.active {
     display: flex;
 }
-/* --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ --- */
 
 .page-loader .spinner {
     width: 48px;
@@ -1785,21 +1748,17 @@ body {
     animation: spin 1s linear infinite;
 }
 
-
 /* ====================================== */
 /* = MODAL ELIMINAR CUENTA (NUEVOS)     = */
 /* ====================================== */
 
-/* Título del modal (ajuste de tamaño) */
 #delete-account-modal .modal__title {
-    font-size: 24px; /* Más grande, como en la imagen */
+    font-size: 24px;
     font-weight: 600;
 }
 
-/* === INICIO DEL CAMBIO (COLOR BOX) === */
-/* Caja de advertencia azul cielo */
 .modal-warning-box {
-    background-color: #e3f2fd; /* Azul cielo */
+    background-color: #e3f2fd;
     border-radius: 8px;
     padding: 16px;
     display: flex;
@@ -1808,7 +1767,7 @@ body {
 }
 
 .modal-warning-box .material-symbols-rounded {
-    color: #0d6efd; /* Azul principal */
+    color: #0d6efd;
     font-size: 20px;
     margin-top: 2px;
 }
@@ -1816,22 +1775,19 @@ body {
 .modal-warning-box p {
     font-size: 14px;
     line-height: 1.5;
-    color: #3f3c33; /* Texto oscuro, no negro */
+    color: #3f3c33;
     margin: 0; 
 }
 
 .modal-warning-box p strong {
     font-weight: 700;
-    color: #1f2937; /* Texto strong más oscuro */
+    color: #1f2937;
 }
-/* === FIN DEL CAMBIO (COLOR BOX) === */
 
-
-/* Párrafos de descripción */
 #delete-account-modal .modal__description {
     font-size: 14px;
-    color: #333333; /* Gris oscuro, no negro */
-    font-weight: 400; /* Peso normal */
+    color: #333333;
+    font-weight: 400;
     line-height: 1.5;
     text-align: left;
     margin: 0;
@@ -1843,7 +1799,7 @@ body {
 }
 
 #delete-account-modal .modal__description a {
-    color: #0d6efd; /* Azul de link estándar */
+    color: #0d6efd;
     text-decoration: none;
     font-weight: 600;
 }
@@ -1852,46 +1808,40 @@ body {
     text-decoration: underline;
 }
 
-/* Lista de bullets */
 #delete-account-modal .modal__list {
     list-style-type: disc;
     margin: 0 0 0 20px;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px; /* Un poco menos de espacio */
+    gap: 4px;
 }
  #delete-account-modal .modal__list li {
     font-size: 14px;
-    color: #333333; /* Gris oscuro */
+    color: #333333;
     line-height: 1.5;
 }
 
-/* --- ▼▼▼ INICIO DE MODIFICACIÓN (BOTONES PEQUEÑOS) ▼▼▼ --- */
-
-/* 1. Estilo para el footer de botones pequeños */
 .modal__footer--small-buttons {
-    justify-content: flex-end; /* Alinea los botones a la derecha */
+    justify-content: flex-end;
 }
 
-/* 2. Clase base para los botones pequeños (inspirada en settings-button) */
 .modal__button-small {
     height: 40px;
     border-radius: 8px;
-    font-size: 14px; /* Más pequeño */
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
-    flex: none; /* No se expande */
+    flex: none;
     display: flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
     line-height: 1;
-    padding: 0 16px; /* Padding horizontal */
+    padding: 0 16px;
 }
 
-/* 3. Estilo Secundario (Cancelar) */
 .modal__button-small--secondary {
     background-color: #ffffff;
     color: #000000;
@@ -1901,8 +1851,6 @@ body {
     background-color: #f5f5fa;
 }
 
-/* --- ▼▼▼ INICIO DE NUEVA CLASE AÑADIDA ▼▼▼ --- */
-/* 3.b. Estilo Primario (Continuar, Guardar) */
 .modal__button-small--primary {
     background-color: #000;
     color: #ffffff;
@@ -1912,10 +1860,7 @@ body {
     background-color: #333;
     border-color: #333;
 }
-/* --- ▲▲▲ FIN DE NUEVA CLASE AÑADIDA ▲▲▲ --- */
 
-
-/* 4. Estilo Peligro (Eliminar) */
 .modal__button-small--danger {
     background-color: #c62828;
     color: #ffffff;
@@ -1925,10 +1870,9 @@ body {
     background-color: #b71c1c;
 }
 
-/* 5. Estilo Deshabilitado (para el botón de Eliminar) */
 .modal__button-small:disabled {
-    background-color: #f8f9fa; /* Gris muy claro */
-    color: #adb5bd; /* Texto gris pálido */
+    background-color: #f8f9fa;
+    color: #adb5bd;
     border-color: #e0e0e0;
     cursor: not-allowed;
     opacity: 1; 
@@ -1938,12 +1882,3 @@ body {
     color: #adb5bd;
     border-color: #e0e0e0;
 }
-/* --- ▲▲▲ FIN DE MODIFICACIÓN (BOTONES PEQUEÑOS) ▲▲▲ --- */
-
-
-
-
-
-
-
-

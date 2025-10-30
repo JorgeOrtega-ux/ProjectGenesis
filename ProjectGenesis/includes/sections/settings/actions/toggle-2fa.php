@@ -5,7 +5,7 @@
 // Esta variable ($is2faEnabled) será cargada por config/router.php
 ?>
 
-<div class="section-content <?php echo ($CURRENT_SECTION === 'settings-toggle-2fa') ? 'active' : 'disabled'; ?>" data-section="settings-toggle-2fa">
+<div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'settings-toggle-2fa') ? 'active' : 'disabled'; ?>" data-section="settings-toggle-2fa">
     <div class="settings-wrapper">
 
         <div class="settings-header-card">

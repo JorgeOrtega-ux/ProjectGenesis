@@ -245,7 +245,7 @@ if (isset($_SESSION['language'])) {
                     ?>
                     <?php endif; ?>
 
-                    <div class="general-content-scrolleable overflow-y">
+                    <div class="general-content-scrolleable">
                         
                         <div class="page-loader" id="page-loader">
                             <div class="spinner"></div>

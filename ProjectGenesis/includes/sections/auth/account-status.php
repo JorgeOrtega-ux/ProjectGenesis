@@ -15,7 +15,7 @@ if ($CURRENT_SECTION !== $CURRENT_SECTION_CLASS) {
 }
 ?>
 
-<div class="section-content <?php echo ($CURRENT_SECTION === $CURRENT_SECTION_CLASS) ? 'active' : 'disabled'; ?>" data-section="<?php echo $CURRENT_SECTION_CLASS; ?>">
+<div class="section-content overflow-y <?php echo ($CURRENT_SECTION === $CURRENT_SECTION_CLASS) ? 'active' : 'disabled'; ?>" data-section="<?php echo $CURRENT_SECTION_CLASS; ?>">
     <div class="auth-container text-center">
         
         <h1 class="auth-title" data-i18n="<?php echo htmlspecialchars($titleKey); ?>"></h1>

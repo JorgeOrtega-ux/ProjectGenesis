@@ -1,7 +1,7 @@
 <?php
 // FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-18ab9061f5940223dc8e2888c4e57a51b712dc78/ProjectGenesis/includes/sections/auth/login.php
 ?>
-<div class="section-content <?php echo ($CURRENT_SECTION === 'login') ? 'active' : 'disabled'; ?>" data-section="login">
+<div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'login') ? 'active' : 'disabled'; ?>" data-section="login">
     <div class="auth-container">
         <h1 class="auth-title" data-i18n="page.login.title"></h1>
         

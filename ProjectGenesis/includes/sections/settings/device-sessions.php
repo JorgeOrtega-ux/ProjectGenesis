@@ -105,7 +105,7 @@ function formatSessionDate($dateTimeString) {
 // --- ▲▲▲ FIN DE LÓGICA PHP ▲▲▲ ---
 ?>
 
-<div class="section-content <?php echo ($CURRENT_SECTION === 'settings-devices') ? 'active' : 'disabled'; ?>" data-section="settings-devices">
+<div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'settings-devices') ? 'active' : 'disabled'; ?>" data-section="settings-devices">
     <div class="settings-wrapper">
 
         <div class="settings-header-card">

@@ -1,4 +1,4 @@
-<div class="section-content <?php echo (strpos($CURRENT_SECTION, 'reset-') === 0) ? 'active' : 'disabled'; ?>" data-section="<?php echo htmlspecialchars($CURRENT_SECTION); ?>">
+<div class="section-content overflow-y <?php echo (strpos($CURRENT_SECTION, 'reset-') === 0) ? 'active' : 'disabled'; ?>" data-section="<?php echo htmlspecialchars($CURRENT_SECTION); ?>">
     <div class="auth-container">
         <h1 class="auth-title" data-i18n="page.reset.title"></h1>
         
