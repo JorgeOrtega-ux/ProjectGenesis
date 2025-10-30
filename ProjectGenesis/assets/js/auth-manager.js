@@ -1,3 +1,4 @@
+
 import { callAuthApi } from './api-service.js';
 import { handleNavigation } from './url-manager.js';
 import { getTranslation } from './i18n-manager.js';
@@ -106,11 +107,14 @@ async function handleResetSubmit(e) {
     }
 }
 
+// --- ▼▼▼ INICIO DE LA MODIFICACIÓN (FUNCIÓN handleLoginFinalSubmit) ▼▼▼ ---
 async function handleLoginFinalSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const button = form.querySelector('button[type="submit"]');
-    const activeStep = form.querySelector('.auth-step.active');
+    
+    // CAMBIO CLAVE: Buscar el error div relativo al botón, no a la clase '.active'
+    const activeStep = button.closest('.auth-step'); 
     const errorDiv = activeStep.querySelector('.auth-error-message');
 
     button.disabled = true;
@@ -124,13 +128,14 @@ async function handleLoginFinalSubmit(e) {
     if (result.success) {
         window.location.href = window.projectBasePath + '/';
     } else {
-        // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+        // Ahora 'errorDiv' SÍ es el div correcto (del paso 2)
         showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'), result.data);
-        // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
         button.disabled = false;
         button.textContent = getTranslation('page.login.verifyButton');
     }
 }
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN (FUNCIÓN handleLoginFinalSubmit) ▲▲▲ ---
+
 
 // --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA ▼▼▼ ---
 /**
@@ -537,22 +542,84 @@ function initLoginWizard() {
         const loginForm = button.closest('#login-form');
         if (!loginForm) return;
 
+        const action = button.getAttribute('data-auth-action');
+
+        if (action === 'resend-code') {
+            e.preventDefault();
+            
+            const currentStepEl = button.closest('.auth-step');
+            const errorDiv = currentStepEl.querySelector('.auth-error-message');
+            const linkElement = button;
+
+            if (linkElement.classList.contains('disabled-interactive')) {
+                return;
+            }
+
+            // Obtener el email del input del paso 1
+            const emailInput = loginForm.querySelector('#login-email');
+            if (!emailInput || !emailInput.value) {
+                showAuthError(errorDiv, getTranslation('js.auth.errorNoEmail')); // Re-usar esta clave
+                return;
+            }
+            const email = emailInput.value;
+            
+            const originalText = linkElement.textContent.replace(/\s*\(\d+s?\)$/, '').trim();
+            
+            startResendTimer(linkElement, 60); 
+
+            const formData = new FormData();
+            formData.append('action', 'login-resend-2fa-code'); // Nueva acción de API
+            formData.append('email', email);
+            
+            const csrfToken = loginForm.querySelector('[name="csrf_token"]');
+            if(csrfToken) {
+                 formData.append('csrf_token', csrfToken.value);
+            }
+
+            const result = await callAuthApi(formData);
+
+            if (result.success) {
+                window.showAlert(getTranslation(result.message || 'js.auth.successCodeResent'), 'success');
+            } else {
+                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorCodeResent'), result.data);
+                
+                const timerId = linkElement.dataset.timerId;
+                if (timerId) {
+                    clearInterval(timerId);
+                }
+                
+                linkElement.textContent = originalText; 
+                linkElement.classList.remove('disabled-interactive');
+                linkElement.style.opacity = '1';
+                linkElement.style.textDecoration = '';
+            }
+            return;
+        }
+
+
         const currentStepEl = button.closest('.auth-step');
         if (!currentStepEl) return;
         const errorDiv = currentStepEl.querySelector('.auth-error-message'); 
 
-        const action = button.getAttribute('data-auth-action');
         const currentStep = parseInt(currentStepEl.getAttribute('data-step'), 10);
 
+        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (initLoginWizard -> prev-step) ▼▼▼ ---
         if (action === 'prev-step') {
+            // Esta lógica ya no se usa porque eliminamos el botón "Atrás" de 2FA
+            // Pero la dejamos por si se reutiliza.
             const prevStepEl = loginForm.querySelector(`[data-step="${currentStep - 1}"]`);
             if (prevStepEl) {
                 currentStepEl.style.display = 'none';
+                currentStepEl.classList.remove('active'); // <-- LÍNEA AÑADIDA
+                
                 prevStepEl.style.display = 'block';
+                prevStepEl.classList.add('active'); // <-- LÍNEA AÑADIDA
+                
                 if(errorDiv) errorDiv.style.display = 'none'; 
             }
             return;
         }
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN (initLoginWizard -> prev-step) ▲▲▲ ---
 
         if (action === 'next-step') { 
             const emailInput = currentStepEl.querySelector('#login-email');
@@ -571,42 +638,44 @@ function initLoginWizard() {
 
             const result = await callAuthApi(formData);
 
-            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN: CHEQUEO DE REDIRECCIÓN ▼▼▼ ---
             if (result.success) {
+                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (initLoginWizard -> next-step) ▼▼▼ ---
                 if (result.is_2fa_required) {
                     const nextStepEl = loginForm.querySelector(`[data-step="${currentStep + 1}"]`);
                     if (nextStepEl) {
                         currentStepEl.style.display = 'none';
+                        currentStepEl.classList.remove('active'); // <-- LÍNEA AÑADIDA
+                        
                         nextStepEl.style.display = 'block';
+                        nextStepEl.classList.add('active'); // <-- LÍNEA AÑADIDA
+                        
                          const nextInput = nextStepEl.querySelector('input#login-code');
                          if (nextInput) nextInput.focus();
+                         
+                         const resendLink = nextStepEl.querySelector('#login-resend-code-link');
+                         const cooldown = result.cooldown || 0; 
+                         if (resendLink && cooldown > 0) {
+                            startResendTimer(resendLink, cooldown);
+                         }
                     }
                      if (result.message) {
-                        // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-                        window.showAlert(getTranslation(result.message), 'info');
-                        // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
+                         window.showAlert(getTranslation(result.message), 'info');
                      }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN (initLoginWizard -> next-step) ▲▲▲ ---
                 } else {
                      if (result.message) {
-                         // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
                          window.showAlert(getTranslation(result.message), 'success');
-                         // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                          await new Promise(resolve => setTimeout(resolve, 500)); 
                      }
                     window.location.href = window.projectBasePath + '/';
                 }
             } else if (result.redirect_to_status) {
-                 // ¡NUEVA LÓGICA! Redirigir si el backend lo indica.
-                window.location.href = window.projectBasePath + '/account-status/' + result.redirect_to_status;
+                 window.location.href = window.projectBasePath + '/account-status/' + result.redirect_to_status;
             } else {
-                // Lógica de error normal (ej. contraseña incorrecta)
-                // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
                 showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown'), result.data); 
-                // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                 button.disabled = false; 
                 button.textContent = getTranslation('page.login.continueButton');
             }
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
              if(result.success && result.is_2fa_required) {
              } else if (!result.success && !result.redirect_to_status) { // Modificado para no reactivar botón si hay redirección

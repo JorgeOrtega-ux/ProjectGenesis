@@ -1,4 +1,7 @@
 <?php
+// FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-18ab9061f5940223dc8e2888c4e57a51b712dc78/ProjectGenesis/api/auth_handler.php
+?>
+<?php
 
 error_reporting(E_ALL); // Reportar todos los errores
 ini_set('display_errors', 0); // NO mostrar errores en la salida
@@ -340,6 +343,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
+        
+        elseif ($action === 'login-resend-2fa-code') {
+            $email = $_POST['email'] ?? '';
+            $ip = getIpAddress();
+
+            if (empty($email)) {
+                $response['message'] = 'js.auth.errorNoEmail';
+            } elseif (checkLockStatus($pdo, $email, $ip)) { 
+                $response['message'] = 'js.auth.errorTooManyAttempts';
+                $response['data'] = ['minutes' => LOCKOUT_TIME_MINUTES];
+            } else {
+                try {
+                    // 1. Validar que el usuario exista y tenga 2FA activado
+                    $stmt_check_user = $pdo->prepare("SELECT id, is_2fa_enabled FROM users WHERE email = ?");
+                    $stmt_check_user->execute([$email]);
+                    $user = $stmt_check_user->fetch();
+
+                    if (!$user) {
+                        // No revelar si el usuario existe o no. Simular éxito.
+                        // (Aunque si llegó aquí, es probable que la contraseña fuera correcta)
+                        logFailedAttempt($pdo, $email, $ip, 'login_fail'); // Registrar como intento fallido
+                        throw new Exception('js.auth.errorUserNotFound'); // Error genérico
+                    }
+                    
+                    if ($user['is_2fa_enabled'] != 1) {
+                         // Esto no debería pasar si la lógica de login es correcta, pero por si acaso.
+                         throw new Exception('js.auth.errorUnknown');
+                    }
+                    
+                    // 2. Checar cooldown
+                    $stmt_check_code = $pdo->prepare(
+                        "SELECT * FROM verification_codes 
+                         WHERE identifier = ? AND code_type = '2fa' 
+                         ORDER BY created_at DESC LIMIT 1"
+                    );
+                    $stmt_check_code->execute([$email]);
+                    $codeData = $stmt_check_code->fetch();
+
+                    if ($codeData) {
+                        $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
+                        $currentTime = new DateTime('now', new DateTimeZone('UTC'));
+                        $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
+
+                        if ($secondsPassed < CODE_RESEND_COOLDOWN_SECONDS) {
+                            $secondsRemaining = CODE_RESEND_COOLDOWN_SECONDS - $secondsPassed;
+                            throw new Exception('js.auth.errorCodeCooldown');
+                        }
+                    }
+
+                    // 3. Borrar código viejo y crear uno nuevo
+                    $stmt_delete = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = '2fa'");
+                    $stmt_delete->execute([$email]);
+
+                    $newCode = str_replace('-', '', generateVerificationCode());
+                    
+                    $stmt_insert = $pdo->prepare(
+                        "INSERT INTO verification_codes (identifier, code_type, code) 
+                         VALUES (?, '2fa', ?)"
+                    );
+                    $stmt_insert->execute([$email, $newCode]);
+
+                    $response['success'] = true;
+                    $response['message'] = 'js.auth.successCodeResent';
+
+                } catch (Exception $e) {
+                    if ($e instanceof PDOException) {
+                        logDatabaseError($e, 'auth_handler - login-resend-2fa-code');
+                        $response['message'] = 'js.api.errorDatabase';
+                    } else {
+                        $response['message'] = $e->getMessage();
+                        if ($response['message'] === 'js.auth.errorCodeCooldown') {
+                            $response['data'] = ['seconds' => $secondsRemaining ?? CODE_RESEND_COOLDOWN_SECONDS];
+                        }
+                    }
+                }
+            }
+        }
 
         elseif ($action === 'login-check-credentials') {
             if (!empty($_POST['email']) && !empty($_POST['password'])) {
@@ -391,9 +471,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $stmt->execute([$email, $verificationCode]);
 
 
+                            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
                             $response['success'] = true;
                             $response['message'] = 'js.auth.info2faRequired';
                             $response['is_2fa_required'] = true; 
+                            $response['cooldown'] = CODE_RESEND_COOLDOWN_SECONDS; // <-- LÍNEA AÑADIDA
+                            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
                         } else {
                             session_regenerate_id(true);

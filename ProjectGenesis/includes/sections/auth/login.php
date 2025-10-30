@@ -1,3 +1,6 @@
+<?php
+// FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-18ab9061f5940223dc8e2888c4e57a51b712dc78/ProjectGenesis/includes/sections/auth/login.php
+?>
 <div class="section-content <?php echo ($CURRENT_SECTION === 'login') ? 'active' : 'disabled'; ?>" data-section="login">
     <div class="auth-container">
         <h1 class="auth-title" data-i18n="page.login.title"></h1>
@@ -28,6 +31,7 @@
                 </div>
                 <div class="auth-error-message" style="display: none;"></div>
             </fieldset>
+            
             <fieldset class="auth-step" data-step="2" style="display: none;">
                 <p class="auth-verification-text" style="margin-bottom: 16px;" data-i18n="page.login.2faDescription"></p>
 
@@ -37,10 +41,19 @@
                 </div>
                 
                 <div class="auth-step-buttons">
-                    <button type="button" class="auth-button-back" data-auth-action="prev-step" data-i18n="page.login.backButton"></button>
                     <button type="submit" class="auth-button" data-i18n="page.login.verifyButton"></button>
                 </div>
+                
                 <div class="auth-error-message" style="display: none;"></div>
+                <p class="auth-link" style="text-align: center;">
+                    <a href="#" 
+                       id="login-resend-code-link" 
+                       data-auth-action="resend-code"
+                       data-cooldown="0" 
+                       data-i18n="page.login.resendCode"
+                    >
+                    </a>
+                </p>
             </fieldset>
             
             </form>
