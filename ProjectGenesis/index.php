@@ -163,6 +163,21 @@ $currentLang = $_SESSION['language'] ?? 'en-us';
 // 2. Luego, usamos esa variable (que ahora sabemos que SÍ existe) para buscar en el map.
 $htmlLang = $langMap[$currentLang] ?? 'en'; // Default 'en'
 // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
+
+// --- ▼▼▼ INICIO: MODIFICACIÓN PASO 2 (Bloque 1) ▼▼▼ ---
+// 1. Definir un idioma por defecto como fallback
+$jsLanguage = 'en-us'; 
+
+if (isset($_SESSION['language'])) {
+    // 2. Si el usuario ESTÁ logueado, usar el idioma de su sesión
+    $jsLanguage = $_SESSION['language'];
+} else {
+    // 3. Si NO está logueado, detectar el idioma del navegador
+    //    Usamos la función que acabamos de mover a config.php
+    $browserLang = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'en-us';
+    $jsLanguage = getPreferredLanguage($browserLang); 
+}
+// --- ▲▲▲ FIN: MODIFICACIÓN PASO 2 (Bloque 1) ▲▲▲ ---
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $htmlLang; ?>" class="<?php echo $themeClass; ?>">
@@ -217,8 +232,12 @@ $htmlLang = $langMap[$currentLang] ?? 'en'; // Default 'en'
         // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN: INYECTAR PREFERENCIAS! ▼▼▼ ---
         window.userTheme = '<?php echo $_SESSION['theme'] ?? 'system'; ?>';
         window.userIncreaseMessageDuration = <?php echo $_SESSION['increase_message_duration'] ?? 0; ?>;
-        // --- ¡NUEVA MODIFICACIÓN! Inyectar idioma actual ---
-        window.userLanguage = '<?php echo $_SESSION['language'] ?? 'en-us'; ?>'; 
+        
+        // --- ▼▼▼ INICIO: MODIFICACIÓN PASO 2 (Bloque 2) ▼▼▼ ---
+        // ¡NUEVA MODIFICACIÓN! Inyectar idioma actual (calculado arriba)
+        window.userLanguage = '<?php echo $jsLanguage; ?>'; 
+        // --- ▲▲▲ FIN: MODIFICACIÓN PASO 2 (Bloque 2) ▲▲▲ ---
+        
         // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
     </script>
     <script type="module" src="<?php echo $basePath; ?>/assets/js/app-init.js"></script>

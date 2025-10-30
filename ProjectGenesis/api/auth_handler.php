@@ -26,51 +26,9 @@ function generateVerificationCode() {
     return substr($code, 0, 4) . '-' . substr($code, 4, 4) . '-' . substr($code, 8, 4);
 }
 
-function getPreferredLanguage($acceptLanguage) {
-    $supportedLanguages = [
-        'en-us' => 'en-us',
-        'es-mx' => 'es-mx',
-        'es-latam' => 'es-latam',
-        'fr-fr' => 'fr-fr'
-    ];
-    
-    $primaryLanguageMap = [
-        'es' => 'es-latam',
-        'en' => 'en-us',
-        'fr' => 'fr-fr'
-    ];
-    
-    $defaultLanguage = 'en-us';
-
-    if (empty($acceptLanguage)) {
-        return $defaultLanguage;
-    }
-
-    $langs = [];
-    preg_match_all('/([a-z]{1,8}(-[a-z]{1,8})?)\s*(;\s*q\s*=\s*(1|0\.[0-9]+))?/i', $acceptLanguage, $matches);
-
-    if (!empty($matches[1])) {
-        $langs = array_map('strtolower', $matches[1]);
-    }
-
-    $primaryMatch = null;
-    foreach ($langs as $lang) {
-        if (isset($supportedLanguages[$lang])) {
-            return $supportedLanguages[$lang];
-        }
-        
-        $primary = substr($lang, 0, 2);
-        if ($primaryMatch === null && isset($primaryLanguageMap[$primary])) {
-            $primaryMatch = $primaryLanguageMap[$primary];
-        }
-    }
-    
-    if ($primaryMatch !== null) {
-        return $primaryMatch;
-    }
-
-    return $defaultLanguage;
-}
+// --- ▼▼▼ INICIO: FUNCIÓN ELIMINADA (PASO 1) ▼▼▼ ---
+// La función getPreferredLanguage() se ha movido a config/config.php
+// --- ▲▲▲ FIN: FUNCIÓN ELIMINADA (PASO 1) ▲▲▲ ---
 
 
 function logUserMetadata($pdo, $userId) {

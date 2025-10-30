@@ -1,5 +1,0 @@
-[2025-10-28 17:25:36 UTC] [PDO Connection] SQLSTATE[HY000] [2006] MySQL server has gone away (Archivo: E:\xampp\htdocs\ProjectGenesis\config\config.php, Línea: 47)
-[2025-10-28 17:25:40 UTC] [PDO Connection] SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión (Archivo: E:\xampp\htdocs\ProjectGenesis\config\config.php, Línea: 47)
-[2025-10-28 17:25:45 UTC] [PDO Connection] SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión (Archivo: E:\xampp\htdocs\ProjectGenesis\config\config.php, Línea: 47)
-[2025-10-28 17:27:21 UTC] [checkLockStatus] SQLSTATE[42S02]: Base table or view not found: 1932 Table 'project_genesis.security_logs' doesn't exist in engine (Archivo: E:\xampp\htdocs\ProjectGenesis\config\config.php, Línea: 156)
-[2025-10-28 17:27:21 UTC] [auth_handler - login-check-credentials] SQLSTATE[42S02]: Base table or view not found: 1932 Table 'project_genesis.users' doesn't exist in engine (Archivo: E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php, Línea: 448)
