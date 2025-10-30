@@ -11,12 +11,31 @@ getCsrfToken();
 if (isset($_SESSION['user_id'])) {
     try {
         // 1. OBTENER DATOS BÁSICOS DEL USUARIO
-        $stmt = $pdo->prepare("SELECT username, email, profile_image_url, role, auth_token FROM users WHERE id = ?");
+        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (SE AÑADIÓ 'account_status') ▼▼▼ ---
+        $stmt = $pdo->prepare("SELECT username, email, profile_image_url, role, auth_token, account_status FROM users WHERE id = ?");
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+        
         $stmt->execute([$_SESSION['user_id']]);
         $freshUserData = $stmt->fetch();
 
         if ($freshUserData) {
             
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (VALIDACIÓN DE ESTADO) ▼▼▼ ---
+            // 1.b. VALIDACIÓN DE ESTADO DE CUENTA
+            $accountStatus = $freshUserData['account_status'];
+            if ($accountStatus === 'suspended' || $accountStatus === 'deleted') {
+                // El estado no es 'active'. Destruir la sesión.
+                session_unset();
+                session_destroy();
+                
+                // Redirigir a la página de estado apropiada
+                $statusPath = ($accountStatus === 'suspended') ? '/account-status/suspended' : '/account-status/deleted';
+                header('Location: ' . $basePath . $statusPath);
+                exit;
+            }
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
+
             // 2. VALIDACIÓN DE AUTH_TOKEN
             $dbAuthToken = $freshUserData['auth_token'];
             $sessionAuthToken = $_SESSION['auth_token'] ?? null;
@@ -106,7 +125,7 @@ $pathsToPages = [
     '/account-status/deleted'   => 'account-status-deleted',
     '/account-status/suspended' => 'account-status-suspended',
 ];
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
 $currentPage = $pathsToPages[$path] ?? '404';
 
@@ -117,7 +136,7 @@ $isAuthPage = in_array($currentPage, $authPages) ||
               strpos($currentPage, 'register-') === 0 ||
               strpos($currentPage, 'reset-') === 0 ||
               strpos($currentPage, 'account-status-') === 0; // <-- AÑADIR ESTO
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
 $isSettingsPage = strpos($currentPage, 'settings-') === 0;
 

@@ -502,12 +502,15 @@ body {
 }
 
 .auth-button {
-    display: block; /* Asegura que <a> ocupe todo el ancho */
+    /* display: block; */ /* <-- LÍNEA ELIMINADA */
+    /* line-height: 52px; */ /* <-- LÍNEA ELIMINADA */
+    display: flex; /* <-- LÍNEA AÑADIDA */
+    align-items: center; /* <-- LÍNEA AÑADIDA */
+    justify-content: center; /* <-- LÍNEA AÑADIDA */
     height: 52px;
-    line-height: 52px; /* Centra verticalmente el texto en <a> */
-    padding: 0; /* Quitamos padding si usamos line-height */
-    text-align: center; /* Centra el texto */
-    text-decoration: none; /* Quita el subrayado de <a> */
+    padding: 0; 
+    text-align: center; 
+    text-decoration: none; 
     border: none;
     border-radius: 8px;
     background-color: #000;
@@ -518,7 +521,6 @@ body {
     transition: background-color 0.2s;
     flex: 1;
 }
-
 
 .auth-link {
     text-align: center;
@@ -547,7 +549,30 @@ body {
     /* display: none; */ /* <-- LÍNEA ELIMINADA */
 }
 /* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
+.auth-input-group input:focus~label,
+.auth-input-group input:not(:placeholder-shown)~label {
+    color: #000;
+}
 
+/* --- ▼▼▼ INICIO DE NUEVA CLASE ▼▼▼ --- */
+.auth-input-group input.auth-input-error {
+    border-color: #c62828; /* Color rojo de error */
+}
+
+/* Mantener el borde rojo incluso cuando está enfocado */
+.auth-input-group input.auth-input-error:focus {
+    border-color: #c62828;
+    box-shadow: none;
+}/* --- ▼▼▼ INICIO DE NUEVA CLASE ▼▼▼ --- */
+.auth-button-spinner {
+    display: block;
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.2); /* Blanco transparente */
+    border-top-color: #ffffff; /* Blanco sólido */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
 .auth-form fieldset.auth-step {
     border: none;
     padding: 0;

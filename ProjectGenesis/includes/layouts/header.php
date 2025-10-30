@@ -52,6 +52,23 @@ $userRole = $_SESSION['role'] ?? 'user';
     <div class="menu-content">
             <div class="menu-list">
 
+                <?php 
+                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+                // Mostrar solo si el rol es administrador o fundador
+                if (isset($userRole) && ($userRole === 'administrator' || $userRole === 'founder')): 
+                ?>
+                    <div class="menu-link" style="cursor: not-allowed;"> <div class="menu-link-icon">
+                            <span class="material-symbols-rounded">admin_panel_settings</span>
+                        </div>
+                        <div class="menu-link-text">
+                            <span data-i18n="header.profile.adminPanel">Panel de Administración</span> 
+                        </div>
+                    </div>
+                <?php 
+                endif; 
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                ?>
+
                 <div class="menu-link" data-action="toggleSectionSettingsProfile">
                     <div class="menu-link-icon">
                         <span class="material-symbols-rounded">settings</span>

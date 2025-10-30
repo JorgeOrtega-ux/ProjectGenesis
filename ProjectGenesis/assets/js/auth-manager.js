@@ -2,6 +2,34 @@ import { callAuthApi } from './api-service.js';
 import { handleNavigation } from './url-manager.js';
 import { getTranslation } from './i18n-manager.js';
 
+// --- ▼▼▼ INICIO DE NUEVAS FUNCIONES HELPER ▼▼▼ ---
+/**
+ * Reemplaza el contenido de un botón de auth con un spinner.
+ * @param {HTMLElement} button - El botón a modificar.
+ */
+function setButtonSpinner(button) {
+    if (!button) return;
+    // Guardar el texto original (o HTML si tuviera iconos)
+    button.dataset.originalHtml = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<div class="auth-button-spinner"></div>';
+}
+
+/**
+ * Restaura el contenido original de un botón y lo reactiva.
+ * @param {HTMLElement} button - El botón a restaurar.
+ */
+function removeButtonSpinner(button) {
+    if (!button) return;
+    button.disabled = false;
+    // Restaurar desde el HTML guardado.
+    if (button.dataset.originalHtml) {
+        button.innerHTML = button.dataset.originalHtml;
+    }
+}
+// --- ▲▲▲ FIN DE NUEVAS FUNCIONES HELPER ▲▲▲ ---
+
+
 export function startResendTimer(linkElement, seconds) {
     if (!linkElement) {
         return;
@@ -39,8 +67,9 @@ async function handleRegistrationSubmit(e) {
     const activeStep = form.querySelector('.auth-step.active');
     const errorDiv = activeStep.querySelector('.auth-error-message');
 
-    button.disabled = true;
-    button.textContent = getTranslation('js.auth.verifying');
+    // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+    setButtonSpinner(button);
+    // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
 
     const formData = new FormData(form);
     formData.append('action', 'register-verify');
@@ -53,11 +82,14 @@ async function handleRegistrationSubmit(e) {
         sessionStorage.removeItem('regPass');
         window.location.href = window.projectBasePath + '/';
     } else {
-        // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-        showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'), result.data);
-        // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
-        button.disabled = false;
-        button.textContent = getTranslation('page.register.verifyButton');
+        // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+        const codeInput = form.querySelector('#register-code');
+        showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'), result.data, codeInput);
+        // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
+        
+        // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+        removeButtonSpinner(button);
+        // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
     }
 }
 
@@ -68,20 +100,23 @@ async function handleResetSubmit(e) {
     const activeStep = form.querySelector('.auth-step.active');
     const errorDiv = activeStep.querySelector('.auth-error-message');
 
-    const password = form.querySelector('#reset-password').value;
-    const passwordConfirm = form.querySelector('#reset-password-confirm').value;
+    // --- ▼▼▼ MODIFICACIÓN: Obtener elementos, no solo valores ▼▼▼ ---
+    const password = form.querySelector('#reset-password');
+    const passwordConfirm = form.querySelector('#reset-password-confirm');
 
-    if (password.length < 8 || password.length > 72) {
-        showAuthError(errorDiv, getTranslation('js.auth.errorPasswordLength', {min: 8, max: 72}));
+    if (password.value.length < 8 || password.value.length > 72) {
+        showAuthError(errorDiv, getTranslation('js.auth.errorPasswordLength', {min: 8, max: 72}), null, password);
         return;
     }
-    if (password !== passwordConfirm) {
-        showAuthError(errorDiv, getTranslation('js.auth.errorPasswordMismatch'));
+    if (password.value !== passwordConfirm.value) {
+        showAuthError(errorDiv, getTranslation('js.auth.errorPasswordMismatch'), null, [password, passwordConfirm]);
         return;
     }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
-    button.disabled = true;
-    button.textContent = getTranslation('js.auth.saving');
+    // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+    setButtonSpinner(button);
+    // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
 
     const formData = new FormData(form);
     formData.append('action', 'reset-update-password');
@@ -98,11 +133,13 @@ async function handleResetSubmit(e) {
             window.location.href = window.projectBasePath + '/login';
         }, 2000);
     } else {
-        // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
+        // --- ▼▼▼ LÍNEA CORREGIDA (Sin input específico para error de servidor genérico) ▼▼▼ ---
         showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'), result.data);
         // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
-        button.disabled = false;
-        button.textContent = getTranslation('js.auth.saveAndContinue');
+        
+        // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+        removeButtonSpinner(button);
+        // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
     }
 }
 
@@ -116,8 +153,9 @@ async function handleLoginFinalSubmit(e) {
     const activeStep = button.closest('.auth-step'); 
     const errorDiv = activeStep.querySelector('.auth-error-message');
 
-    button.disabled = true;
-    button.textContent = getTranslation('js.auth.verifying');
+    // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+    setButtonSpinner(button);
+    // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
 
     const formData = new FormData(form);
     formData.append('action', 'login-verify-2fa');
@@ -127,10 +165,14 @@ async function handleLoginFinalSubmit(e) {
     if (result.success) {
         window.location.href = window.projectBasePath + '/';
     } else {
-        // Ahora 'errorDiv' SÍ es el div correcto (del paso 2)
-        showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'), result.data);
-        button.disabled = false;
-        button.textContent = getTranslation('page.login.verifyButton');
+        // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+        const codeInput = form.querySelector('#login-code');
+        showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'), result.data, codeInput);
+        // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
+        
+        // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+        removeButtonSpinner(button);
+        // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
     }
 }
 // --- ▲▲▲ FIN DE LA MODIFICACIÓN (FUNCIÓN handleLoginFinalSubmit) ▲▲▲ ---
@@ -142,8 +184,9 @@ async function handleLoginFinalSubmit(e) {
  * @param {HTMLElement} errorDiv - El div donde se mostrará el error.
  * @param {string} message - El mensaje (o clave i18n) a mostrar.
  * @param {object|null} data - Datos opcionales para reemplazar (ej. {seconds: 5}).
+ * @param {HTMLElement|HTMLElement[]|null} inputElement - El input (o inputs) a marcar en rojo.
  */
-function showAuthError(errorDiv, message, data = null) {
+function showAuthError(errorDiv, message, data = null, inputElement = null) {
     if (errorDiv) {
         let finalMessage = message;
         
@@ -159,6 +202,18 @@ function showAuthError(errorDiv, message, data = null) {
         errorDiv.textContent = finalMessage;
         errorDiv.style.display = 'block';
     }
+    
+    // --- ▼▼▼ NUEVO BLOQUE PARA MARCAR INPUTS ▼▼▼ ---
+    if (inputElement) {
+        if (Array.isArray(inputElement)) {
+            inputElement.forEach(input => {
+                if(input) input.classList.add('auth-input-error');
+            });
+        } else {
+            inputElement.classList.add('auth-input-error');
+        }
+    }
+    // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 }
 // --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA ▲▲▲ ---
 
@@ -272,6 +327,7 @@ function initRegisterWizard() {
             let clientErrorMessage = getTranslation('js.auth.errorCompleteFields');
             let errorData = null;
 
+            // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (register-step1) ▼▼▼ ---
             if (currentStep === 1) {
                 const emailInput = currentStepEl.querySelector('#register-email');
                 const passwordInput = currentStepEl.querySelector('#register-password');
@@ -280,43 +336,56 @@ function initRegisterWizard() {
                 if (!emailInput.value || !passwordInput.value) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorCompleteEmailPass');
+                    // Marcar solo los campos vacíos
+                    showAuthError(errorDiv, clientErrorMessage, null, [emailInput, passwordInput].filter(el => !el.value));
                 } else if (!emailInput.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { 
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorInvalidEmail');
+                    showAuthError(errorDiv, clientErrorMessage, null, emailInput);
                 } else if (emailInput.value.length > 255) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorEmailLength');
+                    showAuthError(errorDiv, clientErrorMessage, null, emailInput);
                 } else if (!allowedDomains.test(emailInput.value)) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorEmailDomain');
+                    showAuthError(errorDiv, clientErrorMessage, null, emailInput);
                 } else if (passwordInput.value.length < 8 || passwordInput.value.length > 72) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorPasswordLength');
                     errorData = {min: 8, max: 72};
+                    showAuthError(errorDiv, clientErrorMessage, errorData, passwordInput);
                 }
             }
+            // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (register-step1) ▲▲▲ ---
+
+            // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (register-step2) ▼▼▼ ---
             else if (currentStep === 2) {
                 const usernameInput = currentStepEl.querySelector('#register-username');
 
                 if (!usernameInput.value) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorUsernameMissing');
+                    showAuthError(errorDiv, clientErrorMessage, null, usernameInput);
                 } else if (usernameInput.value.length < 6 || usernameInput.value.length > 32) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorUsernameLength');
                     errorData = {min: 6, max: 32};
+                    showAuthError(errorDiv, clientErrorMessage, errorData, usernameInput);
                 }
             }
+            // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (register-step2) ▲▲▲ ---
 
             if (!isValid) {
-                showAuthError(errorDiv, clientErrorMessage, errorData); 
+                // showAuthError(errorDiv, clientErrorMessage, errorData); // <-- Llamada antigua eliminada
                 return;
             }
 
             if (errorDiv) errorDiv.style.display = 'none';
 
-            button.disabled = true;
-            button.textContent = getTranslation('js.auth.verifying');
+            // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+            setButtonSpinner(button);
+            // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
 
             const formData = new FormData(registerForm);
             let fetchAction = '';
@@ -349,39 +418,26 @@ function initRegisterWizard() {
                     handleNavigation(); 
                 }
             } else {
-                // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown'), result.data); 
-                // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
+                // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Error de Servidor) ▼▼▼ ---
+                let errorInput = null;
+                if (result.message === 'js.auth.errorEmailInUse') {
+                    errorInput = registerForm.querySelector('#register-email');
+                } else if (result.message === 'js.auth.errorUsernameInUse') {
+                    errorInput = registerForm.querySelector('#register-username');
+                }
+                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown'), result.data, errorInput); 
+                // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (Error de Servidor) ▼▼▼ ---
             }
 
             if (!result.success) {
-                 button.disabled = false;
-                 button.textContent = getTranslation('page.register.continueButton');
+                 // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+                 removeButtonSpinner(button);
+                 // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
             }
         }
     });
 
-    document.body.addEventListener('input', e => {
-        const isRegisterCode = (e.target.id === 'register-code' && e.target.closest('#register-form'));
-        const isResetCode = (e.target.id === 'reset-code' && e.target.closest('#reset-form'));
-        const isLoginCode = (e.target.id === 'login-code' && e.target.closest('#login-form'));
-        const isSettingsEmailCode = (e.target.id === 'email-verify-code' && e.target.closest('#email-verify-modal'));
-
-        if (isRegisterCode || isResetCode || isLoginCode || isSettingsEmailCode) {
-            let input = e.target.value.replace(/[^0-9a-zA-Z]/g, '');
-            input = input.toUpperCase();
-            input = input.substring(0, 12);
-
-            let formatted = '';
-            for (let i = 0; i < input.length; i++) {
-                if (i > 0 && i % 4 === 0) {
-                    formatted += '-';
-                }
-                formatted += input[i];
-            }
-            e.target.value = formatted;
-        }
-    });
+    // --- ELIMINADO: El listener de 'input' se moverá a initAuthManager ---
 }
 
 function initResetWizard() {
@@ -462,32 +518,42 @@ function initResetWizard() {
             let isValid = true;
             let clientErrorMessage = getTranslation('js.auth.errorCompleteFields');
 
+            // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (reset-step1) ▼▼▼ ---
             if (currentStep === 1) {
                 const emailInput = currentStepEl.querySelector('#reset-email');
                 if (!emailInput.value || !emailInput.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { 
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorInvalidEmail');
+                    showAuthError(errorDiv, clientErrorMessage, null, emailInput);
                 } else if (emailInput.value.length > 255) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorEmailLength');
+                    showAuthError(errorDiv, clientErrorMessage, null, emailInput);
                 }
             }
+            // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (reset-step1) ▲▲▲ ---
+
+            // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (reset-step2) ▼▼▼ ---
             else if (currentStep === 2) {
                 const codeInput = currentStepEl.querySelector('#reset-code');
                 if (!codeInput.value || codeInput.value.length < 14) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorInvalidCode');
+                    showAuthError(errorDiv, clientErrorMessage, null, codeInput);
                 }
             }
+            // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (reset-step2) ▲▲▲ ---
 
             if (!isValid) {
-                showAuthError(errorDiv, clientErrorMessage); 
+                // showAuthError(errorDiv, clientErrorMessage); // <-- Llamada antigua eliminada
                 return;
             }
 
             if(errorDiv) errorDiv.style.display = 'none'; 
-            button.disabled = true;
-            button.textContent = getTranslation('js.auth.verifying');
+            
+            // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+            setButtonSpinner(button);
+            // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
 
             const formData = new FormData(resetForm);
             let fetchAction = '';
@@ -520,14 +586,21 @@ function initResetWizard() {
                  }
 
             } else {
-                // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown'), result.data); 
-                // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
+                // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Error de Servidor) ▼▼▼ ---
+                let errorInput = null;
+                if (result.message === 'js.auth.errorUserNotFound') {
+                    errorInput = resetForm.querySelector('#reset-email');
+                } else if (result.message === 'js.auth.errorCodeExpired') {
+                    errorInput = resetForm.querySelector('#reset-code');
+                }
+                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown'), result.data, errorInput); 
+                // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (Error de Servidor) ▼▼▼ ---
             }
 
             if (!result.success) {
-                button.disabled = false;
-                button.textContent = (currentStep === 1) ? getTranslation('page.reset.sendCodeButton') : getTranslation('page.reset.verifyButton');
+                // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+                removeButtonSpinner(button);
+                // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
             }
         }
     });
@@ -621,16 +694,21 @@ function initLoginWizard() {
         // --- ▲▲▲ FIN DE LA MODIFICACIÓN (initLoginWizard -> prev-step) ▲▲▲ ---
 
         if (action === 'next-step') { 
+            // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (login-step1) ▼▼▼ ---
             const emailInput = currentStepEl.querySelector('#login-email');
             const passwordInput = currentStepEl.querySelector('#login-password');
             if (!emailInput.value || !passwordInput.value) {
-                showAuthError(errorDiv, getTranslation('js.auth.errorCompleteEmailPass')); 
+                // Marcar solo los campos vacíos
+                showAuthError(errorDiv, getTranslation('js.auth.errorCompleteEmailPass'), null, [emailInput, passwordInput].filter(el => !el.value)); 
                 return;
             }
+            // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (login-step1) ▲▲▲ ---
 
             if(errorDiv) errorDiv.style.display = 'none'; 
-            button.disabled = true;
-            button.textContent = getTranslation('js.auth.processing');
+            
+            // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+            setButtonSpinner(button);
+            // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
 
             const formData = new FormData(loginForm);
             formData.append('action', 'login-check-credentials');
@@ -671,9 +749,17 @@ function initLoginWizard() {
             } else if (result.redirect_to_status) {
                  window.location.href = window.projectBasePath + '/account-status/' + result.redirect_to_status;
             } else {
-                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown'), result.data); 
-                button.disabled = false; 
-                button.textContent = getTranslation('page.login.continueButton');
+                // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Error de Servidor) ▼▼▼ ---
+                let errorInput = [emailInput, passwordInput]; // Marcar ambos por defecto
+                if (result.message === 'js.auth.errorTooManyAttempts') {
+                    errorInput = null; // No marcar campos si es por rate limiting
+                }
+                showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown'), result.data, errorInput); 
+                // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (Error de Servidor) ▼▼▼ ---
+                
+                // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+                removeButtonSpinner(button);
+                // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
             }
 
              if(result.success && result.is_2fa_required) {
@@ -687,6 +773,51 @@ function initLoginWizard() {
 
 export function initAuthManager() {
     initPasswordToggles();
+
+    // --- ▼▼▼ INICIO DE NUEVO LISTENER (Unificado) ▼▼▼ ---
+    // Centraliza la limpieza de errores y el formato de códigos
+    document.body.addEventListener('input', e => {
+        
+        // Parte 1: Limpiar errores de validación
+        const authInput = e.target.closest('.auth-input-group input');
+        if (authInput && e.target.closest('.auth-form')) {
+            
+            // Quitar el borde rojo del input
+            authInput.classList.remove('auth-input-error');
+            
+            // Ocultar el mensaje de error del paso actual
+            const currentStep = authInput.closest('.auth-step');
+            if (currentStep) {
+                const errorDiv = currentStep.querySelector('.auth-error-message');
+                if (errorDiv && errorDiv.style.display !== 'none') {
+                    errorDiv.style.display = 'none';
+                }
+            }
+        }
+
+        // Parte 2: Formatear códigos de verificación
+        const isRegisterCode = (e.target.id === 'register-code' && e.target.closest('#register-form'));
+        const isResetCode = (e.target.id === 'reset-code' && e.target.closest('#reset-form'));
+        const isLoginCode = (e.target.id === 'login-code' && e.target.closest('#login-form'));
+        const isSettingsEmailCode = (e.target.id === 'email-verify-code' && e.target.closest('#email-verify-modal'));
+
+        if (isRegisterCode || isResetCode || isLoginCode || isSettingsEmailCode) {
+            let input = e.target.value.replace(/[^0-9a-zA-Z]/g, '');
+            input = input.toUpperCase();
+            input = input.substring(0, 12);
+
+            let formatted = '';
+            for (let i = 0; i < input.length; i++) {
+                if (i > 0 && i % 4 === 0) {
+                    formatted += '-';
+                }
+                formatted += input[i];
+            }
+            e.target.value = formatted;
+        }
+    });
+    // --- ▲▲▲ FIN DE NUEVO LISTENER (Unificado) ▲▲▲ ---
+
     initRegisterWizard();
     initResetWizard();
     initLoginWizard();

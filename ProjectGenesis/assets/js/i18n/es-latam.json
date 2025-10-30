@@ -2,7 +2,8 @@
 {
   "header": {
     "profile": {
-      "altPrefix": "Avatar de",
+   "altPrefix": "Avatar de",
+      "adminPanel": "Panel de Administración",
       "settings": "Configuración",
       "help": "Ayuda y comentarios",
       "logout": "Cerrar sesión"
