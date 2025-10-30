@@ -85,7 +85,6 @@ function focusInputAndMoveCursorToEnd(inputElement) {
     }
 }
 
-// --- ▼▼▼ INICIO DE LA MODIFICACIÓN (NUEVA FUNCIÓN) ▼▼▼ ---
 /**
  * Formatea una fecha UTC (ej. "2025-10-27 18:32:00") a un formato simple "dd/mm/yyyy".
  * @param {string} utcTimestamp
@@ -109,7 +108,6 @@ function formatTimestampToSimpleDate(utcTimestamp) {
         return 'fecha inválida';
     }
 }
-// --- ▲▲▲ FIN DE LA MODIFICACIÓN (NUEVA FUNCIÓN) ▲▲▲ ---
 
 
 async function handlePreferenceChange(preferenceTypeOrField, newValue, cardElement) {
@@ -142,7 +140,6 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue, cardEleme
     const result = await callSettingsApi(formData);
 
     if (result.success) {
-        window.showAlert(getTranslation(result.message || 'js.settings.successPreference'), 'success');
 
         if (preferenceTypeOrField === 'theme') {
             window.userTheme = newValue;
@@ -153,13 +150,22 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue, cardEleme
         if (fieldName === 'increase_message_duration') {
             window.userIncreaseMessageDuration = Number(newValue);
         }
+        
         if (preferenceTypeOrField === 'language') {
             window.userLanguage = newValue;
-            // Recargar la página para aplicar idioma completamente (más simple)
-            // await loadTranslations(newValue);
-            // applyTranslations(document.body);
-            window.showAlert(getTranslation('js.settings.successLang'), 'success'); // Nuevo mensaje
-            setTimeout(() => location.reload(), 1500); // Recargar
+            
+            // 1. Cargar las nuevas traducciones dinámicamente
+            await loadTranslations(newValue);
+            
+            // 2. Aplicar las traducciones a toda la página
+            applyTranslations(document.body);
+            
+            // 3. Mostrar la alerta de éxito estándar (que no menciona la recarga)
+            window.showAlert(getTranslation('js.settings.successPreference'), 'success');
+
+        } else {
+             // Mostrar la alerta estándar para todas las demás preferencias
+             window.showAlert(getTranslation(result.message || 'js.settings.successPreference'), 'success');
         }
 
     } else {
@@ -167,13 +173,11 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue, cardEleme
     }
 }
 
-// --- ▼▼▼ NUEVA FUNCIÓN HELPER PARA OBTENER CSRF TOKEN DE FORMA SEGURA ▼▼▼ ---
 function getCsrfTokenFromPage() {
     // Intenta encontrar *cualquier* input CSRF en la página
     const csrfInput = document.querySelector('input[name="csrf_token"]');
     return csrfInput ? csrfInput.value : (window.csrfToken || ''); // Fallback al global
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN HELPER ▲▲▲ ---
 
 export function initSettingsManager() {
 
@@ -497,15 +501,14 @@ export function initSettingsManager() {
         }
 
         // --- PREFERENCES (Dropdowns/Popovers) ---
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN DE SELECTORES ▼▼▼ ---
-        const clickedLink = target.closest('.popover-module .menu-link'); // <-- Selector actualizado
-        if (clickedLink && card) { // Asegurarse de que estamos dentro de una tarjeta
+        const clickedLink = target.closest('.popover-module .menu-link'); 
+        if (clickedLink && card) { 
             e.preventDefault();
-            hideInlineError(card); // Ocultar error al cambiar preferencia
+            hideInlineError(card); 
 
             const menuList = clickedLink.closest('.menu-list');
-            const module = clickedLink.closest('.popover-module[data-preference-type]'); // <-- Selector actualizado
-            const wrapper = card.querySelector('.trigger-select-wrapper'); // <-- Buscar wrapper en la tarjeta padre
+            const module = clickedLink.closest('.popover-module[data-preference-type]'); 
+            const wrapper = card.querySelector('.trigger-select-wrapper'); 
             const trigger = wrapper?.querySelector('.trigger-selector');
             const triggerTextEl = trigger?.querySelector('.trigger-select-text span');
             const triggerIconEl = trigger?.querySelector('.trigger-select-icon span');
@@ -516,7 +519,7 @@ export function initSettingsManager() {
             const newIconName = clickedLink.querySelector('.menu-link-icon span')?.textContent;
 
 
-            if (!menuList || !module || !wrapper || !trigger || !triggerTextEl || !newTextKey || !newValue || !prefType || !triggerIconEl) { // <-- Añadida validación de wrapper y trigger
+            if (!menuList || !module || !wrapper || !trigger || !triggerTextEl || !newTextKey || !newValue || !prefType || !triggerIconEl) { 
                  console.error("Error finding elements for preference change", {menuList, module, wrapper, trigger, triggerTextEl, newTextKey, newValue, prefType, triggerIconEl});
                  deactivateAllModules();
                 return;
@@ -543,11 +546,22 @@ export function initSettingsManager() {
 
             deactivateAllModules();
 
-            handlePreferenceChange(prefType, newValue, card);
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+            trigger.classList.add('disabled-interactive'); // 1. Deshabilitar trigger
+            try {
+                await handlePreferenceChange(prefType, newValue, card); // 2. Esperar guardado
+            } catch (error) {
+                // Capturar cualquier error inesperado de la función
+                console.error("Error during preference change:", error); 
+                // El error inline ya se muestra dentro de handlePreferenceChange si falla la API
+            } finally {
+                // 3. Reactivar el trigger sin importar si falló o no
+                trigger.classList.remove('disabled-interactive'); 
+            }
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
-            return; // <-- Añadido return explícito
+            return; 
         }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN DE SELECTORES ▲▲▲ ---
 
 
         // --- (Modal 2FA handlers remain the same, except CSRF token) ---
@@ -668,10 +682,8 @@ export function initSettingsManager() {
             if (!modal) return;
             // ... (resto del código sin cambios) ...
             
-            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
             modal.querySelector('[data-step="1"]').style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
             modal.querySelector('[data-step="2"]').style.display = 'none';
-            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
             const errorDiv1 = modal.querySelector('#password-verify-error');
             const errorDiv2 = modal.querySelector('#password-update-error');
@@ -700,12 +712,9 @@ export function initSettingsManager() {
              e.preventDefault();
             const modal = document.getElementById('password-change-modal');
             if (!modal) return;
-            // ... (resto del código sin cambios) ...
             
-            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
              modal.querySelector('[data-step="1"]').style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
              modal.querySelector('[data-step="2"]').style.display = 'none';
-            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
             const errorDiv = modal.querySelector('#password-update-error');
              if (errorDiv) errorDiv.style.display = 'none';
@@ -739,10 +748,8 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
                 modal.querySelector('[data-step="1"]').style.display = 'none';
                 modal.querySelector('[data-step="2"]').style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
-                // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
                 focusInputAndMoveCursorToEnd(modal.querySelector('#password-update-new'));
             } else {
                 if(errorDiv) {
@@ -796,24 +803,15 @@ export function initSettingsManager() {
                 if(modal) modal.style.display = 'none';
                 window.showAlert(getTranslation(result.message || 'js.settings.successPassUpdate'), 'success');
 
-                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (ACTUALIZAR TEXTO) ▼▼▼ ---
                 if (result.newTimestamp) {
                     const passwordTextElement = document.getElementById('password-last-updated-text');
                     if (passwordTextElement) {
-                        // Formatear la fecha (ej. "27/10/2025")
                         const formattedDate = formatTimestampToSimpleDate(result.newTimestamp);
-                        
-                        // Construir el string (replicamos la lógica del PHP ya que no hay clave i18n para esto)
                         const newText = `Última actualización de tu contraseña: ${formattedDate}`;
-                        
-                        // Actualizar el DOM
                         passwordTextElement.textContent = newText;
-                        
-                        // Quitar el data-i18n para que no se sobreescriba
                         passwordTextElement.removeAttribute('data-i18n');
                     }
                 }
-                // --- ▲▲▲ FIN DE LA MODIFICACIÓN (ACTUALIZAR TEXTO) ▲▲▲ ---
 
             } else {
                 if(errorDiv) {
@@ -830,7 +828,6 @@ export function initSettingsManager() {
          if (target.closest('#logout-all-devices-trigger')) {
             e.preventDefault();
             const modal = document.getElementById('logout-all-modal');
-            // ... (resto del código sin cambios) ...
             if(modal) {
                 const dangerBtn = modal.querySelector('#logout-all-confirm');
                 if(dangerBtn) {
@@ -879,7 +876,6 @@ export function initSettingsManager() {
          if (target.closest('#delete-account-trigger')) {
             e.preventDefault();
             const modal = document.getElementById('delete-account-modal');
-            // ... (resto del código sin cambios) ...
              if(modal) {
                 const passwordInput = modal.querySelector('#delete-account-password');
                 const errorDiv = modal.querySelector('#delete-account-error');
@@ -947,8 +943,10 @@ export function initSettingsManager() {
 
     }); // Fin listener 'click'
 
-    // --- (Listener 'change' and 'input' remain the same) ---
-     document.body.addEventListener('change', (e) => {
+
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (AÑADIR ASYNC) ▼▼▼ ---
+    document.body.addEventListener('change', async (e) => {
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
         const target = e.target;
         const card = target.closest('.settings-card');
 
@@ -998,8 +996,16 @@ export function initSettingsManager() {
             const newValue = checkbox.checked ? '1' : '0';
 
             if (fieldName) {
-                // Llamar a handlePreferenceChange pasando la tarjeta actual
-                handlePreferenceChange(fieldName, newValue, card);
+                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (DESHABILITAR Y AWAIT) ▼▼▼ ---
+                checkbox.disabled = true; // 1. Deshabilitar
+                try {
+                    await handlePreferenceChange(fieldName, newValue, card); // 2. Esperar
+                } catch (error) {
+                    console.error("Error during toggle preference change:", error);
+                } finally {
+                    checkbox.disabled = false; // 3. Reactivar
+                }
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } else {
                 console.error('Este toggle no tiene un data-field-name:', checkbox);
             }

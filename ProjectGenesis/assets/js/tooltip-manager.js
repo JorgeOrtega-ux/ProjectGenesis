@@ -10,23 +10,20 @@ let tooltipEl;
 let popperInstance;
 
 /**
- * Crea el elemento de tooltip reutilizable y lo añade al body.
+ * Crea una NUEVA instancia del elemento tooltip.
+ * No lo añade al body.
  */
-function createTooltipElement() {
-    if (!document.getElementById('main-tooltip')) {
-        tooltipEl = document.createElement('div');
-        tooltipEl.id = 'main-tooltip';
-        tooltipEl.className = 'tooltip';
-        tooltipEl.setAttribute('role', 'tooltip');
-        
-        const textEl = document.createElement('div');
-        textEl.className = 'tooltip-text';
-        tooltipEl.appendChild(textEl);
-        
-        document.body.appendChild(tooltipEl);
-    } else {
-        tooltipEl = document.getElementById('main-tooltip');
-    }
+function createTooltipElementInstance() {
+    const newTooltipEl = document.createElement('div');
+    newTooltipEl.id = 'main-tooltip'; // El ID puede causar conflictos si se muestran varios a la vez, pero para este sistema funciona.
+    newTooltipEl.className = 'tooltip';
+    newTooltipEl.setAttribute('role', 'tooltip');
+    
+    const textEl = document.createElement('div');
+    textEl.className = 'tooltip-text';
+    newTooltipEl.appendChild(textEl);
+    
+    return newTooltipEl;
 }
 
 /**
@@ -36,6 +33,14 @@ function createTooltipElement() {
 function showTooltip(target) {
     const tooltipKey = target.getAttribute('data-tooltip');
     if (!tooltipKey) return;
+
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    // 1. Crear el elemento
+    tooltipEl = createTooltipElementInstance();
+    
+    // 2. Añadirlo al body
+    document.body.appendChild(tooltipEl);
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     const text = getTranslation(tooltipKey);
     tooltipEl.querySelector('.tooltip-text').textContent = text;
@@ -59,18 +64,31 @@ function showTooltip(target) {
  * Oculta el tooltip y destruye la instancia de Popper.
  */
 function hideTooltip() {
-    tooltipEl.style.display = 'none';
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    // 1. Destruir la instancia de Popper
     if (popperInstance) {
         popperInstance.destroy();
         popperInstance = null;
     }
+    
+    // 2. Eliminar el elemento del DOM
+    if (tooltipEl && tooltipEl.parentNode) {
+        tooltipEl.parentNode.removeChild(tooltipEl);
+        tooltipEl = null; // Limpiar la referencia
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
 
 /**
  * Inicializa los listeners para los tooltips.
  */
 export function initTooltipManager() {
-    createTooltipElement();
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    // Ya NO creamos el elemento al iniciar
+    // createTooltipElement();
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     document.body.addEventListener('mouseover', (e) => {
         const target = e.target.closest('[data-tooltip]');
