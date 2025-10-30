@@ -1137,8 +1137,9 @@ body {
 }
 
 .modal__description {
-    font-size: 15px;
-    color: #6b7280;
+    font-size: 14px;
+    color: #000;
+    font-weight: 500;
     line-height: 1.5;
     text-align: left;
     margin: 0;
@@ -1692,20 +1693,21 @@ body {
 
 /* --- ▼▼▼ NUEVOS ESTILOS PARA MODAL ELIMINAR CUENTA (CORREGIDOS) ▼▼▼ --- */
 .delete-account-user-badge {
-    display: inline-flex;
+    display: inline-flex
+;
     align-items: center;
-    gap: 12px;
-    padding: 8px 16px 8px 10px;
+    height: 35px;
+    gap: 6px;
+    padding: 8px 12px;
     border-radius: 99px;
-    background-color: #f5f5fa;
     border: 1px solid #00000020;
-    margin: 0 auto; /* Centrar el badge */
+    margin: 0 auto;
     max-width: 100%;
 }
 
 .delete-account-user-avatar {
-    width: 32px;
-    height: 32px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
@@ -1713,7 +1715,6 @@ body {
 
 .delete-account-user-email {
     font-size: 15px;
-    font-weight: 500;
     color: #1f2937;
     white-space: nowrap;
     overflow: hidden;
