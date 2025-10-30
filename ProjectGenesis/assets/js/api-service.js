@@ -1,3 +1,5 @@
+// assets/js/api-service.js
+
 import { getTranslation } from './i18n-manager.js';
 
 const API_ENDPOINTS = {
@@ -9,8 +11,10 @@ async function _post(url, formData) {
     const csrfToken = window.csrfToken || '';
     formData.append('csrf_token', csrfToken);
 
+    let response; // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
+    
     try {
-        const response = await fetch(url, {
+        response = await fetch(url, { // --- Asignar a 'response'
             method: 'POST',
             body: formData,
         });
@@ -20,17 +24,33 @@ async function _post(url, formData) {
             return { success: false, message: getTranslation('js.api.errorServer') };
         }
 
-        const result = await response.json();
+        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ ---
+        // Intentar clonar la respuesta para leerla como texto si falla el JSON
+        const responseClone = response.clone();
+        
+        try {
+            const result = await response.json(); // Intentar parsear JSON
 
-        if (result.success === false && result.message && result.message.includes('Error de seguridad')) {
-            window.showAlert(getTranslation('js.api.errorSecurity'), 'error');
-            setTimeout(() => location.reload(), 2000);
+            if (result.success === false && result.message && result.message.includes('Error de seguridad')) {
+                window.showAlert(getTranslation('js.api.errorSecurity'), 'error');
+                setTimeout(() => location.reload(), 2000);
+            }
+            
+            return result;
+
+        } catch (jsonError) {
+            // ¡FALLÓ EL JSON! Leer la respuesta como texto para ver el error de PHP
+            console.error('Error al parsear JSON:', jsonError);
+            const errorText = await responseClone.text();
+            console.error('Respuesta del servidor (no-JSON):', errorText);
+            // Devolver un error más específico
+            return { success: false, message: getTranslation('js.api.errorServer') + ' (Respuesta inválida)' };
         }
+        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
 
-        return result;
 
-    } catch (error) {
-        console.error('Error en la llamada fetch:', error);
+    } catch (error) { // Esto ahora solo captura errores de red (ej. sin internet)
+        console.error('Error en la llamada fetch (Red):', error);
         return { success: false, message: getTranslation('js.api.errorConnection') };
     }
 }
