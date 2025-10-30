@@ -1,4 +1,3 @@
-
 {
   "header": {
     "profile": {
@@ -212,7 +211,11 @@
       "backToRegister": "Volver al inicio del registro",
       "backToReset": "Volver al inicio de la recuperación"
     },
-
+    
+    "db_error": {
+        "title": "Error de Conexión",
+        "description": "No pudimos conectarnos a la base de datos. Por favor, inténtalo de nuevo más tarde o contacta al administrador."
+    },
   
     "status": {
         "deletedTitle": "Cuenta Eliminada",

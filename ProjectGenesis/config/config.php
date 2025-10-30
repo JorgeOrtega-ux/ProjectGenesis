@@ -20,6 +20,10 @@ define('DB_NAME', 'project_genesis');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 
+// --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+$pdo = null;
+$pdo_connection_error = null; // Variable global para el error
+
 try {
     $pdo = new PDO(
         "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", 
@@ -33,8 +37,11 @@ try {
 
 } catch (PDOException $e) {
     logDatabaseError($e, 'PDO Connection');
-    die("db.connectionError: ERROR: Could not connect to the database. Please contact the administrator.");
+    // En lugar de 'die()', guardamos el error
+    $pdo_connection_error = "db.connectionError: ERROR: Could not connect to the database. Please contact the administrator.";
 }
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
 
 $basePath = '/ProjectGenesis';
 

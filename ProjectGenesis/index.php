@@ -8,7 +8,10 @@ include 'config/config.php';
 getCsrfToken(); 
 
 // --- ¡NUEVA MODIFICACIÓN! ACTUALIZAR DATOS DE SESIÓN EN CADA CARGA ---
-if (isset($_SESSION['user_id'])) {
+// --- ▼▼▼ INICIO DE LA MODIFICACIÓN (MANEJO DE ERROR DE BD) ▼▼▼ ---
+// Solo intentar refrescar la sesión si la BD está conectada
+if ($pdo !== null && isset($_SESSION['user_id'])) {
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
     try {
         // 1. OBTENER DATOS BÁSICOS DEL USUARIO
         // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (SE AÑADIÓ 'account_status') ▼▼▼ ---
@@ -87,7 +90,13 @@ if (isset($_SESSION['user_id'])) {
         // Error al refrescar sesión
         logDatabaseError($e, 'index - refresh session'); // Añadido log
     }
+// --- ▼▼▼ INICIO DE LA MODIFICACIÓN (MANEJO DE ERROR DE BD) ▼▼▼ ---
+} elseif ($pdo === null) {
+    // Si la BD está caída, forzar un estado de "no logueado"
+    // para que las variables de JS (theme, lang) usen defaults.
+    session_unset(); // Limpiar sesión para que no parezca logueado
 }
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 // --- FIN DE LA NUEVA MODIFICACIÓN ---
 
 
@@ -141,14 +150,26 @@ $isAuthPage = in_array($currentPage, $authPages) ||
 $isSettingsPage = strpos($currentPage, 'settings-') === 0;
 
 // 6. LÓGICA DE PROTECCIÓN DE RUTAS
-if (!isset($_SESSION['user_id']) && !$isAuthPage) {
-    header('Location: ' . $basePath . '/login');
-    exit;
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (MANEJO DE ERROR DE BD) ▼▼▼ ---
+if ($pdo === null && !$isAuthPage) {
+    // Si la BD está caída Y NO estamos en una página pública (auth),
+    // Forzamos la página de 'login' (que luego router.php convertirá en db-error)
+    $currentPage = 'login';
+    $isAuthPage = true;
+    
+} elseif ($pdo !== null) { 
+    // Solo ejecutar estas reglas si la BD SÍ está conectada
+    if (!isset($_SESSION['user_id']) && !$isAuthPage) {
+        header('Location: ' . $basePath . '/login');
+        exit;
+    }
+    if (isset($_SESSION['user_id']) && $isAuthPage) {
+        header('Location: ' . $basePath . '/');
+        exit;
+    }
 }
-if (isset($_SESSION['user_id']) && $isAuthPage) {
-    header('Location: ' . $basePath . '/');
-    exit;
-}
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
 if ($path === '/settings') {
     header('Location: ' . $basePath . '/settings/your-profile');
     exit;

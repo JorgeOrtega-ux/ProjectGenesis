@@ -1,0 +1,2 @@
+[2025-10-30 15:45:22 UTC] [PDO Connection] SQLSTATE[HY000] [2006] MySQL server has gone away (Archivo: E:\xampp\htdocs\ProjectGenesis\config\config.php, Línea: 31)
+[2025-10-30 15:45:26 UTC] [PDO Connection] SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión (Archivo: E:\xampp\htdocs\ProjectGenesis\config\config.php, Línea: 31)
