@@ -85,6 +85,12 @@ function outputCsrfInput() {
 define('MAX_LOGIN_ATTEMPTS', 5); 
 define('LOCKOUT_TIME_MINUTES', 5); 
 
+// --- ▼▼▼ INICIO DE LA MODIFICACIÓN (CONSTANTES DE SPAM) ▼▼▼ ---
+define('MAX_PREFERENCE_CHANGES', 20); // 20 cambios en 60 mins
+define('PREFERENCE_LOCKOUT_MINUTES', 60);
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN (CONSTANTES DE SPAM) ▲▲▲ ---
+
+
 function getIpAddress() {
     if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
         return $_SERVER['HTTP_CLIENT_IP'];

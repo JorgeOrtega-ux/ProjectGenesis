@@ -1,7 +1,7 @@
 {
   "header": {
     "profile": {
-   "altPrefix": "Avatar de",
+      "altPrefix": "Avatar de",
       "adminPanel": "Panel de Administración",
       "settings": "Configuración",
       "help": "Ayuda y comentarios",
@@ -39,9 +39,7 @@
       "edit": "Editar",
       "email": "Correo Electrónico",
       "modalCodeTitle": "Busca el código que te enviamos",
-      
       "modalCodeDesc": "Para poder hacer cambios en tu cuenta, primero debes ingresar el código que te enviamos a",
-      
       "modalCodeLabel": "Código*",
       "continue": "Continuar",
       "modalCodeResendP": "¿No recibiste el código?",
@@ -90,7 +88,6 @@
       "confirm": "Confirmar",
       "lastPassUpdateNever": "Nunca has actualizado tu contraseña.",
       "lastPassUpdateError": "No se pudo cargar el historial de actualizaciones.",
-      
       "modalDeleteTitle": "Eliminar tu cuenta permanentemente",
       "modalDeleteWarning": "Esta acción es <strong>irreversible</strong> y no se puede deshacer. Todo tu contenido, publicaciones y conexiones se eliminarán permanentemente y <strong>no se podrán recuperar</strong>.",
       "modalDeleteLosingTitle": "<strong>Al eliminar tu cuenta, también perderás:</strong>",
@@ -217,20 +214,17 @@
       "backToRegister": "Volver al inicio del registro",
       "backToReset": "Volver al inicio de la recuperación"
     },
-    
     "db_error": {
-        "title": "Error de Conexión",
-        "description": "No pudimos conectarnos a la base de datos. Por favor, inténtalo de nuevo más tarde o contacta al administrador."
+      "title": "Error de Conexión",
+      "description": "No pudimos conectarnos a la base de datos. Por favor, inténtalo de nuevo más tarde o contacta al administrador."
     },
-  
     "status": {
-        "deletedTitle": "Cuenta Eliminada",
-        "deletedDesc": "Esta cuenta ha sido eliminada permanentemente. Si crees que esto es un error, por favor contacta a soporte.",
-        "suspendedTitle": "Cuenta Suspendida",
-        "suspendedDesc": "Esta cuenta ha sido suspendida. No podrás acceder hasta que la suspensión sea levantada. Si crees que esto es un error, por favor contacta a soporte.",
-        "backToLogin": "Volver a Inicio de Sesión"
+      "deletedTitle": "Cuenta Eliminada",
+      "deletedDesc": "Esta cuenta ha sido eliminada permanentemente. Si crees que esto es un error, por favor contacta a soporte.",
+      "suspendedTitle": "Cuenta Suspendida",
+      "suspendedDesc": "Esta cuenta ha sido suspendida. No podrás acceder hasta que la suspensión sea levantada. Si crees que esto es un error, por favor contacta a soporte.",
+      "backToLogin": "Volver a Inicio de Sesión"
     }
-
   },
   "js": {
     "auth": {
@@ -342,13 +336,14 @@
       "errorAccountDelete": "Error al eliminar la cuenta."
     },
     "api": {
-      "errorServer": "Error en la respuesta del servidor.",
+      "errorServer": "No se pudo completar la solicitud. Por favor, inténtalo más tarde.",
       "errorSecurity": "Error de seguridad. Recargando la página...",
       "errorSecurityRefresh": "Error de seguridad. Por favor, recarga la página e inténtalo de nuevo.",
       "errorConnection": "No se pudo conectar con el servidor.",
       "invalidAction": "Acción no válida.",
       "errorDatabase": "Error en la base de datos.",
-      "errorDatabaseEnum": "Error de BD: El tipo de acción no existe en la base de datos."
+      "errorDatabaseEnum": "Error de BD: El tipo de acción no existe en la base de datos.",
+      "genericSpamError": "Algo no salió bien. Vuelve a intentarlo."
     },
     "main": {
       "errorNetwork": "No hay conexión a internet.",

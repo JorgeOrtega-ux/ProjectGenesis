@@ -627,6 +627,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         } elseif ($action === 'update-preference') {
+            
+            $ip = getIpAddress();
+            try {
+                $stmt_check_spam = $pdo->prepare(
+                    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (LA LÍNEA CORREGIDA) ▼▼▼ ---
+                    "SELECT COUNT(*) FROM security_logs 
+                     WHERE user_identifier = ? 
+                     AND action_type = 'preference_spam' 
+                     AND created_at > (NOW() - INTERVAL ? MINUTE)"
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN (LA LÍNEA CORREGIDA) ▲▲▲ ---
+                );
+                $stmt_check_spam->execute([$userId, PREFERENCE_LOCKOUT_MINUTES]);
+                $attempts = $stmt_check_spam->fetchColumn();
+
+                if ($attempts >= MAX_PREFERENCE_CHANGES) {
+                    http_response_code(429); 
+                    $response['message'] = 'js.auth.errorTooManyAttempts'; 
+                    $response['data'] = ['minutes' => PREFERENCE_LOCKOUT_MINUTES];
+                    echo json_encode($response);
+                    exit;
+                }
+            } catch (PDOException $e) {
+                logDatabaseError($e, 'settings_handler - check preference spam');
+            }
+            
+            
             try {
                 $field = $_POST['field'] ?? '';
                 $value = $_POST['value'] ?? '';
@@ -658,6 +684,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     : $value;
 
                 $stmt->execute([$finalValue, $userId]);
+                
+                logFailedAttempt($pdo, $userId, $ip, 'preference_spam');
 
                 $response['success'] = true;
                 $response['message'] = 'js.settings.successPreference';

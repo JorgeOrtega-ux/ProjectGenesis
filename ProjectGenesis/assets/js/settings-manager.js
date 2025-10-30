@@ -3,6 +3,11 @@ import { deactivateAllModules } from './main-controller.js';
 import { getTranslation, loadTranslations, applyTranslations } from './i18n-manager.js';
 import { startResendTimer } from './auth-manager.js';
 
+// --- ▼▼▼ INICIO DE LA MODIFICACIÓN (RATE LIMIT) ▼▼▼ ---
+let isPreferenceLocked = false;
+let preferenceLockoutTimer = null;
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN (RATE LIMIT) ▲▲▲ ---
+
 // --- (Helper functions showInlineError, hideInlineError, toggleButtonSpinner, focusInputAndMoveCursorToEnd remain the same) ---
 /**
  * Muestra un mensaje de error inline debajo de un elemento .settings-card.
@@ -119,6 +124,16 @@ function formatTimestampToSimpleDate(utcTimestamp) {
 
 
 async function handlePreferenceChange(preferenceTypeOrField, newValue, cardElement) {
+    
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (RATE LIMIT) ▼▼▼ ---
+    if (isPreferenceLocked) {
+        // Estamos bloqueados localmente, no enviar petición.
+        // Mostrar el error genérico solicitado.
+        showInlineError(cardElement, 'js.api.genericSpamError'); 
+        return; // Detener la ejecución
+    }
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN (RATE LIMIT) ▲▲▲ ---
+
     if (!preferenceTypeOrField || newValue === undefined || !cardElement) {
         console.error('handlePreferenceChange: Faltan tipo/campo, valor o elemento de tarjeta.');
         return;
@@ -177,7 +192,31 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue, cardEleme
         }
 
     } else {
-        showInlineError(cardElement, result.message || 'js.settings.errorPreference');
+        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (RATE LIMIT) ▼▼▼ ---
+        // Comprobar si el error es el de "demasiados intentos"
+        if (result.message === 'js.auth.errorTooManyAttempts') {
+            // El servidor nos dijo que estamos bloqueados.
+            isPreferenceLocked = true;
+            // Mostrar el error genérico solicitado
+            showInlineError(cardElement, 'js.api.genericSpamError'); 
+
+            // Limpiar el temporizador existente si lo hay
+            if (preferenceLockoutTimer) {
+                clearTimeout(preferenceLockoutTimer);
+            }
+
+            // Iniciar un temporizador local para desbloquear después de 60 minutos
+            // (60 minutos * 60 segundos * 1000 ms)
+            const lockoutDuration = (result.data?.minutes || 60) * 60 * 1000;
+            preferenceLockoutTimer = setTimeout(() => {
+                isPreferenceLocked = false;
+            }, lockoutDuration);
+            
+        } else {
+            // Mostrar cualquier otro error de guardado
+            showInlineError(cardElement, result.message || 'js.settings.errorPreference');
+        }
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN (RATE LIMIT) ▲▲▲ ---
     }
 }
 
@@ -574,7 +613,7 @@ export function initSettingsManager() {
                 // 3. Reactivar el trigger sin importar si falló o no
                 trigger.classList.remove('disabled-interactive'); 
             }
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▼▼▼ ---
 
             return; 
         }
