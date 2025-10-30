@@ -386,189 +386,135 @@ export function initSettingsManager() {
             }
         }
 
-        // --- (Email handlers remain the same, except CSRF token) ---
+        // --- (Email section - logic removed, now handled by page) ---
         const emailCard = document.getElementById('email-section');
         if (emailCard) {
-            // ... (código email sin cambios, excepto CSRF token y llamada a startResendTimer) ...
             hideInlineError(emailCard);
+        }
+        
+        // --- (Page logic: change-email) ---
+        if (target.closest('#email-verify-resend')) {
+            e.preventDefault();
+            const resendTrigger = target.closest('#email-verify-resend');
+            const card = resendTrigger.closest('.settings-card');
+            if (!card) return; 
 
-            if (target.closest('#email-edit-trigger')) {
-                e.preventDefault();
-                const editTrigger = target.closest('#email-edit-trigger');
-                toggleButtonSpinner(editTrigger, getTranslation('settings.profile.edit'), true);
+            if (resendTrigger.classList.contains('disabled-interactive')) return;
 
-                const formData = new FormData();
-                formData.append('action', 'request-email-change-code');
-                formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
+            startResendTimer(resendTrigger, 60);
+            hideInlineError(card);
 
-                const result = await callSettingsApi(formData);
+            const formData = new FormData();
+            formData.append('action', 'request-email-change-code');
+            formData.append('csrf_token', getCsrfTokenFromPage());
 
-                if (result.success) {
-                    const modal = document.getElementById('email-verify-modal');
-                    if(modal) {
-                        const resendLink = modal.querySelector('#email-verify-resend');
-                        if (resendLink) {
-                            startResendTimer(resendLink, 60); // Iniciar timer aquí
-                        }
-                        const currentEmail = document.getElementById('email-display-text')?.dataset.originalEmail;
-                        const modalEmailEl = modal.querySelector('strong'); // <-- Corrección para encontrar el <strong>
-                        if (modalEmailEl && currentEmail) modalEmailEl.textContent = currentEmail;
-                        const modalError = document.getElementById('email-verify-error');
-                        if(modalError) modalError.style.display = 'none';
-                        const modalInput = document.getElementById('email-verify-code');
-                        if(modalInput) modalInput.value = '';
-                        
-                        // --- MODIFICACIÓN: Resetear spinner de botón ---
-                        const continueBtn = modal.querySelector('#email-verify-continue');
-                        toggleButtonSpinner(continueBtn, getTranslation('settings.profile.continue'), false);
-                        
-                        modal.style.display = 'flex';
-                        focusInputAndMoveCursorToEnd(document.getElementById('email-verify-code'));
-                    }
-                    window.showAlert(getTranslation('js.settings.infoCodeSentCurrent'), 'info');
-                } else {
-                    showInlineError(emailCard, result.message || 'js.settings.errorCodeRequest', result.data);
-                }
-                toggleButtonSpinner(editTrigger, getTranslation('settings.profile.edit'), false);
-                return;
+            const result = await callSettingsApi(formData);
+
+            if (result.success) {
+                window.showAlert(getTranslation('js.settings.successCodeResent'), 'success');
+            } else {
+                showInlineError(card, result.message || 'js.settings.errorCodeResent', result.data);
+                
+                const timerId = resendTrigger.dataset.timerId;
+                if (timerId) clearInterval(timerId);
+                const originalBaseText = getTranslation('settings.profile.modalCodeResendA');
+                resendTrigger.textContent = originalBaseText;
+                resendTrigger.classList.remove('disabled-interactive');
             }
-             if (target.closest('#email-cancel-trigger')) {
-                 e.preventDefault();
-                const displayElement = document.getElementById('email-display-text');
-                const inputElement = document.getElementById('email-input');
-                if (displayElement && inputElement) inputElement.value = displayElement.dataset.originalEmail;
-                document.getElementById('email-edit-state').style.display = 'none';
-                document.getElementById('email-actions-edit').style.display = 'none';
-                document.getElementById('email-view-state').style.display = 'flex';
-                document.getElementById('email-actions-view').style.display = 'flex';
-                return;
-            }
-            if (target.closest('#email-save-trigger-btn')) {
-                e.preventDefault();
-                const saveTrigger = target.closest('#email-save-trigger-btn');
-                const inputElement = document.getElementById('email-input');
-                const newEmail = inputElement.value;
-                const actionInput = emailCard.querySelector('[name="action"]');
-
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(newEmail)) {
-                    showInlineError(emailCard, 'js.auth.errorInvalidEmail'); return;
-                }
-                if (newEmail.length > 255) {
-                    showInlineError(emailCard, 'js.auth.errorEmailLength'); return;
-                }
-                const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i;
-                if (!allowedDomains.test(newEmail)) {
-                    showInlineError(emailCard, 'js.auth.errorEmailDomain'); return;
-                }
-
-                toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
-
-                const formData = new FormData();
-                formData.append('action', actionInput.value);
-                formData.append('email', newEmail);
-                formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
-
-                const result = await callSettingsApi(formData);
-
-                if (result.success) {
-                    window.showAlert(getTranslation(result.message || 'js.settings.successEmailUpdate'), 'success');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showInlineError(emailCard, result.message || 'js.settings.errorSaveUnknown', result.data);
-                    toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
-                }
-                return;
-            }
+            return;
         }
 
-        // --- ▼▼▼ INICIO DE MODAL EMAIL MODIFICADO ▼▼▼ ---
-        const emailVerifyModal = document.getElementById('email-verify-modal');
-        if (emailVerifyModal && emailVerifyModal.contains(target)) {
-             if (target.closest('#email-verify-resend')) {
-                e.preventDefault();
-                const resendTrigger = target.closest('#email-verify-resend');
-                const modalError = document.getElementById('email-verify-error');
-                if (resendTrigger.classList.contains('disabled-interactive')) return;
+        if (target.closest('#email-verify-continue')) {
+            e.preventDefault();
+            const continueTrigger = target.closest('#email-verify-continue');
+            const card = continueTrigger.closest('.settings-card');
+            if (!card) return;
+            const modalInput = document.getElementById('email-verify-code');
 
-                startResendTimer(resendTrigger, 60);
+            hideInlineError(card);
 
-                if(modalError) modalError.style.display = 'none';
-
-                const formData = new FormData();
-                formData.append('action', 'request-email-change-code');
-                formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
-
-                const result = await callSettingsApi(formData);
-
-                if (result.success) {
-                    window.showAlert(getTranslation('js.settings.successCodeResent'), 'success');
-                } else {
-                    if(modalError) {
-                        modalError.textContent = getTranslation(result.message || 'js.settings.errorCodeResent', result.data);
-                        modalError.style.display = 'block';
-                    }
-                    const timerId = resendTrigger.dataset.timerId;
-                    if (timerId) clearInterval(timerId);
-                    const originalBaseText = getTranslation('settings.profile.modalCodeResendA');
-                    resendTrigger.textContent = originalBaseText;
-                    resendTrigger.classList.remove('disabled-interactive');
-                }
+            if (!modalInput || !modalInput.value) {
+                showInlineError(card, 'js.settings.errorEnterCode');
                 return;
             }
-            if (target.closest('#email-verify-continue')) {
-                e.preventDefault();
-                const continueTrigger = target.closest('#email-verify-continue');
-                const modalError = document.getElementById('email-verify-error');
-                const modalInput = document.getElementById('email-verify-code');
 
-                if (!modalInput || !modalInput.value) {
-                    if(modalError) {
-                        modalError.textContent = getTranslation('js.settings.errorEnterCode');
-                        modalError.style.display = 'block';
-                    }
-                    return;
+            toggleButtonSpinner(continueTrigger, getTranslation('settings.profile.continue'), true);
+            
+            const formData = new FormData();
+            formData.append('action', 'verify-email-change-code');
+            formData.append('verification_code', modalInput.value);
+            formData.append('csrf_token', getCsrfTokenFromPage());
+
+            const result = await callSettingsApi(formData);
+
+            if (result.success) {
+                card.style.display = 'none';
+                const step2Card = document.getElementById('email-step-2-update');
+                if (step2Card) {
+                    step2Card.style.display = 'flex';
+                    focusInputAndMoveCursorToEnd(document.getElementById('email-input-new'));
                 }
-
-                toggleButtonSpinner(continueTrigger, getTranslation('settings.profile.continue'), true);
-                if(modalError) modalError.style.display = 'none';
-
-                const formData = new FormData();
-                formData.append('action', 'verify-email-change-code');
-                formData.append('verification_code', modalInput.value);
-                formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
-
-
-                const result = await callSettingsApi(formData);
-
-                if (result.success) {
-                    emailVerifyModal.style.display = 'none';
-                    document.getElementById('email-view-state').style.display = 'none';
-                    document.getElementById('email-actions-view').style.display = 'none';
-                    document.getElementById('email-edit-state').style.display = 'flex';
-                    document.getElementById('email-actions-edit').style.display = 'flex';
-                    focusInputAndMoveCursorToEnd(document.getElementById('email-input'));
-                    window.showAlert(getTranslation(result.message || 'js.settings.successVerification'), 'success');
-                } else {
-                    if(modalError) {
-                        modalError.textContent = result.message || getTranslation('js.settings.errorVerification');
-                        modalError.style.display = 'block';
-                    }
-                }
-                toggleButtonSpinner(continueTrigger, getTranslation('settings.profile.continue'), false);
-                return;
+                window.showAlert(getTranslation(result.message || 'js.settings.successVerification'), 'success');
+            } else {
+                showInlineError(card, result.message || 'js.settings.errorVerification');
             }
-            // LISTENER PARA EL NUEVO BOTÓN CANCELAR
-            if (target.closest('#email-verify-cancel')) {
-                e.preventDefault();
-                emailVerifyModal.style.display = 'none';
-                return;
-            }
+            toggleButtonSpinner(continueTrigger, getTranslation('settings.profile.continue'), false);
+            return;
         }
-        // --- ▲▲▲ FIN DE MODAL EMAIL MODIFICADO ▲▲▲ ---
+        
+        if (target.closest('#email-save-trigger-btn')) {
+            e.preventDefault();
+            const saveTrigger = target.closest('#email-save-trigger-btn');
+            const card = saveTrigger.closest('.settings-card');
+            if (!card) return;
+            
+            const inputElement = document.getElementById('email-input-new'); 
+            const newEmail = inputElement.value;
+
+            hideInlineError(card); 
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(newEmail)) {
+                showInlineError(card, 'js.auth.errorInvalidEmail'); return;
+            }
+            if (newEmail.length > 255) {
+                showInlineError(card, 'js.auth.errorEmailLength'); return;
+            }
+            const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i;
+            if (!allowedDomains.test(newEmail)) {
+                showInlineError(card, 'js.auth.errorEmailDomain'); return;
+            }
+
+            toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
+
+            const formData = new FormData();
+            formData.append('action', 'update-email'); 
+            formData.append('email', newEmail);
+            formData.append('csrf_token', getCsrfTokenFromPage());
+
+            const result = await callSettingsApi(formData);
+
+            if (result.success) {
+                window.showAlert(getTranslation(result.message || 'js.settings.successEmailUpdate'), 'success');
+
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.href = window.projectBasePath + '/settings/your-profile';
+                    link.setAttribute('data-nav-js', 'true');
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                }, 1500);
+
+            } else {
+                showInlineError(card, result.message || 'js.settings.errorSaveUnknown', result.data);
+                toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
+            }
+            return;
+        }
 
 
-        // --- PREFERENCES (Dropdowns/Popovers) ---
+        // --- (Preferences - Dropdowns/Popovers) ---
         const clickedLink = target.closest('.popover-module .menu-link'); 
         if (clickedLink && card) { 
             e.preventDefault();
@@ -614,161 +560,87 @@ export function initSettingsManager() {
 
             deactivateAllModules();
 
-            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-            trigger.classList.add('disabled-interactive'); // 1. Deshabilitar trigger
+            trigger.classList.add('disabled-interactive'); 
             try {
-                await handlePreferenceChange(prefType, newValue, card); // 2. Esperar guardado
+                await handlePreferenceChange(prefType, newValue, card);
             } catch (error) {
-                // Capturar cualquier error inesperado de la función
                 console.error("Error during preference change:", error); 
-                // El error inline ya se muestra dentro de handlePreferenceChange si falla la API
             } finally {
-                // 3. Reactivar el trigger sin importar si falló o no
                 trigger.classList.remove('disabled-interactive'); 
             }
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
             return; 
         }
 
 
-        // --- ▼▼▼ INICIO DE MODAL 2FA MODIFICADO ▼▼▼ ---
-         if (target.closest('#tfa-verify-cancel')) { // <-- MODIFICADO DE -close A -cancel
-            e.preventDefault();
-            const modal = document.getElementById('tfa-verify-modal');
-            if(modal) modal.style.display = 'none';
-            return;
-        }
-        if (target.closest('#tfa-toggle-button')) {
-             e.preventDefault();
-            const toggleButton = target.closest('#tfa-toggle-button');
-            const modal = document.getElementById('tfa-verify-modal');
-            if (!modal) {
-                window.showAlert(getTranslation('js.settings.errorModalNotFound'), 'error');
-                return;
-            }
-            const isCurrentlyEnabled = toggleButton.dataset.isEnabled === '1';
-
-            const modalTitle = document.getElementById('tfa-modal-title');
-            const modalText = document.getElementById('tfa-modal-text');
-            const errorDiv = document.getElementById('tfa-verify-error');
-            const passInput = document.getElementById('tfa-verify-password');
-
-            if (!isCurrentlyEnabled) {
-                if(modalTitle) modalTitle.dataset.i18n = 'js.settings.modal2faTitleEnable';
-                if(modalText) modalText.dataset.i18n = 'js.settings.modal2faDescEnable';
-            } else {
-                 if(modalTitle) modalTitle.dataset.i18n = 'js.settings.modal2faTitleDisable';
-                 if(modalText) modalText.dataset.i18n = 'js.settings.modal2faDescDisable';
-            }
-             applyTranslations(modal);
-
-            if(errorDiv) errorDiv.style.display = 'none';
-            if(passInput) passInput.value = '';
-
-            // --- MODIFICACIÓN: Resetear spinner de botón ---
-            const continueBtn = modal.querySelector('#tfa-verify-continue');
-            toggleButtonSpinner(continueBtn, getTranslation('settings.login.confirm'), false);
-
-            modal.style.display = 'flex';
-            focusInputAndMoveCursorToEnd(passInput);
-
-            return;
-        }
+        // --- (Page logic: toggle-2fa) ---
          if (target.closest('#tfa-verify-continue')) {
              e.preventDefault();
-                const modal = document.getElementById('tfa-verify-modal');
-                const verifyTrigger = target.closest('#tfa-verify-continue');
-                const errorDiv = document.getElementById('tfa-verify-error');
-                const currentPassInput = document.getElementById('tfa-verify-password');
-                const toggleButton = document.getElementById('tfa-toggle-button'); // Necesario para actualizar su estado/texto
+                const card = target.closest('.settings-card');
+                if (!card) return; 
 
-                if (!currentPassInput || !currentPassInput.value) { // Comprobar si existe el input
-                    if(errorDiv) {
-                        errorDiv.textContent = getTranslation('js.settings.errorEnterCurrentPass');
-                        errorDiv.style.display = 'block';
-                    }
+                const verifyTrigger = target.closest('#tfa-verify-continue');
+                const currentPassInput = document.getElementById('tfa-verify-password');
+                
+                hideInlineError(card);
+
+                if (!currentPassInput || !currentPassInput.value) {
+                    showInlineError(card, 'js.settings.errorEnterCurrentPass');
                     return;
                 }
 
                 toggleButtonSpinner(verifyTrigger, getTranslation('settings.login.confirm'), true);
-                if(errorDiv) errorDiv.style.display = 'none';
 
                 const passFormData = new FormData();
                 passFormData.append('action', 'verify-current-password');
                 passFormData.append('current_password', currentPassInput.value);
-                 passFormData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
+                 passFormData.append('csrf_token', getCsrfTokenFromPage()); 
 
                 const passResult = await callSettingsApi(passFormData);
 
                 if (passResult.success) {
                     const twoFaFormData = new FormData();
                     twoFaFormData.append('action', 'toggle-2fa');
-                    twoFaFormData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
+                    twoFaFormData.append('csrf_token', getCsrfTokenFromPage()); 
 
                     const twoFaResult = await callSettingsApi(twoFaFormData);
 
                     if (twoFaResult.success) {
-                        if(modal) modal.style.display = 'none';
                         window.showAlert(getTranslation(twoFaResult.message), 'success');
 
-                        const statusText = document.getElementById('tfa-status-text');
-                        const statusKey = twoFaResult.newState === 1 ? 'settings.login.2faEnabled' : 'settings.login.2faDisabled';
-                        const buttonKey = twoFaResult.newState === 1 ? 'settings.login.disable' : 'settings.login.enable';
-
-                        if (statusText) statusText.setAttribute('data-i18n', statusKey);
-                        if (toggleButton) { // Comprobar si existe el botón
-                            toggleButton.setAttribute('data-i18n', buttonKey);
-                            if (twoFaResult.newState === 1) toggleButton.classList.add('danger');
-                            else toggleButton.classList.remove('danger');
-                            toggleButton.dataset.isEnabled = twoFaResult.newState.toString();
-                        }
-                         // Re-traducir la tarjeta completa o al menos el status y botón
-                        const tfaCard = document.getElementById('tfa-toggle-button')?.closest('.settings-card');
-                        if (tfaCard) applyTranslations(tfaCard);
-
+                        setTimeout(() => {
+                            const link = document.createElement('a');
+                            link.href = window.projectBasePath + '/settings/login-security';
+                            link.setAttribute('data-nav-js', 'true');
+                            document.body.appendChild(link);
+                            link.click();
+                            link.remove();
+                        }, 1500);
 
                     } else {
-                        if(errorDiv) {
-                            errorDiv.textContent = getTranslation(twoFaResult.message || 'js.settings.error2faToggle');
-                            errorDiv.style.display = 'block';
-                        }
+                        showInlineError(card, twoFaResult.message || 'js.settings.error2faToggle');
                     }
 
                 } else {
-                    if(errorDiv) {
-                        errorDiv.textContent = getTranslation(passResult.message || 'js.settings.errorVerification');
-                        errorDiv.style.display = 'block';
-                    }
+                    showInlineError(card, passResult.message || 'js.settings.errorVerification');
                 }
 
                 toggleButtonSpinner(verifyTrigger, getTranslation('settings.login.confirm'), false);
-                if(currentPassInput) currentPassInput.value = ''; // Limpiar contraseña
-            return; // <-- Añadido return explícito
+                if(currentPassInput) currentPassInput.value = '';
+            return;
         }
-        // --- ▲▲▲ FIN DE MODAL 2FA MODIFICADO ▲▲▲ ---
 
 
-        // --- ▼▼▼ INICIO DE MODAL PASSWORD MODIFICADO ▼▼▼ ---
-         
-        // ELIMINADO: Listener para #password-edit-trigger (ahora es un link manejado por url-manager.js)
-        
-        // ELIMINADO: Listener para #password-verify-cancel (el modal no existe)
-
-        // ELIMINADO: Listener para #password-update-back (el modal no existe)
-
-         // MODIFICADO: Adaptado para la nueva página en lugar del modal
+        // --- (Page logic: change-password) ---
          if (target.closest('#password-verify-continue')) {
             e.preventDefault();
-            // No buscar modal, buscar el card de la página
             const step1Card = target.closest('#password-step-1');
-            if (!step1Card) return; // No estamos en la página correcta
+            if (!step1Card) return; 
             
             const verifyTrigger = target.closest('#password-verify-continue');
-            const currentPassInput = document.getElementById('password-verify-current'); // Usar ID
+            const currentPassInput = document.getElementById('password-verify-current'); 
 
-            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Usar showInlineError) ▼▼▼ ---
-            hideInlineError(step1Card); // Ocultar errores antiguos
+            hideInlineError(step1Card); 
 
             if (!currentPassInput || !currentPassInput.value) {
                 showInlineError(step1Card, 'js.settings.errorEnterCurrentPass');
@@ -780,41 +652,37 @@ export function initSettingsManager() {
             const formData = new FormData();
             formData.append('action', 'verify-current-password');
             formData.append('current_password', currentPassInput.value);
-            formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
+            formData.append('csrf_token', getCsrfTokenFromPage()); 
 
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                // Ocultar card 1 y mostrar card 2
                 step1Card.style.display = 'none';
                 const step2Card = document.getElementById('password-step-2');
                 if (step2Card) {
-                    step2Card.style.display = 'flex'; // 'flex' para que coincida con el CSS de settings-card
+                    step2Card.style.display = 'flex'; 
                     focusInputAndMoveCursorToEnd(document.getElementById('password-update-new'));
                 }
             } else {
                 showInlineError(step1Card, result.message || 'js.settings.errorVerification', result.data);
             }
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
             toggleButtonSpinner(verifyTrigger, getTranslation('settings.profile.continue'), false);
-            return; // <-- Añadido return explícito
+            return;
         }
 
-         // MODIFICADO: Adaptado para la nueva página en lugar del modal
          if (target.closest('#password-update-save')) {
             e.preventDefault();
              const step2Card = target.closest('#password-step-2');
-             if (!step2Card) return; // No estamos en la página correcta
+             if (!step2Card) return; 
 
             const saveTrigger = target.closest('#password-update-save');
-            const newPassInput = document.getElementById('password-update-new'); // Usar ID
-            const confirmPassInput = document.getElementById('password-update-confirm'); // Usar ID
+            const newPassInput = document.getElementById('password-update-new'); 
+            const confirmPassInput = document.getElementById('password-update-confirm'); 
 
             if (!newPassInput || !confirmPassInput) return;
 
-            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Usar showInlineError) ▼▼▼ ---
-            hideInlineError(step2Card); // Ocultar errores antiguos
+            hideInlineError(step2Card); 
 
              if (newPassInput.value.length < 8 || newPassInput.value.length > 72) {
                 showInlineError(step2Card, 'js.auth.errorPasswordLength', {min: 8, max: 72});
@@ -831,21 +699,18 @@ export function initSettingsManager() {
             formData.append('action', 'update-password');
             formData.append('new_password', newPassInput.value);
             formData.append('confirm_password', confirmPassInput.value);
-            formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
+            formData.append('csrf_token', getCsrfTokenFromPage()); 
 
 
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                // Ya no ocultamos un modal, mostramos alerta y redirigimos
                 window.showAlert(getTranslation(result.message || 'js.settings.successPassUpdate'), 'success');
 
-                // Redirigir a la página de seguridad tras 1.5s
                 setTimeout(() => {
-                    // Usar el router de JS si está disponible, si no, fallback
                     const link = document.createElement('a');
                     link.href = window.projectBasePath + '/settings/login-security';
-                    link.setAttribute('data-nav-js', 'true'); // Asegura que url-manager lo intercepte
+                    link.setAttribute('data-nav-js', 'true'); 
                     document.body.appendChild(link);
                     link.click();
                     link.remove();
@@ -855,14 +720,12 @@ export function initSettingsManager() {
                 showInlineError(step2Card, result.message || 'js.settings.errorSaving', result.data);
                 toggleButtonSpinner(saveTrigger, getTranslation('settings.login.savePassword'), false);
             }
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
-            return; // <-- Añadido return explícito
+            return;
         }
-        // --- ▲▲▲ FIN DE MODAL PASSWORD MODIFICADO ▲▲▲ ---
 
 
-        // --- ▼▼▼ INICIO DE MODAL LOGOUT-ALL MODIFICADO ▼▼▼ ---
+        // --- (Modal logic: logout-all-devices) ---
          if (target.closest('#logout-all-devices-trigger')) {
             e.preventDefault();
             const modal = document.getElementById('logout-all-modal');
@@ -875,7 +738,7 @@ export function initSettingsManager() {
             }
             return;
         }
-         if (target.closest('#logout-all-cancel')) { // <-- MODIFICADO (eliminado -close)
+         if (target.closest('#logout-all-cancel')) {
             e.preventDefault();
             const modal = document.getElementById('logout-all-modal');
             if(modal) modal.style.display = 'none';
@@ -884,13 +747,13 @@ export function initSettingsManager() {
         if (target.closest('#logout-all-confirm')) {
              e.preventDefault();
              const confirmButton = target.closest('#logout-all-confirm');
-             if(!confirmButton) return; // Añadido chequeo
+             if(!confirmButton) return; 
 
             toggleButtonSpinner(confirmButton, getTranslation('settings.devices.modalConfirm'), true);
 
             const formData = new FormData();
             formData.append('action', 'logout-all-devices');
-            formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
+            formData.append('csrf_token', getCsrfTokenFromPage()); 
 
             const result = await callSettingsApi(formData);
 
@@ -898,7 +761,7 @@ export function initSettingsManager() {
                 window.showAlert(getTranslation('js.settings.infoLogoutAll'), 'success');
 
                 setTimeout(() => {
-                    const token = getCsrfTokenFromPage(); // Usar helper
+                    const token = getCsrfTokenFromPage(); 
                     const logoutUrl = (window.projectBasePath || '') + '/config/logout.php';
                     window.location.href = `${logoutUrl}?csrf_token=${encodeURIComponent(token)}`;
                 }, 1500);
@@ -907,61 +770,38 @@ export function initSettingsManager() {
                 window.showAlert(getTranslation(result.message || 'js.settings.errorLogoutAll'), 'error');
                 toggleButtonSpinner(confirmButton, getTranslation('settings.devices.modalConfirm'), false);
             }
-            return; // <-- Añadido return explícito
+            return; 
         }
-        // --- ▲▲▲ FIN DE MODAL LOGOUT-ALL MODIFICADO ▲▲▲ ---
 
 
         // --- ▼▼▼ INICIO DE MODAL DELETE-ACCOUNT MODIFICADO ▼▼▼ ---
-         if (target.closest('#delete-account-trigger')) {
-            e.preventDefault();
-            const modal = document.getElementById('delete-account-modal');
-             if(modal) {
-                const passwordInput = modal.querySelector('#delete-account-password');
-                const errorDiv = modal.querySelector('#delete-account-error');
-                const confirmBtn = modal.querySelector('#delete-account-confirm');
+         
+        // ELIMINADO: Listener para #delete-account-trigger (ahora es un enlace <a>)
+        
+        // ELIMINADO: Listener para #delete-account-cancel (ahora es un enlace <a>)
 
-                if(passwordInput) passwordInput.value = '';
-                if(errorDiv) errorDiv.style.display = 'none';
-                if(confirmBtn) {
-                    toggleButtonSpinner(confirmBtn, getTranslation('settings.login.modalDeleteConfirm'), false);
-                }
-
-                modal.style.display = 'flex';
-                if(passwordInput) focusInputAndMoveCursorToEnd(passwordInput);
-            }
-            return;
-        }
-         if (target.closest('#delete-account-cancel')) { // <-- MODIFICADO (eliminado -close)
-            e.preventDefault();
-            const modal = document.getElementById('delete-account-modal');
-            if(modal) modal.style.display = 'none';
-            return;
-        }
+        // MODIFICADO: Adaptado para la nueva página en lugar del modal
         if (target.closest('#delete-account-confirm')) {
              e.preventDefault();
              const confirmButton = target.closest('#delete-account-confirm');
-             if(!confirmButton) return; // Añadido chequeo
-            const modal = document.getElementById('delete-account-modal');
-            if(!modal) return; // Añadido chequeo
-            const errorDiv = modal.querySelector('#delete-account-error');
-            const passwordInput = modal.querySelector('#delete-account-password');
+             const card = target.closest('.settings-card');
+             if(!confirmButton || !card) return; // No estamos en la página correcta
+            
+            const passwordInput = document.getElementById('delete-account-password');
+            
+            hideInlineError(card); // <-- USAR INLINE ERROR
 
             if (!passwordInput || !passwordInput.value) {
-                if(errorDiv) {
-                    errorDiv.textContent = getTranslation('js.settings.errorEnterCurrentPass');
-                    errorDiv.style.display = 'block';
-                }
+                showInlineError(card, 'js.settings.errorEnterCurrentPass'); // <-- USAR INLINE ERROR
                 return;
             }
 
             toggleButtonSpinner(confirmButton, getTranslation('settings.login.modalDeleteConfirm'), true);
-            if(errorDiv) errorDiv.style.display = 'none';
 
             const formData = new FormData();
             formData.append('action', 'delete-account');
             formData.append('current_password', passwordInput.value);
-            formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
+            formData.append('csrf_token', getCsrfTokenFromPage()); 
 
             const result = await callSettingsApi(formData);
 
@@ -972,47 +812,41 @@ export function initSettingsManager() {
                 }, 2000);
 
             } else {
-                if(errorDiv) {
-                    errorDiv.textContent = getTranslation(result.message || 'js.settings.errorAccountDelete', result.data);
-                    errorDiv.style.display = 'block';
-                }
+                showInlineError(card, result.message || 'js.settings.errorAccountDelete', result.data); // <-- USAR INLINE ERROR
                 toggleButtonSpinner(confirmButton, getTranslation('settings.login.modalDeleteConfirm'), false);
             }
-            return; // <-- Añadido return explícito
+            return;
         }
         // --- ▲▲▲ FIN DE MODAL DELETE-ACCOUNT MODIFICADO ▲▲▲ ---
 
     }); // Fin listener 'click'
 
 
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (AÑADIR ASYNC) ▼▼▼ ---
+    // --- (Listener 'change' - sin cambios) ---
     document.body.addEventListener('change', async (e) => {
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
         const target = e.target;
         const card = target.closest('.settings-card');
 
         // Input de Avatar
         if (target.id === 'avatar-upload-input' && card) {
-            hideInlineError(card); // Ocultar error al seleccionar archivo
+            hideInlineError(card);
             const fileInput = target;
             const previewImage = document.getElementById('avatar-preview-image');
             const file = fileInput.files[0];
 
             if (!file) return;
 
-            // Validaciones de cliente -> Mostrar error inline
             if (!['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(file.type)) {
                 showInlineError(card, 'js.settings.errorAvatarFormat');
-                fileInput.value = ''; // Reset input
+                fileInput.value = ''; 
                 return;
             }
             if (file.size > 2 * 1024 * 1024) { // 2MB
                 showInlineError(card, 'js.settings.errorAvatarSize');
-                fileInput.value = ''; // Reset input
+                fileInput.value = ''; 
                 return;
             }
 
-            // Mostrar previsualización y botones (sin cambios)
             if (!previewImage.dataset.originalSrc) {
                 previewImage.dataset.originalSrc = previewImage.src;
             }
@@ -1021,7 +855,7 @@ export function initSettingsManager() {
             reader.readAsDataURL(file);
 
             const actionsDefault = document.getElementById('avatar-actions-default');
-            const avatarCard = document.getElementById('avatar-section'); // Usar ID del div
+            const avatarCard = document.getElementById('avatar-section'); 
             avatarCard.dataset.originalActions = (actionsDefault.style.display !== 'none') ? 'default' : 'custom';
 
             document.getElementById('avatar-actions-default').style.display = 'none';
@@ -1031,22 +865,20 @@ export function initSettingsManager() {
 
         // Toggles de Preferencias Booleanas
         else if (target.matches('input[type="checkbox"][data-preference-type="boolean"]') && card) {
-             hideInlineError(card); // Ocultar error al cambiar toggle
+             hideInlineError(card);
             const checkbox = target;
             const fieldName = checkbox.dataset.fieldName;
             const newValue = checkbox.checked ? '1' : '0';
 
             if (fieldName) {
-                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (DESHABILITAR Y AWAIT) ▼▼▼ ---
-                checkbox.disabled = true; // 1. Deshabilitar
+                checkbox.disabled = true; 
                 try {
-                    await handlePreferenceChange(fieldName, newValue, card); // 2. Esperar
+                    await handlePreferenceChange(fieldName, newValue, card);
                 } catch (error) {
                     console.error("Error during toggle preference change:", error);
                 } finally {
-                    checkbox.disabled = false; // 3. Reactivar
+                    checkbox.disabled = false; 
                 }
-                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             } else {
                 console.error('Este toggle no tiene un data-field-name:', checkbox);
             }
@@ -1056,20 +888,35 @@ export function initSettingsManager() {
      // Listener de Input (para ocultar errores al escribir)
     document.body.addEventListener('input', (e) => {
         const target = e.target;
-        // Ocultar error inline si se escribe en un input dentro de una tarjeta
-        // --- MODIFICACIÓN: Usar .modal__input-group y .modal__input ---
+
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (HABILITAR BOTÓN DELETE) ▼▼▼ ---
+        // Habilitar/Deshabilitar el botón de eliminar cuenta
+        if (target.id === 'delete-account-password') {
+            const confirmBtn = document.getElementById('delete-account-confirm');
+            if (confirmBtn) {
+                // Habilitar solo si el input no está vacío
+                confirmBtn.disabled = !target.value.trim();
+            }
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+
         if (target.matches('.settings-username-input') || target.closest('.auth-input-group') || target.closest('.modal__input-group')) {
             const card = target.closest('.settings-card');
             if (card) {
-                // Esta función helper fue modificada al inicio para
-                // ocultar también los errores de la página de contraseña
                 hideInlineError(card);
             }
-            // También ocultar errores en modales
+            // También ocultar errores en modales (para el de 'logout-all' que queda)
             const modalContent = target.closest('.modal-content');
             if (modalContent) {
-                 const errorDiv = modalContent.querySelector('.auth-error-message');
-                 if (errorDiv) errorDiv.style.display = 'none';
+                 const errorDiv = modalContent.querySelector('.auth-error-message, .settings-card__error'); 
+                 if (errorDiv) {
+                    if(errorDiv.classList.contains('auth-error-message')) {
+                         errorDiv.style.display = 'none';
+                    } else {
+                         errorDiv.remove(); 
+                    }
+                 }
             }
         }
     }); // Fin listener 'input'

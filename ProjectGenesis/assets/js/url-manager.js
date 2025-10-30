@@ -29,6 +29,9 @@ const routes = {
     
     // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
     'toggleSectionSettingsPassword': 'settings-change-password',
+    'toggleSectionSettingsChangeEmail': 'settings-change-email',
+    'toggleSectionSettingsToggle2fa': 'settings-toggle-2fa',
+    'toggleSectionSettingsDeleteAccount': 'settings-delete-account',
     // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     'toggleSectionAccountStatusDeleted': 'account-status-deleted',
@@ -56,6 +59,9 @@ const paths = {
     
     // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
     '/settings/change-password': 'toggleSectionSettingsPassword',
+    '/settings/change-email': 'toggleSectionSettingsChangeEmail',
+    '/settings/toggle-2fa': 'toggleSectionSettingsToggle2fa',
+    '/settings/delete-account': 'toggleSectionSettingsDeleteAccount',
     // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     '/account-status/deleted': 'toggleSectionAccountStatusDeleted',
@@ -121,20 +127,20 @@ async function loadPage(page, isSettingsPage, action) {
         applyTranslations(contentContainer);
 
         // --- INICIO DE BLOQUE MODIFICADO ---
-        // Ahora revisa tanto 'register-step3' como 'reset-step2'
-        if (page === 'register-step3' || page === 'reset-step2') {
-            let link;
-            if (page === 'register-step3') {
-                link = document.getElementById('register-resend-code-link');
-            } else if (page === 'reset-step2') {
-                link = document.getElementById('reset-resend-code-link');
-            }
+        // Ahora revisa 'register-step3', 'reset-step2' y 'settings-change-email'
+        let link;
+        if (page === 'register-step3') {
+            link = document.getElementById('register-resend-code-link');
+        } else if (page === 'reset-step2') {
+            link = document.getElementById('reset-resend-code-link');
+        } else if (page === 'settings-change-email') { // <-- AÑADIDO
+            link = document.getElementById('email-verify-resend');
+        }
 
-            if (link) {
-                const cooldownSeconds = parseInt(link.dataset.cooldown || '0', 10);
-                if (cooldownSeconds > 0) {
-                    startResendTimer(link, cooldownSeconds);
-                }
+        if (link) {
+            const cooldownSeconds = parseInt(link.dataset.cooldown || '0', 10);
+            if (cooldownSeconds > 0) {
+                startResendTimer(link, cooldownSeconds);
             }
         }
         // --- FIN DE BLOQUE MODIFICADO ---
@@ -206,9 +212,15 @@ function updateMenuState(currentAction) {
     if (currentAction && currentAction.startsWith('toggleSectionReset')) menuAction = 'toggleSectionResetPassword';
 
     // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-    // Si estamos en la página de cambiar contraseña, resaltar "Login y Seguridad"
-    if (currentAction === 'toggleSectionSettingsPassword') {
+    // Si estamos en cambiar contraseña O 2FA O eliminar, resaltar "Login y Seguridad"
+    if (currentAction === 'toggleSectionSettingsPassword' || 
+        currentAction === 'toggleSectionSettingsToggle2fa' ||
+        currentAction === 'toggleSectionSettingsDeleteAccount') {
         menuAction = 'toggleSectionSettingsLogin';
+    }
+    // Si estamos en cambiar email, resaltar "Tu Perfil"
+    if (currentAction === 'toggleSectionSettingsChangeEmail') {
+        menuAction = 'toggleSectionSettingsProfile';
     }
     // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 

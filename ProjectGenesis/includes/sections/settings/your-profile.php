@@ -1,11 +1,12 @@
 <?php
-// FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-970f96c7c06ba42e4101b6d17ae77c332c6f3044/ProjectGenesis/includes/sections/settings/your-profile.php
+// FILE: includes/sections/settings/your-profile.php
 ?>
 <?php
 // --- ▼▼▼ INICIO DE NUEVO BLOQUE PHP ▼▼▼ ---
 
-// Estas variables ($userLanguage, $userUsageType, $openLinksInNewTab, $initialEmailCooldown)
+// Estas variables ($userLanguage, $userUsageType, $openLinksInNewTab)
 // son cargadas por config/router.php
+// ($initialEmailCooldown fue movido a router -> settings-change-email)
 
 // 1. Definir los mapas de valores de BD a *CLAVES DE TRADUCCIÓN*
 $usageMap = [
@@ -117,8 +118,10 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                 <button type="button" class="settings-button" id="username-save-trigger-btn" data-i18n="settings.profile.save"></button>
             </div>
         </div>
+        
         <div class="settings-card settings-card--edit-mode" id="email-section">
-            <?php outputCsrfInput(); ?> <input type="hidden" name="action" value="update-email"> <div class="settings-card__content" id="email-view-state" style="display: flex;">
+            <?php outputCsrfInput(); ?> 
+            <div class="settings-card__content" id="email-view-state" style="display: flex;">
                 <div class="settings-card__text">
                     <h2 class="settings-card__title" data-i18n="settings.profile.email"></h2>
                     <p class="settings-card__description"
@@ -129,67 +132,15 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                 </div>
             </div>
             <div class="settings-card__actions" id="email-actions-view" style="display: flex;">
-                <button type="button" class="settings-button" id="email-edit-trigger" data-i18n="settings.profile.edit"></button>
+                <a href="<?php echo $basePath; ?>/settings/change-email"
+                   class="settings-button"
+                   data-nav-js
+                   data-i18n="settings.profile.edit">
+                </a>
             </div>
 
-            <div class="settings-card__content" id="email-edit-state" style="display: none;">
-                <div class="settings-card__text">
-                    <h2 class="settings-card__title" data-i18n="settings.profile.email"></h2>
-                    <input type="email"
-                           class="settings-username-input"
-                           id="email-input"
-                           name="email"
-                           value="<?php echo htmlspecialchars($userEmail); ?>"
-                           required
-                           maxlength="255">
-                </div>
             </div>
-            <div class="settings-card__actions" id="email-actions-edit" style="display: none;">
-                <button type="button" class="settings-button" id="email-cancel-trigger" data-i18n="settings.profile.cancel"></button>
-                <button type="button" class="settings-button" id="email-save-trigger-btn" data-i18n="settings.profile.save"></button>
-            </div>
-        </div>
 
-        <div class="modal-overlay" id="email-verify-modal">
-            <div class="modal-content">
-                <div class="modal__header">
-                    
-                    <h2 class="modal__title" data-i18n="settings.profile.modalCodeTitle"></h2>
-                    </div>
-                <div class="modal__body">
-                     
-                     <p class="modal__description">
-                        <span data-i18n="settings.profile.modalCodeDesc"></span> 
-                        <strong><?php echo htmlspecialchars($userEmail); ?></strong>
-                     </p>
-                     <div class="auth-error-message" id="email-verify-error" style="display: none;"></div>
-                    <div class="modal__input-group">
-                        <input type="text" id="email-verify-code" name="verification_code" class="modal__input" required placeholder=" " maxlength="14">
-                        <label for="email-verify-code" data-i18n="settings.profile.modalCodeLabel"></label>
-                    </div>
-
-                    <p class="modal__footer-text" style="text-align: center; margin-top: 8px;">
-                        <span data-i18n="settings.profile.modalCodeResendP"></span>
-                        <a id="email-verify-resend" 
-                           data-i18n="settings.profile.modalCodeResendA"
-                           data-cooldown="<?php echo isset($initialEmailCooldown) ? $initialEmailCooldown : 0; ?>"
-                           class="<?php echo (isset($initialEmailCooldown) && $initialEmailCooldown > 0) ? 'disabled-interactive' : ''; ?>"
-                           style="<?php echo (isset($initialEmailCooldown) && $initialEmailCooldown > 0) ? 'opacity: 0.7; text-decoration: none;' : ''; ?>"
-                        >
-                        <?php 
-                           if (isset($initialEmailCooldown) && $initialEmailCooldown > 0) {
-                               echo " (" . $initialEmailCooldown . "s)";
-                           }
-                        ?>
-                        </a>
-                    </p>
-                </div>
-                <div class="modal__footer modal__footer--small-buttons">
-                    <button type="button" class="modal__button-small modal__button-small--secondary" id="email-verify-cancel" data-i18n="settings.profile.cancel"></button>
-                    <button type="button" class="modal__button-small modal__button-small--primary" id="email-verify-continue" data-i18n="settings.profile.continue"></button>
-                </div>
-            </div>
-        </div>
         <div class="settings-card settings-card--column">
             <div class="settings-card__content">
                 <div class="settings-card__text">
