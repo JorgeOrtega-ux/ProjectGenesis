@@ -21,9 +21,6 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 
 // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-$pdo = null;
-$pdo_connection_error = null; // Variable global para el error
-
 try {
     $pdo = new PDO(
         "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", 
@@ -37,8 +34,8 @@ try {
 
 } catch (PDOException $e) {
     logDatabaseError($e, 'PDO Connection');
-    // En lugar de 'die()', guardamos el error
-    $pdo_connection_error = "db.connectionError: ERROR: Could not connect to the database. Please contact the administrator.";
+    // Volver al mensaje básico de error que detiene todo
+    die("ERROR: No se pudo conectar a la base de datos. " . $e->getMessage());
 }
 // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 

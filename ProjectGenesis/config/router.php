@@ -3,14 +3,8 @@
 include '../config/config.php'; 
 
 // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-// Comprobar si la conexión a la BD falló (variable de config.php)
-if ($pdo === null) { // <-- ¡CAMBIA ESTA LÍNEA!
-    // Forzar la carga de la página de error de BD, sin importar qué página se pidió
-    $CURRENT_SECTION = 'db-error';
-    http_response_code(503); // Service Unavailable
-    include '../includes/sections/main/db-error.php';
-    exit; // Detener la ejecución del router
-}
+// El bloque que comprobaba si ($pdo === null) se ha eliminado.
+// Si config.php falla, la ejecución se detendrá antes de llegar aquí.
 // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 
@@ -78,7 +72,7 @@ $allowedPages = [
     'explorer' => '../includes/sections/main/explorer.php',
     'login'    => '../includes/sections/auth/login.php',
     '404'      => '../includes/sections/main/404.php', 
-    'db-error' => '../includes/sections/main/db-error.php', // <-- Añadido por si acaso
+    'db-error' => '../includes/sections/main/db-error.php', // <-- Esto ya no se usará para errores de PDO
 
     'register-step1' => '../includes/sections/auth/register.php',
     'register-step2' => '../includes/sections/auth/register.php',
