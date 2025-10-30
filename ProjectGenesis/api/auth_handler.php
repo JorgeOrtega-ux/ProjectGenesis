@@ -1,5 +1,4 @@
 <?php
-
 include '../config/config.php';
 header('Content-Type: application/json');
 

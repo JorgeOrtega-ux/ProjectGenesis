@@ -328,7 +328,7 @@ function initRegisterWizard() {
                 // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
             }
 
-            if (!result.success || !nextPath) {
+            if (!result.success) {
                  button.disabled = false;
                  button.textContent = getTranslation('page.register.continueButton');
             }
