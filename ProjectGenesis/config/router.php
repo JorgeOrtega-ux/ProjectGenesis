@@ -87,6 +87,10 @@ $allowedPages = [
     'settings-accessibility' => '../includes/sections/settings/accessibility.php',
     'settings-devices'       => '../includes/sections/settings/device-sessions.php', 
     
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+    'settings-change-password' => '../includes/sections/settings/change-password.php',
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
     'account-status-deleted'   => '../includes/sections/auth/account-status.php',
     'account-status-suspended' => '../includes/sections/auth/account-status.php',
 ];

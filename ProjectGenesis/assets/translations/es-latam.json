@@ -100,6 +100,10 @@
       "modalDeletePasswordLabel": "Ingresa tu contraseña",
       "modalDeleteConfirm": "Eliminar permanentemente"
     },
+    "password": {
+      "title": "Actualizar Contraseña",
+      "description": "Para mayor seguridad, primero verifica tu identidad y luego crea tu nueva contraseña."
+    },
     "accessibility": {
       "title": "Accesibilidad",
       "description": "Ajusta las configuraciones de visualización, como el tamaño del texto o el contraste de colores.",

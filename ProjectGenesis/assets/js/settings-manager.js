@@ -55,10 +55,25 @@ function toggleButtonSpinner(button, text, isLoading) {
     button.disabled = isLoading;
     if (isLoading) {
         button.dataset.originalText = button.textContent;
-        // --- MODIFICACIÓN: Usar spinner más pequeño para botones pequeños ---
-        const spinnerClass = button.classList.contains('modal__button-small') ? 'logout-spinner' : 'auth-button-spinner';
-        const spinnerStyle = button.classList.contains('modal__button-small') ? 'width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;' : '';
+        // --- MODIFICACIÓN: Usar spinner más pequeño para botones pequeños Y settings-button ---
+        const spinnerClass = (button.classList.contains('modal__button-small') || button.classList.contains('settings-button')) ? 'logout-spinner' : 'auth-button-spinner';
+        let spinnerStyle = (button.classList.contains('modal__button-small') || button.classList.contains('settings-button')) ? 'width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;' : '';
         
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Color de spinner en botones primarios) ▼▼▼ ---
+        // Se aplica a botones primarios de modal, botones de danger, y botones settings (que son "primarios" en su contexto)
+        if (button.classList.contains('modal__button-small--primary') || 
+            button.classList.contains('modal__button-small--danger') || 
+            (button.classList.contains('settings-button') && !button.classList.contains('danger'))) {
+            
+            // Si el botón es un settings-button PERO es 'danger', no aplicar el blanco
+            if(button.classList.contains('settings-button') && button.classList.contains('danger')) {
+                 // Dejar el estilo por defecto (oscuro)
+            } else {
+                 spinnerStyle += ' border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;';
+            }
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
         if(spinnerClass === 'logout-spinner') {
             button.innerHTML = `<span class="${spinnerClass}" style="${spinnerStyle}"></span>`;
         } else {
@@ -77,7 +92,7 @@ function focusInputAndMoveCursorToEnd(inputElement) {
     const originalType = inputElement.type;
 
     try {
-        if (inputElement.type === 'email' || inputElement.type === 'text') {
+        if (inputElement.type === 'email' || inputElement.type === 'text' || inputElement.type === 'password') { // <-- Añadido password
              inputElement.type = 'text';
         }
 
@@ -396,7 +411,7 @@ export function initSettingsManager() {
                             startResendTimer(resendLink, 60); // Iniciar timer aquí
                         }
                         const currentEmail = document.getElementById('email-display-text')?.dataset.originalEmail;
-                        const modalEmailEl = document.getElementById('email-verify-modal-email');
+                        const modalEmailEl = modal.querySelector('strong'); // <-- Corrección para encontrar el <strong>
                         if (modalEmailEl && currentEmail) modalEmailEl.textContent = currentEmail;
                         const modalError = document.getElementById('email-verify-error');
                         if(modalError) modalError.style.display = 'none';
@@ -498,8 +513,6 @@ export function initSettingsManager() {
                     const originalBaseText = getTranslation('settings.profile.modalCodeResendA');
                     resendTrigger.textContent = originalBaseText;
                     resendTrigger.classList.remove('disabled-interactive');
-                    resendTrigger.style.opacity = '1';
-                    resendTrigger.style.textDecoration = '';
                 }
                 return;
             }
@@ -613,7 +626,7 @@ export function initSettingsManager() {
                 // 3. Reactivar el trigger sin importar si falló o no
                 trigger.classList.remove('disabled-interactive'); 
             }
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▼▼▼ ---
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
             return; 
         }
@@ -737,74 +750,32 @@ export function initSettingsManager() {
 
 
         // --- ▼▼▼ INICIO DE MODAL PASSWORD MODIFICADO ▼▼▼ ---
-         if (target.closest('#password-edit-trigger')) {
-            e.preventDefault();
-            const modal = document.getElementById('password-change-modal');
-            if (!modal) return;
-            
-            modal.querySelector('[data-step="1"]').style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
-            modal.querySelector('[data-step="2"]').style.display = 'none';
+         
+        // ELIMINADO: Listener para #password-edit-trigger (ahora es un link manejado por url-manager.js)
+        
+        // ELIMINADO: Listener para #password-verify-cancel (el modal no existe)
 
-            const errorDiv1 = modal.querySelector('#password-verify-error');
-            const errorDiv2 = modal.querySelector('#password-update-error');
-            if (errorDiv1) errorDiv1.style.display = 'none';
-            if (errorDiv2) errorDiv2.style.display = 'none';
+        // ELIMINADO: Listener para #password-update-back (el modal no existe)
 
-
-            const input1 = modal.querySelector('#password-verify-current');
-            const input2 = modal.querySelector('#password-update-new');
-            const input3 = modal.querySelector('#password-update-confirm');
-             if (input1) input1.value = '';
-             if (input2) input2.value = '';
-             if (input3) input3.value = '';
-            
-            // --- MODIFICACIÓN: Resetear spinner de botón ---
-            const continueBtn = modal.querySelector('#password-verify-continue');
-            toggleButtonSpinner(continueBtn, getTranslation('settings.profile.continue'), false);
-            const saveBtn = modal.querySelector('#password-update-save');
-            toggleButtonSpinner(saveBtn, getTranslation('settings.login.savePassword'), false);
-
-            modal.style.display = 'flex';
-            focusInputAndMoveCursorToEnd(input1);
-            return;
-        }
-         if (target.closest('#password-verify-cancel')) { // <-- MODIFICADO DE -close A -cancel
-            e.preventDefault();
-            const modal = document.getElementById('password-change-modal');
-            if(modal) modal.style.display = 'none';
-            return;
-        }
-        if (target.closest('#password-update-back')) {
-             e.preventDefault();
-            const modal = document.getElementById('password-change-modal');
-            if (!modal) return;
-            
-             modal.querySelector('[data-step="1"]').style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
-             modal.querySelector('[data-step="2"]').style.display = 'none';
-
-            const errorDiv = modal.querySelector('#password-update-error');
-             if (errorDiv) errorDiv.style.display = 'none';
-            focusInputAndMoveCursorToEnd(modal.querySelector('#password-verify-current'));
-            return;
-        }
+         // MODIFICADO: Adaptado para la nueva página en lugar del modal
          if (target.closest('#password-verify-continue')) {
             e.preventDefault();
-            const modal = document.getElementById('password-change-modal');
-            if (!modal) return; // Añadido chequeo
+            // No buscar modal, buscar el card de la página
+            const step1Card = target.closest('#password-step-1');
+            if (!step1Card) return; // No estamos en la página correcta
+            
             const verifyTrigger = target.closest('#password-verify-continue');
-            const errorDiv = modal.querySelector('#password-verify-error'); // Corregido ID
-            const currentPassInput = modal.querySelector('#password-verify-current'); // Corregido selector
+            const currentPassInput = document.getElementById('password-verify-current'); // Usar ID
+
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Usar showInlineError) ▼▼▼ ---
+            hideInlineError(step1Card); // Ocultar errores antiguos
 
             if (!currentPassInput || !currentPassInput.value) {
-                if(errorDiv) {
-                    errorDiv.textContent = getTranslation('js.settings.errorEnterCurrentPass');
-                    errorDiv.style.display = 'block';
-                }
+                showInlineError(step1Card, 'js.settings.errorEnterCurrentPass');
                 return;
             }
 
             toggleButtonSpinner(verifyTrigger, getTranslation('settings.profile.continue'), true);
-            if(errorDiv) errorDiv.style.display = 'none';
 
             const formData = new FormData();
             formData.append('action', 'verify-current-password');
@@ -814,47 +785,47 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                modal.querySelector('[data-step="1"]').style.display = 'none';
-                modal.querySelector('[data-step="2"]').style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
-                focusInputAndMoveCursorToEnd(modal.querySelector('#password-update-new'));
-            } else {
-                if(errorDiv) {
-                    errorDiv.textContent = getTranslation(result.message || 'js.settings.errorVerification');
-                    errorDiv.style.display = 'block';
+                // Ocultar card 1 y mostrar card 2
+                step1Card.style.display = 'none';
+                const step2Card = document.getElementById('password-step-2');
+                if (step2Card) {
+                    step2Card.style.display = 'flex'; // 'flex' para que coincida con el CSS de settings-card
+                    focusInputAndMoveCursorToEnd(document.getElementById('password-update-new'));
                 }
+            } else {
+                showInlineError(step1Card, result.message || 'js.settings.errorVerification', result.data);
             }
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
             toggleButtonSpinner(verifyTrigger, getTranslation('settings.profile.continue'), false);
             return; // <-- Añadido return explícito
         }
+
+         // MODIFICADO: Adaptado para la nueva página en lugar del modal
          if (target.closest('#password-update-save')) {
             e.preventDefault();
-             const modal = document.getElementById('password-change-modal');
-             if (!modal) return; // Añadido chequeo
+             const step2Card = target.closest('#password-step-2');
+             if (!step2Card) return; // No estamos en la página correcta
+
             const saveTrigger = target.closest('#password-update-save');
-            const errorDiv = modal.querySelector('#password-update-error'); // Corregido ID
-            const newPassInput = modal.querySelector('#password-update-new'); // Corregido selector
-            const confirmPassInput = modal.querySelector('#password-update-confirm'); // Corregido selector
+            const newPassInput = document.getElementById('password-update-new'); // Usar ID
+            const confirmPassInput = document.getElementById('password-update-confirm'); // Usar ID
 
             if (!newPassInput || !confirmPassInput) return;
 
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Usar showInlineError) ▼▼▼ ---
+            hideInlineError(step2Card); // Ocultar errores antiguos
+
              if (newPassInput.value.length < 8 || newPassInput.value.length > 72) {
-                 if(errorDiv) {
-                    errorDiv.textContent = getTranslation('js.auth.errorPasswordLength', {min: 8, max: 72});
-                    errorDiv.style.display = 'block';
-                 }
+                showInlineError(step2Card, 'js.auth.errorPasswordLength', {min: 8, max: 72});
                  return;
              }
              if (newPassInput.value !== confirmPassInput.value) {
-                 if(errorDiv) {
-                    errorDiv.textContent = getTranslation('js.auth.errorPasswordMismatch');
-                    errorDiv.style.display = 'block';
-                 }
+                showInlineError(step2Card, 'js.auth.errorPasswordMismatch');
                  return;
              }
 
             toggleButtonSpinner(saveTrigger, getTranslation('settings.login.savePassword'), true);
-            if(errorDiv) errorDiv.style.display = 'none';
 
             const formData = new FormData();
             formData.append('action', 'update-password');
@@ -866,27 +837,26 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                if(modal) modal.style.display = 'none';
+                // Ya no ocultamos un modal, mostramos alerta y redirigimos
                 window.showAlert(getTranslation(result.message || 'js.settings.successPassUpdate'), 'success');
 
-                if (result.newTimestamp) {
-                    const passwordTextElement = document.getElementById('password-last-updated-text');
-                    if (passwordTextElement) {
-                        const formattedDate = formatTimestampToSimpleDate(result.newTimestamp);
-                        const newText = `Última actualización de tu contraseña: ${formattedDate}`;
-                        passwordTextElement.textContent = newText;
-                        passwordTextElement.removeAttribute('data-i18n');
-                    }
-                }
+                // Redirigir a la página de seguridad tras 1.5s
+                setTimeout(() => {
+                    // Usar el router de JS si está disponible, si no, fallback
+                    const link = document.createElement('a');
+                    link.href = window.projectBasePath + '/settings/login-security';
+                    link.setAttribute('data-nav-js', 'true'); // Asegura que url-manager lo intercepte
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                }, 1500);
 
             } else {
-                if(errorDiv) {
-                    errorDiv.textContent = getTranslation(result.message || 'js.settings.errorSaving', result.data);
-                    errorDiv.style.display = 'block';
-                }
+                showInlineError(step2Card, result.message || 'js.settings.errorSaving', result.data);
+                toggleButtonSpinner(saveTrigger, getTranslation('settings.login.savePassword'), false);
             }
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
-            toggleButtonSpinner(saveTrigger, getTranslation('settings.login.savePassword'), false);
             return; // <-- Añadido return explícito
         }
         // --- ▲▲▲ FIN DE MODAL PASSWORD MODIFICADO ▲▲▲ ---
@@ -1091,6 +1061,8 @@ export function initSettingsManager() {
         if (target.matches('.settings-username-input') || target.closest('.auth-input-group') || target.closest('.modal__input-group')) {
             const card = target.closest('.settings-card');
             if (card) {
+                // Esta función helper fue modificada al inicio para
+                // ocultar también los errores de la página de contraseña
                 hideInlineError(card);
             }
             // También ocultar errores en modales

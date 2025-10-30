@@ -1,5 +1,5 @@
 <?php
-// FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-98418948306e47bc505f1797114031c3351b5e33/ProjectGenesis/includes/sections/settings/login-security.php
+// FILE: includes/sections/settings/login-security.php
 ?>
 <div class="section-content <?php echo ($CURRENT_SECTION === 'settings-login') ? 'active' : 'disabled'; ?>" data-section="settings-login">
     <div class="settings-wrapper">
@@ -27,8 +27,12 @@
                     </div>
             </div>
             <div class="settings-card__actions">
-                <button type="button" class="settings-button" id="password-edit-trigger" data-i18n="settings.login.update"></button>
-            </div>
+                <a href="<?php echo $basePath; ?>/settings/change-password"
+                   class="settings-button"
+                   data-nav-js
+                   data-i18n="settings.login.update">
+                </a>
+                </div>
         </div>
         <div class="settings-card">
             <div class="settings-card__content">
@@ -79,51 +83,6 @@
         </div>
         </div>
 
-    <div class="modal-overlay" id="password-change-modal">
-        <div class="modal-content">
-
-            <div data-step="1">
-                <div class="modal__header">
-                    <h2 class="modal__title" data-i18n="settings.login.modalVerifyTitle"></h2>
-                    </div>
-                <div class="modal__body">
-                    <p class="modal__description" data-i18n="settings.login.modalVerifyDesc"></p>
-                    <div class="auth-error-message" id="password-verify-error" style="display: none;"></div>
-                    <div class="modal__input-group">
-                        <input type="password" id="password-verify-current" name="current_password" class="modal__input" required placeholder=" ">
-                        <label for="password-verify-current" data-i18n="settings.login.modalCurrentPass"></label>
-                    </div>
-                </div>
-                <div class="modal__footer modal__footer--small-buttons">
-                    <button type="button" class="modal__button-small modal__button-small--secondary" id="password-verify-cancel" data-i18n="settings.profile.cancel"></button>
-                    <button type="button" class="modal__button-small modal__button-small--primary" id="password-verify-continue" data-i18n="settings.profile.continue"></button>
-                </div>
-            </div>
-
-            <div data-step="2" style="display: none;">
-                <div class="modal__header">
-                     <h2 class="modal__title" data-i18n="settings.login.modalNewPassTitle"></h2>
-                     </div>
-                <div class="modal__body">
-                    <p class="modal__description" data-i18n="settings.login.modalNewPassDesc"></p>
-                    <div class="auth-error-message" id="password-update-error" style="display: none;"></div>
-                    <div class="modal__input-group">
-                        <input type="password" id="password-update-new" name="new_password" class="modal__input" required placeholder=" " minlength="8" maxlength="72">
-                        <label for="password-update-new" data-i18n="settings.login.modalNewPass"></label>
-                    </div>
-                    <div class="modal__input-group">
-                        <input type="password" id="password-update-confirm" name="confirm_password" class="modal__input" required placeholder=" " minlength="8" maxlength="72">
-                        <label for="password-update-confirm" data-i18n="settings.login.modalConfirmPass"></label>
-                    </div>
-                </div>
-                <div class="modal__footer modal__footer--small-buttons">
-                    <button type="button" class="modal__button-small modal__button-small--secondary" id="password-update-back" data-i18n="settings.login.back"></button>
-                    <button type="button" class="modal__button-small modal__button-small--primary" id="password-update-save" data-i18n="settings.login.savePassword"></button>
-                </div>
-            </div>
-
-        </div>
-    </div>
     <div class="modal-overlay" id="tfa-verify-modal">
         <div class="modal-content">
             <div class="modal__header">

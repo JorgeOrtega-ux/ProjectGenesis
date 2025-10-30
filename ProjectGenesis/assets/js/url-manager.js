@@ -27,6 +27,10 @@ const routes = {
     'toggleSectionSettingsAccess': 'settings-accessibility',
     'toggleSectionSettingsDevices': 'settings-devices',
     
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+    'toggleSectionSettingsPassword': 'settings-change-password',
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
     'toggleSectionAccountStatusDeleted': 'account-status-deleted',
     'toggleSectionAccountStatusSuspended': 'account-status-suspended'
 };
@@ -50,6 +54,10 @@ const paths = {
     '/settings/accessibility': 'toggleSectionSettingsAccess',
     '/settings/device-sessions': 'toggleSectionSettingsDevices',
     
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+    '/settings/change-password': 'toggleSectionSettingsPassword',
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
     '/account-status/deleted': 'toggleSectionAccountStatusDeleted',
     '/account-status/suspended': 'toggleSectionAccountStatusSuspended'
 };
@@ -197,6 +205,14 @@ function updateMenuState(currentAction) {
     if (currentAction && currentAction.startsWith('toggleSectionRegister')) menuAction = 'toggleSectionRegister';
     if (currentAction && currentAction.startsWith('toggleSectionReset')) menuAction = 'toggleSectionResetPassword';
 
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+    // Si estamos en la página de cambiar contraseña, resaltar "Login y Seguridad"
+    if (currentAction === 'toggleSectionSettingsPassword') {
+        menuAction = 'toggleSectionSettingsLogin';
+    }
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
+
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
         const linkAction = link.getAttribute('data-action');
 
@@ -213,10 +229,20 @@ export function initRouter() {
 
     document.body.addEventListener('click', e => {
         const link = e.target.closest(
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[data-nav-js], .settings-button[data-action*="toggleSection"]'
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Añadido 'a[href*="/settings/"]') ▼▼▼ ---
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/settings/"], a[data-nav-js], .settings-button[data-action*="toggleSection"]'
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
         );
 
         if (link) {
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Evitar que los botones de settings recarguen la página) ▼▼▼ ---
+            // Si es un botón de settings que no sea un data-action, no hacer nada
+            if (link.classList.contains('settings-button') && !link.hasAttribute('data-action') && !link.hasAttribute('data-nav-js')) {
+                return;
+            }
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
+
             e.preventDefault();
 
             let action, page, newPath;
