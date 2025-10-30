@@ -123,10 +123,17 @@ function formatSessionDate($dateTimeString) {
                 <button type="button" class="settings-button" id="logout-all-devices-trigger" data-i18n="settings.devices.invalidateButton"></button>
             </div>
         </div>
-        <div style="padding: 16px 8px 0px 8px;">
-            <h2 class="settings-card__title" style="font-size: 18px;" data-i18n="settings.devices.activeSessionsTitle"></h2>
-        </div>
 
+        <div class="settings-card" style="padding: 16px 24px;">
+            <div class="settings-card__content" style="gap: 12px;">
+                <div class="settings-card__icon" style="width: 40px; height: 40px; border-radius: 50%;">
+                    <span class="material-symbols-rounded" style="font-size: 20px;">devices</span>
+                </div>
+                <div class="settings-card__text">
+                    <h2 class="settings-card__title" style="font-size: 18px; font-weight: 600;" data-i18n="settings.devices.activeSessionsTitle"></h2>
+                </div>
+            </div>
+        </div>
         <?php if (empty($sessions)): ?>
             <div class="settings-card">
                 <div class="settings-card__content">
@@ -167,20 +174,16 @@ function formatSessionDate($dateTimeString) {
         <div class="modal-content">
             <div class="modal__header">
                 <h2 class="modal__title" data-i18n="settings.devices.modalTitle"></h2>
-                <button type="button" class="modal-close-btn" id="logout-all-close">
-                    <span class="material-symbols-rounded">close</span>
-                </button>
             </div>
             
-            <form onsubmit="event.preventDefault();" novalidate>
-                <div class="modal__body">
-                    <p class="modal__description" data-i18n="settings.devices.modalDesc"></p>
-                </div>
-                <div class="modal__footer">
-                    <button type="button" class="modal__button modal__button--secondary" id="logout-all-cancel" data-i18n="settings.devices.modalCancel"></button>
-                    <button type="button" class="modal__button modal__button--danger" id="logout-all-confirm" data-i18n="settings.devices.modalConfirm"></button>
-                </div>
-            </form>
+            <div class="modal__body">
+                <p class="modal__description" data-i18n="settings.devices.modalDesc"></p>
+            </div>
+            <div class="modal__footer modal__footer--small-buttons">
+                <button type="button" class="modal__button-small modal__button-small--secondary" id="logout-all-cancel" data-i18n="settings.devices.modalCancel"></button>
+                <button type="button" class="modal__button-small modal__button-small--danger" id="logout-all-confirm" data-i18n="settings.devices.modalConfirm"></button>
+            </div>
+            
         </div>
     </div>
-    </div>
+</div>

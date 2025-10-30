@@ -155,10 +155,7 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                 <div class="modal__header">
                     
                     <h2 class="modal__title" data-i18n="settings.profile.modalCodeTitle"></h2>
-                    <button type="button" class="modal-close-btn" id="email-verify-close">
-                        <span class="material-symbols-rounded">close</span>
-                    </button>
-                </div>
+                    </div>
                 <div class="modal__body">
                      
                      <p class="modal__description">
@@ -170,12 +167,9 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                         <input type="text" id="email-verify-code" name="verification_code" class="modal__input" required placeholder=" " maxlength="14">
                         <label for="email-verify-code" data-i18n="settings.profile.modalCodeLabel"></label>
                     </div>
-                </div>
-                <div class="modal__footer modal__footer--column">
-                    <button type="button" class="modal__button modal__button--primary" id="email-verify-continue" data-i18n="settings.profile.continue"></button>
-                    <p class="modal__footer-text" style="text-align: center;">
+
+                    <p class="modal__footer-text" style="text-align: center; margin-top: 8px;">
                         <span data-i18n="settings.profile.modalCodeResendP"></span>
-                        
                         <a id="email-verify-resend" 
                            data-i18n="settings.profile.modalCodeResendA"
                            data-cooldown="<?php echo isset($initialEmailCooldown) ? $initialEmailCooldown : 0; ?>"
@@ -184,12 +178,15 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                         >
                         <?php 
                            if (isset($initialEmailCooldown) && $initialEmailCooldown > 0) {
-                               // El JS pondrá el texto base, aquí solo añadimos el contador
                                echo " (" . $initialEmailCooldown . "s)";
                            }
                         ?>
                         </a>
-                        </p>
+                    </p>
+                </div>
+                <div class="modal__footer modal__footer--small-buttons">
+                    <button type="button" class="modal__button-small modal__button-small--secondary" id="email-verify-cancel" data-i18n="settings.profile.cancel"></button>
+                    <button type="button" class="modal__button-small modal__button-small--primary" id="email-verify-continue" data-i18n="settings.profile.continue"></button>
                 </div>
             </div>
         </div>

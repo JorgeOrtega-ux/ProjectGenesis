@@ -50,7 +50,15 @@ function toggleButtonSpinner(button, text, isLoading) {
     button.disabled = isLoading;
     if (isLoading) {
         button.dataset.originalText = button.textContent;
-        button.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;"></span>`;
+        // --- MODIFICACIÓN: Usar spinner más pequeño para botones pequeños ---
+        const spinnerClass = button.classList.contains('modal__button-small') ? 'logout-spinner' : 'auth-button-spinner';
+        const spinnerStyle = button.classList.contains('modal__button-small') ? 'width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;' : '';
+        
+        if(spinnerClass === 'logout-spinner') {
+            button.innerHTML = `<span class="${spinnerClass}" style="${spinnerStyle}"></span>`;
+        } else {
+            button.innerHTML = `<div class="${spinnerClass}"></div>`;
+        }
     } else {
         button.innerHTML = button.dataset.originalText || text;
     }
@@ -355,6 +363,11 @@ export function initSettingsManager() {
                         if(modalError) modalError.style.display = 'none';
                         const modalInput = document.getElementById('email-verify-code');
                         if(modalInput) modalInput.value = '';
+                        
+                        // --- MODIFICACIÓN: Resetear spinner de botón ---
+                        const continueBtn = modal.querySelector('#email-verify-continue');
+                        toggleButtonSpinner(continueBtn, getTranslation('settings.profile.continue'), false);
+                        
                         modal.style.display = 'flex';
                         focusInputAndMoveCursorToEnd(document.getElementById('email-verify-code'));
                     }
@@ -415,7 +428,7 @@ export function initSettingsManager() {
             }
         }
 
-        // --- (Email Modal handlers remain the same, except CSRF token) ---
+        // --- ▼▼▼ INICIO DE MODAL EMAIL MODIFICADO ▼▼▼ ---
         const emailVerifyModal = document.getElementById('email-verify-modal');
         if (emailVerifyModal && emailVerifyModal.contains(target)) {
              if (target.closest('#email-verify-resend')) {
@@ -493,12 +506,15 @@ export function initSettingsManager() {
                 toggleButtonSpinner(continueTrigger, getTranslation('settings.profile.continue'), false);
                 return;
             }
-            if (target.closest('#email-verify-close')) {
+            // LISTENER PARA EL NUEVO BOTÓN CANCELAR
+            if (target.closest('#email-verify-cancel')) {
                 e.preventDefault();
                 emailVerifyModal.style.display = 'none';
                 return;
             }
         }
+        // --- ▲▲▲ FIN DE MODAL EMAIL MODIFICADO ▲▲▲ ---
+
 
         // --- PREFERENCES (Dropdowns/Popovers) ---
         const clickedLink = target.closest('.popover-module .menu-link'); 
@@ -564,8 +580,8 @@ export function initSettingsManager() {
         }
 
 
-        // --- (Modal 2FA handlers remain the same, except CSRF token) ---
-         if (target.closest('#tfa-verify-close')) {
+        // --- ▼▼▼ INICIO DE MODAL 2FA MODIFICADO ▼▼▼ ---
+         if (target.closest('#tfa-verify-cancel')) { // <-- MODIFICADO DE -close A -cancel
             e.preventDefault();
             const modal = document.getElementById('tfa-verify-modal');
             if(modal) modal.style.display = 'none';
@@ -597,6 +613,10 @@ export function initSettingsManager() {
 
             if(errorDiv) errorDiv.style.display = 'none';
             if(passInput) passInput.value = '';
+
+            // --- MODIFICACIÓN: Resetear spinner de botón ---
+            const continueBtn = modal.querySelector('#tfa-verify-continue');
+            toggleButtonSpinner(continueBtn, getTranslation('settings.login.confirm'), false);
 
             modal.style.display = 'flex';
             focusInputAndMoveCursorToEnd(passInput);
@@ -674,13 +694,14 @@ export function initSettingsManager() {
                 if(currentPassInput) currentPassInput.value = ''; // Limpiar contraseña
             return; // <-- Añadido return explícito
         }
+        // --- ▲▲▲ FIN DE MODAL 2FA MODIFICADO ▲▲▲ ---
 
-        // --- (Password change handlers remain the same, except CSRF token) ---
+
+        // --- ▼▼▼ INICIO DE MODAL PASSWORD MODIFICADO ▼▼▼ ---
          if (target.closest('#password-edit-trigger')) {
             e.preventDefault();
             const modal = document.getElementById('password-change-modal');
             if (!modal) return;
-            // ... (resto del código sin cambios) ...
             
             modal.querySelector('[data-step="1"]').style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
             modal.querySelector('[data-step="2"]').style.display = 'none';
@@ -697,12 +718,18 @@ export function initSettingsManager() {
              if (input1) input1.value = '';
              if (input2) input2.value = '';
              if (input3) input3.value = '';
+            
+            // --- MODIFICACIÓN: Resetear spinner de botón ---
+            const continueBtn = modal.querySelector('#password-verify-continue');
+            toggleButtonSpinner(continueBtn, getTranslation('settings.profile.continue'), false);
+            const saveBtn = modal.querySelector('#password-update-save');
+            toggleButtonSpinner(saveBtn, getTranslation('settings.login.savePassword'), false);
 
             modal.style.display = 'flex';
             focusInputAndMoveCursorToEnd(input1);
             return;
         }
-         if (target.closest('#password-verify-close')) {
+         if (target.closest('#password-verify-cancel')) { // <-- MODIFICADO DE -close A -cancel
             e.preventDefault();
             const modal = document.getElementById('password-change-modal');
             if(modal) modal.style.display = 'none';
@@ -823,8 +850,10 @@ export function initSettingsManager() {
             toggleButtonSpinner(saveTrigger, getTranslation('settings.login.savePassword'), false);
             return; // <-- Añadido return explícito
         }
+        // --- ▲▲▲ FIN DE MODAL PASSWORD MODIFICADO ▲▲▲ ---
 
-        // --- (Logout All handlers remain the same, except CSRF token) ---
+
+        // --- ▼▼▼ INICIO DE MODAL LOGOUT-ALL MODIFICADO ▼▼▼ ---
          if (target.closest('#logout-all-devices-trigger')) {
             e.preventDefault();
             const modal = document.getElementById('logout-all-modal');
@@ -837,7 +866,7 @@ export function initSettingsManager() {
             }
             return;
         }
-         if (target.closest('#logout-all-close') || target.closest('#logout-all-cancel')) {
+         if (target.closest('#logout-all-cancel')) { // <-- MODIFICADO (eliminado -close)
             e.preventDefault();
             const modal = document.getElementById('logout-all-modal');
             if(modal) modal.style.display = 'none';
@@ -871,8 +900,10 @@ export function initSettingsManager() {
             }
             return; // <-- Añadido return explícito
         }
+        // --- ▲▲▲ FIN DE MODAL LOGOUT-ALL MODIFICADO ▲▲▲ ---
 
-        // --- (Delete Account handlers remain the same, except CSRF token) ---
+
+        // --- ▼▼▼ INICIO DE MODAL DELETE-ACCOUNT MODIFICADO ▼▼▼ ---
          if (target.closest('#delete-account-trigger')) {
             e.preventDefault();
             const modal = document.getElementById('delete-account-modal');
@@ -892,7 +923,7 @@ export function initSettingsManager() {
             }
             return;
         }
-         if (target.closest('#delete-account-close') || target.closest('#delete-account-cancel')) {
+         if (target.closest('#delete-account-cancel')) { // <-- MODIFICADO (eliminado -close)
             e.preventDefault();
             const modal = document.getElementById('delete-account-modal');
             if(modal) modal.style.display = 'none';
@@ -940,6 +971,7 @@ export function initSettingsManager() {
             }
             return; // <-- Añadido return explícito
         }
+        // --- ▲▲▲ FIN DE MODAL DELETE-ACCOUNT MODIFICADO ▲▲▲ ---
 
     }); // Fin listener 'click'
 
@@ -1016,7 +1048,8 @@ export function initSettingsManager() {
     document.body.addEventListener('input', (e) => {
         const target = e.target;
         // Ocultar error inline si se escribe en un input dentro de una tarjeta
-        if (target.matches('.settings-username-input') || target.matches('.auth-input-group input') || target.matches('.modal__input')) { // Añadido .modal__input
+        // --- MODIFICACIÓN: Usar .modal__input-group y .modal__input ---
+        if (target.matches('.settings-username-input') || target.closest('.auth-input-group') || target.closest('.modal__input-group')) {
             const card = target.closest('.settings-card');
             if (card) {
                 hideInlineError(card);

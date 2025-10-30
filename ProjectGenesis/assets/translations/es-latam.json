@@ -91,16 +91,17 @@
       "lastPassUpdateNever": "Nunca has actualizado tu contraseña.",
       "lastPassUpdateError": "No se pudo cargar el historial de actualizaciones.",
       
-      "modalDeleteTitle": "Estás a punto de eliminar tu cuenta",
-      "modalDeleteWarning": "Después de seleccionar “Eliminar cuenta”, tienes <strong>72 horas</strong> para volver a iniciar sesión y restaurarla.",
-      "modalDeleteLosingTitle": "<strong>Si eliminas tu cuenta, perderás lo siguiente:</strong>",
-      "modalDeleteBullet1": "Acceso a todas tus publicaciones, comentarios y contenido multimedia.",
+      "modalDeleteTitle": "Eliminar tu cuenta permanentemente",
+      "modalDeleteWarning": "Esta acción es <strong>irreversible</strong> y no se puede deshacer. Todo tu contenido, publicaciones y conexiones se eliminarán permanentemente y <strong>no se podrán recuperar</strong>.",
+      "modalDeleteLosingTitle": "<strong>Al eliminar tu cuenta, también perderás:</strong>",
+      "modalDeleteBullet1": "El acceso a todas tus publicaciones, comentarios y contenido multimedia.",
       "modalDeleteBullet2": "Tu lista de amigos, conexiones y mensajes.",
+      "modalDeleteBullet3": "La posibilidad de usar tu nombre de usuario y correo electrónico para un nuevo registro en el futuro.",
       "modalDeletePrivacyTitle": "<strong>Cómo se eliminan tus datos</strong>",
-      "modalDeletePrivacyDesc": "<strong>Pasadas las 72 horas</strong>, tu contenido se eliminará de forma permanente y no se podrá recuperar. Tu nombre de usuario y correo electrónico no podrán ser usados para un nuevo registro en el futuro.",
-      "modalDeleteConfirmText": "Para continuar, confirma tu contraseña:",
+      "modalDeletePrivacyDesc": "Tu contenido se eliminará de forma permanente y no se podrá recuperar. Tu nombre de usuario y correo electrónico no podrán ser usados para un nuevo registro en el futuro.",
+      "modalDeleteConfirmText": "Para confirmar esta acción irreversible, ingresa tu contraseña:",
       "modalDeletePasswordLabel": "Ingresa tu contraseña",
-      "modalDeleteConfirm": "Eliminar cuenta"
+      "modalDeleteConfirm": "Eliminar permanentemente"
     },
     "accessibility": {
       "title": "Accesibilidad",

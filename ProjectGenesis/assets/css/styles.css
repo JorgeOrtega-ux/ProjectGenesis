@@ -63,7 +63,7 @@ body {
 }
 
 .general-content-top.shadow {
-    box-shadow: 0 4px 12px #00000020;
+    box-shadow: 0 4px 6px -4px rgba(0, 0, 0, 0.2);
     border: transparent;
 }
 
@@ -1899,6 +1899,20 @@ body {
 .modal__button-small--secondary:hover {
     background-color: #f5f5fa;
 }
+
+/* --- ▼▼▼ INICIO DE NUEVA CLASE AÑADIDA ▼▼▼ --- */
+/* 3.b. Estilo Primario (Continuar, Guardar) */
+.modal__button-small--primary {
+    background-color: #000;
+    color: #ffffff;
+    border: 1px solid #000;
+}
+.modal__button-small--primary:hover {
+    background-color: #333;
+    border-color: #333;
+}
+/* --- ▲▲▲ FIN DE NUEVA CLASE AÑADIDA ▲▲▲ --- */
+
 
 /* 4. Estilo Peligro (Eliminar) */
 .modal__button-small--danger {

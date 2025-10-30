@@ -85,10 +85,7 @@
             <div data-step="1">
                 <div class="modal__header">
                     <h2 class="modal__title" data-i18n="settings.login.modalVerifyTitle"></h2>
-                    <button type="button" class="modal-close-btn" id="password-verify-close">
-                        <span class="material-symbols-rounded">close</span>
-                    </button>
-                </div>
+                    </div>
                 <div class="modal__body">
                     <p class="modal__description" data-i18n="settings.login.modalVerifyDesc"></p>
                     <div class="auth-error-message" id="password-verify-error" style="display: none;"></div>
@@ -97,17 +94,16 @@
                         <label for="password-verify-current" data-i18n="settings.login.modalCurrentPass"></label>
                     </div>
                 </div>
-                <div class="modal__footer">
-                    <button type="button" class="modal__button modal__button--primary" id="password-verify-continue" data-i18n="settings.profile.continue"></button>
+                <div class="modal__footer modal__footer--small-buttons">
+                    <button type="button" class="modal__button-small modal__button-small--secondary" id="password-verify-cancel" data-i18n="settings.profile.cancel"></button>
+                    <button type="button" class="modal__button-small modal__button-small--primary" id="password-verify-continue" data-i18n="settings.profile.continue"></button>
                 </div>
             </div>
 
             <div data-step="2" style="display: none;">
                 <div class="modal__header">
                      <h2 class="modal__title" data-i18n="settings.login.modalNewPassTitle"></h2>
-                     <button type="button" class="modal-close-btn" data-action="close-modal"> <span class="material-symbols-rounded">close</span>
-                    </button>
-                </div>
+                     </div>
                 <div class="modal__body">
                     <p class="modal__description" data-i18n="settings.login.modalNewPassDesc"></p>
                     <div class="auth-error-message" id="password-update-error" style="display: none;"></div>
@@ -120,9 +116,9 @@
                         <label for="password-update-confirm" data-i18n="settings.login.modalConfirmPass"></label>
                     </div>
                 </div>
-                <div class="modal__footer">
-                    <button type="button" class="modal__button modal__button--secondary" id="password-update-back" data-i18n="settings.login.back"></button>
-                    <button type="button" class="modal__button modal__button--primary" id="password-update-save" data-i18n="settings.login.savePassword"></button>
+                <div class="modal__footer modal__footer--small-buttons">
+                    <button type="button" class="modal__button-small modal__button-small--secondary" id="password-update-back" data-i18n="settings.login.back"></button>
+                    <button type="button" class="modal__button-small modal__button-small--primary" id="password-update-save" data-i18n="settings.login.savePassword"></button>
                 </div>
             </div>
 
@@ -132,10 +128,7 @@
         <div class="modal-content">
             <div class="modal__header">
                  <h2 class="modal__title" id="tfa-modal-title" data-i18n="settings.login.modalVerifyTitle"></h2>
-                <button type="button" class="modal-close-btn" id="tfa-verify-close">
-                    <span class="material-symbols-rounded">close</span>
-                </button>
-            </div>
+                 </div>
             <div class="modal__body">
                 <p class="modal__description" id="tfa-modal-text" data-i18n="settings.login.modalVerifyDesc"></p>
                 <div class="auth-error-message" id="tfa-verify-error" style="display: none;"></div>
@@ -144,12 +137,12 @@
                     <label for="tfa-verify-password" data-i18n="settings.login.modalCurrentPass"></label>
                 </div>
             </div>
-            <div class="modal__footer">
-                 <button type="button" class="modal__button modal__button--primary" id="tfa-verify-continue" data-i18n="settings.login.confirm"></button>
+            <div class="modal__footer modal__footer--small-buttons">
+                 <button type="button" class="modal__button-small modal__button-small--secondary" id="tfa-verify-cancel" data-i18n="settings.devices.modalCancel"></button>
+                 <button type="button" class="modal__button-small modal__button-small--primary" id="tfa-verify-continue" data-i18n="settings.login.confirm"></button>
             </div>
         </div>
     </div>
-
     <div class="modal-overlay" id="delete-account-modal">
         <div class="modal-content">
             <div class="modal__header">
@@ -158,8 +151,8 @@
 
             <div class="modal__body">
                 
-                <div class="modal-warning-box">
-                    <span class="material-symbols-rounded">warning</span>
+                <div class="modal-warning-box" style="background-color: #fbebee;">
+                    <span class="material-symbols-rounded" style="color: #c62828;">error</span>
                     <p data-i18n="settings.login.modalDeleteWarning"></p>
                 </div>
 
@@ -168,10 +161,9 @@
                 <ul class="modal__list">
                     <li data-i18n="settings.login.modalDeleteBullet1"></li>
                     <li data-i18n="settings.login.modalDeleteBullet2"></li>
+                    <li data-i18n="settings.login.modalDeleteBullet3"></li>
                 </ul>
 
-                <p class="modal__description" data-i18n="settings.login.modalDeletePrivacyTitle"></p>
-                <p class="modal__description" data-i18n="settings.login.modalDeletePrivacyDesc" style="margin-top: -8px;"></p>
                 <div class="auth-error-message" id="delete-account-error" style="display: none;"></div>
 
                 <p class="modal__description" style="margin-bottom: -8px;" data-i18n="settings.login.modalDeleteConfirmText"></p>
@@ -193,5 +185,6 @@
             </div>
         </div>
     </div>
+    
     </div>
 </div>

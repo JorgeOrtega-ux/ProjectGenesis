@@ -85,11 +85,19 @@ function hideTooltip() {
  */
 export function initTooltipManager() {
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-    // Ya NO creamos el elemento al iniciar
-    // createTooltipElement();
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Detección Táctil) ▼▼▼ ---
+    
+    // 1. Detectar si el dispositivo es táctil.
+    // (ontouchstart es la forma clásica, maxTouchPoints es la moderna)
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
+    // 2. Si es un dispositivo táctil, no adjuntar los listeners de hover.
+    if (isTouchDevice) {
+        // No hacer nada. Los tooltips de 'hover' no se activarán.
+        return; 
+    }
+
+    // 3. Si NO es táctil (es un dispositivo de mouse), adjuntar los listeners.
     document.body.addEventListener('mouseover', (e) => {
         const target = e.target.closest('[data-tooltip]');
         if (!target) return;
@@ -109,4 +117,5 @@ export function initTooltipManager() {
     document.body.addEventListener('click', () => {
          hideTooltip();
     });
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN (Detección Táctil) ▲▲▲ ---
 }
