@@ -567,7 +567,7 @@ body {
     border-color: #c62828; /* Color rojo de error */
 }
 
-/* Mantener el borde rojo incluso cuando está enfocado */
+/* Mantener el borde rojo incluso when enfocado */
 .auth-input-group input.auth-input-error:focus {
     border-color: #c62828;
     box-shadow: none;
@@ -2250,7 +2250,7 @@ body {
 
 /* --- ▼▼▼ NUEVO: Estilo para la barra de búsqueda ▼▼▼ --- */
 .admin-search-bar {
-    /* display: flex;  ¡Se quita! 'display: none;' se maneja inline por JS */
+    /* display: flex; */ /* ¡Se quita! 'display: none;' se maneja inline por JS */
     align-items: center;
     gap: 12px;
     padding: 8px 12px;
@@ -2260,6 +2260,7 @@ body {
     border-radius: 8px;
     box-shadow: 0 4px 12px #00000010;
     box-sizing: border-box;
+    width: 100%; /* <-- AÑADIDO PARA QUE LLENE EL NUEVO DIV FLOTANTE */
 }
 
 .admin-search-bar .material-symbols-rounded {

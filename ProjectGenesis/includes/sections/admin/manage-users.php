@@ -79,6 +79,7 @@ try {
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-users') ? 'active' : 'disabled'; ?>" data-section="admin-users">
     
     <div class="admin-toolbar-container">
+        
         <div class="admin-toolbar-floating" 
              data-current-page="<?php echo $adminCurrentPage; ?>" 
              data-total-pages="<?php echo $totalPages; ?>">
@@ -145,15 +146,16 @@ try {
             </div>
         </div>
         
-        <div class="admin-search-bar" id="admin-search-bar" 
-             style="display: <?php echo $isSearching ? 'flex' : 'none'; ?>;">
-            <span class="material-symbols-rounded">search</span>
-            <input type="text" class="admin-search-input" 
-                   placeholder="Buscar usuario por nombre, email..." 
-                   value="<?php echo htmlspecialchars($searchQuery); ?>">
+        <div class="admin-toolbar-floating">
+            <div class="admin-search-bar" id="admin-search-bar" 
+                 style="display: <?php echo $isSearching ? 'flex' : 'none'; ?>;">
+                <span class="material-symbols-rounded">search</span>
+                <input type="text" class="admin-search-input" 
+                       placeholder="Buscar usuario por nombre, email..." 
+                       value="<?php echo htmlspecialchars($searchQuery); ?>">
+            </div>
         </div>
-
-    </div>
+        </div>
     <div class="component-wrapper">
 
         <div class="component-header-card">
