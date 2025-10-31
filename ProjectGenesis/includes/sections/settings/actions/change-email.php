@@ -20,30 +20,31 @@
         ?>
 
         <div class="settings-card settings-card--action" id="email-step-1-verify">
-        <div class="settings-card__content">
+            <div class="settings-card__content">
                 <div class="settings-card__icon">
                     <span class="material-symbols-rounded">password</span>
                 </div>
                 <div class="settings-card__text">
                     <h2 class="settings-card__title" data-i18n="settings.profile.modalCodeTitle"></h2>
-                    <p class="modal__description" style="font-size: 14px; font-weight: 400; color: #333;">
+                    <p class="settings-card__description">
                         <span data-i18n="settings.profile.modalCodeDesc"></span> 
                         <strong><?php echo htmlspecialchars($userEmail); ?></strong>
                     </p>
                 </div>
             </div>
             
-            <div class="modal__input-group" style="width: 100%; margin-top: 16px;">
-                <input type="text" id="email-verify-code" name="verification_code" class="modal__input" required placeholder=" " maxlength="14">
+            <div class="settings-input-group">
+                <input type="text" id="email-verify-code" name="verification_code" class="settings-input" required placeholder=" " maxlength="14">
                 <label for="email-verify-code" data-i18n="settings.profile.modalCodeLabel"></label>
             </div>
-            <p class="modal__footer-text" style="text-align: left; width: 100%; margin: 8px 0 0 0;">
+            <p class="settings-card__description" style="text-align: left; width: 100%; margin: 0;">
                 <span data-i18n="settings.profile.modalCodeResendP"></span>
                 
                 <a id="email-verify-resend" 
                    data-i18n="page.register.resendCode"
                    data-cooldown="<?php echo isset($initialEmailCooldown) ? $initialEmailCooldown : 0; ?>"
                    class="<?php echo (isset($initialEmailCooldown) && $initialEmailCooldown > 0) ? 'disabled-interactive' : ''; ?>"
+                   style="color: #000; font-weight: 600; text-decoration: none; cursor: pointer;"
                 >
                    <?php 
                    if (isset($initialEmailCooldown) && $initialEmailCooldown > 0) {
@@ -53,13 +54,13 @@
                 </a>
             </p>
             <div class="settings-card__actions">
-                <button type="button" class="modal__button-small modal__button-small--secondary" data-action="toggleSectionSettingsProfile" data-i18n="settings.profile.cancel"></button>
-                <button type="button" class="modal__button-small modal__button-small--primary" id="email-verify-continue" data-i18n="settings.profile.continue"></button>
+                <button type="button" class="settings-action-button settings-action-button--secondary" data-action="toggleSectionSettingsProfile" data-i18n="settings.profile.cancel"></button>
+                <button type="button" class="settings-action-button settings-action-button--primary" id="email-verify-continue" data-i18n="settings.profile.continue"></button>
             </div>
-            </div>
+        </div>
 
-        <div class="settings-card settings-card--action" id="email-step-2-update" style="display: none; gap: 16px;">
-        <div class="settings-card__content">
+        <div class="settings-card settings-card--action" id="email-step-2-update" style="display: none;">
+            <div class="settings-card__content">
                 <div class="settings-card__icon">
                     <span class="material-symbols-rounded">mark_email_read</span>
                 </div>
@@ -69,9 +70,9 @@
                 </div>
             </div>
             
-            <div class="modal__input-group" style="width: 100%;">
+            <div class="settings-input-group">
                 <input type="email"
-                   class="modal__input"
+                   class="settings-input"
                    id="email-input-new"
                    name="email"
                    value="<?php echo htmlspecialchars($userEmail); ?>"
@@ -81,9 +82,9 @@
             </div>
 
             <div class="settings-card__actions">
-                 <button type="button" class="modal__button-small modal__button-small--secondary" data-action="toggleSectionSettingsProfile" data-i18n="settings.profile.cancel"></button>
-                <button type="button" class="modal__button-small modal__button-small--primary" id="email-save-trigger-btn" data-i18n="settings.profile.save"></button>
+                 <button type="button" class="settings-action-button settings-action-button--secondary" data-action="toggleSectionSettingsProfile" data-i18n="settings.profile.cancel"></button>
+                <button type="button" class="settings-action-button settings-action-button--primary" id="email-save-trigger-btn" data-i18n="settings.profile.save"></button>
             </div>
         </div>
-        </div>
+    </div>
 </div>

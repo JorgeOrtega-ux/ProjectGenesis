@@ -828,6 +828,7 @@ body {
 /* Modificador para formularios y toggles */
 .settings-card--edit-mode {
     align-items: flex-end;
+    gap: 8px; /* <-- AÑADIDO PARA ESTANDARIZAR */
 }
 
 /* Modificador para selectores (Idioma, Tema) */
@@ -846,10 +847,11 @@ body {
 .settings-card--action {
     flex-direction: column;
     align-items: stretch;
+    gap: 8px; /* <-- AÑADIDO PARA ESTANDARIZAR */
 }
 .settings-card--action .settings-card__actions {
     justify-content: flex-end; /* Alinear a la derecha */
-    margin-top: 16px; /* Margen superior solo en desktop */
+    /* margin-top: 16px; */ /* <-- ELIMINADO */
 }
 .settings-card--action .settings-card__content {
     flex: unset;
@@ -984,6 +986,160 @@ body {
 .settings-toggle-switch input:checked+.settings-toggle-slider:before {
     transform: translateX(16px);
 }
+
+/* --- ▼▼▼ INICIO DE NUEVOS COMPONENTES ESTANDARIZADOS ▼▼▼ --- */
+
+/* Inputs (copiados de .modal__input-group) */
+.settings-input-group {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.settings-input-group label {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #6b7280;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    transform-origin: top left;
+}
+
+.settings-input-group .settings-input {
+    width: 100%;
+    height: 52px;
+    padding: 20px 12px 8px 12px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: transparent;
+    color: #000;
+}
+
+.settings-input-group .settings-input:focus~label,
+.settings-input-group .settings-input:not(:placeholder-shown)~label {
+    top: 8px;
+    transform: translateY(0);
+    font-size: 12px;
+}
+.settings-input-group .settings-input:focus,
+.settings-input-group .settings-input:not(:placeholder-shown) {
+    border-color: #000;
+}
+.settings-input-group .settings-input:focus~label,
+.settings-input-group .settings-input:not(:placeholder-shown)~label {
+    color: #000;
+}
+
+/* Botones de Acción (copiados de .modal__button-small) */
+.settings-action-button {
+    height: 40px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    line-height: 1;
+    padding: 0 16px;
+}
+
+.settings-action-button--secondary {
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #00000020;
+}
+.settings-action-button--secondary:hover {
+    background-color: #f5f5fa;
+}
+
+.settings-action-button--primary {
+    background-color: #000;
+    color: #ffffff;
+    border: 1px solid #000;
+}
+.settings-action-button--primary:hover {
+    background-color: #333;
+    border-color: #333;
+}
+
+.settings-action-button--danger {
+    background-color: #c62828;
+    color: #ffffff;
+    border: 1px solid #c62828;
+}
+.settings-action-button--danger:hover {
+    background-color: #b71c1c;
+}
+
+.settings-action-button:disabled {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    border-color: #e0e0e0;
+    cursor: not-allowed;
+    opacity: 1; 
+}
+.settings-action-button--danger:disabled {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    border-color: #e0e0e0;
+}
+
+/* Caja de Advertencia (copiada de .modal-warning-box) */
+.settings-warning-box {
+    background-color: #fbebee; /* Color de peligro */
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+.settings-warning-box .material-symbols-rounded {
+    color: #c62828; /* Color de peligro */
+    font-size: 20px;
+    margin-top: 2px;
+}
+.settings-warning-box p {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #3f3c33;
+    margin: 0; 
+}
+.settings-warning-box p strong {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+/* Lista (copiada de .modal__list) */
+.settings-list {
+    list-style-type: disc;
+    margin: 0 0 0 20px; /* Margen izquierdo para bullets */
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+ .settings-list li {
+    font-size: 14px;
+    color: #1f2937;
+    line-height: 1.5;
+}
+
+/* --- ▲▲▲ FIN DE NUEVOS COMPONENTES ESTANDARIZADOS ▲▲▲ --- */
+
+/* --- ▲▲▲ FIN DE LA SECCIÓN REFACTORIZADA ▲▲▲ --- */
+
+
 /* --- ▲▲▲ FIN DE LA SECCIÓN REFACTORIZADA ▲▲▲ --- */
 
 

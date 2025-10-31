@@ -22,27 +22,29 @@
         ?>
 
         <div class="settings-card settings-card--column settings-card--danger">
-        <div class="settings-card__content">
+            <div class="settings-card__content">
                 <div class="settings-card__text">
                     
-                    <div class="modal-warning-box" style="background-color: #fbebee; margin-bottom: 16px;">
-                        <span class="material-symbols-rounded" style="color: #c62828;">error</span>
+                    <div class="settings-warning-box" style="margin-bottom: 16px;">
+                        <span class="material-symbols-rounded">error</span>
                         <p data-i18n="settings.login.modalDeleteWarning"></p>
                     </div>
 
-                    <p class="modal__description" style="font-size: 14px; font-weight: 400; color: #333;" data-i18n="settings.login.modalDeleteLosingTitle"></p>
-                    <ul class="modal__list" style="margin-top: 8px; margin-bottom: 16px;">
+                    <p class="settings-card__description" style="font-weight: 400; color: #333;" data-i18n="settings.login.modalDeleteLosingTitle"></p>
+                    
+                    <ul class="settings-list" style="margin-top: 8px; margin-bottom: 16px; gap: 4px; color: #333;">
                         <li data-i18n="settings.login.modalDeleteBullet1"></li>
                         <li data-i18n="settings.login.modalDeleteBullet2"></li>
                         <li data-i18n="settings.login.modalDeleteBullet3"></li>
                     </ul>
                     
-                    <p class="modal__description" style="font-size: 14px; font-weight: 400; color: #333; margin-bottom: 8px;" data-i18n="settings.login.modalDeleteConfirmText"></p>
-                    <div class="modal__input-group">
+                    <p class="settings-card__description" style="font-weight: 400; color: #333; margin-bottom: 8px;" data-i18n="settings.login.modalDeleteConfirmText"></p>
+                    
+                    <div class="settings-input-group">
                         <input type="password" 
                                id="delete-account-password" 
                                name="current_password" 
-                               class="modal__input" 
+                               class="settings-input" 
                                required 
                                placeholder=" ">
                         <label for="delete-account-password" data-i18n="settings.login.modalDeletePasswordLabel"></label>
