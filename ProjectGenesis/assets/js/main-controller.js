@@ -1,6 +1,6 @@
 import { getTranslation } from './i18n-manager.js';
 
-export const deactivateAllModules = (exceptionModule = null) => {
+const deactivateAllModules = (exceptionModule = null) => {
     document.querySelectorAll('[data-module].active').forEach(activeModule => {
         if (activeModule !== exceptionModule) {
             activeModule.classList.add('disabled');
@@ -9,15 +9,14 @@ export const deactivateAllModules = (exceptionModule = null) => {
     });
 };
 
-export function initMainController() {
+function initMainController() {
     let allowMultipleActiveModules = false;
     let closeOnClickOutside = true;
     let closeOnEscape = true;
 
     document.body.addEventListener('click', async function (event) {
-        
         const button = event.target.closest('[data-action]');
-        
+
         if (!button) {
             return;
         }
@@ -26,20 +25,20 @@ export function initMainController() {
 
         if (action === 'logout') {
             event.preventDefault();
-            const logoutButton = button; 
-            
+            const logoutButton = button;
+
             if (logoutButton.classList.contains('disabled-interactive')) {
                 return;
             }
 
             logoutButton.classList.add('disabled-interactive');
-            
+
             const spinnerContainer = document.createElement('div');
             spinnerContainer.className = 'menu-link-icon';
 
             const spinner = document.createElement('div');
             spinner.className = 'logout-spinner';
-            
+
             spinnerContainer.appendChild(spinner);
             logoutButton.appendChild(spinnerContainer);
 
@@ -62,18 +61,18 @@ export function initMainController() {
                     setTimeout(() => {
                         console.log('Verificación: Sesión activa (simulado).');
                         resolve(true);
-                    }, 500); 
+                    }, 500);
                 });
             };
 
             try {
                 await checkSession();
                 await checkNetwork();
-                await new Promise(res => setTimeout(res, 1000)); 
+                await new Promise(res => setTimeout(res, 1000));
 
                 const token = window.csrfToken || '';
                 const logoutUrl = (window.projectBasePath || '') + '/config/logout.php';
-                
+
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = logoutUrl;
@@ -87,21 +86,18 @@ export function initMainController() {
                 form.appendChild(tokenInput);
                 document.body.appendChild(form);
                 form.submit();
-                
+
             } catch (error) {
                 alert(getTranslation('js.main.errorLogout') + (error.message || getTranslation('js.auth.errorUnknown')));
-            
             } finally {
-
-                spinnerContainer.remove(); 
-                
+                spinnerContainer.remove();
                 logoutButton.classList.remove('disabled-interactive');
             }
             return;
         }
-        
+
         if (action.startsWith('toggleSection')) {
-            return; 
+            return;
         }
 
         const isSelectorLink = event.target.closest('[data-module="moduleTriggerSelect"] .menu-link');
@@ -110,9 +106,9 @@ export function initMainController() {
         }
 
         if (action.startsWith('toggle')) {
-            event.stopPropagation(); 
-            
-            let moduleName = action.substring(6); 
+            event.stopPropagation();
+
+            let moduleName = action.substring(6);
             moduleName = moduleName.charAt(0).toLowerCase() + moduleName.slice(1);
 
             const module = document.querySelector(`[data-module="${moduleName}"]`);
@@ -129,7 +125,6 @@ export function initMainController() {
             }
         }
     });
-
 
     if (closeOnClickOutside) {
         document.addEventListener('click', function (event) {
@@ -149,7 +144,6 @@ export function initMainController() {
             }
         });
     }
-    
-    
-    
 }
+
+export { deactivateAllModules, initMainController };

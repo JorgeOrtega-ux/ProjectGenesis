@@ -41,7 +41,11 @@ if ($CURRENT_REGISTER_STEP == 2) {
                 <div class="auth-input-group">
                     <input type="text" id="register-username" name="username" required placeholder=" " minlength="6" maxlength="32">
                     <label for="register-username" data-i18n="page.register.usernameLabel"></label>
-                </div>
+                    
+                    <button type="button" class="auth-toggle-password auth-generate-username" data-auth-action="generate-username" data-toggle="register-username" title="Generar nombre de usuario aleatorio">
+                        <span class="material-symbols-rounded">auto_fix_high</span>
+                    </button>
+                    </div>
 
                 <div class="auth-step-buttons">
                     <button type="button" class="auth-button" data-auth-action="next-step" data-i18n="page.register.continueButton"></button>

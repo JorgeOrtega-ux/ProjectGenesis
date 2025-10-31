@@ -166,7 +166,7 @@ function showAuthError(errorDiv, message, data = null, inputElement = null) {
 
 function initPasswordToggles() {
     document.body.addEventListener('click', e => {
-        const toggleBtn = e.target.closest('.auth-toggle-password');
+        const toggleBtn = e.target.closest('.auth-toggle-password:not(.auth-generate-username)'); // Modificado para excluir el nuevo botón
         if (toggleBtn) {
             const inputId = toggleBtn.getAttribute('data-toggle');
             const input = document.getElementById(inputId);
@@ -192,6 +192,42 @@ function initRegisterWizard() {
         if (!button) return;
 
         const action = button.getAttribute('data-auth-action');
+
+        if (action === 'generate-username') {
+            e.preventDefault();
+            const inputId = button.getAttribute('data-toggle');
+            const input = document.getElementById(inputId);
+            
+            if (input) {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                
+                // Formato: userYYYYMMDD_HHMMSS
+                const timestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+                
+                // Sufijo: XX (dos caracteres alfanuméricos)
+                const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+                const suffix = chars[Math.floor(Math.random() * chars.length)] + chars[Math.floor(Math.random() * chars.length)];
+                
+                const newUsername = `user${timestamp}${suffix}`;
+                
+                // Asegurarse de que no exceda el maxlength
+                input.value = newUsername.substring(0, 32);
+                
+                // Forzar que la etiqueta flotante se active
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                // Opcional: quitar el foco del botón
+                button.blur();
+            }
+            return; // Importante para no continuar al 'next-step'
+        }
+
 
         if (action === 'resend-code') {
             e.preventDefault();
@@ -682,8 +718,8 @@ export function initAuthManager() {
         const isRegisterCode = (e.target.id === 'register-code' && e.target.closest('#register-form'));
         const isResetCode = (e.target.id === 'reset-code' && e.target.closest('#reset-form'));
         const isLoginCode = (e.target.id === 'login-code' && e.target.closest('#login-form'));
-        const isSettingsEmailCode = (e.target.id === 'email-verify-code' && e.target.closest('#email-verify-modal'));
-
+        
+        const isSettingsEmailCode = (e.target.id === 'email-verify-code' && e.target.closest('[data-section="settings-change-email"]'));
         if (isRegisterCode || isResetCode || isLoginCode || isSettingsEmailCode) {
             let input = e.target.value.replace(/[^0-9a-zA-Z]/g, '');
             input = input.toUpperCase();

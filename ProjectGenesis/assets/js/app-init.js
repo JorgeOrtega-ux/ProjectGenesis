@@ -53,5 +53,4 @@ document.addEventListener('DOMContentLoaded', async function () {
     initAuthManager();
     initSettingsManager();
     initTooltipManager(); 
-
 });

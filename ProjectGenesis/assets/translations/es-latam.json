@@ -40,7 +40,7 @@
       "email": "Correo Electrónico",
       "modalCodeTitle": "Busca el código que te enviamos",
       "modalCodeDesc": "Para poder hacer cambios en tu cuenta, primero debes ingresar el código que te enviamos a",
-      "modalCodeLabel": "Código*",
+  "modalCodeLabel": "Código de verificación*",
       "continue": "Continuar",
       "modalCodeResendP": "¿No recibiste el código?",
       "modalCodeResendA": "Volver a enviarlo",

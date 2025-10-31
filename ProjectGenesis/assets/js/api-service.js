@@ -1,4 +1,3 @@
-
 import { getTranslation } from './i18n-manager.js';
 
 const API_ENDPOINTS = {
@@ -10,10 +9,10 @@ async function _post(url, formData) {
     const csrfToken = window.csrfToken || '';
     formData.append('csrf_token', csrfToken);
 
-    let response; 
-    
+    let response;
+
     try {
-        response = await fetch(url, { 
+        response = await fetch(url, {
             method: 'POST',
             body: formData,
         });
@@ -24,15 +23,15 @@ async function _post(url, formData) {
         }
 
         const responseClone = response.clone();
-        
+
         try {
-            const result = await response.json(); 
+            const result = await response.json();
 
             if (result.success === false && result.message && result.message.includes('Error de seguridad')) {
                 window.showAlert(getTranslation('js.api.errorSecurity'), 'error');
                 setTimeout(() => location.reload(), 2000);
             }
-            
+
             return result;
 
         } catch (jsonError) {
@@ -42,17 +41,18 @@ async function _post(url, formData) {
             return { success: false, message: getTranslation('js.api.errorServer') + ' (Respuesta inválida)' };
         }
 
-
-    } catch (error) { 
+    } catch (error) {
         console.error('Error en la llamada fetch (Red):', error);
         return { success: false, message: getTranslation('js.api.errorConnection') };
     }
 }
 
-export async function callAuthApi(formData) {
+async function callAuthApi(formData) {
     return _post(API_ENDPOINTS.AUTH, formData);
 }
 
-export async function callSettingsApi(formData) {
+async function callSettingsApi(formData) {
     return _post(API_ENDPOINTS.SETTINGS, formData);
 }
+
+export { callAuthApi, callSettingsApi };

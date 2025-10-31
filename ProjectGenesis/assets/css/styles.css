@@ -501,6 +501,12 @@ body {
     color: #000;
 }
 
+/* ▼▼▼ REGLAS CSS ELIMINADAS ▼▼▼ */
+/* .auth-generate-username { ... } */
+/* .auth-input-group input#register-username { ... } */
+/* ▲▲▲ REGLAS CSS ELIMINADAS ▲▲▲ */
+
+
 .auth-button {
     /* display: block; */ /* <-- LÍNEA ELIMINADA */
     /* line-height: 52px; */ /* <-- LÍNEA ELIMINADA */

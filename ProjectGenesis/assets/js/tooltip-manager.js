@@ -1,6 +1,4 @@
-
 import { createPopper } from 'https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/esm/popper.min.js';
-
 import { getTranslation } from './i18n-manager.js';
 
 let tooltipEl;
@@ -8,14 +6,14 @@ let popperInstance;
 
 function createTooltipElementInstance() {
     const newTooltipEl = document.createElement('div');
-    newTooltipEl.id = 'main-tooltip'; 
+    newTooltipEl.id = 'main-tooltip';
     newTooltipEl.className = 'tooltip';
     newTooltipEl.setAttribute('role', 'tooltip');
-    
+
     const textEl = document.createElement('div');
     textEl.className = 'tooltip-text';
     newTooltipEl.appendChild(textEl);
-    
+
     return newTooltipEl;
 }
 
@@ -24,7 +22,6 @@ function showTooltip(target) {
     if (!tooltipKey) return;
 
     tooltipEl = createTooltipElementInstance();
-    
     document.body.appendChild(tooltipEl);
 
     const text = getTranslation(tooltipKey);
@@ -32,13 +29,12 @@ function showTooltip(target) {
     tooltipEl.style.display = 'block';
 
     popperInstance = createPopper(target, tooltipEl, {
-       placement: 'bottom',
-       placement: 'auto',
+        placement: 'bottom',
         modifiers: [
             {
                 name: 'offset',
                 options: {
-                    offset: [0, 8], 
+                    offset: [0, 8],
                 },
             },
         ],
@@ -46,42 +42,35 @@ function showTooltip(target) {
 }
 
 function hideTooltip() {
-    
     if (popperInstance) {
         popperInstance.destroy();
         popperInstance = null;
     }
-    
+
     if (tooltipEl && tooltipEl.parentNode) {
         tooltipEl.parentNode.removeChild(tooltipEl);
-        tooltipEl = null; 
+        tooltipEl = null;
     }
 }
 
-export function initTooltipManager() {
-    
-    
-    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+function initTooltipManager() {
+    const isCoarsePointer = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
 
-    if (isTouchDevice) {
-        return; 
+    if (isCoarsePointer) {
+        return;
     }
 
     document.body.addEventListener('mouseover', (e) => {
         const target = e.target.closest('[data-tooltip]');
         if (!target) return;
-
         showTooltip(target);
     });
 
     document.body.addEventListener('mouseout', (e) => {
         const target = e.target.closest('[data-tooltip]');
         if (!target) return;
-        
         hideTooltip();
     });
-    
-    document.body.addEventListener('click', () => {
-         hideTooltip();
-    });
 }
+
+export { initTooltipManager, showTooltip, hideTooltip };
