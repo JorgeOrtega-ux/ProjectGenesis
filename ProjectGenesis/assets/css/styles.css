@@ -2156,23 +2156,21 @@ body {
     box-sizing: border-box;
 }
 
-/* --- ▼▼▼ MODIFICADO: El toolbar flotante AHORA es un hijo ▼▼▼ --- */
 .admin-toolbar-floating {
     /* Esto AHORA es solo el estilo VISUAL del toolbar */
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%; /* Ocupa el 100% del nuevo container */
-    padding: 8px 12px;
+    padding: 8px 8px;
     background-color: #ffffff;
     border: 1px solid #00000020;
-    border-radius: 8px; /* Bordes redondeados */
+    border-radius: 12px; /* Bordes redondeados */
     box-shadow: 0 4px 12px #00000010; /* Sombra ligera */
     box-sizing: border-box;
     
     /* ¡Se eliminó position, top, left, transform, z-index, max-width, width: 95%! */
 }
-
 .admin-toolbar-left,
 .admin-toolbar-right {
     display: flex;
@@ -2237,15 +2235,13 @@ body {
     height: 36px;
     display: flex;
     align-items: center;
-    border-left: 1px solid #00000020;
-    border-right: 1px solid #00000020;
 }
 
 /* --- ▼▼▼ NUEVO: Estilo para el botón de búsqueda ACTIVO ▼▼▼ --- */
 .admin-toolbar-button[data-action="admin-toggle-search"].active {
-    border-color: #206BD3; /* Azul como en la imagen */
-    background-color: #f5f5fa;
-    color: #206BD3;
+    border-color: #000000; /* Azul como en la imagen */
+    background-color: #000000;
+    color: #ffffff;
 }
 
 /* --- ▼▼▼ NUEVO: Estilo para la barra de búsqueda ▼▼▼ --- */

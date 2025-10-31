@@ -19,35 +19,35 @@ $totalPages = 1;
 
 try {
     // --- ▼▼▼ INICIO DE SQL MODIFICADO ▼▼▼ ---
-    
+
     // 2. Contar el total de usuarios (con filtro si existe)
     $sqlCount = "SELECT COUNT(*) FROM users";
     if ($isSearching) {
         $sqlCount .= " WHERE (username LIKE :query OR email LIKE :query)";
     }
-    
+
     $totalUsersStmt = $pdo->prepare($sqlCount);
-    
+
     if ($isSearching) {
         $searchParam = '%' . $searchQuery . '%';
         $totalUsersStmt->bindParam(':query', $searchParam, PDO::PARAM_STR);
     }
-    
+
     $totalUsersStmt->execute();
     $totalUsers = (int)$totalUsersStmt->fetchColumn();
     // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
-    
+
     if ($totalUsers > 0) {
         $totalPages = (int)ceil($totalUsers / $usersPerPage);
     } else {
         $totalPages = 1; // Si no hay usuarios, seguimos en la página 1
     }
-    
+
     // 2. Asegurarse de que la página actual es válida
     if ($adminCurrentPage > $totalPages) {
         $adminCurrentPage = $totalPages;
     }
-    
+
     // 3. Calcular el OFFSET
     $offset = ($adminCurrentPage - 1) * $usersPerPage;
 
@@ -61,13 +61,13 @@ try {
     $sqlSelect .= " ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
 
     $stmt = $pdo->prepare($sqlSelect);
-    
+
     if ($isSearching) {
         $stmt->bindParam(':query', $searchParam, PDO::PARAM_STR);
     }
     $stmt->bindValue(':limit', $usersPerPage, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-    
+
     $stmt->execute();
     $usersList = $stmt->fetchAll();
     // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
@@ -77,51 +77,51 @@ try {
 }
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-users') ? 'active' : 'disabled'; ?>" data-section="admin-users">
-    
+
     <div class="admin-toolbar-container">
-        
-        <div class="admin-toolbar-floating" 
-             data-current-page="<?php echo $adminCurrentPage; ?>" 
-             data-total-pages="<?php echo $totalPages; ?>">
-            
+
+        <div class="admin-toolbar-floating"
+            data-current-page="<?php echo $adminCurrentPage; ?>"
+            data-total-pages="<?php echo $totalPages; ?>">
+
             <div class="admin-toolbar-left">
                 <div class="admin-toolbar-default-actions">
-                    <button type="button" 
-                            class="admin-toolbar-button admin-action-default <?php echo $isSearching ? 'active' : ''; ?>" 
-                            data-action="admin-toggle-search"
-                            data-tooltip="admin.users.search">
+                    <button type="button"
+                        class="admin-toolbar-button admin-action-default <?php echo $isSearching ? 'active' : ''; ?>"
+                        data-action="admin-toggle-search"
+                        data-tooltip="admin.users.search">
                         <span class="material-symbols-rounded">search</span>
                     </button>
-                    <button type="button" 
-                            class="admin-toolbar-button admin-action-default" 
-                            data-tooltip="admin.users.filter" disabled>
+                    <button type="button"
+                        class="admin-toolbar-button admin-action-default"
+                        data-tooltip="admin.users.filter" disabled>
                         <span class="material-symbols-rounded">filter_list</span>
                     </button>
-                    
-                    <button type="button" 
-                            class="admin-toolbar-button admin-action-selection" 
-                            data-tooltip="admin.users.manageRole" disabled>
+
+                    <button type="button"
+                        class="admin-toolbar-button admin-action-selection"
+                        data-tooltip="admin.users.manageRole" disabled>
                         <span class="material-symbols-rounded">manage_accounts</span>
                     </button>
-                    <button type="button" 
-                            class="admin-toolbar-button admin-action-selection" 
-                            data-tooltip="admin.users.manageStatus" disabled>
+                    <button type="button"
+                        class="admin-toolbar-button admin-action-selection"
+                        data-tooltip="admin.users.manageStatus" disabled>
                         <span class="material-symbols-rounded">toggle_on</span>
                     </button>
                 </div>
             </div>
-            
+
             <div class="admin-toolbar-right">
                 <div class="admin-toolbar-pagination admin-action-default">
-                    <button type="button" class="admin-toolbar-button" 
-                            data-action="admin-page-prev" 
-                            data-tooltip="admin.users.prevPage"
-                            <?php echo ($adminCurrentPage <= 1) ? 'disabled' : ''; ?>>
+                    <button type="button" class="admin-toolbar-button"
+                        data-action="admin-page-prev"
+                        data-tooltip="admin.users.prevPage"
+                        <?php echo ($adminCurrentPage <= 1) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
-                    
+
                     <span class="admin-toolbar-page-text">
-                        <?php 
+                        <?php
                         if ($totalUsers == 0) {
                             echo '--';
                         } else {
@@ -129,33 +129,33 @@ try {
                         }
                         ?>
                     </span>
-                    <button type="button" class="admin-toolbar-button" 
-                            data-action="admin-page-next"
-                            data-tooltip="admin.users.nextPage"
-                            <?php echo ($adminCurrentPage >= $totalPages) ? 'disabled' : ''; ?>>
+                    <button type="button" class="admin-toolbar-button"
+                        data-action="admin-page-next"
+                        data-tooltip="admin.users.nextPage"
+                        <?php echo ($adminCurrentPage >= $totalPages) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_right</span>
                     </button>
                 </div>
-                
-                <button type="button" 
-                        class="admin-toolbar-button admin-action-selection" 
-                        data-action="admin-clear-selection" 
-                        data-tooltip="admin.users.clearSelection">
+
+                <button type="button"
+                    class="admin-toolbar-button admin-action-selection"
+                    data-action="admin-clear-selection"
+                    data-tooltip="admin.users.clearSelection">
                     <span class="material-symbols-rounded">close</span>
                 </button>
             </div>
         </div>
-        
-        <div class="admin-toolbar-floating">
-            <div class="admin-search-bar" id="admin-search-bar" 
-                 style="display: <?php echo $isSearching ? 'flex' : 'none'; ?>;">
+
+       <div class="admin-toolbar-floating" style="display: <?php echo $isSearching ? 'flex' : 'none'; ?>;">
+            
+            <div class="admin-search-bar" id="admin-search-bar">
                 <span class="material-symbols-rounded">search</span>
                 <input type="text" class="admin-search-input" 
                        placeholder="Buscar usuario por nombre, email..." 
                        value="<?php echo htmlspecialchars($searchQuery); ?>">
             </div>
         </div>
-        </div>
+    </div>
     <div class="component-wrapper">
 
         <div class="component-header-card">
@@ -164,7 +164,7 @@ try {
         </div>
 
         <?php if (empty($usersList)): ?>
-            
+
             <div class="component-card">
                 <div class="component-card__content">
                     <div class="component-card__icon">
@@ -178,29 +178,29 @@ try {
             </div>
 
         <?php else: ?>
-        <div class="user-list-container">
+            <div class="user-list-container">
                 <?php foreach ($usersList as $user): ?>
                     <?php
-                        $avatarUrl = $user['profile_image_url'] ?? $defaultAvatar;
-                        if (empty($avatarUrl)) { 
-                            $avatarUrl = "https://ui-avatars.com/api/?name=" . urlencode($user['username']) . "&size=100&background=e0e0e0&color=ffffff";
-                        }
+                    $avatarUrl = $user['profile_image_url'] ?? $defaultAvatar;
+                    if (empty($avatarUrl)) {
+                        $avatarUrl = "https://ui-avatars.com/api/?name=" . urlencode($user['username']) . "&size=100&background=e0e0e0&color=ffffff";
+                    }
                     ?>
                     <div class="user-card-item" data-user-id="<?php echo $user['id']; ?>">
-                        
+
                         <div class="component-card__avatar" style="width: 50px; height: 50px; flex-shrink: 0;" data-role="<?php echo htmlspecialchars($user['role']); ?>">
                             <img src="<?php echo htmlspecialchars($avatarUrl); ?>"
-                                 alt="<?php echo htmlspecialchars($user['username']); ?>"
-                                 class="component-card__avatar-image">
+                                alt="<?php echo htmlspecialchars($user['username']); ?>"
+                                class="component-card__avatar-image">
                         </div>
 
                         <div class="user-card-details">
-                            
+
                             <div class="user-card-detail-item user-card-detail-item--full">
                                 <span class="user-card-detail-label">Nombre del usuario</span>
                                 <span class="user-card-detail-value"><?php echo htmlspecialchars($user['username']); ?></span>
                             </div>
-                            
+
                             <div class="user-card-detail-item">
                                 <span class="user-card-detail-label">Rol</span>
                                 <span class="user-card-detail-value"><?php echo htmlspecialchars(ucfirst($user['role'])); ?></span>
@@ -209,7 +209,7 @@ try {
                                 <span class="user-card-detail-label">Fecha de creación</span>
                                 <span class="user-card-detail-value"><?php echo (new DateTime($user['created_at']))->format('d/m/Y'); ?></span>
                             </div>
-                            
+
                             <?php if ($user['email']): ?>
                                 <div class="user-card-detail-item user-card-detail-item--full">
                                     <span class="user-card-detail-label">Email</span>
@@ -222,7 +222,7 @@ try {
                                 <span class="user-card-detail-value"><?php echo htmlspecialchars(ucfirst($user['account_status'])); ?></span>
                             </div>
                         </div>
-                        
+
                     </div>
                 <?php endforeach; ?>
             </div>

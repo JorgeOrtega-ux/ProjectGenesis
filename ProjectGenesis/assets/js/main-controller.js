@@ -1,5 +1,6 @@
 import { getTranslation } from './i18n-manager.js';
 import { handleNavigation } from './url-manager.js';
+import { hideTooltip } from './tooltip-manager.js'; // <-- AÑADIDO: Importar hideTooltip
 
 const deactivateAllModules = (exceptionModule = null) => {
     document.querySelectorAll('[data-module].active').forEach(activeModule => {
@@ -151,6 +152,9 @@ function initMainController() {
         
         } else if (action === 'admin-page-next' || action === 'admin-page-prev') {
             event.preventDefault();
+            
+            hideTooltip(); // <-- AÑADIDO: Ocultar tooltip antes de navegar
+            
             const toolbar = button.closest('.admin-toolbar-floating[data-current-page]');
             if (!toolbar) return;
             
@@ -172,35 +176,51 @@ function initMainController() {
         } else if (action === 'admin-toggle-search') {
             event.preventDefault();
             const searchButton = button;
-            const searchBar = document.getElementById('admin-search-bar');
             
-            if (searchBar) {
-                const isActive = searchButton.classList.contains('active');
-                
-                if (isActive) {
-                    // CERRAR Y LIMPIAR BÚSQUEDA
-                    searchButton.classList.remove('active');
-                    searchBar.style.display = 'none';
-                    const searchInput = searchBar.querySelector('.admin-search-input');
-                    if (searchInput) searchInput.value = '';
-                    
-                    // Limpiar selección al cerrar búsqueda
-                    clearAdminUserSelection();
+            // --- INICIO DE CORRECCIÓN (BARRA DE BÚSQUEDA) ---
+            
+            // 1. Obtener la barra de búsqueda interna
+            const searchBar = document.getElementById('admin-search-bar');
+            if (!searchBar) return;
+            
+            // 2. Obtener el contenedor flotante externo
+            const searchBarContainer = searchBar.closest('.admin-toolbar-floating');
+            if (!searchBarContainer) return;
+            
+            // 3. Comprobar el estado
+            const isActive = searchButton.classList.contains('active');
+            
+            if (isActive) {
+                // CERRAR Y LIMPIAR BÚSQUEDA
+                searchButton.classList.remove('active');
+                searchBarContainer.style.display = 'none'; // <-- Ocultar el contenedor externo
+                searchBar.style.display = 'none'; // <-- Asegurarse de ocultar también el interno
 
-                    const newUrl = new URL(window.location);
-                    if (newUrl.searchParams.has('q')) {
-                        newUrl.searchParams.delete('q');
-                        newUrl.searchParams.set('p', '1');
-                        history.pushState(null, '', newUrl);
-                        handleNavigation(); 
-                    }
-                } else {
-                    // ABRIR
-                    searchButton.classList.add('active');
-                    searchBar.style.display = 'flex';
-                    searchBar.querySelector('.admin-search-input')?.focus();
+                const searchInput = searchBar.querySelector('.admin-search-input');
+                if (searchInput) searchInput.value = '';
+                
+                // Limpiar selección al cerrar búsqueda
+                clearAdminUserSelection();
+
+                const newUrl = new URL(window.location);
+                if (newUrl.searchParams.has('q')) {
+                    newUrl.searchParams.delete('q');
+                    newUrl.searchParams.set('p', '1');
+                    history.pushState(null, '', newUrl);
+                    
+                    hideTooltip(); // <-- AÑADIDO: Ocultar tooltip al navegar
+                    
+                    handleNavigation(); 
                 }
+            } else {
+                // ABRIR
+                searchButton.classList.add('active');
+                searchBarContainer.style.display = 'flex'; // <-- Mostrar el contenedor externo
+                searchBar.style.display = 'flex'; // <-- Mostrar la barra interna
+                searchBar.querySelector('.admin-search-input')?.focus();
             }
+            
+            // --- FIN DE CORRECCIÓN ---
             return;
         
         } else if (action === 'admin-clear-selection') {
@@ -271,6 +291,8 @@ function initMainController() {
         }
         
         event.preventDefault(); 
+        
+        hideTooltip(); // <-- AÑADIDO: Ocultar tooltip al buscar
         
         // Limpiar selección al buscar
         clearAdminUserSelection();
