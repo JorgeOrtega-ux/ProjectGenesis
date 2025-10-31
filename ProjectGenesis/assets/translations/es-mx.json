@@ -1,7 +1,7 @@
 {
   "header": {
     "profile": {
-"altPrefix": "Avatar de",
+      "altPrefix": "Avatar de",
       "adminPanel": "Panel de Administración",
       "settings": "Configuración",
       "help": "Ayuda y comentarios",
@@ -39,9 +39,7 @@
       "edit": "Editar",
       "email": "Correo Electrónico",
       "modalCodeTitle": "Busca el código que te enviamos",
-      
       "modalCodeDesc": "Para poder hacer cambios en tu cuenta, primero debes ingresar el código que te enviamos a",
-      
       "modalCodeLabel": "Código*",
       "continue": "Continuar",
       "modalCodeResendP": "¿No recibiste el código?",
@@ -157,6 +155,7 @@
     },
     "login": {
       "title": "Iniciar sesión",
+      "step1Desc": "Ingresa tus credenciales para acceder a tu cuenta.",
       "emailLabel": "Dirección de correo electrónico*",
       "passwordLabel": "Contraseña*",
       "forgotPassword": "¿Olvidaste tu contraseña?",
@@ -171,6 +170,10 @@
     },
     "register": {
       "title": "Crea una cuenta",
+      "titleStep2": "Completa tus datos",
+      "titleStep3": "Verifica tu cuenta",
+      "step1Desc": "Ingresa tu correo y una contraseña segura.",
+      "step2Desc": "Elige un nombre de usuario único para tu perfil.",
       "emailLabel": "Dirección de correo electrónico*",
       "passwordLabel": "Contraseña*",
       "continueButton": "Continuar",
@@ -211,12 +214,10 @@
       "backToRegister": "Volver al inicio del registro",
       "backToReset": "Volver al inicio de la recuperación"
     },
-    
     "db_error": {
-        "title": "Error de Conexión",
-        "description": "No pudimos conectarnos a la base de datos. Por favor, inténtalo de nuevo más tarde o contacta al administrador."
+      "title": "Error de Conexión",
+      "description": "No pudimos conectarnos a la base de datos. Por favor, inténtalo de nuevo más tarde o contacta al administrador."
     },
-    
     "status": {
       "deletedTitle": "Cuenta Eliminada",
       "deletedDesc": "Esta cuenta ha sido eliminada permanentemente. Si crees que esto es un error, por favor contacta a soporte.",

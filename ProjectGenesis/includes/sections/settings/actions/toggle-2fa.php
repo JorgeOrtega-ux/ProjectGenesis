@@ -18,9 +18,8 @@
         outputCsrfInput();
         ?>
 
-        <div class="settings-card settings-card--column" id="2fa-step-1-verify" style="gap: 16px;">
-        
-            <div class="settings-card__content">
+        <div class="settings-card settings-card--action" id="2fa-step-1-verify" style="gap: 16px;">
+        <div class="settings-card__content">
                 <div class="settings-card__icon">
                     <span class="material-symbols-rounded">password</span>
                 </div>
@@ -36,8 +35,8 @@
             </div>
 
             <div class="settings-card__actions">
-                <button type="button" class="settings-button" data-action="toggleSectionSettingsLogin" data-i18n="settings.profile.cancel"></button>
-                <button type="button" class="settings-button" id="tfa-verify-continue" data-i18n="<?php echo $is2faEnabled ? 'settings.login.disable' : 'settings.login.enable'; ?>"></button>
+                <button type="button" class="modal__button-small modal__button-small--secondary" data-action="toggleSectionSettingsLogin" data-i18n="settings.profile.cancel"></button>
+                <button type="button" class="modal__button-small modal__button-small--primary" id="tfa-verify-continue" data-i18n="<?php echo $is2faEnabled ? 'settings.login.disable' : 'settings.login.enable'; ?>"></button>
             </div>
         </div>
         </div>

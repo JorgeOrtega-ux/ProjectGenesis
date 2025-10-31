@@ -15,9 +15,8 @@
         outputCsrfInput();
         ?>
 
-        <div class="settings-card settings-card--column" id="password-step-1" style="gap: 16px;">
-            
-            <div class="settings-card__content">
+        <div class="settings-card settings-card--action" id="password-step-1" style="gap: 16px;">
+        <div class="settings-card__content">
                 <div class="settings-card__icon">
                     <span class="material-symbols-rounded">password</span>
                 </div>
@@ -33,13 +32,12 @@
             </div>
 
             <div class="settings-card__actions">
-                <button type="button" class="settings-button" data-action="toggleSectionSettingsLogin" data-i18n="settings.profile.cancel"></button>
-                <button type="button" class="settings-button" id="password-verify-continue" data-i18n="settings.profile.continue"></button>
+                <button type="button" class="modal__button-small modal__button-small--secondary" data-action="toggleSectionSettingsLogin" data-i18n="settings.profile.cancel"></button>
+                <button type="button" class="modal__button-small modal__button-small--primary" id="password-verify-continue" data-i18n="settings.profile.continue"></button>
             </div>
         </div>
-        <div class="settings-card settings-card--column" id="password-step-2" style="display: none; gap: 16px;">
-            
-            <div class="settings-card__content">
+        <div class="settings-card settings-card--action" id="password-step-2" style="display: none; gap: 16px;">
+        <div class="settings-card__content">
                 <div class="settings-card__icon">
                     <span class="material-symbols-rounded">lock_reset</span>
                 </div>
@@ -59,8 +57,8 @@
             </div>
 
             <div class="settings-card__actions">
-                <button type="button" class="settings-button" data-action="toggleSectionSettingsLogin" data-i18n="settings.profile.cancel"></button>
-                <button type="button" class="settings-button" id="password-update-save" data-i18n="settings.login.savePassword"></button>
+                <button type="button" class="modal__button-small modal__button-small--secondary" data-action="toggleSectionSettingsLogin" data-i18n="settings.profile.cancel"></button>
+                <button type="button" class="modal__button-small modal__button-small--primary" id="password-update-save" data-i18n="settings.login.savePassword"></button>
             </div>
         </div>
         </div>

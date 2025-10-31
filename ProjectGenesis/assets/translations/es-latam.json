@@ -176,6 +176,7 @@
     },
     "login": {
       "title": "Iniciar sesión",
+      "step1Desc": "Ingresa tus credenciales para acceder a tu cuenta.",
       "emailLabel": "Dirección de correo electrónico*",
       "passwordLabel": "Contraseña*",
       "forgotPassword": "¿Olvidaste tu contraseña?",
@@ -190,6 +191,10 @@
     },
     "register": {
       "title": "Crea una cuenta",
+      "titleStep2": "Completa tus datos",
+      "titleStep3": "Verifica tu cuenta",
+      "step1Desc": "Ingresa tu correo y una contraseña segura.",
+      "step2Desc": "Elige un nombre de usuario único para tu perfil.",
       "emailLabel": "Dirección de correo electrónico*",
       "passwordLabel": "Contraseña*",
       "continueButton": "Continuar",

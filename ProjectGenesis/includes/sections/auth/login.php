@@ -10,6 +10,7 @@
             <?php outputCsrfInput(); ?>
 
             <fieldset class="auth-step active" data-step="1">
+                <p class="auth-verification-text mb-16" data-i18n="page.login.step1Desc"></p>
                 <div class="auth-input-group">
                     <input type="email" id="login-email" name="email" required placeholder=" ">
                     <label for="login-email" data-i18n="page.login.emailLabel"></label>

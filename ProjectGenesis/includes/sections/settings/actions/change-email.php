@@ -19,9 +19,8 @@
         outputCsrfInput();
         ?>
 
-        <div class="settings-card settings-card--column" id="email-step-1-verify">
-            
-            <div class="settings-card__content">
+        <div class="settings-card settings-card--action" id="email-step-1-verify">
+        <div class="settings-card__content">
                 <div class="settings-card__icon">
                     <span class="material-symbols-rounded">password</span>
                 </div>
@@ -40,8 +39,9 @@
             </div>
             <p class="modal__footer-text" style="text-align: left; width: 100%; margin: 8px 0 0 0;">
                 <span data-i18n="settings.profile.modalCodeResendP"></span>
+                
                 <a id="email-verify-resend" 
-                   data-i18n="settings.profile.modalCodeResendA"
+                   data-i18n="page.register.resendCode"
                    data-cooldown="<?php echo isset($initialEmailCooldown) ? $initialEmailCooldown : 0; ?>"
                    class="<?php echo (isset($initialEmailCooldown) && $initialEmailCooldown > 0) ? 'disabled-interactive' : ''; ?>"
                 >
@@ -52,15 +52,14 @@
                    ?>
                 </a>
             </p>
-            <div class="settings-card__actions" style="margin-top: 16px;">
-                <button type="button" class="settings-button" data-action="toggleSectionSettingsProfile" data-i18n="settings.profile.cancel"></button>
-                <button type="button" class="settings-button" id="email-verify-continue" data-i18n="settings.profile.continue"></button>
+            <div class="settings-card__actions">
+                <button type="button" class="modal__button-small modal__button-small--secondary" data-action="toggleSectionSettingsProfile" data-i18n="settings.profile.cancel"></button>
+                <button type="button" class="modal__button-small modal__button-small--primary" id="email-verify-continue" data-i18n="settings.profile.continue"></button>
             </div>
             </div>
 
-        <div class="settings-card settings-card--column" id="email-step-2-update" style="display: none; gap: 16px;">
-            
-            <div class="settings-card__content">
+        <div class="settings-card settings-card--action" id="email-step-2-update" style="display: none; gap: 16px;">
+        <div class="settings-card__content">
                 <div class="settings-card__icon">
                     <span class="material-symbols-rounded">mark_email_read</span>
                 </div>
@@ -82,8 +81,8 @@
             </div>
 
             <div class="settings-card__actions">
-                 <button type="button" class="settings-button" data-action="toggleSectionSettingsProfile" data-i18n="settings.profile.cancel"></button>
-                <button type="button" class="settings-button" id="email-save-trigger-btn" data-i18n="settings.profile.save"></button>
+                 <button type="button" class="modal__button-small modal__button-small--secondary" data-action="toggleSectionSettingsProfile" data-i18n="settings.profile.cancel"></button>
+                <button type="button" class="modal__button-small modal__button-small--primary" id="email-save-trigger-btn" data-i18n="settings.profile.save"></button>
             </div>
         </div>
         </div>
