@@ -158,6 +158,20 @@ $isSettingsPage = strpos($currentPage, 'settings-') === 0;
 // --- ▼▼▼ NUEVA LÍNEA ▼▼▼ ---
 $isAdminPage = strpos($currentPage, 'admin-') === 0;
 
+// --- ▼▼▼ ¡INICIO DE MODIFICACIÓN DE SEGURIDAD! ▼▼▼ ---
+// Validar el rol aquí para el menú de carga inicial
+if ($isAdminPage && isset($_SESSION['user_id'])) {
+    $userRole = $_SESSION['role'] ?? 'user';
+    if ($userRole !== 'administrator' && $userRole !== 'founder') {
+        // Si no es admin, no debe ver el menú de admin
+        $isAdminPage = false; 
+        // Y forzamos que la página a cargar sea 404 (esto ya lo hace router.php,
+        // pero lo duplicamos aquí para asegurar que 'module-surface' reciba la variable correcta)
+        $currentPage = '404'; 
+    }
+}
+// --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
+
 // 6. LÓGICA DE PROTECCIÓN DE RUTAS
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (MANEJO DE ERROR DE BD) ▼▼▼ ---
 // Se eliminaron las comprobaciones de $pdo y $pdo !== null.

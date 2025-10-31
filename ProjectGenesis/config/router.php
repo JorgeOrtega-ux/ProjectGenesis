@@ -126,16 +126,18 @@ if (!isset($_SESSION['user_id']) && !$isAuthPage && $page !== '404') {
 }
 
 // --- ▼▼▼ ¡NUEVO BLOQUE DE SEGURIDAD PARA ADMIN! ▼▼▼ ---
+// --- ▼▼▼ ¡NUEVO BLOQUE DE SEGURIDAD PARA ADMIN! ▼▼▼ ---
 if ($isAdminPage && isset($_SESSION['user_id'])) {
     $userRole = $_SESSION['role'] ?? 'user';
     if ($userRole !== 'administrator' && $userRole !== 'founder') {
-        // Si no es admin o founder, se le niega el acceso
-        http_response_code(403); // Prohibido
-        $CURRENT_SECTION = '404'; // Mostrar 404
-        include $allowedPages['404'];
-        exit;
+        // Si no es admin o founder, no se le niega el acceso con 403,
+        // simplemente se le cambia la página a '404'.
+        $page = '404';
+        $CURRENT_SECTION = '404';
+        // ¡Ya no hay http_response_code(403) ni exit!
     }
 }
+// --- ▲▲▲ FIN DEL BLOQUE DE SEGURIDAD ▲▲▲ ---
 // --- ▲▲▲ FIN DEL BLOQUE DE SEGURIDAD ▲▲▲ ---
 
 
