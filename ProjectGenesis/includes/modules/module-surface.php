@@ -6,7 +6,9 @@
         <div class="menu-list">
             
             <?php 
-            // La variable $isSettingsPage viene de index.php
+            // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA ▼▼▼ ---
+            
+            // La variable $isSettingsPage y $isAdminPage vienen de config/menu_router.php
             if (isset($isSettingsPage) && $isSettingsPage): 
             ?>
                 <div class="menu-link" data-action="toggleSectionHome">
@@ -44,7 +46,40 @@
                         <span data-i18n="sidebar.settings.accessibility"></span>
                     </div>
                 </div>
-                <?php else: ?>
+                
+            <?php 
+            elseif (isset($isAdminPage) && $isAdminPage): 
+            ?>
+                <div class="menu-link" data-action="toggleSectionHome">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">arrow_back</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="sidebar.admin.backToHome"></span>
+                    </div>
+                </div>
+
+                <div class="menu-link" data-action="toggleSectionAdminDashboard">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">dashboard</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="sidebar.admin.dashboard"></span>
+                    </div>
+                </div>
+
+                <div class="menu-link" data-action="toggleSectionAdminUsers">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">manage_accounts</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="sidebar.admin.manageUsers"></span>
+                    </div>
+                </div>
+
+            <?php 
+            else: 
+            ?>
                 <div class="menu-link active" data-action="toggleSectionHome">
                     <div class="menu-link-icon">
                         <span class="material-symbols-rounded">home</span>
@@ -62,7 +97,10 @@
                         <span data-i18n="sidebar.main.explore"></span>
                     </div>
                 </div>
-                <?php endif; ?>
+            <?php 
+            endif; 
+            // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
+            ?>
 
         </div>
     </div>

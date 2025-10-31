@@ -6,7 +6,9 @@ const contentContainer = document.querySelector('.main-sections');
 const pageLoader = document.getElementById('page-loader');
 
 let loaderTimer = null;
-let currentIsSettings = null; 
+// --- ▼▼▼ MODIFICACIÓN: Renombrar variable ▼▼▼ ---
+let currentMenuType = null; 
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 const routes = {
     'toggleSectionHome': 'home',
@@ -32,7 +34,12 @@ const routes = {
     'toggleSectionSettingsDeleteAccount': 'settings-delete-account',
 
     'toggleSectionAccountStatusDeleted': 'account-status-deleted',
-    'toggleSectionAccountStatusSuspended': 'account-status-suspended'
+    'toggleSectionAccountStatusSuspended': 'account-status-suspended',
+    
+    // --- ▼▼▼ NUEVAS RUTAS DE ADMIN ▼▼▼ ---
+    'toggleSectionAdminDashboard': 'admin-dashboard',
+    'toggleSectionAdminUsers': 'admin-users',
+    // --- ▲▲▲ FIN DE NUEVAS RUTAS ▲▲▲ ---
 };
 
 const paths = {
@@ -59,13 +66,19 @@ const paths = {
     '/settings/delete-account': 'toggleSectionSettingsDeleteAccount',
 
     '/account-status/deleted': 'toggleSectionAccountStatusDeleted',
-    '/account-status/suspended': 'toggleSectionAccountStatusSuspended'
+    '/account-status/suspended': 'toggleSectionAccountStatusSuspended',
+    
+    // --- ▼▼▼ NUEVOS PATHS DE ADMIN ▼▼▼ ---
+    '/admin/dashboard': 'toggleSectionAdminDashboard',
+    '/admin/users': 'toggleSectionAdminUsers',
+    // --- ▲▲▲ FIN DE NUEVOS PATHS ▲▲▲ ---
 };
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
 
 
-async function loadPage(page, isSettingsPage, action) {
+// --- ▼▼▼ MODIFICACIÓN: Lógica de loadPage actualizada ▼▼▼ ---
+async function loadPage(page, action) {
 
     if (!contentContainer) return;
 
@@ -88,9 +101,20 @@ async function loadPage(page, isSettingsPage, action) {
     }, 200);
 
     
-    if (currentIsSettings === null || currentIsSettings !== isSettingsPage) {
-        currentIsSettings = isSettingsPage; 
-        const menuType = isSettingsPage ? 'settings' : 'main';
+    // Determinar qué tipo de página es (main, settings, o admin)
+    const isSettingsPage = page.startsWith('settings-');
+    const isAdminPage = page.startsWith('admin-');
+    
+    let menuType = 'main';
+    if (isSettingsPage) {
+        menuType = 'settings';
+    } else if (isAdminPage) {
+        menuType = 'admin';
+    }
+
+    // Cargar el menú lateral correcto si el tipo de menú cambió
+    if (currentMenuType === null || currentMenuType !== menuType) {
+        currentMenuType = menuType; 
         
         fetch(`${basePath}/config/menu_router.php?type=${menuType}`)
             .then(res => res.text())
@@ -110,6 +134,7 @@ async function loadPage(page, isSettingsPage, action) {
     } else {
         updateMenuState(action);
     }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
     try {
@@ -176,23 +201,33 @@ export function handleNavigation() {
         path = '/settings/your-profile';
         history.replaceState(null, '', `${basePath}${path}`);
     }
+    
+    // --- ▼▼▼ NUEVA REGLA DE REDIRECCIÓN ▼▼▼ ---
+    if (path === '/admin') {
+        path = '/admin/dashboard';
+        history.replaceState(null, '', `${basePath}${path}`);
+    }
+    // --- ▲▲▲ FIN DE NUEVA REGLA ▲▲▲ ---
 
     const action = paths[path];
 
     if (!action) {
-        const isSettings = path.startsWith('/settings');
-        loadPage('404', isSettings, null); 
+        // --- ▼▼▼ MODIFICACIÓN: Simplificado ▼▼▼ ---
+        loadPage('404', null); 
         return;
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     }
 
     const page = routes[action];
 
     if (page) {
-        const isSettings = path.startsWith('/settings');
-        loadPage(page, isSettings, action); 
+        // --- ▼▼▼ MODIFICACIÓN: Simplificado ▼▼▼ ---
+        loadPage(page, action); 
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     } else {
-        const isSettings = path.startsWith('/settings');
-        loadPage('404', isSettings, null);
+        // --- ▼▼▼ MODIFICACIÓN: Simplificado ▼▼▼ ---
+        loadPage('404', null);
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     }
 }
 
@@ -210,6 +245,12 @@ function updateMenuState(currentAction) {
     if (currentAction === 'toggleSectionSettingsChangeEmail') {
         menuAction = 'toggleSectionSettingsProfile';
     }
+    
+    // --- ▼▼▼ NUEVA LÓGICA DE ADMIN ▼▼▼ ---
+    if (currentAction === 'toggleSectionAdminUsers') {
+        menuAction = 'toggleSectionAdminUsers';
+    }
+    // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
 
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
@@ -227,9 +268,11 @@ function updateMenuState(currentAction) {
 export function initRouter() {
 
     document.body.addEventListener('click', e => {
+        // --- ▼▼▼ MODIFICACIÓN: Añadir selector de admin ▼▼▼ ---
         const link = e.target.closest(
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], .component-button[data-action*="toggleSection"]' // MODIFICADO
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"]'
         );
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         if (link) {
             if (link.classList.contains('component-button') && !link.hasAttribute('data-action') && !link.hasAttribute('data-nav-js')) { // MODIFICADO
@@ -253,6 +296,12 @@ export function initRouter() {
                     newPath = '/settings/your-profile';
                 }
                 
+                // --- ▼▼▼ NUEVA REGLA ▼▼▼ ---
+                if (newPath === '/admin') {
+                    newPath = '/admin/dashboard';
+                }
+                // --- ▲▲▲ FIN DE NUEVA REGLA ▲▲▲ ---
+                
                 action = paths[newPath];
                 page = routes[action];
             }
@@ -268,11 +317,11 @@ export function initRouter() {
 
             if (window.location.pathname !== fullUrlPath) {
                 
-                const isGoingToSettings = newPath.startsWith('/settings');
-
+                // --- ▼▼▼ MODIFICACIÓN: Simplificado ▼▼▼ ---
                 history.pushState(null, '', fullUrlPath);
                 
-                loadPage(page, isGoingToSettings, action); 
+                loadPage(page, action); 
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
 
             deactivateAllModules();
@@ -281,8 +330,16 @@ export function initRouter() {
 
     window.addEventListener('popstate', handleNavigation);
 
+    // --- ▼▼▼ MODIFICACIÓN: Lógica de Carga Inicial ▼▼▼ ---
     const initialPath = window.location.pathname.replace(basePath, '') || '/';
-    currentIsSettings = initialPath.startsWith('/settings') || initialPath.startsWith('/settings');
+    let initialMenuType = 'main';
+    if (initialPath.startsWith('/settings')) {
+        initialMenuType = 'settings';
+    } else if (initialPath.startsWith('/admin')) {
+        initialMenuType = 'admin';
+    }
+    currentMenuType = initialMenuType;
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     handleNavigation();
 }

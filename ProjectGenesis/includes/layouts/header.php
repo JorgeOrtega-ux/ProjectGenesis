@@ -57,7 +57,8 @@ $userRole = $_SESSION['role'] ?? 'user';
                 // Mostrar solo si el rol es administrador o fundador
                 if (isset($userRole) && ($userRole === 'administrator' || $userRole === 'founder')): 
                 ?>
-                    <div class="menu-link" style="cursor: not-allowed;"> <div class="menu-link-icon">
+                    <div class="menu-link" data-action="toggleSectionAdminDashboard"> 
+                        <div class="menu-link-icon">
                             <span class="material-symbols-rounded">admin_panel_settings</span>
                         </div>
                         <div class="menu-link-text">

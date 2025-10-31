@@ -22,6 +22,21 @@
     "main": {
       "home": "Página principal",
       "explore": "Explorar comunidades"
+    },
+    "admin": {
+      "backToHome": "Volver a inicio",
+      "dashboard": "Dashboard",
+      "manageUsers": "Gestionar usuarios"
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Resumen general de la actividad del sitio."
+    },
+    "users": {
+      "title": "Gestionar Usuarios",
+      "description": "Busca, edita o gestiona los roles de los usuarios."
     }
   },
   "settings": {

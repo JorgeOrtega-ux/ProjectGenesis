@@ -127,17 +127,21 @@ $pathsToPages = [
     '/settings/accessibility'   => 'settings-accessibility',
     '/settings/device-sessions' => 'settings-devices', 
     
-    // ▼▼▼ ¡AQUÍ ESTÁ LA CORRECCIÓN! ▼▼▼
     '/settings/change-password' => 'settings-change-password',
     '/settings/change-email'    => 'settings-change-email',
     '/settings/toggle-2fa'      => 'settings-toggle-2fa',
     '/settings/delete-account'  => 'settings-delete-account',
-    // ▲▲▲ ¡FIN DE LA CORRECCIÓN! ▲▲▲
     
     '/account-status/deleted'   => 'account-status-deleted',
     '/account-status/suspended' => 'account-status-suspended',
+    
+    // --- ▼▼▼ NUEVAS RUTAS DE ADMIN ▼▼▼ ---
+    '/admin'                    => 'admin-dashboard',
+    '/admin/dashboard'          => 'admin-dashboard',
+    '/admin/users'              => 'admin-users',
+    // --- ▲▲▲ FIN DE NUEVAS RUTAS ▲▲▲ ---
 ];
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 $currentPage = $pathsToPages[$path] ?? '404';
 
@@ -151,6 +155,8 @@ $isAuthPage = in_array($currentPage, $authPages) ||
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
 $isSettingsPage = strpos($currentPage, 'settings-') === 0;
+// --- ▼▼▼ NUEVA LÍNEA ▼▼▼ ---
+$isAdminPage = strpos($currentPage, 'admin-') === 0;
 
 // 6. LÓGICA DE PROTECCIÓN DE RUTAS
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (MANEJO DE ERROR DE BD) ▼▼▼ ---
@@ -170,6 +176,12 @@ if ($path === '/settings') {
     header('Location: ' . $basePath . '/settings/your-profile');
     exit;
 }
+// --- ▼▼▼ NUEVO BLOQUE DE REDIRECCIÓN ▼▼▼ ---
+if ($path === '/admin') {
+    header('Location: ' . $basePath . '/admin/dashboard');
+    exit;
+}
+// --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 
 // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN: LÓGICA DE TEMA PARA HTML! ▼▼▼ ---
 $themeClass = '';
@@ -241,7 +253,9 @@ if (isset($_SESSION['language'])) {
                     
                     <?php if (!$isAuthPage): ?>
                     <?php 
+                    // --- ▼▼▼ MODIFICACIÓN PARA INCLUIR ADMIN PAGE FLAG ▼▼▼ ---
                     include 'includes/modules/module-surface.php'; 
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     ?>
                     <?php endif; ?>
 

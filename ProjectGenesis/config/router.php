@@ -94,6 +94,11 @@ $allowedPages = [
 
     'account-status-deleted'   => '../includes/sections/auth/account-status.php',
     'account-status-suspended' => '../includes/sections/auth/account-status.php',
+    
+    // --- ▼▼▼ NUEVAS PÁGINAS DE ADMIN ▼▼▼ ---
+    'admin-dashboard'          => '../includes/sections/admin/dashboard.php',
+    'admin-users'              => '../includes/sections/admin/manage-users.php',
+    // --- ▲▲▲ FIN DE NUEVAS PÁGINAS ▲▲▲ ---
 ];
 
 $authPages = ['login'];
@@ -103,6 +108,8 @@ $isAuthPage = in_array($page, $authPages) ||
               strpos($page, 'account-status-') === 0; 
 
 $isSettingsPage = strpos($page, 'settings-') === 0;
+// --- ▼▼▼ NUEVA LÍNEA ▼▼▼ ---
+$isAdminPage = strpos($page, 'admin-') === 0;
 
 $accountStatusType = 'none'; 
 if ($page === 'account-status-deleted') {
@@ -117,6 +124,20 @@ if (!isset($_SESSION['user_id']) && !$isAuthPage && $page !== '404') {
     include $allowedPages['404'];
     exit; 
 }
+
+// --- ▼▼▼ ¡NUEVO BLOQUE DE SEGURIDAD PARA ADMIN! ▼▼▼ ---
+if ($isAdminPage && isset($_SESSION['user_id'])) {
+    $userRole = $_SESSION['role'] ?? 'user';
+    if ($userRole !== 'administrator' && $userRole !== 'founder') {
+        // Si no es admin o founder, se le niega el acceso
+        http_response_code(403); // Prohibido
+        $CURRENT_SECTION = '404'; // Mostrar 404
+        include $allowedPages['404'];
+        exit;
+    }
+}
+// --- ▲▲▲ FIN DEL BLOQUE DE SEGURIDAD ▲▲▲ ---
+
 
 if (array_key_exists($page, $allowedPages)) {
 
@@ -362,6 +383,12 @@ if (array_key_exists($page, $allowedPages)) {
          $profileImageUrl = $_SESSION['profile_image_url'] ?? $defaultAvatar;
          if (empty($profileImageUrl)) $profileImageUrl = $defaultAvatar;
     }
+    
+    // --- ▼▼▼ NUEVO BLOQUE ELSEIF PARA ADMIN ▼▼▼ ---
+    elseif ($isAdminPage) {
+        // No se necesita lógica de precarga especial por ahora
+    }
+    // --- ▲▲▲ FIN DEL BLOQUE ▲▲▲ ---
     
     
     include $allowedPages[$page];

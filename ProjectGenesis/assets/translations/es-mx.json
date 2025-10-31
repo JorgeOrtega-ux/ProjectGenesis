@@ -22,6 +22,21 @@
     "main": {
       "home": "Página principal",
       "explore": "Explorar comunidades"
+    },
+    "admin": {
+      "backToHome": "Volver a inicio",
+      "dashboard": "Dashboard",
+      "manageUsers": "Gestionar usuarios"
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Resumen general de la actividad del sitio."
+    },
+    "users": {
+      "title": "Gestionar Usuarios",
+      "description": "Busca, edita o gestiona los roles de los usuarios."
     }
   },
   "settings": {
@@ -40,7 +55,7 @@
       "email": "Correo Electrónico",
       "modalCodeTitle": "Busca el código que te enviamos",
       "modalCodeDesc": "Para poder hacer cambios en tu cuenta, primero debes ingresar el código que te enviamos a",
-      "modalCodeLabel": "Código de verificación*",
+  "modalCodeLabel": "Código de verificación*",
       "continue": "Continuar",
       "modalCodeResendP": "¿No recibiste el código?",
       "modalCodeResendA": "Volver a enviarlo",

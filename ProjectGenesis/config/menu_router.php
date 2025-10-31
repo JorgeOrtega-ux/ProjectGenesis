@@ -10,6 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 $type = $_GET['type'] ?? 'main';
 
 $isSettingsPage = ($type === 'settings');
+$isAdminPage = ($type === 'admin'); // --- NUEVA LÍNEA ---
 
 include '../includes/modules/module-surface.php';
 
