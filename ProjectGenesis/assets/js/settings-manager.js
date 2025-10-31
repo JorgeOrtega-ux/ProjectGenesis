@@ -3,28 +3,18 @@ import { deactivateAllModules } from './main-controller.js';
 import { getTranslation, loadTranslations, applyTranslations } from './i18n-manager.js';
 import { startResendTimer } from './auth-manager.js';
 
-// --- ▼▼▼ INICIO DE LA MODIFICACIÓN (RATE LIMIT) ▼▼▼ ---
 let isPreferenceLocked = false;
 let preferenceLockoutTimer = null;
-// --- ▲▲▲ FIN DE LA MODIFICACIÓN (RATE LIMIT) ▲▲▲ ---
 
-// --- (Helper functions showInlineError, hideInlineError, toggleButtonSpinner, focusInputAndMoveCursorToEnd remain the same) ---
-/**
- * Muestra un mensaje de error inline debajo de un elemento .settings-card.
- * @param {HTMLElement} cardElement El elemento .settings-card debajo del cual mostrar el error.
- * @param {string} messageKey La clave de traducción para el mensaje de error.
- * @param {object|null} data Datos opcionales para reemplazar placeholders en la traducción (ej. { days: 5 }).
- */
 function showInlineError(cardElement, messageKey, data = null) {
     if (!cardElement) return;
 
-    hideInlineError(cardElement); // Elimina errores previos para esta tarjeta
+    hideInlineError(cardElement); 
 
     const errorDiv = document.createElement('div');
     errorDiv.className = 'settings-card__error';
     let message = getTranslation(messageKey);
 
-    // Reemplazar placeholders si hay datos
     if (data) {
         Object.keys(data).forEach(key => {
             message = message.replace(`%${key}%`, data[key]);
@@ -33,14 +23,9 @@ function showInlineError(cardElement, messageKey, data = null) {
 
     errorDiv.textContent = message;
 
-    // Insertar el div de error justo después de la tarjeta
     cardElement.parentNode.insertBefore(errorDiv, cardElement.nextSibling);
 }
 
-/**
- * Oculta (elimina) el mensaje de error inline asociado a un elemento .settings-card.
- * @param {HTMLElement} cardElement El elemento .settings-card cuyo error se quiere ocultar.
- */
 function hideInlineError(cardElement) {
     if (!cardElement) return;
     const nextElement = cardElement.nextElementSibling;
@@ -49,30 +34,23 @@ function hideInlineError(cardElement) {
     }
 }
 
-// Función para spinner
 function toggleButtonSpinner(button, text, isLoading) {
     if (!button) return;
     button.disabled = isLoading;
     if (isLoading) {
         button.dataset.originalText = button.textContent;
-        // --- MODIFICACIÓN: Usar spinner más pequeño para botones pequeños Y settings-button ---
         const spinnerClass = (button.classList.contains('modal__button-small') || button.classList.contains('settings-button')) ? 'logout-spinner' : 'auth-button-spinner';
         let spinnerStyle = (button.classList.contains('modal__button-small') || button.classList.contains('settings-button')) ? 'width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;' : '';
         
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Color de spinner en botones primarios) ▼▼▼ ---
-        // Se aplica a botones primarios de modal, botones de danger, y botones settings (que son "primarios" en su contexto)
         if (button.classList.contains('modal__button-small--primary') || 
             button.classList.contains('modal__button-small--danger') || 
             (button.classList.contains('settings-button') && !button.classList.contains('danger'))) {
             
-            // Si el botón es un settings-button PERO es 'danger', no aplicar el blanco
             if(button.classList.contains('settings-button') && button.classList.contains('danger')) {
-                 // Dejar el estilo por defecto (oscuro)
             } else {
                  spinnerStyle += ' border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;';
             }
         }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         if(spinnerClass === 'logout-spinner') {
             button.innerHTML = `<span class="${spinnerClass}" style="${spinnerStyle}"></span>`;
@@ -84,7 +62,6 @@ function toggleButtonSpinner(button, text, isLoading) {
     }
 }
 
-// Función focusInputAndMoveCursorToEnd
 function focusInputAndMoveCursorToEnd(inputElement) {
     if (!inputElement) return;
 
@@ -92,7 +69,7 @@ function focusInputAndMoveCursorToEnd(inputElement) {
     const originalType = inputElement.type;
 
     try {
-        if (inputElement.type === 'email' || inputElement.type === 'text' || inputElement.type === 'password') { // <-- Añadido password
+        if (inputElement.type === 'email' || inputElement.type === 'text' || inputElement.type === 'password') { 
              inputElement.type = 'text';
         }
 
@@ -102,32 +79,24 @@ function focusInputAndMoveCursorToEnd(inputElement) {
             try {
                 inputElement.setSelectionRange(length, length);
             } catch (e) {
-                // Ignore errors like "setSelectionRange is not supported"
             }
             inputElement.type = originalType;
         }, 0);
 
     } catch (e) {
         inputElement.type = originalType;
-        // Fallback or log error if needed
     }
 }
 
-/**
- * Formatea una fecha UTC (ej. "2025-10-27 18:32:00") a un formato simple "dd/mm/yyyy".
- * @param {string} utcTimestamp
- * @returns {string}
- */
 function formatTimestampToSimpleDate(utcTimestamp) {
     try {
-        // Añadir 'Z' para asegurar que JS lo interprete como UTC
         const date = new Date(utcTimestamp + 'Z'); 
         if (isNaN(date.getTime())) {
             throw new Error('Invalid date');
         }
         
         const day = String(date.getUTCDate()).padStart(2, '0');
-        const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Enero es 0
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0'); 
         const year = date.getUTCFullYear();
         
         return `${day}/${month}/${year}`;
@@ -140,14 +109,10 @@ function formatTimestampToSimpleDate(utcTimestamp) {
 
 async function handlePreferenceChange(preferenceTypeOrField, newValue, cardElement) {
     
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (RATE LIMIT) ▼▼▼ ---
     if (isPreferenceLocked) {
-        // Estamos bloqueados localmente, no enviar petición.
-        // Mostrar el error genérico solicitado.
         showInlineError(cardElement, 'js.api.genericSpamError'); 
-        return; // Detener la ejecución
+        return; 
     }
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN (RATE LIMIT) ▲▲▲ ---
 
     if (!preferenceTypeOrField || newValue === undefined || !cardElement) {
         console.error('handlePreferenceChange: Faltan tipo/campo, valor o elemento de tarjeta.');
@@ -173,7 +138,6 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue, cardEleme
     formData.append('action', 'update-preference');
     formData.append('field', fieldName);
     formData.append('value', newValue);
-    // CSRF token se añade en _post
 
     const result = await callSettingsApi(formData);
 
@@ -192,53 +156,39 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue, cardEleme
         if (preferenceTypeOrField === 'language') {
             window.userLanguage = newValue;
             
-            // 1. Cargar las nuevas traducciones dinámicamente
             await loadTranslations(newValue);
             
-            // 2. Aplicar las traducciones a toda la página
             applyTranslations(document.body);
             
-            // 3. Mostrar la alerta de éxito estándar (que no menciona la recarga)
             window.showAlert(getTranslation('js.settings.successPreference'), 'success');
 
         } else {
-             // Mostrar la alerta estándar para todas las demás preferencias
              window.showAlert(getTranslation(result.message || 'js.settings.successPreference'), 'success');
         }
 
     } else {
-        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (RATE LIMIT) ▼▼▼ ---
-        // Comprobar si el error es el de "demasiados intentos"
         if (result.message === 'js.auth.errorTooManyAttempts') {
-            // El servidor nos dijo que estamos bloqueados.
             isPreferenceLocked = true;
-            // Mostrar el error genérico solicitado
             showInlineError(cardElement, 'js.api.genericSpamError'); 
 
-            // Limpiar el temporizador existente si lo hay
             if (preferenceLockoutTimer) {
                 clearTimeout(preferenceLockoutTimer);
             }
 
-            // Iniciar un temporizador local para desbloquear después de 60 minutos
-            // (60 minutos * 60 segundos * 1000 ms)
             const lockoutDuration = (result.data?.minutes || 60) * 60 * 1000;
             preferenceLockoutTimer = setTimeout(() => {
                 isPreferenceLocked = false;
             }, lockoutDuration);
             
         } else {
-            // Mostrar cualquier otro error de guardado
             showInlineError(cardElement, result.message || 'js.settings.errorPreference');
         }
-        // --- ▲▲▲ FIN DE LA MODIFICACIÓN (RATE LIMIT) ▲▲▲ ---
     }
 }
 
 function getCsrfTokenFromPage() {
-    // Intenta encontrar *cualquier* input CSRF en la página
     const csrfInput = document.querySelector('input[name="csrf_token"]');
-    return csrfInput ? csrfInput.value : (window.csrfToken || ''); // Fallback al global
+    return csrfInput ? csrfInput.value : (window.csrfToken || ''); 
 }
 
 export function initSettingsManager() {
@@ -247,24 +197,22 @@ export function initSettingsManager() {
         const target = e.target;
         const card = target.closest('.settings-card');
 
-        // --- (Avatar handlers remain the same) ---
         const avatarCard = document.getElementById('avatar-section');
         if (avatarCard) {
-            // ... (código avatar sin cambios) ...
              if (target.closest('#avatar-preview-container') || target.closest('#avatar-upload-trigger') || target.closest('#avatar-change-trigger')) {
                 e.preventDefault();
-                hideInlineError(avatarCard); // Ocultar error al intentar abrir selector
+                hideInlineError(avatarCard); 
                 document.getElementById('avatar-upload-input')?.click();
                 return;
             }
 
             if (target.closest('#avatar-cancel-trigger')) {
                 e.preventDefault();
-                hideInlineError(avatarCard); // Ocultar error al cancelar
+                hideInlineError(avatarCard); 
                 const previewImage = document.getElementById('avatar-preview-image');
                 const originalAvatarSrc = previewImage.dataset.originalSrc;
                 if (previewImage && originalAvatarSrc) previewImage.src = originalAvatarSrc;
-                document.getElementById('avatar-upload-input').value = ''; // Limpiar input file
+                document.getElementById('avatar-upload-input').value = ''; 
 
                 document.getElementById('avatar-actions-preview').style.display = 'none';
                 const originalState = avatarCard.dataset.originalActions === 'default'
@@ -276,13 +224,13 @@ export function initSettingsManager() {
 
             if (target.closest('#avatar-remove-trigger')) {
                 e.preventDefault();
-                hideInlineError(avatarCard); // Ocultar error al intentar eliminar
+                hideInlineError(avatarCard); 
                 const removeTrigger = target.closest('#avatar-remove-trigger');
                 toggleButtonSpinner(removeTrigger, getTranslation('settings.profile.removePhoto'), true);
 
                 const formData = new FormData();
                 formData.append('action', 'remove-avatar');
-                formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
+                formData.append('csrf_token', getCsrfTokenFromPage()); 
 
                 const result = await callSettingsApi(formData);
 
@@ -313,7 +261,7 @@ export function initSettingsManager() {
                 const formData = new FormData();
                 formData.append('action', 'upload-avatar');
                 formData.append('avatar', fileInput.files[0]);
-                formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
+                formData.append('csrf_token', getCsrfTokenFromPage()); 
 
                 const result = await callSettingsApi(formData);
 
@@ -328,10 +276,8 @@ export function initSettingsManager() {
             }
         }
 
-        // --- (Username handlers remain the same) ---
         const usernameCard = document.getElementById('username-section');
         if (usernameCard) {
-            // ... (código username sin cambios, excepto CSRF token) ...
             hideInlineError(usernameCard);
 
             if (target.closest('#username-edit-trigger')) {
@@ -371,7 +317,7 @@ export function initSettingsManager() {
                 const formData = new FormData();
                 formData.append('action', actionInput.value);
                 formData.append('username', inputElement.value);
-                formData.append('csrf_token', getCsrfTokenFromPage()); // Usar helper
+                formData.append('csrf_token', getCsrfTokenFromPage()); 
 
                 const result = await callSettingsApi(formData);
 
@@ -386,13 +332,11 @@ export function initSettingsManager() {
             }
         }
 
-        // --- (Email section - logic removed, now handled by page) ---
         const emailCard = document.getElementById('email-section');
         if (emailCard) {
             hideInlineError(emailCard);
         }
         
-        // --- (Page logic: change-email) ---
         if (target.closest('#email-verify-resend')) {
             e.preventDefault();
             const resendTrigger = target.closest('#email-verify-resend');
@@ -514,7 +458,6 @@ export function initSettingsManager() {
         }
 
 
-        // --- (Preferences - Dropdowns/Popovers) ---
         const clickedLink = target.closest('.popover-module .menu-link'); 
         if (clickedLink && card) { 
             e.preventDefault();
@@ -573,7 +516,6 @@ export function initSettingsManager() {
         }
 
 
-        // --- (Page logic: toggle-2fa) ---
          if (target.closest('#tfa-verify-continue')) {
              e.preventDefault();
                 const card = target.closest('.settings-card');
@@ -631,7 +573,6 @@ export function initSettingsManager() {
         }
 
 
-        // --- (Page logic: change-password) ---
          if (target.closest('#password-verify-continue')) {
             e.preventDefault();
             const step1Card = target.closest('#password-step-1');
@@ -725,7 +666,6 @@ export function initSettingsManager() {
         }
 
 
-        // --- (Modal logic: logout-all-devices) ---
          if (target.closest('#logout-all-devices-trigger')) {
             e.preventDefault();
             const modal = document.getElementById('logout-all-modal');
@@ -774,25 +714,21 @@ export function initSettingsManager() {
         }
 
 
-        // --- ▼▼▼ INICIO DE MODAL DELETE-ACCOUNT MODIFICADO ▼▼▼ ---
          
-        // ELIMINADO: Listener para #delete-account-trigger (ahora es un enlace <a>)
         
-        // ELIMINADO: Listener para #delete-account-cancel (ahora es un enlace <a>)
 
-        // MODIFICADO: Adaptado para la nueva página en lugar del modal
         if (target.closest('#delete-account-confirm')) {
              e.preventDefault();
              const confirmButton = target.closest('#delete-account-confirm');
              const card = target.closest('.settings-card');
-             if(!confirmButton || !card) return; // No estamos en la página correcta
+             if(!confirmButton || !card) return; 
             
             const passwordInput = document.getElementById('delete-account-password');
             
-            hideInlineError(card); // <-- USAR INLINE ERROR
+            hideInlineError(card); 
 
             if (!passwordInput || !passwordInput.value) {
-                showInlineError(card, 'js.settings.errorEnterCurrentPass'); // <-- USAR INLINE ERROR
+                showInlineError(card, 'js.settings.errorEnterCurrentPass'); 
                 return;
             }
 
@@ -812,22 +748,19 @@ export function initSettingsManager() {
                 }, 2000);
 
             } else {
-                showInlineError(card, result.message || 'js.settings.errorAccountDelete', result.data); // <-- USAR INLINE ERROR
+                showInlineError(card, result.message || 'js.settings.errorAccountDelete', result.data); 
                 toggleButtonSpinner(confirmButton, getTranslation('settings.login.modalDeleteConfirm'), false);
             }
             return;
         }
-        // --- ▲▲▲ FIN DE MODAL DELETE-ACCOUNT MODIFICADO ▲▲▲ ---
 
-    }); // Fin listener 'click'
+    }); 
 
 
-    // --- (Listener 'change' - sin cambios) ---
     document.body.addEventListener('change', async (e) => {
         const target = e.target;
         const card = target.closest('.settings-card');
 
-        // Input de Avatar
         if (target.id === 'avatar-upload-input' && card) {
             hideInlineError(card);
             const fileInput = target;
@@ -841,7 +774,7 @@ export function initSettingsManager() {
                 fileInput.value = ''; 
                 return;
             }
-            if (file.size > 2 * 1024 * 1024) { // 2MB
+            if (file.size > 2 * 1024 * 1024) { 
                 showInlineError(card, 'js.settings.errorAvatarSize');
                 fileInput.value = ''; 
                 return;
@@ -863,7 +796,6 @@ export function initSettingsManager() {
             document.getElementById('avatar-actions-preview').style.display = 'flex';
         }
 
-        // Toggles de Preferencias Booleanas
         else if (target.matches('input[type="checkbox"][data-preference-type="boolean"]') && card) {
              hideInlineError(card);
             const checkbox = target;
@@ -883,22 +815,17 @@ export function initSettingsManager() {
                 console.error('Este toggle no tiene un data-field-name:', checkbox);
             }
         }
-    }); // Fin listener 'change'
+    }); 
 
-     // Listener de Input (para ocultar errores al escribir)
     document.body.addEventListener('input', (e) => {
         const target = e.target;
 
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (HABILITAR BOTÓN DELETE) ▼▼▼ ---
-        // Habilitar/Deshabilitar el botón de eliminar cuenta
         if (target.id === 'delete-account-password') {
             const confirmBtn = document.getElementById('delete-account-confirm');
             if (confirmBtn) {
-                // Habilitar solo si el input no está vacío
                 confirmBtn.disabled = !target.value.trim();
             }
         }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
         if (target.matches('.settings-username-input') || target.closest('.auth-input-group') || target.closest('.modal__input-group')) {
@@ -906,7 +833,6 @@ export function initSettingsManager() {
             if (card) {
                 hideInlineError(card);
             }
-            // También ocultar errores en modales (para el de 'logout-all' que queda)
             const modalContent = target.closest('.modal-content');
             if (modalContent) {
                  const errorDiv = modalContent.querySelector('.auth-error-message, .settings-card__error'); 
@@ -919,9 +845,8 @@ export function initSettingsManager() {
                  }
             }
         }
-    }); // Fin listener 'input'
+    }); 
 
-    // --- (setTimeout for original avatar src remains the same) ---
     setTimeout(() => {
         const previewImage = document.getElementById('avatar-preview-image');
         if (previewImage && !previewImage.dataset.originalSrc) {
@@ -929,4 +854,4 @@ export function initSettingsManager() {
         }
     }, 100);
 
-} // Fin initSettingsManager
+} 

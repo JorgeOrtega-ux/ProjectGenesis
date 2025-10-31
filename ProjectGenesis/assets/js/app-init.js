@@ -3,8 +3,8 @@ import { initRouter } from './url-manager.js';
 import { initAuthManager } from './auth-manager.js';
 import { initSettingsManager } from './settings-manager.js';
 import { showAlert } from './alert-manager.js'; 
-import { initI18nManager } from './i18n-manager.js'; // <-- IMPORTACIÓN EXISTENTE
-import { initTooltipManager } from './tooltip-manager.js'; // <-- NUEVA IMPORTACIÓN
+import { initI18nManager } from './i18n-manager.js'; 
+import { initTooltipManager } from './tooltip-manager.js'; 
 
 const htmlEl = document.documentElement;
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -40,25 +40,18 @@ function initThemeManager() {
 }
 
 
-document.addEventListener('DOMContentLoaded', async function () { // <-- CONVERTIDO A ASYNC
+document.addEventListener('DOMContentLoaded', async function () { 
     
     window.showAlert = showAlert;
 
-    // --- ▼▼▼ NUEVA MODIFICACIÓN ▼▼▼ ---
-    // Carga las traducciones ANTES de inicializar el resto de la UI
     await initI18nManager();
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     initThemeManager();
 
     initMainController();
-    initRouter(); // <-- Esta función llamará a handleNavigation, que llamará a loadPage (que activa el loader)
+    initRouter(); 
     initAuthManager();
     initSettingsManager();
-    initTooltipManager(); // <-- NUEVA LLAMADA
+    initTooltipManager(); 
 
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-    // Ya no necesitamos ocultar el loader aquí.
-    // loadPage() en url-manager.js se encarga de todo.
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 });

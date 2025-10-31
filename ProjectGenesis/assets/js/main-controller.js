@@ -74,7 +74,19 @@ export function initMainController() {
                 const token = window.csrfToken || '';
                 const logoutUrl = (window.projectBasePath || '') + '/config/logout.php';
                 
-                window.location.href = `${logoutUrl}?csrf_token=${encodeURIComponent(token)}`;
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = logoutUrl;
+                form.style.display = 'none';
+
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = 'csrf_token';
+                tokenInput.value = token;
+
+                form.appendChild(tokenInput);
+                document.body.appendChild(form);
+                form.submit();
                 
             } catch (error) {
                 alert(getTranslation('js.main.errorLogout') + (error.message || getTranslation('js.auth.errorUnknown')));
@@ -138,18 +150,6 @@ export function initMainController() {
         });
     }
     
-    const scrollableContent = document.querySelector('.general-content-scrolleable');
-    const headerTop = document.querySelector('.general-content-top');
-
-    if (scrollableContent && headerTop) {
-        scrollableContent.addEventListener('scroll', function() {
-            
-            if (this.scrollTop > 0) {
-                headerTop.classList.add('shadow');
-            } else {
-                
-                headerTop.classList.remove('shadow');
-            }
-        });
-    }
+    
+    
 }

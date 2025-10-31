@@ -38,7 +38,7 @@
                 <input type="text" id="email-verify-code" name="verification_code" class="modal__input" required placeholder=" " maxlength="14">
                 <label for="email-verify-code" data-i18n="settings.profile.modalCodeLabel"></label>
             </div>
-            <p class="modal__footer-text" style="text-align: center; width: 100%; margin: 8px 0 0 0;">
+            <p class="modal__footer-text" style="text-align: left; width: 100%; margin: 8px 0 0 0;">
                 <span data-i18n="settings.profile.modalCodeResendP"></span>
                 <a id="email-verify-resend" 
                    data-i18n="settings.profile.modalCodeResendA"

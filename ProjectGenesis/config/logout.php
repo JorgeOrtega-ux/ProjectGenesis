@@ -2,7 +2,10 @@
 
 include 'config.php'; 
 
-$submittedToken = $_GET['csrf_token'] ?? '';
+// --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
+// Se cambia de $_GET a $_POST para mayor seguridad
+$submittedToken = $_POST['csrf_token'] ?? '';
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 if (!validateCsrfToken($submittedToken)) {
     die('logout.invalidSession: Your session has expired or is invalid.');

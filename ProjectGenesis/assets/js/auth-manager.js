@@ -2,32 +2,20 @@ import { callAuthApi } from './api-service.js';
 import { handleNavigation } from './url-manager.js';
 import { getTranslation } from './i18n-manager.js';
 
-// --- ▼▼▼ INICIO DE NUEVAS FUNCIONES HELPER ▼▼▼ ---
-/**
- * Reemplaza el contenido de un botón de auth con un spinner.
- * @param {HTMLElement} button - El botón a modificar.
- */
 function setButtonSpinner(button) {
     if (!button) return;
-    // Guardar el texto original (o HTML si tuviera iconos)
     button.dataset.originalHtml = button.innerHTML;
     button.disabled = true;
     button.innerHTML = '<div class="auth-button-spinner"></div>';
 }
 
-/**
- * Restaura el contenido original de un botón y lo reactiva.
- * @param {HTMLElement} button - El botón a restaurar.
- */
 function removeButtonSpinner(button) {
     if (!button) return;
     button.disabled = false;
-    // Restaurar desde el HTML guardado.
     if (button.dataset.originalHtml) {
         button.innerHTML = button.dataset.originalHtml;
     }
 }
-// --- ▲▲▲ FIN DE NUEVAS FUNCIONES HELPER ▲▲▲ ---
 
 
 export function startResendTimer(linkElement, seconds) {
@@ -40,8 +28,6 @@ export function startResendTimer(linkElement, seconds) {
     const originalBaseText = linkElement.textContent.trim().replace(/\s*\(\d+s?\)$/, '');
 
     linkElement.classList.add('disabled-interactive');
-    // linkElement.style.opacity = '0.7'; // ELIMINADO
-    // linkElement.style.textDecoration = 'none'; // ELIMINADO
     linkElement.textContent = `${originalBaseText} (${secondsRemaining}s)`;
 
     const intervalId = setInterval(() => {
@@ -52,8 +38,6 @@ export function startResendTimer(linkElement, seconds) {
             clearInterval(intervalId);
             linkElement.textContent = originalBaseText;
             linkElement.classList.remove('disabled-interactive');
-            // linkElement.style.opacity = '1'; // ELIMINADO
-            // linkElement.style.textDecoration = ''; // ELIMINADO
         }
     }, 1000);
 
@@ -67,9 +51,7 @@ async function handleRegistrationSubmit(e) {
     const activeStep = form.querySelector('.auth-step.active');
     const errorDiv = activeStep.querySelector('.auth-error-message');
 
-    // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
     setButtonSpinner(button);
-    // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
 
     const formData = new FormData(form);
     formData.append('action', 'register-verify');
@@ -82,14 +64,10 @@ async function handleRegistrationSubmit(e) {
         sessionStorage.removeItem('regPass');
         window.location.href = window.projectBasePath + '/';
     } else {
-        // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
         const codeInput = form.querySelector('#register-code');
         showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'), result.data, codeInput);
-        // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
         
-        // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
         removeButtonSpinner(button);
-        // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
     }
 }
 
@@ -100,7 +78,6 @@ async function handleResetSubmit(e) {
     const activeStep = form.querySelector('.auth-step.active');
     const errorDiv = activeStep.querySelector('.auth-error-message');
 
-    // --- ▼▼▼ MODIFICACIÓN: Obtener elementos, no solo valores ▼▼▼ ---
     const password = form.querySelector('#reset-password');
     const passwordConfirm = form.querySelector('#reset-password-confirm');
 
@@ -112,11 +89,8 @@ async function handleResetSubmit(e) {
         showAuthError(errorDiv, getTranslation('js.auth.errorPasswordMismatch'), null, [password, passwordConfirm]);
         return;
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
-    // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
     setButtonSpinner(button);
-    // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
 
     const formData = new FormData(form);
     formData.append('action', 'reset-update-password');
@@ -126,36 +100,26 @@ async function handleResetSubmit(e) {
     if (result.success) {
         sessionStorage.removeItem('resetEmail');
         sessionStorage.removeItem('resetCode');
-        // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
         window.showAlert(getTranslation(result.message || 'js.auth.successPasswordUpdate'), 'success');
-        // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
         setTimeout(() => {
             window.location.href = window.projectBasePath + '/login';
         }, 2000);
     } else {
-        // --- ▼▼▼ LÍNEA CORREGIDA (Sin input específico para error de servidor genérico) ▼▼▼ ---
         showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'), result.data);
-        // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
         
-        // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
         removeButtonSpinner(button);
-        // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
     }
 }
 
-// --- ▼▼▼ INICIO DE LA MODIFICACIÓN (FUNCIÓN handleLoginFinalSubmit) ▼▼▼ ---
 async function handleLoginFinalSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const button = form.querySelector('button[type="submit"]');
     
-    // CAMBIO CLAVE: Buscar el error div relativo al botón, no a la clase '.active'
     const activeStep = button.closest('.auth-step'); 
     const errorDiv = activeStep.querySelector('.auth-error-message');
 
-    // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
     setButtonSpinner(button);
-    // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
 
     const formData = new FormData(form);
     formData.append('action', 'login-verify-2fa');
@@ -165,35 +129,20 @@ async function handleLoginFinalSubmit(e) {
     if (result.success) {
         window.location.href = window.projectBasePath + '/';
     } else {
-        // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
         const codeInput = form.querySelector('#login-code');
         showAuthError(errorDiv, getTranslation(result.message || 'js.auth.genericError'), result.data, codeInput);
-        // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
         
-        // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
         removeButtonSpinner(button);
-        // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
     }
 }
-// --- ▲▲▲ FIN DE LA MODIFICACIÓN (FUNCIÓN handleLoginFinalSubmit) ▲▲▲ ---
 
 
-// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA ▼▼▼ ---
-/**
- * Muestra un mensaje de error en un contenedor, reemplazando placeholders.
- * @param {HTMLElement} errorDiv - El div donde se mostrará el error.
- * @param {string} message - El mensaje (o clave i18n) a mostrar.
- * @param {object|null} data - Datos opcionales para reemplazar (ej. {seconds: 5}).
- * @param {HTMLElement|HTMLElement[]|null} inputElement - El input (o inputs) a marcar en rojo.
- */
 function showAuthError(errorDiv, message, data = null, inputElement = null) {
     if (errorDiv) {
         let finalMessage = message;
         
-        // Reemplazar placeholders si hay datos
         if (data) {
             Object.keys(data).forEach(key => {
-                // Usar un RegExp global (g) para reemplazar todas las instancias
                 const regex = new RegExp(`%${key}%`, 'g');
                 finalMessage = finalMessage.replace(regex, data[key]);
             });
@@ -203,7 +152,6 @@ function showAuthError(errorDiv, message, data = null, inputElement = null) {
         errorDiv.style.display = 'block';
     }
     
-    // --- ▼▼▼ NUEVO BLOQUE PARA MARCAR INPUTS ▼▼▼ ---
     if (inputElement) {
         if (Array.isArray(inputElement)) {
             inputElement.forEach(input => {
@@ -213,9 +161,7 @@ function showAuthError(errorDiv, message, data = null, inputElement = null) {
             inputElement.classList.add('auth-input-error');
         }
     }
-    // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 }
-// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA ▲▲▲ ---
 
 
 function initPasswordToggles() {
@@ -285,14 +231,9 @@ function initRegisterWizard() {
             const result = await callAuthApi(formData);
 
             if (result.success) {
-                // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
                 window.showAlert(getTranslation(result.message || 'js.auth.successCodeResent'), 'success');
-                // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
             } else {
-                // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-                // Ahora pasa result.data para reemplazar %seconds%
                 showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorCodeResent'), result.data);
-                // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                 
                 const timerId = linkElement.dataset.timerId;
                 if (timerId) {
@@ -301,8 +242,6 @@ function initRegisterWizard() {
                 
                 linkElement.textContent = originalText; 
                 linkElement.classList.remove('disabled-interactive');
-                // linkElement.style.opacity = '1'; // ELIMINADO
-                // linkElement.style.textDecoration = ''; // ELIMINADO
             }
             return;
         }
@@ -327,7 +266,6 @@ function initRegisterWizard() {
             let clientErrorMessage = getTranslation('js.auth.errorCompleteFields');
             let errorData = null;
 
-            // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (register-step1) ▼▼▼ ---
             if (currentStep === 1) {
                 const emailInput = currentStepEl.querySelector('#register-email');
                 const passwordInput = currentStepEl.querySelector('#register-password');
@@ -336,7 +274,6 @@ function initRegisterWizard() {
                 if (!emailInput.value || !passwordInput.value) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorCompleteEmailPass');
-                    // Marcar solo los campos vacíos
                     showAuthError(errorDiv, clientErrorMessage, null, [emailInput, passwordInput].filter(el => !el.value));
                 } else if (!emailInput.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { 
                     isValid = false;
@@ -357,9 +294,7 @@ function initRegisterWizard() {
                     showAuthError(errorDiv, clientErrorMessage, errorData, passwordInput);
                 }
             }
-            // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (register-step1) ▲▲▲ ---
 
-            // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (register-step2) ▼▼▼ ---
             else if (currentStep === 2) {
                 const usernameInput = currentStepEl.querySelector('#register-username');
 
@@ -374,18 +309,14 @@ function initRegisterWizard() {
                     showAuthError(errorDiv, clientErrorMessage, errorData, usernameInput);
                 }
             }
-            // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (register-step2) ▲▲▲ ---
 
             if (!isValid) {
-                // showAuthError(errorDiv, clientErrorMessage, errorData); // <-- Llamada antigua eliminada
                 return;
             }
 
             if (errorDiv) errorDiv.style.display = 'none';
 
-            // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
             setButtonSpinner(button);
-            // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
 
             const formData = new FormData(registerForm);
             let fetchAction = '';
@@ -418,7 +349,6 @@ function initRegisterWizard() {
                     handleNavigation(); 
                 }
             } else {
-                // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Error de Servidor) ▼▼▼ ---
                 let errorInput = null;
                 if (result.message === 'js.auth.errorEmailInUse') {
                     errorInput = registerForm.querySelector('#register-email');
@@ -426,18 +356,14 @@ function initRegisterWizard() {
                     errorInput = registerForm.querySelector('#register-username');
                 }
                 showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown'), result.data, errorInput); 
-                // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (Error de Servidor) ▼▼▼ ---
             }
 
             if (!result.success) {
-                 // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
                  removeButtonSpinner(button);
-                 // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
             }
         }
     });
 
-    // --- ELIMINADO: El listener de 'input' se moverá a initAuthManager ---
 }
 
 function initResetWizard() {
@@ -485,14 +411,9 @@ function initResetWizard() {
             const result = await callAuthApi(formData);
 
             if (result.success) {
-                // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
                 window.showAlert(getTranslation(result.message || 'js.auth.successCodeResent'), 'success');
-                // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
             } else {
-                // --- ▼▼▼ LÍNEA CORREGIDA ▼▼▼ ---
-                // Ahora pasa result.data para reemplazar %seconds%
                 showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorCodeResent'), result.data);
-                // --- ▲▲▲ LÍNEA CORREGIDA ▲▲▲ ---
                 
                 const timerId = linkElement.dataset.timerId;
                 if (timerId) {
@@ -501,8 +422,6 @@ function initResetWizard() {
                 
                 linkElement.textContent = originalText; 
                 linkElement.classList.remove('disabled-interactive');
-                // linkElement.style.opacity = '1'; // ELIMINADO
-                // linkElement.style.textDecoration = ''; // ELIMINADO
             }
             return;
         }
@@ -518,7 +437,6 @@ function initResetWizard() {
             let isValid = true;
             let clientErrorMessage = getTranslation('js.auth.errorCompleteFields');
 
-            // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (reset-step1) ▼▼▼ ---
             if (currentStep === 1) {
                 const emailInput = currentStepEl.querySelector('#reset-email');
                 if (!emailInput.value || !emailInput.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { 
@@ -531,9 +449,7 @@ function initResetWizard() {
                     showAuthError(errorDiv, clientErrorMessage, null, emailInput);
                 }
             }
-            // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (reset-step1) ▲▲▲ ---
 
-            // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (reset-step2) ▼▼▼ ---
             else if (currentStep === 2) {
                 const codeInput = currentStepEl.querySelector('#reset-code');
                 if (!codeInput.value || codeInput.value.length < 14) {
@@ -542,18 +458,14 @@ function initResetWizard() {
                     showAuthError(errorDiv, clientErrorMessage, null, codeInput);
                 }
             }
-            // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (reset-step2) ▲▲▲ ---
 
             if (!isValid) {
-                // showAuthError(errorDiv, clientErrorMessage); // <-- Llamada antigua eliminada
                 return;
             }
 
             if(errorDiv) errorDiv.style.display = 'none'; 
             
-            // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
             setButtonSpinner(button);
-            // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
 
             const formData = new FormData(resetForm);
             let fetchAction = '';
@@ -586,7 +498,6 @@ function initResetWizard() {
                  }
 
             } else {
-                // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Error de Servidor) ▼▼▼ ---
                 let errorInput = null;
                 if (result.message === 'js.auth.errorUserNotFound') {
                     errorInput = resetForm.querySelector('#reset-email');
@@ -594,13 +505,10 @@ function initResetWizard() {
                     errorInput = resetForm.querySelector('#reset-code');
                 }
                 showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown'), result.data, errorInput); 
-                // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (Error de Servidor) ▼▼▼ ---
             }
 
             if (!result.success) {
-                // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
                 removeButtonSpinner(button);
-                // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
             }
         }
     });
@@ -627,10 +535,9 @@ function initLoginWizard() {
                 return;
             }
 
-            // Obtener el email del input del paso 1
             const emailInput = loginForm.querySelector('#login-email');
             if (!emailInput || !emailInput.value) {
-                showAuthError(errorDiv, getTranslation('js.auth.errorNoEmail')); // Re-usar esta clave
+                showAuthError(errorDiv, getTranslation('js.auth.errorNoEmail')); 
                 return;
             }
             const email = emailInput.value;
@@ -640,7 +547,7 @@ function initLoginWizard() {
             startResendTimer(linkElement, 60); 
 
             const formData = new FormData();
-            formData.append('action', 'login-resend-2fa-code'); // Nueva acción de API
+            formData.append('action', 'login-resend-2fa-code'); 
             formData.append('email', email);
             
             const csrfToken = loginForm.querySelector('[name="csrf_token"]');
@@ -662,8 +569,6 @@ function initLoginWizard() {
                 
                 linkElement.textContent = originalText; 
                 linkElement.classList.remove('disabled-interactive');
-                // linkElement.style.opacity = '1'; // ELIMINADO
-                // linkElement.style.textDecoration = ''; // ELIMINADO
             }
             return;
         }
@@ -675,40 +580,31 @@ function initLoginWizard() {
 
         const currentStep = parseInt(currentStepEl.getAttribute('data-step'), 10);
 
-        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (initLoginWizard -> prev-step) ▼▼▼ ---
         if (action === 'prev-step') {
-            // Esta lógica ya no se usa porque eliminamos el botón "Atrás" de 2FA
-            // Pero la dejamos por si se reutiliza.
             const prevStepEl = loginForm.querySelector(`[data-step="${currentStep - 1}"]`);
             if (prevStepEl) {
                 currentStepEl.style.display = 'none';
-                currentStepEl.classList.remove('active'); // <-- LÍNEA AÑADIDA
+                currentStepEl.classList.remove('active'); 
                 
                 prevStepEl.style.display = 'block';
-                prevStepEl.classList.add('active'); // <-- LÍNEA AÑADIDA
+                prevStepEl.classList.add('active'); 
                 
                 if(errorDiv) errorDiv.style.display = 'none'; 
             }
             return;
         }
-        // --- ▲▲▲ FIN DE LA MODIFICACIÓN (initLoginWizard -> prev-step) ▲▲▲ ---
 
         if (action === 'next-step') { 
-            // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (login-step1) ▼▼▼ ---
             const emailInput = currentStepEl.querySelector('#login-email');
             const passwordInput = currentStepEl.querySelector('#login-password');
             if (!emailInput.value || !passwordInput.value) {
-                // Marcar solo los campos vacíos
                 showAuthError(errorDiv, getTranslation('js.auth.errorCompleteEmailPass'), null, [emailInput, passwordInput].filter(el => !el.value)); 
                 return;
             }
-            // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (login-step1) ▲▲▲ ---
 
             if(errorDiv) errorDiv.style.display = 'none'; 
             
-            // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
             setButtonSpinner(button);
-            // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
 
             const formData = new FormData(loginForm);
             formData.append('action', 'login-check-credentials');
@@ -716,15 +612,14 @@ function initLoginWizard() {
             const result = await callAuthApi(formData);
 
             if (result.success) {
-                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (initLoginWizard -> next-step) ▼▼▼ ---
                 if (result.is_2fa_required) {
                     const nextStepEl = loginForm.querySelector(`[data-step="${currentStep + 1}"]`);
                     if (nextStepEl) {
                         currentStepEl.style.display = 'none';
-                        currentStepEl.classList.remove('active'); // <-- LÍNEA AÑADIDA
+                        currentStepEl.classList.remove('active'); 
                         
                         nextStepEl.style.display = 'block';
-                        nextStepEl.classList.add('active'); // <-- LÍNEA AÑADIDA
+                        nextStepEl.classList.add('active'); 
                         
                          const nextInput = nextStepEl.querySelector('input#login-code');
                          if (nextInput) nextInput.focus();
@@ -738,7 +633,6 @@ function initLoginWizard() {
                      if (result.message) {
                          window.showAlert(getTranslation(result.message), 'info');
                      }
-                // --- ▲▲▲ FIN DE LA MODIFICACIÓN (initLoginWizard -> next-step) ▲▲▲ ---
                 } else {
                      if (result.message) {
                          window.showAlert(getTranslation(result.message), 'success');
@@ -749,22 +643,17 @@ function initLoginWizard() {
             } else if (result.redirect_to_status) {
                  window.location.href = window.projectBasePath + '/account-status/' + result.redirect_to_status;
             } else {
-                // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Error de Servidor) ▼▼▼ ---
-                let errorInput = [emailInput, passwordInput]; // Marcar ambos por defecto
+                let errorInput = [emailInput, passwordInput]; 
                 if (result.message === 'js.auth.errorTooManyAttempts') {
-                    errorInput = null; // No marcar campos si es por rate limiting
+                    errorInput = null; 
                 }
                 showAuthError(errorDiv, getTranslation(result.message || 'js.auth.errorUnknown'), result.data, errorInput); 
-                // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (Error de Servidor) ▼▼▼ ---
                 
-                // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
                 removeButtonSpinner(button);
-                // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
             }
 
              if(result.success && result.is_2fa_required) {
-             } else if (!result.success && !result.redirect_to_status) { // Modificado para no reactivar botón si hay redirección
-                // No reactivar el botón si estamos redirigiendo
+             } else if (!result.success && !result.redirect_to_status) { 
              }
         }
     });
@@ -774,18 +663,13 @@ function initLoginWizard() {
 export function initAuthManager() {
     initPasswordToggles();
 
-    // --- ▼▼▼ INICIO DE NUEVO LISTENER (Unificado) ▼▼▼ ---
-    // Centraliza la limpieza de errores y el formato de códigos
     document.body.addEventListener('input', e => {
         
-        // Parte 1: Limpiar errores de validación
         const authInput = e.target.closest('.auth-input-group input');
         if (authInput && e.target.closest('.auth-form')) {
             
-            // Quitar el borde rojo del input
             authInput.classList.remove('auth-input-error');
             
-            // Ocultar el mensaje de error del paso actual
             const currentStep = authInput.closest('.auth-step');
             if (currentStep) {
                 const errorDiv = currentStep.querySelector('.auth-error-message');
@@ -795,7 +679,6 @@ export function initAuthManager() {
             }
         }
 
-        // Parte 2: Formatear códigos de verificación
         const isRegisterCode = (e.target.id === 'register-code' && e.target.closest('#register-form'));
         const isResetCode = (e.target.id === 'reset-code' && e.target.closest('#reset-form'));
         const isLoginCode = (e.target.id === 'login-code' && e.target.closest('#login-form'));
@@ -816,7 +699,6 @@ export function initAuthManager() {
             e.target.value = formatted;
         }
     });
-    // --- ▲▲▲ FIN DE NUEVO LISTENER (Unificado) ▲▲▲ ---
 
     initRegisterWizard();
     initResetWizard();

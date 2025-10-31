@@ -9,7 +9,6 @@ let loaderTimer = null;
 let currentIsSettings = null; 
 
 const routes = {
-    // ... (sin cambios)
     'toggleSectionHome': 'home',
     'toggleSectionExplorer': 'explorer',
     'toggleSectionLogin': 'login',
@@ -27,19 +26,16 @@ const routes = {
     'toggleSectionSettingsAccess': 'settings-accessibility',
     'toggleSectionSettingsDevices': 'settings-devices',
     
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
     'toggleSectionSettingsPassword': 'settings-change-password',
     'toggleSectionSettingsChangeEmail': 'settings-change-email',
     'toggleSectionSettingsToggle2fa': 'settings-toggle-2fa',
     'toggleSectionSettingsDeleteAccount': 'settings-delete-account',
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     'toggleSectionAccountStatusDeleted': 'account-status-deleted',
     'toggleSectionAccountStatusSuspended': 'account-status-suspended'
 };
 
 const paths = {
-    // ... (sin cambios)
     '/': 'toggleSectionHome',
     '/explorer': 'toggleSectionExplorer',
     '/login': 'toggleSectionLogin',
@@ -57,12 +53,10 @@ const paths = {
     '/settings/accessibility': 'toggleSectionSettingsAccess',
     '/settings/device-sessions': 'toggleSectionSettingsDevices',
     
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
     '/settings/change-password': 'toggleSectionSettingsPassword',
     '/settings/change-email': 'toggleSectionSettingsChangeEmail',
     '/settings/toggle-2fa': 'toggleSectionSettingsToggle2fa',
     '/settings/delete-account': 'toggleSectionSettingsDeleteAccount',
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     '/account-status/deleted': 'toggleSectionAccountStatusDeleted',
     '/account-status/suspended': 'toggleSectionAccountStatusSuspended'
@@ -71,14 +65,18 @@ const paths = {
 const basePath = window.projectBasePath || '/ProjectGenesis';
 
 
-// --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-
-// 1. Modificar la firma para aceptar 'action'
 async function loadPage(page, isSettingsPage, action) {
 
     if (!contentContainer) return;
 
-    // --- Lógica del Loader (sin cambios) ---
+    
+    const headerTop = document.querySelector('.general-content-top');
+    
+    if (headerTop) {
+        headerTop.classList.remove('shadow');
+    }
+
+
     contentContainer.innerHTML = ''; 
     if (loaderTimer) {
         clearTimeout(loaderTimer);
@@ -90,7 +88,6 @@ async function loadPage(page, isSettingsPage, action) {
     }, 200);
 
     
-    // --- Lógica de Carga de Menú ---
     if (currentIsSettings === null || currentIsSettings !== isSettingsPage) {
         currentIsSettings = isSettingsPage; 
         const menuType = isSettingsPage ? 'settings' : 'main';
@@ -106,19 +103,15 @@ async function loadPage(page, isSettingsPage, action) {
                         applyTranslations(newMenu);
                     }
                     
-                    // 2. LLAMAR A updateMenuState DESPUÉS de que el nuevo menú se inyectó
                     updateMenuState(action); 
                 }
             })
             .catch(err => console.error('Error al cargar el menú lateral:', err));
     } else {
-        // 3. LLAMAR A updateMenuState si el menú NO cambió (ej. settings -> settings)
         updateMenuState(action);
     }
-    // --- FIN DE LA LÓGICA DE MENÚ ---
 
 
-    // --- Lógica de Carga de Página (con modificación) ---
     try {
         const response = await fetch(`${basePath}/config/router.php?page=${page}`);
         const html = await response.text();
@@ -126,14 +119,12 @@ async function loadPage(page, isSettingsPage, action) {
         contentContainer.innerHTML = html;
         applyTranslations(contentContainer);
 
-        // --- INICIO DE BLOQUE MODIFICADO ---
-        // Ahora revisa 'register-step3', 'reset-step2' y 'settings-change-email'
         let link;
         if (page === 'register-step3') {
             link = document.getElementById('register-resend-code-link');
         } else if (page === 'reset-step2') {
             link = document.getElementById('reset-resend-code-link');
-        } else if (page === 'settings-change-email') { // <-- AÑADIDO
+        } else if (page === 'settings-change-email') { 
             link = document.getElementById('email-verify-resend');
         }
 
@@ -143,13 +134,29 @@ async function loadPage(page, isSettingsPage, action) {
                 startResendTimer(link, cooldownSeconds);
             }
         }
-        // --- FIN DE BLOQUE MODIFICADO ---
+
+        
+        
+        const headerTopForListener = document.querySelector('.general-content-top');
+        
+        const newScrollableContent = contentContainer.querySelector('.section-content.overflow-y');
+
+        if (newScrollableContent && headerTopForListener) {
+            
+            newScrollableContent.addEventListener('scroll', function() {
+                
+                if (this.scrollTop > 0) {
+                    headerTopForListener.classList.add('shadow');
+                } else {
+                    headerTopForListener.classList.remove('shadow');
+                }
+            });
+        }
         
     } catch (error) {
         console.error('Error al cargar la página:', error);
         contentContainer.innerHTML = `<h2>${getTranslation('js.url.errorLoad')}</h2>`;
     } finally {
-        // --- Lógica de limpieza del Loader (sin cambios) ---
         if (loaderTimer) {
             clearTimeout(loaderTimer);
             loaderTimer = null;
@@ -159,7 +166,6 @@ async function loadPage(page, isSettingsPage, action) {
         }
     }
 }
-// --- ▲▲▲ FIN DE LA MODIFICACIÓN (FUNCIÓN loadPage) ▲▲▲ ---
 
 export function handleNavigation() {
 
@@ -175,10 +181,7 @@ export function handleNavigation() {
 
     if (!action) {
         const isSettings = path.startsWith('/settings');
-        // 4. Pasar 'action' (null en este caso) a loadPage
         loadPage('404', isSettings, null); 
-        // 5. Eliminar la llamada de aquí
-        // updateMenuState(null); 
         return;
     }
 
@@ -186,49 +189,33 @@ export function handleNavigation() {
 
     if (page) {
         const isSettings = path.startsWith('/settings');
-        // 6. Pasar 'action' a loadPage
         loadPage(page, isSettings, action); 
-        
-        // 7. Eliminar la llamada de aquí
-        // let menuAction = action;
-        // if (action.startsWith('toggleSectionRegister')) menuAction = 'toggleSectionRegister';
-        // if (action.startsWith('toggleSectionReset')) menuAction = 'toggleSectionResetPassword'; 
-        // updateMenuState(menuAction);
     } else {
         const isSettings = path.startsWith('/settings');
-        // 8. Pasar 'action' (null en este caso) a loadPage
         loadPage('404', isSettings, null);
-        // 9. Eliminar la llamada de aquí
-        // updateMenuState(null);
     }
 }
 
 function updateMenuState(currentAction) {
     
-    // 10. (Lógica de alias para register/reset)
-    // Esto lo podemos mover aquí para que funcione correctamente
     let menuAction = currentAction;
     if (currentAction && currentAction.startsWith('toggleSectionRegister')) menuAction = 'toggleSectionRegister';
     if (currentAction && currentAction.startsWith('toggleSectionReset')) menuAction = 'toggleSectionResetPassword';
 
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-    // Si estamos en cambiar contraseña O 2FA O eliminar, resaltar "Login y Seguridad"
     if (currentAction === 'toggleSectionSettingsPassword' || 
         currentAction === 'toggleSectionSettingsToggle2fa' ||
         currentAction === 'toggleSectionSettingsDeleteAccount') {
         menuAction = 'toggleSectionSettingsLogin';
     }
-    // Si estamos en cambiar email, resaltar "Tu Perfil"
     if (currentAction === 'toggleSectionSettingsChangeEmail') {
         menuAction = 'toggleSectionSettingsProfile';
     }
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
         const linkAction = link.getAttribute('data-action');
 
-        if (linkAction === menuAction) { // Usar la variable 'menuAction'
+        if (linkAction === menuAction) { 
             link.classList.add('active');
         } else {
             link.classList.remove('active');
@@ -241,18 +228,13 @@ export function initRouter() {
 
     document.body.addEventListener('click', e => {
         const link = e.target.closest(
-            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Selector limpiado) ▼▼▼ ---
             '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], .settings-button[data-action*="toggleSection"]'
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN (Selector limpiado) ▲▲▲ ---
         );
 
         if (link) {
-            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Evitar que los botones de settings recarguen la página) ▼▼▼ ---
-            // Si es un botón de settings que no sea un data-action, no hacer nada
             if (link.classList.contains('settings-button') && !link.hasAttribute('data-action') && !link.hasAttribute('data-nav-js')) {
                 return;
             }
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 
             e.preventDefault();
@@ -260,12 +242,10 @@ export function initRouter() {
             let action, page, newPath;
 
             if (link.hasAttribute('data-action')) {
-                // ... (sin cambios)
                 action = link.getAttribute('data-action');
                 page = routes[action];
                 newPath = Object.keys(paths).find(key => paths[key] === action);
             } else {
-                // ... (sin cambios)
                 const url = new URL(link.href);
                 newPath = url.pathname.replace(basePath, '') || '/';
                 
@@ -292,11 +272,7 @@ export function initRouter() {
 
                 history.pushState(null, '', fullUrlPath);
                 
-                // 11. Pasar 'action' a loadPage
                 loadPage(page, isGoingToSettings, action); 
-                
-                // 12. Eliminar la llamada de aquí
-                // updateMenuState(action);
             }
 
             deactivateAllModules();
