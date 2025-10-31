@@ -1,17 +1,48 @@
 <?php
 // FILE: includes/sections/admin/manage-users.php
 
-// --- ▼▼▼ INICIO DE LÓGICA PHP ▼▼▼ ---
+// --- ▼▼▼ INICIO DE LÓGICA PHP DE PAGINACIÓN (SIN CAMBIOS) ▼▼▼ ---
 $usersList = [];
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
+// $adminCurrentPage es definido por config/router.php
+$usersPerPage = 1; // 20 usuarios por página
+$totalUsers = 0;
+$totalPages = 1;
+
 try {
-    // $pdo está disponible gracias a que este archivo es incluido por config/router.php
+    // 1. Contar el total de usuarios
+    $totalUsersStmt = $pdo->prepare("SELECT COUNT(*) FROM users");
+    $totalUsersStmt->execute();
+    $totalUsers = (int)$totalUsersStmt->fetchColumn();
+    
+    if ($totalUsers > 0) {
+        $totalPages = (int)ceil($totalUsers / $usersPerPage);
+    }
+    
+    // 2. Asegurarse de que la página actual es válida
+    if ($adminCurrentPage < 1) {
+        $adminCurrentPage = 1;
+    }
+    if ($adminCurrentPage > $totalPages) {
+        $adminCurrentPage = $totalPages;
+    }
+    
+    // 3. Calcular el OFFSET
+    $offset = ($adminCurrentPage - 1) * $usersPerPage;
+
+    // 4. Obtener solo los usuarios para la página actual
     $stmt = $pdo->prepare(
         "SELECT id, username, email, profile_image_url, role, created_at, account_status 
          FROM users 
-         ORDER BY created_at DESC"
+         ORDER BY created_at DESC
+         LIMIT :limit OFFSET :offset"
     );
+    
+    // Usamos bindValue para asegurar que los tipos de datos son correctos
+    $stmt->bindValue(':limit', $usersPerPage, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    
     $stmt->execute();
     $usersList = $stmt->fetchAll();
 
@@ -19,9 +50,43 @@ try {
     logDatabaseError($e, 'admin - manage-users');
     // $usersList se quedará vacío y mostrará el mensaje de error de abajo.
 }
-// --- ▲▲▲ FIN DE LÓGICA PHP ▲▲▲ ---
+// --- ▲▲▲ FIN DE LÓGICA PHP DE PAGINACIÓN ▲▲▲ ---
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-users') ? 'active' : 'disabled'; ?>" data-section="admin-users">
+    
+    <div class="admin-toolbar-floating" 
+         data-current-page="<?php echo $adminCurrentPage; ?>" 
+         data-total-pages="<?php echo $totalPages; ?>">
+        
+        <div class="admin-toolbar-left">
+            <button type="button" class="admin-toolbar-button" disabled>
+                <span class="material-symbols-rounded">search</span>
+            </button>
+            <button type="button" class="admin-toolbar-button" disabled>
+                <span class="material-symbols-rounded">filter_list</span>
+            </button>
+        </div>
+        
+        <div class="admin-toolbar-right">
+            <div class="admin-toolbar-pagination">
+                <button type="button" class="admin-toolbar-button" 
+                        data-action="admin-page-prev" 
+                        <?php echo ($adminCurrentPage <= 1) ? 'disabled' : ''; ?>>
+                    <span class="material-symbols-rounded">chevron_left</span>
+                </button>
+                
+                <span class="admin-toolbar-page-text">
+                    <?php echo $adminCurrentPage; ?> / <?php echo $totalPages; ?>
+                </span>
+                
+                <button type="button" class="admin-toolbar-button" 
+                        data-action="admin-page-next"
+                        <?php echo ($adminCurrentPage >= $totalPages) ? 'disabled' : ''; ?>>
+                    <span class="material-symbols-rounded">chevron_right</span>
+                </button>
+            </div>
+        </div>
+    </div>
     <div class="component-wrapper">
 
         <div class="component-header-card">
@@ -39,7 +104,7 @@ try {
                     </div>
                     <div class="component-card__text">
                         <h2 class="component-card__title">No se encontraron usuarios</h2>
-                        <p class="component-card__description">No hay usuarios registrados en la base de datos o hubo un error al cargarlos.</p>
+                        <p class="component-card__description">No hay usuarios registrados en esta página o hubo un error al cargarlos.</p>
                     </div>
                 </div>
             </div>

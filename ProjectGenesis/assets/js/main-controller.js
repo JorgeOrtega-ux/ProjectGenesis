@@ -1,4 +1,5 @@
 import { getTranslation } from './i18n-manager.js';
+import { handleNavigation } from './url-manager.js';
 
 const deactivateAllModules = (exceptionModule = null) => {
     document.querySelectorAll('[data-module].active').forEach(activeModule => {
@@ -94,6 +95,27 @@ function initMainController() {
                 logoutButton.classList.remove('disabled-interactive');
             }
             return;
+        
+        // --- ▼▼▼ LÓGICA DE PAGINACIÓN ADMIN MODIFICADA ▼▼▼ ---
+        } else if (action === 'admin-page-next' || action === 'admin-page-prev') {
+            event.preventDefault();
+            // Buscamos el nuevo div flotante
+            const toolbar = button.closest('.admin-toolbar-floating[data-current-page]');
+            if (!toolbar) return;
+
+            let currentPage = parseInt(toolbar.dataset.currentPage, 10);
+            const totalPages = parseInt(toolbar.dataset.totalPages, 10);
+
+            let nextPage = (action === 'admin-page-next') ? currentPage + 1 : currentPage - 1;
+
+            if (nextPage >= 1 && nextPage <= totalPages) {
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('p', nextPage);
+                history.pushState(null, '', newUrl);
+                handleNavigation(); // Recargar el contenido de la sección
+            }
+            return;
+        // --- ▲▲▲ FIN DE LÓGICA DE PAGINACIÓN ▲▲▲ ---
         }
 
         if (action.startsWith('toggleSection')) {

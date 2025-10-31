@@ -138,7 +138,12 @@ async function loadPage(page, action) {
 
 
     try {
-        const response = await fetch(`${basePath}/config/router.php?page=${page}`);
+        // --- ▼▼▼ MODIFICACIÓN: Añadir query string al fetch ▼▼▼ ---
+        const queryString = window.location.search;
+        const fetchUrl = `${basePath}/config/router.php?page=${page}${queryString ? queryString.replace('?', '&') : ''}`;
+        const response = await fetch(fetchUrl);
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+        
         const html = await response.text();
 
         contentContainer.innerHTML = html;

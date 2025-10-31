@@ -386,9 +386,15 @@ if (array_key_exists($page, $allowedPages)) {
          if (empty($profileImageUrl)) $profileImageUrl = $defaultAvatar;
     }
     
-    // --- ▼▼▼ NUEVO BLOQUE ELSEIF PARA ADMIN ▼▼▼ ---
+    // --- ▼▼▼ BLOQUE MODIFICADO PARA ADMIN ▼▼▼ ---
+    elseif ($page === 'admin-users') {
+        // Capturar el parámetro 'p' (page) de la URL
+        // El router ha sido llamado con &p=X
+        $adminCurrentPage = (int)($_GET['p'] ?? 1);
+        if ($adminCurrentPage < 1) $adminCurrentPage = 1;
+    }
     elseif ($isAdminPage) {
-        // No se necesita lógica de precarga especial por ahora
+        // Lógica general para otras páginas de admin si es necesario
     }
     // --- ▲▲▲ FIN DEL BLOQUE ▲▲▲ ---
     
