@@ -352,9 +352,11 @@ body {
     align-items: center;
 }
 
-.section-content:has(.settings-wrapper) {
+/* --- ▼▼▼ CLASE MODIFICADA ▼▼▼ --- */
+.section-content:has(.component-wrapper) {
     align-items: flex-start;
 }
+/* --- ▲▲▲ CLASE MODIFICADA ▲▲▲ --- */
 
 
 /* ====================================== */
@@ -641,10 +643,12 @@ body {
 }
 
 /* ====================================== */
-/* ========= CONFIGURACION (SETTINGS) === */
+/* ========= COMPONENTES (NUEVO) ======== */
 /* ====================================== */
 
-.settings-wrapper {
+/* --- ▼▼▼ SECCIÓN MODIFICADA (ANTES SETTINGS) ▼▼▼ --- */
+
+.component-wrapper {
     width: 100%;
     max-width: 700px;
     margin: 0 auto;
@@ -654,14 +658,14 @@ body {
     gap: 16px;
 }
 
-.settings-title {
+.component-page-title {
     font-size: 28px;
     font-weight: 700;
     color: #1f2937;
     text-align: center;
 }
 
-.settings-description {
+.component-page-description {
     font-size: 16px;
     color: #6b7280;
     line-height: 1.6;
@@ -669,17 +673,15 @@ body {
     text-align: center;
 }
 
-.settings-header-card {
+.component-header-card {
     border: 1px solid #00000020;
     border-radius: 12px;
     padding: 24px;
     background-color: #ffffff;
 }
 
-/* --- ▼▼▼ INICIO DE LA SECCIÓN REFACTORIZADA (CON FIX FINAL) ▼▼▼ --- */
-
 /* 1. El Bloque Principal (Block) */
-.settings-card {
+.component-card {
     display: flex;
     flex-direction: row;
     align-items: center; /* Alineación por defecto para filas simples */
@@ -691,14 +693,14 @@ body {
 }
 
 /* 2. Los Elementos (Elements) */
-.settings-card__content {
+.component-card__content {
     display: flex;
     flex: 1 1 auto;
     align-items: center;
     gap: 16px;
 }
 
-.settings-card__icon {
+.component-card__icon {
     width: 60px;
     height: 60px;
     border-radius: 8px;
@@ -711,11 +713,11 @@ body {
     flex-shrink: 0;
 }
 
-.settings-card__icon .material-symbols-rounded {
+.component-card__icon .material-symbols-rounded {
     font-size: 28px;
 }
 
-.settings-card__avatar {
+.component-card__avatar {
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -725,7 +727,7 @@ body {
     flex-shrink: 0;
 }
 
-.settings-card__avatar-image {
+.component-card__avatar-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -735,7 +737,7 @@ body {
     border-radius: 50%;
 }
 
-.settings-card__avatar::before {
+.component-card__avatar::before {
     content: '';
     position: absolute;
     border-radius: 50%;
@@ -750,16 +752,16 @@ body {
     background-image: none;
 }
 
-.settings-card__avatar[data-role="user"]::before {
+.component-card__avatar[data-role="user"]::before {
     border-color: #cccccc;
 }
-.settings-card__avatar[data-role="moderator"]::before {
+.component-card__avatar[data-role="moderator"]::before {
     border-color: #0000FF;
 }
-.settings-card__avatar[data-role="administrator"]::before {
+.component-card__avatar[data-role="administrator"]::before {
     border-color: #FF0000;
 }
-.settings-card__avatar[data-role="founder"]::before {
+.component-card__avatar[data-role="founder"]::before {
     border: none;
     top: -4px;
     left: -4px;
@@ -771,7 +773,7 @@ body {
     transform: rotate(300deg);
 }
 
-.settings-card__avatar-overlay {
+.component-card__avatar-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -789,33 +791,33 @@ body {
     cursor: pointer;
 }
 
-.settings-card__avatar-overlay .material-symbols-rounded {
+.component-card__avatar-overlay .material-symbols-rounded {
     font-size: 16px;
 }
 
-.settings-card__avatar:hover .settings-card__avatar-overlay {
+.component-card__avatar:hover .component-card__avatar-overlay {
     opacity: 1;
 }
 
-.settings-card__text {
+.component-card__text {
     display: flex;
     flex-direction: column;
     line-height: 25px;
     width: 100%; /* Para que el input de username/email ocupe todo el ancho */
 }
 
-.settings-card__title {
+.component-card__title {
     font-size: 14px;
     font-weight: 600;
     color: #000000;
 }
 
-.settings-card__description {
+.component-card__description {
     font-size: 14px;
     color: #6b7280;
 }
 
-.settings-card__actions {
+.component-card__actions {
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
@@ -826,48 +828,48 @@ body {
 /* 3. Los Modificadores (Modifiers) */
 
 /* Modificador para formularios y toggles */
-.settings-card--edit-mode {
+.component-card--edit-mode {
     align-items: flex-end;
     gap: 8px; /* <-- AÑADIDO PARA ESTANDARIZAR */
 }
 
 /* Modificador para selectores (Idioma, Tema) */
-.settings-card--column {
+.component-card--column {
     flex-direction: column;
     align-items: stretch;
 }
-.settings-card--column .settings-card__actions {
+.component-card--column .component-card__actions {
     margin-top: 8px; /* Margen superior solo en desktop */
 }
-.settings-card--column .settings-card__content {
+.component-card--column .component-card__content {
     flex: unset;
 }
 
 /* Modificador para tarjetas de acción (Adm. Dispositivos, Eliminar) */
-.settings-card--action {
+.component-card--action {
     flex-direction: column;
     align-items: stretch;
     gap: 8px; /* <-- AÑADIDO PARA ESTANDARIZAR */
 }
-.settings-card--action .settings-card__actions {
+.component-card--action .component-card__actions {
     justify-content: flex-end; /* Alinear a la derecha */
     /* margin-top: 16px; */ /* <-- ELIMINADO */
 }
-.settings-card--action .settings-card__content {
+.component-card--action .component-card__content {
     flex: unset;
 }
 
 
 /* Modificador para tarjetas de peligro */
-.settings-card--danger {
+.component-card--danger {
     border-color: #ef9a9a;
 }
-.settings-card--danger .settings-card__title {
+.component-card--danger .component-card__title {
     color: #c62828;
 }
 
 /* Clase para errores inline */
-.settings-card__error {
+.component-card__error {
     background-color: #fbebee;
     color: #c62828;
     border: 1px solid #ef9a9a;
@@ -879,7 +881,7 @@ body {
 
 /* 4. Clases de componentes que viven DENTRO de las tarjetas */
 
-.settings-button {
+.component-button {
     height: 40px;
     border: 1px solid #00000020;
     border-radius: 8px;
@@ -893,22 +895,22 @@ body {
     flex-shrink: 0;
 }
 
-.settings-button:hover {
+.component-button:hover {
     background-color: #f5f5fa;
 }
 
-.settings-button.danger {
+.component-button.danger {
     color: #c62828;
     border-color: #ef9a9a;
 }
 
-.settings-button.danger:hover {
+.component-button.danger:hover {
     background-color: #fbebee;
     color: #c62828;
     border-color: #c62828;
 }
 
-.settings-username-input {
+.component-text-input {
     width: 100%;
     height: 40px;
     padding: 0 12px;
@@ -922,29 +924,20 @@ body {
     margin-top: 4px;
 }
 
-.settings-username-input:focus {
+.component-text-input:focus {
     border-color: #000;
 }
 
-.settings-card-avatar-error {
-    padding: 12px;
-    background-color: #fbebee;
-    color: #c62828;
-    border: 1px solid #ef9a9a;
-    border-radius: 8px;
-    font-size: 14px;
-    margin-bottom: 16px;
-    display: none;
-}
+/* .settings-card-avatar-error -> Eliminada, usar .component-card__error */
 
-.settings-toggle-switch {
+.component-toggle-switch {
     position: relative;
     display: inline-block;
     width: 40px;
     height: 24px;
 }
 
-.settings-toggle-switch .settings-toggle-slider {
+.component-toggle-switch .component-toggle-slider {
     position: absolute;
     cursor: pointer;
     top: 0;
@@ -956,7 +949,7 @@ body {
     border-radius: 34px;
 }
 
-.settings-toggle-switch .settings-toggle-slider:before {
+.component-toggle-switch .component-toggle-slider:before {
     position: absolute;
     content: "";
     height: 20px;
@@ -968,36 +961,36 @@ body {
     border-radius: 50%;
 }
 
-.settings-toggle-switch input {
+.component-toggle-switch input {
     opacity: 0;
     width: 0;
     height: 0;
     position: absolute;
 }
 
-.settings-toggle-switch input:checked+.settings-toggle-slider {
+.component-toggle-switch input:checked+.component-toggle-slider {
     background-color: #000;
 }
 
-.settings-toggle-switch input:focus+.settings-toggle-slider {
+.component-toggle-switch input:focus+.component-toggle-slider {
     box-shadow: 0 0 1px #000;
 }
 
-.settings-toggle-switch input:checked+.settings-toggle-slider:before {
+.component-toggle-switch input:checked+.component-toggle-slider:before {
     transform: translateX(16px);
 }
 
 /* --- ▼▼▼ INICIO DE NUEVOS COMPONENTES ESTANDARIZADOS ▼▼▼ --- */
 
 /* Inputs (copiados de .modal__input-group) */
-.settings-input-group {
+.component-input-group {
     position: relative;
     display: flex;
     flex-direction: column;
     width: 100%;
 }
 
-.settings-input-group label {
+.component-input-group label {
     position: absolute;
     left: 12px;
     top: 50%;
@@ -1009,7 +1002,7 @@ body {
     transform-origin: top left;
 }
 
-.settings-input-group .settings-input {
+.component-input-group .component-input {
     width: 100%;
     height: 52px;
     padding: 20px 12px 8px 12px;
@@ -1022,23 +1015,23 @@ body {
     color: #000;
 }
 
-.settings-input-group .settings-input:focus~label,
-.settings-input-group .settings-input:not(:placeholder-shown)~label {
+.component-input-group .component-input:focus~label,
+.component-input-group .component-input:not(:placeholder-shown)~label {
     top: 8px;
     transform: translateY(0);
     font-size: 12px;
 }
-.settings-input-group .settings-input:focus,
-.settings-input-group .settings-input:not(:placeholder-shown) {
+.component-input-group .component-input:focus,
+.component-input-group .component-input:not(:placeholder-shown) {
     border-color: #000;
 }
-.settings-input-group .settings-input:focus~label,
-.settings-input-group .settings-input:not(:placeholder-shown)~label {
+.component-input-group .component-input:focus~label,
+.component-input-group .component-input:not(:placeholder-shown)~label {
     color: #000;
 }
 
 /* Botones de Acción (copiados de .modal__button-small) */
-.settings-action-button {
+.component-action-button {
     height: 40px;
     border-radius: 8px;
     font-size: 14px;
@@ -1054,49 +1047,49 @@ body {
     padding: 0 16px;
 }
 
-.settings-action-button--secondary {
+.component-action-button--secondary {
     background-color: #ffffff;
     color: #000000;
     border: 1px solid #00000020;
 }
-.settings-action-button--secondary:hover {
+.component-action-button--secondary:hover {
     background-color: #f5f5fa;
 }
 
-.settings-action-button--primary {
+.component-action-button--primary {
     background-color: #000;
     color: #ffffff;
     border: 1px solid #000;
 }
-.settings-action-button--primary:hover {
+.component-action-button--primary:hover {
     background-color: #333;
     border-color: #333;
 }
 
-.settings-action-button--danger {
+.component-action-button--danger {
     background-color: #c62828;
     color: #ffffff;
     border: 1px solid #c62828;
 }
-.settings-action-button--danger:hover {
+.component-action-button--danger:hover {
     background-color: #b71c1c;
 }
 
-.settings-action-button:disabled {
+.component-action-button:disabled {
     background-color: #f8f9fa;
     color: #adb5bd;
     border-color: #e0e0e0;
     cursor: not-allowed;
     opacity: 1; 
 }
-.settings-action-button--danger:disabled {
+.component-action-button--danger:disabled {
     background-color: #f8f9fa;
     color: #adb5bd;
     border-color: #e0e0e0;
 }
 
 /* Caja de Advertencia (copiada de .modal-warning-box) */
-.settings-warning-box {
+.component-warning-box {
     background-color: #fbebee; /* Color de peligro */
     border-radius: 8px;
     padding: 16px;
@@ -1104,24 +1097,24 @@ body {
     align-items: flex-start;
     gap: 12px;
 }
-.settings-warning-box .material-symbols-rounded {
+.component-warning-box .material-symbols-rounded {
     color: #c62828; /* Color de peligro */
     font-size: 20px;
     margin-top: 2px;
 }
-.settings-warning-box p {
+.component-warning-box p {
     font-size: 14px;
     line-height: 1.5;
     color: #3f3c33;
     margin: 0; 
 }
-.settings-warning-box p strong {
+.component-warning-box p strong {
     font-weight: 700;
     color: #1f2937;
 }
 
 /* Lista (copiada de .modal__list) */
-.settings-list {
+.component-list {
     list-style-type: disc;
     margin: 0 0 0 20px; /* Margen izquierdo para bullets */
     padding: 0;
@@ -1129,16 +1122,13 @@ body {
     flex-direction: column;
     gap: 12px;
 }
- .settings-list li {
+ .component-list li {
     font-size: 14px;
     color: #1f2937;
     line-height: 1.5;
 }
 
 /* --- ▲▲▲ FIN DE NUEVOS COMPONENTES ESTANDARIZADOS ▲▲▲ --- */
-
-/* --- ▲▲▲ FIN DE LA SECCIÓN REFACTORIZADA ▲▲▲ --- */
-
 
 /* --- ▲▲▲ FIN DE LA SECCIÓN REFACTORIZADA ▲▲▲ --- */
 
@@ -1751,7 +1741,7 @@ body {
         transform: scale(1);
     }
 }
-.settings-card--edit-mode {
+.component-card--edit-mode {
     align-items: flex-end;
     gap: 8px;
 }
@@ -1774,30 +1764,30 @@ body {
         border: none;
     }
 
-    .settings-wrapper .settings-card {
+    .component-wrapper .component-card {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
     }
 
-    #avatar-section.settings-card {
+    #avatar-section.component-card {
         align-items: center;
     }
 
-    #avatar-section .settings-card__actions {
+    #avatar-section .component-card__actions {
         width: 100%;
     }
-    .settings-card__actions {
+    .component-card__actions {
         justify-content: flex-end;
         width: 100%;
         margin-top: 0 !important;
     }
 
-    .settings-card__actions .settings-button {
+    .component-card__actions .component-button {
         flex: 1;
     }
 
-    .settings-card--column .settings-card__actions {
+    .component-card--column .component-card__actions {
         justify-content: flex-start;
     }
     .trigger-select-wrapper {

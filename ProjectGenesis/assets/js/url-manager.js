@@ -228,11 +228,11 @@ export function initRouter() {
 
     document.body.addEventListener('click', e => {
         const link = e.target.closest(
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], .settings-button[data-action*="toggleSection"]'
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], .component-button[data-action*="toggleSection"]' // MODIFICADO
         );
 
         if (link) {
-            if (link.classList.contains('settings-button') && !link.hasAttribute('data-action') && !link.hasAttribute('data-nav-js')) {
+            if (link.classList.contains('component-button') && !link.hasAttribute('data-action') && !link.hasAttribute('data-nav-js')) { // MODIFICADO
                 return;
             }
 

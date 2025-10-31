@@ -12,7 +12,7 @@ function showInlineError(cardElement, messageKey, data = null) {
     hideInlineError(cardElement); 
 
     const errorDiv = document.createElement('div');
-    errorDiv.className = 'settings-card__error';
+    errorDiv.className = 'component-card__error'; // MODIFICADO
     let message = getTranslation(messageKey);
 
     if (data) {
@@ -29,7 +29,7 @@ function showInlineError(cardElement, messageKey, data = null) {
 function hideInlineError(cardElement) {
     if (!cardElement) return;
     const nextElement = cardElement.nextElementSibling;
-    if (nextElement && nextElement.classList.contains('settings-card__error')) {
+    if (nextElement && nextElement.classList.contains('component-card__error')) { // MODIFICADO
         nextElement.remove();
     }
 }
@@ -39,14 +39,14 @@ function toggleButtonSpinner(button, text, isLoading) {
     button.disabled = isLoading;
     if (isLoading) {
         button.dataset.originalText = button.textContent;
-        const spinnerClass = (button.classList.contains('modal__button-small') || button.classList.contains('settings-button')) ? 'logout-spinner' : 'auth-button-spinner';
-        let spinnerStyle = (button.classList.contains('modal__button-small') || button.classList.contains('settings-button')) ? 'width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;' : '';
+        const spinnerClass = (button.classList.contains('modal__button-small') || button.classList.contains('component-button')) ? 'logout-spinner' : 'auth-button-spinner'; // MODIFICADO
+        let spinnerStyle = (button.classList.contains('modal__button-small') || button.classList.contains('component-button')) ? 'width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;' : ''; // MODIFICADO
         
         if (button.classList.contains('modal__button-small--primary') || 
             button.classList.contains('modal__button-small--danger') || 
-            (button.classList.contains('settings-button') && !button.classList.contains('danger'))) {
+            (button.classList.contains('component-button') && !button.classList.contains('danger'))) { // MODIFICADO
             
-            if(button.classList.contains('settings-button') && button.classList.contains('danger')) {
+            if(button.classList.contains('component-button') && button.classList.contains('danger')) { // MODIFICADO
             } else {
                  spinnerStyle += ' border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;';
             }
@@ -195,7 +195,7 @@ export function initSettingsManager() {
 
     document.body.addEventListener('click', async (e) => {
         const target = e.target;
-        const card = target.closest('.settings-card');
+        const card = target.closest('.component-card'); // MODIFICADO
 
         const avatarCard = document.getElementById('avatar-section');
         if (avatarCard) {
@@ -340,7 +340,7 @@ export function initSettingsManager() {
         if (target.closest('#email-verify-resend')) {
             e.preventDefault();
             const resendTrigger = target.closest('#email-verify-resend');
-            const card = resendTrigger.closest('.settings-card');
+            const card = resendTrigger.closest('.component-card'); // MODIFICADO
             if (!card) return; 
 
             if (resendTrigger.classList.contains('disabled-interactive')) return;
@@ -371,7 +371,7 @@ export function initSettingsManager() {
         if (target.closest('#email-verify-continue')) {
             e.preventDefault();
             const continueTrigger = target.closest('#email-verify-continue');
-            const card = continueTrigger.closest('.settings-card');
+            const card = continueTrigger.closest('.component-card'); // MODIFICADO
             if (!card) return;
             const modalInput = document.getElementById('email-verify-code');
 
@@ -409,7 +409,7 @@ export function initSettingsManager() {
         if (target.closest('#email-save-trigger-btn')) {
             e.preventDefault();
             const saveTrigger = target.closest('#email-save-trigger-btn');
-            const card = saveTrigger.closest('.settings-card');
+            const card = saveTrigger.closest('.component-card'); // MODIFICADO
             if (!card) return;
             
             const inputElement = document.getElementById('email-input-new'); 
@@ -518,7 +518,7 @@ export function initSettingsManager() {
 
          if (target.closest('#tfa-verify-continue')) {
              e.preventDefault();
-                const card = target.closest('.settings-card');
+                const card = target.closest('.component-card'); // MODIFICADO
                 if (!card) return; 
 
                 const verifyTrigger = target.closest('#tfa-verify-continue');
@@ -720,7 +720,7 @@ export function initSettingsManager() {
         if (target.closest('#delete-account-confirm')) {
              e.preventDefault();
              const confirmButton = target.closest('#delete-account-confirm');
-             const card = target.closest('.settings-card');
+             const card = target.closest('.component-card'); // MODIFICADO
              if(!confirmButton || !card) return; 
             
             const passwordInput = document.getElementById('delete-account-password');
@@ -759,7 +759,7 @@ export function initSettingsManager() {
 
     document.body.addEventListener('change', async (e) => {
         const target = e.target;
-        const card = target.closest('.settings-card');
+        const card = target.closest('.component-card'); // MODIFICADO
 
         if (target.id === 'avatar-upload-input' && card) {
             hideInlineError(card);
@@ -828,14 +828,14 @@ export function initSettingsManager() {
         }
 
 
-        if (target.matches('.settings-username-input') || target.closest('.auth-input-group') || target.closest('.modal__input-group')) {
-            const card = target.closest('.settings-card');
+        if (target.matches('.component-text-input') || target.closest('.auth-input-group') || target.closest('.modal__input-group') || target.closest('.component-input-group')) { // MODIFICADO
+            const card = target.closest('.component-card'); // MODIFICADO
             if (card) {
                 hideInlineError(card);
             }
             const modalContent = target.closest('.modal-content');
             if (modalContent) {
-                 const errorDiv = modalContent.querySelector('.auth-error-message, .settings-card__error'); 
+                 const errorDiv = modalContent.querySelector('.auth-error-message, .component-card__error'); // MODIFICADO
                  if (errorDiv) {
                     if(errorDiv.classList.contains('auth-error-message')) {
                          errorDiv.style.display = 'none';
@@ -854,4 +854,4 @@ export function initSettingsManager() {
         }
     }, 100);
 
-} 
+}

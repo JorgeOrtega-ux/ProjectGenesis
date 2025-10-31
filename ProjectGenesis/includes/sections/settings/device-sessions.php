@@ -106,40 +106,40 @@ function formatSessionDate($dateTimeString) {
 ?>
 
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'settings-devices') ? 'active' : 'disabled'; ?>" data-section="settings-devices">
-    <div class="settings-wrapper">
+    <div class="component-wrapper">
 
-        <div class="settings-header-card">
-            <h1 class="settings-title" data-i18n="settings.devices.title"></h1>
-            <p class="settings-description" data-i18n="settings.devices.description"></p>
+        <div class="component-header-card">
+            <h1 class="component-page-title" data-i18n="settings.devices.title"></h1>
+            <p class="component-page-description" data-i18n="settings.devices.description"></p>
         </div>
         
-        <div class="settings-card settings-card--action"> <div class="settings-card__content">
-                <div class="settings-card__text">
-                    <h2 class="settings-card__title" data-i18n="settings.devices.invalidateTitle"></h2>
-                    <p class="settings-card__description" data-i18n="settings.devices.invalidateDesc"></p>
+        <div class="component-card component-card--action"> <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="settings.devices.invalidateTitle"></h2>
+                    <p class="component-card__description" data-i18n="settings.devices.invalidateDesc"></p>
                 </div>
             </div>
-            <div class="settings-card__actions">
-                <button type="button" class="settings-button" id="logout-all-devices-trigger" data-i18n="settings.devices.invalidateButton"></button>
+            <div class="component-card__actions">
+                <button type="button" class="component-button" id="logout-all-devices-trigger" data-i18n="settings.devices.invalidateButton"></button>
             </div>
         </div>
 
-        <div class="settings-card" style="padding: 16px 24px;">
-            <div class="settings-card__content" style="gap: 12px;">
-                <div class="settings-card__icon" style="width: 40px; height: 40px; border-radius: 50%;">
+        <div class="component-card" style="padding: 16px 24px;">
+            <div class="component-card__content" style="gap: 12px;">
+                <div class="component-card__icon" style="width: 40px; height: 40px; border-radius: 50%;">
                     <span class="material-symbols-rounded" style="font-size: 20px;">devices</span>
                 </div>
-                <div class="settings-card__text">
-                    <h2 class="settings-card__title" style="font-size: 18px; font-weight: 600;" data-i18n="settings.devices.activeSessionsTitle"></h2>
+                <div class="component-card__text">
+                    <h2 class="component-card__title" style="font-size: 18px; font-weight: 600;" data-i18n="settings.devices.activeSessionsTitle"></h2>
                 </div>
             </div>
         </div>
         <?php if (empty($sessions)): ?>
-            <div class="settings-card">
-                <div class="settings-card__content">
-                    <div class="settings-card__text">
-                        <h2 class="settings-card__title" data-i18n="settings.devices.noSessionsTitle"></h2>
-                        <p class="settings-card__description" data-i18n="settings.devices.noSessionsDesc"></p>
+            <div class="component-card">
+                <div class="component-card__content">
+                    <div class="component-card__text">
+                        <h2 class="component-card__title" data-i18n="settings.devices.noSessionsTitle"></h2>
+                        <p class="component-card__description" data-i18n="settings.devices.noSessionsDesc"></p>
                     </div>
                 </div>
                 </div>
@@ -150,14 +150,14 @@ function formatSessionDate($dateTimeString) {
                     $deviceInfo = formatUserAgent($session['browser_info']);
                     $sessionDate = formatSessionDate($session['created_at']);
                 ?>
-                <div class="settings-card" data-session-card-id="<?php echo $session['id']; ?>">
-                    <div class="settings-card__content">
-                        <div class="settings-card__icon">
+                <div class="component-card" data-session-card-id="<?php echo $session['id']; ?>">
+                    <div class="component-card__content">
+                        <div class="component-card__icon">
                             <span class="material-symbols-rounded"><?php echo $deviceIcon; ?></span>
                         </div>
-                        <div class="settings-card__text">
-                            <h2 class="settings-card__title"><?php echo $deviceInfo; ?></h2> 
-                            <p class="settings-card__description">
+                        <div class="component-card__text">
+                            <h2 class="component-card__title"><?php echo $deviceInfo; ?></h2> 
+                            <p class="component-card__description">
                                 <?php echo htmlspecialchars($session['ip_address']); ?> - 
                                 <span data-i18n="settings.devices.lastAccess"></span> 
                                 <?php echo $sessionDate; ?> 

@@ -245,37 +245,42 @@ if (array_key_exists($page, $allowedPages)) {
             if ($lastLog) {
                 if (!class_exists('IntlDateFormatter')) {
                     $date = new DateTime($lastLog['changed_at']);
-                    $lastPasswordUpdateText = 'Última actualización de tu contraseña: ' . $date->format('d/m/Y');
+                    // ¡MODIFICADO!
+                    $lastPasswordUpdateText = 'Última actualización: ' . $date->format('d/m/Y \a \l\a\s H:i');
                 } else {
-                    $formatter = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::NONE, 'UTC');
+                    // ¡MODIFICADO!
+                    $formatter = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::SHORT, 'UTC');
                     $timestamp = strtotime($lastLog['changed_at']);
-                    $lastPasswordUpdateText = 'Última actualización de tu contraseña: ' . $formatter->format($timestamp);
+                    $lastPasswordUpdateText = 'Última actualización: ' . $formatter->format($timestamp);
                 }
             } else {
                 $lastPasswordUpdateText = 'settings.login.lastPassUpdateNever'; 
             }
 
             // 3. Format creation date for delete description
+            $accountCreationDateText = ''; // <-- NUEVA variable
             if ($accountCreatedDate) {
                 if (!class_exists('IntlDateFormatter')) {
                      $date = new DateTime($accountCreatedDate);
-                     $deleteAccountDescText = 'Cuenta creada el ' . $date->format('d/m/Y');
+                     // ¡MODIFICADO!
+                     $accountCreationDateText = 'Cuenta creada el ' . $date->format('d/m/Y \a \l\a\s H:i');
                 } else {
-                    $formatter = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::NONE, 'UTC');
+                    // ¡MODIFICADO!
+                    $formatter = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::SHORT, 'UTC');
                     $timestamp = strtotime($accountCreatedDate);
-                    // This will be our new description text
-                    $deleteAccountDescText = 'Cuenta creada el ' . $formatter->format($timestamp);
+                    $accountCreationDateText = 'Cuenta creada el ' . $formatter->format($timestamp);
                 }
-            } else {
-                // Fallback to the original key if data fails
-                $deleteAccountDescText = 'settings.login.deleteAccountDesc'; 
             }
+            
+            // La descripción principal SIEMPRE usa la clave de traducción.
+            $deleteAccountDescText = 'settings.login.deleteAccountDesc'; 
 
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - settings-login');
             $is2faEnabled = 0;
             $lastPasswordUpdateText = 'settings.login.lastPassUpdateError'; 
             $deleteAccountDescText = 'settings.login.deleteAccountDesc'; // Fallback
+            $accountCreationDateText = ''; // Fallback
         }
     // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 

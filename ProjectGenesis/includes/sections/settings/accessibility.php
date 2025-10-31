@@ -23,21 +23,21 @@ $currentThemeKey = $themeMap[$userTheme] ?? 'settings.accessibility.themeSystem'
 // --- ▲▲▲ FIN DE NUEVO BLOQUE PHP ▲▲▲ ---
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'settings-accessibility') ? 'active' : 'disabled'; ?>" data-section="settings-accessibility">
-    <div class="settings-wrapper">
+    <div class="component-wrapper">
         
-        <div class="settings-header-card">
-            <h1 class="settings-title" data-i18n="settings.accessibility.title"></h1>
-            <p class="settings-description" data-i18n="settings.accessibility.description"></p>
+        <div class="component-header-card">
+            <h1 class="component-page-title" data-i18n="settings.accessibility.title"></h1>
+            <p class="component-page-description" data-i18n="settings.accessibility.description"></p>
         </div>
 
-        <div class="settings-card settings-card--column">
-            <div class="settings-card__content">
-                <div class="settings-card__text">
-                    <h2 class="settings-card__title" data-i18n="settings.accessibility.themeTitle"></h2>
-                    <p class="settings-card__description" data-i18n="settings.accessibility.themeDesc"></p>
+        <div class="component-card component-card--column">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="settings.accessibility.themeTitle"></h2>
+                    <p class="component-card__description" data-i18n="settings.accessibility.themeDesc"></p>
                 </div>
             </div>
-            <div class="settings-card__actions">
+            <div class="component-card__actions">
                 <div class="trigger-select-wrapper">
                     <div class="trigger-selector" data-action="toggleModuleThemeSelect">
                         <div class="trigger-select-icon">
@@ -82,21 +82,21 @@ $currentThemeKey = $themeMap[$userTheme] ?? 'settings.accessibility.themeSystem'
                 </div>
             </div>
         </div>
-        <div class="settings-card settings-card--edit-mode">
-            <div class="settings-card__content">
-                <div class="settings-card__text">
-                    <h2 class="settings-card__title" data-i18n="settings.accessibility.durationTitle"></h2>
-                    <p class="settings-card__description" data-i18n="settings.accessibility.durationDesc"></p>
+        <div class="component-card component-card--edit-mode">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="settings.accessibility.durationTitle"></h2>
+                    <p class="component-card__description" data-i18n="settings.accessibility.durationDesc"></p>
                 </div>
             </div>
-            <div class="settings-card__actions">
-                <label class="settings-toggle-switch">
+            <div class="component-card__actions">
+                <label class="component-toggle-switch">
                     <input type="checkbox" 
                            id="toggle-message-duration"
                            data-preference-type="boolean"
                            data-field-name="increase_message_duration"
                            <?php echo ($increaseMessageDuration == 1) ? 'checked' : ''; ?>> 
-                    <span class="settings-toggle-slider"></span>
+                    <span class="component-toggle-slider"></span>
                 </label>
             </div>
         </div>

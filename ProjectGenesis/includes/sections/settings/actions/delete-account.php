@@ -7,12 +7,12 @@
 ?>
 
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'settings-delete-account') ? 'active' : 'disabled'; ?>" data-section="settings-delete-account">
-    <div class="settings-wrapper">
+    <div class="component-wrapper">
 
-        <div class="settings-header-card">
-            <h1 class="settings-title" data-i18n="settings.login.modalDeleteTitle"></h1>
+        <div class="component-header-card">
+            <h1 class="component-page-title" data-i18n="settings.login.modalDeleteTitle"></h1>
             
-            <p class="settings-description" data-i18n="settings.login.deleteAccountDesc"></p>
+            <p class="component-page-description" data-i18n="settings.login.deleteAccountDesc"></p>
             
         </div>
 
@@ -21,30 +21,30 @@
         outputCsrfInput();
         ?>
 
-        <div class="settings-card settings-card--column settings-card--danger">
-            <div class="settings-card__content">
-                <div class="settings-card__text">
+        <div class="component-card component-card--column component-card--danger">
+            <div class="component-card__content">
+                <div class="component-card__text">
                     
-                    <div class="settings-warning-box" style="margin-bottom: 16px;">
+                    <div class="component-warning-box" style="margin-bottom: 16px;">
                         <span class="material-symbols-rounded">error</span>
                         <p data-i18n="settings.login.modalDeleteWarning"></p>
                     </div>
 
-                    <p class="settings-card__description" style="font-weight: 400; color: #333;" data-i18n="settings.login.modalDeleteLosingTitle"></p>
+                    <p class="component-card__description" style="font-weight: 400; color: #333;" data-i18n="settings.login.modalDeleteLosingTitle"></p>
                     
-                    <ul class="settings-list" style="margin-top: 8px; margin-bottom: 16px; gap: 4px; color: #333;">
+                    <ul class="component-list" style="margin-top: 8px; margin-bottom: 16px; gap: 4px; color: #333;">
                         <li data-i18n="settings.login.modalDeleteBullet1"></li>
                         <li data-i18n="settings.login.modalDeleteBullet2"></li>
                         <li data-i18n="settings.login.modalDeleteBullet3"></li>
                     </ul>
                     
-                    <p class="settings-card__description" style="font-weight: 400; color: #333; margin-bottom: 8px;" data-i18n="settings.login.modalDeleteConfirmText"></p>
+                    <p class="component-card__description" style="font-weight: 400; color: #333; margin-bottom: 8px;" data-i18n="settings.login.modalDeleteConfirmText"></p>
                     
-                    <div class="settings-input-group">
+                    <div class="component-input-group">
                         <input type="password" 
                                id="delete-account-password" 
                                name="current_password" 
-                               class="settings-input" 
+                               class="component-input" 
                                required 
                                placeholder=" ">
                         <label for="delete-account-password" data-i18n="settings.login.modalDeletePasswordLabel"></label>
@@ -52,13 +52,13 @@
 
                 </div>
             </div>
-            <div class="settings-card__actions">
+            <div class="component-card__actions">
                  <button type="button"
-                   class="settings-button"
+                   class="component-button"
                    data-action="toggleSectionSettingsLogin"
                    data-i18n="settings.profile.cancel">
                 </button>
-                 <button type="button" class="settings-button danger" id="delete-account-confirm" data-i18n="settings.login.modalDeleteConfirm" disabled></button>
+                 <button type="button" class="component-button danger" id="delete-account-confirm" data-i18n="settings.login.modalDeleteConfirm" disabled></button>
             </div>
         </div>
 
