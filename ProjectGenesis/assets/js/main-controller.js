@@ -14,8 +14,61 @@ function initMainController() {
     let allowMultipleActiveModules = false;
     let closeOnClickOutside = true;
     let closeOnEscape = true;
+    
+    // --- ▼▼▼ INICIO DE LÓGICA DE SELECCIÓN ADMIN (CORREGIDA) ▼▼▼ ---
+    let selectedAdminUserId = null;
+
+    function clearAdminUserSelection() {
+        const selectedCard = document.querySelector('.user-card-item.selected');
+        if (selectedCard) {
+            selectedCard.classList.remove('selected');
+        }
+        
+        // Simplemente quitamos la clase del contenedor principal
+        const toolbarContainer = document.querySelector('.admin-toolbar-container');
+        if (toolbarContainer) {
+            toolbarContainer.classList.remove('selection-active');
+        }
+        
+        selectedAdminUserId = null;
+    }
+    // --- ▲▲▲ FIN DE LÓGICA DE SELECCIÓN ADMIN (CORREGIDA) ▲▲▲ ---
+
 
     document.body.addEventListener('click', async function (event) {
+        
+        // --- ▼▼▼ INICIO DE LÓGICA DE CLIC EN TARJETA (CORREGIDA) ▼▼▼ ---
+        const userCard = event.target.closest('.user-card-item[data-user-id]');
+        if (userCard) {
+            event.preventDefault();
+            const userId = userCard.dataset.userId;
+            const toolbarContainer = document.querySelector('.admin-toolbar-container');
+
+            if (selectedAdminUserId === userId) {
+                // Ya estaba seleccionado, así que lo deseleccionamos
+                clearAdminUserSelection();
+            } else {
+                // No estaba seleccionado o era otro
+                // 1. Limpiar selección anterior (visual)
+                const oldSelected = document.querySelector('.user-card-item.selected');
+                if (oldSelected) {
+                    oldSelected.classList.remove('selected');
+                }
+                
+                // 2. Seleccionar el nuevo
+                userCard.classList.add('selected');
+                selectedAdminUserId = userId;
+                
+                // 3. Actualizar el toolbar (solo con la clase)
+                if (toolbarContainer) {
+                    toolbarContainer.classList.add('selection-active');
+                }
+            }
+            return;
+        }
+        // --- ▲▲▲ FIN DE LÓGICA DE CLIC EN TARJETA (CORREGIDA) ▲▲▲ ---
+        
+        
         const button = event.target.closest('[data-action]');
 
         if (!button) {
@@ -100,6 +153,9 @@ function initMainController() {
             event.preventDefault();
             const toolbar = button.closest('.admin-toolbar-floating[data-current-page]');
             if (!toolbar) return;
+            
+            // Limpiar selección al navegar
+            clearAdminUserSelection();
 
             let currentPage = parseInt(toolbar.dataset.currentPage, 10);
             const totalPages = parseInt(toolbar.dataset.totalPages, 10);
@@ -108,13 +164,11 @@ function initMainController() {
             if (nextPage >= 1 && nextPage <= totalPages) {
                 const newUrl = new URL(window.location);
                 newUrl.searchParams.set('p', nextPage);
-                // La búsqueda (q) ya está en la URL, así que se mantiene
                 history.pushState(null, '', newUrl);
                 handleNavigation();
             }
             return;
         
-        // --- ▼▼▼ INICIO DE LÓGICA DE BÚSQUEDA (MODIFICADA) ▼▼▼ ---
         } else if (action === 'admin-toggle-search') {
             event.preventDefault();
             const searchButton = button;
@@ -129,14 +183,16 @@ function initMainController() {
                     searchBar.style.display = 'none';
                     const searchInput = searchBar.querySelector('.admin-search-input');
                     if (searchInput) searchInput.value = '';
+                    
+                    // Limpiar selección al cerrar búsqueda
+                    clearAdminUserSelection();
 
                     const newUrl = new URL(window.location);
-                    // Si había una búsqueda activa (parámetro 'q'), recargamos
                     if (newUrl.searchParams.has('q')) {
                         newUrl.searchParams.delete('q');
-                        newUrl.searchParams.set('p', '1'); // Resetear página
+                        newUrl.searchParams.set('p', '1');
                         history.pushState(null, '', newUrl);
-                        handleNavigation(); // Recargar para limpiar el filtro
+                        handleNavigation(); 
                     }
                 } else {
                     // ABRIR
@@ -146,7 +202,11 @@ function initMainController() {
                 }
             }
             return;
-        // --- ▲▲▲ FIN DE LÓGICA DE BÚSQUEDA ▲▲▲ ---
+        
+        } else if (action === 'admin-clear-selection') {
+            event.preventDefault();
+            clearAdminUserSelection();
+            return;
         }
 
         if (action.startsWith('toggleSection')) {
@@ -183,8 +243,10 @@ function initMainController() {
         document.addEventListener('click', function (event) {
             const clickedOnModule = event.target.closest('[data-module].active');
             const clickedOnButton = event.target.closest('[data-action]');
-
-            if (!clickedOnModule && !clickedOnButton) {
+            
+            // No cerrar módulos si se hace clic en una tarjeta de usuario
+            const clickedOnUserCard = event.target.closest('.user-card-item[data-user-id]');
+            if (!clickedOnModule && !clickedOnButton && !clickedOnUserCard) {
                 deactivateAllModules();
             }
         });
@@ -194,40 +256,39 @@ function initMainController() {
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 deactivateAllModules();
+                
+                // Limpiar selección con Escape
+                clearAdminUserSelection();
             }
         });
     }
 
-    // --- ▼▼▼ NUEVO LISTENER PARA EL "ENTER" DE BÚSQUEDA ▼▼▼ ---
     document.body.addEventListener('keydown', function(event) {
         const searchInput = event.target.closest('.admin-search-input');
         
-        // Si no es el input de admin-search o la tecla no es "Enter", no hacer nada
         if (!searchInput || event.key !== 'Enter') {
             return;
         }
         
-        event.preventDefault(); // Evitar cualquier envío de formulario por defecto
+        event.preventDefault(); 
+        
+        // Limpiar selección al buscar
+        clearAdminUserSelection();
         
         const newQuery = searchInput.value;
         const newUrl = new URL(window.location);
         
-        // Si la búsqueda no está vacía, la añadimos
         if (newQuery.trim()) {
             newUrl.searchParams.set('q', newQuery);
         } else {
-            // Si está vacía, la quitamos
             newUrl.searchParams.delete('q');
         }
         
-        // Una nueva búsqueda siempre resetea a la página 1
         newUrl.searchParams.set('p', '1'); 
         
-        // Actualizamos la URL y recargamos el contenido
         history.pushState(null, '', newUrl);
         handleNavigation();
     });
-    // --- ▲▲▲ FIN DEL NUEVO LISTENER ▲▲▲ ---
 }
 
 export { deactivateAllModules, initMainController };

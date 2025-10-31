@@ -84,27 +84,44 @@ try {
              data-total-pages="<?php echo $totalPages; ?>">
             
             <div class="admin-toolbar-left">
-                <button type="button" 
-                        class="admin-toolbar-button <?php echo $isSearching ? 'active' : ''; ?>" 
-                        data-action="admin-toggle-search">
-                    <span class="material-symbols-rounded">search</span>
-                </button>
-                <button type="button" class="admin-toolbar-button" disabled>
-                    <span class="material-symbols-rounded">filter_list</span>
-                </button>
+                <div class="admin-toolbar-default-actions">
+                    <button type="button" 
+                            class="admin-toolbar-button admin-action-default <?php echo $isSearching ? 'active' : ''; ?>" 
+                            data-action="admin-toggle-search"
+                            data-tooltip="admin.users.search">
+                        <span class="material-symbols-rounded">search</span>
+                    </button>
+                    <button type="button" 
+                            class="admin-toolbar-button admin-action-default" 
+                            data-tooltip="admin.users.filter" disabled>
+                        <span class="material-symbols-rounded">filter_list</span>
+                    </button>
+                    
+                    <button type="button" 
+                            class="admin-toolbar-button admin-action-selection" 
+                            data-tooltip="admin.users.manageRole" disabled>
+                        <span class="material-symbols-rounded">manage_accounts</span>
+                    </button>
+                    <button type="button" 
+                            class="admin-toolbar-button admin-action-selection" 
+                            data-tooltip="admin.users.manageStatus" disabled>
+                        <span class="material-symbols-rounded">toggle_on</span>
+                    </button>
+                </div>
             </div>
             
             <div class="admin-toolbar-right">
-                <div class="admin-toolbar-pagination">
+                <div class="admin-toolbar-pagination admin-action-default">
                     <button type="button" class="admin-toolbar-button" 
                             data-action="admin-page-prev" 
+                            data-tooltip="admin.users.prevPage"
                             <?php echo ($adminCurrentPage <= 1) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     
                     <span class="admin-toolbar-page-text">
                         <?php 
-                        if ($totalUsers == 0) { // Si no hay usuarios (sea búsqueda o no)
+                        if ($totalUsers == 0) {
                             echo '--';
                         } else {
                             echo $adminCurrentPage . ' / ' . $totalPages;
@@ -113,10 +130,18 @@ try {
                     </span>
                     <button type="button" class="admin-toolbar-button" 
                             data-action="admin-page-next"
+                            data-tooltip="admin.users.nextPage"
                             <?php echo ($adminCurrentPage >= $totalPages) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_right</span>
                     </button>
                 </div>
+                
+                <button type="button" 
+                        class="admin-toolbar-button admin-action-selection" 
+                        data-action="admin-clear-selection" 
+                        data-tooltip="admin.users.clearSelection">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
             </div>
         </div>
         
@@ -129,8 +154,6 @@ try {
         </div>
 
     </div>
-
-
     <div class="component-wrapper">
 
         <div class="component-header-card">
@@ -161,7 +184,7 @@ try {
                             $avatarUrl = "https://ui-avatars.com/api/?name=" . urlencode($user['username']) . "&size=100&background=e0e0e0&color=ffffff";
                         }
                     ?>
-                    <div class="user-card-item">
+                    <div class="user-card-item" data-user-id="<?php echo $user['id']; ?>">
                         
                         <div class="component-card__avatar" style="width: 50px; height: 50px; flex-shrink: 0;" data-role="<?php echo htmlspecialchars($user['role']); ?>">
                             <img src="<?php echo htmlspecialchars($avatarUrl); ?>"

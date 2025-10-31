@@ -36,7 +36,14 @@
     },
     "users": {
       "title": "Gestionar Usuarios",
-      "description": "Busca, edita o gestiona los roles de los usuarios."
+      "description": "Busca, edita o gestiona los roles de los usuarios.",
+      "manageRole": "Gestionar Rol",
+      "manageStatus": "Estado de Cuenta",
+      "clearSelection": "Quitar selección",
+      "search": "Buscar usuarios",
+      "filter": "Filtrar (próximamente)",
+      "prevPage": "Página anterior",
+      "nextPage": "Página siguiente"
     }
   },
   "settings": {
