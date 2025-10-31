@@ -21,7 +21,7 @@
         outputCsrfInput();
         ?>
 
-        <div class="component-card component-card--column component-card--danger">
+        <div class="component-card component-card--action component-card--danger">
             <div class="component-card__content">
                 <div class="component-card__text">
                     
@@ -40,18 +40,19 @@
                     
                     <p class="component-card__description" style="font-weight: 400; color: #333; margin-bottom: 8px;" data-i18n="settings.login.modalDeleteConfirmText"></p>
                     
-                    <div class="component-input-group">
-                        <input type="password" 
-                               id="delete-account-password" 
-                               name="current_password" 
-                               class="component-input" 
-                               required 
-                               placeholder=" ">
-                        <label for="delete-account-password" data-i18n="settings.login.modalDeletePasswordLabel"></label>
-                    </div>
-
                 </div>
             </div>
+            
+            <div class="component-input-group">
+                <input type="password" 
+                       id="delete-account-password" 
+                       name="current_password" 
+                       class="component-input" 
+                       required 
+                       placeholder=" ">
+                <label for="delete-account-password" data-i18n="settings.login.modalDeletePasswordLabel"></label>
+            </div>
+
             <div class="component-card__actions">
                  <button type="button"
                    class="component-button"
