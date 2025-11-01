@@ -2130,10 +2130,12 @@ body {
 /* ====================================== */
 
 /* Padding-top por defecto.
-  (Toolbar 52px + Container top 16px + Wrapper padding 16px = 84px. 86px está bien.)
+  (Toolbar 50px + Container top 16px + Wrapper padding 16px = 82px)
 */
 .section-content[data-section="admin-users"] .component-wrapper {
-    padding-top: 86px; 
+    /* --- MODIFICADO --- */
+    padding-top: 82px; 
+    /* --- FIN MODIFICACIÓN --- */
     /* ¡YA NO SE NECESITA TRANSICIÓN NI CLASE .search-active! */
 }
 
@@ -2169,6 +2171,10 @@ body {
     box-shadow: 0 4px 12px #00000010; /* Sombra ligera */
     box-sizing: border-box;
     
+    /* --- MODIFICADO --- */
+    height: 50px; /* Altura fija de 50px */
+    /* --- FIN MODIFICACIÓN --- */
+    
     /* ¡Se eliminó position, top, left, transform, z-index, max-width, width: 95%! */
 }
 .admin-toolbar-left,
@@ -2183,8 +2189,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    /* --- MODIFICADO --- */
+    width: 34px;  /* 50px (altura barra) - 8px*2 (padding) = 34px */
+    height: 34px; /* 50px (altura barra) - 8px*2 (padding) = 34px */
+    /* --- FIN MODIFICACIÓN --- */
     background-color: transparent;
     border: 1px solid #00000020;
     border-radius: 8px;
@@ -2221,7 +2229,9 @@ body {
 .admin-toolbar-pagination .admin-toolbar-button {
     border: none;
     border-radius: 0;
-    width: 36px; /* Forzar tamaño de icono */
+    /* --- MODIFICADO --- */
+    width: 34px; /* Forzar tamaño de icono */
+    /* --- FIN MODIFICACIÓN --- */
     padding: 0; /* Asegurarse que no tenga padding */
 }
 
@@ -2232,7 +2242,9 @@ body {
     color: #6b7280;
     padding: 0 12px;
     user-select: none;
-    height: 36px;
+    /* --- MODIFICADO --- */
+    height: 34px; /* 50px (altura barra) - 8px*2 (padding) = 34px */
+    /* --- FIN MODIFICACIÓN --- */
     display: flex;
     align-items: center;
 }
@@ -2247,10 +2259,13 @@ body {
 /* --- ▼▼▼ NUEVO: Estilo para la barra de búsqueda ▼▼▼ --- */
 .admin-search-bar {
     /* display: flex; */ /* ¡Se quita! 'display: none;' se maneja inline por JS */
+    display: none; /* Inicia oculta por defecto */
     align-items: center;
     gap: 12px;
     padding: 8px 12px;
-    height: 52px; /* Altura de la barra de búsqueda */
+    /* --- MODIFICADO --- */
+    height: 50px; /* Altura fija de 50px */
+    /* --- FIN MODIFICACIÓN --- */
     background-color: #ffffff;
     border: 1px solid #00000020;
     border-radius: 8px;
