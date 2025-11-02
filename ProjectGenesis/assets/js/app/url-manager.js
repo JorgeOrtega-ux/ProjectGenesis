@@ -1,6 +1,6 @@
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
-import { applyTranslations, getTranslation } from '../i18n-manager.js';
+import { applyTranslations, getTranslation } from '../services/i18n-manager.js';
 
 const contentContainer = document.querySelector('.main-sections');
 const pageLoader = document.getElementById('page-loader');

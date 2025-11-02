@@ -1,4 +1,4 @@
-import { getTranslation } from '../i18n-manager.js';
+import { getTranslation } from '../services/i18n-manager.js';
 // import { handleNavigation } from './url-manager.js'; // Ya no se necesita aquí
 import { hideTooltip } from '../tooltip-manager.js'; 
 // import { callAdminApi } from './api-service.js'; // Ya no se necesita aquí
@@ -119,6 +119,18 @@ function initMainController() {
 
         // Lógica de toggle para módulos NO-ADMIN
         if (action.startsWith('toggle')) {
+            
+            // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
+            // Prevenir que este listener genérico maneje los toggles de admin,
+            // ya que admin-manager.js se encarga de ellos (y necesita
+            // lógica especial como updateAdminModals()).
+            if (action === 'toggleModulePageFilter' || 
+                action === 'toggleModuleAdminRole' || 
+                action === 'toggleModuleAdminStatus') {
+                return; // Dejamos que admin-manager.js lo maneje
+            }
+            // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
+
             event.stopPropagation();
 
             let moduleName = action.substring(6);

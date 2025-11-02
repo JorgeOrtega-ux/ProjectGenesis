@@ -4,7 +4,7 @@ import { initAuthManager } from './modules/auth-manager.js';
 import { initSettingsManager } from './modules/settings-manager.js';
 import { initAdminManager } from './modules/admin-manager.js'; // <-- AÑADIDO
 import { showAlert } from './alert-manager.js'; 
-import { initI18nManager } from './i18n-manager.js'; 
+import { initI18nManager } from './services/i18n-manager.js'; 
 import { initTooltipManager } from './tooltip-manager.js'; 
 
 const htmlEl = document.documentElement;

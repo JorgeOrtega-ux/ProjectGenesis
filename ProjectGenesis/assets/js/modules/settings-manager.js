@@ -1,6 +1,6 @@
 import { callSettingsApi }  from '../services/api-service.js';
 import { deactivateAllModules }  from '../app/main-controller.js';
-import { getTranslation, loadTranslations, applyTranslations } from '../i18n-manager.js';
+import { getTranslation, loadTranslations, applyTranslations } from '../services/i18n-manager.js';
 import { startResendTimer } from './auth-manager.js';
 
 let isPreferenceLocked = false;

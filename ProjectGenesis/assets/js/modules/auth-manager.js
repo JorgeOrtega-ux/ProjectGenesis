@@ -1,6 +1,6 @@
 import { callAuthApi }  from '../services/api-service.js';
 import { handleNavigation } from '../app/url-manager.js';
-import { getTranslation } from '../i18n-manager.js';
+import { getTranslation } from '../services/i18n-manager.js';
 
 function setButtonSpinner(button) {
     if (!button) return;

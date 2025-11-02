@@ -1,6 +1,6 @@
 import { callAdminApi } from '../services/api-service.js';
 import { showAlert } from '../alert-manager.js';
-import { getTranslation } from '../i18n-manager.js';
+import { getTranslation } from '../services/i18n-manager.js';
 import { handleNavigation } from '../app/url-manager.js';
 import { hideTooltip } from '../tooltip-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js';
