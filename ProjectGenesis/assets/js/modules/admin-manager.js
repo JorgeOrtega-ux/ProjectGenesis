@@ -1,9 +1,6 @@
 import { callAdminApi } from '../services/api-service.js';
 import { showAlert } from '../services/alert-manager.js';
 import { getTranslation } from '../services/i18n-manager.js';
-// --- ▼▼▼ MODIFICACIÓN DE IMPORTS (loadPage eliminado) ▼▼▼ ---
-// import { loadPage } from '../app/url-manager.js'; // <-- ELIMINADO
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 import { hideTooltip } from '../services/tooltip-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js';
 
@@ -13,13 +10,11 @@ export function initAdminManager() {
     let selectedAdminUserRole = null;
     let selectedAdminUserStatus = null;
     
-    // --- ▼▼▼ VARIABLES DE ESTADO (Ahora leen el estado inicial del DOM) ▼▼▼ ---
     let currentPage = 1;
     let currentSearch = '';
     let currentSort = '';
     let currentOrder = '';
 
-    // Leer el estado inicial renderizado por PHP
     const mainToolbar = document.querySelector('.page-toolbar-floating[data-current-page]');
     if (mainToolbar) {
         currentPage = parseInt(mainToolbar.dataset.currentPage, 10) || 1;
@@ -33,17 +28,13 @@ export function initAdminManager() {
         currentSort = activeFilter.dataset.sort || '';
         currentOrder = activeFilter.dataset.order || '';
     }
-    // --- ▲▲▲ FIN DE VARIABLES DE ESTADO ▲▲▲ ---
 
 
     function enableSelectionActions() {
         const toolbarContainer = document.querySelector('.page-toolbar-container');
         if (!toolbarContainer) return;
         toolbarContainer.classList.add('selection-active');
-        // --- ▼▼▼ CORRECCIÓN AQUÍ ▼▼▼ ---
-        // Se debe seleccionar los 'button' DENTRO de '.toolbar-action-selection'
         const selectionButtons = toolbarContainer.querySelectorAll('.toolbar-action-selection button');
-        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
         selectionButtons.forEach(btn => {
             btn.disabled = false;
         });
@@ -53,10 +44,7 @@ export function initAdminManager() {
         const toolbarContainer = document.querySelector('.page-toolbar-container');
         if (!toolbarContainer) return;
         toolbarContainer.classList.remove('selection-active');
-        // --- ▼▼▼ CORRECCIÓN AQUÍ ▼▼▼ ---
-        // Se debe seleccionar los 'button' DENTRO de '.toolbar-action-selection'
         const selectionButtons = toolbarContainer.querySelectorAll('.toolbar-action-selection button');
-        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
         selectionButtons.forEach(btn => {
             btn.disabled = true;
         });
@@ -100,12 +88,6 @@ export function initAdminManager() {
         }
     }
 
-    // --- ▼▼▼ ¡NUEVAS FUNCIONES DE RENDERIZADO! ▼▼▼ ---
-
-    /**
-     * Muestra/Oculta el estado de carga de la lista
-     * @param {boolean} isLoading 
-     */
     function setListLoadingState(isLoading) {
         const listContainer = document.querySelector('.user-list-container');
         if (listContainer) {
@@ -114,11 +96,6 @@ export function initAdminManager() {
         }
     }
 
-    /**
-     * Actualiza el texto de paginación y el estado de los botones
-     * @param {number} currentPage 
-     * @param {number} totalPages 
-     */
     function updatePaginationControls(currentPage, totalPages, totalUsers) {
         const pageText = document.querySelector('.page-toolbar-page-text');
         const prevButton = document.querySelector('[data-action="admin-page-prev"]');
@@ -134,7 +111,6 @@ export function initAdminManager() {
             nextButton.disabled = (currentPage >= totalPages);
         }
         
-        // Actualizar el data-attribute en el toolbar para futuras referencias
         const mainToolbar = document.querySelector('.page-toolbar-floating[data-current-page]');
         if (mainToolbar) {
             mainToolbar.dataset.currentPage = currentPage;
@@ -142,11 +118,6 @@ export function initAdminManager() {
         }
     }
 
-    /**
-     * Renderiza la lista de usuarios o el mensaje de "sin resultados"
-     * @param {Array} users - El array de usuarios de la API
-     * @param {number} totalUsers - El conteo total de usuarios
-     */
     function renderUserList(users, totalUsers) {
         const listContainer = document.querySelector('.user-list-container');
         if (!listContainer) return;
@@ -212,9 +183,6 @@ export function initAdminManager() {
         listContainer.innerHTML = userListHtml;
     }
 
-    /**
-     * Función principal que llama a la API y actualiza el DOM
-     */
     async function fetchAndRenderUsers() {
         clearAdminUserSelection();
         setListLoadingState(true);
@@ -225,7 +193,6 @@ export function initAdminManager() {
         formData.append('q', currentSearch);
         formData.append('s', currentSort);
         formData.append('o', currentOrder);
-        // El token CSRF se añade automáticamente en callAdminApi
 
         const result = await callAdminApi(formData);
 
@@ -234,14 +201,11 @@ export function initAdminManager() {
             updatePaginationControls(result.currentPage, result.totalPages, result.totalUsers);
         } else {
             showAlert(getTranslation(result.message || 'js.auth.errorUnknown'), 'error');
-            // Opcional: mostrar un estado de error en la lista
             listContainer.innerHTML = `<div class="component-card"><p>${getTranslation('js.api.errorServer')}</p></div>`;
         }
 
         setListLoadingState(false);
     }
-
-    // --- ▲▲▲ FIN NUEVAS FUNCIONES DE RENDERIZADO ▲▲▲ ---
     
     async function handleAdminAction(actionType, targetUserId, newValue, buttonEl) {
         if (!targetUserId) {
@@ -262,21 +226,13 @@ export function initAdminManager() {
         if (result.success) {
             showAlert(getTranslation(result.message || 'js.admin.successRole'), 'success');
             deactivateAllModules();
-            // --- ▼▼▼ MODIFICACIÓN (Llamar a fetchAndRenderUsers en lugar de loadPage) ▼▼▼ ---
             fetchAndRenderUsers();
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         } else {
             showAlert(getTranslation(result.message || 'js.auth.errorUnknown'), 'error');
             menuLinks.forEach(link => link.classList.remove('disabled-interactive'));
         }
     }
 
-    // --- ▼▼▼ ¡NUEVA FUNCIÓN! ▼▼▼ ---
-    /**
-     * Muestra u oculta un error inline en el formulario de creación
-     * @param {string} messageKey - Clave de traducción del mensaje
-     * @param {Object} data - Datos para reemplazar en la clave (ej. %length%)
-     */
     function showCreateUserError(messageKey, data = null) {
         const errorDiv = document.querySelector('#admin-create-card .component-card__error');
         if (!errorDiv) return;
@@ -292,10 +248,6 @@ export function initAdminManager() {
         errorDiv.style.display = 'block';
     }
     
-    // --- ▼▼▼ ¡NUEVA FUNCIÓN! ▼▼▼ ---
-    /**
-     * Oculta el error inline en el formulario de creación
-     */
     function hideCreateUserError() {
         const errorDiv = document.querySelector('#admin-create-card .component-card__error');
         if (errorDiv) {
@@ -325,21 +277,17 @@ export function initAdminManager() {
             return;
         }
 
-        // --- ▼▼▼ ¡NUEVA LÓGICA! ▼▼▼ ---
-        // Manejar clic en el selector de rol en la PÁGINA DE CREACIÓN
         const createRoleLink = event.target.closest('[data-module="moduleAdminCreateRole"] .menu-link');
         if (createRoleLink) {
             event.preventDefault();
             const newValue = createRoleLink.dataset.value;
             if (!newValue) return;
 
-            // 1. Actualizar el input oculto
             const hiddenInput = document.getElementById('admin-create-role-input');
             if (hiddenInput) {
                 hiddenInput.value = newValue;
             }
 
-            // 2. Actualizar el botón trigger
             const trigger = document.querySelector('[data-action="toggleModuleAdminCreateRole"]');
             const textEl = trigger.querySelector('.trigger-select-text span');
             const iconEl = trigger.querySelector('.trigger-select-icon span');
@@ -351,7 +299,6 @@ export function initAdminManager() {
             if (textEl) textEl.textContent = getTranslation(newTextKey);
             if (iconEl) iconEl.textContent = newIconName;
 
-            // 3. Actualizar el estado 'active' en el popover
             const menuList = createRoleLink.closest('.menu-list');
             menuList.querySelectorAll('.menu-link').forEach(link => {
                 link.classList.remove('active');
@@ -362,11 +309,9 @@ export function initAdminManager() {
             const iconContainer = createRoleLink.querySelector('.menu-link-check-icon');
             if (iconContainer) iconContainer.innerHTML = '<span class="material-symbols-rounded">check</span>';
 
-            // 4. Cerrar el popover
             deactivateAllModules();
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
 
         const button = event.target.closest('[data-action]');
         if (!button) {
@@ -381,15 +326,13 @@ export function initAdminManager() {
             const toolbar = button.closest('.page-toolbar-floating[data-current-page]');
             if (!toolbar) return;
             
-            // --- ▼▼▼ LÓGICA DE PAGINACIÓN MODIFICADA (Llama a fetchAndRenderUsers) ▼▼▼ ---
             const totalPages = parseInt(toolbar.dataset.totalPages, 10);
             let nextPage = (action === 'admin-page-next') ? currentPage + 1 : currentPage - 1;
 
             if (nextPage >= 1 && nextPage <= totalPages && nextPage !== currentPage) {
-                currentPage = nextPage; // Actualiza el estado de JS
-                fetchAndRenderUsers();  // Llama a la API
+                currentPage = nextPage; 
+                fetchAndRenderUsers();  
             }
-            // --- ▲▲▲ FIN DE LÓGICA DE PAGINACIÓN ▲▲▲ ---
             return;
         }
         
@@ -410,14 +353,12 @@ export function initAdminManager() {
                 const searchInput = searchBar.querySelector('.page-search-input');
                 if (searchInput) searchInput.value = '';
                 
-                // --- ▼▼▼ LÓGICA DE BÚSQUEDA MODIFICADA (Llama a fetchAndRenderUsers) ▼▼▼ ---
                 if (currentSearch !== '') {
-                    currentSearch = ''; // Actualiza el estado de JS
+                    currentSearch = ''; 
                     currentPage = 1;
                     hideTooltip();
-                    fetchAndRenderUsers(); // Llama a la API
+                    fetchAndRenderUsers(); 
                 }
-                // --- ▲▲▲ FIN DE LÓGICA DE BÚSQUEDA ▲▲▲ ---
             } else {
                 searchButton.classList.add('active');
                 searchBarContainer.style.display = 'flex';
@@ -433,51 +374,44 @@ export function initAdminManager() {
             return;
         }
 
-        // === ▼▼▼ BLOQUE CORREGIDO ▼▼▼ ===
         if (action === 'toggleSectionAdminEditUser') {
-            event.preventDefault();
-            event.stopPropagation(); // <--- ¡ESTA ES LA CORRECCIÓN!
-            
+            // event.preventDefault(); <-- No es necesario, url-manager lo hace
+            // event.stopImmediatePropagation(); <-- Eliminado
+
             if (!selectedAdminUserId) {
                 showAlert(getTranslation('js.admin.errorNoSelection'), 'error');
                 return;
             }
             
-            // Usar el sistema de router para navegar
             const link = document.createElement('a');
-            // ¡IMPORTANTE! La URL debe pasar el ID del usuario
             link.href = window.projectBasePath + '/admin/edit-user?id=' + selectedAdminUserId;
-            link.setAttribute('data-nav-js', 'true'); // Para que url-manager.js lo intercepte
+            link.setAttribute('data-nav-js', 'true'); 
             document.body.appendChild(link);
             link.click();
             link.remove();
             
-            clearAdminUserSelection(); // Limpiar la selección después de navegar
-            deactivateAllModules(); // Cerrar popovers
+            clearAdminUserSelection(); 
+            deactivateAllModules(); 
             return;
         }
-        // === ▲▲▲ FIN BLOQUE CORREGIDO ▲▲▲ ===
         
         if (action === 'admin-set-filter') {
             event.preventDefault();
             hideTooltip();
             deactivateAllModules(); 
 
-            // --- ▼▼▼ LÓGICA DE FILTRO MODIFICADA (Llama a fetchAndRenderUsers) ▼▼▼ ---
             const newSort = button.dataset.sort;
             const newOrder = button.dataset.order;
 
             if (currentSort === newSort && currentOrder === newOrder) {
-                return; // No hacer nada si el filtro ya está activo
+                return; 
             }
 
             if (newSort !== undefined && newOrder !== undefined) {
-                // Actualiza el estado de JS
                 currentSort = newSort;
                 currentOrder = newOrder;
                 currentPage = 1;
                 
-                // Actualizar la UI del popover
                 const menuList = button.closest('.menu-list');
                 if (menuList) {
                     menuList.querySelectorAll('.menu-link').forEach(link => {
@@ -490,9 +424,8 @@ export function initAdminManager() {
                     if (icon) icon.innerHTML = '<span class="material-symbols-rounded">check</span>';
                 }
                 
-                fetchAndRenderUsers(); // Llama a la API
+                fetchAndRenderUsers(); 
             }
-            // --- ▲▲▲ FIN DE LÓGICA DE FILTRO ▲▲▲ ---
             return;
         }
         
@@ -504,11 +437,10 @@ export function initAdminManager() {
             return;
         }
 
-        // --- ▼▼▼ LÓGICA DE TOGGLE MODIFICADA ▼▼▼ ---
         if (action === 'toggleModulePageFilter' || 
             action === 'toggleModuleAdminRole' || 
             action === 'toggleModuleAdminStatus' ||
-            action === 'toggleModuleAdminCreateRole') { // <-- ¡NUEVO!
+            action === 'toggleModuleAdminCreateRole') { 
             
             event.stopPropagation();
             let moduleName;
@@ -516,14 +448,14 @@ export function initAdminManager() {
             if (action === 'toggleModulePageFilter') {
                 moduleName = 'modulePageFilter';
             } else if (action === 'toggleModuleAdminRole') {
-                if (!selectedAdminUserId) return; // No abrir si no hay usuario
+                if (!selectedAdminUserId) return; 
                 moduleName = 'moduleAdminRole';
                 updateAdminModals();
             } else if (action === 'toggleModuleAdminStatus'){ 
-                if (!selectedAdminUserId) return; // No abrir si no hay usuario
+                if (!selectedAdminUserId) return; 
                 moduleName = 'moduleAdminStatus';
                 updateAdminModals();
-            } else if (action === 'toggleModuleAdminCreateRole') { // <-- ¡NUEVO!
+            } else if (action === 'toggleModuleAdminCreateRole') { 
                 moduleName = 'moduleAdminCreateRole';
             }
             
@@ -536,12 +468,9 @@ export function initAdminManager() {
                 module.classList.toggle('disabled');
                 module.classList.toggle('active');
             }
-            // --- ▲▲▲ FIN DE LÓGICA DE TOGGLE ▲▲▲ ---
         }
     });
 
-    // --- ▼▼▼ ¡NUEVO LISTENER! ▼▼▼ ---
-    // Manejar el envío del formulario de creación de usuario
     document.body.addEventListener('submit', async function(event) {
         if (event.target.id !== 'admin-create-user-form') {
             return;
@@ -551,17 +480,15 @@ export function initAdminManager() {
         const form = event.target;
         const button = form.querySelector('#admin-create-user-submit');
         
-        // Ocultar error anterior
         hideCreateUserError();
 
-        // --- ▼▼▼ INICIO DE VALIDACIÓN MODIFICADA ▼▼▼ ---
         const username = form.querySelector('#admin-create-username').value;
         const email = form.querySelector('#admin-create-email').value;
         const password = form.querySelector('#admin-create-password').value;
-        const passwordConfirm = form.querySelector('#admin-create-password-confirm').value; // <-- NUEVA VARIABLE
+        const passwordConfirm = form.querySelector('#admin-create-password-confirm').value; 
         const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i;
 
-        if (!username || !email || !password || !passwordConfirm) { // <-- CAMPO AÑADIDO
+        if (!username || !email || !password || !passwordConfirm) { 
             showCreateUserError('js.auth.errorCompleteAllFields'); return;
         }
         if (username.length < 6 || username.length > 32) {
@@ -576,14 +503,10 @@ export function initAdminManager() {
         if (password.length < 8 || password.length > 72) {
             showCreateUserError('js.auth.errorPasswordLength', {min: 8, max: 72}); return;
         }
-        // --- ▼▼▼ NUEVA VALIDACIÓN ▼▼▼ ---
         if (password !== passwordConfirm) {
             showCreateUserError('js.auth.errorPasswordMismatch'); return;
         }
-        // --- ▲▲▲ FIN NUEVA VALIDACIÓN ▲▲▲ ---
-        // --- ▲▲▲ FIN DE VALIDACIÓN MODIFICADA ▲▲▲ ---
 
-        // Mostrar spinner en el botón
         if (button) {
             button.disabled = true;
             button.dataset.originalText = button.innerHTML;
@@ -598,7 +521,6 @@ export function initAdminManager() {
         if (result.success) {
             showAlert(getTranslation(result.message || 'admin.create.success'), 'success');
             
-            // Redirigir a la página de gestión de usuarios
             setTimeout(() => {
                 const link = document.createElement('a');
                 link.href = window.projectBasePath + '/admin/manage-users';
@@ -609,10 +531,8 @@ export function initAdminManager() {
             }, 1500);
 
         } else {
-            // Mostrar error de la API
             showCreateUserError(result.message || 'js.auth.errorUnknown', result.data);
             
-            // Restaurar botón
             if (button) {
                 button.disabled = false;
                 button.innerHTML = button.dataset.originalText || getTranslation('admin.create.createButton');
@@ -620,14 +540,12 @@ export function initAdminManager() {
         }
     });
 
-    // Ocultar error de creación al escribir en cualquier input
     document.body.addEventListener('input', function(event) {
         const input = event.target.closest('#admin-create-user-form .component-input');
         if (input) {
             hideCreateUserError();
         }
     });
-    // --- ▲▲▲ FIN DE NUEVO LISTENER ▲▲▲ ---
 
     document.body.addEventListener('keydown', function(event) {
         const searchInput = event.target.closest('.page-search-input');
@@ -638,16 +556,14 @@ export function initAdminManager() {
         event.preventDefault(); 
         hideTooltip();
         
-        // --- ▼▼▼ LÓGICA DE BÚSQUEDA MODIFICADA (Llama a fetchAndRenderUsers) ▼▼▼ ---
         const newQuery = searchInput.value;
         
-        if (currentSearch === newQuery) return; // No buscar lo mismo
+        if (currentSearch === newQuery) return; 
         
         currentSearch = newQuery;
         currentPage = 1; 
         
-        fetchAndRenderUsers(); // Llama a la API
-        // --- ▲▲▲ FIN DE LÓGICA DE BÚSQUEDA ▲▲▲ ---
+        fetchAndRenderUsers(); 
     });
 
     document.addEventListener('keydown', function (event) {

@@ -2072,8 +2072,7 @@ body {
 
 /* --- ▼▼▼ NUEVA CLASE ▼▼▼ --- */
 .user-card-item.selected {
-    border-color: #206BD3; /* Azul */
-    background-color: #f5f5fa; /* Fondo gris claro */
+    border-color: #000000; /* Azul */
 }
 
 

@@ -9,9 +9,7 @@ const contentContainer = document.querySelector('.main-sections');
 const pageLoader = document.getElementById('page-loader');
 
 let loaderTimer = null;
-// --- ▼▼▼ MODIFICACIÓN: Renombrar variable ▼▼▼ ---
 let currentMenuType = null; 
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 const routes = {
     'toggleSectionHome': 'home',
@@ -39,12 +37,10 @@ const routes = {
     'toggleSectionAccountStatusDeleted': 'account-status-deleted',
     'toggleSectionAccountStatusSuspended': 'account-status-suspended',
     
-    // --- ▼▼▼ RUTAS DE ADMIN MODIFICADAS ▼▼▼ ---
     'toggleSectionAdminDashboard': 'admin-dashboard',
-    'toggleSectionAdminManageUsers': 'admin-manage-users', // <--- RUTA MODIFICADA
-    'toggleSectionAdminCreateUser': 'admin-create-user', // <--- ¡NUEVA LÍNEA!
-    'toggleSectionAdminEditUser': 'admin-edit-user', // <--- ¡NUEVA LÍNEA!
-    // --- ▲▲▲ FIN DE RUTAS DE ADMIN ▲▲▲ ---
+    'toggleSectionAdminManageUsers': 'admin-manage-users', 
+    'toggleSectionAdminCreateUser': 'admin-create-user', 
+    'toggleSectionAdminEditUser': 'admin-edit-user', 
 };
 
 const paths = {
@@ -65,30 +61,23 @@ const paths = {
     '/settings/accessibility': 'toggleSectionSettingsAccess',
     '/settings/device-sessions': 'toggleSectionSettingsDevices',
     
-    // --- ▼▼▼ INICIO DE LA CORRECCIÓN (LÍNEAS 108-111) ▼▼▼ ---
-    // Los valores aquí DEBEN coincidir con los data-action de los botones
-    // para que el router pueda encontrar la URL correcta.
     '/settings/change-password': 'toggleSectionSettingsPassword',
     '/settings/change-email': 'toggleSectionSettingsChangeEmail',
     '/settings/toggle-2fa': 'toggleSectionSettingsToggle2fa',
     '/settings/delete-account': 'toggleSectionSettingsDeleteAccount',
-    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
     '/account-status/deleted': 'toggleSectionAccountStatusDeleted',
     '/account-status/suspended': 'toggleSectionAccountStatusSuspended',
     
-    // --- ▼▼▼ PATHS DE ADMIN MODIFICADOS ▼▼▼ ---
     '/admin/dashboard': 'toggleSectionAdminDashboard',
-    '/admin/manage-users': 'toggleSectionAdminManageUsers', // <--- PATH MODIFICADO
-    '/admin/create-user': 'toggleSectionAdminCreateUser', // <--- ¡NUEVA LÍNEA!
-    '/admin/edit-user': 'toggleSectionAdminEditUser', // <--- ¡NUEVA LÍNEA!
-    // --- ▲▲▲ FIN DE PATHS DE ADMIN ▲▲▲ ---
+    '/admin/manage-users': 'toggleSectionAdminManageUsers', 
+    '/admin/create-user': 'toggleSectionAdminCreateUser', 
+    '/admin/edit-user': 'toggleSectionAdminEditUser', 
 };
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
 
 
-// --- ▼▼▼ LÓGICA DE loadPage MODIFICADA ▼▼▼ ---
 async function loadPage(page, action, fetchParams = null) {
 
     if (!contentContainer) return;
@@ -112,7 +101,6 @@ async function loadPage(page, action, fetchParams = null) {
     }, 200);
 
     
-    // Determinar qué tipo de página es (main, settings, o admin)
     const isSettingsPage = page.startsWith('settings-');
     const isAdminPage = page.startsWith('admin-');
     
@@ -123,7 +111,6 @@ async function loadPage(page, action, fetchParams = null) {
         menuType = 'admin';
     }
 
-    // Cargar el menú lateral correcto si el tipo de menú cambió
     if (currentMenuType === null || currentMenuType !== menuType) {
         currentMenuType = menuType; 
         
@@ -148,35 +135,19 @@ async function loadPage(page, action, fetchParams = null) {
 
 
     try {
-        // --- ▼▼▼ LÓGICA DE QUERY STRING MODIFICADA ▼▼▼ ---
-        
         let queryString = '';
 
         if (fetchParams) {
-            // 1. Si se pasan fetchParams (ej. admin-manager-js), usarlos para el fetch
             queryString = new URLSearchParams(fetchParams).toString().replace(/\+/g, '%20');
         
         } else {
-            // 2. Si NO hay params (navegación/recarga), usar la URL del navegador
             const browserQuery = window.location.search;
             if (browserQuery) {
-                queryString = browserQuery.substring(1); // "quita el ?"
+                queryString = browserQuery.substring(1); 
             }
         }
-
-        // === ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ===
-        // 3. EXCEPCIÓN: Esta excepción causaba que al presionar "atrás" (que es un popstate 
-        //    sin fetchParams) se perdieran los filtros de búsqueda/paginación.
-        /*
-        if (page === 'admin-manage-users' && !fetchParams) {
-            queryString = '';
-        }
-        */
-        // === ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ===
         
         const fetchUrl = `${basePath}/config/router.php?page=${page}${queryString ? `&${queryString}` : ''}`;
-        
-        // --- ▲▲▲ FIN DE LÓGICA DE QUERY STRING ▲▲▲ ---
 
         const response = await fetch(fetchUrl);
         
@@ -201,10 +172,7 @@ async function loadPage(page, action, fetchParams = null) {
             }
         }
 
-        
-        
         const headerTopForListener = document.querySelector('.general-content-top');
-        
         const newScrollableContent = contentContainer.querySelector('.section-content.overflow-y');
 
         if (newScrollableContent && headerTopForListener) {
@@ -232,7 +200,6 @@ async function loadPage(page, action, fetchParams = null) {
         }
     }
 }
-// --- ▲▲▲ FIN DE loadPage ▲▲▲ ---
 
 export function handleNavigation() {
 
@@ -244,32 +211,24 @@ export function handleNavigation() {
         history.replaceState(null, '', `${basePath}${path}`);
     }
     
-    // --- ▼▼▼ NUEVA REGLA DE REDIRECCIÓN ▼▼▼ ---
     if (path === '/admin') {
         path = '/admin/dashboard';
         history.replaceState(null, '', `${basePath}${path}`);
     }
-    // --- ▲▲▲ FIN DE NUEVA REGLA ▲▲▲ ---
 
     const action = paths[path];
 
     if (!action) {
-        // --- ▼▼▼ MODIFICACIÓN: Simplificado ▼▼▼ ---
         loadPage('404', null); 
         return;
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     }
 
     const page = routes[action];
 
     if (page) {
-        // --- ▼▼▼ MODIFICACIÓN: Simplificado ▼▼▼ ---
         loadPage(page, action); 
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     } else {
-        // --- ▼▼▼ MODIFICACIÓN: Simplificado ▼▼▼ ---
         loadPage('404', null);
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     }
 }
 
@@ -288,19 +247,15 @@ function updateMenuState(currentAction) {
         menuAction = 'toggleSectionSettingsProfile';
     }
     
-    // --- ▼▼▼ LÓGICA DE ADMIN MODIFICADA ▼▼▼ ---
-    if (currentAction === 'toggleSectionAdminManageUsers') { // <--- ACCIÓN MODIFICADA
-        menuAction = 'toggleSectionAdminManageUsers'; // <--- ACCIÓN MODIFICADA
+    if (currentAction === 'toggleSectionAdminManageUsers') { 
+        menuAction = 'toggleSectionAdminManageUsers'; 
     }
-    // --- ¡NUEVA REGLA! ---
     if (currentAction === 'toggleSectionAdminCreateUser') {
         menuAction = 'toggleSectionAdminCreateUser';
     }
-    // --- ¡NUEVA REGLA! ---
     if (currentAction === 'toggleSectionAdminEditUser') {
-        menuAction = 'toggleSectionAdminManageUsers'; // Resaltar 'Gestionar Usuarios'
+        menuAction = 'toggleSectionAdminManageUsers';
     }
-    // --- ▲▲▲ FIN DE LÓGICA DE ADMIN ▲▲▲ ---
 
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
@@ -318,14 +273,12 @@ function updateMenuState(currentAction) {
 export function initRouter() {
 
     document.body.addEventListener('click', e => {
-        // --- ▼▼▼ MODIFICACIÓN: Añadir selector de admin ▼▼▼ ---
       const link = e.target.closest(
             '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"]'
         );
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         if (link) {
-            if (link.classList.contains('component-button') && !link.hasAttribute('data-action') && !link.hasAttribute('data-nav-js')) { // MODIFICADO
+            if (link.classList.contains('component-button') && !link.hasAttribute('data-action') && !link.hasAttribute('data-nav-js')) { 
                 return;
             }
 
@@ -336,6 +289,17 @@ export function initRouter() {
 
             if (link.hasAttribute('data-action')) {
                 action = link.getAttribute('data-action');
+
+                // --- ▼▼▼ ¡ESTA ES LA CORRECCIÓN! ▼▼▼ ---
+                if (action === 'toggleSectionAdminEditUser') {
+                    // Esta acción es especial y la maneja 'admin-manager.js'
+                    // porque necesita el ID del usuario seleccionado.
+                    // Detenemos este listener para que el otro pueda actuar.
+                    e.stopImmediatePropagation();
+                    return; 
+                }
+                // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+
                 page = routes[action];
                 newPath = Object.keys(paths).find(key => paths[key] === action);
             } else {
@@ -346,29 +310,22 @@ export function initRouter() {
                     newPath = '/settings/your-profile';
                 }
                 
-                // --- ▼▼▼ NUEVA REGLA ▼▼▼ ---
                 if (newPath === '/admin') {
                     newPath = '/admin/dashboard';
                 }
-                // --- ▲▲▲ FIN DE NUEVA REGLA ▲▲▲ ---
                 
                 action = paths[newPath];
                 page = routes[action];
             }
             
-            // --- ▼▼▼ ¡NUEVA LÓGICA PARA QUERY STRINGS! ▼▼▼ ---
-            // Si es un enlace de JS (data-nav-js) Y tiene un query string,
-            // asegurarse de que el newPath lo incluya para el pushState.
             const url = link.href ? new URL(link.href) : null;
             if (link.hasAttribute('data-nav-js') && url && url.search) {
                  if (newPath.includes('?')) {
-                    // Esto no debería pasar con la lógica de arriba, pero por si acaso
                     newPath += "&" + url.search.substring(1);
                 } else {
                     newPath += url.search;
                 }
             }
-            // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
 
             if (!page) {
                 if(link.tagName === 'A' && !link.hasAttribute('data-action')) {
@@ -379,16 +336,10 @@ export function initRouter() {
 
             const fullUrlPath = `${basePath}${newPath === '/' ? '/' : newPath}`;
             
-            // --- ▼▼▼ MODIFICACIÓN: Comprobar URL completa (con query) ▼▼▼ ---
             const currentFullUrl = window.location.pathname + window.location.search;
             if (currentFullUrl !== fullUrlPath) {
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-                
-                // --- ▼▼▼ MODIFICACIÓN: Simplificado ▼▼▼ ---
                 history.pushState(null, '', fullUrlPath);
-                
                 loadPage(page, action); 
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
 
             deactivateAllModules();
@@ -397,7 +348,6 @@ export function initRouter() {
 
     window.addEventListener('popstate', handleNavigation);
 
-    // --- ▼▼▼ MODIFICACIÓN: Lógica de Carga Inicial ▼▼▼ ---
     const initialPath = window.location.pathname.replace(basePath, '') || '/';
     let initialMenuType = 'main';
     if (initialPath.startsWith('/settings')) {
@@ -406,11 +356,8 @@ export function initRouter() {
         initialMenuType = 'admin';
     }
     currentMenuType = initialMenuType;
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     handleNavigation();
 }
 
-// --- ▼▼▼ ¡NUEVO EXPORT! ▼▼▼ ---
 export { loadPage };
-// --- ▲▲▲ FIN NUEVO EXPORT ▲▲▲ ---
