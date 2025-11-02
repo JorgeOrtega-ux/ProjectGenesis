@@ -1,5 +1,5 @@
 import { createPopper } from 'https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/esm/popper.min.js';
-import { getTranslation } from './i18n-manager';
+import { getTranslation } from './i18n-manager.js';
 
 let tooltipEl;
 let popperInstance;

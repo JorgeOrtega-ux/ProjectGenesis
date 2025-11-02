@@ -1,6 +1,6 @@
 import { getTranslation } from '../services/i18n-manager.js';
 // import { handleNavigation } from './url-manager.js'; // Ya no se necesita aquí
-import { hideTooltip } from '../tooltip-manager.js'; 
+import { hideTooltip } from '../services/tooltip-manager.js'; 
 // import { callAdminApi } from './api-service.js'; // Ya no se necesita aquí
 // import { showAlert } from './alert-manager.js'; // Ya no se necesita aquí
 

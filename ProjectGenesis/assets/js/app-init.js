@@ -3,9 +3,9 @@ import { initRouter } from './app/url-manager.js';
 import { initAuthManager } from './modules/auth-manager.js';
 import { initSettingsManager } from './modules/settings-manager.js';
 import { initAdminManager } from './modules/admin-manager.js'; // <-- AÑADIDO
-import { showAlert } from './alert-manager.js'; 
+import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager } from './services/i18n-manager.js'; 
-import { initTooltipManager } from './tooltip-manager.js'; 
+import { initTooltipManager } from './services/tooltip-manager.js'; 
 
 const htmlEl = document.documentElement;
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');

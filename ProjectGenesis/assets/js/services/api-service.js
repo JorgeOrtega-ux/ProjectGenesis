@@ -1,4 +1,4 @@
-import { getTranslation } from './i18n-manager';
+import { getTranslation } from './i18n-manager.js';
 
 const API_ENDPOINTS = {
     AUTH: `${window.projectBasePath}/api/auth_handler.php`,

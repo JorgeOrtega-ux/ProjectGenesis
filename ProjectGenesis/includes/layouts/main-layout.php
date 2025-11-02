@@ -35,9 +35,11 @@
                         <div class="main-sections">
                             <?php ?>
                         </div>
-
+                        
                     </div>
                 </div>
+
+                <div id="alert-container"></div>
             </div>
         </div>
 

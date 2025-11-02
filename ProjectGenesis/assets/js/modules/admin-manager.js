@@ -1,8 +1,8 @@
 import { callAdminApi } from '../services/api-service.js';
-import { showAlert } from '../alert-manager.js';
+import { showAlert } from '../services/alert-manager.js';
 import { getTranslation } from '../services/i18n-manager.js';
 import { handleNavigation } from '../app/url-manager.js';
-import { hideTooltip } from '../tooltip-manager.js';
+import { hideTooltip } from '../services/tooltip-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js';
 
 export function initAdminManager() {
@@ -221,22 +221,34 @@ export function initAdminManager() {
             clearAdminUserSelection();
             deactivateAllModules(); // Cierra el popover de filtro
 
-            const sort_by = button.dataset.sort;
-            const sort_order = button.dataset.order;
+            const newSort = button.dataset.sort;
+            const newOrder = button.dataset.order;
 
-            if (sort_by !== undefined && sort_order !== undefined) {
+            // --- ▼▼▼ INICIO DE LA VALIDACIÓN (TU SUGERENCIA) ▼▼▼ ---
+            const currentUrl = new URL(window.location);
+            const currentSort = currentUrl.searchParams.get('s') || '';
+            const currentOrder = currentUrl.searchParams.get('o') || '';
+
+            // Si el filtro que se ha clicado ya es el que está activo,
+            // no hacemos nada.
+            if (currentSort === newSort && currentOrder === newOrder) {
+                return;
+            }
+            // --- ▲▲▲ FIN DE LA VALIDACIÓN ▲▲▲ ---
+
+            if (newSort !== undefined && newOrder !== undefined) {
                 const newUrl = new URL(window.location);
                 
-                if (sort_by === '') {
+                if (newSort === '') {
                     newUrl.searchParams.delete('s');
                 } else {
-                    newUrl.searchParams.set('s', sort_by);
+                    newUrl.searchParams.set('s', newSort);
                 }
 
-                if (sort_order === '') {
+                if (newOrder === '') {
                     newUrl.searchParams.delete('o');
                 } else {
-                    newUrl.searchParams.set('o', sort_order);
+                    newUrl.searchParams.set('o', newOrder);
                 }
                 
                 newUrl.searchParams.set('p', '1');
