@@ -102,50 +102,54 @@ try {
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-manage-users') ? 'active' : 'disabled'; ?>" data-section="admin-users">
 
-    <div class="admin-toolbar-container">
+    <div class="page-toolbar-container">
 
-        <div class="admin-toolbar-floating"
+        <div class="page-toolbar-floating"
             data-current-page="<?php echo $adminCurrentPage; ?>"
             data-total-pages="<?php echo $totalPages; ?>">
 
-            <div class="admin-toolbar-left">
-                <div class="admin-toolbar-default-actions">
+            <div class="page-toolbar-left">
+                <div class="toolbar-action-default">
                     <button type="button"
-                        class="admin-toolbar-button admin-action-default <?php echo $isSearching ? 'active' : ''; ?>"
+                        class="page-toolbar-button <?php echo $isSearching ? 'active' : ''; ?>"
                         data-action="admin-toggle-search"
                         data-tooltip="admin.users.search">
                         <span class="material-symbols-rounded">search</span>
                     </button>
                     
                     <button type="button"
-                        class="admin-toolbar-button admin-action-default <?php echo ($sort_by_param !== '') ? 'active' : ''; ?>"
-                        data-action="toggleModuleAdminFilter"
+                        class="page-toolbar-button <?php echo ($sort_by_param !== '') ? 'active' : ''; ?>"
+                        data-action="toggleModulePageFilter"
                         data-tooltip="admin.users.filter">
                         <span class="material-symbols-rounded">filter_list</span>
                     </button>
+                </div>
+                
+                <div class="toolbar-action-selection">
                     <button type="button"
-                        class="admin-toolbar-button admin-action-selection"
+                        class="page-toolbar-button"
                         data-tooltip="admin.users.manageRole" disabled>
                         <span class="material-symbols-rounded">manage_accounts</span>
                     </button>
                     <button type="button"
-                        class="admin-toolbar-button admin-action-selection"
+                        class="page-toolbar-button"
                         data-tooltip="admin.users.manageStatus" disabled>
                         <span class="material-symbols-rounded">toggle_on</span>
                     </button>
                 </div>
-            </div>
+                
+                </div>
 
-            <div class="admin-toolbar-right">
-                <div class="admin-toolbar-pagination admin-action-default">
-                    <button type="button" class="admin-toolbar-button"
+            <div class="page-toolbar-right">
+                <div class="page-toolbar-pagination toolbar-action-default">
+                    <button type="button" class="page-toolbar-button"
                         data-action="admin-page-prev"
                         data-tooltip="admin.users.prevPage"
                         <?php echo ($adminCurrentPage <= 1) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
 
-                    <span class="admin-toolbar-page-text">
+                    <span class="page-toolbar-page-text">
                         <?php
                         if ($totalUsers == 0) {
                             echo '--';
@@ -154,7 +158,7 @@ try {
                         }
                         ?>
                     </span>
-                    <button type="button" class="admin-toolbar-button"
+                    <button type="button" class="page-toolbar-button"
                         data-action="admin-page-next"
                         data-tooltip="admin.users.nextPage"
                         <?php echo ($adminCurrentPage >= $totalPages) ? 'disabled' : ''; ?>>
@@ -162,16 +166,19 @@ try {
                     </button>
                 </div>
 
-                <button type="button"
-                    class="admin-toolbar-button admin-action-selection"
-                    data-action="admin-clear-selection"
-                    data-tooltip="admin.users.clearSelection">
-                    <span class="material-symbols-rounded">close</span>
-                </button>
-            </div>
+                <div class="toolbar-action-selection">
+                    <button type="button"
+                        class="page-toolbar-button"
+                        data-action="admin-clear-selection"
+                        data-tooltip="admin.users.clearSelection" disabled>
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+                
+                </div>
         </div>
 
-        <div class="popover-module body-title disabled" data-module="moduleAdminFilter">
+        <div class="popover-module body-title disabled" data-module="modulePageFilter">
             <div class="menu-content">
                 <div class="menu-list">
                     <div class="menu-header" data-i18n="admin.users.sortBy">Ordenar por</div>
@@ -244,11 +251,11 @@ try {
                 </div>
             </div>
         </div>
-        <div class="admin-toolbar-floating" style="display: <?php echo $isSearching ? 'flex' : 'none'; ?>;">
+        <div class="page-toolbar-floating" style="display: <?php echo $isSearching ? 'flex' : 'none'; ?>;">
             
-            <div class="admin-search-bar" id="admin-search-bar">
+            <div class="page-search-bar" id="page-search-bar">
                 <span class="material-symbols-rounded">search</span>
-                <input type="text" class="admin-search-input" 
+                <input type="text" class="page-search-input" 
                        placeholder="Buscar usuario por nombre, email..." 
                        value="<?php echo htmlspecialchars($searchQuery); ?>">
             </div>

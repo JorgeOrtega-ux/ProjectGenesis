@@ -16,34 +16,59 @@ function initMainController() {
     let closeOnClickOutside = true;
     let closeOnEscape = true;
     
-    // --- ▼▼▼ INICIO DE LÓGICA DE SELECCIÓN ADMIN (CORREGIDA) ▼▼▼ ---
     let selectedAdminUserId = null;
 
+    // --- ▼▼▼ NUEVA FUNCIÓN ▼▼▼ ---
+    // Habilita los botones de acción y muestra la vista de selección
+    function enableSelectionActions() {
+        const toolbarContainer = document.querySelector('.page-toolbar-container');
+        if (!toolbarContainer) return;
+
+        toolbarContainer.classList.add('selection-active');
+        
+        // Encontrar botones de selección y HABILITARLOS
+        const selectionButtons = toolbarContainer.querySelectorAll('.toolbar-action-selection');
+        selectionButtons.forEach(btn => {
+            btn.disabled = false;
+        });
+    }
+
+    // --- ▼▼▼ NUEVA FUNCIÓN ▼▼▼ ---
+    // Deshabilita los botones de acción y muestra la vista por defecto
+    function disableSelectionActions() {
+        const toolbarContainer = document.querySelector('.page-toolbar-container');
+        if (!toolbarContainer) return;
+
+        toolbarContainer.classList.remove('selection-active');
+        
+        // Encontrar botones de selección y DESHABILITARLOS
+        const selectionButtons = toolbarContainer.querySelectorAll('.toolbar-action-selection');
+        selectionButtons.forEach(btn => {
+            btn.disabled = true;
+        });
+    }
+
+    // --- ▼▼▼ FUNCIÓN MODIFICADA ▼▼▼ ---
     function clearAdminUserSelection() {
         const selectedCard = document.querySelector('.user-card-item.selected');
         if (selectedCard) {
             selectedCard.classList.remove('selected');
         }
         
-        // Simplemente quitamos la clase del contenedor principal
-        const toolbarContainer = document.querySelector('.admin-toolbar-container');
-        if (toolbarContainer) {
-            toolbarContainer.classList.remove('selection-active');
-        }
+        // Llamar a la nueva función helper
+        disableSelectionActions();
         
         selectedAdminUserId = null;
     }
-    // --- ▲▲▲ FIN DE LÓGICA DE SELECCIÓN ADMIN (CORREGIDA) ▲▲▲ ---
 
 
     document.body.addEventListener('click', async function (event) {
         
-        // --- ▼▼▼ INICIO DE LÓGICA DE CLIC EN TARJETA (CORREGIDA) ▼▼▼ ---
+        // --- ▼▼▼ BLOQUE MODIFICADO ▼▼▼ ---
         const userCard = event.target.closest('.user-card-item[data-user-id]');
         if (userCard) {
             event.preventDefault();
             const userId = userCard.dataset.userId;
-            const toolbarContainer = document.querySelector('.admin-toolbar-container');
 
             if (selectedAdminUserId === userId) {
                 // Ya estaba seleccionado, así que lo deseleccionamos
@@ -60,14 +85,12 @@ function initMainController() {
                 userCard.classList.add('selected');
                 selectedAdminUserId = userId;
                 
-                // 3. Actualizar el toolbar (solo con la clase)
-                if (toolbarContainer) {
-                    toolbarContainer.classList.add('selection-active');
-                }
+                // 3. Actualizar el toolbar (con la función helper)
+                enableSelectionActions();
             }
             return;
         }
-        // --- ▲▲▲ FIN DE LÓGICA DE CLIC EN TARJETA (CORREGIDA) ▲▲▲ ---
+        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
         
         
         const button = event.target.closest('[data-action]');
@@ -155,7 +178,7 @@ function initMainController() {
             
             hideTooltip(); // <-- AÑADIDO: Ocultar tooltip antes de navegar
             
-            const toolbar = button.closest('.admin-toolbar-floating[data-current-page]');
+            const toolbar = button.closest('.page-toolbar-floating[data-current-page]');
             if (!toolbar) return;
             
             // Limpiar selección al navegar
@@ -180,11 +203,11 @@ function initMainController() {
             // --- INICIO DE CORRECCIÓN (BARRA DE BÚSQUEDA) ---
             
             // 1. Obtener la barra de búsqueda interna
-            const searchBar = document.getElementById('admin-search-bar');
+            const searchBar = document.getElementById('page-search-bar');
             if (!searchBar) return;
             
             // 2. Obtener el contenedor flotante externo
-            const searchBarContainer = searchBar.closest('.admin-toolbar-floating');
+            const searchBarContainer = searchBar.closest('.page-toolbar-floating');
             if (!searchBarContainer) return;
             
             // 3. Comprobar el estado
@@ -196,7 +219,7 @@ function initMainController() {
                 searchBarContainer.style.display = 'none'; // <-- Ocultar el contenedor externo
                 searchBar.style.display = 'none'; // <-- Asegurarse de ocultar también el interno
 
-                const searchInput = searchBar.querySelector('.admin-search-input');
+                const searchInput = searchBar.querySelector('.page-search-input');
                 if (searchInput) searchInput.value = '';
                 
                 // Limpiar selección al cerrar búsqueda
@@ -217,7 +240,7 @@ function initMainController() {
                 searchButton.classList.add('active');
                 searchBarContainer.style.display = 'flex'; // <-- Mostrar el contenedor externo
                 searchBar.style.display = 'flex'; // <-- Mostrar la barra interna
-                searchBar.querySelector('.admin-search-input')?.focus();
+                searchBar.querySelector('.page-search-input')?.focus();
             }
             
             // --- FIN DE CORRECCIÓN ---
@@ -278,6 +301,13 @@ function initMainController() {
             let moduleName = action.substring(6);
             moduleName = moduleName.charAt(0).toLowerCase() + moduleName.slice(1);
 
+            // --- ▼▼▼ LÓGICA DE FILTRO MODIFICADA ▼▼▼ ---
+            // Manejar el caso especial del filtro genérico
+            if (action === 'toggleModulePageFilter') {
+                moduleName = 'modulePageFilter';
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             const module = document.querySelector(`[data-module="${moduleName}"]`);
 
             if (module) {
@@ -318,7 +348,7 @@ function initMainController() {
     }
 
     document.body.addEventListener('keydown', function(event) {
-        const searchInput = event.target.closest('.admin-search-input');
+        const searchInput = event.target.closest('.page-search-input');
         
         if (!searchInput || event.key !== 'Enter') {
             return;

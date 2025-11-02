@@ -761,17 +761,24 @@ body {
 .component-card__avatar[data-role="administrator"]::before {
     border-color: #FF0000;
 }
+
+/* --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ --- */
 .component-card__avatar[data-role="founder"]::before {
     border: none;
     top: -4px;
     left: -4px;
     right: -4px;
     bottom: -4px;
-    background-image: conic-gradient(#D32029 0deg 90deg, #206BD3 90deg 210deg, #28A745 210deg 300deg, #FFC107 300deg 360deg);
+    background-image: conic-gradient(from 300deg,
+        #D32029 0deg 90deg,
+        #206BD3 90deg 210deg,
+        #28A745 210deg 300deg,
+        #FFC107 300deg 360deg);
     mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
     -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
-    transform: rotate(300deg);
+    /* transform: rotate(300deg); */ /* <-- LÍNEA ELIMINADA */
 }
+/* --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ --- */
 
 .component-card__avatar-overlay {
     position: absolute;
@@ -2126,7 +2133,7 @@ body {
     }
 }
 /* ====================================== */
-/* =  ESTILOS ADMIN - BARRA HERRAMIENTAS  = */
+/* =  ESTILOS PAGE TOOLBAR (GENÉRICO)   = */
 /* ====================================== */
 
 /* Padding-top por defecto.
@@ -2141,7 +2148,7 @@ body {
 
 
 /* --- ▼▼▼ NUEVO: Contenedor para AMBOS toolbars ▼▼▼ --- */
-.admin-toolbar-container {
+.page-toolbar-container {
     /* Esto es lo que solía ser el .admin-toolbar-floating */
     position: absolute;
     top: 16px;
@@ -2158,7 +2165,7 @@ body {
     box-sizing: border-box;
 }
 /* --- ▼▼▼ NUEVO: Posicionamiento del Popover de Filtro ▼▼▼ */
-.admin-toolbar-container .popover-module[data-module="moduleAdminFilter"] {
+.page-toolbar-container .popover-module[data-module="modulePageFilter"] {
     position: absolute;
     top: calc(100% + 8px); /* Debajo del primer toolbar */
     left: 0;
@@ -2168,7 +2175,7 @@ body {
 }
 
 /* --- ▼▼▼ NUEVO: Botón de filtro activo ▼▼▼ */
-.admin-toolbar-button[data-action="toggleModuleAdminFilter"].active {
+.page-toolbar-button[data-action="toggleModulePageFilter"].active {
     border-color: #000000;
     background-color: #000000;
     color: #ffffff;
@@ -2183,7 +2190,7 @@ body {
     text-transform: uppercase;
     user-select: none;
 }
-.admin-toolbar-floating {
+.page-toolbar-floating {
     display: flex
 ;
     justify-content: space-between;
@@ -2196,15 +2203,15 @@ body {
     box-sizing: border-box;
     height: auto;
 }
-.admin-toolbar-left,
-.admin-toolbar-right {
+.page-toolbar-left,
+.page-toolbar-right {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
 /* 1. Estilo base para los botones (CORREGIDO A ICON-ONLY) */
-.admin-toolbar-button {
+.page-toolbar-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2221,21 +2228,21 @@ body {
     /* width: auto; */
     /* padding: 0 12px; */
 }
-.admin-toolbar-button:not(:disabled):hover {
+.page-toolbar-button:not(:disabled):hover {
     background-color: #f5f5fa;
 }
-.admin-toolbar-button:disabled {
+.page-toolbar-button:disabled {
     color: #00000040;
     cursor: not-allowed;
     opacity: 0.7; /* <-- MODIFICADO */
 }
 
 /* --- ▼▼▼ REGLA ELIMINADA (YA NO ES NECESARIA) ▼▼▼ --- */
-/* .admin-toolbar-button:has(.material-symbols-rounded:only-child) { ... } */
+/* .page-toolbar-button:has(.material-symbols-rounded:only-child) { ... } */
 
 
 /* 2. Estilo para el CONTENEDOR de paginación */
-.admin-toolbar-pagination {
+.page-toolbar-pagination {
     display: flex;
     align-items: center;
     gap: 0;
@@ -2245,7 +2252,7 @@ body {
 }
 
 /* 3. SOBREESCRIBIR los botones DENTRO del contenedor de paginación */
-.admin-toolbar-pagination .admin-toolbar-button {
+.page-toolbar-pagination .page-toolbar-button {
     border: none;
     border-radius: 0;
     /* --- MODIFICADO --- */
@@ -2255,7 +2262,7 @@ body {
 }
 
 /* 4. Estilo para el TEXTO de paginación */
-.admin-toolbar-page-text {
+.page-toolbar-page-text {
     font-size: 14px;
     font-weight: 500;
     color: #6b7280;
@@ -2269,14 +2276,14 @@ body {
 }
 
 /* --- ▼▼▼ NUEVO: Estilo para el botón de búsqueda ACTIVO ▼▼▼ --- */
-.admin-toolbar-button[data-action="admin-toggle-search"].active {
+.page-toolbar-button[data-action="admin-toggle-search"].active {
     border-color: #000000; /* Azul como en la imagen */
     background-color: #000000;
     color: #ffffff;
 }
 
 /* --- ▼▼▼ NUEVO: Estilo para la barra de búsqueda ▼▼▼ --- */
-.admin-search-bar {
+.page-search-bar {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -2292,12 +2299,12 @@ body {
     width: 100%; /* <-- AÑADIDO PARA QUE LLENE EL NUEVO DIV FLOTANTE */
 }
 
-.admin-search-bar .material-symbols-rounded {
+.page-search-bar .material-symbols-rounded {
     color: #6b7280;
     font-size: 20px;
 }
 
-.admin-search-bar .admin-search-input {
+.page-search-bar .page-search-input {
     width: 100%;
     height: 100%;
     border: none;
@@ -2308,36 +2315,37 @@ body {
     color: #000;
 }
 
-.admin-search-bar .admin-search-input::placeholder {
+.page-search-bar .page-search-input::placeholder {
     color: #6b7280;
     font-weight: 400;
 }
 
 /* --- ▼▼▼ INICIO DE REGLAS CORREGIDAS PARA VISTAS DE TOOLBAR ▼▼▼ --- */
 
-.admin-toolbar-default-actions {
+.toolbar-action-default {
     display: flex;
     gap: 8px;
 }
 
 /* Por defecto, las acciones de selección están ocultas */
-.admin-action-selection {
+.toolbar-action-selection {
     display: none;
+    gap: 8px; /* --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ --- */
 }
 /* Por defecto, las acciones default están visibles */
-.admin-action-default {
+.toolbar-action-default {
     display: flex; /* O 'inline-flex' si es un <div> */
 }
-.admin-toolbar-pagination.admin-action-default {
+.page-toolbar-pagination.toolbar-action-default {
     display: flex; /* Asegurarse que la paginación se vea */
 }
 
 
 /* Cuando la selección está activa... */
-.admin-toolbar-container.selection-active .admin-action-default {
+.page-toolbar-container.selection-active .toolbar-action-default {
     display: none; /* Ocultar acciones default */
 }
-.admin-toolbar-container.selection-active .admin-action-selection {
+.page-toolbar-container.selection-active .toolbar-action-selection {
     display: flex; /* Mostrar acciones de selección */
 }
 /* --- ▲▲▲ FIN DE REGLAS CORREGIDAS PARA VISTAS DE TOOLBAR ▲▲▲ --- */
@@ -2346,12 +2354,12 @@ body {
 /* Ajuste para móvil */
 @media (max-width: 700px) {
     /* Esta regla ahora aplica al nuevo contenedor, lo cual es correcto */
-    .admin-toolbar-container {
+    .page-toolbar-container {
         width: calc(100% - 32px);
     }
     
     /* --- ▼▼▼ REGLAS ELIMINADAS (YA NO SON NECESARIAS) ▼▼▼ --- */
-    /* .admin-toolbar-button[data-i18n] { ... } */
-    /* .admin-toolbar-button[data-i18n] .material-symbols-rounded { ... } */
-    /* .admin-toolbar-button[data-action="admin-clear-selection"] { ... } */
+    /* .page-toolbar-button[data-i18n] { ... } */
+    /* .page-toolbar-button[data-i18n] .material-symbols-rounded { ... } */
+    /* .page-toolbar-button[data-action="admin-clear-selection"] { ... } */
 }
