@@ -33,7 +33,7 @@ DROP TABLE IF EXISTS security_logs;
 CREATE TABLE security_logs (
     id INT NOT NULL AUTO_INCREMENT,
     user_identifier VARCHAR(255) NOT NULL,
-    action_type ENUM('login_fail', 'reset_fail', 'password_verify_fail') NOT NULL,
+    action_type ENUM('login_fail', 'reset_fail', 'password_verify_fail', 'preference_spam') NOT NULL,
     ip_address VARCHAR(45) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -76,3 +76,17 @@ CREATE TABLE user_preferences (
     increase_message_duration TINYINT(1) NOT NULL DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- --- ▼▼▼ INICIO DE NUEVA TABLA Y DATOS ▼▼▼ ---
+DROP TABLE IF EXISTS site_settings;
+CREATE TABLE site_settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    setting_key VARCHAR(100) NOT NULL UNIQUE,
+    setting_value TEXT
+);
+
+-- Insertar las configuraciones por defecto
+INSERT INTO site_settings (setting_key, setting_value) VALUES
+('maintenance_mode', '0'),
+('allow_new_registrations', '1');
+-- --- ▲▲▲ FIN DE NUEVA TABLA Y DATOS ▲▲▲ ---
