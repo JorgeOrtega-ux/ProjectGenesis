@@ -60,7 +60,8 @@
       "statusActive": "Activo",
       "statusSuspended": "Suspendido",
       "statusDeleted": "Eliminado (Inactivo)",
-      "createUser": "Crear nuevo usuario"
+      "createUser": "Crear nuevo usuario",
+      "editUserTooltip": "Editar datos del usuario"
     },
     "create": {
       "title": "Crear Nuevo Usuario",
@@ -74,6 +75,15 @@
       "createButton": "Crear Usuario",
       "success": "¡Usuario creado! Serás redirigido.",
       "errorRole": "Rol no válido seleccionado."
+    },
+    "edit": {
+      "title": "Editar Usuario",
+      "description": "Editando el perfil de",
+      "passwordHashed": "Contraseña Actual (Hash)",
+      "passwordDesc": "La contraseña actual está hasheada. Puedes establecer una nueva contraseña si es necesario.",
+      "passwordNew": "Nueva Contraseña (Opcional)",
+      "passwordConfirm": "Confirmar Nueva Contraseña",
+      "errorPassEmpty": "Los campos de nueva contraseña están vacíos. No se realizaron cambios."
     }
   },
   "settings": {
@@ -92,7 +102,7 @@
       "email": "Correo Electrónico",
       "modalCodeTitle": "Busca el código que te enviamos",
       "modalCodeDesc": "Para poder hacer cambios en tu cuenta, primero debes ingresar el código que te enviamos a",
-  "modalCodeLabel": "Código de verificación*",
+      "modalCodeLabel": "Código de verificación*",
       "continue": "Continuar",
       "modalCodeResendP": "¿No recibiste el código?",
       "modalCodeResendA": "Volver a enviarlo",

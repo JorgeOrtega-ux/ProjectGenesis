@@ -51,8 +51,45 @@ function generateDefaultAvatar($pdo, $userId, $username, $basePath)
         file_put_contents($fullSavePath, $imageData);
         return $publicUrl;
     } catch (Exception $e) {
+        logDatabaseError($e, 'admin_handler - generateDefaultAvatar');
         return null;
     }
+}
+
+// --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! (Copiada de settings_handler.php) ▼▼▼ ---
+function deleteOldAvatar($oldUrl, $basePath)
+{
+    // Solo borrar avatares que están en la carpeta 'avatars_uploaded'
+    if (strpos($oldUrl, '/assets/uploads/avatars_uploaded/') === false) {
+        // Si no está en esa carpeta, es un avatar por defecto (o de ui-avatars), no lo borramos.
+        return;
+    }
+    
+    $relativePath = str_replace($basePath, '', $oldUrl);
+    $serverPath = dirname(__DIR__) . $relativePath;
+
+    if (file_exists($serverPath)) {
+        @unlink($serverPath);
+    }
+}
+
+// --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! (Comprobador de permisos) ▼▼▼ ---
+/**
+ * Comprueba si un admin ($adminRole) puede modificar a un usuario ($targetRole).
+ * @param string $adminRole Rol del admin (administrator, founder)
+ * @param string $targetRole Rol del usuario a modificar (user, moderator, administrator, founder)
+ * @return bool True si puede modificar, false si no.
+ */
+function canAdminModifyTarget($adminRole, $targetRole) {
+    if ($adminRole === 'founder') {
+        // Un fundador puede modificar a todos, excepto a otros fundadores
+        return $targetRole !== 'founder';
+    }
+    if ($adminRole === 'administrator') {
+        // Un admin solo puede modificar a usuarios y moderadores
+        return $targetRole === 'user' || $targetRole === 'moderator';
+    }
+    return false;
 }
 // --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
 
@@ -322,25 +359,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $targetRole = $targetUser['role'];
 
-            $canModify = false;
-            if ($adminRole === 'founder') {
-                if ($targetRole !== 'founder') {
-                    $canModify = true;
-                } else {
-                    $response['message'] = 'js.admin.errorFounderTarget';
-                }
-            } elseif ($adminRole === 'administrator') {
-                if ($targetRole === 'user' || $targetRole === 'moderator') {
-                    $canModify = true;
-                } else {
-                    $response['message'] = 'js.admin.errorAdminTarget';
-                }
+            // === ▼▼▼ LÓGICA DE PERMISOS MODIFICADA ▼▼▼ ===
+            if (!canAdminModifyTarget($adminRole, $targetRole)) {
+                 $response['message'] = ($targetRole === 'founder') ? 'js.admin.errorFounderTarget' : 'js.admin.errorAdminTarget';
+                 echo json_encode($response);
+                 exit;
             }
-            
-            if (!$canModify) {
-                echo json_encode($response);
-                exit;
-            }
+            // === ▲▲▲ FIN LÓGICA DE PERMISOS ▲▲▲ ===
             
             if ($action === 'set-role') {
                 $allowedRoles = ['user', 'moderator', 'administrator', 'founder'];
@@ -381,6 +406,200 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     // --- Fin de la lógica 'set-role' / 'set-status' ---
+    
+    // === ▼▼▼ INICIO DE NUEVAS ACCIONES DE EDICIÓN DE ADMIN ▼▼▼ ===
+
+    elseif ($action === 'admin-upload-avatar') {
+        try {
+            $targetUserId = $_POST['target_user_id'] ?? 0;
+            if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception('js.settings.errorAvatarUpload');
+            }
+
+            $stmt_target = $pdo->prepare("SELECT role, profile_image_url FROM users WHERE id = ?");
+            $stmt_target->execute([$targetUserId]);
+            $targetUser = $stmt_target->fetch();
+            if (!$targetUser) throw new Exception('js.auth.errorUserNotFound');
+            if (!canAdminModifyTarget($adminRole, $targetUser['role'])) throw new Exception('js.admin.errorAdminTarget');
+            
+            $file = $_FILES['avatar'];
+            if ($file['size'] > 2 * 1024 * 1024) throw new Exception('js.settings.errorAvatarSize');
+
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $mimeType = $finfo->file($file['tmp_name']);
+            $allowedTypes = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/gif' => 'gif', 'image/webp' => 'webp'];
+            if (!array_key_exists($mimeType, $allowedTypes)) throw new Exception('js.settings.errorAvatarFormat');
+            
+            $extension = $allowedTypes[$mimeType];
+            $oldUrl = $targetUser['profile_image_url'];
+            $newFileName = "user-{$targetUserId}-" . time() . "." . $extension;
+            $saveDir = dirname(__DIR__) . '/assets/uploads/avatars_uploaded/';
+            $newFilePath = $saveDir . $newFileName;
+            $newPublicUrl = $basePath . '/assets/uploads/avatars_uploaded/' . $newFileName;
+
+            if (!move_uploaded_file($file['tmp_name'], $newFilePath)) {
+                throw new Exception('js.settings.errorAvatarSave');
+            }
+            $stmt = $pdo->prepare("UPDATE users SET profile_image_url = ? WHERE id = ?");
+            $stmt->execute([$newPublicUrl, $targetUserId]);
+            if ($oldUrl) {
+                deleteOldAvatar($oldUrl, $basePath);
+            }
+            $response['success'] = true;
+            $response['message'] = 'js.settings.successAvatarUpdate';
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-upload-avatar');
+            $response['message'] = $e->getMessage();
+        }
+    }
+
+    elseif ($action === 'admin-remove-avatar') {
+        try {
+            $targetUserId = $_POST['target_user_id'] ?? 0;
+            $stmt_target = $pdo->prepare("SELECT role, username, profile_image_url FROM users WHERE id = ?");
+            $stmt_target->execute([$targetUserId]);
+            $targetUser = $stmt_target->fetch();
+            if (!$targetUser) throw new Exception('js.auth.errorUserNotFound');
+            if (!canAdminModifyTarget($adminRole, $targetUser['role'])) throw new Exception('js.admin.errorAdminTarget');
+
+            $oldUrl = $targetUser['profile_image_url'];
+            $newDefaultUrl = generateDefaultAvatar($pdo, $targetUserId, $targetUser['username'], $basePath);
+            if (!$newDefaultUrl) throw new Exception('js.settings.errorAvatarApi');
+
+            $stmt = $pdo->prepare("UPDATE users SET profile_image_url = ? WHERE id = ?");
+            $stmt->execute([$newDefaultUrl, $targetUserId]);
+            if ($oldUrl) {
+                deleteOldAvatar($oldUrl, $basePath);
+            }
+            $response['success'] = true;
+            $response['message'] = 'js.settings.successAvatarRemoved';
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-remove-avatar');
+            $response['message'] = $e->getMessage();
+        }
+    }
+    
+    elseif ($action === 'admin-update-username') {
+        try {
+            $targetUserId = $_POST['target_user_id'] ?? 0;
+            $newUsername = trim($_POST['username'] ?? '');
+
+            $stmt_target = $pdo->prepare("SELECT role, username, profile_image_url FROM users WHERE id = ?");
+            $stmt_target->execute([$targetUserId]);
+            $targetUser = $stmt_target->fetch();
+            if (!$targetUser) throw new Exception('js.auth.errorUserNotFound');
+            if (!canAdminModifyTarget($adminRole, $targetUser['role'])) throw new Exception('js.admin.errorAdminTarget');
+
+            $oldUsername = $targetUser['username'];
+            if (empty($newUsername)) throw new Exception('js.settings.errorUsernameEmpty');
+            if (strlen($newUsername) < MIN_USERNAME_LENGTH) throw new Exception('js.auth.errorUsernameMinLength');
+            if (strlen($newUsername) > MAX_USERNAME_LENGTH) throw new Exception('js.auth.errorUsernameMaxLength');
+            if ($newUsername === $oldUsername) throw new Exception('js.settings.errorUsernameIsCurrent');
+
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
+            $stmt->execute([$newUsername, $targetUserId]);
+            if ($stmt->fetch()) throw new Exception('js.auth.errorUsernameInUse');
+
+            $stmt = $pdo->prepare("UPDATE users SET username = ? WHERE id = ?");
+            $stmt->execute([$newUsername, $targetUserId]);
+            
+            $stmt_log = $pdo->prepare("INSERT INTO user_audit_logs (user_id, change_type, old_value, new_value, changed_by_ip) VALUES (?, 'username', ?, ?, ?)");
+            $stmt_log->execute([$targetUserId, $oldUsername, $newUsername, getIpAddress()]);
+
+            $response['success'] = true;
+            $response['message'] = 'js.settings.successUsernameUpdate';
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-update-username');
+            $response['message'] = $e->getMessage();
+            if ($response['message'] === 'js.auth.errorUsernameMinLength') $response['data'] = ['length' => MIN_USERNAME_LENGTH];
+            elseif ($response['message'] === 'js.auth.errorUsernameMaxLength') $response['data'] = ['length' => MAX_USERNAME_LENGTH];
+        }
+    }
+    
+    elseif ($action === 'admin-update-email') {
+        try {
+            $targetUserId = $_POST['target_user_id'] ?? 0;
+            $newEmail = trim($_POST['email'] ?? '');
+
+            $stmt_target = $pdo->prepare("SELECT role, email FROM users WHERE id = ?");
+            $stmt_target->execute([$targetUserId]);
+            $targetUser = $stmt_target->fetch();
+            if (!$targetUser) throw new Exception('js.auth.errorUserNotFound');
+            if (!canAdminModifyTarget($adminRole, $targetUser['role'])) throw new Exception('js.admin.errorAdminTarget');
+
+            $oldEmail = $targetUser['email'];
+            if (empty($newEmail) || !filter_var($newEmail, FILTER_VALIDATE_EMAIL)) throw new Exception('js.auth.errorInvalidEmail');
+            if (strlen($newEmail) > MAX_EMAIL_LENGTH) throw new Exception('js.auth.errorEmailLength');
+            if ($newEmail === $oldEmail) throw new Exception('js.settings.errorEmailIsCurrent');
+            
+            $allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com'];
+            $emailDomain = substr($newEmail, strrpos($newEmail, '@') + 1);
+            if (!in_array(strtolower($emailDomain), $allowedDomains)) throw new Exception('js.auth.errorEmailDomain');
+
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+            $stmt->execute([$newEmail, $targetUserId]);
+            if ($stmt->fetch()) throw new Exception('js.auth.errorEmailInUse');
+
+            $stmt = $pdo->prepare("UPDATE users SET email = ? WHERE id = ?");
+            $stmt->execute([$newEmail, $targetUserId]);
+
+            $stmt_log_email = $pdo->prepare("INSERT INTO user_audit_logs (user_id, change_type, old_value, new_value, changed_by_ip) VALUES (?, 'email', ?, ?, ?)");
+            $stmt_log_email->execute([$targetUserId, $oldEmail, $newEmail, getIpAddress()]);
+
+            $response['success'] = true;
+            $response['message'] = 'js.settings.successEmailUpdate';
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-update-email');
+            $response['message'] = $e->getMessage();
+        }
+    }
+    
+    elseif ($action === 'admin-update-password') {
+        try {
+            $targetUserId = $_POST['target_user_id'] ?? 0;
+            $newPassword = $_POST['new_password'] ?? '';
+            $confirmPassword = $_POST['confirm_password'] ?? '';
+
+            $stmt_target = $pdo->prepare("SELECT role, password FROM users WHERE id = ?");
+            $stmt_target->execute([$targetUserId]);
+            $targetUser = $stmt_target->fetch();
+            if (!$targetUser) throw new Exception('js.auth.errorUserNotFound');
+            if (!canAdminModifyTarget($adminRole, $targetUser['role'])) throw new Exception('js.admin.errorAdminTarget');
+            
+            $oldHashedPassword = $targetUser['password'];
+
+            if (empty($newPassword) || empty($confirmPassword)) {
+                throw new Exception('admin.edit.errorPassEmpty'); // Nuevo i18n
+            }
+            if (strlen($newPassword) < MIN_PASSWORD_LENGTH) throw new Exception('js.auth.errorPasswordMinLength');
+            if (strlen($newPassword) > MAX_PASSWORD_LENGTH) throw new Exception('js.auth.errorPasswordMaxLength');
+            if ($newPassword !== $confirmPassword) throw new Exception('js.auth.errorPasswordMismatch');
+
+            $newHashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
+
+            $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+            $stmt->execute([$newHashedPassword, $targetUserId]);
+
+            $stmt_log_pass = $pdo->prepare("INSERT INTO user_audit_logs (user_id, change_type, old_value, new_value, changed_by_ip) VALUES (?, 'password', ?, ?, ?)");
+            $stmt_log_pass->execute([$targetUserId, $oldHashedPassword, $newHashedPassword, getIpAddress()]);
+
+            $response['success'] = true;
+            $response['message'] = 'js.settings.successPassUpdate';
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-update-password');
+            $response['message'] = $e->getMessage();
+            if ($response['message'] === 'js.auth.errorPasswordMinLength') $response['data'] = ['length' => MIN_PASSWORD_LENGTH];
+            elseif ($response['message'] === 'js.auth.errorPasswordMaxLength') $response['data'] = ['length' => MAX_PASSWORD_LENGTH];
+        }
+    }
+    
+    // === ▲▲▲ FIN DE NUEVAS ACCIONES DE EDICIÓN DE ADMIN ▲▲▲ ===
+
     
 } else {
     // Si no es POST, se mantiene el error por defecto

@@ -40,7 +40,10 @@ export function initAdminManager() {
         const toolbarContainer = document.querySelector('.page-toolbar-container');
         if (!toolbarContainer) return;
         toolbarContainer.classList.add('selection-active');
-        const selectionButtons = toolbarContainer.querySelectorAll('.toolbar-action-selection');
+        // --- ▼▼▼ CORRECCIÓN AQUÍ ▼▼▼ ---
+        // Se debe seleccionar los 'button' DENTRO de '.toolbar-action-selection'
+        const selectionButtons = toolbarContainer.querySelectorAll('.toolbar-action-selection button');
+        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
         selectionButtons.forEach(btn => {
             btn.disabled = false;
         });
@@ -50,7 +53,10 @@ export function initAdminManager() {
         const toolbarContainer = document.querySelector('.page-toolbar-container');
         if (!toolbarContainer) return;
         toolbarContainer.classList.remove('selection-active');
-        const selectionButtons = toolbarContainer.querySelectorAll('.toolbar-action-selection');
+        // --- ▼▼▼ CORRECCIÓN AQUÍ ▼▼▼ ---
+        // Se debe seleccionar los 'button' DENTRO de '.toolbar-action-selection'
+        const selectionButtons = toolbarContainer.querySelectorAll('.toolbar-action-selection button');
+        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
         selectionButtons.forEach(btn => {
             btn.disabled = true;
         });
@@ -426,6 +432,29 @@ export function initAdminManager() {
             clearAdminUserSelection();
             return;
         }
+
+        // === ▼▼▼ BLOQUE AÑADIDO ▼▼▼ ===
+        if (action === 'toggleSectionAdminEditUser') {
+            event.preventDefault();
+            if (!selectedAdminUserId) {
+                showAlert(getTranslation('js.admin.errorNoSelection'), 'error');
+                return;
+            }
+            
+            // Usar el sistema de router para navegar
+            const link = document.createElement('a');
+            // ¡IMPORTANTE! La URL debe pasar el ID del usuario
+            link.href = window.projectBasePath + '/admin/edit-user?id=' + selectedAdminUserId;
+            link.setAttribute('data-nav-js', 'true'); // Para que url-manager.js lo intercepte
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            
+            clearAdminUserSelection(); // Limpiar la selección después de navegar
+            deactivateAllModules(); // Cerrar popovers
+            return;
+        }
+        // === ▲▲▲ FIN BLOQUE AÑADIDO ▲▲▲ ===
         
         if (action === 'admin-set-filter') {
             event.preventDefault();

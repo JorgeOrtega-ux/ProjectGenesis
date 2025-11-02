@@ -43,6 +43,7 @@ const routes = {
     'toggleSectionAdminDashboard': 'admin-dashboard',
     'toggleSectionAdminManageUsers': 'admin-manage-users', // <--- RUTA MODIFICADA
     'toggleSectionAdminCreateUser': 'admin-create-user', // <--- ¡NUEVA LÍNEA!
+    'toggleSectionAdminEditUser': 'admin-edit-user', // <--- ¡NUEVA LÍNEA!
     // --- ▲▲▲ FIN DE RUTAS DE ADMIN ▲▲▲ ---
 };
 
@@ -80,6 +81,7 @@ const paths = {
     '/admin/dashboard': 'toggleSectionAdminDashboard',
     '/admin/manage-users': 'toggleSectionAdminManageUsers', // <--- PATH MODIFICADO
     '/admin/create-user': 'toggleSectionAdminCreateUser', // <--- ¡NUEVA LÍNEA!
+    '/admin/edit-user': 'toggleSectionAdminEditUser', // <--- ¡NUEVA LÍNEA!
     // --- ▲▲▲ FIN DE PATHS DE ADMIN ▲▲▲ ---
 };
 
@@ -151,18 +153,22 @@ async function loadPage(page, action, fetchParams = null) {
         let queryString = '';
 
         if (fetchParams) {
-            // 1. Si se pasan fetchParams (ej. admin-manager), usarlos para el fetch
+            // 1. Si se pasan fetchParams (ej. admin-manager-js), usarlos para el fetch
             queryString = new URLSearchParams(fetchParams).toString().replace(/\+/g, '%20');
         
-        } else if (!page.startsWith('admin-')) {
-            // 2. Si NO es admin y NO hay params, usar la URL (comportamiento normal)
+        } else {
+            // 2. Si NO hay params (navegación/recarga), usar la URL del navegador
             const browserQuery = window.location.search;
             if (browserQuery) {
                 queryString = browserQuery.substring(1); // "quita el ?"
             }
         }
-        // 3. Si ES admin y NO hay fetchParams (ej. recarga de página),
-        //    queryString se queda vacío '', forzando la carga limpia.
+
+        // 3. EXCEPCIÓN: Si es admin-manage-users y NO hay params, 
+        //    forzar la carga limpia (para ignorar ?q= de la URL en recarga).
+        if (page === 'admin-manage-users' && !fetchParams) {
+            queryString = '';
+        }
         
         const fetchUrl = `${basePath}/config/router.php?page=${page}${queryString ? `&${queryString}` : ''}`;
         
@@ -286,6 +292,10 @@ function updateMenuState(currentAction) {
     if (currentAction === 'toggleSectionAdminCreateUser') {
         menuAction = 'toggleSectionAdminCreateUser';
     }
+    // --- ¡NUEVA REGLA! ---
+    if (currentAction === 'toggleSectionAdminEditUser') {
+        menuAction = 'toggleSectionAdminManageUsers'; // Resaltar 'Gestionar Usuarios'
+    }
     // --- ▲▲▲ FIN DE LÓGICA DE ADMIN ▲▲▲ ---
 
 
@@ -318,7 +328,9 @@ export function initRouter() {
 
             e.preventDefault();
 
-            let action, page, newPath;
+            // --- MODIFICACIÓN: Inicializar fetchParams ---
+            let action, page, newPath, fetchParams = null;
+            const originalHref = link.href; // Guardar el href original
 
             if (link.hasAttribute('data-action')) {
                 action = link.getAttribute('data-action');
@@ -341,6 +353,33 @@ export function initRouter() {
                 action = paths[newPath];
                 page = routes[action];
             }
+            
+            // --- ▼▼▼ INICIO DE LÓGICA DE URL LIMPIA ▼▼▼ ---
+            
+            // Caso especial: El enlace es para editar un usuario Y tiene [data-nav-js]
+            if (action === 'toggleSectionAdminEditUser' && link.hasAttribute('data-nav-js') && originalHref) {
+                const url = new URL(originalHref);
+                const id = url.searchParams.get('id');
+                if (id) {
+                    fetchParams = { id: id };
+                    // 'newPath' ya está limpio (ej: /admin/edit-user) gracias a la lógica anterior
+                } else {
+                    console.error("ID de usuario no encontrado para editar");
+                    return; // No continuar si el ID falta
+                }
+            }
+            // Caso general: Otro enlace [data-nav-js] que SÍ debe mantener su query string (si existiera)
+            else if (link.hasAttribute('data-nav-js') && originalHref) {
+                 const url = new URL(originalHref);
+                 if (url.search) {
+                     if (newPath.includes('?')) {
+                        newPath += "&" + url.search.substring(1);
+                    } else {
+                        newPath += url.search;
+                    }
+                 }
+            }
+            // --- ▲▲▲ FIN DE LÓGICA DE URL LIMPIA ▲▲▲ ---
 
             if (!page) {
                 if(link.tagName === 'A' && !link.hasAttribute('data-action')) {
@@ -350,15 +389,22 @@ export function initRouter() {
             }
 
             const fullUrlPath = `${basePath}${newPath === '/' ? '/' : newPath}`;
-
-            if (window.location.pathname !== fullUrlPath) {
-                
-                // --- ▼▼▼ MODIFICACIÓN: Simplificado ▼▼▼ ---
+            
+            // --- ▼▼▼ MODIFICACIÓN: Comprobar URL completa (con query) ▼▼▼ ---
+            const currentFullUrl = window.location.pathname + window.location.search;
+            
+            if (currentFullUrl !== fullUrlPath) {
+                // --- MODIFICACIÓN: Pasa fetchParams a loadPage ---
                 history.pushState(null, '', fullUrlPath);
-                
-                loadPage(page, action); 
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                loadPage(page, action, fetchParams); 
+            
+            // --- MODIFICACIÓN: Nuevo bloque 'else if' ---
+            // Caso especial: Ya estamos en /admin/edit-user pero hacemos clic
+            // para editar OTRO usuario. La URL no cambia, pero el contenido SÍ debe recargarse.
+            } else if (fetchParams) {
+                loadPage(page, action, fetchParams);
             }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             deactivateAllModules();
         }

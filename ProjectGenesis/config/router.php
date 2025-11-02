@@ -99,6 +99,7 @@ $allowedPages = [
     'admin-dashboard'          => '../includes/sections/admin/dashboard.php',
     'admin-manage-users'       => '../includes/sections/admin/manage-users.php', // <--- CLAVE MODIFICADA
     'admin-create-user'        => '../includes/sections/admin/create-user.php', // <--- ¡NUEVA LÍNEA!
+    'admin-edit-user'          => '../includes/sections/admin/admin-edit-user.php', // <--- ¡NUEVA LÍNEA!
     // --- ▲▲▲ FIN DE PÁGINAS DE ADMIN ▲▲▲ ---
 ];
 
@@ -394,6 +395,50 @@ if (array_key_exists($page, $allowedPages)) {
         $adminCurrentPage = (int)($_GET['p'] ?? 1);
         if ($adminCurrentPage < 1) $adminCurrentPage = 1;
     }
+    // === ▼▼▼ BLOQUE AÑADIDO ▼▼▼ ===
+    elseif ($page === 'admin-edit-user') {
+        $targetUserId = (int)($_GET['id'] ?? 0);
+        if ($targetUserId === 0) {
+            // No ID provided, treat as 404
+            $page = '404';
+            $CURRENT_SECTION = '404';
+        } else {
+            try {
+                $stmt_user = $pdo->prepare("SELECT id, username, email, password, profile_image_url, role FROM users WHERE id = ?");
+                $stmt_user->execute([$targetUserId]);
+                $editUser = $stmt_user->fetch();
+
+                if (!$editUser) {
+                    // User not found, treat as 404
+                    $page = '404';
+                    $CURRENT_SECTION = '404';
+                }
+
+                // (Opcional) Validación de permisos: un admin no puede editar a un fundador
+                $adminRole = $_SESSION['role'] ?? 'user';
+                if ($editUser['role'] === 'founder' && $adminRole !== 'founder') {
+                    $page = '404'; // O una página de "acceso denegado"
+                    $CURRENT_SECTION = '404';
+                }
+                
+                // Renombrar 'password' a 'password_hash' para claridad en la vista
+                $editUser['password_hash'] = $editUser['password'];
+                unset($editUser['password']);
+                
+                // Determinar si el avatar es el default
+                $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+                $profileImageUrl = $editUser['profile_image_url'] ?? $defaultAvatar;
+                if (empty($profileImageUrl)) $profileImageUrl = $defaultAvatar;
+                $isDefaultAvatar = strpos($profileImageUrl, 'ui-avatars.com') !== false || strpos($profileImageUrl, 'user-' . $editUser['id'] . '.png') !== false;
+
+            } catch (PDOException $e) {
+                logDatabaseError($e, 'router - admin-edit-user');
+                $page = '404';
+                $CURRENT_SECTION = '404';
+            }
+        }
+    }
+    // === ▲▲▲ FIN BLOQUE AÑADIDO ▲▲▲ ===
     elseif ($isAdminPage) {
         // Lógica general para otras páginas de admin si es necesario
     }

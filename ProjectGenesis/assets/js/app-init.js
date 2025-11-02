@@ -3,6 +3,7 @@ import { initRouter } from './app/url-manager.js';
 import { initAuthManager } from './modules/auth-manager.js';
 import { initSettingsManager } from './modules/settings-manager.js';
 import { initAdminManager } from './modules/admin-manager.js'; // <-- AÑADIDO
+import { initAdminEditUserManager } from './modules/admin-edit-user-manager.js'; // <-- ¡NUEVA LÍNEA!
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager } from './services/i18n-manager.js'; 
 import { initTooltipManager } from './services/tooltip-manager.js'; 
@@ -54,5 +55,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     initAuthManager();
     initSettingsManager();
     initAdminManager(); // <-- AÑADIDO
+    initAdminEditUserManager(); // <-- ¡NUEVA LÍNEA!
     initTooltipManager(); 
 });

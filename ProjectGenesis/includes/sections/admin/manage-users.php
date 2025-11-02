@@ -135,14 +135,20 @@ try {
                 <div class="toolbar-action-selection">
                     <button type="button"
                         class="page-toolbar-button"
+                        data-action="toggleSectionAdminEditUser"
+                        data-tooltip="admin.users.editUserTooltip" disabled>
+                        <span class="material-symbols-rounded">edit</span>
+                    </button>
+                    <button type="button"
+                        class="page-toolbar-button"
                         data-action="toggleModuleAdminRole"
-                        data-tooltip="admin.users.manageRole">
+                        data-tooltip="admin.users.manageRole" disabled>
                         <span class="material-symbols-rounded">manage_accounts</span>
                     </button>
                     <button type="button"
                         class="page-toolbar-button"
                         data-action="toggleModuleAdminStatus"
-                        data-tooltip="admin.users.manageStatus">
+                        data-tooltip="admin.users.manageStatus" disabled>
                         <span class="material-symbols-rounded">toggle_on</span>
                     </button>
                     </div>
