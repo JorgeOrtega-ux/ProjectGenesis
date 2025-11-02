@@ -76,6 +76,15 @@
                         <span data-i18n="sidebar.admin.manageUsers"></span>
                     </div>
                 </div>
+                
+                <div class="menu-link" data-action="toggleSectionAdminServerSettings">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">dns</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="sidebar.admin.serverSettings">Config. del Servidor</span> 
+                    </div>
+                </div>
                 <?php 
             else: 
             ?>

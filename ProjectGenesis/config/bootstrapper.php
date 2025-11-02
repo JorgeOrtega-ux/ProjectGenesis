@@ -7,6 +7,30 @@ include 'config/config.php';
 // Asegura que el token CSRF exista
 getCsrfToken(); 
 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
+// Cargar configuraciones globales del sitio
+$GLOBALS['site_settings'] = [];
+try {
+    // Asumimos que la tabla se llamará 'site_settings'
+    $stmt_settings = $pdo->prepare("SELECT setting_key, setting_value FROM site_settings");
+    $stmt_settings->execute();
+    while ($row = $stmt_settings->fetch()) {
+        $GLOBALS['site_settings'][$row['setting_key']] = $row['setting_value'];
+    }
+    
+    // Asegurar un fallback si la clave no existe en la BD
+    if (!isset($GLOBALS['site_settings']['maintenance_mode'])) {
+         $GLOBALS['site_settings']['maintenance_mode'] = '0';
+    }
+    
+} catch (PDOException $e) {
+    // Si la tabla no existe o falla, asumimos que no hay mantenimiento
+    logDatabaseError($e, 'bootstrapper - load site_settings');
+    $GLOBALS['site_settings']['maintenance_mode'] = '0'; // Fallback seguro
+}
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+
 // Refresca los datos del usuario desde la BD en cada carga de página
 if (isset($_SESSION['user_id'])) {
     try {

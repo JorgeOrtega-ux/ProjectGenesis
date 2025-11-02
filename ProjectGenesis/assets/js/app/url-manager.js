@@ -18,6 +18,7 @@ const routes = {
     'toggleSectionHome': 'home',
     'toggleSectionExplorer': 'explorer',
     'toggleSectionLogin': 'login',
+    'toggleSectionMaintenance': 'maintenance', // <-- ¡NUEVA LÍNEA!
 
     'toggleSectionRegisterStep1': 'register-step1',
     'toggleSectionRegisterStep2': 'register-step2',
@@ -44,12 +45,14 @@ const routes = {
     'toggleSectionAdminManageUsers': 'admin-manage-users', 
     'toggleSectionAdminCreateUser': 'admin-create-user', 
     'toggleSectionAdminEditUser': 'admin-edit-user', 
+    'toggleSectionAdminServerSettings': 'admin-server-settings', // <-- ¡NUEVA LÍNEA!
 };
 
 const paths = {
     '/': 'toggleSectionHome',
     '/explorer': 'toggleSectionExplorer',
     '/login': 'toggleSectionLogin',
+    '/maintenance': 'toggleSectionMaintenance', // <-- ¡NUEVA LÍNEA!
 
     '/register': 'toggleSectionRegisterStep1',
     '/register/additional-data': 'toggleSectionRegisterStep2',
@@ -76,6 +79,7 @@ const paths = {
     '/admin/manage-users': 'toggleSectionAdminManageUsers', 
     '/admin/create-user': 'toggleSectionAdminCreateUser', 
     '/admin/edit-user': 'toggleSectionAdminEditUser', 
+    '/admin/server-settings': 'toggleSectionAdminServerSettings', // <-- ¡NUEVA LÍNEA!
 };
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
@@ -259,6 +263,11 @@ function updateMenuState(currentAction) {
     if (currentAction === 'toggleSectionAdminEditUser') {
         menuAction = 'toggleSectionAdminManageUsers';
     }
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
+    if (currentAction === 'toggleSectionAdminServerSettings') {
+        menuAction = 'toggleSectionAdminServerSettings';
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
@@ -277,7 +286,7 @@ export function initRouter() {
 
     document.body.addEventListener('click', e => {
       const link = e.target.closest(
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"]'
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"]' // <-- ¡NUEVA RUTA!
         );
 
         if (link) {

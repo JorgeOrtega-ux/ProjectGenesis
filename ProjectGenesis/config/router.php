@@ -73,6 +73,7 @@ $allowedPages = [
     'login'    => '../includes/sections/auth/login.php',
     '404'      => '../includes/sections/main/404.php', 
     'db-error' => '../includes/sections/main/db-error.php', 
+    'maintenance' => '../includes/sections/main/maintenance.php', // <-- ¡NUEVA LÍNEA!
 
     'register-step1' => '../includes/sections/auth/register.php',
     'register-step2' => '../includes/sections/auth/register.php',
@@ -100,10 +101,14 @@ $allowedPages = [
     'admin-manage-users'       => '../includes/sections/admin/manage-users.php', // <--- CLAVE MODIFICADA
     'admin-create-user'        => '../includes/sections/admin/create-user.php', // <--- ¡NUEVA LÍNEA!
     'admin-edit-user'          => '../includes/sections/admin/admin-edit-user.php', // <--- ¡NUEVA LÍNEA!
+    'admin-server-settings'    => '../includes/sections/admin/server-settings.php', // <--- ¡NUEVA LÍNEA!
     // --- ▲▲▲ FIN DE PÁGINAS DE ADMIN ▲▲▲ ---
 ];
 
-$authPages = ['login'];
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
+$authPages = ['login', 'maintenance']; // 'maintenance' se trata como una página de auth
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 $isAuthPage = in_array($page, $authPages) || 
               strpos($page, 'register-') === 0 ||
               strpos($page, 'reset-') === 0 ||
@@ -438,7 +443,16 @@ if (array_key_exists($page, $allowedPages)) {
             }
         }
     }
-    // === ▲▲▲ FIN BLOQUE AÑADIDO ▲▲▲ ===
+    // === ▲▲▲ FIN BLOQUE AÑADIDO ▲▲▲ ---
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
+    elseif ($page === 'admin-server-settings') {
+        // Cargar el estado actual del modo mantenimiento para el toggle
+        // $GLOBALS['site_settings'] fue cargado en bootstrapper.php
+        $maintenanceModeStatus = $GLOBALS['site_settings']['maintenance_mode'] ?? '0';
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    
     elseif ($isAdminPage) {
         // Lógica general para otras páginas de admin si es necesario
     }

@@ -27,7 +27,8 @@
       "backToHome": "Volver a inicio",
       "dashboard": "Dashboard",
       "manageUsers": "Gestionar usuarios",
-      "createUsers": "Crear usuario"
+      "createUsers": "Crear usuario",
+      "serverSettings": "Config. del Servidor"
     }
   },
   "admin": {
@@ -84,6 +85,12 @@
       "passwordNew": "Nueva Contraseña (Opcional)",
       "passwordConfirm": "Confirmar Nueva Contraseña",
       "errorPassEmpty": "Los campos de nueva contraseña están vacíos. No se realizaron cambios."
+    },
+    "server": {
+      "title": "Configuración del Servidor",
+      "description": "Gestiona la configuración global y el estado del sitio. (Solo Fundadores)",
+      "maintenanceTitle": "Modo Mantenimiento",
+      "maintenanceDesc": "Si está activo, los usuarios con rol \"user\" no podrán navegar por el sitio y verán una página de mantenimiento."
     }
   },
   "settings": {
@@ -307,6 +314,11 @@
       "suspendedTitle": "Cuenta Suspendida",
       "suspendedDesc": "Esta cuenta ha sido suspendida. No podrás acceder hasta que la suspensión sea levantada. Si crees que esto es un error, por favor contacta a soporte.",
       "backToLogin": "Volver a Inicio de Sesión"
+    },
+    "maintenance": {
+      "title": "Sitio en Mantenimiento",
+      "description": "Estamos realizando mejoras en el sitio. Por favor, vuelve a intentarlo más tarde.",
+      "adminLogin": "Acceso de Administrador"
     }
   },
   "js": {
@@ -443,7 +455,9 @@
       "errorInvalidRole": "No tienes permiso para asignar este rol.",
       "errorSelf": "No puedes modificarte a ti mismo.",
       "errorNoSelection": "No se ha seleccionado ningún usuario.",
-      "errorFounderAssign": "El rol 'Fundador' solo se puede asignar desde la base de datos."
+      "errorFounderAssign": "El rol 'Fundador' solo se puede asignar desde la base de datos.",
+      "maintenanceSuccess": "Modo mantenimiento actualizado.",
+      "maintenanceError": "Error al actualizar el modo mantenimiento."
     }
   },
   "db": {

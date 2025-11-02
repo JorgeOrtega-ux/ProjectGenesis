@@ -2,9 +2,31 @@
 // FILE: includes/router-guard.php
 
 // $basePath y $pdo (para rol de admin) se definieron en bootstrapper.php
+// $GLOBALS['site_settings'] se definió en bootstrapper.php
+
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
+$maintenanceMode = $GLOBALS['site_settings']['maintenance_mode'] ?? '0';
+$userRole = $_SESSION['role'] ?? 'user'; // Asumir 'user' si no está logueado
+$isPrivilegedUser = in_array($userRole, ['moderator', 'administrator', 'founder']);
+
+$requestUri = $_SERVER['REQUEST_URI'];
+$isMaintenancePage = (strpos($requestUri, '/maintenance') !== false);
+$isLoginPage = (strpos($requestUri, '/login') !== false);
+$isApiCall = (strpos($requestUri, '/api/') !== false);
+$isConfigCall = (strpos($requestUri, '/config/') !== false); // Permitir logout
+
+// Si el modo mantenimiento está ACTIVO
+if ($maintenanceMode === '1') {
+    // Y el usuario NO es privilegiado Y NO está intentando acceder a una página permitida
+    if (!$isPrivilegedUser && !$isMaintenancePage && !$isLoginPage && !$isApiCall && !$isConfigCall) {
+        header('Location: ' . $basePath . '/maintenance');
+        exit;
+    }
+}
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
 // 1. Analizar la URL
-$requestUri = $_SERVER['REQUEST_URI'];
 $requestPath = strtok($requestUri, '?'); 
 
 $path = str_replace($basePath, '', $requestPath);
@@ -17,12 +39,16 @@ $pathsToPages = [
     '/'           => 'home',
     '/explorer'   => 'explorer',
     '/login'      => 'login',
+    '/maintenance' => 'maintenance', // <--- ¡NUEVA LÍNEA!
+    
     '/register'                 => 'register-step1',
     '/register/additional-data' => 'register-step2',
     '/register/verification-code' => 'register-step3',
+    
     '/reset-password'          => 'reset-step1',
     '/reset-password/verify-code'  => 'reset-step2',
     '/reset-password/new-password' => 'reset-step3',
+    
     '/settings'                 => 'settings-profile', 
     '/settings/your-profile'    => 'settings-profile',
     '/settings/login-security'  => 'settings-login',
@@ -42,12 +68,15 @@ $pathsToPages = [
     '/admin/manage-users'       => 'admin-manage-users', 
     '/admin/create-user'        => 'admin-create-user', // <--- ¡NUEVA LÍNEA!
     '/admin/edit-user'          => 'admin-edit-user', // <--- ¡NUEVA LÍNEA!
+    '/admin/server-settings'    => 'admin-server-settings', // <--- ¡NUEVA LÍNEA!
 ];
 
 // 3. Determinar la página actual y los tipos de página
 $currentPage = $pathsToPages[$path] ?? '404';
 
-$authPages = ['login'];
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
+$authPages = ['login', 'maintenance']; // 'maintenance' se trata como una página de auth
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 $isAuthPage = in_array($currentPage, $authPages) || 
               strpos($currentPage, 'register-') === 0 ||
               strpos($currentPage, 'reset-') === 0 ||
@@ -71,9 +100,16 @@ if (!isset($_SESSION['user_id']) && !$isAuthPage) {
     exit;
 }
 // Redirigir a home si está logueado e intenta ir a auth
-if (isset($_SESSION['user_id']) && $isAuthPage) {
-    header('Location: ' . $basePath . '/');
-    exit;
+if (isset($_SESSION['user_id']) && $isAuthPage && $currentPage !== 'maintenance') { // <-- MODIFICADO
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
+    // Si el modo mantenimiento está activo, no redirigir a /home,
+    // el chequeo de al inicio de este archivo ya lo habrá enviado a /maintenance si es 'user'
+    // o le permitirá ver la página de login/registro si es admin.
+    if ($maintenanceMode !== '1') {
+         header('Location: ' . $basePath . '/');
+         exit;
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
 
 // Redirecciones de conveniencia

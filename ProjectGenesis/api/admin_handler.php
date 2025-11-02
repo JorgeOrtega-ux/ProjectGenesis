@@ -626,6 +626,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // === ▲▲▲ FIN DE NUEVAS ACCIONES DE EDICIÓN DE ADMIN ▲▲▲ ===
 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
+    elseif ($action === 'update-maintenance-mode') {
+        // Solo los 'founder' pueden cambiar esto.
+        if ($adminRole !== 'founder') {
+            $response['message'] = 'js.admin.errorAdminTarget'; // Sin permiso
+            echo json_encode($response);
+            exit;
+        }
+
+        try {
+            $newValue = $_POST['new_value'] ?? '0';
+
+            // Validar que el valor sea solo 0 o 1
+            if ($newValue !== '0' && $newValue !== '1') {
+                throw new Exception('js.api.invalidAction');
+            }
+
+            $stmt = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = 'maintenance_mode'");
+            $stmt->execute([$newValue]);
+
+            $response['success'] = true;
+            $response['message'] = 'js.admin.maintenanceSuccess'; // Nueva clave i18n
+            $response['newValue'] = $newValue;
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) {
+                logDatabaseError($e, 'admin_handler - update-maintenance-mode');
+                $response['message'] = 'js.api.errorDatabase';
+            } else {
+                $response['message'] = $e->getMessage();
+            }
+        }
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
 } else {
     // Si no es POST, se mantiene el error por defecto
