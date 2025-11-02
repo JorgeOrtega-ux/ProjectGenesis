@@ -144,6 +144,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'];
 
         if ($action === 'register-check-email') {
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (BLOQUEAR REGISTRO) ▼▼▼ ---
+            if (!isset($GLOBALS['site_settings']['allow_new_registrations']) || $GLOBALS['site_settings']['allow_new_registrations'] !== '1') {
+                $response['message'] = 'js.auth.errorRegistrationsDisabled'; // Nueva clave i18n
+                echo json_encode($response);
+                exit;
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
             $allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com'];

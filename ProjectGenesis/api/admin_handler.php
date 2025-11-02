@@ -642,15 +642,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($newValue !== '0' && $newValue !== '1') {
                 throw new Exception('js.api.invalidAction');
             }
+            
+            $pdo->beginTransaction();
 
-            $stmt = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = 'maintenance_mode'");
-            $stmt->execute([$newValue]);
+            $stmt_maintenance = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = 'maintenance_mode'");
+            $stmt_maintenance->execute([$newValue]);
+            
+            $registrationValue = null;
+
+            // ¡LÓGICA DE VINCULACIÓN!
+            // Si el modo mantenimiento se ACTIVA, forzar el bloqueo de registros.
+            if ($newValue === '1') {
+                $stmt_registration = $pdo->prepare("UPDATE site_settings SET setting_value = '0' WHERE setting_key = 'allow_new_registrations'");
+                $stmt_registration->execute();
+                $registrationValue = '0';
+            }
+            
+            $pdo->commit();
 
             $response['success'] = true;
             $response['message'] = 'js.admin.maintenanceSuccess'; // Nueva clave i18n
             $response['newValue'] = $newValue;
+            if ($registrationValue !== null) {
+                $response['registrationValue'] = $registrationValue; // Enviar el valor forzado al JS
+            }
 
         } catch (Exception $e) {
+            $pdo->rollBack();
             if ($e instanceof PDOException) {
                 logDatabaseError($e, 'admin_handler - update-maintenance-mode');
                 $response['message'] = 'js.api.errorDatabase';
@@ -660,6 +678,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    
+    // --- ▼▼▼ INICIO DE NUEVA ACCIÓN (BLOQUEAR REGISTROS) ▼▼▼ ---
+    elseif ($action === 'update-registration-mode') {
+        // Solo los 'founder' pueden cambiar esto.
+        if ($adminRole !== 'founder') {
+            $response['message'] = 'js.admin.errorAdminTarget';
+            echo json_encode($response);
+            exit;
+        }
+        
+        try {
+            $newValue = $_POST['new_value'] ?? '0';
+            if ($newValue !== '0' && $newValue !== '1') {
+                throw new Exception('js.api.invalidAction');
+            }
+
+            // Comprobar si el modo mantenimiento está activo
+            $stmt_check_maintenance = $pdo->prepare("SELECT setting_value FROM site_settings WHERE setting_key = 'maintenance_mode'");
+            $stmt_check_maintenance->execute();
+            $maintenanceMode = $stmt_check_maintenance->fetchColumn();
+
+            // Si el mantenimiento está activo, NO se puede activar el registro
+            if ($maintenanceMode === '1' && $newValue === '1') {
+                throw new Exception('js.admin.errorRegInMaintenance'); // Nueva clave i18n
+            }
+            
+            // Si no, proceder con la actualización
+            $stmt = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = 'allow_new_registrations'");
+            $stmt->execute([$newValue]);
+
+            $response['success'] = true;
+            $response['message'] = 'js.admin.registrationSuccess'; // Nueva clave i18n
+            $response['newValue'] = $newValue;
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) {
+                logDatabaseError($e, 'admin_handler - update-registration-mode');
+                $response['message'] = 'js.api.errorDatabase';
+            } else {
+                $response['message'] = $e->getMessage();
+            }
+        }
+    }
+    // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
     
 } else {
     // Si no es POST, se mantiene el error por defecto

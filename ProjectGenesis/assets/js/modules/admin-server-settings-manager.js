@@ -19,33 +19,64 @@ function getCsrfTokenFromPage() {
 export function initAdminServerSettingsManager() {
 
     document.body.addEventListener('change', async (e) => {
-        // Salir si no es el toggle de mantenimiento
-        if (e.target.id !== 'toggle-maintenance-mode') {
+        
+        const toggle = e.target;
+        const toggleId = toggle.id;
+
+        // Salir si no es uno de los toggles de esta página
+        if (toggleId !== 'toggle-maintenance-mode' && toggleId !== 'toggle-allow-registration') {
             return;
         }
 
-        // Salir si no estamos en la sección correcta (para evitar efectos secundarios)
-        const section = e.target.closest('.section-content[data-section="admin-server-settings"]');
+        // Salir si no estamos en la sección correcta
+        const section = toggle.closest('.section-content[data-section="admin-server-settings"]');
         if (!section) {
             return;
         }
 
-        const toggle = e.target;
         const newValue = toggle.checked ? '1' : '0';
-
-        // Deshabilitar el toggle mientras se procesa
-        toggle.disabled = true;
-
-        const formData = new FormData();
-        formData.append('action', 'update-maintenance-mode');
+        let action = '';
+        let formData = new FormData();
+        
         formData.append('new_value', newValue);
         formData.append('csrf_token', getCsrfTokenFromPage());
+
+        // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA ▼▼▼ ---
+
+        if (toggleId === 'toggle-maintenance-mode') {
+            action = 'update-maintenance-mode';
+            formData.append('action', action);
+
+        } else if (toggleId === 'toggle-allow-registration') {
+            action = 'update-registration-mode';
+            formData.append('action', action);
+        }
+        
+        // Deshabilitar el toggle mientras se procesa
+        toggle.disabled = true;
 
         try {
             const result = await callAdminApi(formData);
 
             if (result.success) {
                 showAlert(getTranslation(result.message || 'js.admin.maintenanceSuccess'), 'success');
+
+                // Lógica de vinculación: si el modo mantenimiento se activó,
+                // actualizar el toggle de registro.
+                if (action === 'update-maintenance-mode') {
+                    const regToggle = document.getElementById('toggle-allow-registration');
+                    if (regToggle) {
+                        if (result.newValue === '1') {
+                            // Mantenimiento ON -> Forzar registro OFF y deshabilitado
+                            regToggle.checked = false;
+                            regToggle.disabled = true;
+                        } else {
+                            // Mantenimiento OFF -> Solo rehabilitar, no cambiar valor
+                            regToggle.disabled = false;
+                        }
+                    }
+                }
+
             } else {
                 // Si falla, revertir el estado visual del toggle
                 showAlert(getTranslation(result.message || 'js.admin.maintenanceError'), 'error');
@@ -57,8 +88,17 @@ export function initAdminServerSettingsManager() {
             showAlert(getTranslation('js.api.errorServer'), 'error');
             toggle.checked = !toggle.checked;
         } finally {
-            // Volver a habilitar el toggle
-            toggle.disabled = false;
+            // Volver a habilitar el toggle (a menos que sea el de registro y mant. esté on)
+            if (toggleId === 'toggle-maintenance-mode') {
+                toggle.disabled = false;
+            } else if (toggleId === 'toggle-allow-registration') {
+                // No re-habilitar si el modo mantenimiento está activo
+                const maintenanceToggle = document.getElementById('toggle-maintenance-mode');
+                if (!maintenanceToggle || !maintenanceToggle.checked) {
+                    toggle.disabled = false;
+                }
+            }
         }
+        // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
     });
 }

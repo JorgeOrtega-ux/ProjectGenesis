@@ -4,3 +4,13 @@
 [31-Oct-2025 02:57:15 UTC] PHP Warning:  move_uploaded_file(): Unable to move &quot;C:\xampp\tmp\php35D6.tmp&quot; to &quot;E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1761879435.png&quot; in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 142
 [02-Nov-2025 18:28:11 UTC] PHP Warning:  include(../includes/sections/admin/create-user.php): Failed to open stream: No such file or directory in E:\xampp\htdocs\ProjectGenesis\config\router.php on line 403
 [02-Nov-2025 18:28:12 UTC] PHP Warning:  include(): Failed opening '../includes/sections/admin/create-user.php' for inclusion (include_path='C:\xampp\php\PEAR') in E:\xampp\htdocs\ProjectGenesis\config\router.php on line 403
+[02-Nov-2025 21:55:10 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:55:19 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:55:31 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:55:35 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:55:36 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:56:15 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:56:36 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:57:24 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:57:26 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:58:02 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50

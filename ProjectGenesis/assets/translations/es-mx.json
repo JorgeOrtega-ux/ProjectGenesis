@@ -90,7 +90,9 @@
       "title": "Configuración del Servidor",
       "description": "Gestiona la configuración global y el estado del sitio. (Solo Fundadores)",
       "maintenanceTitle": "Modo Mantenimiento",
-      "maintenanceDesc": "Si está activo, los usuarios con rol \"user\" no podrán navegar por el sitio y verán una página de mantenimiento."
+      "maintenanceDesc": "Si está activo, los usuarios con rol \"user\" no podrán navegar por el sitio y verán una página de mantenimiento.",
+      "registrationTitle": "Permitir nuevos registros",
+      "registrationDesc": "Si está inactivo, los nuevos usuarios no podrán registrarse. Se desactiva automáticamente con el modo mantenimiento."
     }
   },
   "settings": {
@@ -371,6 +373,7 @@
       "errorNoResetData": "No se encontraron datos de reseteo. Por favor, vuelve a empezar.",
       "errorMissingDataRestart": "Faltan datos. Por favor, vuelve a empezar.",
       "errorInvalidResetSession": "La sesión de reseteo es inválida. Vuelve a empezar.",
+      "errorRegistrationsDisabled": "Los nuevos registros están deshabilitados por el momento.",
       "errorAccountDeleted": "Esta cuenta ha sido eliminada.",
       "errorAccountSuspended": "Esta cuenta ha sido suspendida."
     },
@@ -457,7 +460,9 @@
       "errorNoSelection": "No se ha seleccionado ningún usuario.",
       "errorFounderAssign": "El rol 'Fundador' solo se puede asignar desde la base de datos.",
       "maintenanceSuccess": "Modo mantenimiento actualizado.",
-      "maintenanceError": "Error al actualizar el modo mantenimiento."
+      "maintenanceError": "Error al actualizar el modo mantenimiento.",
+      "registrationSuccess": "Estado de registros actualizado.",
+      "errorRegInMaintenance": "No se pueden activar los registros mientras el sitio está en mantenimiento."
     }
   },
   "db": {

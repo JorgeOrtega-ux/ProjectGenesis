@@ -450,6 +450,10 @@ if (array_key_exists($page, $allowedPages)) {
         // Cargar el estado actual del modo mantenimiento para el toggle
         // $GLOBALS['site_settings'] fue cargado en bootstrapper.php
         $maintenanceModeStatus = $GLOBALS['site_settings']['maintenance_mode'] ?? '0';
+        
+        // --- ▼▼▼ ¡ESTA ES LA LÍNEA QUE FALTABA! ▼▼▼ ---
+        $allowRegistrationStatus = $GLOBALS['site_settings']['allow_new_registrations'] ?? '1';
+        // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
     }
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
