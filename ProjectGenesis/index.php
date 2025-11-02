@@ -135,11 +135,11 @@ $pathsToPages = [
     '/account-status/deleted'   => 'account-status-deleted',
     '/account-status/suspended' => 'account-status-suspended',
     
-    // --- ▼▼▼ NUEVAS RUTAS DE ADMIN ▼▼▼ ---
+    // --- ▼▼▼ RUTAS DE ADMIN MODIFICADAS ▼▼▼ ---
     '/admin'                    => 'admin-dashboard',
     '/admin/dashboard'          => 'admin-dashboard',
-    '/admin/users'              => 'admin-users',
-    // --- ▲▲▲ FIN DE NUEVAS RUTAS ▲▲▲ ---
+    '/admin/manage-users'       => 'admin-manage-users', // <--- RUTA MODIFICADA
+    // --- ▲▲▲ FIN DE RUTAS DE ADMIN ▲▲▲ ---
 ];
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 

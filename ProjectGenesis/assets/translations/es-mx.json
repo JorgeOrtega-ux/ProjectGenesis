@@ -41,9 +41,15 @@
       "manageStatus": "Estado de Cuenta",
       "clearSelection": "Quitar selección",
       "search": "Buscar usuarios",
-      "filter": "Filtrar (próximamente)",
+      "filter": "Ordenar y filtrar",
       "prevPage": "Página anterior",
-      "nextPage": "Página siguiente"
+      "nextPage": "Página siguiente",
+      "sortBy": "Ordenar por",
+      "sortDefault": "Orden por defecto",
+      "sortDateNew": "Fecha (más nuevos)",
+      "sortDateOld": "Fecha (más antiguos)",
+      "sortNameAZ": "Nombre (A-Z)",
+      "sortNameZA": "Nombre (Z-A)"
     }
   },
   "settings": {

@@ -2157,7 +2157,32 @@ body {
     gap: 8px; /* Espacio entre el toolbar principal y el de búsqueda */
     box-sizing: border-box;
 }
+/* --- ▼▼▼ NUEVO: Posicionamiento del Popover de Filtro ▼▼▼ */
+.admin-toolbar-container .popover-module[data-module="moduleAdminFilter"] {
+    position: absolute;
+    top: calc(100% + 8px); /* Debajo del primer toolbar */
+    left: 0;
+    right: auto;
+    width: 280px; /* Ancho estándar del menú */
+    z-index: 10;
+}
 
+/* --- ▼▼▼ NUEVO: Botón de filtro activo ▼▼▼ */
+.admin-toolbar-button[data-action="toggleModuleAdminFilter"].active {
+    border-color: #000000;
+    background-color: #000000;
+    color: #ffffff;
+}
+
+/* --- ▼▼▼ NUEVO: Encabezado para menús (reutilizable) ▼▼▼ */
+.menu-header {
+    padding: 8px 12px 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    user-select: none;
+}
 .admin-toolbar-floating {
     display: flex
 ;
@@ -2252,8 +2277,7 @@ body {
 
 /* --- ▼▼▼ NUEVO: Estilo para la barra de búsqueda ▼▼▼ --- */
 .admin-search-bar {
-    /* display: flex; */ /* ¡Se quita! 'display: none;' se maneja inline por JS */
-    display: none; /* Inicia oculta por defecto */
+    display: flex;
     align-items: center;
     gap: 12px;
     padding: 8px 12px;

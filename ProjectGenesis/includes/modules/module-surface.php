@@ -68,7 +68,7 @@
                     </div>
                 </div>
 
-                <div class="menu-link" data-action="toggleSectionAdminUsers">
+                <div class="menu-link" data-action="toggleSectionAdminManageUsers">
                     <div class="menu-link-icon">
                         <span class="material-symbols-rounded">manage_accounts</span>
                     </div>
@@ -76,8 +76,7 @@
                         <span data-i18n="sidebar.admin.manageUsers"></span>
                     </div>
                 </div>
-
-            <?php 
+                <?php 
             else: 
             ?>
                 <div class="menu-link active" data-action="toggleSectionHome">

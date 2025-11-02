@@ -11,6 +11,28 @@ if ($adminCurrentPage < 1) $adminCurrentPage = 1;
 
 $searchQuery = trim($_GET['q'] ?? '');
 $isSearching = !empty($searchQuery);
+
+// ¡NUEVO! OBTENER PARÁMETROS DE ORDEN (o string vacío si no existen)
+$sort_by_param = trim($_GET['s'] ?? '');
+$sort_order_param = trim($_GET['o'] ?? '');
+
+// ¡NUEVO! Lista blanca para seguridad
+$allowed_sort = ['created_at', 'username', 'email'];
+$allowed_order = ['ASC', 'DESC'];
+
+// ¡NUEVO! Validar parámetros. Si son inválidos, se tratan como vacíos (default)
+if (!in_array($sort_by_param, $allowed_sort)) {
+    $sort_by_param = '';
+}
+if (!in_array($sort_order_param, $allowed_order)) {
+    $sort_order_param = '';
+}
+
+// ¡NUEVO! Definir los valores REALES para la consulta SQL
+// Si los parámetros están vacíos, usamos el orden por defecto.
+$sort_by_sql = ($sort_by_param === '') ? 'created_at' : $sort_by_param;
+$sort_order_sql = ($sort_order_param === '') ? 'DESC' : $sort_order_param;
+
 // --- ▲▲▲ FIN DE LÓGICA PHP MODIFICADA ▲▲▲ ---
 
 $usersPerPage = 1; // 20 usuarios por página
@@ -58,7 +80,9 @@ try {
     if ($isSearching) {
         $sqlSelect .= " WHERE (username LIKE :query OR email LIKE :query)";
     }
-    $sqlSelect .= " ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
+    
+    // ¡MODIFICADO! Usar las variables SQL seguras
+    $sqlSelect .= " ORDER BY $sort_by_sql $sort_order_sql LIMIT :limit OFFSET :offset";
 
     $stmt = $pdo->prepare($sqlSelect);
 
@@ -76,7 +100,7 @@ try {
     logDatabaseError($e, 'admin - manage-users');
 }
 ?>
-<div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-users') ? 'active' : 'disabled'; ?>" data-section="admin-users">
+<div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-manage-users') ? 'active' : 'disabled'; ?>" data-section="admin-users">
 
     <div class="admin-toolbar-container">
 
@@ -92,12 +116,13 @@ try {
                         data-tooltip="admin.users.search">
                         <span class="material-symbols-rounded">search</span>
                     </button>
+                    
                     <button type="button"
-                        class="admin-toolbar-button admin-action-default"
-                        data-tooltip="admin.users.filter" disabled>
+                        class="admin-toolbar-button admin-action-default <?php echo ($sort_by_param !== '') ? 'active' : ''; ?>"
+                        data-action="toggleModuleAdminFilter"
+                        data-tooltip="admin.users.filter">
                         <span class="material-symbols-rounded">filter_list</span>
                     </button>
-
                     <button type="button"
                         class="admin-toolbar-button admin-action-selection"
                         data-tooltip="admin.users.manageRole" disabled>
@@ -146,7 +171,80 @@ try {
             </div>
         </div>
 
-       <div class="admin-toolbar-floating" style="display: <?php echo $isSearching ? 'flex' : 'none'; ?>;">
+        <div class="popover-module body-title disabled" data-module="moduleAdminFilter">
+            <div class="menu-content">
+                <div class="menu-list">
+                    <div class="menu-header" data-i18n="admin.users.sortBy">Ordenar por</div>
+                    
+                    <div class="menu-link <?php echo ($sort_by_param === '') ? 'active' : ''; ?>"
+                         data-action="admin-set-filter" data-sort="" data-order="">
+                        <div class="menu-link-icon">
+                            <span class="material-symbols-rounded">clear_all</span>
+                        </div>
+                        <div class="menu-link-text">
+                            <span data-i18n="admin.users.sortDefault"></span>
+                        </div>
+                        <div class="menu-link-check-icon">
+                            <?php if ($sort_by_param === ''): ?><span class="material-symbols-rounded">check</span><?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div class="menu-link <?php echo ($sort_by_param === 'created_at' && $sort_order_param === 'DESC') ? 'active' : ''; ?>"
+                         data-action="admin-set-filter" data-sort="created_at" data-order="DESC">
+                        <div class="menu-link-icon">
+                            <span class="material-symbols-rounded">calendar_today</span>
+                        </div>
+                        <div class="menu-link-text">
+                            <span data-i18n="admin.users.sortDateNew"></span>
+                        </div>
+                        <div class="menu-link-check-icon">
+                            <?php if ($sort_by_param === 'created_at' && $sort_order_param === 'DESC'): ?><span class="material-symbols-rounded">check</span><?php endif; ?>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-link <?php echo ($sort_by_param === 'created_at' && $sort_order_param === 'ASC') ? 'active' : ''; ?>"
+                         data-action="admin-set-filter" data-sort="created_at" data-order="ASC">
+                        <div class="menu-link-icon">
+                            <span class="material-symbols-rounded">calendar_today</span>
+                        </div>
+                        <div class="menu-link-text">
+                            <span data-i18n="admin.users.sortDateOld"></span>
+                        </div>
+                        <div class="menu-link-check-icon">
+                            <?php if ($sort_by_param === 'created_at' && $sort_order_param === 'ASC'): ?><span class="material-symbols-rounded">check</span><?php endif; ?>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-link <?php echo ($sort_by_param === 'username' && $sort_order_param === 'ASC') ? 'active' : ''; ?>"
+                         data-action="admin-set-filter" data-sort="username" data-order="ASC">
+                        <div class="menu-link-icon">
+                            <span class="material-symbols-rounded">sort_by_alpha</span>
+                        </div>
+                        <div class="menu-link-text">
+                            <span data-i18n="admin.users.sortNameAZ"></span>
+                        </div>
+                        <div class="menu-link-check-icon">
+                            <?php if ($sort_by_param === 'username' && $sort_order_param === 'ASC'): ?><span class="material-symbols-rounded">check</span><?php endif; ?>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-link <?php echo ($sort_by_param === 'username' && $sort_order_param === 'DESC') ? 'active' : ''; ?>"
+                         data-action="admin-set-filter" data-sort="username" data-order="DESC">
+                        <div class="menu-link-icon">
+                            <span class="material-symbols-rounded">sort_by_alpha</span>
+                        </div>
+                        <div class="menu-link-text">
+                            <span data-i18n="admin.users.sortNameZA"></span>
+                        </div>
+                        <div class="menu-link-check-icon">
+                            <?php if ($sort_by_param === 'username' && $sort_order_param === 'DESC'): ?><span class="material-symbols-rounded">check</span><?php endif; ?>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="admin-toolbar-floating" style="display: <?php echo $isSearching ? 'flex' : 'none'; ?>;">
             
             <div class="admin-search-bar" id="admin-search-bar">
                 <span class="material-symbols-rounded">search</span>

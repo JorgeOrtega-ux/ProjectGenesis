@@ -36,10 +36,10 @@ const routes = {
     'toggleSectionAccountStatusDeleted': 'account-status-deleted',
     'toggleSectionAccountStatusSuspended': 'account-status-suspended',
     
-    // --- ▼▼▼ NUEVAS RUTAS DE ADMIN ▼▼▼ ---
+    // --- ▼▼▼ RUTAS DE ADMIN MODIFICADAS ▼▼▼ ---
     'toggleSectionAdminDashboard': 'admin-dashboard',
-    'toggleSectionAdminUsers': 'admin-users',
-    // --- ▲▲▲ FIN DE NUEVAS RUTAS ▲▲▲ ---
+    'toggleSectionAdminManageUsers': 'admin-manage-users', // <--- RUTA MODIFICADA
+    // --- ▲▲▲ FIN DE RUTAS DE ADMIN ▲▲▲ ---
 };
 
 const paths = {
@@ -68,10 +68,10 @@ const paths = {
     '/account-status/deleted': 'toggleSectionAccountStatusDeleted',
     '/account-status/suspended': 'toggleSectionAccountStatusSuspended',
     
-    // --- ▼▼▼ NUEVOS PATHS DE ADMIN ▼▼▼ ---
+    // --- ▼▼▼ PATHS DE ADMIN MODIFICADOS ▼▼▼ ---
     '/admin/dashboard': 'toggleSectionAdminDashboard',
-    '/admin/users': 'toggleSectionAdminUsers',
-    // --- ▲▲▲ FIN DE NUEVOS PATHS ▲▲▲ ---
+    '/admin/manage-users': 'toggleSectionAdminManageUsers', // <--- PATH MODIFICADO
+    // --- ▲▲▲ FIN DE PATHS DE ADMIN ▲▲▲ ---
 };
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
@@ -251,11 +251,11 @@ function updateMenuState(currentAction) {
         menuAction = 'toggleSectionSettingsProfile';
     }
     
-    // --- ▼▼▼ NUEVA LÓGICA DE ADMIN ▼▼▼ ---
-    if (currentAction === 'toggleSectionAdminUsers') {
-        menuAction = 'toggleSectionAdminUsers';
+    // --- ▼▼▼ LÓGICA DE ADMIN MODIFICADA ▼▼▼ ---
+    if (currentAction === 'toggleSectionAdminManageUsers') { // <--- ACCIÓN MODIFICADA
+        menuAction = 'toggleSectionAdminManageUsers'; // <--- ACCIÓN MODIFICADA
     }
-    // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
+    // --- ▲▲▲ FIN DE LÓGICA DE ADMIN ▲▲▲ ---
 
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {

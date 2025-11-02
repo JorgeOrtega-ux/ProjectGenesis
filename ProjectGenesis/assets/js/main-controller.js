@@ -227,6 +227,40 @@ function initMainController() {
             event.preventDefault();
             clearAdminUserSelection();
             return;
+        
+        // --- ▼▼▼ ¡BLOQUE DE FILTRO MODIFICADO! ▼▼▼ ---
+        } else if (action === 'admin-set-filter') {
+            event.preventDefault();
+            hideTooltip();
+            clearAdminUserSelection();
+            deactivateAllModules(); // Cierra el popover de filtro
+
+            const sort_by = button.dataset.sort;
+            const sort_order = button.dataset.order;
+
+            // Comprobar que los atributos existen (incluso si están vacíos)
+            if (sort_by !== undefined && sort_order !== undefined) {
+                const newUrl = new URL(window.location);
+                
+                // Si el valor está vacío, elimina el parámetro. Si no, lo establece.
+                if (sort_by === '') {
+                    newUrl.searchParams.delete('s');
+                } else {
+                    newUrl.searchParams.set('s', sort_by);
+                }
+
+                if (sort_order === '') {
+                    newUrl.searchParams.delete('o');
+                } else {
+                    newUrl.searchParams.set('o', sort_order);
+                }
+                
+                newUrl.searchParams.set('p', '1'); // Resetear a la página 1
+                history.pushState(null, '', newUrl);
+                handleNavigation();
+            }
+            return;
+        // --- ▲▲▲ FIN DEL BLOQUE MODIFICADO ▲▲▲ ---
         }
 
         if (action.startsWith('toggleSection')) {

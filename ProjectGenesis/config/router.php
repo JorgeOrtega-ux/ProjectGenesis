@@ -95,10 +95,10 @@ $allowedPages = [
     'account-status-deleted'   => '../includes/sections/auth/account-status.php',
     'account-status-suspended' => '../includes/sections/auth/account-status.php',
     
-    // --- ▼▼▼ NUEVAS PÁGINAS DE ADMIN ▼▼▼ ---
+    // --- ▼▼▼ PÁGINAS DE ADMIN MODIFICADAS ▼▼▼ ---
     'admin-dashboard'          => '../includes/sections/admin/dashboard.php',
-    'admin-users'              => '../includes/sections/admin/manage-users.php',
-    // --- ▲▲▲ FIN DE NUEVAS PÁGINAS ▲▲▲ ---
+    'admin-manage-users'       => '../includes/sections/admin/manage-users.php', // <--- CLAVE MODIFICADA
+    // --- ▲▲▲ FIN DE PÁGINAS DE ADMIN ▲▲▲ ---
 ];
 
 $authPages = ['login'];
@@ -387,7 +387,7 @@ if (array_key_exists($page, $allowedPages)) {
     }
     
     // --- ▼▼▼ BLOQUE MODIFICADO PARA ADMIN ▼▼▼ ---
-    elseif ($page === 'admin-users') {
+    elseif ($page === 'admin-manage-users') { // <--- LÓGICA MODIFICADA
         // Capturar el parámetro 'p' (page) de la URL
         // El router ha sido llamado con &p=X
         $adminCurrentPage = (int)($_GET['p'] ?? 1);
