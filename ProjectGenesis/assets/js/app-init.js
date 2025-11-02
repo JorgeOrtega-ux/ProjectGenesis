@@ -1,7 +1,8 @@
-import { initMainController } from './main-controller.js';
-import { initRouter } from './url-manager.js';
-import { initAuthManager } from './auth-manager.js';
-import { initSettingsManager } from './settings-manager.js';
+import { initMainController } from './app/main-controller.js';
+import { initRouter } from './app/url-manager.js';
+import { initAuthManager } from './modules/auth-manager.js';
+import { initSettingsManager } from './modules/settings-manager.js';
+import { initAdminManager } from './modules/admin-manager.js'; // <-- AÑADIDO
 import { showAlert } from './alert-manager.js'; 
 import { initI18nManager } from './i18n-manager.js'; 
 import { initTooltipManager } from './tooltip-manager.js'; 
@@ -52,5 +53,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     initRouter(); 
     initAuthManager();
     initSettingsManager();
+    initAdminManager(); // <-- AÑADIDO
     initTooltipManager(); 
 });
