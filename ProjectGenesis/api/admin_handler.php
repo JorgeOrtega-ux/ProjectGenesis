@@ -185,10 +185,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = trim($_POST['username'] ?? '');
             $email = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
+            $passwordConfirm = $_POST['password_confirm'] ?? ''; // <-- NUEVA VARIABLE
             $role = $_POST['role'] ?? 'user';
 
             // 2. Validar Campos Vacíos
-            if (empty($username) || empty($email) || empty($password) || empty($role)) {
+            if (empty($username) || empty($email) || empty($password) || empty($passwordConfirm) || empty($role)) { // <-- CAMPO AÑADIDO
                 throw new Exception('js.auth.errorCompleteAllFields');
             }
 
@@ -238,6 +239,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (strlen($password) > MAX_PASSWORD_LENGTH) {
                 throw new Exception('js.auth.errorPasswordMaxLength');
             }
+            // --- ▼▼▼ NUEVA VALIDACIÓN ▼▼▼ ---
+            if ($password !== $passwordConfirm) {
+                throw new Exception('js.auth.errorPasswordMismatch');
+            }
+            // --- ▲▲▲ FIN NUEVA VALIDACIÓN ▲▲▲ ---
+
 
             // 7. Si todo es válido, crear usuario
             $passwordHash = password_hash($password, PASSWORD_BCRYPT);

@@ -68,6 +68,7 @@
       "usernameLabel": "Nombre de usuario*",
       "emailLabel": "Correo electrónico*",
       "passwordLabel": "Contraseña*",
+      "confirmPasswordLabel": "Confirmar contraseña*",
       "roleLabel": "Rol Asignado",
       "cancelButton": "Cancelar",
       "createButton": "Crear Usuario",

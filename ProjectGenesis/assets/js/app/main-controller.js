@@ -126,7 +126,8 @@ function initMainController() {
             // lógica especial como updateAdminModals()).
             if (action === 'toggleModulePageFilter' || 
                 action === 'toggleModuleAdminRole' || 
-                action === 'toggleModuleAdminStatus') {
+               action === 'toggleModuleAdminStatus' ||
+                action === 'toggleModuleAdminCreateRole') {
                 return; // Dejamos que admin-manager.js lo maneje
             }
             // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---

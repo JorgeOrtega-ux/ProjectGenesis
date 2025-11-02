@@ -305,8 +305,8 @@ export function initRouter() {
 
     document.body.addEventListener('click', e => {
         // --- ▼▼▼ MODIFICACIÓN: Añadir selector de admin ▼▼▼ ---
-        const link = e.target.closest(
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"]'
+      const link = e.target.closest(
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"]'
         );
         // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 

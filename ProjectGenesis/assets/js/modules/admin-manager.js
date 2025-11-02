@@ -523,13 +523,14 @@ export function initAdminManager() {
         // Ocultar error anterior
         hideCreateUserError();
 
-        // --- Validación básica del lado del cliente ---
+        // --- ▼▼▼ INICIO DE VALIDACIÓN MODIFICADA ▼▼▼ ---
         const username = form.querySelector('#admin-create-username').value;
         const email = form.querySelector('#admin-create-email').value;
         const password = form.querySelector('#admin-create-password').value;
+        const passwordConfirm = form.querySelector('#admin-create-password-confirm').value; // <-- NUEVA VARIABLE
         const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i;
 
-        if (!username || !email || !password) {
+        if (!username || !email || !password || !passwordConfirm) { // <-- CAMPO AÑADIDO
             showCreateUserError('js.auth.errorCompleteAllFields'); return;
         }
         if (username.length < 6 || username.length > 32) {
@@ -544,7 +545,12 @@ export function initAdminManager() {
         if (password.length < 8 || password.length > 72) {
             showCreateUserError('js.auth.errorPasswordLength', {min: 8, max: 72}); return;
         }
-        // --- Fin Validación ---
+        // --- ▼▼▼ NUEVA VALIDACIÓN ▼▼▼ ---
+        if (password !== passwordConfirm) {
+            showCreateUserError('js.auth.errorPasswordMismatch'); return;
+        }
+        // --- ▲▲▲ FIN NUEVA VALIDACIÓN ▲▲▲ ---
+        // --- ▲▲▲ FIN DE VALIDACIÓN MODIFICADA ▲▲▲ ---
 
         // Mostrar spinner en el botón
         if (button) {
