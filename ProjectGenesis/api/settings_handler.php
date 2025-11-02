@@ -108,9 +108,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $fileSize = $file['size'];
                 $fileTmpName = $file['tmp_name'];
 
-                if ($fileSize > 2 * 1024 * 1024) { // 2MB
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                // Usar el valor de la BD, con un fallback de 2MB
+                $maxSizeMB = (int)($GLOBALS['site_settings']['avatar_max_size_mb'] ?? 2);
+                if ($fileSize > $maxSizeMB * 1024 * 1024) {
+                    $response['data'] = ['size' => $maxSizeMB]; // Enviar el límite al JS
                     throw new Exception('js.settings.errorAvatarSize');
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 $finfo = new finfo(FILEINFO_MIME_TYPE);
                 $mimeType = $finfo->file($fileTmpName);
@@ -194,7 +199,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'update-username') {
             try {
 
-                define('USERNAME_CHANGE_COOLDOWN_DAYS', 30);
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                // Ya no se define la constante, se lee de $GLOBALS
+                $usernameCooldownDays = (int)($GLOBALS['site_settings']['username_cooldown_days'] ?? 30);
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 $stmt_check = $pdo->prepare(
                     "SELECT changed_at FROM user_audit_logs 
@@ -210,13 +218,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $interval = $currentTime->diff($lastChangeTime);
                     $daysPassed = (int)$interval->format('%a');
 
-                    if ($daysPassed < USERNAME_CHANGE_COOLDOWN_DAYS) {
-                        $daysRemaining = USERNAME_CHANGE_COOLDOWN_DAYS - $daysPassed;
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                    if ($daysPassed < $usernameCooldownDays) {
+                        $daysRemaining = $usernameCooldownDays - $daysPassed;
                         $response['message'] = 'js.settings.errorUsernameCooldown';
                         $response['data'] = ['days' => $daysRemaining];
                         echo json_encode($response);
                         exit;
                     }
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 }
 
                 $newUsername = trim($_POST['username'] ?? '');
@@ -416,7 +426,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'update-email') {
             try {
 
-                define('EMAIL_CHANGE_COOLDOWN_DAYS', 12);
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                $emailCooldownDays = (int)($GLOBALS['site_settings']['email_cooldown_days'] ?? 12);
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 $stmt_check_email = $pdo->prepare(
                     "SELECT changed_at FROM user_audit_logs 
@@ -432,13 +444,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $interval = $currentTime->diff($lastChangeTime);
                     $daysPassed = (int)$interval->format('%a');
 
-                    if ($daysPassed < EMAIL_CHANGE_COOLDOWN_DAYS) {
-                        $daysRemaining = EMAIL_CHANGE_COOLDOWN_DAYS - $daysPassed;
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                    if ($daysPassed < $emailCooldownDays) {
+                        $daysRemaining = $emailCooldownDays - $daysPassed;
                         $response['message'] = 'js.settings.errorEmailCooldown';
                         $response['data'] = ['days' => $daysRemaining];
                         echo json_encode($response);
                         exit;
                     }
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 }
 
                 $newEmail = trim($_POST['email'] ?? '');

@@ -14,91 +14,118 @@ function getCsrfTokenFromPage() {
 }
 
 /**
+ * Manejador genérico para actualizar una configuración del sitio.
+ * @param {HTMLElement} inputElement - El elemento input (checkbox o number) que disparó el evento.
+ * @param {string} action - La acción de la API a llamar (ej. 'update-maintenance-mode').
+ * @param {string} newValue - El nuevo valor a enviar.
+ */
+async function handleSettingUpdate(inputElement, action, newValue) {
+    const formData = new FormData();
+    formData.append('action', action);
+    formData.append('new_value', newValue);
+    formData.append('csrf_token', getCsrfTokenFromPage());
+
+    // Deshabilitar el input mientras se procesa
+    inputElement.disabled = true;
+
+    try {
+        const result = await callAdminApi(formData);
+
+        if (result.success) {
+            // Usar un mensaje genérico de éxito para todas las configuraciones
+            showAlert(getTranslation(result.message || 'js.admin.settingUpdateSuccess'), 'success');
+
+            // --- Lógica de Vinculación (Casos Especiales) ---
+            
+            // 1. Si se actualizó el modo mantenimiento
+            if (action === 'update-maintenance-mode') {
+                const regToggle = document.getElementById('toggle-allow-registration');
+                if (regToggle) {
+                    if (newValue === '1') {
+                        // Mantenimiento ON -> Forzar registro OFF y deshabilitado
+                        regToggle.checked = false;
+                        regToggle.disabled = true;
+                    } else {
+                        // Mantenimiento OFF -> Solo rehabilitar, no cambiar valor
+                        regToggle.disabled = false;
+                    }
+                }
+            }
+            
+            // 2. Si se actualizó el toggle de registro (y falló por mantenimiento)
+            // (La API maneja esto, pero el JS de 'result.success' no se ejecutaría)
+
+        } else {
+            // Si falla, revertir el estado visual del input
+            showAlert(getTranslation(result.message || 'js.admin.settingUpdateError'), 'error');
+            if (inputElement.type === 'checkbox') {
+                inputElement.checked = !inputElement.checked;
+            }
+            // (Para 'number', revertir al valor original sería más complejo,
+            // por ahora solo mostramos el error).
+        }
+
+    } catch (error) {
+        // Error de red o similar
+        showAlert(getTranslation('js.api.errorServer'), 'error');
+        if (inputElement.type === 'checkbox') {
+            inputElement.checked = !inputElement.checked;
+        }
+    } finally {
+        // Volver a habilitar el input (a menos que sea el de registro y mant. esté on)
+        if (inputElement.id === 'toggle-allow-registration') {
+            const maintenanceToggle = document.getElementById('toggle-maintenance-mode');
+            if (!maintenanceToggle || !maintenanceToggle.checked) {
+                inputElement.disabled = false;
+            }
+        } else {
+            inputElement.disabled = false;
+        }
+    }
+}
+
+/**
  * Inicializa los listeners para la página de configuración del servidor.
  */
 export function initAdminServerSettingsManager() {
 
+    // Usar 'change' funciona tanto para toggles como para inputs numéricos (se dispara al perder el foco)
     document.body.addEventListener('change', async (e) => {
         
-        const toggle = e.target;
-        const toggleId = toggle.id;
+        const input = e.target;
+        const action = input.dataset.action;
 
-        // Salir si no es uno de los toggles de esta página
-        if (toggleId !== 'toggle-maintenance-mode' && toggleId !== 'toggle-allow-registration') {
+        // Salir si el input no tiene data-action
+        if (!action) {
             return;
         }
 
         // Salir si no estamos en la sección correcta
-        const section = toggle.closest('.section-content[data-section="admin-server-settings"]');
+        const section = input.closest('.section-content[data-section="admin-server-settings"]');
         if (!section) {
             return;
         }
 
-        const newValue = toggle.checked ? '1' : '0';
-        let action = '';
-        let formData = new FormData();
-        
-        formData.append('new_value', newValue);
-        formData.append('csrf_token', getCsrfTokenFromPage());
+        let newValue = '';
 
-        // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA ▼▼▼ ---
-
-        if (toggleId === 'toggle-maintenance-mode') {
-            action = 'update-maintenance-mode';
-            formData.append('action', action);
-
-        } else if (toggleId === 'toggle-allow-registration') {
-            action = 'update-registration-mode';
-            formData.append('action', action);
-        }
-        
-        // Deshabilitar el toggle mientras se procesa
-        toggle.disabled = true;
-
-        try {
-            const result = await callAdminApi(formData);
-
-            if (result.success) {
-                showAlert(getTranslation(result.message || 'js.admin.maintenanceSuccess'), 'success');
-
-                // Lógica de vinculación: si el modo mantenimiento se activó,
-                // actualizar el toggle de registro.
-                if (action === 'update-maintenance-mode') {
-                    const regToggle = document.getElementById('toggle-allow-registration');
-                    if (regToggle) {
-                        if (result.newValue === '1') {
-                            // Mantenimiento ON -> Forzar registro OFF y deshabilitado
-                            regToggle.checked = false;
-                            regToggle.disabled = true;
-                        } else {
-                            // Mantenimiento OFF -> Solo rehabilitar, no cambiar valor
-                            regToggle.disabled = false;
-                        }
-                    }
-                }
-
-            } else {
-                // Si falla, revertir el estado visual del toggle
-                showAlert(getTranslation(result.message || 'js.admin.maintenanceError'), 'error');
-                toggle.checked = !toggle.checked;
+        if (input.type === 'checkbox') {
+            // Es un Toggle
+            newValue = input.checked ? '1' : '0';
+        } else if (input.type === 'number') {
+            // Es un campo numérico
+            newValue = input.value;
+            // Validación simple
+            if (newValue === '' || parseFloat(newValue) < 0) {
+                showAlert(getTranslation('js.auth.errorCompleteFields'), 'error');
+                // (Opcional: revertir al valor anterior si lo teníamos guardado)
+                return;
             }
-
-        } catch (error) {
-            // Error de red o similar
-            showAlert(getTranslation('js.api.errorServer'), 'error');
-            toggle.checked = !toggle.checked;
-        } finally {
-            // Volver a habilitar el toggle (a menos que sea el de registro y mant. esté on)
-            if (toggleId === 'toggle-maintenance-mode') {
-                toggle.disabled = false;
-            } else if (toggleId === 'toggle-allow-registration') {
-                // No re-habilitar si el modo mantenimiento está activo
-                const maintenanceToggle = document.getElementById('toggle-maintenance-mode');
-                if (!maintenanceToggle || !maintenanceToggle.checked) {
-                    toggle.disabled = false;
-                }
-            }
+        } else {
+            // No es un input que nos interese
+            return;
         }
-        // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
+
+        // Llamar al manejador genérico
+        await handleSettingUpdate(input, action, newValue);
     });
 }

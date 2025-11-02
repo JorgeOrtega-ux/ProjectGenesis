@@ -18,15 +18,36 @@ try {
         $GLOBALS['site_settings'][$row['setting_key']] = $row['setting_value'];
     }
     
-    // Asegurar un fallback si la clave no existe en la BD
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    // Asegurar un fallback si las claves no existen en la BD
     if (!isset($GLOBALS['site_settings']['maintenance_mode'])) {
          $GLOBALS['site_settings']['maintenance_mode'] = '0';
     }
+    // (allow_new_registrations se carga en config.php, pero lo dejamos por seguridad)
+    if (!isset($GLOBALS['site_settings']['allow_new_registrations'])) {
+         $GLOBALS['site_settings']['allow_new_registrations'] = '1';
+    }
+    if (!isset($GLOBALS['site_settings']['username_cooldown_days'])) {
+         $GLOBALS['site_settings']['username_cooldown_days'] = '30';
+    }
+    if (!isset($GLOBALS['site_settings']['email_cooldown_days'])) {
+         $GLOBALS['site_settings']['email_cooldown_days'] = '12';
+    }
+    if (!isset($GLOBALS['site_settings']['avatar_max_size_mb'])) {
+         $GLOBALS['site_settings']['avatar_max_size_mb'] = '2';
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
 } catch (PDOException $e) {
-    // Si la tabla no existe o falla, asumimos que no hay mantenimiento
+    // Si la tabla no existe o falla, asumimos valores seguros
     logDatabaseError($e, 'bootstrapper - load site_settings');
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     $GLOBALS['site_settings']['maintenance_mode'] = '0'; // Fallback seguro
+    $GLOBALS['site_settings']['allow_new_registrations'] = '1'; // Fallback seguro
+    $GLOBALS['site_settings']['username_cooldown_days'] = '30'; // Fallback seguro
+    $GLOBALS['site_settings']['email_cooldown_days'] = '12'; // Fallback seguro
+    $GLOBALS['site_settings']['avatar_max_size_mb'] = '2'; // Fallback seguro
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 

@@ -423,7 +423,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!canAdminModifyTarget($adminRole, $targetUser['role'])) throw new Exception('js.admin.errorAdminTarget');
             
             $file = $_FILES['avatar'];
-            if ($file['size'] > 2 * 1024 * 1024) throw new Exception('js.settings.errorAvatarSize');
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            $maxSizeMB = (int)($GLOBALS['site_settings']['avatar_max_size_mb'] ?? 2);
+            if ($file['size'] > $maxSizeMB * 1024 * 1024) {
+                $response['data'] = ['size' => $maxSizeMB];
+                throw new Exception('js.settings.errorAvatarSize');
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             $finfo = new finfo(FILEINFO_MIME_TYPE);
             $mimeType = $finfo->file($file['tmp_name']);
@@ -722,6 +729,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
+    
+    // --- ▼▼▼ INICIO DE NUEVAS ACCIONES GENÉRICAS ▼▼▼ ---
+    elseif ($action === 'update-username-cooldown' || $action === 'update-email-cooldown' || $action === 'update-avatar-max-size') {
+        
+        if ($adminRole !== 'founder') {
+            $response['message'] = 'js.admin.errorAdminTarget';
+            echo json_encode($response);
+            exit;
+        }
+
+        try {
+            $newValue = trim($_POST['new_value'] ?? '');
+            
+            // Determinar la clave de la BD
+            $settingKeyMap = [
+                'update-username-cooldown' => 'username_cooldown_days',
+                'update-email-cooldown' => 'email_cooldown_days',
+                'update-avatar-max-size' => 'avatar_max_size_mb',
+            ];
+            $dbKey = $settingKeyMap[$action];
+
+            // Validar que el valor sea un número positivo
+            if (!is_numeric($newValue) || (int)$newValue <= 0) {
+                throw new Exception('js.api.invalidAction'); // Error genérico
+            }
+            
+            $stmt = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = ?");
+            $stmt->execute([(int)$newValue, $dbKey]);
+
+            $response['success'] = true;
+            $response['message'] = 'js.admin.settingUpdateSuccess'; // Mensaje genérico
+            $response['newValue'] = (int)$newValue;
+            $response['settingKey'] = $dbKey;
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) {
+                logDatabaseError($e, "admin_handler - $action");
+                $response['message'] = 'js.api.errorDatabase';
+            } else {
+                $response['message'] = $e->getMessage();
+            }
+        }
+    }
+    // --- ▲▲▲ FIN DE NUEVAS ACCIONES GENÉRICAS ▲▲▲ ---
     
 } else {
     // Si no es POST, se mantiene el error por defecto

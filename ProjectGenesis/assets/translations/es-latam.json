@@ -92,7 +92,13 @@
       "maintenanceTitle": "Modo Mantenimiento",
       "maintenanceDesc": "Si está activo, los usuarios con rol \"user\" no podrán navegar por el sitio y verán una página de mantenimiento.",
       "registrationTitle": "Permitir nuevos registros",
-      "registrationDesc": "Si está inactivo, los nuevos usuarios no podrán registrarse. Se desactiva automáticamente con el modo mantenimiento."
+      "registrationDesc": "Si está inactivo, los nuevos usuarios no podrán registrarse. Se desactiva automáticamente con el modo mantenimiento.",
+      "usernameCooldownTitle": "Cooldown de Nombre de Usuario (Días)",
+      "usernameCooldownDesc": "Días que un usuario debe esperar antes de poder cambiar su nombre de usuario de nuevo.",
+      "emailCooldownTitle": "Cooldown de Email (Días)",
+      "emailCooldownDesc": "Días que un usuario debe esperar antes de poder cambiar su email de nuevo.",
+      "avatarMaxSizeTitle": "Tamaño Máx. de Avatar (MB)",
+      "avatarMaxSizeDesc": "Tamaño máximo permitido para la subida de avatares, en Megabytes (ej. 2 = 2MB)."
     }
   },
   "settings": {
@@ -401,7 +407,7 @@
       "success2faEnabled": "Verificación de dos pasos activada.",
       "success2faDisabled": "Verificación de dos pasos desactivada.",
       "successLogoutAll": "Se han invalidado todas las demás sesiones.",
-      "errorNoSession": "Acceso denegado. No has iniciado sesión.",
+      "errorNoSession": "Acceso denigado. No has iniciado sesión.",
       "infoCodeSentCurrent": "Se ha enviado un código a tu correo actual.",
       "errorCodeRequest": "Error al solicitar el código.",
       "sending": "Enviando...",
@@ -462,7 +468,9 @@
       "maintenanceSuccess": "Modo mantenimiento actualizado.",
       "maintenanceError": "Error al actualizar el modo mantenimiento.",
       "registrationSuccess": "Estado de registros actualizado.",
-      "errorRegInMaintenance": "No se pueden activar los registros mientras el sitio está en mantenimiento."
+      "errorRegInMaintenance": "No se pueden activar los registros mientras el sitio está en mantenimiento.",
+      "settingUpdateSuccess": "Configuración actualizada.",
+      "settingUpdateError": "Error al guardar la configuración."
     }
   },
   "db": {
