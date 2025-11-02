@@ -1,3 +1,6 @@
+// RUTA: assets/js/app/url-manager.js
+// (CÓDIGO CORREGIDO)
+
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
 import { applyTranslations, getTranslation } from '../services/i18n-manager.js';
@@ -60,13 +63,17 @@ const paths = {
     '/settings/accessibility': 'toggleSectionSettingsAccess',
     '/settings/device-sessions': 'toggleSectionSettingsDevices',
     
-    '/settings/change-password': 'settings-change-password',
-    '/settings/change-email': 'settings-change-email',
-    '/settings/toggle-2fa': 'settings-toggle-2fa',
-    '/settings/delete-account': 'settings-delete-account',
+    // --- ▼▼▼ INICIO DE LA CORRECCIÓN (LÍNEAS 108-111) ▼▼▼ ---
+    // Los valores aquí DEBEN coincidir con los data-action de los botones
+    // para que el router pueda encontrar la URL correcta.
+    '/settings/change-password': 'toggleSectionSettingsPassword',
+    '/settings/change-email': 'toggleSectionSettingsChangeEmail',
+    '/settings/toggle-2fa': 'toggleSectionSettingsToggle2fa',
+    '/settings/delete-account': 'toggleSectionSettingsDeleteAccount',
+    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
-    '/account-status/deleted': 'account-status-deleted',
-    '/account-status/suspended': 'account-status-suspended',
+    '/account-status/deleted': 'toggleSectionAccountStatusDeleted',
+    '/account-status/suspended': 'toggleSectionAccountStatusSuspended',
     
     // --- ▼▼▼ PATHS DE ADMIN MODIFICADOS ▼▼▼ ---
     '/admin/dashboard': 'toggleSectionAdminDashboard',
