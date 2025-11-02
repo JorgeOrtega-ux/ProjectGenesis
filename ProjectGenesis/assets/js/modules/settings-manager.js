@@ -774,11 +774,16 @@ export function initSettingsManager() {
                 fileInput.value = ''; 
                 return;
             }
-            if (file.size > 2 * 1024 * 1024) { 
-                showInlineError(card, 'js.settings.errorAvatarSize');
+            
+            // --- ▼▼▼ BLOQUE MODIFICADO ▼▼▼ ---
+            const maxSizeInMB = window.avatarMaxSizeMB || 2;
+            if (file.size > maxSizeInMB * 1024 * 1024) { 
+                showInlineError(card, 'js.settings.errorAvatarSize', { size: maxSizeInMB });
                 fileInput.value = ''; 
                 return;
             }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
             if (!previewImage.dataset.originalSrc) {
                 previewImage.dataset.originalSrc = previewImage.src;

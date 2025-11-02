@@ -50,6 +50,10 @@
             window.userTheme = '<?php echo $_SESSION['theme'] ?? 'system'; ?>';
             window.userIncreaseMessageDuration = <?php echo $_SESSION['increase_message_duration'] ?? 0; ?>;
 
+            // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+            window.avatarMaxSizeMB = <?php echo $GLOBALS['site_settings']['avatar_max_size_mb'] ?? 2; ?>;
+            // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+
             window.userLanguage = '<?php echo $jsLanguage; ?>';
         </script>
         <script type="module" src="<?php echo $basePath; ?>/assets/js/app-init.js"></script>

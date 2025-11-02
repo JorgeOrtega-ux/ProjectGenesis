@@ -435,7 +435,7 @@
       "successUsernameUpdate": "Nombre de usuario actualizado.",
       "successEmailUpdate": "Correo actualizado.",
       "errorAvatarFormat": "Formato no válido (solo PNG, JPEG, GIF o WebP).",
-      "errorAvatarSize": "El archivo es demasiado grande (máx 2MB).",
+      "errorAvatarSize": "El archivo es demasiado grande (máx %size%MB).",
       "successAccountDeleted": "Cuenta eliminada. Serás redirigido.",
       "errorAccountDelete": "Error al eliminar la cuenta."
     },
