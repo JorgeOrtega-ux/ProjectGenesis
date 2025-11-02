@@ -88,5 +88,10 @@ CREATE TABLE site_settings (
 -- Insertar las configuraciones por defecto
 INSERT INTO site_settings (setting_key, setting_value) VALUES
 ('maintenance_mode', '0'),
-('allow_new_registrations', '1');
+('allow_new_registrations', '1'),
+-- --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+('username_cooldown_days', '30'),
+('email_cooldown_days', '12'),
+('avatar_max_size_mb', '2');
+-- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 -- --- ▲▲▲ FIN DE NUEVA TABLA Y DATOS ▲▲▲ ---
