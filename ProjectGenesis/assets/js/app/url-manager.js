@@ -328,9 +328,7 @@ export function initRouter() {
 
             e.preventDefault();
 
-            // --- MODIFICACIÓN: Inicializar fetchParams ---
-            let action, page, newPath, fetchParams = null;
-            const originalHref = link.href; // Guardar el href original
+            let action, page, newPath;
 
             if (link.hasAttribute('data-action')) {
                 action = link.getAttribute('data-action');
@@ -354,32 +352,19 @@ export function initRouter() {
                 page = routes[action];
             }
             
-            // --- ▼▼▼ INICIO DE LÓGICA DE URL LIMPIA ▼▼▼ ---
-            
-            // Caso especial: El enlace es para editar un usuario Y tiene [data-nav-js]
-            if (action === 'toggleSectionAdminEditUser' && link.hasAttribute('data-nav-js') && originalHref) {
-                const url = new URL(originalHref);
-                const id = url.searchParams.get('id');
-                if (id) {
-                    fetchParams = { id: id };
-                    // 'newPath' ya está limpio (ej: /admin/edit-user) gracias a la lógica anterior
+            // --- ▼▼▼ ¡NUEVA LÓGICA PARA QUERY STRINGS! ▼▼▼ ---
+            // Si es un enlace de JS (data-nav-js) Y tiene un query string,
+            // asegurarse de que el newPath lo incluya para el pushState.
+            const url = link.href ? new URL(link.href) : null;
+            if (link.hasAttribute('data-nav-js') && url && url.search) {
+                 if (newPath.includes('?')) {
+                    // Esto no debería pasar con la lógica de arriba, pero por si acaso
+                    newPath += "&" + url.search.substring(1);
                 } else {
-                    console.error("ID de usuario no encontrado para editar");
-                    return; // No continuar si el ID falta
+                    newPath += url.search;
                 }
             }
-            // Caso general: Otro enlace [data-nav-js] que SÍ debe mantener su query string (si existiera)
-            else if (link.hasAttribute('data-nav-js') && originalHref) {
-                 const url = new URL(originalHref);
-                 if (url.search) {
-                     if (newPath.includes('?')) {
-                        newPath += "&" + url.search.substring(1);
-                    } else {
-                        newPath += url.search;
-                    }
-                 }
-            }
-            // --- ▲▲▲ FIN DE LÓGICA DE URL LIMPIA ▲▲▲ ---
+            // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
 
             if (!page) {
                 if(link.tagName === 'A' && !link.hasAttribute('data-action')) {
@@ -392,19 +377,15 @@ export function initRouter() {
             
             // --- ▼▼▼ MODIFICACIÓN: Comprobar URL completa (con query) ▼▼▼ ---
             const currentFullUrl = window.location.pathname + window.location.search;
-            
             if (currentFullUrl !== fullUrlPath) {
-                // --- MODIFICACIÓN: Pasa fetchParams a loadPage ---
-                history.pushState(null, '', fullUrlPath);
-                loadPage(page, action, fetchParams); 
-            
-            // --- MODIFICACIÓN: Nuevo bloque 'else if' ---
-            // Caso especial: Ya estamos en /admin/edit-user pero hacemos clic
-            // para editar OTRO usuario. La URL no cambia, pero el contenido SÍ debe recargarse.
-            } else if (fetchParams) {
-                loadPage(page, action, fetchParams);
-            }
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                
+                // --- ▼▼▼ MODIFICACIÓN: Simplificado ▼▼▼ ---
+                history.pushState(null, '', fullUrlPath);
+                
+                loadPage(page, action); 
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            }
 
             deactivateAllModules();
         }
