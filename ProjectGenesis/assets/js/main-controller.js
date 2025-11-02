@@ -1,6 +1,10 @@
 import { getTranslation } from './i18n-manager.js';
 import { handleNavigation } from './url-manager.js';
-import { hideTooltip } from './tooltip-manager.js'; // <-- AÑADIDO: Importar hideTooltip
+import { hideTooltip } from './tooltip-manager.js'; 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+import { callAdminApi } from './api-service.js';
+import { showAlert } from './alert-manager.js';
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 const deactivateAllModules = (exceptionModule = null) => {
     document.querySelectorAll('[data-module].active').forEach(activeModule => {
@@ -16,7 +20,12 @@ function initMainController() {
     let closeOnClickOutside = true;
     let closeOnEscape = true;
     
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     let selectedAdminUserId = null;
+    let selectedAdminUserRole = null;
+    let selectedAdminUserStatus = null;
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
     // --- ▼▼▼ NUEVA FUNCIÓN ▼▼▼ ---
     // Habilita los botones de acción y muestra la vista de selección
@@ -59,6 +68,77 @@ function initMainController() {
         disableSelectionActions();
         
         selectedAdminUserId = null;
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        selectedAdminUserRole = null;
+        selectedAdminUserStatus = null;
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    }
+    
+    // --- ▼▼▼ NUEVA FUNCIÓN ▼▼▼ ---
+    // Actualiza los popovers de admin con el estado actual del usuario seleccionado
+    function updateAdminModals() {
+        // Actualizar popover de Rol
+        const roleModule = document.querySelector('[data-module="moduleAdminRole"]');
+        if (roleModule) {
+            roleModule.querySelectorAll('.menu-link').forEach(link => {
+                link.classList.remove('active');
+                const icon = link.querySelector('.menu-link-check-icon');
+                if (icon) icon.innerHTML = '';
+                
+                if (link.dataset.value === selectedAdminUserRole) {
+                    link.classList.add('active');
+                    if (icon) icon.innerHTML = '<span class="material-symbols-rounded">check</span>';
+                }
+            });
+        }
+        
+        // Actualizar popover de Estado
+        const statusModule = document.querySelector('[data-module="moduleAdminStatus"]');
+        if (statusModule) {
+            statusModule.querySelectorAll('.menu-link').forEach(link => {
+                link.classList.remove('active');
+                const icon = link.querySelector('.menu-link-check-icon');
+                if (icon) icon.innerHTML = '';
+
+                if (link.dataset.value === selectedAdminUserStatus) {
+                    link.classList.add('active');
+                    if (icon) icon.innerHTML = '<span class="material-symbols-rounded">check</span>';
+                }
+            });
+        }
+    }
+    
+    // --- ▼▼▼ NUEVA FUNCIÓN ▼▼▼ ---
+    // Maneja la llamada a la API para cambiar rol o estado
+    async function handleAdminAction(actionType, targetUserId, newValue, buttonEl) {
+        if (!targetUserId) {
+            showAlert(getTranslation('js.admin.errorNoSelection'), 'error');
+            return;
+        }
+
+        // Deshabilitar todos los links en el menú actual para evitar doble clic
+        const menuLinks = buttonEl.closest('.menu-list').querySelectorAll('.menu-link');
+        menuLinks.forEach(link => link.classList.add('disabled-interactive'));
+
+        const formData = new FormData();
+        formData.append('action', actionType === 'admin-set-role' ? 'set-role' : 'set-status');
+        formData.append('target_user_id', targetUserId);
+        formData.append('new_value', newValue);
+        // El token CSRF se añade automáticamente en callAdminApi
+
+        const result = await callAdminApi(formData);
+
+        if (result.success) {
+            showAlert(getTranslation(result.message || 'js.admin.successRole'), 'success');
+            // Limpiar selección y recargar la lista de usuarios
+            clearAdminUserSelection();
+            deactivateAllModules();
+            handleNavigation(); // Esto recarga la sección
+        } else {
+            showAlert(getTranslation(result.message || 'js.auth.errorUnknown'), 'error');
+            // Si falla, reactivar los links
+            menuLinks.forEach(link => link.classList.remove('disabled-interactive'));
+        }
     }
 
 
@@ -84,6 +164,8 @@ function initMainController() {
                 // 2. Seleccionar el nuevo
                 userCard.classList.add('selected');
                 selectedAdminUserId = userId;
+                selectedAdminUserRole = userCard.dataset.userRole; // <-- AÑADIDO
+                selectedAdminUserStatus = userCard.dataset.userStatus; // <-- AÑADIDO
                 
                 // 3. Actualizar el toolbar (con la función helper)
                 enableSelectionActions();
@@ -284,7 +366,18 @@ function initMainController() {
             }
             return;
         // --- ▲▲▲ FIN DEL BLOQUE MODIFICADO ▲▲▲ ---
+        
+        // --- ▼▼▼ INICIO DE NUEVO BLOQUE ▼▼▼ ---
+        } else if (action === 'admin-set-role' || action === 'admin-set-status') {
+            event.preventDefault();
+            hideTooltip();
+            const newValue = button.dataset.value;
+            // Llamar a la nueva función async
+            handleAdminAction(action, selectedAdminUserId, newValue, button);
+            return;
+        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
         }
+
 
         if (action.startsWith('toggleSection')) {
             return;
@@ -301,10 +394,15 @@ function initMainController() {
             let moduleName = action.substring(6);
             moduleName = moduleName.charAt(0).toLowerCase() + moduleName.slice(1);
 
-            // --- ▼▼▼ LÓGICA DE FILTRO MODIFICADA ▼▼▼ ---
-            // Manejar el caso especial del filtro genérico
+            // --- ▼▼▼ LÓGICA DE FILTRO Y ADMIN MODIFICADA ▼▼▼ ---
             if (action === 'toggleModulePageFilter') {
                 moduleName = 'modulePageFilter';
+            } else if (action === 'toggleModuleAdminRole') {
+                moduleName = 'moduleAdminRole';
+                updateAdminModals(); // Actualizar el estado antes de mostrar
+            } else if (action === 'toggleModuleAdminStatus') {
+                moduleName = 'moduleAdminStatus';
+                updateAdminModals(); // Actualizar el estado antes de mostrar
             }
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 

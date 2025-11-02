@@ -2,7 +2,8 @@ import { getTranslation } from './i18n-manager.js';
 
 const API_ENDPOINTS = {
     AUTH: `${window.projectBasePath}/api/auth_handler.php`,
-    SETTINGS: `${window.projectBasePath}/api/settings_handler.php`
+    SETTINGS: `${window.projectBasePath}/api/settings_handler.php`,
+    ADMIN: `${window.projectBasePath}/api/admin_handler.php` // <-- AÑADIDO
 };
 
 async function _post(url, formData) {
@@ -55,4 +56,10 @@ async function callSettingsApi(formData) {
     return _post(API_ENDPOINTS.SETTINGS, formData);
 }
 
-export { callAuthApi, callSettingsApi };
+// --- ▼▼▼ NUEVA FUNCIÓN AÑADIDA ▼▼▼ ---
+async function callAdminApi(formData) {
+    return _post(API_ENDPOINTS.ADMIN, formData);
+}
+
+export { callAuthApi, callSettingsApi, callAdminApi }; // <-- AÑADIDO A EXPORT
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---

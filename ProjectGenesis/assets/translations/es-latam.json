@@ -49,7 +49,16 @@
       "sortDateNew": "Fecha (más nuevos)",
       "sortDateOld": "Fecha (más antiguos)",
       "sortNameAZ": "Nombre (A-Z)",
-      "sortNameZA": "Nombre (Z-A)"
+      "sortNameZA": "Nombre (Z-A)",
+      "role": "Rol",
+      "status": "Estado",
+      "roleUser": "Usuario",
+      "roleModerator": "Moderador",
+      "roleAdministrator": "Administrador",
+      "roleFounder": "Fundador",
+      "statusActive": "Activo",
+      "statusSuspended": "Suspendido",
+      "statusDeleted": "Eliminado (Inactivo)"
     }
   },
   "settings": {
@@ -400,6 +409,16 @@
     },
     "url": {
       "errorLoad": "Error al cargar el contenido"
+    },
+    "admin": {
+      "successRole": "Rol del usuario actualizado.",
+      "successStatus": "Estado del usuario actualizado.",
+      "errorAdminTarget": "No tienes permiso para modificar a este usuario.",
+      "errorFounderTarget": "No puedes modificar a un Fundador.",
+      "errorInvalidRole": "No tienes permiso para asignar este rol.",
+      "errorSelf": "No puedes modificarte a ti mismo.",
+      "errorNoSelection": "No se ha seleccionado ningún usuario.",
+      "errorFounderAssign": "El rol 'Fundador' solo se puede asignar desde la base de datos."
     }
   },
   "db": {

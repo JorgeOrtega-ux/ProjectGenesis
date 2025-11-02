@@ -128,15 +128,17 @@ try {
                 <div class="toolbar-action-selection">
                     <button type="button"
                         class="page-toolbar-button"
-                        data-tooltip="admin.users.manageRole" disabled>
+                        data-action="toggleModuleAdminRole"
+                        data-tooltip="admin.users.manageRole">
                         <span class="material-symbols-rounded">manage_accounts</span>
                     </button>
                     <button type="button"
                         class="page-toolbar-button"
-                        data-tooltip="admin.users.manageStatus" disabled>
+                        data-action="toggleModuleAdminStatus"
+                        data-tooltip="admin.users.manageStatus">
                         <span class="material-symbols-rounded">toggle_on</span>
                     </button>
-                </div>
+                    </div>
                 
                 </div>
 
@@ -251,6 +253,60 @@ try {
                 </div>
             </div>
         </div>
+        
+        <div class="popover-module body-title disabled" data-module="moduleAdminRole">
+            <div class="menu-content">
+                <div class="menu-list">
+                    <div class="menu-header" data-i18n="admin.users.role">Rol</div>
+                    
+                    <div class="menu-link" data-action="admin-set-role" data-value="user">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">person</span></div>
+                        <div class="menu-link-text"><span data-i18n="admin.users.roleUser"></span></div>
+                        <div class="menu-link-check-icon"></div>
+                    </div>
+                    <div class="menu-link" data-action="admin-set-role" data-value="moderator">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">shield_person</span></div>
+                        <div class="menu-link-text"><span data-i18n="admin.users.roleModerator"></span></div>
+                        <div class="menu-link-check-icon"></div>
+                    </div>
+                    <div class="menu-link" data-action="admin-set-role" data-value="administrator">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">admin_panel_settings</span></div>
+                        <div class="menu-link-text"><span data-i18n="admin.users.roleAdministrator"></span></div>
+                        <div class="menu-link-check-icon"></div>
+                    </div>
+                    <div class="menu-link" data-action="admin-set-role" data-value="founder">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">star</span></div>
+                        <div class="menu-link-text"><span data-i18n="admin.users.roleFounder"></span></div>
+                        <div class="menu-link-check-icon"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="popover-module body-title disabled" data-module="moduleAdminStatus">
+            <div class="menu-content">
+                <div class="menu-list">
+                    <div class="menu-header" data-i18n="admin.users.status">Estado</div>
+                    
+                    <div class="menu-link" data-action="admin-set-status" data-value="active">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">check_circle</span></div>
+                        <div class="menu-link-text"><span data-i18n="admin.users.statusActive"></span></div>
+                        <div class="menu-link-check-icon"></div>
+                    </div>
+                    <div class="menu-link" data-action="admin-set-status" data-value="suspended">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">pause_circle</span></div>
+                        <div class="menu-link-text"><span data-i18n="admin.users.statusSuspended"></span></div>
+                        <div class="menu-link-check-icon"></div>
+                    </div>
+                    <div class="menu-link" data-action="admin-set-status" data-value="deleted">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">remove_circle</span></div>
+                        <div class="menu-link-text"><span data-i18n="admin.users.statusDeleted"></span></div>
+                        <div class="menu-link-check-icon"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="page-toolbar-floating" style="display: <?php echo $isSearching ? 'flex' : 'none'; ?>;">
             
             <div class="page-search-bar" id="page-search-bar">
@@ -291,9 +347,12 @@ try {
                         $avatarUrl = "https://ui-avatars.com/api/?name=" . urlencode($user['username']) . "&size=100&background=e0e0e0&color=ffffff";
                     }
                     ?>
-                    <div class="user-card-item" data-user-id="<?php echo $user['id']; ?>">
-
-                        <div class="component-card__avatar" style="width: 50px; height: 50px; flex-shrink: 0;" data-role="<?php echo htmlspecialchars($user['role']); ?>">
+                    <div class="user-card-item" 
+                         data-user-id="<?php echo $user['id']; ?>"
+                         data-user-role="<?php echo htmlspecialchars($user['role']); ?>"
+                         data-user-status="<?php echo htmlspecialchars($user['account_status']); ?>"
+                    >
+                    <div class="component-card__avatar" style="width: 50px; height: 50px; flex-shrink: 0;" data-role="<?php echo htmlspecialchars($user['role']); ?>">
                             <img src="<?php echo htmlspecialchars($avatarUrl); ?>"
                                 alt="<?php echo htmlspecialchars($user['username']); ?>"
                                 class="component-card__avatar-image">
