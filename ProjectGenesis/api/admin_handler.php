@@ -447,6 +447,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $response['success'] = true;
             $response['message'] = 'js.settings.successAvatarUpdate';
+            $response['newAvatarUrl'] = $newPublicUrl;
 
         } catch (Exception $e) {
             if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-upload-avatar');
@@ -474,6 +475,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $response['success'] = true;
             $response['message'] = 'js.settings.successAvatarRemoved';
+            $response['newAvatarUrl'] = $newDefaultUrl;
 
         } catch (Exception $e) {
             if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-remove-avatar');
@@ -510,6 +512,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $response['success'] = true;
             $response['message'] = 'js.settings.successUsernameUpdate';
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            $response['newUsername'] = $newUsername;
+            // Comprobar si el avatar por defecto necesita actualizarse
+            $oldUrl = $targetUser['profile_image_url'];
+            $isDefaultAvatar = strpos($oldUrl, '/assets/uploads/avatars_uploaded/') === false;
+            
+            if ($isDefaultAvatar) {
+                $oldInitial = mb_substr($oldUsername, 0, 1, 'UTF-8');
+                $newInitial = mb_substr($newUsername, 0, 1, 'UTF-8');
+
+                if (strcasecmp($oldInitial, $newInitial) !== 0) {
+                    $newAvatarUrl = generateDefaultAvatar($pdo, $targetUserId, $newUsername, $basePath);
+                    if ($newAvatarUrl) {
+                        $stmt_avatar = $pdo->prepare("UPDATE users SET profile_image_url = ? WHERE id = ?");
+                        $stmt_avatar->execute([$newAvatarUrl, $targetUserId]);
+                        $response['newAvatarUrl'] = $newAvatarUrl;
+                    }
+                }
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
         } catch (Exception $e) {
             if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-update-username');
@@ -551,6 +575,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $response['success'] = true;
             $response['message'] = 'js.settings.successEmailUpdate';
+            $response['newEmail'] = $newEmail; // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
 
         } catch (Exception $e) {
             if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-update-email');
@@ -589,6 +614,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $response['success'] = true;
             $response['message'] = 'js.settings.successPassUpdate';
+            $response['newPasswordHash'] = $newHashedPassword; // <-- ¡LÍNEA AÑADIDA!
 
         } catch (Exception $e) {
             if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-update-password');

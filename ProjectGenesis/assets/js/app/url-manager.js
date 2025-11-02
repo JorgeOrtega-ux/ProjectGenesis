@@ -4,6 +4,9 @@
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
 import { applyTranslations, getTranslation } from '../services/i18n-manager.js';
+// --- ▼▼▼ INICIO DE LA CORRECCIÓN (IMPORTAR) ▼▼▼ ---
+import { hideTooltip } from '../services/tooltip-manager.js';
+// --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
 const contentContainer = document.querySelector('.main-sections');
 const pageLoader = document.getElementById('page-loader');
@@ -278,6 +281,12 @@ export function initRouter() {
         );
 
         if (link) {
+            
+            // --- ▼▼▼ INICIO DE LA CORRECCIÓN (LLAMAR) ▼▼▼ ---
+            // Ocultar cualquier tooltip abierto tan pronto como se haga clic en un enlace de navegación.
+            hideTooltip();
+            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+
             if (link.classList.contains('component-button') && !link.hasAttribute('data-action') && !link.hasAttribute('data-nav-js')) { 
                 return;
             }

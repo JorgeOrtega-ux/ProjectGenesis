@@ -140,13 +140,26 @@ export function initAdminEditUserManager() {
 
                 const result = await callAdminApi(formData); // API de Admin
 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (NO-RELOAD) ▼▼▼ ---
                 if (result.success) {
                     window.showAlert(getTranslation(result.message || 'js.settings.successAvatarRemoved'), 'success');
-                    setTimeout(() => location.reload(), 1500); // Recargar para ver cambios
+                    
+                    const previewImage = document.getElementById('admin-avatar-preview-image');
+                    previewImage.src = result.newAvatarUrl; // API returns new default URL
+                    previewImage.dataset.originalSrc = result.newAvatarUrl;
+
+                    // Hide custom buttons, show default buttons
+                    document.getElementById('admin-avatar-actions-preview').style.display = 'none';
+                    document.getElementById('admin-avatar-actions-custom').style.display = 'none';
+                    document.getElementById('admin-avatar-actions-default').style.display = 'flex';
+                    avatarCard.dataset.originalActions = 'default'; // Update the original state
+                    
+                    toggleButtonSpinner(removeTrigger, getTranslation('settings.profile.removePhoto'), false);
                 } else {
                     showInlineError(avatarCard, result.message || 'js.settings.errorAvatarRemove');
                     toggleButtonSpinner(removeTrigger, getTranslation('settings.profile.removePhoto'), false);
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 return;
             }
 
@@ -169,13 +182,28 @@ export function initAdminEditUserManager() {
 
                 const result = await callAdminApi(formData); // API de Admin
 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (NO-RELOAD) ▼▼▼ ---
                 if (result.success) {
                     window.showAlert(getTranslation(result.message || 'js.settings.successAvatarUpdate'), 'success');
-                    setTimeout(() => location.reload(), 1500);
+
+                    const previewImage = document.getElementById('admin-avatar-preview-image');
+                    previewImage.src = result.newAvatarUrl; // API must return this
+                    previewImage.dataset.originalSrc = result.newAvatarUrl; // Update original source
+                    
+                    document.getElementById('admin-avatar-upload-input').value = ''; // Clear file input
+
+                    // Hide preview buttons, show custom buttons
+                    document.getElementById('admin-avatar-actions-preview').style.display = 'none';
+                    document.getElementById('admin-avatar-actions-default').style.display = 'none';
+                    document.getElementById('admin-avatar-actions-custom').style.display = 'flex';
+                    avatarCard.dataset.originalActions = 'custom'; // Update the original state
+
+                    toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 } else {
                     showInlineError(avatarCard, result.message || 'js.settings.errorSaveUnknown');
                     toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 return;
             }
         }
@@ -221,13 +249,37 @@ export function initAdminEditUserManager() {
 
                 const result = await callAdminApi(formData); // API de Admin
 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (NO-RELOAD) ▼▼▼ ---
                 if (result.success) {
                     window.showAlert(getTranslation(result.message || 'js.settings.successUsernameUpdate'), 'success');
-                    setTimeout(() => location.reload(), 1500);
+                    
+                    const newUsername = result.newUsername; // Get from API
+                    const displayElement = document.getElementById('admin-username-display-text');
+                    const inputElement = document.getElementById('admin-username-input');
+                    
+                    displayElement.textContent = newUsername;
+                    displayElement.dataset.originalUsername = newUsername;
+                    inputElement.value = newUsername;
+
+                    // Hide edit state, show view state
+                    document.getElementById('admin-username-edit-state').style.display = 'none';
+                    document.getElementById('admin-username-actions-edit').style.display = 'none';
+                    document.getElementById('admin-username-view-state').style.display = 'flex';
+                    document.getElementById('admin-username-actions-view').style.display = 'flex';
+
+                    // Check if avatar also changed (if it was a default one)
+                    if (result.newAvatarUrl) {
+                        const previewImage = document.getElementById('admin-avatar-preview-image');
+                        previewImage.src = result.newAvatarUrl;
+                        previewImage.dataset.originalSrc = result.newAvatarUrl;
+                    }
+
+                    toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 } else {
                     showInlineError(usernameCard, result.message || 'js.settings.errorSaveUnknown', result.data);
                     toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                  return;
             }
         }
@@ -284,13 +336,30 @@ export function initAdminEditUserManager() {
 
                 const result = await callAdminApi(formData); // API de Admin
 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (NO-RELOAD) ▼▼▼ ---
                 if (result.success) {
                     window.showAlert(getTranslation(result.message || 'js.settings.successEmailUpdate'), 'success');
-                    setTimeout(() => location.reload(), 1500);
+
+                    const newEmail = result.newEmail; // Get from API
+                    const displayElement = document.getElementById('admin-email-display-text');
+                    const inputElement = document.getElementById('admin-email-input');
+
+                    displayElement.textContent = newEmail;
+                    displayElement.dataset.originalEmail = newEmail;
+                    inputElement.value = newEmail;
+
+                    // Hide edit state, show view state
+                    document.getElementById('admin-email-edit-state').style.display = 'none';
+                    document.getElementById('admin-email-actions-edit').style.display = 'none';
+                    document.getElementById('admin-email-view-state').style.display = 'flex';
+                    document.getElementById('admin-email-actions-view').style.display = 'flex';
+
+                    toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 } else {
                     showInlineError(emailCard, result.message || 'js.settings.errorSaveUnknown', result.data);
                     toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                  return;
             }
         }
@@ -336,14 +405,23 @@ export function initAdminEditUserManager() {
 
             const result = await callAdminApi(formData); // API de Admin
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (NO-RELOAD) ▼▼▼ ---
             if (result.success) {
                 window.showAlert(getTranslation(result.message || 'js.settings.successPassUpdate'), 'success');
-                // Limpiar campos y recargar hash (o recargar página)
-                setTimeout(() => location.reload(), 1500);
+                
+                // Actualizar el hash mostrado y limpiar los campos
+                if (result.newPasswordHash) {
+                    document.getElementById('admin-password-hash-display').value = result.newPasswordHash;
+                }
+                newPassInput.value = '';
+                confirmPassInput.value = '';
+
+                toggleButtonSpinner(saveTrigger, getTranslation('settings.login.savePassword'), false);
             } else {
                 showInlineError(step2Card, result.message || 'js.settings.errorSaving', result.data);
                 toggleButtonSpinner(saveTrigger, getTranslation('settings.login.savePassword'), false);
             }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             return;
         }
 

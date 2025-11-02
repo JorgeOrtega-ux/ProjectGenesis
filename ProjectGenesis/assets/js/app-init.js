@@ -51,10 +51,22 @@ document.addEventListener('DOMContentLoaded', async function () {
     initThemeManager();
 
     initMainController();
-    initRouter(); 
+    
+    // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+    // Los listeners de los módulos deben registrarse ANTES que el router
+    // para que puedan interceptar clics específicos (como 'toggleSectionAdminEditUser')
+    // antes de que el router general los capture.
+    
+    // initRouter(); // <-- MOVIDO MÁS ABAJO
+    
     initAuthManager();
     initSettingsManager();
     initAdminManager(); // <-- AÑADIDO
     initAdminEditUserManager(); // <-- ¡NUEVA LÍNEA!
+    
+    // El Router se inicializa al final
+    initRouter(); 
+    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+    
     initTooltipManager(); 
 });

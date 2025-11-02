@@ -26,6 +26,15 @@ function initMainController() {
         
         const button = event.target.closest('[data-action]');
 
+        // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+        // Ocultar cualquier tooltip abierto tan pronto como se haga clic en una acción.
+        // Esto previene que el tooltip se quede "pegado" si la acción causa
+        // que el botón desaparezca (ej. navegación).
+        if (button) {
+            hideTooltip();
+        }
+        // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+
         if (!button) {
             return;
         }
