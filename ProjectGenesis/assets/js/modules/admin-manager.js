@@ -433,9 +433,11 @@ export function initAdminManager() {
             return;
         }
 
-        // === ▼▼▼ BLOQUE AÑADIDO ▼▼▼ ===
+        // === ▼▼▼ BLOQUE CORREGIDO ▼▼▼ ===
         if (action === 'toggleSectionAdminEditUser') {
             event.preventDefault();
+            event.stopPropagation(); // <--- ¡ESTA ES LA CORRECCIÓN!
+            
             if (!selectedAdminUserId) {
                 showAlert(getTranslation('js.admin.errorNoSelection'), 'error');
                 return;
@@ -454,7 +456,7 @@ export function initAdminManager() {
             deactivateAllModules(); // Cerrar popovers
             return;
         }
-        // === ▲▲▲ FIN BLOQUE AÑADIDO ▲▲▲ ===
+        // === ▲▲▲ FIN BLOQUE CORREGIDO ▲▲▲ ===
         
         if (action === 'admin-set-filter') {
             event.preventDefault();

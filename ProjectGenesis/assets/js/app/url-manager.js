@@ -164,11 +164,15 @@ async function loadPage(page, action, fetchParams = null) {
             }
         }
 
-        // 3. EXCEPCIÓN: Si es admin-manage-users y NO hay params, 
-        //    forzar la carga limpia (para ignorar ?q= de la URL en recarga).
+        // === ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ===
+        // 3. EXCEPCIÓN: Esta excepción causaba que al presionar "atrás" (que es un popstate 
+        //    sin fetchParams) se perdieran los filtros de búsqueda/paginación.
+        /*
         if (page === 'admin-manage-users' && !fetchParams) {
             queryString = '';
         }
+        */
+        // === ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ===
         
         const fetchUrl = `${basePath}/config/router.php?page=${page}${queryString ? `&${queryString}` : ''}`;
         
