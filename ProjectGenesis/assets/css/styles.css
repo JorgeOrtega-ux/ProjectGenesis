@@ -2159,23 +2159,17 @@ body {
 }
 
 .admin-toolbar-floating {
-    /* Esto AHORA es solo el estilo VISUAL del toolbar */
-    display: flex;
+    display: flex
+;
     justify-content: space-between;
     align-items: center;
-    width: 100%; /* Ocupa el 100% del nuevo container */
+    width: 100%;
     padding: 8px 8px;
     background-color: #ffffff;
-    border: 1px solid #00000020;
-    border-radius: 12px; /* Bordes redondeados */
-    box-shadow: 0 4px 12px #00000010; /* Sombra ligera */
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #00000020;
     box-sizing: border-box;
-    
-    /* --- MODIFICADO --- */
-    height: 50px; /* Altura fija de 50px */
-    /* --- FIN MODIFICACIÓN --- */
-    
-    /* ¡Se eliminó position, top, left, transform, z-index, max-width, width: 95%! */
+    height: auto;
 }
 .admin-toolbar-left,
 .admin-toolbar-right {
@@ -2264,7 +2258,7 @@ body {
     gap: 12px;
     padding: 8px 12px;
     /* --- MODIFICADO --- */
-    height: 50px; /* Altura fija de 50px */
+    height: auto; /* Altura fija de 50px */
     /* --- FIN MODIFICACIÓN --- */
     background-color: #ffffff;
     border: 1px solid #00000020;
