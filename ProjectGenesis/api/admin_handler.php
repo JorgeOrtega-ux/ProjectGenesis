@@ -23,6 +23,47 @@ if ($adminRole !== 'administrator' && $adminRole !== 'founder') {
     exit;
 }
 
+// --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! (Copiada de settings_handler.php) ▼▼▼ ---
+function generateDefaultAvatar($pdo, $userId, $username, $basePath)
+{
+    try {
+        $savePathDir = dirname(__DIR__) . '/assets/uploads/avatars_default'; // Nueva carpeta
+        $fileName = "user-{$userId}.png";
+        $fullSavePath = $savePathDir . '/' . $fileName;
+        $publicUrl = $basePath . '/assets/uploads/avatars_default/' . $fileName; // Nueva carpeta
+
+        if (!is_dir($savePathDir)) {
+            mkdir($savePathDir, 0755, true);
+        }
+
+        $avatarColors = ['206BD3', 'D32029', '28A745', 'E91E63', 'F57C00'];
+        $selectedColor = $avatarColors[array_rand($avatarColors)];
+        $nameParam = urlencode($username);
+
+        $apiUrl = "https://ui-avatars.com/api/?name={$nameParam}&size=256&background={$selectedColor}&color=ffffff&bold=true&length=1";
+
+        $imageData = @file_get_contents($apiUrl);
+
+        if ($imageData === false) {
+            return null;
+        }
+
+        file_put_contents($fullSavePath, $imageData);
+        return $publicUrl;
+    } catch (Exception $e) {
+        return null;
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+
+// --- ▼▼▼ ¡NUEVAS CONSTANTES AÑADIDAS! (Copiadas de auth_handler.php) ▼▼▼ ---
+define('MIN_PASSWORD_LENGTH', 8);
+define('MAX_PASSWORD_LENGTH', 72);
+define('MIN_USERNAME_LENGTH', 6);
+define('MAX_USERNAME_LENGTH', 32);
+define('MAX_EMAIL_LENGTH', 255);
+// --- ▲▲▲ FIN DE NUEVAS CONSTANTES ▲▲▲ ---
+
 // --- INICIO DE MODIFICACIÓN: Lógica de POST y GET ---
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -136,6 +177,113 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logDatabaseError($e, 'admin_handler - get-users');
             $response['message'] = 'js.api.errorDatabase';
         }
+        
+    // --- ▼▼▼ ¡NUEVA ACCIÓN 'create-user'! ▼▼▼ ---
+    } elseif ($action === 'create-user') {
+        try {
+            // 1. Obtener datos
+            $username = trim($_POST['username'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? '';
+            $role = $_POST['role'] ?? 'user';
+
+            // 2. Validar Campos Vacíos
+            if (empty($username) || empty($email) || empty($password) || empty($role)) {
+                throw new Exception('js.auth.errorCompleteAllFields');
+            }
+
+            // 3. Validar Rol
+            $allowedRoles = ['user', 'moderator', 'administrator'];
+            if (!in_array($role, $allowedRoles)) {
+                throw new Exception('admin.create.errorRole'); // Nueva clave i18n
+            }
+            // (La comprobación de 'founder' no es necesaria, ya que no está en $allowedRoles)
+
+            // 4. Validar Email
+            $allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com'];
+            $emailDomain = substr($email, strrpos($email, '@') + 1);
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new Exception('js.auth.errorInvalidEmail');
+            }
+            if (strlen($email) > MAX_EMAIL_LENGTH) {
+                throw new Exception('js.auth.errorEmailLength');
+            }
+            if (!in_array(strtolower($emailDomain), $allowedDomains)) {
+                throw new Exception('js.auth.errorEmailDomain');
+            }
+            $stmt_check_email = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+            $stmt_check_email->execute([$email]);
+            if ($stmt_check_email->fetch()) {
+                throw new Exception('js.auth.errorEmailInUse');
+            }
+
+            // 5. Validar Username
+            if (strlen($username) < MIN_USERNAME_LENGTH) {
+                throw new Exception('js.auth.errorUsernameMinLength');
+            }
+            if (strlen($username) > MAX_USERNAME_LENGTH) {
+                throw new Exception('js.auth.errorUsernameMaxLength');
+            }
+            $stmt_check_user = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+            $stmt_check_user->execute([$username]);
+            if ($stmt_check_user->fetch()) {
+                throw new Exception('js.auth.errorUsernameInUse');
+            }
+
+            // 6. Validar Contraseña
+            if (strlen($password) < MIN_PASSWORD_LENGTH) {
+                throw new Exception('js.auth.errorPasswordMinLength');
+            }
+            if (strlen($password) > MAX_PASSWORD_LENGTH) {
+                throw new Exception('js.auth.errorPasswordMaxLength');
+            }
+
+            // 7. Si todo es válido, crear usuario
+            $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+            $authToken = bin2hex(random_bytes(32));
+
+            $stmt_insert = $pdo->prepare(
+                "INSERT INTO users (email, username, password, role, auth_token, account_status) 
+                 VALUES (?, ?, ?, ?, ?, 'active')"
+            );
+            $stmt_insert->execute([$email, $username, $passwordHash, $role, $authToken]);
+            $newUserId = $pdo->lastInsertId();
+
+            // 8. Generar Avatar por defecto
+            $localAvatarUrl = generateDefaultAvatar($pdo, $newUserId, $username, $basePath);
+            if ($localAvatarUrl) {
+                $stmt_avatar = $pdo->prepare("UPDATE users SET profile_image_url = ? WHERE id = ?");
+                $stmt_avatar->execute([$localAvatarUrl, $newUserId]);
+            }
+
+            // 9. Crear Preferencias por defecto
+            $preferredLanguage = $_SESSION['language'] ?? 'es-latam'; // Usar el idioma del admin
+            $stmt_prefs = $pdo->prepare(
+                "INSERT INTO user_preferences (user_id, language, theme, usage_type) 
+                 VALUES (?, ?, 'system', 'personal')"
+            );
+            $stmt_prefs->execute([$newUserId, $preferredLanguage]);
+
+            // 10. Responder con éxito
+            $response['success'] = true;
+            $response['message'] = 'admin.create.success'; // Nueva clave i18n
+
+        } catch (PDOException $e) {
+            logDatabaseError($e, 'admin_handler - create-user');
+            $response['message'] = 'js.api.errorDatabase';
+        } catch (Exception $e) {
+            // Capturar errores de validación
+            $response['message'] = $e->getMessage();
+            $data = [];
+            if ($response['message'] === 'js.auth.errorPasswordMinLength') $data['length'] = MIN_PASSWORD_LENGTH;
+            if ($response['message'] === 'js.auth.errorPasswordMaxLength') $data['length'] = MAX_PASSWORD_LENGTH;
+            if ($response['message'] === 'js.auth.errorUsernameMinLength') $data['length'] = MIN_USERNAME_LENGTH;
+            if ($response['message'] === 'js.auth.errorUsernameMaxLength') $data['length'] = MAX_USERNAME_LENGTH;
+            if (!empty($data)) $response['data'] = $data;
+        }
+
+    // --- FIN DE 'create-user' ---
         
     // --- Lógica existente para 'set-role' y 'set-status' ---
     } elseif ($action === 'set-role' || $action === 'set-status') {

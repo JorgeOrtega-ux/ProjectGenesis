@@ -42,6 +42,7 @@ const routes = {
     // --- ▼▼▼ RUTAS DE ADMIN MODIFICADAS ▼▼▼ ---
     'toggleSectionAdminDashboard': 'admin-dashboard',
     'toggleSectionAdminManageUsers': 'admin-manage-users', // <--- RUTA MODIFICADA
+    'toggleSectionAdminCreateUser': 'admin-create-user', // <--- ¡NUEVA LÍNEA!
     // --- ▲▲▲ FIN DE RUTAS DE ADMIN ▲▲▲ ---
 };
 
@@ -78,6 +79,7 @@ const paths = {
     // --- ▼▼▼ PATHS DE ADMIN MODIFICADOS ▼▼▼ ---
     '/admin/dashboard': 'toggleSectionAdminDashboard',
     '/admin/manage-users': 'toggleSectionAdminManageUsers', // <--- PATH MODIFICADO
+    '/admin/create-user': 'toggleSectionAdminCreateUser', // <--- ¡NUEVA LÍNEA!
     // --- ▲▲▲ FIN DE PATHS DE ADMIN ▲▲▲ ---
 };
 
@@ -279,6 +281,10 @@ function updateMenuState(currentAction) {
     // --- ▼▼▼ LÓGICA DE ADMIN MODIFICADA ▼▼▼ ---
     if (currentAction === 'toggleSectionAdminManageUsers') { // <--- ACCIÓN MODIFICADA
         menuAction = 'toggleSectionAdminManageUsers'; // <--- ACCIÓN MODIFICADA
+    }
+    // --- ¡NUEVA REGLA! ---
+    if (currentAction === 'toggleSectionAdminCreateUser') {
+        menuAction = 'toggleSectionAdminCreateUser';
     }
     // --- ▲▲▲ FIN DE LÓGICA DE ADMIN ▲▲▲ ---
 

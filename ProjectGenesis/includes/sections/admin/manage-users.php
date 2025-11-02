@@ -123,7 +123,14 @@ try {
                         data-tooltip="admin.users.filter">
                         <span class="material-symbols-rounded">filter_list</span>
                     </button>
-                </div>
+                    
+                    <button type="button"
+                        class="page-toolbar-button"
+                        data-action="toggleSectionAdminCreateUser" 
+                        data-tooltip="admin.users.createUser">
+                        <span class="material-symbols-rounded">person_add</span>
+                    </button>
+                    </div>
                 
                 <div class="toolbar-action-selection">
                     <button type="button"

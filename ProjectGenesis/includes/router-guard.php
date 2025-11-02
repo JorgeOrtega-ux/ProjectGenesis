@@ -40,6 +40,7 @@ $pathsToPages = [
     '/admin'                    => 'admin-dashboard',
     '/admin/dashboard'          => 'admin-dashboard',
     '/admin/manage-users'       => 'admin-manage-users', 
+    '/admin/create-user'        => 'admin-create-user', // <--- ¡NUEVA LÍNEA!
 ];
 
 // 3. Determinar la página actual y los tipos de página

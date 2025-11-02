@@ -265,6 +265,38 @@ export function initAdminManager() {
         }
     }
 
+    // --- ▼▼▼ ¡NUEVA FUNCIÓN! ▼▼▼ ---
+    /**
+     * Muestra u oculta un error inline en el formulario de creación
+     * @param {string} messageKey - Clave de traducción del mensaje
+     * @param {Object} data - Datos para reemplazar en la clave (ej. %length%)
+     */
+    function showCreateUserError(messageKey, data = null) {
+        const errorDiv = document.querySelector('#admin-create-card .component-card__error');
+        if (!errorDiv) return;
+
+        let message = getTranslation(messageKey);
+        if (data) {
+            Object.keys(data).forEach(key => {
+                message = message.replace(`%${key}%`, data[key]);
+            });
+        }
+        
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+    
+    // --- ▼▼▼ ¡NUEVA FUNCIÓN! ▼▼▼ ---
+    /**
+     * Oculta el error inline en el formulario de creación
+     */
+    function hideCreateUserError() {
+        const errorDiv = document.querySelector('#admin-create-card .component-card__error');
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+        }
+    }
+
     document.body.addEventListener('click', async function (event) {
         
         const userCard = event.target.closest('.user-card-item[data-user-id]');
@@ -286,6 +318,49 @@ export function initAdminManager() {
             }
             return;
         }
+
+        // --- ▼▼▼ ¡NUEVA LÓGICA! ▼▼▼ ---
+        // Manejar clic en el selector de rol en la PÁGINA DE CREACIÓN
+        const createRoleLink = event.target.closest('[data-module="moduleAdminCreateRole"] .menu-link');
+        if (createRoleLink) {
+            event.preventDefault();
+            const newValue = createRoleLink.dataset.value;
+            if (!newValue) return;
+
+            // 1. Actualizar el input oculto
+            const hiddenInput = document.getElementById('admin-create-role-input');
+            if (hiddenInput) {
+                hiddenInput.value = newValue;
+            }
+
+            // 2. Actualizar el botón trigger
+            const trigger = document.querySelector('[data-action="toggleModuleAdminCreateRole"]');
+            const textEl = trigger.querySelector('.trigger-select-text span');
+            const iconEl = trigger.querySelector('.trigger-select-icon span');
+            
+            const newTextKey = createRoleLink.querySelector('.menu-link-text span').dataset.i18n;
+            const newIconName = createRoleLink.querySelector('.menu-link-icon span').textContent;
+
+            if (textEl) textEl.setAttribute('data-i18n', newTextKey);
+            if (textEl) textEl.textContent = getTranslation(newTextKey);
+            if (iconEl) iconEl.textContent = newIconName;
+
+            // 3. Actualizar el estado 'active' en el popover
+            const menuList = createRoleLink.closest('.menu-list');
+            menuList.querySelectorAll('.menu-link').forEach(link => {
+                link.classList.remove('active');
+                const icon = link.querySelector('.menu-link-check-icon');
+                if (icon) icon.innerHTML = '';
+            });
+            createRoleLink.classList.add('active');
+            const iconContainer = createRoleLink.querySelector('.menu-link-check-icon');
+            if (iconContainer) iconContainer.innerHTML = '<span class="material-symbols-rounded">check</span>';
+
+            // 4. Cerrar el popover
+            deactivateAllModules();
+            return;
+        }
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
 
         const button = event.target.closest('[data-action]');
         if (!button) {
@@ -398,20 +473,29 @@ export function initAdminManager() {
             return;
         }
 
-        if (action === 'toggleModulePageFilter' || action === 'toggleModuleAdminRole' || action === 'toggleModuleAdminStatus') {
+        // --- ▼▼▼ LÓGICA DE TOGGLE MODIFICADA ▼▼▼ ---
+        if (action === 'toggleModulePageFilter' || 
+            action === 'toggleModuleAdminRole' || 
+            action === 'toggleModuleAdminStatus' ||
+            action === 'toggleModuleAdminCreateRole') { // <-- ¡NUEVO!
+            
             event.stopPropagation();
             let moduleName;
+            
             if (action === 'toggleModulePageFilter') {
                 moduleName = 'modulePageFilter';
             } else if (action === 'toggleModuleAdminRole') {
                 if (!selectedAdminUserId) return; // No abrir si no hay usuario
                 moduleName = 'moduleAdminRole';
                 updateAdminModals();
-            } else { 
+            } else if (action === 'toggleModuleAdminStatus'){ 
                 if (!selectedAdminUserId) return; // No abrir si no hay usuario
                 moduleName = 'moduleAdminStatus';
                 updateAdminModals();
+            } else if (action === 'toggleModuleAdminCreateRole') { // <-- ¡NUEVO!
+                moduleName = 'moduleAdminCreateRole';
             }
+            
             const module = document.querySelector(`[data-module="${moduleName}"]`);
             if (module) {
                 const isOpening = module.classList.contains('disabled');
@@ -421,8 +505,92 @@ export function initAdminManager() {
                 module.classList.toggle('disabled');
                 module.classList.toggle('active');
             }
+            // --- ▲▲▲ FIN DE LÓGICA DE TOGGLE ▲▲▲ ---
         }
     });
+
+    // --- ▼▼▼ ¡NUEVO LISTENER! ▼▼▼ ---
+    // Manejar el envío del formulario de creación de usuario
+    document.body.addEventListener('submit', async function(event) {
+        if (event.target.id !== 'admin-create-user-form') {
+            return;
+        }
+        event.preventDefault();
+        
+        const form = event.target;
+        const button = form.querySelector('#admin-create-user-submit');
+        
+        // Ocultar error anterior
+        hideCreateUserError();
+
+        // --- Validación básica del lado del cliente ---
+        const username = form.querySelector('#admin-create-username').value;
+        const email = form.querySelector('#admin-create-email').value;
+        const password = form.querySelector('#admin-create-password').value;
+        const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i;
+
+        if (!username || !email || !password) {
+            showCreateUserError('js.auth.errorCompleteAllFields'); return;
+        }
+        if (username.length < 6 || username.length > 32) {
+            showCreateUserError('js.auth.errorUsernameLength', {min: 6, max: 32}); return;
+        }
+        if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+            showCreateUserError('js.auth.errorInvalidEmail'); return;
+        }
+        if (!allowedDomains.test(email)) {
+            showCreateUserError('js.auth.errorEmailDomain'); return;
+        }
+        if (password.length < 8 || password.length > 72) {
+            showCreateUserError('js.auth.errorPasswordLength', {min: 8, max: 72}); return;
+        }
+        // --- Fin Validación ---
+
+        // Mostrar spinner en el botón
+        if (button) {
+            button.disabled = true;
+            button.dataset.originalText = button.innerHTML;
+            button.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;"></span>`;
+        }
+
+        const formData = new FormData(form);
+        formData.append('action', 'create-user');
+
+        const result = await callAdminApi(formData);
+
+        if (result.success) {
+            showAlert(getTranslation(result.message || 'admin.create.success'), 'success');
+            
+            // Redirigir a la página de gestión de usuarios
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.href = window.projectBasePath + '/admin/manage-users';
+                link.setAttribute('data-nav-js', 'true');
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            }, 1500);
+
+        } else {
+            // Mostrar error de la API
+            showCreateUserError(result.message || 'js.auth.errorUnknown', result.data);
+            
+            // Restaurar botón
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = button.dataset.originalText || getTranslation('admin.create.createButton');
+            }
+        }
+    });
+
+    // Ocultar error de creación al escribir en cualquier input
+    document.body.addEventListener('input', function(event) {
+        const input = event.target.closest('#admin-create-user-form .component-input');
+        if (input) {
+            hideCreateUserError();
+        }
+    });
+    // --- ▲▲▲ FIN DE NUEVO LISTENER ▲▲▲ ---
 
     document.body.addEventListener('keydown', function(event) {
         const searchInput = event.target.closest('.page-search-input');

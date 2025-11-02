@@ -26,7 +26,8 @@
     "admin": {
       "backToHome": "Volver a inicio",
       "dashboard": "Dashboard",
-      "manageUsers": "Gestionar usuarios"
+      "manageUsers": "Gestionar usuarios",
+      "createUsers": "Crear usuario"
     }
   },
   "admin": {
@@ -58,7 +59,20 @@
       "roleFounder": "Fundador",
       "statusActive": "Activo",
       "statusSuspended": "Suspendido",
-      "statusDeleted": "Eliminado (Inactivo)"
+      "statusDeleted": "Eliminado (Inactivo)",
+      "createUser": "Crear nuevo usuario"
+    },
+    "create": {
+      "title": "Crear Nuevo Usuario",
+      "description": "Completa el formulario para registrar un nuevo usuario en el sistema.",
+      "usernameLabel": "Nombre de usuario*",
+      "emailLabel": "Correo electrónico*",
+      "passwordLabel": "Contraseña*",
+      "roleLabel": "Rol Asignado",
+      "cancelButton": "Cancelar",
+      "createButton": "Crear Usuario",
+      "success": "¡Usuario creado! Serás redirigido.",
+      "errorRole": "Rol no válido seleccionado."
     }
   },
   "settings": {

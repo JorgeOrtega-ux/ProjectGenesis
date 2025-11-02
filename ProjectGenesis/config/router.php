@@ -98,6 +98,7 @@ $allowedPages = [
     // --- ▼▼▼ PÁGINAS DE ADMIN MODIFICADAS ▼▼▼ ---
     'admin-dashboard'          => '../includes/sections/admin/dashboard.php',
     'admin-manage-users'       => '../includes/sections/admin/manage-users.php', // <--- CLAVE MODIFICADA
+    'admin-create-user'        => '../includes/sections/admin/create-user.php', // <--- ¡NUEVA LÍNEA!
     // --- ▲▲▲ FIN DE PÁGINAS DE ADMIN ▲▲▲ ---
 ];
 
