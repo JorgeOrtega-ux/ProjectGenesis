@@ -2321,9 +2321,8 @@ body {
     user-select: none;
 }
 .page-toolbar-floating {
-    display: flex
-;
-    justify-content: space-between;
+    display: flex;
+    /* justify-content: space-between; */ /* <-- ELIMINADO */
     align-items: center;
     width: 100%;
     padding: 8px 8px;
@@ -2332,7 +2331,21 @@ body {
     box-shadow: 0 4px 12px #00000020;
     box-sizing: border-box;
     height: auto;
+    position: relative; /* <-- AÑADIDO */
 }
+
+/* --- ▼▼▼ INICIO DE REGLAS CORREGIDAS PARA VISTAS DE TOOLBAR ▼▼▼ --- */
+
+/* Los contenedores de estado (default/selection) son los hijos directos */
+.toolbar-action-default,
+.toolbar-action-selection {
+    display: flex;
+    justify-content: space-between; /* <-- AÑADIDO */
+    align-items: center; /* <-- AÑADIDO */
+    width: 100%; /* <-- AÑADIDO */
+    gap: 8px; /* <-- AÑADIDO */
+}
+
 .page-toolbar-left,
 .page-toolbar-right {
     display: flex;
@@ -2425,7 +2438,6 @@ body {
     background-color: #ffffff;
     border: 1px solid #00000020;
     border-radius: 8px;
-    box-shadow: 0 4px 12px #00000010;
     box-sizing: border-box;
     width: 100%; /* <-- AÑADIDO PARA QUE LLENE EL NUEVO DIV FLOTANTE */
 }
@@ -2453,22 +2465,13 @@ body {
 
 /* --- ▼▼▼ INICIO DE REGLAS CORREGIDAS PARA VISTAS DE TOOLBAR ▼▼▼ --- */
 
-.toolbar-action-default {
-    display: flex;
-    gap: 8px;
-}
-
 /* Por defecto, las acciones de selección están ocultas */
 .toolbar-action-selection {
     display: none;
-    gap: 8px; /* --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ --- */
 }
 /* Por defecto, las acciones default están visibles */
 .toolbar-action-default {
-    display: flex; /* O 'inline-flex' si es un <div> */
-}
-.page-toolbar-pagination.toolbar-action-default {
-    display: flex; /* Asegurarse que la paginación se vea */
+    display: flex;
 }
 
 

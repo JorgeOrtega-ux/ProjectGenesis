@@ -108,8 +108,8 @@ try {
             data-current-page="<?php echo $adminCurrentPage; ?>"
             data-total-pages="<?php echo $totalPages; ?>">
 
-            <div class="page-toolbar-left">
-                <div class="toolbar-action-default">
+            <div class="toolbar-action-default">
+                <div class="page-toolbar-left">
                     <button type="button"
                         class="page-toolbar-button <?php echo $isSearching ? 'active' : ''; ?>"
                         data-action="admin-toggle-search"
@@ -130,9 +130,38 @@ try {
                         data-tooltip="admin.users.createUser">
                         <span class="material-symbols-rounded">person_add</span>
                     </button>
-                    </div>
+                </div>
                 
-                <div class="toolbar-action-selection">
+                <div class="page-toolbar-right">
+                    <div class="page-toolbar-pagination">
+                        <button type="button" class="page-toolbar-button"
+                            data-action="admin-page-prev"
+                            data-tooltip="admin.users.prevPage"
+                            <?php echo ($adminCurrentPage <= 1) ? 'disabled' : ''; ?>>
+                            <span class="material-symbols-rounded">chevron_left</span>
+                        </button>
+
+                        <span class="page-toolbar-page-text">
+                            <?php
+                            if ($totalUsers == 0) {
+                                echo '--';
+                            } else {
+                                echo $adminCurrentPage . ' / ' . $totalPages;
+                            }
+                            ?>
+                        </span>
+                        <button type="button" class="page-toolbar-button"
+                            data-action="admin-page-next"
+                            data-tooltip="admin.users.nextPage"
+                            <?php echo ($adminCurrentPage >= $totalPages) ? 'disabled' : ''; ?>>
+                            <span class="material-symbols-rounded">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="toolbar-action-selection">
+                <div class="page-toolbar-left">
                     <button type="button"
                         class="page-toolbar-button"
                         data-action="toggleSectionAdminEditUser"
@@ -151,37 +180,9 @@ try {
                         data-tooltip="admin.users.manageStatus" disabled>
                         <span class="material-symbols-rounded">toggle_on</span>
                     </button>
-                    </div>
-                
                 </div>
 
-            <div class="page-toolbar-right">
-                <div class="page-toolbar-pagination toolbar-action-default">
-                    <button type="button" class="page-toolbar-button"
-                        data-action="admin-page-prev"
-                        data-tooltip="admin.users.prevPage"
-                        <?php echo ($adminCurrentPage <= 1) ? 'disabled' : ''; ?>>
-                        <span class="material-symbols-rounded">chevron_left</span>
-                    </button>
-
-                    <span class="page-toolbar-page-text">
-                        <?php
-                        if ($totalUsers == 0) {
-                            echo '--';
-                        } else {
-                            echo $adminCurrentPage . ' / ' . $totalPages;
-                        }
-                        ?>
-                    </span>
-                    <button type="button" class="page-toolbar-button"
-                        data-action="admin-page-next"
-                        data-tooltip="admin.users.nextPage"
-                        <?php echo ($adminCurrentPage >= $totalPages) ? 'disabled' : ''; ?>>
-                        <span class="material-symbols-rounded">chevron_right</span>
-                    </button>
-                </div>
-
-                <div class="toolbar-action-selection">
+                <div class="page-toolbar-right">
                     <button type="button"
                         class="page-toolbar-button"
                         data-action="admin-clear-selection"
@@ -189,8 +190,8 @@ try {
                         <span class="material-symbols-rounded">close</span>
                     </button>
                 </div>
-                
-                </div>
+            </div>
+            
         </div>
 
         <div class="popover-module body-title disabled" data-module="modulePageFilter">
