@@ -101,5 +101,7 @@ INSERT INTO site_settings (setting_key, setting_value) VALUES
 ('min_username_length', '6'),
 ('max_username_length', '32'),
 ('max_email_length', '255'),
-('code_resend_cooldown_seconds', '60');
--- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+('code_resend_cooldown_seconds', '60'),
+-- --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+('max_concurrent_users', '500');
+-- --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---

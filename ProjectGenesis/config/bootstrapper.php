@@ -66,6 +66,13 @@ try {
     }
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     // --- ▲▲▲ FIN DE NUEVAS CLAVES ▲▲▲ ---
+    
+    // --- ▼▼▼ NUEVA CLAVE AÑADIDA ▼▼▼ ---
+    if (!isset($GLOBALS['site_settings']['max_concurrent_users'])) {
+         $GLOBALS['site_settings']['max_concurrent_users'] = '500'; // Fallback
+    }
+    // --- ▲▲▲ FIN DE NUEVA CLAVE ▲▲▲ ---
+
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
 } catch (PDOException $e) {
@@ -90,6 +97,11 @@ try {
     $GLOBALS['site_settings']['code_resend_cooldown_seconds'] = '60'; // Fallback seguro
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     // --- ▲▲▲ FIN DE NUEVAS CLAVES ▲▲▲ ---
+    
+    // --- ▼▼▼ NUEVA CLAVE AÑADIDA ▼▼▼ ---
+    $GLOBALS['site_settings']['max_concurrent_users'] = '500'; // Fallback seguro
+    // --- ▲▲▲ FIN DE NUEVA CLAVE ▲▲▲ ---
+
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
@@ -184,10 +196,15 @@ $isLoginPage = (strpos($requestUri, '/login') !== false);
 $isApiCall = (strpos($requestUri, '/api/') !== false);
 $isConfigCall = (strpos($requestUri, '/config/') !== false); // Permitir logout
 
+// --- ▼▼▼ NUEVA VARIABLE AÑADIDA ▼▼▼ ---
+$isServerFullPage = (strpos($requestUri, '/server-full') !== false);
+
+
 // Si el modo mantenimiento está ACTIVO
 if ($maintenanceMode === '1') {
     // Y el usuario NO es privilegiado Y NO está intentando acceder a una página permitida
-    if (!$isPrivilegedUser && !$isMaintenancePage && !$isLoginPage && !$isApiCall && !$isConfigCall) {
+    // --- ▼▼▼ MODIFICACIÓN: Añadir $isServerFullPage a la lista de exclusión ▼▼▼ ---
+    if (!$isPrivilegedUser && !$isMaintenancePage && !$isLoginPage && !$isApiCall && !$isConfigCall && !$isServerFullPage) {
         header('Location: ' . $basePath . '/maintenance');
         exit;
     }
@@ -209,6 +226,7 @@ $pathsToPages = [
     '/explorer'   => 'explorer',
     '/login'      => 'login',
     '/maintenance' => 'maintenance', 
+    '/server-full' => 'server-full', // <-- ¡NUEVA LÍNEA!
     
     '/register'                 => 'register-step1',
     '/register/additional-data' => 'register-step2',
@@ -248,11 +266,13 @@ $pathsToPages = [
 // 3. Determinar la página actual y los tipos de página
 $currentPage = $pathsToPages[$path] ?? '404';
 
-$authPages = ['login', 'maintenance']; 
+// --- ▼▼▼ MODIFICACIÓN: Añadir 'server-full' a $authPages ▼▼▼ ---
+$authPages = ['login', 'maintenance', 'server-full']; 
 $isAuthPage = in_array($currentPage, $authPages) || 
               strpos($currentPage, 'register-') === 0 ||
               strpos($currentPage, 'reset-') === 0 ||
               strpos($currentPage, 'account-status-') === 0; 
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 $isSettingsPage = strpos($currentPage, 'settings-') === 0;
 $isAdminPage = strpos($currentPage, 'admin-') === 0;
@@ -281,12 +301,14 @@ if (!isset($_SESSION['user_id']) && !$isAuthPage) {
     exit;
 }
 // Redirigir a home si está logueado e intenta ir a auth
-if (isset($_SESSION['user_id']) && $isAuthPage && $currentPage !== 'maintenance') { 
+// --- ▼▼▼ MODIFICACIÓN: Añadir 'server-full' a la exclusión ▼▼▼ ---
+if (isset($_SESSION['user_id']) && $isAuthPage && $currentPage !== 'maintenance' && $currentPage !== 'server-full') { 
     if ($maintenanceMode !== '1') {
          header('Location: ' . $basePath . '/');
          exit;
     }
 }
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 // Redirecciones de conveniencia
 if ($path === '/settings') {

@@ -79,4 +79,53 @@ document.addEventListener('DOMContentLoaded', async function () {
     initRouter(); 
     
     initTooltipManager(); 
+
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLIENTE WEBSOCKET PARA CONTEO DE CONCURRENTES) ▼▼▼ ---
+    
+    // Solo conectar si el usuario está logueado (indicado por la existencia de un csrfToken)
+    if (window.csrfToken) {
+        let ws;
+        const wsUrl = "ws://127.0.0.1:8765";
+
+        function connectWebSocket() {
+            try {
+                ws = new WebSocket(wsUrl);
+
+                ws.onopen = () => {
+                    console.log("[WS_Counter] Conectado al servidor de conteo.");
+                };
+
+                ws.onclose = (event) => {
+                    console.log("[WS_Counter] Desconectado del servidor de conteo.", event.reason);
+                    // Opcional: intentar reconectar si no es un cierre normal
+                    if (event.code !== 1000) {
+                         // console.log("[WS_Counter] Intentando reconectar en 5s...");
+                         // setTimeout(connectWebSocket, 5000); // Reconectar cada 5 seg
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error("[WS_Counter] Error de WebSocket:", error);
+                    // El 'onclose' se llamará después de esto.
+                };
+
+            } catch (e) {
+                console.error("[WS_Counter] No se pudo crear la conexión WebSocket:", e);
+            }
+        }
+
+        // Iniciar la conexión
+        connectWebSocket();
+
+        // Asegurarse de cerrar la conexión al cerrar la pestaña
+        window.addEventListener('beforeunload', () => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                // Enviar un código de cierre normal para que el servidor
+                // no lo marque como un error.
+                ws.close(1000, "Navegación de usuario"); 
+            }
+        });
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 });

@@ -698,8 +698,16 @@ function initLoginWizard() {
                      }
                     window.location.href = window.projectBasePath + '/';
                 }
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (MANEJAR server_full) ▼▼▼ ---
             } else if (result.redirect_to_status) {
-                 window.location.href = window.projectBasePath + '/account-status/' + result.redirect_to_status;
+                if (result.redirect_to_status === 'server_full') {
+                    // Redirigir a la nueva página de servidor lleno
+                    window.location.href = window.projectBasePath + '/server-full';
+                } else {
+                    // Lógica existente para 'deleted' o 'suspended'
+                    window.location.href = window.projectBasePath + '/account-status/' + result.redirect_to_status;
+                }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             } else {
                 let errorInput = [emailInput, passwordInput]; 
                 if (result.message === 'js.auth.errorTooManyAttempts') {

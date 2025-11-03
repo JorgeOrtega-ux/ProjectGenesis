@@ -100,6 +100,7 @@ $allowedPages = [
     '404'      => '../../includes/sections/main/404.php', 
     'db-error' => '../../includes/sections/main/db-error.php', 
     'maintenance' => '../../includes/sections/main/maintenance.php', // <-- ¡NUEVA LÍNEA!
+    'server-full' => '../../includes/sections/main/server-full.php', // <-- ¡NUEVA LÍNEA!
 
     'register-step1' => '../../includes/sections/auth/register.php',
     'register-step2' => '../../includes/sections/auth/register.php',
@@ -139,7 +140,7 @@ $allowedPages = [
 // --- ▲▲▲ FIN DE CAMBIO DE RUTA ▲▲▲ ---
 
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
-$authPages = ['login', 'maintenance']; // 'maintenance' se trata como una página de auth
+$authPages = ['login', 'maintenance', 'server-full']; // 'maintenance' y 'server-full' se tratan como páginas de auth
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 $isAuthPage = in_array($page, $authPages) || 
