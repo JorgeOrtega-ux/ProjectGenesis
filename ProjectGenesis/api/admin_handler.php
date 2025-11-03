@@ -761,16 +761,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
+
+    // --- ▼▼▼ INICIO DE NUEVAS ACCIONES DE DOMINIO ▼▼▼ ---
+    elseif ($action === 'admin-add-domain') {
+        if ($adminRole !== 'founder') {
+            $response['message'] = 'js.admin.errorAdminTarget';
+            echo json_encode($response);
+            exit;
+        }
+        try {
+            $newDomain = strtolower(trim($_POST['new_domain'] ?? ''));
+
+            if (empty($newDomain)) {
+                throw new Exception('js.admin.domainEmpty');
+            }
+            if (!preg_match('/^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/i', $newDomain)) {
+                throw new Exception('js.admin.domainInvalid');
+            }
+
+            $stmt_get = $pdo->prepare("SELECT setting_value FROM site_settings WHERE setting_key = 'allowed_email_domains'");
+            $stmt_get->execute();
+            $domainsString = $stmt_get->fetchColumn();
+            
+            $domains = preg_split('/[\s,]+/', $domainsString, -1, PREG_SPLIT_NO_EMPTY);
+            
+            if (in_array($newDomain, $domains)) {
+                throw new Exception('js.admin.domainExists');
+            }
+
+            $domains[] = $newDomain;
+            $newDomainsString = implode("\n", $domains);
+
+            $stmt_set = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = 'allowed_email_domains'");
+            $stmt_set->execute([$newDomainsString]);
+
+            $response['success'] = true;
+            $response['message'] = 'js.admin.domainAdded';
+            $response['domain'] = $newDomain;
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-add-domain');
+            $response['message'] = $e->getMessage();
+        }
+    }
+    elseif ($action === 'admin-remove-domain') {
+        if ($adminRole !== 'founder') {
+            $response['message'] = 'js.admin.errorAdminTarget';
+            echo json_encode($response);
+            exit;
+        }
+        try {
+            $domainToRemove = strtolower(trim($_POST['domain_to_remove'] ?? ''));
+            if (empty($domainToRemove)) {
+                throw new Exception('js.api.invalidAction');
+            }
+            
+            $stmt_get = $pdo->prepare("SELECT setting_value FROM site_settings WHERE setting_key = 'allowed_email_domains'");
+            $stmt_get->execute();
+            $domainsString = $stmt_get->fetchColumn();
+            
+            $domains = preg_split('/[\s,]+/', $domainsString, -1, PREG_SPLIT_NO_EMPTY);
+            
+            // Filtrar el array (case-insensitive)
+            $newDomains = array_filter($domains, function($domain) use ($domainToRemove) {
+                return strtolower($domain) !== $domainToRemove;
+            });
+
+            $newDomainsString = implode("\n", $newDomains);
+
+            $stmt_set = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = 'allowed_email_domains'");
+            $stmt_set->execute([$newDomainsString]);
+
+            $response['success'] = true;
+            $response['message'] = 'js.admin.domainRemoved';
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-remove-domain');
+            $response['message'] = 'js.admin.domainRemoveError';
+        }
+    }
+    // --- ▲▲▲ FIN DE NUEVAS ACCIONES DE DOMINIO ▲▲▲ ---
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (ACCIONES GENÉRICAS AMPLIADAS) ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (ACCIÓN 'update-allowed-email-domains' ELIMINADA) ▼▼▼ ---
     elseif (
         $action === 'update-username-cooldown' || $action === 'update-email-cooldown' || $action === 'update-avatar-max-size' ||
         $action === 'update-min-password-length' || $action === 'update-max-login-attempts' || $action === 'update-lockout-time-minutes' ||
-        $action === 'update-allowed-email-domains'
-        // --- ▼▼▼ ¡NUEVA LÍNEA! ▼▼▼ ---
-        || $action === 'update-max-password-length'
-        // --- ▲▲▲ ¡FIN NUEVA LÍNEA! ▲▲▲ ---
+        // 'update-allowed-email-domains' se ha quitado de esta lista
+        $action === 'update-max-password-length'
     ) {
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
@@ -786,15 +865,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'update-username-cooldown' => 'username_cooldown_days',
                 'update-email-cooldown' => 'email_cooldown_days',
                 'update-avatar-max-size' => 'avatar_max_size_mb',
-                // --- ▼▼▼ NUEVAS CLAVES AÑADIDAS ▼▼▼ ---
                 'update-min-password-length' => 'min_password_length',
                 'update-max-login-attempts' => 'max_login_attempts',
                 'update-lockout-time-minutes' => 'lockout_time_minutes',
-                'update-allowed-email-domains' => 'allowed_email_domains',
-                // --- ▼▼▼ ¡NUEVA LÍNEA! ▼▼▼ ---
+                // 'allowed_email_domains' se ha quitado de este mapa
                 'update-max-password-length' => 'max_password_length'
-                // --- ▲▲▲ ¡FIN NUEVA LÍNEA! ▲▲▲ ---
-                // --- ▲▲▲ FIN DE NUEVAS CLAVES ▲▲▲ ---
             ];
             
             if (!isset($settingKeyMap[$action])) {
@@ -803,15 +878,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $dbKey = $settingKeyMap[$action];
 
-            // Validar que el valor sea un número positivo (excepto para el textarea)
-            if ($action !== 'update-allowed-email-domains') {
-                if (!is_numeric($newValue) || (int)$newValue <= 0) {
-                    throw new Exception('js.api.invalidAction'); // Error genérico
-                }
-                $finalValue = (int)$newValue;
-            } else {
-                $finalValue = $newValue; // Guardar el string tal cual
+            // Validar que el valor sea un número positivo
+            if (!is_numeric($newValue) || (int)$newValue <= 0) {
+                throw new Exception('js.api.invalidAction'); // Error genérico
             }
+            $finalValue = (int)$newValue;
             
             $stmt = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = ?");
             $stmt->execute([$finalValue, $dbKey]);
@@ -830,7 +901,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
 } else {
     // Si no es POST, se mantiene el error por defecto

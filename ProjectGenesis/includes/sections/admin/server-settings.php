@@ -84,19 +84,24 @@ $maxPasswordLength = $GLOBALS['site_settings']['max_password_length'] ?? '72';
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-input-group" style="max-width: 265px;">
-                    <input type="number"
-                           class="component-input"
-                           id="setting-min-password-length"
-                           data-action="update-min-password-length"
-                           value="<?php echo htmlspecialchars($minPasswordLength); ?>"
-                           min="8"
-                           max="72"
-                           step="1"
-                           placeholder=" "
-                           <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                           >
-                    <label for="setting-min-password-length" data-i18n="admin.server.minPasswordLengthTitle"></label>
+                 <div class="component-stepper" 
+                      style="max-width: 265px;"
+                      data-action="update-min-password-length"
+                      data-current-value="<?php echo htmlspecialchars($minPasswordLength); ?>"
+                      data-min="8"
+                      data-max="72"
+                      data-step="1"
+                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
+                      >
+                    <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($minPasswordLength <= 8) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_left</span>
+                    </button>
+                    <div class="stepper-value" id="stepper-value-min-password-length">
+                         <?php echo htmlspecialchars($minPasswordLength); ?>
+                    </div>
+                    <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($minPasswordLength >= 72) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_right</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -104,24 +109,29 @@ $maxPasswordLength = $GLOBALS['site_settings']['max_password_length'] ?? '72';
         <div class="component-card component-card--column">
             <div class="component-card__content">
                 <div class="component-card__text">
-                    <h2 class="component-card__title" data-i18n="admin.server.maxPasswordLengthTitle">Longitud Máxima de Contraseña</h2>
-                    <p class="component-card__description" data-i18n="admin.server.maxPasswordLengthDesc">El número máximo de caracteres permitidos para cualquier contraseña nueva (máx. 72).</p>
+                    <h2 class="component-card__title" data-i18n="admin.server.maxPasswordLengthTitle"></h2>
+                    <p class="component-card__description" data-i18n="admin.server.maxPasswordLengthDesc"></p>
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-input-group" style="max-width: 265px;">
-                    <input type="number"
-                           class="component-input"
-                           id="setting-max-password-length"
-                           data-action="update-max-password-length"
-                           value="<?php echo htmlspecialchars($maxPasswordLength); ?>"
-                           min="8"
-                           max="72"
-                           step="1"
-                           placeholder=" "
-                           <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                           >
-                    <label for="setting-max-password-length" data-i18n="admin.server.maxPasswordLengthTitle">Longitud Máxima de Contraseña</label>
+                 <div class="component-stepper" 
+                      style="max-width: 265px;"
+                      data-action="update-max-password-length"
+                      data-current-value="<?php echo htmlspecialchars($maxPasswordLength); ?>"
+                      data-min="8"
+                      data-max="72"
+                      data-step="1"
+                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
+                      >
+                    <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($maxPasswordLength <= 8) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_left</span>
+                    </button>
+                    <div class="stepper-value" id="stepper-value-max-password-length">
+                         <?php echo htmlspecialchars($maxPasswordLength); ?>
+                    </div>
+                    <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($maxPasswordLength >= 72) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_right</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -133,19 +143,24 @@ $maxPasswordLength = $GLOBALS['site_settings']['max_password_length'] ?? '72';
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-input-group" style="max-width: 265px;">
-                    <input type="number"
-                           class="component-input"
-                           id="setting-max-login-attempts"
-                           data-action="update-max-login-attempts"
-                           value="<?php echo htmlspecialchars($maxLoginAttempts); ?>"
-                           min="3"
-                           max="20"
-                           step="1"
-                           placeholder=" "
-                           <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                           >
-                    <label for="setting-max-login-attempts" data-i18n="admin.server.maxLoginAttemptsTitle"></label>
+                 <div class="component-stepper" 
+                      style="max-width: 265px;"
+                      data-action="update-max-login-attempts"
+                      data-current-value="<?php echo htmlspecialchars($maxLoginAttempts); ?>"
+                      data-min="3"
+                      data-max="20"
+                      data-step="1"
+                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
+                      >
+                    <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($maxLoginAttempts <= 3) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_left</span>
+                    </button>
+                    <div class="stepper-value" id="stepper-value-max-login-attempts">
+                         <?php echo htmlspecialchars($maxLoginAttempts); ?>
+                    </div>
+                    <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($maxLoginAttempts >= 20) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_right</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -158,45 +173,86 @@ $maxPasswordLength = $GLOBALS['site_settings']['max_password_length'] ?? '72';
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-input-group" style="max-width: 265px;">
-                    <input type="number"
-                           class="component-input"
-                           id="setting-lockout-time-minutes"
-                           data-action="update-lockout-time-minutes"
-                           value="<?php echo htmlspecialchars($lockoutTimeMinutes); ?>"
-                           min="1"
-                           max="60"
-                           step="1"
-                           placeholder=" "
-                           <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                           >
-                    <label for="setting-lockout-time-minutes" data-i18n="admin.server.lockoutTimeMinutesTitle"></label>
+                 <div class="component-stepper" 
+                      style="max-width: 265px;"
+                      data-action="update-lockout-time-minutes"
+                      data-current-value="<?php echo htmlspecialchars($lockoutTimeMinutes); ?>"
+                      data-min="1"
+                      data-max="60"
+                      data-step="1"
+                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
+                      >
+                    <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($lockoutTimeMinutes <= 1) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_left</span>
+                    </button>
+                    <div class="stepper-value" id="stepper-value-lockout-time-minutes">
+                         <?php echo htmlspecialchars($lockoutTimeMinutes); ?>
+                    </div>
+                    <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($lockoutTimeMinutes >= 60) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_right</span>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div class="component-card component-card--column">
+        <div class="component-card component-card--column" id="admin-domain-card">
             <div class="component-card__content">
                 <div class="component-card__text">
                     <h2 class="component-card__title" data-i18n="admin.server.allowedEmailDomainsTitle"></h2>
                     <p class="component-card__description" data-i18n="admin.server.allowedEmailDomainsDesc"></p>
                 </div>
             </div>
-            <div class="component-card__actions">
-                 <div class="component-input-group">
-                    <textarea
+            
+            <div id="domain-view-state" <?php echo ($_SESSION['role'] !== 'founder') ? 'style="pointer-events: none; opacity: 0.7;"' : ''; ?>>
+                <div class="domain-card-list">
+                    <?php
+                    $domains = preg_split('/[\s,]+/', $allowedEmailDomains, -1, PREG_SPLIT_NO_EMPTY);
+                    if (empty($domains)):
+                    ?>
+                        <p class="component-card__description" style="margin: 8px 0;">No hay dominios configurados.</p>
+                    <?php
+                    else:
+                        foreach ($domains as $domain):
+                    ?>
+                        <div class="domain-card-item" data-domain="<?php echo htmlspecialchars($domain); ?>">
+                            <span class="material-symbols-rounded">language</span>
+                            <span class="domain-card-text"><?php echo htmlspecialchars($domain); ?></span>
+                            <button type="button" class="domain-card-delete" data-action="admin-domain-delete" data-domain="<?php echo htmlspecialchars($domain); ?>" data-tooltip="admin.server.deleteDomainTooltip">
+                                <span class="material-symbols-rounded">delete</span>
+                            </button>
+                        </div>
+                    <?php
+                        endforeach;
+                    endif;
+                    ?>
+                </div>
+                
+                <div class="component-card__actions" style="justify-content: flex-end; margin-top: 16px;">
+                    <button type="button" class="component-action-button component-action-button--primary" data-action="admin-domain-show-add" data-i18n="admin.server.addDomain" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
+                        Agregar dominio
+                    </button>
+                </div>
+            </div>
+
+            <div id="domain-add-state" style="display: none;">
+                <div class="component-input-group" style="margin-top: 8px;">
+                    <input type="text"
                            class="component-input"
-                           id="setting-allowed-email-domains"
-                           data-action="update-allowed-email-domains"
+                           id="setting-new-domain-input"
                            placeholder=" "
-                           style="height: 120px; resize: vertical; padding-top: 12px; font-size: 14px;"
-                           <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                           ><?php echo htmlspecialchars($allowedEmailDomains); ?></textarea>
-                    <label for="setting-allowed-email-domains" data-i18n="admin.server.allowedEmailDomainsTitle"></label>
+                           maxlength="100">
+                    <label for="setting-new-domain-input" data-i18n="admin.server.addDomainPlaceholder">Escribe el dominio (ej. miempresa.com)</label>
+                </div>
+                <div class="component-card__actions" style="justify-content: flex-end; margin-top: 16px;">
+                    <button type="button" class="component-action-button component-action-button--secondary" data-action="admin-domain-cancel-add" data-i18n="admin.server.cancel">
+                        Cancelar
+                    </button>
+                    <button type="button" class="component-action-button component-action-button--primary" data-action="admin-domain-save-add" data-i18n="admin.server.saveChanges">
+                        Guardar cambios
+                    </button>
                 </div>
             </div>
         </div>
-
         <div class="component-card component-card--column">
             <div class="component-card__content">
                 <div class="component-card__text">
@@ -205,18 +261,24 @@ $maxPasswordLength = $GLOBALS['site_settings']['max_password_length'] ?? '72';
                 </div>
             </div>
             <div class="component-card__actions">
-                <div class="component-input-group" style="max-width: 265px;">
-                    <input type="number"
-                           class="component-input"
-                           id="setting-username-cooldown"
-                           data-action="update-username-cooldown"
-                           value="<?php echo htmlspecialchars($usernameCooldown); ?>"
-                           min="1"
-                           step="1"
-                           placeholder=" "
-                           <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                           >
-                    <label for="setting-username-cooldown" data-i18n="admin.server.usernameCooldownTitle"></label>
+                <div class="component-stepper" 
+                      style="max-width: 265px;"
+                      data-action="update-username-cooldown"
+                      data-current-value="<?php echo htmlspecialchars($usernameCooldown); ?>"
+                      data-min="1"
+                      data-max="365"
+                      data-step="1"
+                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
+                      >
+                    <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($usernameCooldown <= 1) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_left</span>
+                    </button>
+                    <div class="stepper-value" id="stepper-value-username-cooldown">
+                         <?php echo htmlspecialchars($usernameCooldown); ?>
+                    </div>
+                    <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($usernameCooldown >= 365) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_right</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -229,18 +291,24 @@ $maxPasswordLength = $GLOBALS['site_settings']['max_password_length'] ?? '72';
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-input-group" style="max-width: 265px;">
-                    <input type="number"
-                           class="component-input"
-                           id="setting-email-cooldown"
-                           data-action="update-email-cooldown"
-                           value="<?php echo htmlspecialchars($emailCooldown); ?>"
-                           min="1"
-                           step="1"
-                           placeholder=" "
-                           <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                           >
-                    <label for="setting-email-cooldown" data-i18n="admin.server.emailCooldownTitle"></label>
+                 <div class="component-stepper" 
+                      style="max-width: 265px;"
+                      data-action="update-email-cooldown"
+                      data-current-value="<?php echo htmlspecialchars($emailCooldown); ?>"
+                      data-min="1"
+                      data-max="365"
+                      data-step="1"
+                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
+                      >
+                    <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($emailCooldown <= 1) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_left</span>
+                    </button>
+                    <div class="stepper-value" id="stepper-value-email-cooldown">
+                         <?php echo htmlspecialchars($emailCooldown); ?>
+                    </div>
+                    <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($emailCooldown >= 365) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_right</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -253,18 +321,24 @@ $maxPasswordLength = $GLOBALS['site_settings']['max_password_length'] ?? '72';
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-input-group" style="max-width: 265px;">
-                    <input type="number"
-                           class="component-input"
-                           id="setting-avatar-max-size"
-                           data-action="update-avatar-max-size"
-                           value="<?php echo htmlspecialchars($avatarMaxSize); ?>"
-                           min="1"
-                           step="1"
-                           placeholder=" "
-                           <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                           >
-                    <label for="setting-avatar-max-size" data-i18n="admin.server.avatarMaxSizeTitle"></label>
+                 <div class="component-stepper" 
+                      style="max-width: 265px;"
+                      data-action="update-avatar-max-size"
+                      data-current-value="<?php echo htmlspecialchars($avatarMaxSize); ?>"
+                      data-min="1"
+                      data-max="20"
+                      data-step="1"
+                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
+                      >
+                    <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($avatarMaxSize <= 1) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_left</span>
+                    </button>
+                    <div class="stepper-value" id="stepper-value-avatar-max-size">
+                         <?php echo htmlspecialchars($avatarMaxSize); ?>
+                    </div>
+                    <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($avatarMaxSize >= 20) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_right</span>
+                    </button>
                 </div>
             </div>
         </div>

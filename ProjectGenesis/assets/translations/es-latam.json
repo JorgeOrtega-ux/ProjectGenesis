@@ -86,7 +86,7 @@
       "passwordConfirm": "Confirmar Nueva Contraseña",
       "errorPassEmpty": "Los campos de nueva contraseña están vacíos. No se realizaron cambios."
     },
-    "server": {
+  "server": {
       "title": "Configuración del Servidor",
       "description": "Gestiona la configuración global y el estado del sitio. (Solo Fundadores)",
       "maintenanceTitle": "Modo Mantenimiento",
@@ -108,7 +108,12 @@
       "lockoutTimeMinutesTitle": "Minutos de Bloqueo",
       "lockoutTimeMinutesDesc": "Minutos que una cuenta permanecerá bloqueada después de fallar los intentos de sesión.",
       "allowedEmailDomainsTitle": "Dominios de Email Permitidos",
-      "allowedEmailDomainsDesc": "Lista de dominios permitidos para registrarse (ej. gmail.com). Dejar vacío para permitir cualquiera. (Uno por línea)"
+      "allowedEmailDomainsDesc": "Lista de dominios permitidos para registrarse (ej. gmail.com). Dejar vacío para permitir cualquiera.",
+      "addDomain": "Agregar dominio",
+      "saveChanges": "Guardar cambios",
+      "cancel": "Cancelar",
+      "deleteDomainTooltip": "Eliminar dominio",
+      "addDomainPlaceholder": "Escribe el dominio (ej. miempresa.com)"
     }
   },
   "settings": {
@@ -466,7 +471,7 @@
     "url": {
       "errorLoad": "Error al cargar el contenido"
     },
-    "admin": {
+"admin": {
       "successRole": "Rol del usuario actualizado.",
       "successStatus": "Estado del usuario actualizado.",
       "errorAdminTarget": "No tienes permiso para modificar a este usuario.",
@@ -480,7 +485,14 @@
       "registrationSuccess": "Estado de registros actualizado.",
       "errorRegInMaintenance": "No se pueden activar los registros mientras el sitio está en mantenimiento.",
       "settingUpdateSuccess": "Configuración actualizada.",
-      "settingUpdateError": "Error al guardar la configuración."
+      "settingUpdateError": "Error al guardar la configuración.",
+      "domainEmpty": "El campo de dominio no puede estar vacío.",
+      "domainInvalid": "Por favor, introduce un formato de dominio válido (ej. dominio.com).",
+      "domainAdded": "Dominio agregado exitosamente.",
+      "domainRemoved": "Dominio eliminado exitosamente.",
+      "domainAddError": "Error al agregar el dominio.",
+      "domainRemoveError": "Error al eliminar el dominio.",
+      "domainExists": "Este dominio ya existe en la lista."
     }
   },
   "db": {
