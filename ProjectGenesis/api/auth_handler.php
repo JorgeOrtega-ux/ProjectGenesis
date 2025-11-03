@@ -11,7 +11,8 @@ define('CODE_RESEND_COOLDOWN_SECONDS', 60);
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (CONSTANTES GLOBALES) ▼▼▼ ---
 $minPasswordLength = (int)($GLOBALS['site_settings']['min_password_length'] ?? 8);
 // define('MIN_PASSWORD_LENGTH', 8); // <-- ELIMINADO
-define('MAX_PASSWORD_LENGTH', 72);
+// define('MAX_PASSWORD_LENGTH', 72); // <-- ELIMINADO
+$maxPasswordLength = (int)($GLOBALS['site_settings']['max_password_length'] ?? 72);
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 define('MIN_USERNAME_LENGTH', 6);
 define('MAX_USERNAME_LENGTH', 32);
@@ -180,10 +181,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif (strlen($password) < $minPasswordLength) {
                 $response['message'] = 'js.auth.errorPasswordMinLength';
                 $response['data'] = ['length' => $minPasswordLength];
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-            } elseif (strlen($password) > MAX_PASSWORD_LENGTH) {
-                $response['message'] = 'js.auth.errorPasswordMaxLength';
-                $response['data'] = ['length' => MAX_PASSWORD_LENGTH];
+            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+            } elseif (strlen($password) > $maxPasswordLength) {
+                $response['message'] = 'js.auth.errorPasswordLength';
+                $response['data'] = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
+            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
             } else {
                 try {
                     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
@@ -211,9 +213,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($email) || empty($password) || empty($username)) {
                 $response['message'] = 'js.auth.errorMissingSteps';
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
-            } elseif (strlen($password) < $minPasswordLength || strlen($password) > MAX_PASSWORD_LENGTH) {
+            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+            } elseif (strlen($password) < $minPasswordLength || strlen($password) > $maxPasswordLength) {
                  $response['message'] = 'js.auth.errorPasswordLength';
-                 $response['data'] = ['min' => $minPasswordLength, 'max' => MAX_PASSWORD_LENGTH];
+                 $response['data'] = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
+            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             } elseif (strlen($username) < MIN_USERNAME_LENGTH) {
                 $response['message'] = 'js.auth.errorUsernameMinLength';
@@ -765,10 +769,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif (strlen($newPassword) < $minPasswordLength) {
                 $response['message'] = 'js.auth.errorPasswordMinLength';
                 $response['data'] = ['length' => $minPasswordLength];
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-            } elseif (strlen($newPassword) > MAX_PASSWORD_LENGTH) {
-                $response['message'] = 'js.auth.errorPasswordMaxLength';
-                $response['data'] = ['length' => MAX_PASSWORD_LENGTH];
+            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+            } elseif (strlen($newPassword) > $maxPasswordLength) {
+                $response['message'] = 'js.auth.errorPasswordLength';
+                $response['data'] = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
+            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
             } else {
                 
                 if (checkLockStatus($pdo, $email, $ip)) {

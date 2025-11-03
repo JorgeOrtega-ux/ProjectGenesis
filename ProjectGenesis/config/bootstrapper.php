@@ -48,6 +48,10 @@ try {
     if (!isset($GLOBALS['site_settings']['min_password_length'])) {
          $GLOBALS['site_settings']['min_password_length'] = '8';
     }
+    // --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
+    if (!isset($GLOBALS['site_settings']['max_password_length'])) {
+         $GLOBALS['site_settings']['max_password_length'] = '72';
+    }
     // --- ▲▲▲ FIN DE NUEVAS CLAVES ▲▲▲ ---
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
@@ -65,6 +69,8 @@ try {
     $GLOBALS['site_settings']['lockout_time_minutes'] = '5'; // Fallback seguro
     $GLOBALS['site_settings']['allowed_email_domains'] = 'gmail.com\noutlook.com'; // Fallback seguro
     $GLOBALS['site_settings']['min_password_length'] = '8'; // Fallback seguro
+    // --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
+    $GLOBALS['site_settings']['max_password_length'] = '72'; // Fallback seguro
     // --- ▲▲▲ FIN DE NUEVAS CLAVES ▲▲▲ ---
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }

@@ -9,7 +9,8 @@ $response = ['success' => false, 'message' => 'js.api.invalidAction'];
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (CONSTANTES GLOBALES) ▼▼▼ ---
 $minPasswordLength = (int)($GLOBALS['site_settings']['min_password_length'] ?? 8);
 // define('MIN_PASSWORD_LENGTH', 8); // <-- ELIMINADO
-define('MAX_PASSWORD_LENGTH', 72);
+// define('MAX_PASSWORD_LENGTH', 72); // <-- ELIMINADO
+$maxPasswordLength = (int)($GLOBALS['site_settings']['max_password_length'] ?? 72);
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 define('MIN_USERNAME_LENGTH', 6);
 define('MAX_USERNAME_LENGTH', 32);
@@ -597,10 +598,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (strlen($newPassword) < $minPasswordLength) {
                     throw new Exception('js.auth.errorPasswordMinLength');
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-                if (strlen($newPassword) > MAX_PASSWORD_LENGTH) {
-                    throw new Exception('js.auth.errorPasswordMaxLength');
+                // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+                if (strlen($newPassword) > $maxPasswordLength) {
+                    throw new Exception('js.auth.errorPasswordLength');
                 }
+                // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
                 if ($newPassword !== $confirmPassword) {
                     throw new Exception('js.auth.errorPasswordMismatch');
                 }
@@ -643,9 +645,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
                     if ($response['message'] === 'js.auth.errorPasswordMinLength') {
                         $response['data'] = ['length' => $minPasswordLength];
-                    } elseif ($response['message'] === 'js.auth.errorPasswordMaxLength') {
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-                         $response['data'] = ['length' => MAX_PASSWORD_LENGTH];
+                    // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+                    } elseif ($response['message'] === 'js.auth.errorPasswordLength') {
+                        $response['data'] = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
+                    // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
                     }
                 }
             }

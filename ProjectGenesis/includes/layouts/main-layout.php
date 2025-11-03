@@ -52,6 +52,11 @@
 
             // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
             window.avatarMaxSizeMB = <?php echo $GLOBALS['site_settings']['avatar_max_size_mb'] ?? 2; ?>;
+            
+            // --- ▼▼▼ ¡LÍNEAS MODIFICADAS/AÑADIDAS! ▼▼▼ ---
+            window.minPasswordLength = <?php echo $GLOBALS['site_settings']['min_password_length'] ?? 8; ?>;
+            window.maxPasswordLength = <?php echo $GLOBALS['site_settings']['max_password_length'] ?? 72; ?>;
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
             window.userLanguage = '<?php echo $jsLanguage; ?>';

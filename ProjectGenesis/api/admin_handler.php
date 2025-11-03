@@ -96,8 +96,10 @@ function canAdminModifyTarget($adminRole, $targetRole) {
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (CONSTANTES GLOBALES) ▼▼▼ ---
 // Cargar valores desde $GLOBALS
 $minPasswordLength = (int)($GLOBALS['site_settings']['min_password_length'] ?? 8);
-// define('MIN_PASSWORD_LENGTH', 8); // <-- ELIMINADO
-define('MAX_PASSWORD_LENGTH', 72);
+// --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+$maxPasswordLength = (int)($GLOBALS['site_settings']['max_password_length'] ?? 72);
+// define('MAX_PASSWORD_LENGTH', 72); // <-- ELIMINADO
+// --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
 define('MIN_USERNAME_LENGTH', 6);
 define('MAX_USERNAME_LENGTH', 32);
 define('MAX_EMAIL_LENGTH', 255);
@@ -281,10 +283,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (strlen($password) < $minPasswordLength) {
                 throw new Exception('js.auth.errorPasswordMinLength');
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-            if (strlen($password) > MAX_PASSWORD_LENGTH) {
-                throw new Exception('js.auth.errorPasswordMaxLength');
+            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+            if (strlen($password) > $maxPasswordLength) {
+                throw new Exception('js.auth.errorPasswordLength');
             }
+            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             // --- ▼▼▼ NUEVA VALIDACIÓN ▼▼▼ ---
             if ($password !== $passwordConfirm) {
                 throw new Exception('js.auth.errorPasswordMismatch');
@@ -331,8 +335,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [];
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
             if ($response['message'] === 'js.auth.errorPasswordMinLength') $data['length'] = $minPasswordLength;
+            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+            if ($response['message'] === 'js.auth.errorPasswordLength') $data = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
+            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-            if ($response['message'] === 'js.auth.errorPasswordMaxLength') $data['length'] = MAX_PASSWORD_LENGTH;
             if ($response['message'] === 'js.auth.errorUsernameMinLength') $data['length'] = MIN_USERNAME_LENGTH;
             if ($response['message'] === 'js.auth.errorUsernameMaxLength') $data['length'] = MAX_USERNAME_LENGTH;
             if (!empty($data)) $response['data'] = $data;
@@ -627,8 +633,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
             if (strlen($newPassword) < $minPasswordLength) throw new Exception('js.auth.errorPasswordMinLength');
+            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+            if (strlen($newPassword) > $maxPasswordLength) throw new Exception('js.auth.errorPasswordLength');
+            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-            if (strlen($newPassword) > MAX_PASSWORD_LENGTH) throw new Exception('js.auth.errorPasswordMaxLength');
             if ($newPassword !== $confirmPassword) throw new Exception('js.auth.errorPasswordMismatch');
 
             $newHashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
@@ -648,8 +656,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = $e->getMessage();
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
             if ($response['message'] === 'js.auth.errorPasswordMinLength') $response['data'] = ['length' => $minPasswordLength];
+            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+            elseif ($response['message'] === 'js.auth.errorPasswordLength') $response['data'] = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
+            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-            elseif ($response['message'] === 'js.auth.errorPasswordMaxLength') $response['data'] = ['length' => MAX_PASSWORD_LENGTH];
         }
     }
     
@@ -757,6 +767,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action === 'update-username-cooldown' || $action === 'update-email-cooldown' || $action === 'update-avatar-max-size' ||
         $action === 'update-min-password-length' || $action === 'update-max-login-attempts' || $action === 'update-lockout-time-minutes' ||
         $action === 'update-allowed-email-domains'
+        // --- ▼▼▼ ¡NUEVA LÍNEA! ▼▼▼ ---
+        || $action === 'update-max-password-length'
+        // --- ▲▲▲ ¡FIN NUEVA LÍNEA! ▲▲▲ ---
     ) {
         
         if ($adminRole !== 'founder') {
@@ -777,7 +790,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'update-min-password-length' => 'min_password_length',
                 'update-max-login-attempts' => 'max_login_attempts',
                 'update-lockout-time-minutes' => 'lockout_time_minutes',
-                'update-allowed-email-domains' => 'allowed_email_domains'
+                'update-allowed-email-domains' => 'allowed_email_domains',
+                // --- ▼▼▼ ¡NUEVA LÍNEA! ▼▼▼ ---
+                'update-max-password-length' => 'max_password_length'
+                // --- ▲▲▲ ¡FIN NUEVA LÍNEA! ▲▲▲ ---
                 // --- ▲▲▲ FIN DE NUEVAS CLAVES ▲▲▲ ---
             ];
             

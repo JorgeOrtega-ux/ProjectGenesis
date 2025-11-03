@@ -631,10 +631,13 @@ export function initSettingsManager() {
 
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
             const minPassLength = window.minPasswordLength || 8;
-             if (newPassInput.value.length < minPassLength || newPassInput.value.length > 72) {
-                showInlineError(step2Card, 'js.auth.errorPasswordLength', {min: minPassLength, max: 72});
+            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+            const maxPassLength = window.maxPasswordLength || 72;
+             if (newPassInput.value.length < minPassLength || newPassInput.value.length > maxPassLength) {
+                showInlineError(step2Card, 'js.auth.errorPasswordLength', {min: minPassLength, max: maxPassLength});
                  return;
              }
+            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
              if (newPassInput.value !== confirmPassInput.value) {
                 showInlineError(step2Card, 'js.auth.errorPasswordMismatch');

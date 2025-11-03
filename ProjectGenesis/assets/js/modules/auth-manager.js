@@ -83,10 +83,13 @@ async function handleResetSubmit(e) {
 
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
     const minPassLength = window.minPasswordLength || 8; // Obtener del objeto global
-    if (password.value.length < minPassLength || password.value.length > 72) {
-        showAuthError(errorDiv, getTranslation('js.auth.errorPasswordLength', {min: minPassLength, max: 72}), null, password);
+    // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+    const maxPassLength = window.maxPasswordLength || 72; // Obtener del objeto global
+    if (password.value.length < minPassLength || password.value.length > maxPassLength) {
+        showAuthError(errorDiv, getTranslation('js.auth.errorPasswordLength', {min: minPassLength, max: maxPassLength}), null, password);
         return;
     }
+    // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     if (password.value !== passwordConfirm.value) {
         showAuthError(errorDiv, getTranslation('js.auth.errorPasswordMismatch'), null, [password, passwordConfirm]);
@@ -334,12 +337,15 @@ function initRegisterWizard() {
                 // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
                 } else {
                     const minPassLength = window.minPasswordLength || 8;
-                    if (passwordInput.value.length < minPassLength || passwordInput.value.length > 72) {
+                    // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+                    const maxPassLength = window.maxPasswordLength || 72;
+                    if (passwordInput.value.length < minPassLength || passwordInput.value.length > maxPassLength) {
                         isValid = false;
                         clientErrorMessage = getTranslation('js.auth.errorPasswordLength');
-                        errorData = {min: minPassLength, max: 72};
+                        errorData = {min: minPassLength, max: maxPassLength};
                         showAuthError(errorDiv, clientErrorMessage, errorData, passwordInput);
                     }
+                    // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
                 }
                 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }

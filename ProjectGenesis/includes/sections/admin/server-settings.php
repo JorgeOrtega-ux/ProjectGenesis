@@ -15,6 +15,8 @@ $maxLoginAttempts = $GLOBALS['site_settings']['max_login_attempts'] ?? '5';
 $lockoutTimeMinutes = $GLOBALS['site_settings']['lockout_time_minutes'] ?? '5';
 $allowedEmailDomains = $GLOBALS['site_settings']['allowed_email_domains'] ?? 'gmail.com\noutlook.com';
 $minPasswordLength = $GLOBALS['site_settings']['min_password_length'] ?? '8';
+// --- ¡NUEVA LÍNEA! ---
+$maxPasswordLength = $GLOBALS['site_settings']['max_password_length'] ?? '72';
 // --- ▲▲▲ FIN DE NUEVAS VARIABLES ▲▲▲ ---
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 ?>
@@ -99,6 +101,30 @@ $minPasswordLength = $GLOBALS['site_settings']['min_password_length'] ?? '8';
             </div>
         </div>
 
+        <div class="component-card component-card--column">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="admin.server.maxPasswordLengthTitle">Longitud Máxima de Contraseña</h2>
+                    <p class="component-card__description" data-i18n="admin.server.maxPasswordLengthDesc">El número máximo de caracteres permitidos para cualquier contraseña nueva (máx. 72).</p>
+                </div>
+            </div>
+            <div class="component-card__actions">
+                 <div class="component-input-group" style="max-width: 265px;">
+                    <input type="number"
+                           class="component-input"
+                           id="setting-max-password-length"
+                           data-action="update-max-password-length"
+                           value="<?php echo htmlspecialchars($maxPasswordLength); ?>"
+                           min="8"
+                           max="72"
+                           step="1"
+                           placeholder=" "
+                           <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
+                           >
+                    <label for="setting-max-password-length" data-i18n="admin.server.maxPasswordLengthTitle">Longitud Máxima de Contraseña</label>
+                </div>
+            </div>
+        </div>
         <div class="component-card component-card--column">
             <div class="component-card__content">
                 <div class="component-card__text">

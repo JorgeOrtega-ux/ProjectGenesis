@@ -380,10 +380,14 @@ export function initAdminEditUserManager() {
             
             // Permitir campos vacíos (para "no cambiar"), pero si uno está lleno, validar
             if (newPassInput.value || confirmPassInput.value) {
-                 if (newPassInput.value.length < 8 || newPassInput.value.length > 72) {
-                    showInlineError(step2Card, 'js.auth.errorPasswordLength', {min: 8, max: 72});
+                // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
+                const minPassLength = window.minPasswordLength || 8;
+                const maxPassLength = window.maxPasswordLength || 72;
+                 if (newPassInput.value.length < minPassLength || newPassInput.value.length > maxPassLength) {
+                    showInlineError(step2Card, 'js.auth.errorPasswordLength', {min: minPassLength, max: maxPassLength});
                      return;
                  }
+                // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
                  if (newPassInput.value !== confirmPassInput.value) {
                     showInlineError(step2Card, 'js.auth.errorPasswordMismatch');
                      return;
