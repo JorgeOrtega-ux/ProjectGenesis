@@ -35,3 +35,4 @@ Stack trace:
 [03-Nov-2025 18:31:43 UTC] PHP Fatal error:  Cannot redeclare formatBackupSize() (previously declared in E:\xampp\htdocs\ProjectGenesis\config\router.php:71) in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\manage-backups.php on line 50
 [03-Nov-2025 18:58:36 UTC] PHP Warning:  include(E:\xampp\htdocs\ProjectGenesis\includes/main/404.php): Failed to open stream: No such file or directory in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\manage-backups.php on line 18
 [03-Nov-2025 18:58:36 UTC] PHP Warning:  include(): Failed opening 'E:\xampp\htdocs\ProjectGenesis\includes/main/404.php' for inclusion (include_path='C:\xampp\php\PEAR') in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\manage-backups.php on line 18
+[03-Nov-2025 20:49:42 UTC] PHP Warning:  Undefined variable $userId in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 539

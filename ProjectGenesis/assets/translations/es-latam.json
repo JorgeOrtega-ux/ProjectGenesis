@@ -442,7 +442,8 @@
       "errorInvalidResetSession": "La sesión de reseteo es inválida. Vuelve a empezar.",
       "errorRegistrationsDisabled": "Los nuevos registros están deshabilitados por el momento.",
       "errorAccountDeleted": "Esta cuenta ha sido eliminada.",
-      "errorAccountSuspended": "Esta cuenta ha sido suspendida."
+      "errorAccountSuspended": "Esta cuenta ha sido suspendida.",
+      "errorSync": "Ocurrió un problema de sincronización. Por favor, vuelve a intentarlo mas tarde."
     },
     "settings": {
       "successPreference": "Preferencia actualizada.",

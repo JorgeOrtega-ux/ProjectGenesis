@@ -262,6 +262,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         elseif ($action === 'register-verify') {
+            
+            // Corrección de bug de mantenimiento (Recomendación anterior)
+            if (!isset($GLOBALS['site_settings']['allow_new_registrations']) || $GLOBALS['site_settings']['allow_new_registrations'] !== '1') {
+                $response['message'] = 'js.auth.errorRegistrationsDisabled';
+                echo json_encode($response);
+                exit;
+            }
+
             if (empty($_POST['email']) || empty($_POST['verification_code'])) {
                 $response['message'] = 'js.auth.errorMissingEmailOrCode';
             } else {
@@ -308,7 +316,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 } catch (PDOException $e) {
                     logDatabaseError($e, 'auth_handler - register-verify');
-                    $response['message'] = 'js.api.errorDatabase';
+                    
+                    // --- ▼▼▼ INICIO DE LA CORRECCIÓN RECOMENDADA (Opción 1 Modificada) ▼▼▼ ---
+                    // El código de error '23000' (o 1062) es para violación de restricción UNIQUE
+                    if ($e->errorInfo[1] == 1062 || str_contains($e->getMessage(), 'Duplicate entry')) {
+                        // Mostrar el nuevo mensaje genérico de sincronización
+                        $response['message'] = 'js.auth.errorSync'; 
+                    } else {
+                        $response['message'] = 'js.api.errorDatabase';
+                    }
+                    // --- ▲▲▲ FIN DE LA CORRECCIÓN RECOMENDADA (Opción 1 Modificada) ▲▲▲ ---
                 }
             }
         }
@@ -519,7 +536,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $_SESSION['role'] = $user['role']; 
                             $_SESSION['auth_token'] = $authToken; 
                             
-                            logUserMetadata($pdo, $user['id']); 
+                            logUserMetadata($pdo, $userId); 
 
                             generateCsrfToken();
 
@@ -598,7 +615,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $_SESSION['role'] = $user['role']; 
                             $_SESSION['auth_token'] = $authToken; 
                             
-                            logUserMetadata($pdo, $user['id']); 
+                            logUserMetadata($pdo, $userId); 
                             
                             generateCsrfToken();
 
