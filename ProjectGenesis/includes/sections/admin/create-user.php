@@ -1,9 +1,4 @@
 <?php
-// FILE: includes/sections/admin/create-user.php
-
-// (Se asume que config/router.php ya ha iniciado $pdo y la sesión)
-
-// 1. Definir los mapas de roles
 $roleMap = [
     'user' => 'admin.users.roleUser',
     'moderator' => 'admin.users.roleModerator',
@@ -15,7 +10,6 @@ $roleIconMap = [
     'administrator' => 'admin_panel_settings'
 ];
 
-// 2. Rol por defecto
 $defaultRole = 'user';
 $currentRoleKey = $roleMap[$defaultRole];
 $currentRoleIcon = $roleIconMap[$defaultRole];

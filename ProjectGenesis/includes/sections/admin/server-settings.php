@@ -1,30 +1,18 @@
 <?php
-// FILE: includes/sections/admin/server-settings.php
-
-// (Se asume que config/router.php ya ha iniciado $pdo y la sesión)
-// Las variables $maintenanceModeStatus y $allowRegistrationStatus son cargadas por config/router.php
-
-// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-// Cargar los nuevos valores desde $GLOBALS (definidos en bootstrapper.php)
 $usernameCooldown = $GLOBALS['site_settings']['username_cooldown_days'] ?? '30';
 $emailCooldown = $GLOBALS['site_settings']['email_cooldown_days'] ?? '12';
 $avatarMaxSize = $GLOBALS['site_settings']['avatar_max_size_mb'] ?? '2';
 
-// --- ▼▼▼ NUEVAS VARIABLES AÑADIDAS ▼▼▼ ---
 $maxLoginAttempts = $GLOBALS['site_settings']['max_login_attempts'] ?? '5';
 $lockoutTimeMinutes = $GLOBALS['site_settings']['lockout_time_minutes'] ?? '5';
 $allowedEmailDomains = $GLOBALS['site_settings']['allowed_email_domains'] ?? 'gmail.com\noutlook.com';
 $minPasswordLength = $GLOBALS['site_settings']['min_password_length'] ?? '8';
-// --- ¡NUEVA LÍNEA! ---
 $maxPasswordLength = $GLOBALS['site_settings']['max_password_length'] ?? '72';
-// --- ▲▲▲ FIN DE NUEVAS VARIABLES ▲▲▲ ---
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-server-settings') ? 'active' : 'disabled'; ?>" data-section="admin-server-settings">
     <div class="component-wrapper">
 
         <?php
-        // Incluir el input CSRF
         outputCsrfInput();
         ?>
 
@@ -67,7 +55,6 @@ $maxPasswordLength = $GLOBALS['site_settings']['max_password_length'] ?? '72';
                            data-action="update-registration-mode"
                            <?php echo ($allowRegistrationStatus == 1) ? 'checked' : ''; ?>
                            <?php 
-                           // Deshabilitado si no es fundador O si el modo mantenimiento está activo
                            echo ($_SESSION['role'] !== 'founder' || $maintenanceModeStatus == 1) ? 'disabled' : ''; 
                            ?>
                            > 

@@ -81,16 +81,12 @@ async function handleResetSubmit(e) {
     const password = form.querySelector('#reset-password');
     const passwordConfirm = form.querySelector('#reset-password-confirm');
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
-    const minPassLength = window.minPasswordLength || 8; // Obtener del objeto global
-    // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
-    const maxPassLength = window.maxPasswordLength || 72; // Obtener del objeto global
+    const minPassLength = window.minPasswordLength || 8; 
+    const maxPassLength = window.maxPasswordLength || 72; 
     if (password.value.length < minPassLength || password.value.length > maxPassLength) {
         showAuthError(errorDiv, getTranslation('js.auth.errorPasswordLength', {min: minPassLength, max: maxPassLength}), null, password);
         return;
     }
-    // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     if (password.value !== passwordConfirm.value) {
         showAuthError(errorDiv, getTranslation('js.auth.errorPasswordMismatch'), null, [password, passwordConfirm]);
         return;
@@ -172,7 +168,7 @@ function showAuthError(errorDiv, message, data = null, inputElement = null) {
 
 function initPasswordToggles() {
     document.body.addEventListener('click', e => {
-        const toggleBtn = e.target.closest('.auth-toggle-password:not(.auth-generate-username)'); // Modificado para excluir el nuevo botón
+        const toggleBtn = e.target.closest('.auth-toggle-password:not(.auth-generate-username)'); 
         if (toggleBtn) {
             const inputId = toggleBtn.getAttribute('data-toggle');
             const input = document.getElementById(inputId);
@@ -213,25 +209,20 @@ function initRegisterWizard() {
                 const minutes = String(now.getMinutes()).padStart(2, '0');
                 const seconds = String(now.getSeconds()).padStart(2, '0');
                 
-                // Formato: userYYYYMMDD_HHMMSS
                 const timestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
                 
-                // Sufijo: XX (dos caracteres alfanuméricos)
                 const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
                 const suffix = chars[Math.floor(Math.random() * chars.length)] + chars[Math.floor(Math.random() * chars.length)];
                 
                 const newUsername = `user${timestamp}${suffix}`;
                 
-                // Asegurarse de que no exceda el maxlength
                 input.value = newUsername.substring(0, 32);
                 
-                // Forzar que la etiqueta flotante se active
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 
-                // Opcional: quitar el foco del botón
                 button.blur();
             }
-            return; // Importante para no continuar al 'next-step'
+            return; 
         }
 
 
@@ -311,9 +302,6 @@ function initRegisterWizard() {
             if (currentStep === 1) {
                 const emailInput = currentStepEl.querySelector('#register-email');
                 const passwordInput = currentStepEl.querySelector('#register-password');
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS) ▼▼▼ ---
-                // const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i; // <-- ELIMINADO
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 if (!emailInput.value || !passwordInput.value) {
                     isValid = false;
@@ -327,17 +315,8 @@ function initRegisterWizard() {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorEmailLength');
                     showAuthError(errorDiv, clientErrorMessage, null, emailInput);
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS) ▼▼▼ ---
-                /* } else if (!allowedDomains.test(emailInput.value)) { // <-- ELIMINADO
-                    isValid = false;
-                    clientErrorMessage = getTranslation('js.auth.errorEmailDomain');
-                    showAuthError(errorDiv, clientErrorMessage, null, emailInput);
-                */
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
                 } else {
                     const minPassLength = window.minPasswordLength || 8;
-                    // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
                     const maxPassLength = window.maxPasswordLength || 72;
                     if (passwordInput.value.length < minPassLength || passwordInput.value.length > maxPassLength) {
                         isValid = false;
@@ -345,9 +324,7 @@ function initRegisterWizard() {
                         errorData = {min: minPassLength, max: maxPassLength};
                         showAuthError(errorDiv, clientErrorMessage, errorData, passwordInput);
                     }
-                    // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
 
             else if (currentStep === 2) {

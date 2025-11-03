@@ -1,6 +1,7 @@
+
 import { callAdminApi } from '../services/api-service.js';
 import { showAlert } from '../services/alert-manager.js';
-import { getTranslation } from '../services/i18n-manager.js';
+import { getTranslation, applyTranslations } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js';
 
@@ -125,8 +126,8 @@ export function initAdminManager() {
         if (totalUsers === 0 || users.length === 0) {
             const isSearching = currentSearch !== '';
             const icon = isSearching ? 'person_search' : 'person_off';
-            const title = isSearching ? 'Sin resultados' : 'No se encontraron usuarios';
-            const desc = isSearching ? 'No hay usuarios que coincidan con tu término de búsqueda.' : 'No hay usuarios registrados en esta página o hubo un error al cargarlos.';
+            const titleKey = isSearching ? 'admin.users.noResultsTitle' : 'admin.users.noUsersTitle';
+            const descKey = isSearching ? 'admin.users.noResultsDesc' : 'admin.users.noUsersDesc';
             
             listContainer.innerHTML = `
                 <div class="component-card">
@@ -135,11 +136,12 @@ export function initAdminManager() {
                             <span class="material-symbols-rounded">${icon}</span>
                         </div>
                         <div class="component-card__text">
-                            <h2 class="component-card__title">${title}</h2>
-                            <p class="component-card__description">${desc}</p>
+                            <h2 class="component-card__title" data-i18n="${titleKey}"></h2>
+                            <p class="component-card__description" data-i18n="${descKey}"></p>
                         </div>
                     </div>
                 </div>`;
+            applyTranslations(listContainer);
             return;
         }
 
@@ -157,30 +159,31 @@ export function initAdminManager() {
 
                     <div class="user-card-details">
                         <div class="user-card-detail-item user-card-detail-item--full">
-                            <span class="user-card-detail-label">Nombre del usuario</span>
+                            <span class="user-card-detail-label" data-i18n="admin.users.labelUsername">Nombre del usuario</span>
                             <span class="user-card-detail-value">${user.username}</span>
                         </div>
                         <div class="user-card-detail-item">
-                            <span class="user-card-detail-label">Rol</span>
+                            <span class="user-card-detail-label" data-i18n="admin.users.labelRole">Rol</span>
                             <span class="user-card-detail-value">${user.roleDisplay}</span>
                         </div>
                         <div class="user-card-detail-item">
-                            <span class="user-card-detail-label">Fecha de creación</span>
+                            <span class="user-card-detail-label" data-i18n="admin.users.labelCreated">Fecha de creación</span>
                             <span class="user-card-detail-value">${user.createdAt}</span>
                         </div>
                         ${user.email ? `
                         <div class="user-card-detail-item user-card-detail-item--full">
-                            <span class="user-card-detail-label">Email</span>
+                            <span class="user-card-detail-label" data-i18n="admin.users.labelEmail">Email</span>
                             <span class="user-card-detail-value">${user.email}</span>
                         </div>` : ''}
                         <div class="user-card-detail-item">
-                            <span class="user-card-detail-label">Estado de la cuenta</span>
+                            <span class="user-card-detail-label" data-i18n="admin.users.labelStatus">Estado de la cuenta</span>
                             <span class="user-card-detail-value">${user.statusDisplay}</span>
                         </div>
                     </div>
                 </div>`;
         });
         listContainer.innerHTML = userListHtml;
+        applyTranslations(listContainer);
     }
 
     async function fetchAndRenderUsers() {
@@ -193,6 +196,11 @@ export function initAdminManager() {
         formData.append('q', currentSearch);
         formData.append('s', currentSort);
         formData.append('o', currentOrder);
+        
+        const csrfInput = document.querySelector('input[name="csrf_token"]');
+        if (csrfInput) {
+            formData.append('csrf_token', csrfInput.value);
+        }
 
         const result = await callAdminApi(formData);
 
@@ -201,7 +209,10 @@ export function initAdminManager() {
             updatePaginationControls(result.currentPage, result.totalPages, result.totalUsers);
         } else {
             showAlert(getTranslation(result.message || 'js.auth.errorUnknown'), 'error');
-            listContainer.innerHTML = `<div class="component-card"><p>${getTranslation('js.api.errorServer')}</p></div>`;
+            const listContainer = document.querySelector('.user-list-container');
+            if (listContainer) {
+                listContainer.innerHTML = `<div class="component-card"><p>${getTranslation('js.api.errorServer')}</p></div>`;
+            }
         }
 
         setListLoadingState(false);
@@ -220,13 +231,61 @@ export function initAdminManager() {
         formData.append('action', actionType === 'admin-set-role' ? 'set-role' : 'set-status');
         formData.append('target_user_id', targetUserId);
         formData.append('new_value', newValue);
+        
+        const csrfInput = document.querySelector('input[name="csrf_token"]');
+        if (csrfInput) {
+            formData.append('csrf_token', csrfInput.value);
+        }
 
         const result = await callAdminApi(formData);
 
         if (result.success) {
             showAlert(getTranslation(result.message || 'js.admin.successRole'), 'success');
             deactivateAllModules();
-            fetchAndRenderUsers();
+
+            
+            const selectedCard = document.querySelector('.user-card-item.selected');
+            
+            if (actionType === 'admin-set-role') {
+                selectedAdminUserRole = newValue;
+                if (selectedCard) {
+                    selectedCard.dataset.userRole = newValue;
+                    
+                    const newRoleText = buttonEl.querySelector('.menu-link-text span').textContent;
+                    const labels = selectedCard.querySelectorAll('.user-card-detail-label');
+                    labels.forEach(label => {
+                        if (label.dataset.i18n === 'admin.users.labelRole') { 
+                            const valueEl = label.nextElementSibling;
+                            if (valueEl && valueEl.classList.contains('user-card-detail-value')) {
+                                valueEl.textContent = newRoleText;
+                            }
+                        }
+                    });
+                    
+                    const avatar = selectedCard.querySelector('.component-card__avatar');
+                    if(avatar) avatar.dataset.role = newValue;
+                }
+            } else { 
+                selectedAdminUserStatus = newValue;
+                if (selectedCard) {
+                    selectedCard.dataset.userStatus = newValue;
+                    
+                    const newStatusText = buttonEl.querySelector('.menu-link-text span').textContent;
+                    const labels = selectedCard.querySelectorAll('.user-card-detail-label');
+                    labels.forEach(label => {
+                        if (label.dataset.i18n === 'admin.users.labelStatus') { 
+                            const valueEl = label.nextElementSibling;
+                            if (valueEl && valueEl.classList.contains('user-card-detail-value')) {
+                                valueEl.textContent = newStatusText;
+                            }
+                        }
+                    });
+                }
+            }
+            
+            menuLinks.forEach(link => link.classList.remove('disabled-interactive'));
+
+
         } else {
             showAlert(getTranslation(result.message || 'js.auth.errorUnknown'), 'error');
             menuLinks.forEach(link => link.classList.remove('disabled-interactive'));
@@ -319,7 +378,6 @@ export function initAdminManager() {
         }
         const action = button.getAttribute('data-action');
 
-        // === INICIO DE MODIFICACIÓN ===
         if (action === 'admin-generate-username') {
             event.preventDefault();
             const inputId = button.getAttribute('data-toggle');
@@ -334,27 +392,21 @@ export function initAdminManager() {
                 const minutes = String(now.getMinutes()).padStart(2, '0');
                 const seconds = String(now.getSeconds()).padStart(2, '0');
                 
-                // Formato: userYYYYMMDD_HHMMSS
                 const timestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
                 
-                // Sufijo: XX (dos caracteres alfanuméricos)
                 const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
                 const suffix = chars[Math.floor(Math.random() * chars.length)] + chars[Math.floor(Math.random() * chars.length)];
                 
                 const newUsername = `user${timestamp}${suffix}`;
                 
-                // Asegurarse de que no exceda el maxlength
                 input.value = newUsername.substring(0, 32);
                 
-                // Forzar que la etiqueta flotante se active
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 
-                // Opcional: quitar el foco del botón
                 button.blur();
             }
-            return; // Importante para no continuar
+            return;
         }
-        // === FIN DE MODIFICACIÓN ===
 
         if (action === 'admin-page-next' || action === 'admin-page-prev') {
             event.preventDefault();
@@ -412,20 +464,26 @@ export function initAdminManager() {
         }
 
         if (action === 'toggleSectionAdminEditUser') {
-            // event.preventDefault(); <-- No es necesario, url-manager lo hace
-            // event.stopImmediatePropagation(); <-- Eliminado
-
             if (!selectedAdminUserId) {
                 showAlert(getTranslation('js.admin.errorNoSelection'), 'error');
+                event.preventDefault(); 
+                event.stopImmediatePropagation();
                 return;
             }
             
-            const link = document.createElement('a');
-            link.href = window.projectBasePath + '/admin/edit-user?id=' + selectedAdminUserId;
-            link.setAttribute('data-nav-js', 'true'); 
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
+            const linkUrl = window.projectBasePath + '/admin/edit-user?id=' + selectedAdminUserId;
+            
+            if (button.tagName === 'A') {
+                button.href = linkUrl;
+            } else {
+                const link = document.createElement('a');
+                link.href = linkUrl;
+                link.setAttribute('data-nav-js', 'true'); 
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            }
+            
             
             clearAdminUserSelection(); 
             deactivateAllModules(); 
@@ -523,10 +581,6 @@ export function initAdminManager() {
         const email = form.querySelector('#admin-create-email').value;
         const password = form.querySelector('#admin-create-password').value;
         const passwordConfirm = form.querySelector('#admin-create-password-confirm').value; 
-        
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS) ▼▼▼ ---
-        // const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i; // <-- ELIMINADO
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         if (!username || !email || !password || !passwordConfirm) { 
             showCreateUserError('js.auth.errorCompleteAllFields'); return;
@@ -537,20 +591,12 @@ export function initAdminManager() {
         if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
             showCreateUserError('js.auth.errorInvalidEmail'); return;
         }
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS) ▼▼▼ ---
-        /*
-        if (!allowedDomains.test(email)) { // <-- ELIMINADO
-            showCreateUserError('js.auth.errorEmailDomain'); return;
-        }
-        */
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
         const minPassLength = window.minPasswordLength || 8;
-        if (password.length < minPassLength || password.length > 72) {
-            showCreateUserError('js.auth.errorPasswordLength', {min: minPassLength, max: 72}); return;
+        const maxPassLength = window.maxPasswordLength || 72;
+        if (password.length < minPassLength || password.length > maxPassLength) {
+            showCreateUserError('js.auth.errorPasswordLength', {min: minPassLength, max: maxPassLength}); return;
         }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         if (password !== passwordConfirm) {
             showCreateUserError('js.auth.errorPasswordMismatch'); return;
         }
@@ -629,4 +675,9 @@ export function initAdminManager() {
             clearAdminUserSelection();
         }
     });
+
+    const userListContainer = document.querySelector('.user-list-container');
+    if (userListContainer) {
+        applyTranslations(userListContainer);
+    }
 }

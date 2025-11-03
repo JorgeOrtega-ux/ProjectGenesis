@@ -1,14 +1,8 @@
 <?php
-// FILE: includes/sections/admin/admin-edit-user.php
-
-// (Se asume que config/router.php ya ha cargado los datos en la variable $editUser)
-
 if (!isset($editUser) || !$editUser) {
     echo "Error: No se han podido cargar los datos del usuario.";
     return;
 }
-
-// $editUser, $isDefaultAvatar son cargadas por config/router.php
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-edit-user') ? 'active' : 'disabled'; ?>" data-section="admin-edit-user">
     <div class="component-wrapper">

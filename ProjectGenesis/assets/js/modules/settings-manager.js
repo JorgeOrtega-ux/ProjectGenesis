@@ -12,7 +12,7 @@ function showInlineError(cardElement, messageKey, data = null) {
     hideInlineError(cardElement); 
 
     const errorDiv = document.createElement('div');
-    errorDiv.className = 'component-card__error'; // MODIFICADO
+    errorDiv.className = 'component-card__error'; 
     let message = getTranslation(messageKey);
 
     if (data) {
@@ -29,7 +29,7 @@ function showInlineError(cardElement, messageKey, data = null) {
 function hideInlineError(cardElement) {
     if (!cardElement) return;
     const nextElement = cardElement.nextElementSibling;
-    if (nextElement && nextElement.classList.contains('component-card__error')) { // MODIFICADO
+    if (nextElement && nextElement.classList.contains('component-card__error')) { 
         nextElement.remove();
     }
 }
@@ -39,14 +39,14 @@ function toggleButtonSpinner(button, text, isLoading) {
     button.disabled = isLoading;
     if (isLoading) {
         button.dataset.originalText = button.textContent;
-        const spinnerClass = (button.classList.contains('modal__button-small') || button.classList.contains('component-button')) ? 'logout-spinner' : 'auth-button-spinner'; // MODIFICADO
-        let spinnerStyle = (button.classList.contains('modal__button-small') || button.classList.contains('component-button')) ? 'width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;' : ''; // MODIFICADO
+        const spinnerClass = (button.classList.contains('modal__button-small') || button.classList.contains('component-button')) ? 'logout-spinner' : 'auth-button-spinner'; 
+        let spinnerStyle = (button.classList.contains('modal__button-small') || button.classList.contains('component-button')) ? 'width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;' : ''; 
         
         if (button.classList.contains('modal__button-small--primary') || 
             button.classList.contains('modal__button-small--danger') || 
-            (button.classList.contains('component-button') && !button.classList.contains('danger'))) { // MODIFICADO
+            (button.classList.contains('component-button') && !button.classList.contains('danger'))) { 
             
-            if(button.classList.contains('component-button') && button.classList.contains('danger')) { // MODIFICADO
+            if(button.classList.contains('component-button') && button.classList.contains('danger')) { 
             } else {
                  spinnerStyle += ' border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;';
             }
@@ -195,7 +195,7 @@ export function initSettingsManager() {
 
     document.body.addEventListener('click', async (e) => {
         const target = e.target;
-        const card = target.closest('.component-card'); // MODIFICADO
+        const card = target.closest('.component-card'); 
 
         const avatarCard = document.getElementById('avatar-section');
         if (avatarCard) {
@@ -340,7 +340,7 @@ export function initSettingsManager() {
         if (target.closest('#email-verify-resend')) {
             e.preventDefault();
             const resendTrigger = target.closest('#email-verify-resend');
-            const card = resendTrigger.closest('.component-card'); // MODIFICADO
+            const card = resendTrigger.closest('.component-card'); 
             if (!card) return; 
 
             if (resendTrigger.classList.contains('disabled-interactive')) return;
@@ -371,7 +371,7 @@ export function initSettingsManager() {
         if (target.closest('#email-verify-continue')) {
             e.preventDefault();
             const continueTrigger = target.closest('#email-verify-continue');
-            const card = continueTrigger.closest('.component-card'); // MODIFICADO
+            const card = continueTrigger.closest('.component-card'); 
             if (!card) return;
             const modalInput = document.getElementById('email-verify-code');
 
@@ -409,7 +409,7 @@ export function initSettingsManager() {
         if (target.closest('#email-save-trigger-btn')) {
             e.preventDefault();
             const saveTrigger = target.closest('#email-save-trigger-btn');
-            const card = saveTrigger.closest('.component-card'); // MODIFICADO
+            const card = saveTrigger.closest('.component-card'); 
             if (!card) return;
             
             const inputElement = document.getElementById('email-input-new'); 
@@ -424,14 +424,6 @@ export function initSettingsManager() {
             if (newEmail.length > 255) {
                 showInlineError(card, 'js.auth.errorEmailLength'); return;
             }
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS) ▼▼▼ ---
-            // const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i; // <-- ELIMINADO
-            /*
-            if (!allowedDomains.test(newEmail)) { // <-- ELIMINADO
-                showInlineError(card, 'js.auth.errorEmailDomain'); return;
-            }
-            */
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
 
@@ -522,7 +514,7 @@ export function initSettingsManager() {
 
          if (target.closest('#tfa-verify-continue')) {
              e.preventDefault();
-                const card = target.closest('.component-card'); // MODIFICADO
+                const card = target.closest('.component-card'); 
                 if (!card) return; 
 
                 const verifyTrigger = target.closest('#tfa-verify-continue');
@@ -629,16 +621,12 @@ export function initSettingsManager() {
 
             hideInlineError(step2Card); 
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
             const minPassLength = window.minPasswordLength || 8;
-            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
             const maxPassLength = window.maxPasswordLength || 72;
              if (newPassInput.value.length < minPassLength || newPassInput.value.length > maxPassLength) {
                 showInlineError(step2Card, 'js.auth.errorPasswordLength', {min: minPassLength, max: maxPassLength});
                  return;
              }
-            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
              if (newPassInput.value !== confirmPassInput.value) {
                 showInlineError(step2Card, 'js.auth.errorPasswordMismatch');
                  return;
@@ -730,7 +718,7 @@ export function initSettingsManager() {
         if (target.closest('#delete-account-confirm')) {
              e.preventDefault();
              const confirmButton = target.closest('#delete-account-confirm');
-             const card = target.closest('.component-card'); // MODIFICADO
+             const card = target.closest('.component-card'); 
              if(!confirmButton || !card) return; 
             
             const passwordInput = document.getElementById('delete-account-password');
@@ -769,7 +757,7 @@ export function initSettingsManager() {
 
     document.body.addEventListener('change', async (e) => {
         const target = e.target;
-        const card = target.closest('.component-card'); // MODIFICADO
+        const card = target.closest('.component-card'); 
 
         if (target.id === 'avatar-upload-input' && card) {
             hideInlineError(card);
@@ -785,14 +773,12 @@ export function initSettingsManager() {
                 return;
             }
             
-            // --- ▼▼▼ BLOQUE MODIFICADO ▼▼▼ ---
             const maxSizeInMB = window.avatarMaxSizeMB || 2;
             if (file.size > maxSizeInMB * 1024 * 1024) { 
                 showInlineError(card, 'js.settings.errorAvatarSize', { size: maxSizeInMB });
                 fileInput.value = ''; 
                 return;
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
             if (!previewImage.dataset.originalSrc) {
@@ -843,14 +829,14 @@ export function initSettingsManager() {
         }
 
 
-        if (target.matches('.component-text-input') || target.closest('.auth-input-group') || target.closest('.modal__input-group') || target.closest('.component-input-group')) { // MODIFICADO
-            const card = target.closest('.component-card'); // MODIFICADO
+        if (target.matches('.component-text-input') || target.closest('.auth-input-group') || target.closest('.modal__input-group') || target.closest('.component-input-group')) { 
+            const card = target.closest('.component-card'); 
             if (card) {
                 hideInlineError(card);
             }
             const modalContent = target.closest('.modal-content');
             if (modalContent) {
-                 const errorDiv = modalContent.querySelector('.auth-error-message, .component-card__error'); // MODIFICADO
+                 const errorDiv = modalContent.querySelector('.auth-error-message, .component-card__error'); 
                  if (errorDiv) {
                     if(errorDiv.classList.contains('auth-error-message')) {
                          errorDiv.style.display = 'none';

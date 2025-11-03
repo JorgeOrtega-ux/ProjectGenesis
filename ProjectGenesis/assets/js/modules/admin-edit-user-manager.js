@@ -1,9 +1,5 @@
-// FILE: assets/js/modules/admin-edit-user-manager.js
-
 import { callAdminApi }  from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
-
-// --- Helper Functions (Copiadas de settings-manager.js) ---
 
 function showInlineError(cardElement, messageKey, data = null) {
     if (!cardElement) return;
@@ -33,7 +29,7 @@ function toggleButtonSpinner(button, text, isLoading) {
     button.disabled = isLoading;
     if (isLoading) {
         button.dataset.originalText = button.textContent;
-        const spinnerClass = 'logout-spinner'; // Usar siempre el spinner pequeño
+        const spinnerClass = 'logout-spinner'; 
         let spinnerStyle = 'width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;';
         
         if (button.classList.contains('modal__button-small--primary') || 
@@ -77,31 +73,20 @@ function getCsrfTokenFromPage() {
     return csrfInput ? csrfInput.value : (window.csrfToken || ''); 
 }
 
-// --- Fin Helper Functions ---
 
 
 export function initAdminEditUserManager() {
 
-    // --- ▼▼▼ CORRECCIÓN: ELIMINAR LA COMPROBACIÓN INICIAL ▼▼▼ ---
-    // La comprobación `if (!targetUserIdInput)` se ha eliminado.
-    // Los listeners se adjuntan al 'body' incondicionalmente.
-    // La comprobación de si estamos en la página correcta se hará DENTRO del listener.
-    // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
 
     document.body.addEventListener('click', async (e) => {
         
-        // --- ▼▼▼ CORRECCIÓN: OBTENER ID Y TARGET AQUÍ ▼▼▼ ---
-        // Comprobar si estamos en la página de edición ANTES de ejecutar cualquier lógica.
         const targetUserIdInput = document.getElementById('admin-edit-target-user-id');
         if (!targetUserIdInput) {
-            // No estamos en la página de admin-edit-user, no hacer nada.
             return;
         }
         const targetUserId = targetUserIdInput.value;
         const target = e.target;
-        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
         
-        // === LÓGICA DE AVATAR ===
         const avatarCard = document.getElementById('admin-avatar-section');
         if (avatarCard) {
              if (target.closest('#admin-avatar-preview-container') || target.closest('#admin-avatar-upload-trigger') || target.closest('#admin-avatar-change-trigger')) {
@@ -135,31 +120,28 @@ export function initAdminEditUserManager() {
 
                 const formData = new FormData();
                 formData.append('action', 'admin-remove-avatar');
-                formData.append('target_user_id', targetUserId); // ID del usuario a editar
+                formData.append('target_user_id', targetUserId); 
                 formData.append('csrf_token', getCsrfTokenFromPage()); 
 
-                const result = await callAdminApi(formData); // API de Admin
+                const result = await callAdminApi(formData); 
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (NO-RELOAD) ▼▼▼ ---
                 if (result.success) {
                     window.showAlert(getTranslation(result.message || 'js.settings.successAvatarRemoved'), 'success');
                     
                     const previewImage = document.getElementById('admin-avatar-preview-image');
-                    previewImage.src = result.newAvatarUrl; // API returns new default URL
+                    previewImage.src = result.newAvatarUrl; 
                     previewImage.dataset.originalSrc = result.newAvatarUrl;
 
-                    // Hide custom buttons, show default buttons
                     document.getElementById('admin-avatar-actions-preview').style.display = 'none';
                     document.getElementById('admin-avatar-actions-custom').style.display = 'none';
                     document.getElementById('admin-avatar-actions-default').style.display = 'flex';
-                    avatarCard.dataset.originalActions = 'default'; // Update the original state
+                    avatarCard.dataset.originalActions = 'default'; 
                     
                     toggleButtonSpinner(removeTrigger, getTranslation('settings.profile.removePhoto'), false);
                 } else {
                     showInlineError(avatarCard, result.message || 'js.settings.errorAvatarRemove');
                     toggleButtonSpinner(removeTrigger, getTranslation('settings.profile.removePhoto'), false);
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 return;
             }
 
@@ -176,39 +158,35 @@ export function initAdminEditUserManager() {
 
                 const formData = new FormData();
                 formData.append('action', 'admin-upload-avatar');
-                formData.append('target_user_id', targetUserId); // ID del usuario a editar
+                formData.append('target_user_id', targetUserId); 
                 formData.append('avatar', fileInput.files[0]);
                 formData.append('csrf_token', getCsrfTokenFromPage()); 
 
-                const result = await callAdminApi(formData); // API de Admin
+                const result = await callAdminApi(formData); 
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (NO-RELOAD) ▼▼▼ ---
                 if (result.success) {
                     window.showAlert(getTranslation(result.message || 'js.settings.successAvatarUpdate'), 'success');
 
                     const previewImage = document.getElementById('admin-avatar-preview-image');
-                    previewImage.src = result.newAvatarUrl; // API must return this
-                    previewImage.dataset.originalSrc = result.newAvatarUrl; // Update original source
+                    previewImage.src = result.newAvatarUrl; 
+                    previewImage.dataset.originalSrc = result.newAvatarUrl; 
                     
-                    document.getElementById('admin-avatar-upload-input').value = ''; // Clear file input
+                    document.getElementById('admin-avatar-upload-input').value = ''; 
 
-                    // Hide preview buttons, show custom buttons
                     document.getElementById('admin-avatar-actions-preview').style.display = 'none';
                     document.getElementById('admin-avatar-actions-default').style.display = 'none';
                     document.getElementById('admin-avatar-actions-custom').style.display = 'flex';
-                    avatarCard.dataset.originalActions = 'custom'; // Update the original state
+                    avatarCard.dataset.originalActions = 'custom'; 
 
                     toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 } else {
                     showInlineError(avatarCard, result.message || 'js.settings.errorSaveUnknown');
                     toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 return;
             }
         }
 
-        // === LÓGICA DE USERNAME ===
         const usernameCard = document.getElementById('admin-username-section');
         if (usernameCard) {
             hideInlineError(usernameCard);
@@ -243,17 +221,16 @@ export function initAdminEditUserManager() {
                 toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
                 const formData = new FormData();
                 formData.append('action', 'admin-update-username');
-                formData.append('target_user_id', targetUserId); // ID del usuario a editar
+                formData.append('target_user_id', targetUserId); 
                 formData.append('username', inputElement.value);
                 formData.append('csrf_token', getCsrfTokenFromPage()); 
 
-                const result = await callAdminApi(formData); // API de Admin
+                const result = await callAdminApi(formData); 
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (NO-RELOAD) ▼▼▼ ---
                 if (result.success) {
                     window.showAlert(getTranslation(result.message || 'js.settings.successUsernameUpdate'), 'success');
                     
-                    const newUsername = result.newUsername; // Get from API
+                    const newUsername = result.newUsername; 
                     const displayElement = document.getElementById('admin-username-display-text');
                     const inputElement = document.getElementById('admin-username-input');
                     
@@ -261,13 +238,11 @@ export function initAdminEditUserManager() {
                     displayElement.dataset.originalUsername = newUsername;
                     inputElement.value = newUsername;
 
-                    // Hide edit state, show view state
                     document.getElementById('admin-username-edit-state').style.display = 'none';
                     document.getElementById('admin-username-actions-edit').style.display = 'none';
                     document.getElementById('admin-username-view-state').style.display = 'flex';
                     document.getElementById('admin-username-actions-view').style.display = 'flex';
 
-                    // Check if avatar also changed (if it was a default one)
                     if (result.newAvatarUrl) {
                         const previewImage = document.getElementById('admin-avatar-preview-image');
                         previewImage.src = result.newAvatarUrl;
@@ -279,12 +254,10 @@ export function initAdminEditUserManager() {
                     showInlineError(usernameCard, result.message || 'js.settings.errorSaveUnknown', result.data);
                     toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                  return;
             }
         }
 
-        // === LÓGICA DE EMAIL (Basada en Username) ===
         const emailCard = document.getElementById('admin-email-section');
         if (emailCard) {
             hideInlineError(emailCard);
@@ -314,7 +287,6 @@ export function initAdminEditUserManager() {
                 const inputElement = document.getElementById('admin-email-input');
                 const newEmail = inputElement.value;
 
-                // Validación de Email
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(newEmail)) {
                     showInlineError(emailCard, 'js.auth.errorInvalidEmail'); return;
@@ -330,17 +302,16 @@ export function initAdminEditUserManager() {
                 toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
                 const formData = new FormData();
                 formData.append('action', 'admin-update-email');
-                formData.append('target_user_id', targetUserId); // ID del usuario a editar
+                formData.append('target_user_id', targetUserId); 
                 formData.append('email', newEmail);
                 formData.append('csrf_token', getCsrfTokenFromPage()); 
 
-                const result = await callAdminApi(formData); // API de Admin
+                const result = await callAdminApi(formData); 
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (NO-RELOAD) ▼▼▼ ---
                 if (result.success) {
                     window.showAlert(getTranslation(result.message || 'js.settings.successEmailUpdate'), 'success');
 
-                    const newEmail = result.newEmail; // Get from API
+                    const newEmail = result.newEmail; 
                     const displayElement = document.getElementById('admin-email-display-text');
                     const inputElement = document.getElementById('admin-email-input');
 
@@ -348,7 +319,6 @@ export function initAdminEditUserManager() {
                     displayElement.dataset.originalEmail = newEmail;
                     inputElement.value = newEmail;
 
-                    // Hide edit state, show view state
                     document.getElementById('admin-email-edit-state').style.display = 'none';
                     document.getElementById('admin-email-actions-edit').style.display = 'none';
                     document.getElementById('admin-email-view-state').style.display = 'flex';
@@ -359,12 +329,10 @@ export function initAdminEditUserManager() {
                     showInlineError(emailCard, result.message || 'js.settings.errorSaveUnknown', result.data);
                     toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                  return;
             }
         }
 
-        // === LÓGICA DE CONTRASEÑA ===
          if (target.closest('#admin-password-update-save')) {
             e.preventDefault();
              const step2Card = target.closest('#admin-pass-step-2');
@@ -378,22 +346,18 @@ export function initAdminEditUserManager() {
 
             hideInlineError(step2Card); 
             
-            // Permitir campos vacíos (para "no cambiar"), pero si uno está lleno, validar
             if (newPassInput.value || confirmPassInput.value) {
-                // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
                 const minPassLength = window.minPasswordLength || 8;
                 const maxPassLength = window.maxPasswordLength || 72;
                  if (newPassInput.value.length < minPassLength || newPassInput.value.length > maxPassLength) {
                     showInlineError(step2Card, 'js.auth.errorPasswordLength', {min: minPassLength, max: maxPassLength});
                      return;
                  }
-                // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
                  if (newPassInput.value !== confirmPassInput.value) {
                     showInlineError(step2Card, 'js.auth.errorPasswordMismatch');
                      return;
                  }
             } else {
-                // Ambos están vacíos, no hacer nada.
                 window.showAlert(getTranslation('admin.edit.errorPassEmpty'), 'info');
                 return;
             }
@@ -402,18 +366,16 @@ export function initAdminEditUserManager() {
 
             const formData = new FormData();
             formData.append('action', 'admin-update-password');
-            formData.append('target_user_id', targetUserId); // ID del usuario a editar
+            formData.append('target_user_id', targetUserId); 
             formData.append('new_password', newPassInput.value);
             formData.append('confirm_password', confirmPassInput.value);
             formData.append('csrf_token', getCsrfTokenFromPage()); 
 
-            const result = await callAdminApi(formData); // API de Admin
+            const result = await callAdminApi(formData); 
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (NO-RELOAD) ▼▼▼ ---
             if (result.success) {
                 window.showAlert(getTranslation(result.message || 'js.settings.successPassUpdate'), 'success');
                 
-                // Actualizar el hash mostrado y limpiar los campos
                 if (result.newPasswordHash) {
                     document.getElementById('admin-password-hash-display').value = result.newPasswordHash;
                 }
@@ -425,20 +387,16 @@ export function initAdminEditUserManager() {
                 showInlineError(step2Card, result.message || 'js.settings.errorSaving', result.data);
                 toggleButtonSpinner(saveTrigger, getTranslation('settings.login.savePassword'), false);
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             return;
         }
 
     }); 
 
-    // === LISTENER DE 'CHANGE' PARA AVATAR ===
     document.body.addEventListener('change', async (e) => {
-        // --- ▼▼▼ CORRECCIÓN: AÑADIR COMPROBACIÓN DE PÁGINA ▼▼▼ ---
         const targetUserIdInput = document.getElementById('admin-edit-target-user-id');
         if (!targetUserIdInput) {
-            return; // No estamos en la página de admin-edit-user
+            return; 
         }
-        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
 
         const target = e.target;
         const card = target.closest('#admin-avatar-section');
@@ -455,14 +413,12 @@ export function initAdminEditUserManager() {
                 return;
             }
 
-            // --- ▼▼▼ BLOQUE MODIFICADO ▼▼▼ ---
             const maxSizeInMB = window.avatarMaxSizeMB || 2;
             if (file.size > maxSizeInMB * 1024 * 1024) { 
                 showInlineError(card, 'js.settings.errorAvatarSize', { size: maxSizeInMB });
                 fileInput.value = ''; 
                 return;
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             if (!previewImage.dataset.originalSrc) {
                 previewImage.dataset.originalSrc = previewImage.src;
@@ -481,14 +437,11 @@ export function initAdminEditUserManager() {
         }
     }); 
 
-    // === LISTENER DE 'INPUT' PARA OCULTAR ERRORES ===
     document.body.addEventListener('input', (e) => {
-        // --- ▼▼▼ CORRECCIÓN: AÑADIR COMPROBACIÓN DE PÁGINA ▼▼▼ ---
         const targetUserIdInput = document.getElementById('admin-edit-target-user-id');
         if (!targetUserIdInput) {
-            return; // No estamos en la página de admin-edit-user
+            return; 
         }
-        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
         
         const target = e.target;
         if (target.matches('.component-text-input') || target.closest('.component-input-group')) {
@@ -499,14 +452,11 @@ export function initAdminEditUserManager() {
         }
     }); 
 
-    // Guardar la URL original del avatar al cargar
     setTimeout(() => {
-        // --- ▼▼▼ CORRECCIÓN: AÑADIR COMPROBACIÓN DE PÁGINA ▼▼▼ ---
         const targetUserIdInput = document.getElementById('admin-edit-target-user-id');
         if (!targetUserIdInput) {
-            return; // No estamos en la página de admin-edit-user
+            return; 
         }
-        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
         
         const previewImage = document.getElementById('admin-avatar-preview-image');
         if (previewImage && !previewImage.dataset.originalSrc) {
