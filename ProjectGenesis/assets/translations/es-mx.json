@@ -101,6 +101,8 @@
       "avatarMaxSizeDesc": "Tamaño máximo permitido para la subida de avatares, en Megabytes (ej. 2 = 2MB).",
       "minPasswordLengthTitle": "Longitud Mínima de Contraseña",
       "minPasswordLengthDesc": "El número mínimo de caracteres requeridos para cualquier contraseña nueva (mín. 8).",
+      "maxPasswordLengthTitle": "Longitud Máxima de Contraseña",
+      "maxPasswordLengthDesc": "El número máximo de caracteres permitidos para cualquier contraseña nueva (máx. 72).",
       "maxLoginAttemptsTitle": "Máx. Intentos de Sesión",
       "maxLoginAttemptsDesc": "Número de intentos fallidos antes de bloquear la cuenta por un tiempo.",
       "lockoutTimeMinutesTitle": "Minutos de Bloqueo",
