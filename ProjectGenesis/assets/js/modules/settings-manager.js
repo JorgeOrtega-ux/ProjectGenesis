@@ -424,10 +424,14 @@ export function initSettingsManager() {
             if (newEmail.length > 255) {
                 showInlineError(card, 'js.auth.errorEmailLength'); return;
             }
-            const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i;
-            if (!allowedDomains.test(newEmail)) {
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS) ▼▼▼ ---
+            // const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i; // <-- ELIMINADO
+            /*
+            if (!allowedDomains.test(newEmail)) { // <-- ELIMINADO
                 showInlineError(card, 'js.auth.errorEmailDomain'); return;
             }
+            */
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
 
@@ -625,10 +629,13 @@ export function initSettingsManager() {
 
             hideInlineError(step2Card); 
 
-             if (newPassInput.value.length < 8 || newPassInput.value.length > 72) {
-                showInlineError(step2Card, 'js.auth.errorPasswordLength', {min: 8, max: 72});
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
+            const minPassLength = window.minPasswordLength || 8;
+             if (newPassInput.value.length < minPassLength || newPassInput.value.length > 72) {
+                showInlineError(step2Card, 'js.auth.errorPasswordLength', {min: minPassLength, max: 72});
                  return;
              }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
              if (newPassInput.value !== confirmPassInput.value) {
                 showInlineError(step2Card, 'js.auth.errorPasswordMismatch');
                  return;

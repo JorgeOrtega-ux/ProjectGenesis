@@ -81,10 +81,13 @@ async function handleResetSubmit(e) {
     const password = form.querySelector('#reset-password');
     const passwordConfirm = form.querySelector('#reset-password-confirm');
 
-    if (password.value.length < 8 || password.value.length > 72) {
-        showAuthError(errorDiv, getTranslation('js.auth.errorPasswordLength', {min: 8, max: 72}), null, password);
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
+    const minPassLength = window.minPasswordLength || 8; // Obtener del objeto global
+    if (password.value.length < minPassLength || password.value.length > 72) {
+        showAuthError(errorDiv, getTranslation('js.auth.errorPasswordLength', {min: minPassLength, max: 72}), null, password);
         return;
     }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     if (password.value !== passwordConfirm.value) {
         showAuthError(errorDiv, getTranslation('js.auth.errorPasswordMismatch'), null, [password, passwordConfirm]);
         return;
@@ -305,7 +308,9 @@ function initRegisterWizard() {
             if (currentStep === 1) {
                 const emailInput = currentStepEl.querySelector('#register-email');
                 const passwordInput = currentStepEl.querySelector('#register-password');
-                const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i;
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS) ▼▼▼ ---
+                // const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i; // <-- ELIMINADO
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 if (!emailInput.value || !passwordInput.value) {
                     isValid = false;
@@ -319,16 +324,24 @@ function initRegisterWizard() {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorEmailLength');
                     showAuthError(errorDiv, clientErrorMessage, null, emailInput);
-                } else if (!allowedDomains.test(emailInput.value)) {
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS) ▼▼▼ ---
+                /* } else if (!allowedDomains.test(emailInput.value)) { // <-- ELIMINADO
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorEmailDomain');
                     showAuthError(errorDiv, clientErrorMessage, null, emailInput);
-                } else if (passwordInput.value.length < 8 || passwordInput.value.length > 72) {
-                    isValid = false;
-                    clientErrorMessage = getTranslation('js.auth.errorPasswordLength');
-                    errorData = {min: 8, max: 72};
-                    showAuthError(errorDiv, clientErrorMessage, errorData, passwordInput);
+                */
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
+                } else {
+                    const minPassLength = window.minPasswordLength || 8;
+                    if (passwordInput.value.length < minPassLength || passwordInput.value.length > 72) {
+                        isValid = false;
+                        clientErrorMessage = getTranslation('js.auth.errorPasswordLength');
+                        errorData = {min: minPassLength, max: 72};
+                        showAuthError(errorDiv, clientErrorMessage, errorData, passwordInput);
+                    }
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
 
             else if (currentStep === 2) {

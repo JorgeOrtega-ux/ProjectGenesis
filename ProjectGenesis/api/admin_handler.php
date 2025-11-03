@@ -93,13 +93,15 @@ function canAdminModifyTarget($adminRole, $targetRole) {
 }
 // --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
 
-// --- ▼▼▼ ¡NUEVAS CONSTANTES AÑADIDAS! (Copiadas de auth_handler.php) ▼▼▼ ---
-define('MIN_PASSWORD_LENGTH', 8);
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (CONSTANTES GLOBALES) ▼▼▼ ---
+// Cargar valores desde $GLOBALS
+$minPasswordLength = (int)($GLOBALS['site_settings']['min_password_length'] ?? 8);
+// define('MIN_PASSWORD_LENGTH', 8); // <-- ELIMINADO
 define('MAX_PASSWORD_LENGTH', 72);
 define('MIN_USERNAME_LENGTH', 6);
 define('MAX_USERNAME_LENGTH', 32);
 define('MAX_EMAIL_LENGTH', 255);
-// --- ▲▲▲ FIN DE NUEVAS CONSTANTES ▲▲▲ ---
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 // --- INICIO DE MODIFICACIÓN: Lógica de POST y GET ---
 
@@ -238,7 +240,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // (La comprobación de 'founder' no es necesaria, ya que no está en $allowedRoles)
 
             // 4. Validar Email
-            $allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com'];
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---
+            $domainsString = $GLOBALS['site_settings']['allowed_email_domains'] ?? '';
+            $allowedDomains = preg_split('/[\s,]+/', $domainsString, -1, PREG_SPLIT_NO_EMPTY);
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $emailDomain = substr($email, strrpos($email, '@') + 1);
 
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -247,9 +252,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (strlen($email) > MAX_EMAIL_LENGTH) {
                 throw new Exception('js.auth.errorEmailLength');
             }
-            if (!in_array(strtolower($emailDomain), $allowedDomains)) {
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---
+            if (!empty($allowedDomains) && !in_array(strtolower($emailDomain), $allowedDomains)) {
                 throw new Exception('js.auth.errorEmailDomain');
             }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $stmt_check_email = $pdo->prepare("SELECT id FROM users WHERE email = ?");
             $stmt_check_email->execute([$email]);
             if ($stmt_check_email->fetch()) {
@@ -270,9 +277,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // 6. Validar Contraseña
-            if (strlen($password) < MIN_PASSWORD_LENGTH) {
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
+            if (strlen($password) < $minPasswordLength) {
                 throw new Exception('js.auth.errorPasswordMinLength');
             }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             if (strlen($password) > MAX_PASSWORD_LENGTH) {
                 throw new Exception('js.auth.errorPasswordMaxLength');
             }
@@ -320,7 +329,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Capturar errores de validación
             $response['message'] = $e->getMessage();
             $data = [];
-            if ($response['message'] === 'js.auth.errorPasswordMinLength') $data['length'] = MIN_PASSWORD_LENGTH;
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
+            if ($response['message'] === 'js.auth.errorPasswordMinLength') $data['length'] = $minPasswordLength;
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             if ($response['message'] === 'js.auth.errorPasswordMaxLength') $data['length'] = MAX_PASSWORD_LENGTH;
             if ($response['message'] === 'js.auth.errorUsernameMinLength') $data['length'] = MIN_USERNAME_LENGTH;
             if ($response['message'] === 'js.auth.errorUsernameMaxLength') $data['length'] = MAX_USERNAME_LENGTH;
@@ -566,9 +577,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (strlen($newEmail) > MAX_EMAIL_LENGTH) throw new Exception('js.auth.errorEmailLength');
             if ($newEmail === $oldEmail) throw new Exception('js.settings.errorEmailIsCurrent');
             
-            $allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com'];
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---
+            $domainsString = $GLOBALS['site_settings']['allowed_email_domains'] ?? '';
+            $allowedDomains = preg_split('/[\s,]+/', $domainsString, -1, PREG_SPLIT_NO_EMPTY);
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $emailDomain = substr($newEmail, strrpos($newEmail, '@') + 1);
-            if (!in_array(strtolower($emailDomain), $allowedDomains)) throw new Exception('js.auth.errorEmailDomain');
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---
+            if (!empty($allowedDomains) && !in_array(strtolower($emailDomain), $allowedDomains)) {
+                throw new Exception('js.auth.errorEmailDomain');
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
             $stmt->execute([$newEmail, $targetUserId]);
@@ -607,7 +625,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($newPassword) || empty($confirmPassword)) {
                 throw new Exception('admin.edit.errorPassEmpty'); // Nuevo i18n
             }
-            if (strlen($newPassword) < MIN_PASSWORD_LENGTH) throw new Exception('js.auth.errorPasswordMinLength');
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
+            if (strlen($newPassword) < $minPasswordLength) throw new Exception('js.auth.errorPasswordMinLength');
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             if (strlen($newPassword) > MAX_PASSWORD_LENGTH) throw new Exception('js.auth.errorPasswordMaxLength');
             if ($newPassword !== $confirmPassword) throw new Exception('js.auth.errorPasswordMismatch');
 
@@ -626,7 +646,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Exception $e) {
             if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-update-password');
             $response['message'] = $e->getMessage();
-            if ($response['message'] === 'js.auth.errorPasswordMinLength') $response['data'] = ['length' => MIN_PASSWORD_LENGTH];
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
+            if ($response['message'] === 'js.auth.errorPasswordMinLength') $response['data'] = ['length' => $minPasswordLength];
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             elseif ($response['message'] === 'js.auth.errorPasswordMaxLength') $response['data'] = ['length' => MAX_PASSWORD_LENGTH];
         }
     }
@@ -730,8 +752,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
     
-    // --- ▼▼▼ INICIO DE NUEVAS ACCIONES GENÉRICAS ▼▼▼ ---
-    elseif ($action === 'update-username-cooldown' || $action === 'update-email-cooldown' || $action === 'update-avatar-max-size') {
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (ACCIONES GENÉRICAS AMPLIADAS) ▼▼▼ ---
+    elseif (
+        $action === 'update-username-cooldown' || $action === 'update-email-cooldown' || $action === 'update-avatar-max-size' ||
+        $action === 'update-min-password-length' || $action === 'update-max-login-attempts' || $action === 'update-lockout-time-minutes' ||
+        $action === 'update-allowed-email-domains'
+    ) {
         
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
@@ -747,20 +773,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'update-username-cooldown' => 'username_cooldown_days',
                 'update-email-cooldown' => 'email_cooldown_days',
                 'update-avatar-max-size' => 'avatar_max_size_mb',
+                // --- ▼▼▼ NUEVAS CLAVES AÑADIDAS ▼▼▼ ---
+                'update-min-password-length' => 'min_password_length',
+                'update-max-login-attempts' => 'max_login_attempts',
+                'update-lockout-time-minutes' => 'lockout_time_minutes',
+                'update-allowed-email-domains' => 'allowed_email_domains'
+                // --- ▲▲▲ FIN DE NUEVAS CLAVES ▲▲▲ ---
             ];
+            
+            if (!isset($settingKeyMap[$action])) {
+                 throw new Exception('js.api.invalidAction');
+            }
+            
             $dbKey = $settingKeyMap[$action];
 
-            // Validar que el valor sea un número positivo
-            if (!is_numeric($newValue) || (int)$newValue <= 0) {
-                throw new Exception('js.api.invalidAction'); // Error genérico
+            // Validar que el valor sea un número positivo (excepto para el textarea)
+            if ($action !== 'update-allowed-email-domains') {
+                if (!is_numeric($newValue) || (int)$newValue <= 0) {
+                    throw new Exception('js.api.invalidAction'); // Error genérico
+                }
+                $finalValue = (int)$newValue;
+            } else {
+                $finalValue = $newValue; // Guardar el string tal cual
             }
             
             $stmt = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = ?");
-            $stmt->execute([(int)$newValue, $dbKey]);
+            $stmt->execute([$finalValue, $dbKey]);
 
             $response['success'] = true;
             $response['message'] = 'js.admin.settingUpdateSuccess'; // Mensaje genérico
-            $response['newValue'] = (int)$newValue;
+            $response['newValue'] = $finalValue;
             $response['settingKey'] = $dbKey;
 
         } catch (Exception $e) {
@@ -772,7 +814,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-    // --- ▲▲▲ FIN DE NUEVAS ACCIONES GENÉRICAS ▲▲▲ ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
 } else {
     // Si no es POST, se mantiene el error por defecto

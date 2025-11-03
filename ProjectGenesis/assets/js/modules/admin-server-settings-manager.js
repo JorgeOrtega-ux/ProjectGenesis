@@ -61,7 +61,7 @@ async function handleSettingUpdate(inputElement, action, newValue) {
             if (inputElement.type === 'checkbox') {
                 inputElement.checked = !inputElement.checked;
             }
-            // (Para 'number', revertir al valor original sería más complejo,
+            // (Para 'number' y 'textarea', revertir al valor original sería más complejo,
             // por ahora solo mostramos el error).
         }
 
@@ -108,6 +108,7 @@ export function initAdminServerSettingsManager() {
 
         let newValue = '';
 
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
         if (input.type === 'checkbox') {
             // Es un Toggle
             newValue = input.checked ? '1' : '0';
@@ -120,10 +121,14 @@ export function initAdminServerSettingsManager() {
                 // (Opcional: revertir al valor anterior si lo teníamos guardado)
                 return;
             }
+        } else if (input.tagName === 'TEXTAREA') {
+            // Es un Textarea
+            newValue = input.value;
         } else {
             // No es un input que nos interese
             return;
         }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         // Llamar al manejador genérico
         await handleSettingUpdate(input, action, newValue);

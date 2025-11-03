@@ -89,9 +89,13 @@ CREATE TABLE site_settings (
 INSERT INTO site_settings (setting_key, setting_value) VALUES
 ('maintenance_mode', '0'),
 ('allow_new_registrations', '1'),
--- --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
 ('username_cooldown_days', '30'),
 ('email_cooldown_days', '12'),
-('avatar_max_size_mb', '2');
+('avatar_max_size_mb', '2'),
+-- --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+('max_login_attempts', '5'),
+('lockout_time_minutes', '5'),
+('allowed_email_domains', 'gmail.com\noutlook.com\nhotmail.com\nyahoo.com\nicloud.com'),
+('min_password_length', '8');
 -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 -- --- ▲▲▲ FIN DE NUEVA TABLA Y DATOS ▲▲▲ ---

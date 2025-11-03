@@ -23,7 +23,6 @@ try {
     if (!isset($GLOBALS['site_settings']['maintenance_mode'])) {
          $GLOBALS['site_settings']['maintenance_mode'] = '0';
     }
-    // (allow_new_registrations se carga en config.php, pero lo dejamos por seguridad)
     if (!isset($GLOBALS['site_settings']['allow_new_registrations'])) {
          $GLOBALS['site_settings']['allow_new_registrations'] = '1';
     }
@@ -36,6 +35,20 @@ try {
     if (!isset($GLOBALS['site_settings']['avatar_max_size_mb'])) {
          $GLOBALS['site_settings']['avatar_max_size_mb'] = '2';
     }
+    // --- ▼▼▼ NUEVAS CLAVES AÑADIDAS ▼▼▼ ---
+    if (!isset($GLOBALS['site_settings']['max_login_attempts'])) {
+         $GLOBALS['site_settings']['max_login_attempts'] = '5';
+    }
+    if (!isset($GLOBALS['site_settings']['lockout_time_minutes'])) {
+         $GLOBALS['site_settings']['lockout_time_minutes'] = '5';
+    }
+    if (!isset($GLOBALS['site_settings']['allowed_email_domains'])) {
+         $GLOBALS['site_settings']['allowed_email_domains'] = 'gmail.com\noutlook.com\nhotmail.com\nyahoo.com\nicloud.com';
+    }
+    if (!isset($GLOBALS['site_settings']['min_password_length'])) {
+         $GLOBALS['site_settings']['min_password_length'] = '8';
+    }
+    // --- ▲▲▲ FIN DE NUEVAS CLAVES ▲▲▲ ---
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
 } catch (PDOException $e) {
@@ -47,6 +60,12 @@ try {
     $GLOBALS['site_settings']['username_cooldown_days'] = '30'; // Fallback seguro
     $GLOBALS['site_settings']['email_cooldown_days'] = '12'; // Fallback seguro
     $GLOBALS['site_settings']['avatar_max_size_mb'] = '2'; // Fallback seguro
+    // --- ▼▼▼ NUEVAS CLAVES AÑADIDAS ▼▼▼ ---
+    $GLOBALS['site_settings']['max_login_attempts'] = '5'; // Fallback seguro
+    $GLOBALS['site_settings']['lockout_time_minutes'] = '5'; // Fallback seguro
+    $GLOBALS['site_settings']['allowed_email_domains'] = 'gmail.com\noutlook.com'; // Fallback seguro
+    $GLOBALS['site_settings']['min_password_length'] = '8'; // Fallback seguro
+    // --- ▲▲▲ FIN DE NUEVAS CLAVES ▲▲▲ ---
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---

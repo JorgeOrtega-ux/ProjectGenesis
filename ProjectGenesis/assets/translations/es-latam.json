@@ -98,7 +98,15 @@
       "emailCooldownTitle": "Cooldown de Email (Días)",
       "emailCooldownDesc": "Días que un usuario debe esperar antes de poder cambiar su email de nuevo.",
       "avatarMaxSizeTitle": "Tamaño Máx. de Avatar (MB)",
-      "avatarMaxSizeDesc": "Tamaño máximo permitido para la subida de avatares, en Megabytes (ej. 2 = 2MB)."
+      "avatarMaxSizeDesc": "Tamaño máximo permitido para la subida de avatares, en Megabytes (ej. 2 = 2MB).",
+      "minPasswordLengthTitle": "Longitud Mínima de Contraseña",
+      "minPasswordLengthDesc": "El número mínimo de caracteres requeridos para cualquier contraseña nueva (mín. 8).",
+      "maxLoginAttemptsTitle": "Máx. Intentos de Sesión",
+      "maxLoginAttemptsDesc": "Número de intentos fallidos antes de bloquear la cuenta por un tiempo.",
+      "lockoutTimeMinutesTitle": "Minutos de Bloqueo",
+      "lockoutTimeMinutesDesc": "Minutos que una cuenta permanecerá bloqueada después de fallar los intentos de sesión.",
+      "allowedEmailDomainsTitle": "Dominios de Email Permitidos",
+      "allowedEmailDomainsDesc": "Lista de dominios permitidos para registrarse (ej. gmail.com). Dejar vacío para permitir cualquiera. (Uno por línea)"
     }
   },
   "settings": {
@@ -350,7 +358,7 @@
       "errorCompleteEmailPass": "Por favor, completa email y contraseña.",
       "errorInvalidEmail": "El formato de correo no es válido.",
       "errorEmailLength": "El correo no puede tener más de 255 caracteres.",
-      "errorEmailDomain": "Solo se permiten correos @gmail, @outlook, @hotmail, @yahoo o @icloud.",
+      "errorEmailDomain": "Solo se permiten correos de dominios autorizados.",
       "errorEmailInUse": "Este correo electrónico ya está en uso.",
       "errorUsernameMissing": "Por favor, introduce un nombre de usuario.",
       "errorUsernameLength": "El nombre de usuario debe tener entre %min% y %max% caracteres.",

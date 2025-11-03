@@ -110,9 +110,10 @@ function outputCsrfInput() {
 }
 
 
-
-define('MAX_LOGIN_ATTEMPTS', 5); 
-define('LOCKOUT_TIME_MINUTES', 5); 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (CONSTANTES ELIMINADAS) ▼▼▼ ---
+// define('MAX_LOGIN_ATTEMPTS', 5); // Movido a site_settings
+// define('LOCKOUT_TIME_MINUTES', 5); // Movido a site_settings
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (CONSTANTES DE SPAM) ▼▼▼ ---
 define('MAX_PREFERENCE_CHANGES', 20); // 20 cambios en 60 mins
@@ -132,15 +133,20 @@ function getIpAddress() {
 
 function checkLockStatus($pdo, $identifier, $ip) {
     try {
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (USAR GLOBALS) ▼▼▼ ---
+        $lockout_time = (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5);
+        $max_attempts = (int)($GLOBALS['site_settings']['max_login_attempts'] ?? 5);
+        
         $stmt = $pdo->prepare(
             "SELECT COUNT(*) FROM security_logs 
              WHERE (user_identifier = ? OR ip_address = ?) 
              AND created_at > (NOW() - INTERVAL ? MINUTE)"
         );
-        $stmt->execute([$identifier, $ip, LOCKOUT_TIME_MINUTES]);
+        $stmt->execute([$identifier, $ip, $lockout_time]);
         $attempts = $stmt->fetchColumn();
         
-        return $attempts >= MAX_LOGIN_ATTEMPTS;
+        return $attempts >= $max_attempts;
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     } catch (PDOException $e) {
         logDatabaseError($e, 'checkLockStatus');

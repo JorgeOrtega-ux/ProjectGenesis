@@ -9,6 +9,13 @@
 $usernameCooldown = $GLOBALS['site_settings']['username_cooldown_days'] ?? '30';
 $emailCooldown = $GLOBALS['site_settings']['email_cooldown_days'] ?? '12';
 $avatarMaxSize = $GLOBALS['site_settings']['avatar_max_size_mb'] ?? '2';
+
+// --- ▼▼▼ NUEVAS VARIABLES AÑADIDAS ▼▼▼ ---
+$maxLoginAttempts = $GLOBALS['site_settings']['max_login_attempts'] ?? '5';
+$lockoutTimeMinutes = $GLOBALS['site_settings']['lockout_time_minutes'] ?? '5';
+$allowedEmailDomains = $GLOBALS['site_settings']['allowed_email_domains'] ?? 'gmail.com\noutlook.com';
+$minPasswordLength = $GLOBALS['site_settings']['min_password_length'] ?? '8';
+// --- ▲▲▲ FIN DE NUEVAS VARIABLES ▲▲▲ ---
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-server-settings') ? 'active' : 'disabled'; ?>" data-section="admin-server-settings">
@@ -66,7 +73,104 @@ $avatarMaxSize = $GLOBALS['site_settings']['avatar_max_size_mb'] ?? '2';
                 </label>
             </div>
         </div>
-        
+
+        <div class="component-card component-card--column">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="admin.server.minPasswordLengthTitle"></h2>
+                    <p class="component-card__description" data-i18n="admin.server.minPasswordLengthDesc"></p>
+                </div>
+            </div>
+            <div class="component-card__actions">
+                 <div class="component-input-group" style="max-width: 265px;">
+                    <input type="number"
+                           class="component-input"
+                           id="setting-min-password-length"
+                           data-action="update-min-password-length"
+                           value="<?php echo htmlspecialchars($minPasswordLength); ?>"
+                           min="8"
+                           max="72"
+                           step="1"
+                           placeholder=" "
+                           <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
+                           >
+                    <label for="setting-min-password-length" data-i18n="admin.server.minPasswordLengthTitle"></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="component-card component-card--column">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="admin.server.maxLoginAttemptsTitle"></h2>
+                    <p class="component-card__description" data-i18n="admin.server.maxLoginAttemptsDesc"></p>
+                </div>
+            </div>
+            <div class="component-card__actions">
+                 <div class="component-input-group" style="max-width: 265px;">
+                    <input type="number"
+                           class="component-input"
+                           id="setting-max-login-attempts"
+                           data-action="update-max-login-attempts"
+                           value="<?php echo htmlspecialchars($maxLoginAttempts); ?>"
+                           min="3"
+                           max="20"
+                           step="1"
+                           placeholder=" "
+                           <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
+                           >
+                    <label for="setting-max-login-attempts" data-i18n="admin.server.maxLoginAttemptsTitle"></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="component-card component-card--column">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="admin.server.lockoutTimeMinutesTitle"></h2>
+                    <p class="component-card__description" data-i18n="admin.server.lockoutTimeMinutesDesc"></p>
+                </div>
+            </div>
+            <div class="component-card__actions">
+                 <div class="component-input-group" style="max-width: 265px;">
+                    <input type="number"
+                           class="component-input"
+                           id="setting-lockout-time-minutes"
+                           data-action="update-lockout-time-minutes"
+                           value="<?php echo htmlspecialchars($lockoutTimeMinutes); ?>"
+                           min="1"
+                           max="60"
+                           step="1"
+                           placeholder=" "
+                           <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
+                           >
+                    <label for="setting-lockout-time-minutes" data-i18n="admin.server.lockoutTimeMinutesTitle"></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="component-card component-card--column">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="admin.server.allowedEmailDomainsTitle"></h2>
+                    <p class="component-card__description" data-i18n="admin.server.allowedEmailDomainsDesc"></p>
+                </div>
+            </div>
+            <div class="component-card__actions">
+                 <div class="component-input-group">
+                    <textarea
+                           class="component-input"
+                           id="setting-allowed-email-domains"
+                           data-action="update-allowed-email-domains"
+                           placeholder=" "
+                           style="height: 120px; resize: vertical; padding-top: 12px; font-size: 14px;"
+                           <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
+                           ><?php echo htmlspecialchars($allowedEmailDomains); ?></textarea>
+                    <label for="setting-allowed-email-domains" data-i18n="admin.server.allowedEmailDomainsTitle"></label>
+                </div>
+            </div>
+        </div>
+
         <div class="component-card component-card--column">
             <div class="component-card__content">
                 <div class="component-card__text">

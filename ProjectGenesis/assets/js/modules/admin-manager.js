@@ -486,7 +486,10 @@ export function initAdminManager() {
         const email = form.querySelector('#admin-create-email').value;
         const password = form.querySelector('#admin-create-password').value;
         const passwordConfirm = form.querySelector('#admin-create-password-confirm').value; 
-        const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i;
+        
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS) ▼▼▼ ---
+        // const allowedDomains = /@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com|icloud\.com)$/i; // <-- ELIMINADO
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         if (!username || !email || !password || !passwordConfirm) { 
             showCreateUserError('js.auth.errorCompleteAllFields'); return;
@@ -497,12 +500,20 @@ export function initAdminManager() {
         if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
             showCreateUserError('js.auth.errorInvalidEmail'); return;
         }
-        if (!allowedDomains.test(email)) {
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS) ▼▼▼ ---
+        /*
+        if (!allowedDomains.test(email)) { // <-- ELIMINADO
             showCreateUserError('js.auth.errorEmailDomain'); return;
         }
-        if (password.length < 8 || password.length > 72) {
-            showCreateUserError('js.auth.errorPasswordLength', {min: 8, max: 72}); return;
+        */
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+        
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
+        const minPassLength = window.minPasswordLength || 8;
+        if (password.length < minPassLength || password.length > 72) {
+            showCreateUserError('js.auth.errorPasswordLength', {min: minPassLength, max: 72}); return;
         }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         if (password !== passwordConfirm) {
             showCreateUserError('js.auth.errorPasswordMismatch'); return;
         }

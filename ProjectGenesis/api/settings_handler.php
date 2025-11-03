@@ -6,8 +6,11 @@ header('Content-Type: application/json');
 
 $response = ['success' => false, 'message' => 'js.api.invalidAction'];
 
-define('MIN_PASSWORD_LENGTH', 8);
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (CONSTANTES GLOBALES) ▼▼▼ ---
+$minPasswordLength = (int)($GLOBALS['site_settings']['min_password_length'] ?? 8);
+// define('MIN_PASSWORD_LENGTH', 8); // <-- ELIMINADO
 define('MAX_PASSWORD_LENGTH', 72);
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 define('MIN_USERNAME_LENGTH', 6);
 define('MAX_USERNAME_LENGTH', 32);
 define('MAX_EMAIL_LENGTH', 255);
@@ -380,9 +383,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $ip = getIpAddress();
 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (LOCKOUT GLOBAL) ▼▼▼ ---
                 if (checkLockStatus($pdo, $identifier, $ip)) {
+                    $response['message'] = 'js.auth.errorTooManyAttempts';
+                    $response['data'] = ['minutes' => (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5)];
                     throw new Exception('js.auth.errorTooManyAttempts');
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
                 if (empty($submittedCode)) {
@@ -419,7 +426,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $response['message'] = $e->getMessage();
                     if ($response['message'] === 'js.auth.errorTooManyAttempts') {
-                        $response['data'] = ['minutes' => LOCKOUT_TIME_MINUTES];
+                        $response['data'] = ['minutes' => (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5)];
                     }
                 }
             }
@@ -468,12 +475,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception('js.settings.errorEmailIsCurrent');
                 }
 
-                $allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com'];
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---
+                $domainsString = $GLOBALS['site_settings']['allowed_email_domains'] ?? '';
+                $allowedDomains = preg_split('/[\s,]+/', $domainsString, -1, PREG_SPLIT_NO_EMPTY);
+                // $allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com']; // <-- ELIMINADO
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 $emailDomain = substr($newEmail, strrpos($newEmail, '@') + 1);
 
-                if (!in_array(strtolower($emailDomain), $allowedDomains)) {
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---
+                if (!empty($allowedDomains) && !in_array(strtolower($emailDomain), $allowedDomains)) {
                     throw new Exception('js.auth.errorEmailDomain');
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
                 $stmt->execute([$newEmail, $userId]);
@@ -510,9 +523,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $identifier = $userId;
                 $currentPassword = $_POST['current_password'] ?? '';
 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (LOCKOUT GLOBAL) ▼▼▼ ---
                 if (checkLockStatus($pdo, $identifier, $ip)) {
+                    $response['message'] = 'js.auth.errorTooManyAttempts';
+                    $response['data'] = ['minutes' => (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5)];
                     throw new Exception('js.auth.errorTooManyAttempts');
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 if (empty($currentPassword)) {
                     throw new Exception('js.settings.errorEnterCurrentPass');
@@ -537,7 +554,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $response['message'] = $e->getMessage();
                     if ($response['message'] === 'js.auth.errorTooManyAttempts') {
-                        $response['data'] = ['minutes' => LOCKOUT_TIME_MINUTES];
+                        $response['data'] = ['minutes' => (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5)];
                     }
                 }
             }
@@ -576,9 +593,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($newPassword) || empty($confirmPassword)) {
                     throw new Exception('js.settings.errorNewPasswordEmpty');
                 }
-                if (strlen($newPassword) < MIN_PASSWORD_LENGTH) {
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
+                if (strlen($newPassword) < $minPasswordLength) {
                     throw new Exception('js.auth.errorPasswordMinLength');
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 if (strlen($newPassword) > MAX_PASSWORD_LENGTH) {
                     throw new Exception('js.auth.errorPasswordMaxLength');
                 }
@@ -621,9 +640,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 } else {
                     $response['message'] = $e->getMessage();
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
                     if ($response['message'] === 'js.auth.errorPasswordMinLength') {
-                        $response['data'] = ['length' => MIN_PASSWORD_LENGTH];
+                        $response['data'] = ['length' => $minPasswordLength];
                     } elseif ($response['message'] === 'js.auth.errorPasswordMaxLength') {
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                          $response['data'] = ['length' => MAX_PASSWORD_LENGTH];
                     }
                 }
@@ -746,9 +767,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $identifier = $userId;
                 $currentPassword = $_POST['current_password'] ?? '';
 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (LOCKOUT GLOBAL) ▼▼▼ ---
                 if (checkLockStatus($pdo, $identifier, $ip)) {
+                    $response['message'] = 'js.auth.errorTooManyAttempts';
+                    $response['data'] = ['minutes' => (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5)];
                     throw new Exception('js.auth.errorTooManyAttempts');
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 if (empty($currentPassword)) {
                     throw new Exception('js.settings.errorEnterCurrentPass');
@@ -781,7 +806,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $response['message'] = $e->getMessage();
                     if ($response['message'] === 'js.auth.errorTooManyAttempts') {
-                        $response['data'] = ['minutes' => LOCKOUT_TIME_MINUTES];
+                        $response['data'] = ['minutes' => (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5)];
                     }
                 }
             }
