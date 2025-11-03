@@ -15,8 +15,8 @@
         outputCsrfInput();
         ?>
 
-        <div class="component-card component-card--action" id="password-step-1">
-            <div class="component-card__content">
+        <div class="component-card component-card--action active" id="password-step-1">
+        <div class="component-card__content">
                 <div class="component-card__icon">
                     <span class="material-symbols-rounded">password</span>
                 </div>
@@ -36,8 +36,8 @@
                 <button type="button" class="component-action-button component-action-button--primary" id="password-verify-continue" data-i18n="settings.profile.continue"></button>
             </div>
         </div>
-        <div class="component-card component-card--action" id="password-step-2" style="display: none;">
-            <div class="component-card__content">
+        <div class="component-card component-card--action disabled" id="password-step-2">
+        <div class="component-card__content">
                 <div class="component-card__icon">
                     <span class="material-symbols-rounded">lock_reset</span>
                 </div>

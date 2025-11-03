@@ -103,8 +103,8 @@ $currentRoleIcon = $roleIconMap[$defaultRole];
                             </div>
                         </div>
                     </div>
-                </div> <div class="component-card__error" style="display: none; width: 100%; margin-top: 16px;"></div>
-
+                </div> 
+                <div class="component-card__error disabled" style="width: 100%; margin-top: 16px;"></div>
                 <div class="component-card__actions" style="margin-top: 16px;">
                     <button type="button" class="component-action-button component-action-button--secondary" data-action="toggleSectionAdminManageUsers" data-i18n="admin.create.cancelButton"></button>
                     <button type="submit" class="component-action-button component-action-button--primary" id="admin-create-user-submit" data-i18n="admin.create.createButton"></button>

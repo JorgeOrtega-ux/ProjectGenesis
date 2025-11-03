@@ -22,6 +22,7 @@ function showInlineError(cardElement, messageKey, data = null) {
     }
 
     errorDiv.textContent = message;
+    errorDiv.classList.add('active'); // <-- MODIFICADO
 
     cardElement.parentNode.insertBefore(errorDiv, cardElement.nextSibling);
 }
@@ -214,11 +215,17 @@ export function initSettingsManager() {
                 if (previewImage && originalAvatarSrc) previewImage.src = originalAvatarSrc;
                 document.getElementById('avatar-upload-input').value = ''; 
 
-                document.getElementById('avatar-actions-preview').style.display = 'none';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                document.getElementById('avatar-actions-preview').classList.remove('active');
+                document.getElementById('avatar-actions-preview').classList.add('disabled');
+                
                 const originalState = avatarCard.dataset.originalActions === 'default'
                     ? 'avatar-actions-default'
                     : 'avatar-actions-custom';
-                document.getElementById(originalState).style.display = 'flex';
+                
+                document.getElementById(originalState).classList.add('active');
+                document.getElementById(originalState).classList.remove('disabled');
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 return;
             }
 
@@ -282,10 +289,16 @@ export function initSettingsManager() {
 
             if (target.closest('#username-edit-trigger')) {
                 e.preventDefault();
-                document.getElementById('username-view-state').style.display = 'none';
-                document.getElementById('username-actions-view').style.display = 'none';
-                document.getElementById('username-edit-state').style.display = 'flex';
-                document.getElementById('username-actions-edit').style.display = 'flex';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                document.getElementById('username-view-state').classList.remove('active');
+                document.getElementById('username-view-state').classList.add('disabled');
+                document.getElementById('username-actions-view').classList.remove('active');
+                document.getElementById('username-actions-view').classList.add('disabled');
+                document.getElementById('username-edit-state').classList.add('active');
+                document.getElementById('username-edit-state').classList.remove('disabled');
+                document.getElementById('username-actions-edit').classList.add('active');
+                document.getElementById('username-actions-edit').classList.remove('disabled');
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 focusInputAndMoveCursorToEnd(document.getElementById('username-input'));
                 return;
             }
@@ -295,10 +308,16 @@ export function initSettingsManager() {
                 const displayElement = document.getElementById('username-display-text');
                 const inputElement = document.getElementById('username-input');
                 if (displayElement && inputElement) inputElement.value = displayElement.dataset.originalUsername;
-                document.getElementById('username-edit-state').style.display = 'none';
-                document.getElementById('username-actions-edit').style.display = 'none';
-                document.getElementById('username-view-state').style.display = 'flex';
-                document.getElementById('username-actions-view').style.display = 'flex';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                document.getElementById('username-edit-state').classList.remove('active');
+                document.getElementById('username-edit-state').classList.add('disabled');
+                document.getElementById('username-actions-edit').classList.remove('active');
+                document.getElementById('username-actions-edit').classList.add('disabled');
+                document.getElementById('username-view-state').classList.add('active');
+                document.getElementById('username-view-state').classList.remove('disabled');
+                document.getElementById('username-actions-view').classList.add('active');
+                document.getElementById('username-actions-view').classList.remove('disabled');
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 return;
             }
              if (target.closest('#username-save-trigger-btn')) {
@@ -392,12 +411,16 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                card.style.display = 'none';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                card.classList.remove('active');
+                card.classList.add('disabled');
                 const step2Card = document.getElementById('email-step-2-update');
                 if (step2Card) {
-                    step2Card.style.display = 'flex';
+                    step2Card.classList.add('active');
+                    step2Card.classList.remove('disabled');
                     focusInputAndMoveCursorToEnd(document.getElementById('email-input-new'));
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 window.showAlert(getTranslation(result.message || 'js.settings.successVerification'), 'success');
             } else {
                 showInlineError(card, result.message || 'js.settings.errorVerification');
@@ -594,12 +617,16 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                step1Card.style.display = 'none';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                step1Card.classList.remove('active');
+                step1Card.classList.add('disabled');
                 const step2Card = document.getElementById('password-step-2');
                 if (step2Card) {
-                    step2Card.style.display = 'flex'; 
+                    step2Card.classList.add('active');
+                    step2Card.classList.remove('disabled');
                     focusInputAndMoveCursorToEnd(document.getElementById('password-update-new'));
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             } else {
                 showInlineError(step1Card, result.message || 'js.settings.errorVerification', result.data);
             }
@@ -668,18 +695,18 @@ export function initSettingsManager() {
             e.preventDefault();
             const modal = document.getElementById('logout-all-modal');
             if(modal) {
-                const dangerBtn = modal.querySelector('#logout-all-confirm');
-                if(dangerBtn) {
-                     toggleButtonSpinner(dangerBtn, getTranslation('settings.devices.modalConfirm'), false);
-                }
-                modal.style.display = 'flex';
+                 const dangerBtn = modal.querySelector('#logout-all-confirm');
+                 if(dangerBtn) {
+                      toggleButtonSpinner(dangerBtn, getTranslation('settings.devices.modalConfirm'), false);
+                 }
+                modal.classList.add('active'); // <-- MODIFICADO
             }
             return;
         }
          if (target.closest('#logout-all-cancel')) {
             e.preventDefault();
             const modal = document.getElementById('logout-all-modal');
-            if(modal) modal.style.display = 'none';
+            if(modal) modal.classList.remove('active'); // <-- MODIFICADO
             return;
         }
         if (target.closest('#logout-all-confirm')) {
@@ -790,11 +817,17 @@ export function initSettingsManager() {
 
             const actionsDefault = document.getElementById('avatar-actions-default');
             const avatarCard = document.getElementById('avatar-section'); 
-            avatarCard.dataset.originalActions = (actionsDefault.style.display !== 'none') ? 'default' : 'custom';
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            avatarCard.dataset.originalActions = (actionsDefault.classList.contains('active')) ? 'default' : 'custom';
 
-            document.getElementById('avatar-actions-default').style.display = 'none';
-            document.getElementById('avatar-actions-custom').style.display = 'none';
-            document.getElementById('avatar-actions-preview').style.display = 'flex';
+            document.getElementById('avatar-actions-default').classList.remove('active');
+            document.getElementById('avatar-actions-default').classList.add('disabled');
+            document.getElementById('avatar-actions-custom').classList.remove('active');
+            document.getElementById('avatar-actions-custom').classList.add('disabled');
+            document.getElementById('avatar-actions-preview').classList.add('active');
+            document.getElementById('avatar-actions-preview').classList.remove('disabled');
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         }
 
         else if (target.matches('input[type="checkbox"][data-preference-type="boolean"]') && card) {
@@ -838,11 +871,13 @@ export function initSettingsManager() {
             if (modalContent) {
                  const errorDiv = modalContent.querySelector('.auth-error-message, .component-card__error'); 
                  if (errorDiv) {
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                     if(errorDiv.classList.contains('auth-error-message')) {
-                         errorDiv.style.display = 'none';
+                         errorDiv.classList.remove('active');
                     } else {
                          errorDiv.remove(); 
                     }
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                  }
             }
         }

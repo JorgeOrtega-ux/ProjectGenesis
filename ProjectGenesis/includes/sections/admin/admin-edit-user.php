@@ -37,15 +37,15 @@ if (!isset($editUser) || !$editUser) {
                 </div>
             </div>
             <div class="component-card__actions">
-                <div id="admin-avatar-actions-default" <?php echo $isDefaultAvatar ? 'style="display: flex; gap: 12px;"' : 'style="display: none;"'; ?>>
+                <div id="admin-avatar-actions-default" class="<?php echo $isDefaultAvatar ? 'active' : 'disabled'; ?>" style="gap: 12px;">
                     <button type="button" class="component-button" id="admin-avatar-upload-trigger" data-i18n="settings.profile.uploadPhoto"></button>
                 </div>
-                <div id="admin-avatar-actions-custom" <?php echo !$isDefaultAvatar ? 'style="display: flex; gap: 12px;"' : 'style="display: none;"'; ?>>
+                <div id="admin-avatar-actions-custom" class="<?php echo !$isDefaultAvatar ? 'active' : 'disabled'; ?>" style="gap: 12px;">
                     <button type="button" class="component-button danger" id="admin-avatar-remove-trigger" data-i18n="settings.profile.removePhoto"></button>
                     <button type="button" class="component-button" id="admin-avatar-change-trigger" data-i18n="settings.profile.changePhoto"></button>
                 </div>
-                <div id="admin-avatar-actions-preview" style="display: none; gap: 12px;">
-                    <button type="button" class="component-button" id="admin-avatar-cancel-trigger" data-i18n="settings.profile.cancel"></button>
+                <div id="admin-avatar-actions-preview" class="disabled" style="gap: 12px;">
+                <button type="button" class="component-button" id="admin-avatar-cancel-trigger" data-i18n="settings.profile.cancel"></button>
                     <button type="button" class="component-button" id="admin-avatar-save-trigger-btn" data-i18n="settings.profile.save"></button>
                 </div>
             </div>
@@ -54,8 +54,8 @@ if (!isset($editUser) || !$editUser) {
         <div class="component-card component-card--edit-mode" id="admin-username-section">
             <?php outputCsrfInput(); ?>
             <input type="hidden" name="action" value="admin-update-username">
-            <div class="component-card__content" id="admin-username-view-state" style="display: flex;">
-                <div class="component-card__text">
+            <div class="component-card__content active" id="admin-username-view-state">
+            <div class="component-card__text">
                     <h2 class="component-card__title" data-i18n="settings.profile.username"></h2>
                     <p class="component-card__description"
                        id="admin-username-display-text"
@@ -64,11 +64,11 @@ if (!isset($editUser) || !$editUser) {
                     </p>
                 </div>
             </div>
-            <div class="component-card__actions" id="admin-username-actions-view" style="display: flex;">
-                <button type="button" class="component-button" id="admin-username-edit-trigger" data-i18n="settings.profile.edit"></button>
+            <div class="component-card__actions active" id="admin-username-actions-view">
+            <button type="button" class="component-button" id="admin-username-edit-trigger" data-i18n="settings.profile.edit"></button>
             </div>
-            <div class="component-card__content" id="admin-username-edit-state" style="display: none;">
-                <div class="component-card__text">
+            <div class="component-card__content disabled" id="admin-username-edit-state">
+            <div class="component-card__text">
                     <h2 class="component-card__title" data-i18n="settings.profile.username"></h2>
                     <input type="text"
                            class="component-text-input"
@@ -80,8 +80,8 @@ if (!isset($editUser) || !$editUser) {
                            maxlength="32">
                 </div>
             </div>
-            <div class="component-card__actions" id="admin-username-actions-edit" style="display: none;">
-                <button type="button" class="component-button" id="admin-username-cancel-trigger" data-i18n="settings.profile.cancel"></button>
+            <div class="component-card__actions disabled" id="admin-username-actions-edit">
+            <button type="button" class="component-button" id="admin-username-cancel-trigger" data-i18n="settings.profile.cancel"></button>
                 <button type="button" class="component-button" id="admin-username-save-trigger-btn" data-i18n="settings.profile.save"></button>
             </div>
         </div>
@@ -89,8 +89,8 @@ if (!isset($editUser) || !$editUser) {
         <div class="component-card component-card--edit-mode" id="admin-email-section">
             <?php outputCsrfInput(); ?>
             <input type="hidden" name="action" value="admin-update-email">
-            <div class="component-card__content" id="admin-email-view-state" style="display: flex;">
-                <div class="component-card__text">
+            <div class="component-card__content active" id="admin-email-view-state">
+            <div class="component-card__text">
                     <h2 class="component-card__title" data-i18n="settings.profile.email"></h2>
                     <p class="component-card__description"
                        id="admin-email-display-text"
@@ -99,11 +99,11 @@ if (!isset($editUser) || !$editUser) {
                     </p>
                 </div>
             </div>
-            <div class="component-card__actions" id="admin-email-actions-view" style="display: flex;">
-                <button type="button" class="component-button" id="admin-email-edit-trigger" data-i18n="settings.profile.edit"></button>
+            <div class="component-card__actions active" id="admin-email-actions-view">
+            <button type="button" class="component-button" id="admin-email-edit-trigger" data-i18n="settings.profile.edit"></button>
             </div>
-            <div class="component-card__content" id="admin-email-edit-state" style="display: none;">
-                <div class="component-card__text">
+            <div class="component-card__content disabled" id="admin-email-edit-state">
+            <div class="component-card__text">
                     <h2 class="component-card__title" data-i18n="settings.profile.email"></h2>
                     <input type="email"
                            class="component-text-input"
@@ -114,8 +114,8 @@ if (!isset($editUser) || !$editUser) {
                            maxlength="255">
                 </div>
             </div>
-            <div class="component-card__actions" id="admin-email-actions-edit" style="display: none;">
-                <button type="button" class="component-button" id="admin-email-cancel-trigger" data-i18n="settings.profile.cancel"></button>
+            <div class="component-card__actions disabled" id="admin-email-actions-edit">
+            <button type="button" class="component-button" id="admin-email-cancel-trigger" data-i18n="settings.profile.cancel"></button>
                 <button type="button" class="component-button" id="admin-email-save-trigger-btn" data-i18n="settings.profile.save"></button>
             </div>
         </div>

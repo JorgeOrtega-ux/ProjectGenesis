@@ -303,13 +303,15 @@ export function initAdminManager() {
         }
         
         errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
+        errorDiv.classList.add('active'); // <-- MODIFICADO
+        errorDiv.classList.remove('disabled');
     }
     
     function hideCreateUserError() {
         const errorDiv = document.querySelector('#admin-create-card .component-card__error');
         if (errorDiv) {
-            errorDiv.style.display = 'none';
+            errorDiv.classList.remove('active'); // <-- MODIFICADO
+            errorDiv.classList.add('disabled');
         }
     }
 
@@ -427,18 +429,20 @@ export function initAdminManager() {
         if (action === 'admin-toggle-search') {
             event.preventDefault();
             const searchButton = button;
-            const searchBar = document.getElementById('page-search-bar');
-            if (!searchBar) return;
-            const searchBarContainer = searchBar.closest('.page-toolbar-floating');
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            const searchBarContainer = document.getElementById('page-search-bar-container');
             if (!searchBarContainer) return;
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             const isActive = searchButton.classList.contains('active');
             
             if (isActive) {
                 searchButton.classList.remove('active');
-                searchBarContainer.style.display = 'none';
-                searchBar.style.display = 'none';
-                const searchInput = searchBar.querySelector('.page-search-input');
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                searchBarContainer.classList.remove('active');
+                searchBarContainer.classList.add('disabled');
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                const searchInput = searchBarContainer.querySelector('.page-search-input');
                 if (searchInput) searchInput.value = '';
                 
                 if (currentSearch !== '') {
@@ -449,9 +453,11 @@ export function initAdminManager() {
                 }
             } else {
                 searchButton.classList.add('active');
-                searchBarContainer.style.display = 'flex';
-                searchBar.style.display = 'flex';
-                searchBar.querySelector('.page-search-input')?.focus();
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                searchBarContainer.classList.add('active');
+                searchBarContainer.classList.remove('disabled');
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                searchBarContainer.querySelector('.page-search-input')?.focus();
             }
             return;
         }

@@ -19,8 +19,8 @@
         outputCsrfInput();
         ?>
 
-        <div class="component-card component-card--action" id="email-step-1-verify">
-            <div class="component-card__content">
+        <div class="component-card component-card--action active" id="email-step-1-verify">
+        <div class="component-card__content">
                 <div class="component-card__icon">
                     <span class="material-symbols-rounded">password</span>
                 </div>
@@ -59,8 +59,8 @@
             </div>
         </div>
 
-        <div class="component-card component-card--action" id="email-step-2-update" style="display: none;">
-            <div class="component-card__content">
+        <div class="component-card component-card--action disabled" id="email-step-2-update">
+        <div class="component-card__content">
                 <div class="component-card__icon">
                     <span class="material-symbols-rounded">mark_email_read</span>
                 </div>
@@ -78,7 +78,7 @@
                    value="<?php echo htmlspecialchars($userEmail); ?>"
                    required
                    maxlength="255">
-                <label for="email-input-new" data-i1Red="settings.email.newEmailLabel"></label>
+                <label for="email-input-new" data-iRed="settings.email.newEmailLabel"></label>
             </div>
 
             <div class="component-card__actions">

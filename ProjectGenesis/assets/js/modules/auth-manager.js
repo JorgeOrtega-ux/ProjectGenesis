@@ -151,7 +151,7 @@ function showAuthError(errorDiv, message, data = null, inputElement = null) {
         }
         
         errorDiv.textContent = finalMessage;
-        errorDiv.style.display = 'block';
+        errorDiv.classList.add('active'); // <-- MODIFICADO
     }
     
     if (inputElement) {
@@ -346,7 +346,7 @@ function initRegisterWizard() {
                 return;
             }
 
-            if (errorDiv) errorDiv.style.display = 'none';
+            if (errorDiv) errorDiv.classList.remove('active'); // <-- MODIFICADO
 
             setButtonSpinner(button);
 
@@ -495,7 +495,7 @@ function initResetWizard() {
                 return;
             }
 
-            if(errorDiv) errorDiv.style.display = 'none'; 
+            if(errorDiv) errorDiv.classList.remove('active'); // <-- MODIFICADO
             
             setButtonSpinner(button);
 
@@ -615,13 +615,15 @@ function initLoginWizard() {
         if (action === 'prev-step') {
             const prevStepEl = loginForm.querySelector(`[data-step="${currentStep - 1}"]`);
             if (prevStepEl) {
-                currentStepEl.style.display = 'none';
-                currentStepEl.classList.remove('active'); 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                currentStepEl.classList.remove('active');
+                currentStepEl.classList.add('disabled');
                 
-                prevStepEl.style.display = 'block';
-                prevStepEl.classList.add('active'); 
+                prevStepEl.classList.add('active');
+                prevStepEl.classList.remove('disabled');
                 
-                if(errorDiv) errorDiv.style.display = 'none'; 
+                if(errorDiv) errorDiv.classList.remove('active');
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
             return;
         }
@@ -634,7 +636,7 @@ function initLoginWizard() {
                 return;
             }
 
-            if(errorDiv) errorDiv.style.display = 'none'; 
+            if(errorDiv) errorDiv.classList.remove('active'); // <-- MODIFICADO
             
             setButtonSpinner(button);
 
@@ -647,11 +649,13 @@ function initLoginWizard() {
                 if (result.is_2fa_required) {
                     const nextStepEl = loginForm.querySelector(`[data-step="${currentStep + 1}"]`);
                     if (nextStepEl) {
-                        currentStepEl.style.display = 'none';
-                        currentStepEl.classList.remove('active'); 
+                        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                        currentStepEl.classList.remove('active');
+                        currentStepEl.classList.add('disabled');
                         
-                        nextStepEl.style.display = 'block';
-                        nextStepEl.classList.add('active'); 
+                        nextStepEl.classList.add('active');
+                        nextStepEl.classList.remove('disabled');
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                         
                          const nextInput = nextStepEl.querySelector('input#login-code');
                          if (nextInput) nextInput.focus();
@@ -705,9 +709,11 @@ export function initAuthManager() {
             const currentStep = authInput.closest('.auth-step');
             if (currentStep) {
                 const errorDiv = currentStep.querySelector('.auth-error-message');
-                if (errorDiv && errorDiv.style.display !== 'none') {
-                    errorDiv.style.display = 'none';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                if (errorDiv && errorDiv.classList.contains('active')) {
+                    errorDiv.classList.remove('active');
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
         }
 

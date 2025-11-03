@@ -2441,7 +2441,52 @@ body {
     box-sizing: border-box;
     width: 100%; /* <-- AÑADIDO PARA QUE LLENE EL NUEVO DIV FLOTANTE */
 }
+/* Añadir al final de assets/css/styles.css */
 
+/* Para los toolbars (incluyendo la barra de búsqueda) */
+.page-toolbar-floating.disabled {
+    display: none;
+}
+.page-toolbar-floating.active {
+    display: flex;
+}
+
+/* Para los estados de edición en admin-edit-user.php */
+.component-card__content.disabled,
+.component-card__actions.disabled {
+    display: none;
+}
+.component-card__content.active,
+.component-card__actions.active {
+    display: flex;
+}
+
+/* Para los pasos en los formularios de settings */
+.component-card.disabled {
+    display: none;
+}
+.component-card.active {
+    display: flex;
+}
+
+/* Para los mensajes de error */
+.component-card__error {
+    display: none; /* Oculto por defecto */
+}
+.component-card__error.active {
+    display: block; /* O 'flex' si necesita centrar contenido */
+}
+
+/* Para los pasos de autenticación (auth-manager.js usa 'block') */
+.auth-step.active {
+    display: flex; /* Aseguramos que 'active' signifique 'flex' */
+}
+.auth-error-message {
+    display: none; /* Oculto por defecto */
+}
+.auth-error-message.active {
+    display: block;
+}
 .page-search-bar .material-symbols-rounded {
     color: #6b7280;
     font-size: 20px;

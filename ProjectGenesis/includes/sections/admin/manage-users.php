@@ -321,10 +321,10 @@ try {
             </div>
         </div>
         
-        <div class="page-toolbar-floating" style="display: <?php echo $isSearching ? 'flex' : 'none'; ?>;">
+        <div class="page-toolbar-floating <?php echo $isSearching ? 'active' : 'disabled'; ?>" id="page-search-bar-container">
             
-            <div class="page-search-bar" id="page-search-bar">
-                <span class="material-symbols-rounded">search</span>
+            <div class="page-search-bar active" id="page-search-bar">
+        <span class="material-symbols-rounded">search</span>
                 <input type="text" class="page-search-input" 
                        placeholder="Buscar usuario por nombre, email..." 
                        value="<?php echo htmlspecialchars($searchQuery); ?>">

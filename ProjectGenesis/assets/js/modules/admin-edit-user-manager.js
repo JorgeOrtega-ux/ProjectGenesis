@@ -13,6 +13,7 @@ function showInlineError(cardElement, messageKey, data = null) {
         });
     }
     errorDiv.textContent = message;
+    errorDiv.classList.add('active'); // <-- MODIFICADO
     cardElement.parentNode.insertBefore(errorDiv, cardElement.nextSibling);
 }
 
@@ -104,11 +105,17 @@ export function initAdminEditUserManager() {
                 if (previewImage && originalAvatarSrc) previewImage.src = originalAvatarSrc;
                 document.getElementById('admin-avatar-upload-input').value = ''; 
 
-                document.getElementById('admin-avatar-actions-preview').style.display = 'none';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                document.getElementById('admin-avatar-actions-preview').classList.remove('active');
+                document.getElementById('admin-avatar-actions-preview').classList.add('disabled');
+                
                 const originalState = avatarCard.dataset.originalActions === 'default'
                     ? 'admin-avatar-actions-default'
                     : 'admin-avatar-actions-custom';
-                document.getElementById(originalState).style.display = 'flex';
+                
+                document.getElementById(originalState).classList.add('active');
+                document.getElementById(originalState).classList.remove('disabled');
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 return;
             }
 
@@ -132,9 +139,15 @@ export function initAdminEditUserManager() {
                     previewImage.src = result.newAvatarUrl; 
                     previewImage.dataset.originalSrc = result.newAvatarUrl;
 
-                    document.getElementById('admin-avatar-actions-preview').style.display = 'none';
-                    document.getElementById('admin-avatar-actions-custom').style.display = 'none';
-                    document.getElementById('admin-avatar-actions-default').style.display = 'flex';
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                    document.getElementById('admin-avatar-actions-preview').classList.remove('active');
+                    document.getElementById('admin-avatar-actions-preview').classList.add('disabled');
+                    document.getElementById('admin-avatar-actions-custom').classList.remove('active');
+                    document.getElementById('admin-avatar-actions-custom').classList.add('disabled');
+                    document.getElementById('admin-avatar-actions-default').classList.add('active');
+                    document.getElementById('admin-avatar-actions-default').classList.remove('disabled');
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                    
                     avatarCard.dataset.originalActions = 'default'; 
                     
                     toggleButtonSpinner(removeTrigger, getTranslation('settings.profile.removePhoto'), false);
@@ -173,9 +186,14 @@ export function initAdminEditUserManager() {
                     
                     document.getElementById('admin-avatar-upload-input').value = ''; 
 
-                    document.getElementById('admin-avatar-actions-preview').style.display = 'none';
-                    document.getElementById('admin-avatar-actions-default').style.display = 'none';
-                    document.getElementById('admin-avatar-actions-custom').style.display = 'flex';
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                    document.getElementById('admin-avatar-actions-preview').classList.remove('active');
+                    document.getElementById('admin-avatar-actions-preview').classList.add('disabled');
+                    document.getElementById('admin-avatar-actions-default').classList.remove('active');
+                    document.getElementById('admin-avatar-actions-default').classList.add('disabled');
+                    document.getElementById('admin-avatar-actions-custom').classList.add('active');
+                    document.getElementById('admin-avatar-actions-custom').classList.remove('disabled');
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     avatarCard.dataset.originalActions = 'custom'; 
 
                     toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
@@ -192,10 +210,16 @@ export function initAdminEditUserManager() {
             hideInlineError(usernameCard);
             if (target.closest('#admin-username-edit-trigger')) {
                 e.preventDefault();
-                document.getElementById('admin-username-view-state').style.display = 'none';
-                document.getElementById('admin-username-actions-view').style.display = 'none';
-                document.getElementById('admin-username-edit-state').style.display = 'flex';
-                document.getElementById('admin-username-actions-edit').style.display = 'flex';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                document.getElementById('admin-username-view-state').classList.remove('active');
+                document.getElementById('admin-username-view-state').classList.add('disabled');
+                document.getElementById('admin-username-actions-view').classList.remove('active');
+                document.getElementById('admin-username-actions-view').classList.add('disabled');
+                document.getElementById('admin-username-edit-state').classList.add('active');
+                document.getElementById('admin-username-edit-state').classList.remove('disabled');
+                document.getElementById('admin-username-actions-edit').classList.add('active');
+                document.getElementById('admin-username-actions-edit').classList.remove('disabled');
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 focusInputAndMoveCursorToEnd(document.getElementById('admin-username-input'));
                 return;
             }
@@ -204,10 +228,16 @@ export function initAdminEditUserManager() {
                 const displayElement = document.getElementById('admin-username-display-text');
                 const inputElement = document.getElementById('admin-username-input');
                 if (displayElement && inputElement) inputElement.value = displayElement.dataset.originalUsername;
-                document.getElementById('admin-username-edit-state').style.display = 'none';
-                document.getElementById('admin-username-actions-edit').style.display = 'none';
-                document.getElementById('admin-username-view-state').style.display = 'flex';
-                document.getElementById('admin-username-actions-view').style.display = 'flex';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                document.getElementById('admin-username-edit-state').classList.remove('active');
+                document.getElementById('admin-username-edit-state').classList.add('disabled');
+                document.getElementById('admin-username-actions-edit').classList.remove('active');
+                document.getElementById('admin-username-actions-edit').classList.add('disabled');
+                document.getElementById('admin-username-view-state').classList.add('active');
+                document.getElementById('admin-username-view-state').classList.remove('disabled');
+                document.getElementById('admin-username-actions-view').classList.add('active');
+                document.getElementById('admin-username-actions-view').classList.remove('disabled');
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 return;
             }
              if (target.closest('#admin-username-save-trigger-btn')) {
@@ -238,10 +268,16 @@ export function initAdminEditUserManager() {
                     displayElement.dataset.originalUsername = newUsername;
                     inputElement.value = newUsername;
 
-                    document.getElementById('admin-username-edit-state').style.display = 'none';
-                    document.getElementById('admin-username-actions-edit').style.display = 'none';
-                    document.getElementById('admin-username-view-state').style.display = 'flex';
-                    document.getElementById('admin-username-actions-view').style.display = 'flex';
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                    document.getElementById('admin-username-edit-state').classList.remove('active');
+                    document.getElementById('admin-username-edit-state').classList.add('disabled');
+                    document.getElementById('admin-username-actions-edit').classList.remove('active');
+                    document.getElementById('admin-username-actions-edit').classList.add('disabled');
+                    document.getElementById('admin-username-view-state').classList.add('active');
+                    document.getElementById('admin-username-view-state').classList.remove('disabled');
+                    document.getElementById('admin-username-actions-view').classList.add('active');
+                    document.getElementById('admin-username-actions-view').classList.remove('disabled');
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                     if (result.newAvatarUrl) {
                         const previewImage = document.getElementById('admin-avatar-preview-image');
@@ -263,10 +299,16 @@ export function initAdminEditUserManager() {
             hideInlineError(emailCard);
             if (target.closest('#admin-email-edit-trigger')) {
                 e.preventDefault();
-                document.getElementById('admin-email-view-state').style.display = 'none';
-                document.getElementById('admin-email-actions-view').style.display = 'none';
-                document.getElementById('admin-email-edit-state').style.display = 'flex';
-                document.getElementById('admin-email-actions-edit').style.display = 'flex';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                document.getElementById('admin-email-view-state').classList.remove('active');
+                document.getElementById('admin-email-view-state').classList.add('disabled');
+                document.getElementById('admin-email-actions-view').classList.remove('active');
+                document.getElementById('admin-email-actions-view').classList.add('disabled');
+                document.getElementById('admin-email-edit-state').classList.add('active');
+                document.getElementById('admin-email-edit-state').classList.remove('disabled');
+                document.getElementById('admin-email-actions-edit').classList.add('active');
+                document.getElementById('admin-email-actions-edit').classList.remove('disabled');
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 focusInputAndMoveCursorToEnd(document.getElementById('admin-email-input'));
                 return;
             }
@@ -275,10 +317,16 @@ export function initAdminEditUserManager() {
                 const displayElement = document.getElementById('admin-email-display-text');
                 const inputElement = document.getElementById('admin-email-input');
                 if (displayElement && inputElement) inputElement.value = displayElement.dataset.originalEmail;
-                document.getElementById('admin-email-edit-state').style.display = 'none';
-                document.getElementById('admin-email-actions-edit').style.display = 'none';
-                document.getElementById('admin-email-view-state').style.display = 'flex';
-                document.getElementById('admin-email-actions-view').style.display = 'flex';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                document.getElementById('admin-email-edit-state').classList.remove('active');
+                document.getElementById('admin-email-edit-state').classList.add('disabled');
+                document.getElementById('admin-email-actions-edit').classList.remove('active');
+                document.getElementById('admin-email-actions-edit').classList.add('disabled');
+                document.getElementById('admin-email-view-state').classList.add('active');
+                document.getElementById('admin-email-view-state').classList.remove('disabled');
+                document.getElementById('admin-email-actions-view').classList.add('active');
+                document.getElementById('admin-email-actions-view').classList.remove('disabled');
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 return;
             }
              if (target.closest('#admin-email-save-trigger-btn')) {
@@ -319,10 +367,16 @@ export function initAdminEditUserManager() {
                     displayElement.dataset.originalEmail = newEmail;
                     inputElement.value = newEmail;
 
-                    document.getElementById('admin-email-edit-state').style.display = 'none';
-                    document.getElementById('admin-email-actions-edit').style.display = 'none';
-                    document.getElementById('admin-email-view-state').style.display = 'flex';
-                    document.getElementById('admin-email-actions-view').style.display = 'flex';
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                    document.getElementById('admin-email-edit-state').classList.remove('active');
+                    document.getElementById('admin-email-edit-state').classList.add('disabled');
+                    document.getElementById('admin-email-actions-edit').classList.remove('active');
+                    document.getElementById('admin-email-actions-edit').classList.add('disabled');
+                    document.getElementById('admin-email-view-state').classList.add('active');
+                    document.getElementById('admin-email-view-state').classList.remove('disabled');
+                    document.getElementById('admin-email-actions-view').classList.add('active');
+                    document.getElementById('admin-email-actions-view').classList.remove('disabled');
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                     toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 } else {
@@ -429,11 +483,16 @@ export function initAdminEditUserManager() {
 
             const actionsDefault = document.getElementById('admin-avatar-actions-default');
             const avatarCard = document.getElementById('admin-avatar-section'); 
-            avatarCard.dataset.originalActions = (actionsDefault.style.display !== 'none') ? 'default' : 'custom';
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            avatarCard.dataset.originalActions = (actionsDefault.classList.contains('active')) ? 'default' : 'custom';
 
-            document.getElementById('admin-avatar-actions-default').style.display = 'none';
-            document.getElementById('admin-avatar-actions-custom').style.display = 'none';
-            document.getElementById('admin-avatar-actions-preview').style.display = 'flex';
+            document.getElementById('admin-avatar-actions-default').classList.remove('active');
+            document.getElementById('admin-avatar-actions-default').classList.add('disabled');
+            document.getElementById('admin-avatar-actions-custom').classList.remove('active');
+            document.getElementById('admin-avatar-actions-custom').classList.add('disabled');
+            document.getElementById('admin-avatar-actions-preview').classList.add('active');
+            document.getElementById('admin-avatar-actions-preview').classList.remove('disabled');
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         }
     }); 
 
