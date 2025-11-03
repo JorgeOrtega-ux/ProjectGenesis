@@ -28,8 +28,8 @@
       "dashboard": "Dashboard",
       "manageUsers": "Gestionar usuarios",
       "createUsers": "Crear usuario",
-      "serverSettings": "Config. del Servidor",
-      "manageBackups": "Gestionar Copias"
+      "serverSettings": "Configuracion del servidor",
+      "manageBackups": "Copias de seguridad"
     }
   },
   "admin": {

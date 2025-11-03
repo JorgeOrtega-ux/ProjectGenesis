@@ -110,16 +110,7 @@
                     // Solo mostrar este bloque si es la página de admin
                     if (isset($isAdminPage) && $isAdminPage): 
                     ?>
-                        <div class="menu-link" data-action="toggleSectionAdminServerSettings">
-                            <div class="menu-link-icon">
-                                <span class="material-symbols-rounded">dns</span>
-                            </div>
-                            <div class="menu-link-text">
-                                <span data-i18n="sidebar.admin.serverSettings">Config. del Servidor</span> 
-                            </div>
-                        </div>
-
-                        <?php // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ --- ?>
+                        <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (ORDEN) ▼▼▼ --- ?>
                         <?php if ($_SESSION['role'] === 'founder'): ?>
                             <div class="menu-link" data-action="toggleSectionAdminManageBackups">
                                 <div class="menu-link-icon">
@@ -130,7 +121,16 @@
                                 </div>
                             </div>
                         <?php endif; ?>
-                        <?php // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ --- ?>
+
+                        <div class="menu-link" data-action="toggleSectionAdminServerSettings">
+                            <div class="menu-link-icon">
+                                <span class="material-symbols-rounded">dns</span>
+                            </div>
+                            <div class="menu-link-text">
+                                <span data-i18n="sidebar.admin.serverSettings">Config. del Servidor</span> 
+                            </div>
+                        </div>
+                        <?php // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- ?>
 
                     <?php 
                     endif; 
