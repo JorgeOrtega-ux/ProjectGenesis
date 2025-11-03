@@ -40,7 +40,11 @@ $currentRoleIcon = $roleIconMap[$defaultRole];
                 <div class="component-input-group">
                     <input type="text" id="admin-create-username" name="username" class="component-input" required placeholder=" " minlength="6" maxlength="32">
                     <label for="admin-create-username" data-i18n="admin.create.usernameLabel"></label>
-                </div>
+                    
+                    <button type="button" class="auth-toggle-password auth-generate-username" data-action="admin-generate-username" data-toggle="admin-create-username" title="Generar nombre de usuario aleatorio">
+                        <span class="material-symbols-rounded">auto_fix_high</span>
+                    </button>
+                    </div>
                 
                 <div class="component-input-group">
                     <input type="email" id="admin-create-email" name="email" class="component-input" required placeholder=" " maxlength="255">

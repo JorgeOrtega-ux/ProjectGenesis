@@ -319,6 +319,43 @@ export function initAdminManager() {
         }
         const action = button.getAttribute('data-action');
 
+        // === INICIO DE MODIFICACIÓN ===
+        if (action === 'admin-generate-username') {
+            event.preventDefault();
+            const inputId = button.getAttribute('data-toggle');
+            const input = document.getElementById(inputId);
+            
+            if (input) {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                
+                // Formato: userYYYYMMDD_HHMMSS
+                const timestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+                
+                // Sufijo: XX (dos caracteres alfanuméricos)
+                const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+                const suffix = chars[Math.floor(Math.random() * chars.length)] + chars[Math.floor(Math.random() * chars.length)];
+                
+                const newUsername = `user${timestamp}${suffix}`;
+                
+                // Asegurarse de que no exceda el maxlength
+                input.value = newUsername.substring(0, 32);
+                
+                // Forzar que la etiqueta flotante se active
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                // Opcional: quitar el foco del botón
+                button.blur();
+            }
+            return; // Importante para no continuar
+        }
+        // === FIN DE MODIFICACIÓN ===
+
         if (action === 'admin-page-next' || action === 'admin-page-prev') {
             event.preventDefault();
             hideTooltip();
