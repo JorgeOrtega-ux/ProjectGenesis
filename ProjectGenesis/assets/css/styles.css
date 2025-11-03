@@ -2346,8 +2346,8 @@ body {
     align-items: center;
     justify-content: center;
     /* --- MODIFICADO --- */
-    width: 34px;  /* 50px (altura barra) - 8px*2 (padding) = 34px */
-    height: 34px; /* 50px (altura barra) - 8px*2 (padding) = 34px */
+    width: 35px;  /* 50px (altura barra) - 8px*2 (padding) = 34px */
+    height: 35px; /* 50px (altura barra) - 8px*2 (padding) = 34px */
     /* --- FIN MODIFICACIÓN --- */
     background-color: transparent;
     border: 1px solid #00000020;
@@ -2376,6 +2376,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0;
+    height: 35px;
     border: 1px solid #00000020;
     border-radius: 8px; 
     overflow: hidden;
