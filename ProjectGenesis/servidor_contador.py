@@ -1,9 +1,8 @@
 import asyncio
 import websockets
-# import threading  <-- Ya no se necesita
 import json
 import logging
-# from http.server import BaseHTTPRequestHandler, HTTPServer  <-- Ya no se necesita
+from aiohttp import web
 
 # Configuración de logging
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] %(message)s')
@@ -11,29 +10,20 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] %(
 # Set global para almacenar conexiones únicas
 ACTIVE_CONNECTIONS = set()
 
-# --- ▼▼▼ NUEVA FUNCIÓN PARA NOTIFICAR A TODOS ▼▼▼ ---
+# --- MANEJADOR DE WEBSOCKET (Sin cambios) ---
 async def broadcast_count():
-    """
-    Envía el conteo actual de usuarios a todas las conexiones activas.
-    """
-    if ACTIVE_CONNECTIONS:  # Solo enviar si hay alguien conectado
+    if ACTIVE_CONNECTIONS:
         count = len(ACTIVE_CONNECTIONS)
         message = json.dumps({"type": "user_count", "count": count})
-        # Prepara una lista de tareas de envío
         tasks = [ws.send(message) for ws in ACTIVE_CONNECTIONS]
-        # Ejecuta todas las tareas de envío en paralelo
         await asyncio.gather(*tasks, return_exceptions=True)
 
 async def ws_handler(websocket):
-    """
-    Maneja las conexiones WebSocket entrantes.
-    """
     try:
         ACTIVE_CONNECTIONS.add(websocket)
         logging.info(f"[WS] Cliente conectado. Total: {len(ACTIVE_CONNECTIONS)}")
-        await broadcast_count()  # <--- NOTIFICAR AL CONECTARSE
+        await broadcast_count()
 
-        # Mantener la conexión abierta
         async for message in websocket:
             pass
             
@@ -44,36 +34,54 @@ async def ws_handler(websocket):
     finally:
         ACTIVE_CONNECTIONS.remove(websocket)
         logging.info(f"[WS] Cliente desconectado. Total: {len(ACTIVE_CONNECTIONS)}")
-        await broadcast_count()  # <--- NOTIFICAR AL DESCONECTARSE
+        await broadcast_count()
 
-async def start_ws_server():
+# --- MANEJADOR DE HTTP (Sin cambios) ---
+async def http_handler(request):
+    count = len(ACTIVE_CONNECTIONS)
+    logging.info(f"[HTTP] Solicitud de conteo recibida. Respondiendo: {count}")
+    response_data = {"active_users": count}
+    return web.json_response(response_data)
+
+# --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+
+async def run_ws_server():
     """
-    Inicia el servidor WebSocket en el puerto 8765.
+    Inicia y mantiene vivo el servidor WebSocket.
     """
-    host = "127.0.0.1"
-    port = 8765
-    logging.info(f"[WS] Iniciando servidor WebSocket en ws://{host}:{port}")
-    async with websockets.serve(ws_handler, host, port):
-        await asyncio.Future()  # Correr indefinidamente
+    logging.info(f"[WS] Iniciando servidor WebSocket en ws://127.0.0.1:8765")
+    async with websockets.serve(ws_handler, "127.0.0.1", 8765):
+        await asyncio.Event().wait()  # Correr indefinidamente
 
-# --- Servidor HTTP (Reporta el conteo) ---
-# --- TODO ESTE BLOQUE DE HTTP YA NO ES NECESARIO ---
-# class CountHTTPRequestHandler(BaseHTTPRequestHandler):
-#     ...
-# def start_http_server():
-#     ...
+async def run_http_server():
+    """
+    Inicia y mantiene vivo el servidor HTTP.
+    """
+    http_app = web.Application()
+    http_app.router.add_get("/count", http_handler)
+    http_runner = web.AppRunner(http_app)
+    await http_runner.setup()
+    http_site = web.TCPSite(http_runner, "127.0.0.1", 8766)
+    logging.info(f"[HTTP] Iniciando servidor HTTP en http://127.0.0.1:8766")
+    await http_site.start()
+    await asyncio.Event().wait() # Correr indefinidamente
 
-# --- Ejecución Principal ---
-
-if __name__ == "__main__":
-    # 1. Iniciar el servidor HTTP en un hilo daemon  <-- ELIMINADO
-    # http_thread = threading.Thread(target=start_http_server, daemon=True)
-    # http_thread.start()
+async def start_servers():
+    """
+    Inicia ambos servidores (WS y HTTP) en paralelo.
+    """
+    ws_task = asyncio.create_task(run_ws_server())
+    http_task = asyncio.create_task(run_http_server())
     
-    # 2. Iniciar el servidor WebSocket (asyncio) en el hilo principal
+    await asyncio.gather(ws_task, http_task)
+
+# --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+
+# --- Ejecución Principal (Modificada) ---
+if __name__ == "__main__":
     try:
-        asyncio.run(start_ws_server())
+        asyncio.run(start_servers())
     except KeyboardInterrupt:
         logging.info("Servidor detenido por el usuario.")
     except Exception as e:
-        logging.critical(f"Error fatal en el servidor WebSocket: {e}")
+        logging.critical(f"Error fatal en el servidor: {e}")

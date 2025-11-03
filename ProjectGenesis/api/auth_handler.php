@@ -525,7 +525,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $currentUserCount = 0;
                         try {
                             $context = stream_context_create(['http' => ['timeout' => 2.0]]);
-                            // El servidor de conteo está ahora en 8765
+                            // Usamos file_get_contents, asumiendo que el servidor HTTP se levantará en este puerto
                             $jsonResponse = file_get_contents('http://127.0.0.1:8766/count', false, $context); 
                             
                             if ($jsonResponse === false) {
