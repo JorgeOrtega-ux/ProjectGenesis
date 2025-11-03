@@ -179,8 +179,9 @@ function clearFailedAttempts($pdo, $identifier) {
 }
 
 
-
-function logDatabaseError(PDOException $e, $context = 'Default') {
+// --- ▼▼▼ ¡ESTA ES LA LÍNEA CORREGIDA! ▼▼▼ ---
+function logDatabaseError(Throwable $e, $context = 'Default') {
+// --- ▲▲▲ ¡FIN DE LA CORRECCIÓN! ▲▲▲ ---
     $logDir = dirname(__DIR__) . '/logs';
     $logFile = $logDir . '/database_errors.log';
 

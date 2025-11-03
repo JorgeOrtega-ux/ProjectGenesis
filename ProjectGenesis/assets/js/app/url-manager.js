@@ -1,5 +1,5 @@
 // RUTA: assets/js/app/url-manager.js
-// (CÓDIGO CORREGIDO)
+// (CÓDIGO MODIFICADO)
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
@@ -49,6 +49,7 @@ const routes = {
 
     // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
     'toggleSectionAdminManageBackups': 'admin-manage-backups',
+    'toggleSectionAdminRestoreBackup': 'admin-restore-backup', // <-- ¡AÑADIDA!
     // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
 };
 
@@ -85,9 +86,10 @@ const paths = {
     '/admin/edit-user': 'toggleSectionAdminEditUser', 
     '/admin/server-settings': 'toggleSectionAdminServerSettings', // <-- ¡NUEVA LÍNEA!
 
-    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
-    '/admin/manage-backups': 'toggleSectionAdminManageBackups',
-    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
+    // --- ▼▼▼ INICIO DE LÍNEA CORREGIDA ▼▼▼ ---
+    '/admin/manage-backups': 'toggleSectionAdminManageBackups', // <-- ¡CORREGIDO!
+    '/admin/restore-backup': 'toggleSectionAdminRestoreBackup', // <-- ¡AÑADIDA!
+    // --- ▲▲▲ FIN DE LÍNEA CORREGIDA ▲▲▲ ---
 };
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
@@ -281,6 +283,11 @@ function updateMenuState(currentAction) {
     if (currentAction === 'toggleSectionAdminManageBackups') {
         menuAction = 'toggleSectionAdminManageBackups';
     }
+    // --- ▼▼▼ INICIO DE NUEVA REGLA ▼▼▼ ---
+    if (currentAction === 'toggleSectionAdminRestoreBackup') {
+        menuAction = 'toggleSectionAdminManageBackups'; // Mantener seleccionado el menú de backups
+    }
+    // --- ▲▲▲ FIN DE NUEVA REGLA ▲▲▲ ---
     // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
@@ -300,7 +307,7 @@ export function initRouter() {
     document.body.addEventListener('click', e => {
       const link = e.target.closest(
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (SE AÑADE LA NUEVA RUTA) ▼▼▼ ---
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"]'
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], a[href*="/admin/restore-backup"]'
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         );
 
@@ -332,6 +339,16 @@ export function initRouter() {
                     return; 
                 }
                 // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+                
+                // --- ▼▼▼ INICIO DE NUEVA REGLA ▼▼▼ ---
+                if (action === 'toggleSectionAdminRestoreBackup') {
+                    // Esta acción es especial y la maneja 'admin-backups-manager.js'
+                    // porque necesita el nombre del archivo seleccionado.
+                    e.stopImmediatePropagation();
+                    return;
+                }
+                // --- ▲▲▲ FIN DE NUEVA REGLA ▲▲▲ ---
+
 
                 page = routes[action];
                 newPath = Object.keys(paths).find(key => paths[key] === action);

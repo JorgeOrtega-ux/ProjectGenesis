@@ -29,3 +29,7 @@ Stack trace:
 #0 E:\xampp\htdocs\ProjectGenesis\api\backup_handler.php(138): logDatabaseError(Object(Exception), 'backup_handler ...')
 #1 {main}
   thrown in E:\xampp\htdocs\ProjectGenesis\config\config.php on line 183
+[03-Nov-2025 18:27:16 UTC] PHP Fatal error:  Cannot redeclare formatBackupSize() (previously declared in E:\xampp\htdocs\ProjectGenesis\config\router.php:71) in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\manage-backups.php on line 50
+[03-Nov-2025 18:27:48 UTC] PHP Fatal error:  Cannot redeclare formatBackupSize() (previously declared in E:\xampp\htdocs\ProjectGenesis\config\router.php:71) in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\manage-backups.php on line 50
+[03-Nov-2025 18:29:29 UTC] PHP Fatal error:  Cannot redeclare formatBackupSize() (previously declared in E:\xampp\htdocs\ProjectGenesis\config\router.php:71) in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\manage-backups.php on line 50
+[03-Nov-2025 18:31:43 UTC] PHP Fatal error:  Cannot redeclare formatBackupSize() (previously declared in E:\xampp\htdocs\ProjectGenesis\config\router.php:71) in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\manage-backups.php on line 50

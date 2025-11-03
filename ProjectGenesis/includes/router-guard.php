@@ -1,5 +1,6 @@
 <?php
 // FILE: includes/router-guard.php
+// (CORREGIDO Y MODIFICADO)
 
 // $basePath y $pdo (para rol de admin) se definieron en bootstrapper.php
 // $GLOBALS['site_settings'] se definió en bootstrapper.php
@@ -39,7 +40,7 @@ $pathsToPages = [
     '/'           => 'home',
     '/explorer'   => 'explorer',
     '/login'      => 'login',
-    '/maintenance' => 'maintenance', // <--- ¡NUEVA LÍNEA!
+    '/maintenance' => 'maintenance', 
     
     '/register'                 => 'register-step1',
     '/register/additional-data' => 'register-step2',
@@ -66,21 +67,20 @@ $pathsToPages = [
     '/admin'                    => 'admin-dashboard',
     '/admin/dashboard'          => 'admin-dashboard',
     '/admin/manage-users'       => 'admin-manage-users', 
-    '/admin/create-user'        => 'admin-create-user', // <--- ¡NUEVA LÍNEA!
-    '/admin/edit-user'          => 'admin-edit-user', // <--- ¡NUEVA LÍNEA!
-    '/admin/server-settings'    => 'admin-server-settings', // <--- ¡NUEVA LÍNEA!
+    '/admin/create-user'        => 'admin-create-user', 
+    '/admin/edit-user'          => 'admin-edit-user', 
+    '/admin/server-settings'    => 'admin-server-settings', 
     
-    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     '/admin/manage-backups'     => 'admin-manage-backups',
-    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
+    '/admin/restore-backup'     => 'admin-restore-backup', // <-- ¡AÑADIDA!
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 ];
 
 // 3. Determinar la página actual y los tipos de página
 $currentPage = $pathsToPages[$path] ?? '404';
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
-$authPages = ['login', 'maintenance']; // 'maintenance' se trata como una página de auth
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+$authPages = ['login', 'maintenance']; 
 $isAuthPage = in_array($currentPage, $authPages) || 
               strpos($currentPage, 'register-') === 0 ||
               strpos($currentPage, 'reset-') === 0 ||
@@ -97,13 +97,13 @@ if ($isAdminPage && isset($_SESSION['user_id'])) {
         $currentPage = '404'; // Tratar la página como 404
     }
     
-    // --- ▼▼▼ INICIO DE NUEVA LÍNEA (SEGURIDAD DE BACKUPS) ▼▼▼ ---
-    // Solo los 'founder' pueden ver la página de backups
-    if ($currentPage === 'admin-manage-backups' && $userRole !== 'founder') {
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (SEGURIDAD DE BACKUPS) ▼▼▼ ---
+    // Solo los 'founder' pueden ver las páginas de backups
+    if (($currentPage === 'admin-manage-backups' || $currentPage === 'admin-restore-backup') && $userRole !== 'founder') {
         $isAdminPage = true; // Sigue siendo admin, pero...
         $currentPage = '404'; // No tiene permiso para esta página específica
     }
-    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 }
 
@@ -113,16 +113,11 @@ if (!isset($_SESSION['user_id']) && !$isAuthPage) {
     exit;
 }
 // Redirigir a home si está logueado e intenta ir a auth
-if (isset($_SESSION['user_id']) && $isAuthPage && $currentPage !== 'maintenance') { // <-- MODIFICADO
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
-    // Si el modo mantenimiento está activo, no redirigir a /home,
-    // el chequeo de al inicio de este archivo ya lo habrá enviado a /maintenance si es 'user'
-    // o le permitirá ver la página de login/registro si es admin.
+if (isset($_SESSION['user_id']) && $isAuthPage && $currentPage !== 'maintenance') { 
     if ($maintenanceMode !== '1') {
          header('Location: ' . $basePath . '/');
          exit;
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
 
 // Redirecciones de conveniencia
@@ -130,10 +125,13 @@ if ($path === '/settings') {
     header('Location: ' . $basePath . '/settings/your-profile');
     exit;
 }
+
+// --- ▼▼▼ ¡AQUÍ ESTÁ LA CORRECCIÓN DEL ERROR DE SINTAXIS! ▼▼▼ ---
 if ($path === '/admin') {
-    header('Location: ' . $basePath . '/admin/dashboard');
+    header('Location: ' . $basePath . '/admin/dashboard'); // Se quitó la 'S'
     exit;
 }
+// --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
 // Las variables $currentPage, $isAuthPage, $isSettingsPage, $isAdminPage
 // están ahora disponibles globalmente para los scripts que se incluyan después.

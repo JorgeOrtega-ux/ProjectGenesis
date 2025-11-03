@@ -44,18 +44,11 @@ if (!$hasError) {
     }
 }
 
-/**
- * Formatea bytes a un tamaño legible (KB, MB, GB)
- */
-function formatBackupSize($bytes) {
-    if ($bytes < 1024) return $bytes . ' B';
-    $kb = $bytes / 1024;
-    if ($kb < 1024) return round($kb, 2) . ' KB';
-    $mb = $kb / 1024;
-    if ($mb < 1024) return round($mb, 2) . ' MB';
-    $gb = $mb / 1024;
-    return round($gb, 2) . ' GB';
-}
+// --- ▼▼▼ FUNCIÓN ELIMINADA DE AQUÍ ▼▼▼ ---
+// La función formatBackupSize() fue movida a config/router.php
+// para que esté disponible globalmente (incluso para restore-backup.php)
+// --- ▲▲▲ FIN DE LA ELIMINACIÓN ▲▲▲ ---
+
 // --- FIN DE LÓGICA PHP ---
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-manage-backups') ? 'active' : 'disabled'; ?>" data-section="admin-backups">

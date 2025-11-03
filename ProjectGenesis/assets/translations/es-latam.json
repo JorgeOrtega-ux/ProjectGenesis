@@ -150,6 +150,16 @@
       "successCreate": "Copia de seguridad creada exitosamente.",
       "successRestore": "Restauración completada. La página se recargará.",
       "successDelete": "Copia de seguridad eliminada."
+    },
+    "restore": {
+      "title": "Confirmar Restauración",
+      "description": "Estás a punto de restaurar la base de datos desde una copia de seguridad.",
+      "warningDesc": "¡ACCIÓN IRREVERSIBLE! Todos los datos actuales (usuarios, configuraciones, etc.) serán eliminados permanentemente y reemplazados por los datos de esta copia. Esta acción no se puede deshacer.",
+      "backupFile": "Archivo de Copia de Seguridad",
+      "backupDate": "Fecha de Creación",
+      "backupSize": "Tamaño del Archivo",
+      "cancelButton": "Cancelar (Volver a Backups)",
+      "confirmButton": "Confirmar y Restaurar"
     }
   },
   "settings": {
@@ -533,6 +543,10 @@
         "errorNoSelection": "Por favor, selecciona una copia de seguridad primero.",
         "errorGeneric": "Ocurrió un error al procesar la copia de seguridad.",
         "successGeneric": "Acción completada exitosamente."
+      },
+      "restore": {
+        "restoring": "Restaurando...",
+        "errorNoFile": "Error: No se especificó ningún archivo de restauración."
       }
     }
   },

@@ -1,4 +1,6 @@
 <?php
+// FILE: config/router.php
+// (CÓDIGO MODIFICADO)
 
 include '../config/config.php'; 
 
@@ -62,6 +64,27 @@ function showResetError($basePath, $messageKey, $detailsKey) {
     echo '</body></html>';
 }
 
+// --- ▼▼▼ INICIO DE FUNCIONES HELPER (COPIADAS DE MANAGE-BACKUPS.PHP) ▼▼▼ ---
+/**
+ * Formatea bytes a un tamaño legible (KB, MB, GB)
+ */
+function formatBackupSize($bytes) {
+    if ($bytes < 1024) return $bytes . ' B';
+    $kb = $bytes / 1024;
+    if ($kb < 1024) return round($kb, 2) . ' KB';
+    $mb = $kb / 1024;
+    if ($mb < 1024) return round($mb, 2) . ' MB';
+    $gb = $mb / 1024;
+    return round($gb, 2) . ' GB';
+}
+/**
+ * Formatea un timestamp a fecha legible
+ */
+function formatBackupDate($timestamp) {
+     return date('d/m/Y H:i:s', $timestamp);
+}
+// --- ▲▲▲ FIN DE FUNCIONES HELPER ▲▲▲ ---
+
 
 $page = $_GET['page'] ?? 'home';
 
@@ -103,9 +126,10 @@ $allowedPages = [
     'admin-edit-user'          => '../includes/sections/admin/admin-edit-user.php', // <--- ¡NUEVA LÍNEA!
     'admin-server-settings'    => '../includes/sections/admin/server-settings.php', // <--- ¡NUEVA LÍNEA!
     
-    // --- ▼▼▼ CORRECCIÓN AÑADIDA ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     'admin-manage-backups'     => '../includes/sections/admin/manage-backups.php',
-    // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
+    'admin-restore-backup'     => '../includes/sections/admin/restore-backup.php', // <-- ¡AÑADIDA!
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     // --- ▲▲▲ FIN DE PÁGINAS DE ADMIN ▲▲▲ ---
 ];
@@ -448,7 +472,23 @@ if (array_key_exists($page, $allowedPages)) {
             }
         }
     }
-    // === ▲▲▲ FIN BLOQUE AÑADIDO ▲▲▲ ---
+    // --- ▼▼▼ INICIO DE NUEVO BLOQUE ▼▼▼ ---
+    elseif ($page === 'admin-restore-backup') {
+        $backupFileName = basename($_GET['file'] ?? ''); // Sanitización
+        $backupDir = dirname(__DIR__) . '/backups';
+        $filePath = $backupDir . '/' . $backupFileName;
+
+        if (empty($backupFileName) || !file_exists($filePath) || !is_readable($filePath)) {
+            // Si el archivo no existe o no se proveyó, tratar como 404
+            $page = '404';
+            $CURRENT_SECTION = '404';
+        } else {
+            // Si existe, obtener los datos para la vista
+            $backupFileSize = formatBackupSize(filesize($filePath));
+            $backupFileDate = formatBackupDate(filemtime($filePath));
+        }
+    }
+    // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
     
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
     elseif ($page === 'admin-server-settings') {

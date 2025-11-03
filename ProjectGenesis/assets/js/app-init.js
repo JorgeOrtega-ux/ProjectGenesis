@@ -1,3 +1,6 @@
+// FILE: assets/js/app-init.js
+// (CÓDIGO MODIFICADO)
+
 import { initMainController } from './app/main-controller.js';
 import { initRouter } from './app/url-manager.js';
 import { initAuthManager } from './modules/auth-manager.js';
@@ -5,9 +8,10 @@ import { initSettingsManager } from './modules/settings-manager.js';
 import { initAdminManager } from './modules/admin-manager.js'; // <-- AÑADIDO
 import { initAdminEditUserManager } from './modules/admin-edit-user-manager.js'; // <-- ¡NUEVA LÍNEA!
 import { initAdminServerSettingsManager } from './modules/admin-server-settings-manager.js'; // <-- ¡NUEVA LÍNEA!
-// --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
 import { initAdminBackupsManager } from './modules/admin-backups-manager.js';
-// --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
+import { initAdminRestoreBackupManager } from './modules/admin-restore-backup-manager.js'; // <-- ¡AÑADIDO!
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager } from './services/i18n-manager.js'; 
 import { initTooltipManager } from './services/tooltip-manager.js'; 
@@ -69,9 +73,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     initAdminEditUserManager(); // <-- ¡NUEVA LÍNEA!
     initAdminServerSettingsManager(); // <-- ¡NUEVA LÍNEA!
     
-    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     initAdminBackupsManager();
-    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
+    initAdminRestoreBackupManager(); // <-- ¡AÑADIDO!
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     // El Router se inicializa al final
     initRouter(); 

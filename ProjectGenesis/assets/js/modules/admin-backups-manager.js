@@ -1,4 +1,5 @@
 // FILE: assets/js/modules/admin-backups-manager.js
+// (CÓDIGO MODIFICADO)
 
 import { showAlert } from '../services/alert-manager.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -340,16 +341,28 @@ export function initAdminBackupsManager() {
                 await handleBackupAction('create-backup', null, button);
                 break;
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             case 'admin-backup-restore':
                 if (!selectedBackupFile) {
                     showAlert(getTranslation('admin.backups.errorNoSelection'), 'error');
                     return;
                 }
-                if (!confirm(getTranslation('admin.backups.confirmRestore', { filename: selectedBackupFile }))) {
-                    return;
-                }
-                await handleBackupAction('restore-backup', selectedBackupFile, button);
+                
+                // Ya no mostramos confirm()
+                // En su lugar, navegamos a la nueva página
+                const linkUrl = window.projectBasePath + '/admin/restore-backup?file=' + encodeURIComponent(selectedBackupFile);
+                
+                const link = document.createElement('a');
+                link.href = linkUrl;
+                link.setAttribute('data-nav-js', 'true'); 
+                // data-action no es necesario, la URL es suficiente
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            
+                clearBackupSelection(); 
                 break;
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             case 'admin-backup-delete':
                 if (!selectedBackupFile) {
