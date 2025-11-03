@@ -62,7 +62,16 @@
       "statusSuspended": "Suspendido",
       "statusDeleted": "Eliminado (Inactivo)",
       "createUser": "Crear nuevo usuario",
-      "editUserTooltip": "Editar datos del usuario"
+      "editUserTooltip": "Editar datos del usuario",
+      "labelUsername": "Nombre del usuario",
+      "labelRole": "Rol",
+      "labelCreated": "Fecha de creación",
+      "labelEmail": "Email",
+      "labelStatus": "Estado de la cuenta",
+      "noResultsTitle": "Sin resultados",
+      "noUsersTitle": "No se encontraron usuarios",
+      "noResultsDesc": "No hay usuarios que coincidan con tu término de búsqueda.",
+      "noUsersDesc": "No hay usuarios registrados en esta página."
     },
     "create": {
       "title": "Crear Nuevo Usuario",
@@ -86,7 +95,7 @@
       "passwordConfirm": "Confirmar Nueva Contraseña",
       "errorPassEmpty": "Los campos de nueva contraseña están vacíos. No se realizaron cambios."
     },
-  "server": {
+    "server": {
       "title": "Configuración del Servidor",
       "description": "Gestiona la configuración global y el estado del sitio. (Solo Fundadores)",
       "maintenanceTitle": "Modo Mantenimiento",
@@ -471,7 +480,7 @@
     "url": {
       "errorLoad": "Error al cargar el contenido"
     },
-"admin": {
+    "admin": {
       "successRole": "Rol del usuario actualizado.",
       "successStatus": "Estado del usuario actualizado.",
       "errorAdminTarget": "No tienes permiso para modificar a este usuario.",

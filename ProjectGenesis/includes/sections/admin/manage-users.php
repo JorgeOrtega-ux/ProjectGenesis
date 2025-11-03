@@ -345,8 +345,8 @@ try {
                         <span class="material-symbols-rounded"><?php echo $isSearching ? 'person_search' : 'person_off'; ?></span>
                     </div>
                     <div class="component-card__text">
-                        <h2 class="component-card__title"><?php echo $isSearching ? 'Sin resultados' : 'No se encontraron usuarios'; ?></h2>
-                        <p class="component-card__description"><?php echo $isSearching ? 'No hay usuarios que coincidan con tu término de búsqueda.' : 'No hay usuarios registrados en esta página o hubo un error al cargarlos.'; ?></p>
+                        <h2 class="component-card__title" data-i18n="<?php echo $isSearching ? 'admin.users.noResultsTitle' : 'admin.users.noUsersTitle'; ?>"></h2>
+                        <p class="component-card__description" data-i18n="<?php echo $isSearching ? 'admin.users.noResultsDesc' : 'admin.users.noUsersDesc'; ?>"></p>
                     </div>
                 </div>
             </div>
@@ -374,28 +374,28 @@ try {
                         <div class="user-card-details">
 
                             <div class="user-card-detail-item user-card-detail-item--full">
-                                <span class="user-card-detail-label">Nombre del usuario</span>
+                                <span class="user-card-detail-label" data-i18n="admin.users.labelUsername"></span>
                                 <span class="user-card-detail-value"><?php echo htmlspecialchars($user['username']); ?></span>
                             </div>
 
                             <div class="user-card-detail-item">
-                                <span class="user-card-detail-label">Rol</span>
+                                <span class="user-card-detail-label" data-i18n="admin.users.labelRole"></span>
                                 <span class="user-card-detail-value"><?php echo htmlspecialchars(ucfirst($user['role'])); ?></span>
                             </div>
                             <div class="user-card-detail-item">
-                                <span class="user-card-detail-label">Fecha de creación</span>
+                                <span class="user-card-detail-label" data-i18n="admin.users.labelCreated"></span>
                                 <span class="user-card-detail-value"><?php echo (new DateTime($user['created_at']))->format('d/m/Y'); ?></span>
                             </div>
 
                             <?php if ($user['email']): ?>
                                 <div class="user-card-detail-item user-card-detail-item--full">
-                                    <span class="user-card-detail-label">Email</span>
+                                    <span class="user-card-detail-label" data-i18n="admin.users.labelEmail"></span>
                                     <span class="user-card-detail-value"><?php echo htmlspecialchars($user['email']); ?></span>
                                 </div>
                             <?php endif; ?>
 
                             <div class="user-card-detail-item">
-                                <span class="user-card-detail-label">Estado de la cuenta</span>
+                                <span class="user-card-detail-label" data-i18n="admin.users.labelStatus"></span>
                                 <span class="user-card-detail-value"><?php echo htmlspecialchars(ucfirst($user['account_status'])); ?></span>
                             </div>
                         </div>

@@ -1,4 +1,3 @@
-
 import { callAdminApi } from '../services/api-service.js';
 import { showAlert } from '../services/alert-manager.js';
 import { getTranslation, applyTranslations } from '../services/i18n-manager.js';
@@ -159,24 +158,24 @@ export function initAdminManager() {
 
                     <div class="user-card-details">
                         <div class="user-card-detail-item user-card-detail-item--full">
-                            <span class="user-card-detail-label" data-i18n="admin.users.labelUsername">Nombre del usuario</span>
+                            <span class="user-card-detail-label" data-i18n="admin.users.labelUsername"></span>
                             <span class="user-card-detail-value">${user.username}</span>
                         </div>
                         <div class="user-card-detail-item">
-                            <span class="user-card-detail-label" data-i18n="admin.users.labelRole">Rol</span>
+                            <span class="user-card-detail-label" data-i18n="admin.users.labelRole"></span>
                             <span class="user-card-detail-value">${user.roleDisplay}</span>
                         </div>
                         <div class="user-card-detail-item">
-                            <span class="user-card-detail-label" data-i18n="admin.users.labelCreated">Fecha de creación</span>
+                            <span class="user-card-detail-label" data-i18n="admin.users.labelCreated"></span>
                             <span class="user-card-detail-value">${user.createdAt}</span>
                         </div>
                         ${user.email ? `
                         <div class="user-card-detail-item user-card-detail-item--full">
-                            <span class="user-card-detail-label" data-i18n="admin.users.labelEmail">Email</span>
+                            <span class="user-card-detail-label" data-i18n="admin.users.labelEmail"></span>
                             <span class="user-card-detail-value">${user.email}</span>
                         </div>` : ''}
                         <div class="user-card-detail-item">
-                            <span class="user-card-detail-label" data-i18n="admin.users.labelStatus">Estado de la cuenta</span>
+                            <span class="user-card-detail-label" data-i18n="admin.users.labelStatus"></span>
                             <span class="user-card-detail-value">${user.statusDisplay}</span>
                         </div>
                     </div>
