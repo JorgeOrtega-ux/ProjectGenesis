@@ -19,6 +19,7 @@ const routes = {
     'toggleSectionExplorer': 'explorer',
     'toggleSectionLogin': 'login',
     'toggleSectionMaintenance': 'maintenance', // <-- ¡NUEVA LÍNEA!
+    'toggleSectionServerFull': 'server-full', // <--- AÑADE ESTA LÍNEA
 
     'toggleSectionRegisterStep1': 'register-step1',
     'toggleSectionRegisterStep2': 'register-step2',
@@ -58,6 +59,7 @@ const paths = {
     '/explorer': 'toggleSectionExplorer',
     '/login': 'toggleSectionLogin',
     '/maintenance': 'toggleSectionMaintenance', // <-- ¡NUEVA LÍNEA!
+    '/server-full': 'toggleSectionServerFull', // <--- AÑADE ESTA LÍNEA
 
     '/register': 'toggleSectionRegisterStep1',
     '/register/additional-data': 'toggleSectionRegisterStep2',

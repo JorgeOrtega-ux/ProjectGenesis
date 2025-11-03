@@ -1,4 +1,3 @@
-
 import { callAdminApi } from '../services/api-service.js';
 import { showAlert } from '../services/alert-manager.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -30,6 +29,47 @@ function showInlineError(cardElement, messageKey, data = null) {
     errorDiv.textContent = message;
     cardElement.parentNode.insertBefore(errorDiv, cardElement.nextSibling);
 }
+
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN ▼▼▼ ---
+/**
+ * Llama a la API para obtener el conteo de usuarios concurrentes y actualizar la UI.
+ */
+async function fetchAndUpdateUserCount() {
+    const display = document.getElementById('concurrent-users-display');
+    const refreshBtn = document.getElementById('refresh-concurrent-users');
+    if (!display || !refreshBtn) return;
+
+    // Guardar texto original del botón (traducción)
+    const originalBtnText = refreshBtn.innerHTML;
+    
+    // Estado de carga
+    display.textContent = getTranslation('admin.server.concurrentUsersLoading');
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;"></span>`;
+
+    const formData = new FormData();
+    formData.append('action', 'get-concurrent-users');
+    formData.append('csrf_token', getCsrfTokenFromPage());
+
+    try {
+        const result = await callAdminApi(formData);
+
+        if (result.success) {
+            display.textContent = result.count;
+        } else {
+            display.textContent = 'Error';
+            showAlert(getTranslation(result.message || 'js.admin.errorUserCount'), 'error');
+        }
+    } catch (error) {
+        display.textContent = 'Error';
+        showAlert(getTranslation('js.api.errorServer'), 'error');
+    } finally {
+        // Restaurar botón
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = originalBtnText;
+    }
+}
+// --- ▲▲▲ FIN NUEVA FUNCIÓN ▲▲▲ ---
 
 async function handleSettingUpdate(element, action, newValue) {
     const formData = new FormData();
@@ -113,6 +153,13 @@ export function initAdminServerSettingsManager() {
 
         const action = button.dataset.action;
         const stepAction = button.dataset.stepAction;
+
+        // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ ---
+        if (action === 'admin-refresh-user-count') {
+            await fetchAndUpdateUserCount();
+            return;
+        }
+        // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
 
         if (stepAction) {
             const wrapper = button.closest('.component-stepper');
@@ -285,4 +332,11 @@ export function initAdminServerSettingsManager() {
         await handleSettingUpdate(input, action, newValue);
 
     }, true); 
+
+    // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ ---
+    // Cargar el conteo inicial cuando se carga la página de ajustes
+    if (document.querySelector('.section-content[data-section="admin-server-settings"]')) {
+        fetchAndUpdateUserCount();
+    }
+    // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
 }

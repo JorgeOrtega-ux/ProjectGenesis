@@ -100,11 +100,6 @@ $maxPasswordLength = (int)($GLOBALS['site_settings']['max_password_length'] ?? 7
 $minUsernameLength = (int)($GLOBALS['site_settings']['min_username_length'] ?? 6);
 $maxUsernameLength = (int)($GLOBALS['site_settings']['max_username_length'] ?? 32);
 $maxEmailLength = (int)($GLOBALS['site_settings']['max_email_length'] ?? 255);
-
-// define('MAX_PASSWORD_LENGTH', 72); // <-- ELIMINADO
-// define('MIN_USERNAME_LENGTH', 6); // <-- ELIMINADO
-// define('MAX_USERNAME_LENGTH', 32); // <-- ELIMINADO
-// define('MAX_EMAIL_LENGTH', 255); // <-- ELIMINADO
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 // --- INICIO DE MODIFICACIÓN: Lógica de POST y GET ---
@@ -289,11 +284,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (strlen($password) < $minPasswordLength) {
                 throw new Exception('js.auth.errorPasswordMinLength');
             }
-            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
             if (strlen($password) > $maxPasswordLength) {
                 throw new Exception('js.auth.errorPasswordLength');
             }
-            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             // --- ▼▼▼ NUEVA VALIDACIÓN ▼▼▼ ---
             if ($password !== $passwordConfirm) {
@@ -341,9 +334,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [];
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
             if ($response['message'] === 'js.auth.errorPasswordMinLength') $data['length'] = $minPasswordLength;
-            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
             if ($response['message'] === 'js.auth.errorPasswordLength') $data = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
-            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             if ($response['message'] === 'js.auth.errorUsernameMinLength') $data['length'] = $minUsernameLength;
@@ -647,9 +638,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
             if (strlen($newPassword) < $minPasswordLength) throw new Exception('js.auth.errorPasswordMinLength');
-            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
             if (strlen($newPassword) > $maxPasswordLength) throw new Exception('js.auth.errorPasswordLength');
-            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             if ($newPassword !== $confirmPassword) throw new Exception('js.auth.errorPasswordMismatch');
 
@@ -670,9 +659,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = $e->getMessage();
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
             if ($response['message'] === 'js.auth.errorPasswordMinLength') $response['data'] = ['length' => $minPasswordLength];
-            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
             elseif ($response['message'] === 'js.auth.errorPasswordLength') $response['data'] = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
-            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         }
     }
@@ -855,7 +842,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     // --- ▲▲▲ FIN DE NUEVAS ACCIONES DE DOMINIO ▲▲▲ ---
-    
+
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (ACCIÓN 'update-allowed-email-domains' ELIMINADA) ▼▼▼ ---
     elseif (
         $action === 'update-username-cooldown' || $action === 'update-email-cooldown' || $action === 'update-avatar-max-size' ||
@@ -864,7 +851,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action === 'update-max-password-length' ||
         // --- ▼▼▼ MODIFICACIÓN: Claves añadidas ▼▼▼ ---
         $action === 'update-min-username-length' || $action === 'update-max-username-length' ||
-        $action === 'update-max-email-length' || $action === 'update-code-resend-cooldown'
+        $action === 'update-max-email-length' || $action === 'update-code-resend-cooldown' ||
+        $action === 'update-max-concurrent-users' // <-- ¡LÍNEA AÑADIDA!
         // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
     ) {
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
@@ -892,7 +880,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'update-min-username-length' => 'min_username_length',
                 'update-max-username-length' => 'max_username_length',
                 'update-max-email-length' => 'max_email_length',
-                'update-code-resend-cooldown' => 'code_resend_cooldown_seconds'
+                'update-code-resend-cooldown' => 'code_resend_cooldown_seconds',
+                'update-max-concurrent-users' => 'max_concurrent_users' // <-- ¡LÍNEA AÑADIDA!
                 // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
             ];
             
@@ -975,9 +964,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 
                 exec($command . ' 2>&1', $output, $return_var);
-                // --- ▼▼▼ CORRECCIÓN ▼▼▼ ---
                 if ($return_var !== 0) throw new Exception('admin.backups.errorExecCreate' . ' ' . implode('; ', $output));
-                // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
                 
                 $response['success'] = true;
                 $response['message'] = 'admin.backups.successCreate';
@@ -1001,9 +988,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 
                 exec($command . ' 2>&1', $output, $return_var);
-                // --- ▼▼▼ CORRECCIÓN ▼▼▼ ---
                 if ($return_var !== 0) throw new Exception('admin.backups.errorExecRestore' . ' ' . implode('; ', $output));
-                // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
                 
                 $response['success'] = true;
                 $response['message'] = 'admin.backups.successRestore';
@@ -1030,6 +1015,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ---
+    
+    // --- ▼▼▼ INICIO DE NUEVA ACCIÓN ▼▼▼ ---
+    elseif ($action === 'get-concurrent-users') {
+        // Solo los 'founder' pueden ver esto.
+        if ($adminRole !== 'founder') {
+            $response['message'] = 'js.admin.errorAdminTarget';
+            echo json_encode($response);
+            exit;
+        }
+        
+        $count = -1;
+        $message = '';
+        $success = false;
+        
+        try {
+            // Usar un contexto para un timeout corto
+            $context = stream_context_create(['http' => ['timeout' => 2.0]]);
+            $jsonResponse = @file_get_contents('http://127.0.0.1:8766/count', false, $context);
+            
+            if ($jsonResponse === false) {
+                // No se pudo conectar al servidor Python
+                throw new Exception('js.admin.errorUserCount');
+            }
+
+            $data = json_decode($jsonResponse, true);
+            if (isset($data['active_users'])) {
+                $count = (int)$data['active_users'];
+                $success = true;
+            } else {
+                 // La respuesta del JSON no fue la esperada
+                 throw new Exception('js.admin.errorUserCount');
+            }
+        } catch (Exception $e) {
+            logDatabaseError($e, 'admin_handler - get-concurrent-users');
+            $message = $e->getMessage();
+        }
+        
+        $response['success'] = $success;
+        $response['count'] = $count;
+        if (!$success) {
+            $response['message'] = $message;
+        }
+    }
+    // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
     
 } else {
     // Si no es POST, se mantiene el error por defecto

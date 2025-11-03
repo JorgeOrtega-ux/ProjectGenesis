@@ -123,7 +123,13 @@
       "saveChanges": "Guardar cambios",
       "cancel": "Cancelar",
       "deleteDomainTooltip": "Eliminar dominio",
-      "addDomainPlaceholder": "Escribe el dominio (ej. miempresa.com)"
+      "addDomainPlaceholder": "Escribe el dominio (ej. miempresa.com)",
+      "concurrentUsersTitle": "Usuarios Activos",
+      "concurrentUsersDesc": "Usuarios conectados al servidor en este momento (vía WebSocket).",
+      "concurrentUsersRefresh": "Actualizar",
+      "concurrentUsersLoading": "Cargando...",
+      "maxConcurrentUsersTitle": "Límite Máximo de Usuarios",
+      "maxConcurrentUsersDesc": "El número máximo de usuarios que pueden estar conectados al mismo tiempo."
     },
     "backups": {
       "title": "Copias de Seguridad",
@@ -388,6 +394,11 @@
       "title": "Sitio en Mantenimiento",
       "description": "Estamos realizando mejoras en el sitio. Por favor, vuelve a intentarlo más tarde.",
       "adminLogin": "Acceso de Administrador"
+    },
+    "serverfull": {
+      "title": "Servidor Lleno",
+      "description": "Lo sentimos, el servidor ha alcanzado su capacidad máxima de usuarios. Por favor, inténtalo de nuevo en unos minutos.",
+      "backToLogin": "Volver a Inicio de Sesión"
     }
   },
   "js": {
@@ -443,7 +454,8 @@
       "errorRegistrationsDisabled": "Los nuevos registros están deshabilitados por el momento.",
       "errorAccountDeleted": "Esta cuenta ha sido eliminada.",
       "errorAccountSuspended": "Esta cuenta ha sido suspendida.",
-      "errorSync": "Ocurrió un problema de sincronización. Por favor, vuelve a intentarlo mas tarde."
+      "errorSync": "Ocurrió un problema de sincronización. Por favor, vuelve a intentarlo mas tarde.",
+      "errorServerFull": "El servidor está lleno. Intenta más tarde."
     },
     "settings": {
       "successPreference": "Preferencia actualizada.",
@@ -540,6 +552,7 @@
       "domainAddError": "Error al agregar el dominio.",
       "domainRemoveError": "Error al eliminar el dominio.",
       "domainExists": "Este dominio ya existe en la lista.",
+      "errorUserCount": "Error al obtener el conteo de usuarios.",
       "backups": {
         "errorNoSelection": "Por favor, selecciona una copia de seguridad primero.",
         "errorGeneric": "Ocurrió un error al procesar la copia de seguridad.",

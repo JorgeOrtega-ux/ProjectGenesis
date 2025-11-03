@@ -9,6 +9,9 @@ $allowedEmailDomains = $GLOBALS['site_settings']['allowed_email_domains'] ?? 'gm
 $minPasswordLength = $GLOBALS['site_settings']['min_password_length'] ?? '8';
 $maxPasswordLength = $GLOBALS['site_settings']['max_password_length'] ?? '72';
 
+// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+$maxConcurrentUsers = $GLOBALS['site_settings']['max_concurrent_users'] ?? '500';
+
 // --- ▼▼▼ MODIFICACIÓN: Claves añadidas ▼▼▼ ---
 $minUsernameLength = $GLOBALS['site_settings']['min_username_length'] ?? '6';
 $maxUsernameLength = $GLOBALS['site_settings']['max_username_length'] ?? '32';
@@ -47,7 +50,56 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </label>
             </div>
         </div>
-        
+
+        <div class="component-card component-card--edit-mode">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="admin.server.concurrentUsersTitle">Usuarios Activos</h2>
+                    <p class="component-card__description" data-i18n="admin.server.concurrentUsersDesc">Usuarios conectados al servidor en este momento (vía WebSocket).</p>
+                </div>
+            </div>
+            <div class="component-card__actions" style="gap: 12px;">
+                <span id="concurrent-users-display" style="font-size: 16px; font-weight: 600; padding: 0 16px;" data-i18n="admin.server.concurrentUsersLoading">Cargando...</span>
+                <button type="button" 
+                        class="component-button" 
+                        id="refresh-concurrent-users" 
+                        data-action="admin-refresh-user-count" 
+                        data-i18n="admin.server.concurrentUsersRefresh"
+                        <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
+                        Actualizar
+                </button>
+            </div>
+        </div>
+
+        <div class="component-card component-card--column">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="admin.server.maxConcurrentUsersTitle">Límite Máximo de Usuarios</h2>
+                    <p class="component-card__description" data-i18n="admin.server.maxConcurrentUsersDesc">El número máximo de usuarios que pueden estar conectados al mismo tiempo.</p>
+                </div>
+            </div>
+            <div class="component-card__actions">
+                 <div class="component-stepper" 
+                      style="max-width: 265px;"
+                      data-action="update-max-concurrent-users"
+                      data-current-value="<?php echo htmlspecialchars($maxConcurrentUsers); ?>"
+                      data-min="1"
+                      data-max="5000"
+                      data-step="10"
+                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
+                      >
+                    <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder' || $maxConcurrentUsers <= 1) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_left</span>
+                    </button>
+                    <div class="stepper-value">
+                         <?php echo htmlspecialchars($maxConcurrentUsers); ?>
+                    </div>
+                    <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder' || $maxConcurrentUsers >= 5000) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_right</span>
+                    </button>
+                </div>
+            </div>
+        </div>
         <div class="component-card component-card--edit-mode">
             <div class="component-card__content">
                 <div class="component-card__text">
