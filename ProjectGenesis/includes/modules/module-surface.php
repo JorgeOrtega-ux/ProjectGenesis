@@ -118,6 +118,20 @@
                                 <span data-i18n="sidebar.admin.serverSettings">Config. del Servidor</span> 
                             </div>
                         </div>
+
+                        <?php // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ --- ?>
+                        <?php if ($_SESSION['role'] === 'founder'): ?>
+                            <div class="menu-link" data-action="toggleSectionAdminManageBackups">
+                                <div class="menu-link-icon">
+                                    <span class="material-symbols-rounded">backup</span>
+                                </div>
+                                <div class="menu-link-text">
+                                    <span data-i18n="sidebar.admin.manageBackups">Gestionar Copias</span> 
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                        <?php // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ --- ?>
+
                     <?php 
                     endif; 
                     ?>

@@ -5,6 +5,9 @@ import { initSettingsManager } from './modules/settings-manager.js';
 import { initAdminManager } from './modules/admin-manager.js'; // <-- AÑADIDO
 import { initAdminEditUserManager } from './modules/admin-edit-user-manager.js'; // <-- ¡NUEVA LÍNEA!
 import { initAdminServerSettingsManager } from './modules/admin-server-settings-manager.js'; // <-- ¡NUEVA LÍNEA!
+// --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
+import { initAdminBackupsManager } from './modules/admin-backups-manager.js';
+// --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager } from './services/i18n-manager.js'; 
 import { initTooltipManager } from './services/tooltip-manager.js'; 
@@ -66,6 +69,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     initAdminEditUserManager(); // <-- ¡NUEVA LÍNEA!
     initAdminServerSettingsManager(); // <-- ¡NUEVA LÍNEA!
     
+    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
+    initAdminBackupsManager();
+    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
+
     // El Router se inicializa al final
     initRouter(); 
     // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---

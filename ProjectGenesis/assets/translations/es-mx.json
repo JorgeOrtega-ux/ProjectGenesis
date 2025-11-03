@@ -28,7 +28,8 @@
       "dashboard": "Dashboard",
       "manageUsers": "Gestionar usuarios",
       "createUsers": "Crear usuario",
-      "serverSettings": "Config. del Servidor"
+      "serverSettings": "Config. del Servidor",
+      "manageBackups": "Gestionar Copias"
     }
   },
   "admin": {
@@ -123,6 +124,32 @@
       "cancel": "Cancelar",
       "deleteDomainTooltip": "Eliminar dominio",
       "addDomainPlaceholder": "Escribe el dominio (ej. miempresa.com)"
+    },
+    "backups": {
+      "title": "Copias de Seguridad",
+      "description": "Crea o restaura una copia de seguridad de la base de datos. Esta es una acción peligrosa y solo para fundadores.",
+      "createTooltip": "Crear nueva copia de seguridad",
+      "restoreTooltip": "Restaurar copia seleccionada",
+      "deleteTooltip": "Eliminar copia seleccionada",
+      "clearSelection": "Quitar selección",
+      "errorDirTitle": "Error de Directorio",
+      "errorDirCreate": "Error: No se pudo crear el directorio de backups. Revisa los permisos.",
+      "errorDirWrite": "Error: El directorio de backups no tiene permisos de escritura.",
+      "errorDirRead": "Error: No se pudo leer el directorio de backups.",
+      "noBackupsTitle": "No hay copias de seguridad",
+      "noBackupsDesc": "Aún no se ha creado ninguna copia de seguridad.",
+      "labelDate": "Fecha de creación",
+      "labelSize": "Tamaño",
+      "confirmCreate": "¿Estás seguro de que deseas crear una nueva copia de seguridad de la base de datos? Esto puede tardar unos segundos.",
+      "confirmRestore": "¡ACCIÓN IRREVERSIBLE!\n\n¿Estás seguro de que deseas restaurar la base de datos usando el archivo \"%filename%\"?\n\nTODOS los datos actuales (usuarios, publicaciones, etc.) serán eliminados y reemplazados por los datos de esta copia. Esta acción no se puede deshacer.",
+      "confirmDelete": "¿Estás seguro de que deseas eliminar permanentemente el archivo de copia de seguridad \"%filename%\"? Esta acción no se puede deshacer.",
+      "errorFileNotFound": "Error: El archivo de copia de seguridad seleccionado no se encontró en el servidor.",
+      "errorExecCreate": "Error al ejecutar 'mysqldump'.",
+      "errorExecRestore": "Error al ejecutar 'mysql' para restaurar.",
+      "errorDelete": "No se pudo eliminar el archivo. Revisa los permisos.",
+      "successCreate": "Copia de seguridad creada exitosamente.",
+      "successRestore": "Restauración completada. La página se recargará.",
+      "successDelete": "Copia de seguridad eliminada."
     }
   },
   "settings": {
@@ -501,7 +528,12 @@
       "domainRemoved": "Dominio eliminado exitosamente.",
       "domainAddError": "Error al agregar el dominio.",
       "domainRemoveError": "Error al eliminar el dominio.",
-      "domainExists": "Este dominio ya existe en la lista."
+      "domainExists": "Este dominio ya existe en la lista.",
+      "backups": {
+        "errorNoSelection": "Por favor, selecciona una copia de seguridad primero.",
+        "errorGeneric": "Ocurrió un error al procesar la copia de seguridad.",
+        "successGeneric": "Acción completada exitosamente."
+      }
     }
   },
   "db": {

@@ -14,3 +14,18 @@
 [02-Nov-2025 21:57:24 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
 [02-Nov-2025 21:57:26 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
 [02-Nov-2025 21:58:02 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[03-Nov-2025 16:52:29 UTC] PHP Fatal error:  Uncaught TypeError: logDatabaseError(): Argument #1 ($e) must be of type PDOException, Exception given, called in E:\xampp\htdocs\ProjectGenesis\api\backup_handler.php on line 138 and defined in E:\xampp\htdocs\ProjectGenesis\config\config.php:183
+Stack trace:
+#0 E:\xampp\htdocs\ProjectGenesis\api\backup_handler.php(138): logDatabaseError(Object(Exception), 'backup_handler ...')
+#1 {main}
+  thrown in E:\xampp\htdocs\ProjectGenesis\config\config.php on line 183
+[03-Nov-2025 16:52:50 UTC] PHP Fatal error:  Uncaught TypeError: logDatabaseError(): Argument #1 ($e) must be of type PDOException, Exception given, called in E:\xampp\htdocs\ProjectGenesis\api\backup_handler.php on line 138 and defined in E:\xampp\htdocs\ProjectGenesis\config\config.php:183
+Stack trace:
+#0 E:\xampp\htdocs\ProjectGenesis\api\backup_handler.php(138): logDatabaseError(Object(Exception), 'backup_handler ...')
+#1 {main}
+  thrown in E:\xampp\htdocs\ProjectGenesis\config\config.php on line 183
+[03-Nov-2025 16:57:07 UTC] PHP Fatal error:  Uncaught TypeError: logDatabaseError(): Argument #1 ($e) must be of type PDOException, Exception given, called in E:\xampp\htdocs\ProjectGenesis\api\backup_handler.php on line 138 and defined in E:\xampp\htdocs\ProjectGenesis\config\config.php:183
+Stack trace:
+#0 E:\xampp\htdocs\ProjectGenesis\api\backup_handler.php(138): logDatabaseError(Object(Exception), 'backup_handler ...')
+#1 {main}
+  thrown in E:\xampp\htdocs\ProjectGenesis\config\config.php on line 183

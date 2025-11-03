@@ -902,6 +902,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
+    // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (LÓGICA DE BACKUP) ▼▼▼ ---
+    
+    elseif ($action === 'create-backup' || $action === 'restore-backup' || $action === 'delete-backup') {
+        
+        // ¡¡¡DOBLE COMPROBACIÓN DE SEGURIDAD!!! SOLO FOUNDER PUEDE HACER ESTO.
+        if ($adminRole !== 'founder') {
+            $response['message'] = 'js.admin.errorAdminTarget';
+            echo json_encode($response);
+            exit;
+        }
+        
+        $backupDir = dirname(__DIR__) . '/backups'; // Sube 2 niveles (api/ -> projectgenesis/) y luego a /backups
+        if (!is_dir($backupDir)) @mkdir($backupDir, 0755, true);
+        
+        if (!is_writable($backupDir)) {
+             $response['message'] = 'admin.backups.errorDirWrite';
+             logDatabaseError(new Exception("API: El directorio de backups no tiene permisos de escritura: " . $backupDir), 'admin_handler - backup');
+             echo json_encode($response);
+             exit;
+        }
+
+        try {
+            if ($action === 'create-backup') {
+                $filename = 'backup_' . DB_NAME . '_' . date('Y-m-d_H-i-s') . '.sql';
+                $filepath = $backupDir . '/' . $filename;
+                
+                // Usar las constantes definidas en config.php
+                $command = sprintf(
+                    'mysqldump --host=%s --user=%s --password=%s --result-file=%s %s',
+                    escapeshellarg(DB_HOST),
+                    escapeshellarg(DB_USER),
+                    escapeshellarg(DB_PASS),
+                    escapeshellarg($filepath),
+                    escapeshellarg(DB_NAME)
+                );
+                
+                exec($command . ' 2>&1', $output, $return_var);
+                // --- ▼▼▼ CORRECCIÓN ▼▼▼ ---
+                if ($return_var !== 0) throw new Exception('admin.backups.errorExecCreate' . ' ' . implode('; ', $output));
+                // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
+                
+                $response['success'] = true;
+                $response['message'] = 'admin.backups.successCreate';
+
+            } elseif ($action === 'restore-backup') {
+                $filename = $_POST['filename'] ?? '';
+                $safeFilename = basename($filename); // SANITIZACIÓN CRÍTICA
+                $filepath = $backupDir . '/' . $safeFilename;
+
+                if (empty($safeFilename) || $safeFilename !== $filename || !file_exists($filepath)) {
+                    throw new Exception('admin.backups.errorFileNotFound');
+                }
+                
+                $command = sprintf(
+                    'mysql --host=%s --user=%s --password=%s %s < %s',
+                    escapeshellarg(DB_HOST),
+                    escapeshellarg(DB_USER),
+                    escapeshellarg(DB_PASS),
+                    escapeshellarg(DB_NAME),
+                    escapeshellarg($filepath)
+                );
+                
+                exec($command . ' 2>&1', $output, $return_var);
+                // --- ▼▼▼ CORRECCIÓN ▼▼▼ ---
+                if ($return_var !== 0) throw new Exception('admin.backups.errorExecRestore' . ' ' . implode('; ', $output));
+                // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
+                
+                $response['success'] = true;
+                $response['message'] = 'admin.backups.successRestore';
+
+            } elseif ($action === 'delete-backup') {
+                $filename = $_POST['filename'] ?? '';
+                $safeFilename = basename($filename); // SANITIZACIÓN CRÍTICA
+                $filepath = $backupDir . '/' . $safeFilename;
+                
+                if (empty($safeFilename) || $safeFilename !== $filename || !file_exists($filepath)) {
+                    throw new Exception('admin.backups.errorFileNotFound');
+                }
+                
+                if (!@unlink($filepath)) throw new Exception('admin.backups.errorDelete');
+                
+                $response['success'] = true;
+                $response['message'] = 'admin.backups.successDelete';
+            }
+        
+        } catch (Exception $e) {
+            logDatabaseError(new Exception($e->getMessage()), 'admin_handler - ' . $action);
+            $response['message'] = $e->getMessage();
+        }
+    }
+    
+    // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ---
+    
 } else {
     // Si no es POST, se mantiene el error por defecto
     $response['message'] = 'js.api.invalidAction';

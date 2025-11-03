@@ -46,6 +46,10 @@ const routes = {
     'toggleSectionAdminCreateUser': 'admin-create-user', 
     'toggleSectionAdminEditUser': 'admin-edit-user', 
     'toggleSectionAdminServerSettings': 'admin-server-settings', // <-- ¡NUEVA LÍNEA!
+
+    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
+    'toggleSectionAdminManageBackups': 'admin-manage-backups',
+    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
 };
 
 const paths = {
@@ -80,6 +84,10 @@ const paths = {
     '/admin/create-user': 'toggleSectionAdminCreateUser', 
     '/admin/edit-user': 'toggleSectionAdminEditUser', 
     '/admin/server-settings': 'toggleSectionAdminServerSettings', // <-- ¡NUEVA LÍNEA!
+
+    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
+    '/admin/manage-backups': 'toggleSectionAdminManageBackups',
+    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
 };
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
@@ -269,6 +277,11 @@ function updateMenuState(currentAction) {
     }
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
+    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
+    if (currentAction === 'toggleSectionAdminManageBackups') {
+        menuAction = 'toggleSectionAdminManageBackups';
+    }
+    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
         const linkAction = link.getAttribute('data-action');
@@ -286,7 +299,9 @@ export function initRouter() {
 
     document.body.addEventListener('click', e => {
       const link = e.target.closest(
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"]' // <-- ¡NUEVA RUTA!
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SE AÑADE LA NUEVA RUTA) ▼▼▼ ---
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"]'
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         );
 
         if (link) {
@@ -346,7 +361,7 @@ export function initRouter() {
             }
 
             if (!page) {
-                if(link.tagName === 'A' && !link.hasAttribute('data-action')) {
+                if(link.tagName === 'A' && !link.TAgName('data-action')) {
                     window.location.href = link.href;
                 }
                 return;

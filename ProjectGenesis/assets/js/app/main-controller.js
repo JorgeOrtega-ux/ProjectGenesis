@@ -168,10 +168,14 @@ function initMainController() {
             const clickedOnModule = event.target.closest('[data-module].active');
             const clickedOnButton = event.target.closest('[data-action]');
             
-            // --- 'clickedOnUserCard' eliminado de la condición ---
-            if (!clickedOnModule && !clickedOnButton) {
+            // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
+            // Prevenir que se cierren los popups si se hace clic en CUALQUIER tarjeta (usuario o backup)
+            const clickedOnCardItem = event.target.closest('.user-card-item');
+            
+            if (!clickedOnModule && !clickedOnButton && !clickedOnCardItem) {
                 deactivateAllModules();
             }
+            // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
         });
     }
 

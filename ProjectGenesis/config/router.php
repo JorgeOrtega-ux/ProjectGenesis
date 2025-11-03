@@ -102,6 +102,11 @@ $allowedPages = [
     'admin-create-user'        => '../includes/sections/admin/create-user.php', // <--- ¡NUEVA LÍNEA!
     'admin-edit-user'          => '../includes/sections/admin/admin-edit-user.php', // <--- ¡NUEVA LÍNEA!
     'admin-server-settings'    => '../includes/sections/admin/server-settings.php', // <--- ¡NUEVA LÍNEA!
+    
+    // --- ▼▼▼ CORRECCIÓN AÑADIDA ▼▼▼ ---
+    'admin-manage-backups'     => '../includes/sections/admin/manage-backups.php',
+    // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
+
     // --- ▲▲▲ FIN DE PÁGINAS DE ADMIN ▲▲▲ ---
 ];
 

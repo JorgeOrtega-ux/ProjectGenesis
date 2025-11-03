@@ -676,9 +676,15 @@ export function initAdminManager() {
         const clickedOnButton = event.target.closest('[data-action]');
         const clickedOnUserCard = event.target.closest('.user-card-item[data-user-id]');
         
-        if (!clickedOnModule && !clickedOnButton && !clickedOnUserCard) {
+        // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
+        // Prevenir que se deseleccione el usuario si se hace clic en OTRA tarjeta (como un backup)
+        const clickedOnAnyCard = event.target.closest('.user-card-item');
+
+        // Solo limpiar si no se hizo clic en un módulo, un botón, o CUALQUIER tarjeta
+        if (!clickedOnModule && !clickedOnButton && !clickedOnAnyCard) {
             clearAdminUserSelection();
         }
+        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
     });
 
     const userListContainer = document.querySelector('.user-list-container');

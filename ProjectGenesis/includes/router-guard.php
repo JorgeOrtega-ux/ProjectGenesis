@@ -69,6 +69,10 @@ $pathsToPages = [
     '/admin/create-user'        => 'admin-create-user', // <--- ¡NUEVA LÍNEA!
     '/admin/edit-user'          => 'admin-edit-user', // <--- ¡NUEVA LÍNEA!
     '/admin/server-settings'    => 'admin-server-settings', // <--- ¡NUEVA LÍNEA!
+    
+    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
+    '/admin/manage-backups'     => 'admin-manage-backups',
+    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
 ];
 
 // 3. Determinar la página actual y los tipos de página
@@ -92,6 +96,15 @@ if ($isAdminPage && isset($_SESSION['user_id'])) {
         $isAdminPage = false; // No es un admin
         $currentPage = '404'; // Tratar la página como 404
     }
+    
+    // --- ▼▼▼ INICIO DE NUEVA LÍNEA (SEGURIDAD DE BACKUPS) ▼▼▼ ---
+    // Solo los 'founder' pueden ver la página de backups
+    if ($currentPage === 'admin-manage-backups' && $userRole !== 'founder') {
+        $isAdminPage = true; // Sigue siendo admin, pero...
+        $currentPage = '404'; // No tiene permiso para esta página específica
+    }
+    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
+
 }
 
 // Redirigir a login si no está logueado y no es página de auth
