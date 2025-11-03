@@ -30,7 +30,7 @@
                 <div class="auth-step-buttons">
                     <button type="button" class="auth-button" data-auth-action="next-step" data-i18n="page.login.continueButton"></button>
                 </div>
-                <div class="auth-error-message" style="display: none;"></div>
+                <div class="auth-error-message"></div>
             </fieldset>
             
             <fieldset class="auth-step" data-step="2">
@@ -45,7 +45,7 @@
                     <button type="submit" class="auth-button" data-i18n="page.login.verifyButton"></button>
                 </div>
                 
-                <div class="auth-error-message" style="display: none;"></div>
+                <div class="auth-error-message"></div>
                 <p class="auth-link text-center">
                     <a href="#" 
                        id="login-resend-code-link" 

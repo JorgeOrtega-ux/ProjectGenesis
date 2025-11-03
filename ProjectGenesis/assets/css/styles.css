@@ -582,9 +582,16 @@ body {
     border: 1px solid #ef9a9a;
     border-radius: 8px;
     font-size: 14px;
-    /* display: none; */ /* <-- LÍNEA ELIMINADA */
+    display: none; /* <-- LÍNEA AÑADIDA */
 }
+
+/* --- ▼▼▼ INICIO DE NUEVA CLASE ▼▼▼ --- */
+.auth-error-message.active {
+    display: block;
+}
+/* --- ▲▲▲ FIN DE NUEVA CLASE ▲▲▲ --- */
 /* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
+
 .auth-input-group input:focus~label,
 .auth-input-group input:not(:placeholder-shown)~label {
     color: #000;

@@ -33,7 +33,7 @@ if ($CURRENT_REGISTER_STEP == 2) {
                 <div class="auth-step-buttons">
                     <button type="button" class="auth-button" data-auth-action="next-step" data-i18n="page.register.continueButton"></button>
                 </div>
-                <div class="auth-error-message" style="display: none;"></div>
+                <div class="auth-error-message"></div>
             </fieldset>
 
             <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 2) ? 'active' : ''; ?>" data-step="2">
@@ -50,7 +50,7 @@ if ($CURRENT_REGISTER_STEP == 2) {
                 <div class="auth-step-buttons">
                     <button type="button" class="auth-button" data-auth-action="next-step" data-i18n="page.register.continueButton"></button>
                 </div>
-                <div class="auth-error-message" style="display: none;"></div>
+                <div class="auth-error-message"></div>
             </fieldset>
 
             <fieldset class="auth-step <?php echo ($CURRENT_REGISTER_STEP == 3) ? 'active' : ''; ?>" data-step="3">
@@ -67,7 +67,7 @@ if ($CURRENT_REGISTER_STEP == 2) {
                     <button type="submit" class="auth-button" data-i18n="page.register.verifyButton"></button>
                 </div>
                 
-                <div class="auth-error-message" style="display: none;"></div>
+                <div class="auth-error-message"></div>
                 
                 <p class="auth-link text-center">
                     <a href="#" 

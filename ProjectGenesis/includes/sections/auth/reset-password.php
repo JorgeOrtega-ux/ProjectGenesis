@@ -17,7 +17,7 @@
                     <button type="button" class="auth-button" data-auth-action="next-step" data-i18n="page.reset.sendCodeButton"></button>
                 </div>
                 
-                <div class="auth-error-message" style="display: none;"></div>
+                <div class="auth-error-message"></div>
                 
                 <p class="auth-link text-center">
                     <span data-i18n="page.reset.rememberedPassword"></span> <a href="/ProjectGenesis/login" data-i18n="page.reset.login"></a>
@@ -40,7 +40,7 @@
                     <button type="button" class="auth-button" data-auth-action="next-step" data-i18n="page.reset.verifyButton"></button>
                 </div>
                 
-                <div class="auth-error-message" style="display: none;"></div>
+                <div class="auth-error-message"></div>
                 
                 <p class="auth-link text-center">
                     <a href="#" 
@@ -82,7 +82,7 @@
                     <button type="submit" class="auth-button" data-i18n="page.reset.saveButton"></button>
                 </div>
                 
-                <div class="auth-error-message" style="display: none;"></div>
+                <div class="auth-error-message"></div>
                 
             </fieldset>
             
