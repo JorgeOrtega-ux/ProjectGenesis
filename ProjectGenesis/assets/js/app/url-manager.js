@@ -179,6 +179,20 @@ async function loadPage(page, action, fetchParams = null) {
         contentContainer.innerHTML = html;
         applyTranslations(contentContainer);
 
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
+        // Después de cargar el HTML y las traducciones,
+        // aplicar el conteo de usuarios que pudo llegar antes.
+        if (page === 'admin-server-settings') {
+            if (window.lastKnownUserCount !== null) {
+                const display = document.getElementById('concurrent-users-display');
+                if (display) {
+                    display.textContent = window.lastKnownUserCount;
+                    display.setAttribute('data-i18n', '');
+                }
+            }
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▲▲▲ ---
+
         let link;
         if (page === 'register-step3') {
             link = document.getElementById('register-resend-code-link');
@@ -290,7 +304,7 @@ function updateMenuState(currentAction) {
         menuAction = 'toggleSectionAdminManageBackups';
     }
     // La regla para 'toggleSectionAdminRestoreBackup' se ha eliminado
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
         const linkAction = link.getAttribute('data-action');

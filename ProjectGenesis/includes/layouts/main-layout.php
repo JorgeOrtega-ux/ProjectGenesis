@@ -46,6 +46,11 @@
         <script>
             window.projectBasePath = '<?php echo $basePath; ?>';
             window.csrfToken = '<?php echo $_SESSION['csrf_token'] ?? ''; ?>';
+            
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+            // Esta variable SÍ nos dice si el usuario está logueado
+            window.isUserLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
             window.userTheme = '<?php echo $_SESSION['theme'] ?? 'system'; ?>';
             window.userIncreaseMessageDuration = <?php echo $_SESSION['increase_message_duration'] ?? 0; ?>;

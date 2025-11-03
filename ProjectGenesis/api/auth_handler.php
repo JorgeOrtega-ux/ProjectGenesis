@@ -516,51 +516,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             exit;
                         }
 
-                        // --- ▼▼▼ INICIO DE MODIFICACIÓN (LÍMITE DE USUARIOS CONCURRENTES) ▼▼▼ ---
-                        
-                        // 1. Obtener el límite de la base de datos (cargado por bootstrapper.php)
-                        // Usamos un fallback por si acaso la clave no está en la BD.
-                        $maxUsers = (int)($GLOBALS['site_settings']['max_concurrent_users'] ?? 500); 
-
-                        // 2. Obtener el conteo actual del servidor Python
-                        $currentUserCount = 0;
-                        try {
-                            // Usar un contexto para un timeout corto y manejar errores
-                            $context = stream_context_create(['http' => ['timeout' => 2.0]]); // 2 segundos de timeout
-                            $jsonResponse = @file_get_contents('http://127.0.0.1:8766/count', false, $context);
-                            
-                            if ($jsonResponse === false) {
-                                // Error al contactar el servidor de conteo.
-                                // Decidimos fallar (más seguro)
-                                logDatabaseError(new Exception("No se pudo contactar al servidor de conteo en http://127.0.0.1:8766/count"), 'auth_handler - concurrent_users');
-                                throw new Exception('js.api.errorServer'); // Error genérico
-                            }
-
-                            $data = json_decode($jsonResponse, true);
-                            if (isset($data['active_users'])) {
-                                $currentUserCount = (int)$data['active_users'];
-                            }
-                        } catch (Exception $e) {
-                            // Captura tanto el error de file_get_contents como el de la BD
-                            logDatabaseError($e, 'auth_handler - concurrent_users_check');
-                            $response['message'] = 'js.api.errorServer'; // No se pudo verificar el conteo
-                            echo json_encode($response);
-                            exit;
-                        }
-
-                        // 3. Comparar y actuar
-                        if ($currentUserCount >= $maxUsers) {
-                            // Servidor lleno. Denegar inicio de sesión.
-                            $response['success'] = false;
-                            $response['redirect_to_status'] = 'server_full';
-                            $response['message'] = 'js.auth.errorServerFull'; // (Opcional, pero bueno tenerlo)
-                            echo json_encode($response);
-                            exit;
-                        }
-                        
-                        // Si hay espacio, la ejecución continúa...
-                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
+                        // --- BLOQUE DE USUARIOS CONCURRENTES ELIMINADO ---
 
                         clearFailedAttempts($pdo, $email);
 

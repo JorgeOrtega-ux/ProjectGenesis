@@ -40,12 +40,11 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
             </div>
             <div class="component-card__actions">
                 <label class="component-toggle-switch">
-                    <input type="checkbox" 
-                           id="toggle-maintenance-mode"
-                           data-action="update-maintenance-mode"
-                           <?php echo ($maintenanceModeStatus == 1) ? 'checked' : ''; ?>
-                           <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                           > 
+                    <input type="checkbox"
+                        id="toggle-maintenance-mode"
+                        data-action="update-maintenance-mode"
+                        <?php echo ($maintenanceModeStatus == 1) ? 'checked' : ''; ?>
+                        <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
                     <span class="component-toggle-slider"></span>
                 </label>
             </div>
@@ -60,8 +59,8 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
             </div>
             <div class="component-card__actions" style="gap: 12px;">
                 <span id="concurrent-users-display" style="font-size: 16px; font-weight: 600; padding: 0 16px;" data-i18n="">---</span>
-                
-                </div>
+
+            </div>
         </div>
         <div class="component-card component-card--column">
             <div class="component-card__content">
@@ -71,20 +70,19 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-stepper" 
-                      style="max-width: 265px;"
-                      data-action="update-max-concurrent-users"
-                      data-current-value="<?php echo htmlspecialchars($maxConcurrentUsers); ?>"
-                      data-min="1"
-                      data-max="5000"
-                      data-step="10"
-                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                      >
+                <div class="component-stepper"
+                    style="max-width: 265px;"
+                    data-action="update-max-concurrent-users"
+                    data-current-value="<?php echo htmlspecialchars($maxConcurrentUsers); ?>"
+                    data-min="1"
+                    data-max="5000"
+                    data-step="10"
+                    <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
                     <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder' || $maxConcurrentUsers <= 1) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     <div class="stepper-value">
-                         <?php echo htmlspecialchars($maxConcurrentUsers); ?>
+                        <?php echo htmlspecialchars($maxConcurrentUsers); ?>
                     </div>
                     <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder' || $maxConcurrentUsers >= 5000) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_right</span>
@@ -101,14 +99,13 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
             </div>
             <div class="component-card__actions">
                 <label class="component-toggle-switch">
-                    <input type="checkbox" 
-                           id="toggle-allow-registration"
-                           data-action="update-registration-mode"
-                           <?php echo ($allowRegistrationStatus == 1) ? 'checked' : ''; ?>
-                           <?php 
-                           echo ($_SESSION['role'] !== 'founder' || $maintenanceModeStatus == 1) ? 'disabled' : ''; 
-                           ?>
-                           > 
+                    <input type="checkbox"
+                        id="toggle-allow-registration"
+                        data-action="update-registration-mode"
+                        <?php echo ($allowRegistrationStatus == 1) ? 'checked' : ''; ?>
+                        <?php
+                        echo ($_SESSION['role'] !== 'founder' || $maintenanceModeStatus == 1) ? 'disabled' : '';
+                        ?>>
                     <span class="component-toggle-slider"></span>
                 </label>
             </div>
@@ -122,20 +119,19 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-stepper" 
-                      style="max-width: 265px;"
-                      data-action="update-min-password-length"
-                      data-current-value="<?php echo htmlspecialchars($minPasswordLength); ?>"
-                      data-min="8"
-                      data-max="72"
-                      data-step="1"
-                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                      >
+                <div class="component-stepper"
+                    style="max-width: 265px;"
+                    data-action="update-min-password-length"
+                    data-current-value="<?php echo htmlspecialchars($minPasswordLength); ?>"
+                    data-min="8"
+                    data-max="72"
+                    data-step="1"
+                    <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
                     <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($minPasswordLength <= 8) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     <div class="stepper-value" id="stepper-value-min-password-length">
-                         <?php echo htmlspecialchars($minPasswordLength); ?>
+                        <?php echo htmlspecialchars($minPasswordLength); ?>
                     </div>
                     <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($minPasswordLength >= 72) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_right</span>
@@ -152,20 +148,19 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-stepper" 
-                      style="max-width: 265px;"
-                      data-action="update-max-password-length"
-                      data-current-value="<?php echo htmlspecialchars($maxPasswordLength); ?>"
-                      data-min="8"
-                      data-max="72"
-                      data-step="1"
-                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                      >
+                <div class="component-stepper"
+                    style="max-width: 265px;"
+                    data-action="update-max-password-length"
+                    data-current-value="<?php echo htmlspecialchars($maxPasswordLength); ?>"
+                    data-min="8"
+                    data-max="72"
+                    data-step="1"
+                    <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
                     <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($maxPasswordLength <= 8) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     <div class="stepper-value" id="stepper-value-max-password-length">
-                         <?php echo htmlspecialchars($maxPasswordLength); ?>
+                        <?php echo htmlspecialchars($maxPasswordLength); ?>
                     </div>
                     <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($maxPasswordLength >= 72) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_right</span>
@@ -181,20 +176,19 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-stepper" 
-                      style="max-width: 265px;"
-                      data-action="update-max-login-attempts"
-                      data-current-value="<?php echo htmlspecialchars($maxLoginAttempts); ?>"
-                      data-min="3"
-                      data-max="20"
-                      data-step="1"
-                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                      >
+                <div class="component-stepper"
+                    style="max-width: 265px;"
+                    data-action="update-max-login-attempts"
+                    data-current-value="<?php echo htmlspecialchars($maxLoginAttempts); ?>"
+                    data-min="3"
+                    data-max="20"
+                    data-step="1"
+                    <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
                     <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($maxLoginAttempts <= 3) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     <div class="stepper-value" id="stepper-value-max-login-attempts">
-                         <?php echo htmlspecialchars($maxLoginAttempts); ?>
+                        <?php echo htmlspecialchars($maxLoginAttempts); ?>
                     </div>
                     <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($maxLoginAttempts >= 20) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_right</span>
@@ -211,20 +205,19 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-stepper" 
-                      style="max-width: 265px;"
-                      data-action="update-lockout-time-minutes"
-                      data-current-value="<?php echo htmlspecialchars($lockoutTimeMinutes); ?>"
-                      data-min="1"
-                      data-max="60"
-                      data-step="1"
-                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                      >
+                <div class="component-stepper"
+                    style="max-width: 265px;"
+                    data-action="update-lockout-time-minutes"
+                    data-current-value="<?php echo htmlspecialchars($lockoutTimeMinutes); ?>"
+                    data-min="1"
+                    data-max="60"
+                    data-step="1"
+                    <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
                     <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($lockoutTimeMinutes <= 1) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     <div class="stepper-value" id="stepper-value-lockout-time-minutes">
-                         <?php echo htmlspecialchars($lockoutTimeMinutes); ?>
+                        <?php echo htmlspecialchars($lockoutTimeMinutes); ?>
                     </div>
                     <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($lockoutTimeMinutes >= 60) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_right</span>
@@ -241,20 +234,19 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-stepper" 
-                      style="max-width: 265px;"
-                      data-action="update-min-username-length"
-                      data-current-value="<?php echo htmlspecialchars($minUsernameLength); ?>"
-                      data-min="6"
-                      data-max="32"
-                      data-step="1"
-                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                      >
+                <div class="component-stepper"
+                    style="max-width: 265px;"
+                    data-action="update-min-username-length"
+                    data-current-value="<?php echo htmlspecialchars($minUsernameLength); ?>"
+                    data-min="6"
+                    data-max="32"
+                    data-step="1"
+                    <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
                     <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($minUsernameLength <= 6) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     <div class="stepper-value">
-                         <?php echo htmlspecialchars($minUsernameLength); ?>
+                        <?php echo htmlspecialchars($minUsernameLength); ?>
                     </div>
                     <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($minUsernameLength >= 32) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_right</span>
@@ -271,20 +263,19 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-stepper" 
-                      style="max-width: 265px;"
-                      data-action="update-max-username-length"
-                      data-current-value="<?php echo htmlspecialchars($maxUsernameLength); ?>"
-                      data-min="6"
-                      data-max="32"
-                      data-step="1"
-                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                      >
+                <div class="component-stepper"
+                    style="max-width: 265px;"
+                    data-action="update-max-username-length"
+                    data-current-value="<?php echo htmlspecialchars($maxUsernameLength); ?>"
+                    data-min="6"
+                    data-max="32"
+                    data-step="1"
+                    <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
                     <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($maxUsernameLength <= 6) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     <div class="stepper-value">
-                         <?php echo htmlspecialchars($maxUsernameLength); ?>
+                        <?php echo htmlspecialchars($maxUsernameLength); ?>
                     </div>
                     <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($maxUsernameLength >= 32) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_right</span>
@@ -301,20 +292,19 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-stepper" 
-                      style="max-width: 265px;"
-                      data-action="update-max-email-length"
-                      data-current-value="<?php echo htmlspecialchars($maxEmailLength); ?>"
-                      data-min="64"
-                      data-max="255"
-                      data-step="1"
-                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                      >
+                <div class="component-stepper"
+                    style="max-width: 265px;"
+                    data-action="update-max-email-length"
+                    data-current-value="<?php echo htmlspecialchars($maxEmailLength); ?>"
+                    data-min="64"
+                    data-max="255"
+                    data-step="1"
+                    <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
                     <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($maxEmailLength <= 64) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     <div class="stepper-value">
-                         <?php echo htmlspecialchars($maxEmailLength); ?>
+                        <?php echo htmlspecialchars($maxEmailLength); ?>
                     </div>
                     <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($maxEmailLength >= 255) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_right</span>
@@ -331,20 +321,19 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-stepper" 
-                      style="max-width: 265px;"
-                      data-action="update-code-resend-cooldown"
-                      data-current-value="<?php echo htmlspecialchars($codeResendCooldown); ?>"
-                      data-min="30"
-                      data-max="300"
-                      data-step="15"
-                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                      >
+                <div class="component-stepper"
+                    style="max-width: 265px;"
+                    data-action="update-code-resend-cooldown"
+                    data-current-value="<?php echo htmlspecialchars($codeResendCooldown); ?>"
+                    data-min="30"
+                    data-max="300"
+                    data-step="15"
+                    <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
                     <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($codeResendCooldown <= 30) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     <div class="stepper-value">
-                         <?php echo htmlspecialchars($codeResendCooldown); ?>
+                        <?php echo htmlspecialchars($codeResendCooldown); ?>
                     </div>
                     <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($codeResendCooldown >= 300) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_right</span>
@@ -359,7 +348,7 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                     <p class="component-card__description" data-i18n="admin.server.allowedEmailDomainsDesc"></p>
                 </div>
             </div>
-            
+
             <div id="domain-view-state" <?php echo ($_SESSION['role'] !== 'founder') ? 'style="pointer-events: none; opacity: 0.7;"' : ''; ?>>
                 <div class="domain-card-list">
                     <?php
@@ -367,23 +356,23 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                     if (empty($domains)):
                     ?>
                         <p class="component-card__description" style="margin: 8px 0;">No hay dominios configurados.</p>
-                    <?php
+                        <?php
                     else:
                         foreach ($domains as $domain):
-                    ?>
-                        <div class="domain-card-item" data-domain="<?php echo htmlspecialchars($domain); ?>">
-                            <span class="material-symbols-rounded">language</span>
-                            <span class="domain-card-text"><?php echo htmlspecialchars($domain); ?></span>
-                            <button type="button" class="domain-card-delete" data-action="admin-domain-delete" data-domain="<?php echo htmlspecialchars($domain); ?>" data-tooltip="admin.server.deleteDomainTooltip">
-                                <span class="material-symbols-rounded">delete</span>
-                            </button>
-                        </div>
+                        ?>
+                            <div class="domain-card-item" data-domain="<?php echo htmlspecialchars($domain); ?>">
+                                <span class="material-symbols-rounded">language</span>
+                                <span class="domain-card-text"><?php echo htmlspecialchars($domain); ?></span>
+                                <button type="button" class="domain-card-delete" data-action="admin-domain-delete" data-domain="<?php echo htmlspecialchars($domain); ?>" data-tooltip="admin.server.deleteDomainTooltip">
+                                    <span class="material-symbols-rounded">delete</span>
+                                </button>
+                            </div>
                     <?php
                         endforeach;
                     endif;
                     ?>
                 </div>
-                
+
                 <div class="component-card__actions" style="justify-content: flex-end; margin-top: 16px;">
                     <button type="button" class="component-action-button component-action-button--primary" data-action="admin-domain-show-add" data-i18n="admin.server.addDomain" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
                         Agregar dominio
@@ -394,10 +383,10 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
             <div id="domain-add-state" style="display: none;">
                 <div class="component-input-group" style="margin-top: 8px;">
                     <input type="text"
-                           class="component-input"
-                           id="setting-new-domain-input"
-                           placeholder=" "
-                           maxlength="100">
+                        class="component-input"
+                        id="setting-new-domain-input"
+                        placeholder=" "
+                        maxlength="100">
                     <label for="setting-new-domain-input" data-i18n="admin.server.addDomainPlaceholder">Escribe el dominio (ej. miempresa.com)</label>
                 </div>
                 <div class="component-card__actions" style="justify-content: flex-end; margin-top: 16px;">
@@ -418,20 +407,19 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
             <div class="component-card__actions">
-                <div class="component-stepper" 
-                      style="max-width: 265px;"
-                      data-action="update-username-cooldown"
-                      data-current-value="<?php echo htmlspecialchars($usernameCooldown); ?>"
-                      data-min="1"
-                      data-max="365"
-                      data-step="1"
-                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                      >
+                <div class="component-stepper"
+                    style="max-width: 265px;"
+                    data-action="update-username-cooldown"
+                    data-current-value="<?php echo htmlspecialchars($usernameCooldown); ?>"
+                    data-min="1"
+                    data-max="365"
+                    data-step="1"
+                    <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
                     <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($usernameCooldown <= 1) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     <div class="stepper-value" id="stepper-value-username-cooldown">
-                         <?php echo htmlspecialchars($usernameCooldown); ?>
+                        <?php echo htmlspecialchars($usernameCooldown); ?>
                     </div>
                     <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($usernameCooldown >= 365) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_right</span>
@@ -439,7 +427,7 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
         </div>
-        
+
         <div class="component-card component-card--column">
             <div class="component-card__content">
                 <div class="component-card__text">
@@ -448,20 +436,19 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-stepper" 
-                      style="max-width: 265px;"
-                      data-action="update-email-cooldown"
-                      data-current-value="<?php echo htmlspecialchars($emailCooldown); ?>"
-                      data-min="1"
-                      data-max="365"
-                      data-step="1"
-                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                      >
+                <div class="component-stepper"
+                    style="max-width: 265px;"
+                    data-action="update-email-cooldown"
+                    data-current-value="<?php echo htmlspecialchars($emailCooldown); ?>"
+                    data-min="1"
+                    data-max="365"
+                    data-step="1"
+                    <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
                     <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($emailCooldown <= 1) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     <div class="stepper-value" id="stepper-value-email-cooldown">
-                         <?php echo htmlspecialchars($emailCooldown); ?>
+                        <?php echo htmlspecialchars($emailCooldown); ?>
                     </div>
                     <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($emailCooldown >= 365) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_right</span>
@@ -469,7 +456,7 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
         </div>
-        
+
         <div class="component-card component-card--column">
             <div class="component-card__content">
                 <div class="component-card__text">
@@ -478,20 +465,19 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
             <div class="component-card__actions">
-                 <div class="component-stepper" 
-                      style="max-width: 265px;"
-                      data-action="update-avatar-max-size"
-                      data-current-value="<?php echo htmlspecialchars($avatarMaxSize); ?>"
-                      data-min="1"
-                      data-max="20"
-                      data-step="1"
-                      <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>
-                      >
+                <div class="component-stepper"
+                    style="max-width: 265px;"
+                    data-action="update-avatar-max-size"
+                    data-current-value="<?php echo htmlspecialchars($avatarMaxSize); ?>"
+                    data-min="1"
+                    data-max="20"
+                    data-step="1"
+                    <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
                     <button type="button" class="stepper-button" data-step-action="decrement" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($avatarMaxSize <= 1) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     <div class="stepper-value" id="stepper-value-avatar-max-size">
-                         <?php echo htmlspecialchars($avatarMaxSize); ?>
+                        <?php echo htmlspecialchars($avatarMaxSize); ?>
                     </div>
                     <button type="button" class="stepper-button" data-step-action="increment" <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?> <?php echo ($avatarMaxSize >= 20) ? 'disabled' : ''; ?>>
                         <span class="material-symbols-rounded">chevron_right</span>
@@ -499,6 +485,6 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
         </div>
-        
-        </div>
+
+    </div>
 </div>

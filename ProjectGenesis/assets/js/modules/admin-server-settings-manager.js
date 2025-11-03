@@ -156,7 +156,21 @@ export function initAdminServerSettingsManager() {
 
         // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ ---
         if (action === 'admin-refresh-user-count') {
-            await fetchAndUpdateUserCount();
+            // NOTA: Esta acción fallará porque 'get-concurrent-users' no existe
+            // en 'admin_handler.php'. Se deja por si se quiere reimplementar.
+            // await fetchAndUpdateUserCount();
+            
+            // Solución temporal: pedir al WebSocket que re-envíe el conteo
+            if (window.ws && window.ws.readyState === WebSocket.OPEN) {
+                 // (Actualmente el servidor python no maneja mensajes entrantes,
+                 // pero si lo hiciera, aquí se enviaría la solicitud)
+                 console.log("Pidiendo actualización de conteo (función no implementada en servidor)");
+                 // Por ahora, solo mostramos el último que tengamos
+                 if (window.lastKnownUserCount !== null) {
+                    const display = document.getElementById('concurrent-users-display');
+                    if (display) display.textContent = window.lastKnownUserCount;
+                 }
+            }
             return;
         }
         // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
@@ -333,10 +347,10 @@ export function initAdminServerSettingsManager() {
 
     }, true); 
 
-    // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
     // Cargar el conteo inicial cuando se carga la página de ajustes
     if (document.querySelector('.section-content[data-section="admin-server-settings"]')) {
-        fetchAndUpdateUserCount();
+        // fetchAndUpdateUserCount(); // <-- ¡LÍNEA ELIMINADA!
     }
-    // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▲▲▲ ---
 }

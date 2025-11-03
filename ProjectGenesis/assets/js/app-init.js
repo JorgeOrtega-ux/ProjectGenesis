@@ -20,6 +20,10 @@ import { initTooltipManager } from './services/tooltip-manager.js';
 const htmlEl = document.documentElement;
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
+window.lastKnownUserCount = null; // Almacén global para el conteo
+// --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▲▲▲ ---
+
 function applyTheme(theme) {
     if (theme === 'light') {
         htmlEl.classList.remove('dark-theme');
@@ -83,7 +87,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLIENTE WEBSOCKET PARA CONTEO DE CONCURRENTES) ▼▼▼ ---
     
     // Solo conectar si el usuario está logueado (indicado por la existencia de un csrfToken)
-    if (window.csrfToken) {
+    // --- ▼▼▼ ¡CAMBIO DE CONDICIÓN! ▼▼▼ ---
+    if (window.isUserLoggedIn) {
+    // --- ▲▲▲ ¡FIN DE CAMBIO! ▲▲▲ ---
         let ws;
         const wsUrl = "ws://127.0.0.1:8765";
 
@@ -96,18 +102,20 @@ document.addEventListener('DOMContentLoaded', async function () {
                     console.log("[WS_Counter] Conectado al servidor de conteo.");
                 };
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
                 ws.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
                         // Si el servidor nos envía un mensaje tipo 'user_count'
                         if (data.type === 'user_count') {
-                            // Buscamos el elemento en la página
+                            
+                            // 1. Guardar siempre el último conteo conocido
+                            window.lastKnownUserCount = data.count; 
+                            
+                            // 2. Intentar actualizar la UI si ya existe
                             const display = document.getElementById('concurrent-users-display');
-                            // Si el admin está viendo esa página, actualizamos el número
                             if (display) {
                                 display.textContent = data.count;
-                                // Quitamos el 'data-i18n' para que no lo reemplace la traducción
                                 display.setAttribute('data-i18n', ''); 
                             }
                         }
@@ -115,7 +123,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         console.error("[WS] Error al parsear mensaje:", e);
                     }
                 };
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▲▲▲ ---
 
 
                 ws.onclose = (event) => {
