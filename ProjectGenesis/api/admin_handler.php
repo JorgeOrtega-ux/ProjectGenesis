@@ -1016,49 +1016,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ---
     
-    // --- ▼▼▼ INICIO DE NUEVA ACCIÓN ▼▼▼ ---
-    elseif ($action === 'get-concurrent-users') {
-        // Solo los 'founder' pueden ver esto.
-        if ($adminRole !== 'founder') {
-            $response['message'] = 'js.admin.errorAdminTarget';
-            echo json_encode($response);
-            exit;
-        }
-        
-        $count = -1;
-        $message = '';
-        $success = false;
-        
-        try {
-            // Usar un contexto para un timeout corto
-            $context = stream_context_create(['http' => ['timeout' => 2.0]]);
-            $jsonResponse = @file_get_contents('http://127.0.0.1:8766/count', false, $context);
-            
-            if ($jsonResponse === false) {
-                // No se pudo conectar al servidor Python
-                throw new Exception('js.admin.errorUserCount');
-            }
-
-            $data = json_decode($jsonResponse, true);
-            if (isset($data['active_users'])) {
-                $count = (int)$data['active_users'];
-                $success = true;
-            } else {
-                 // La respuesta del JSON no fue la esperada
-                 throw new Exception('js.admin.errorUserCount');
-            }
-        } catch (Exception $e) {
-            logDatabaseError($e, 'admin_handler - get-concurrent-users');
-            $message = $e->getMessage();
-        }
-        
-        $response['success'] = $success;
-        $response['count'] = $count;
-        if (!$success) {
-            $response['message'] = $message;
-        }
-    }
-    // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
+    // --- ▼▼▼ EL BLOQUE 'get-concurrent-users' SE HA ELIMINADO ▼▼▼ ---
     
 } else {
     // Si no es POST, se mantiene el error por defecto

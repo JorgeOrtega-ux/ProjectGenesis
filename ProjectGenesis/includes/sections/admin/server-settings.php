@@ -59,18 +59,10 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </div>
             </div>
             <div class="component-card__actions" style="gap: 12px;">
-                <span id="concurrent-users-display" style="font-size: 16px; font-weight: 600; padding: 0 16px;" data-i18n="admin.server.concurrentUsersLoading">Cargando...</span>
-                <button type="button" 
-                        class="component-button" 
-                        id="refresh-concurrent-users" 
-                        data-action="admin-refresh-user-count" 
-                        data-i18n="admin.server.concurrentUsersRefresh"
-                        <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
-                        Actualizar
-                </button>
-            </div>
+                <span id="concurrent-users-display" style="font-size: 16px; font-weight: 600; padding: 0 16px;" data-i18n="">---</span>
+                
+                </div>
         </div>
-
         <div class="component-card component-card--column">
             <div class="component-card__content">
                 <div class="component-card__text">

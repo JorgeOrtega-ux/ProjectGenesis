@@ -90,13 +90,46 @@ document.addEventListener('DOMContentLoaded', async function () {
         function connectWebSocket() {
             try {
                 ws = new WebSocket(wsUrl);
+                window.ws = ws; // Hacemos 'ws' global por si se necesita
 
                 ws.onopen = () => {
                     console.log("[WS_Counter] Conectado al servidor de conteo.");
                 };
 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        // Si el servidor nos envía un mensaje tipo 'user_count'
+                        if (data.type === 'user_count') {
+                            // Buscamos el elemento en la página
+                            const display = document.getElementById('concurrent-users-display');
+                            // Si el admin está viendo esa página, actualizamos el número
+                            if (display) {
+                                display.textContent = data.count;
+                                // Quitamos el 'data-i18n' para que no lo reemplace la traducción
+                                display.setAttribute('data-i18n', ''); 
+                            }
+                        }
+                    } catch (e) {
+                        console.error("[WS] Error al parsear mensaje:", e);
+                    }
+                };
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+
                 ws.onclose = (event) => {
                     console.log("[WS_Counter] Desconectado del servidor de conteo.", event.reason);
+                    
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                    // Si nos desconectamos, mostramos '---'
+                    const display = document.getElementById('concurrent-users-display');
+                    if (display) {
+                        display.textContent = '---';
+                        display.setAttribute('data-i18n', ''); // Quitar i18n
+                    }
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                    
                     // Opcional: intentar reconectar si no es un cierre normal
                     if (event.code !== 1000) {
                          // console.log("[WS_Counter] Intentando reconectar en 5s...");
