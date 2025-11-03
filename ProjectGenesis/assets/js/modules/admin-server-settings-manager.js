@@ -114,10 +114,18 @@ async function handleSettingUpdate(element, action, newValue) {
                 const valueDisplay = element.querySelector('.stepper-value');
                 if (valueDisplay) valueDisplay.textContent = originalValue;
                 
+                // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (4 BOTONES) ▼▼▼ ---
                 const min = parseInt(element.dataset.min, 10);
                 const max = parseInt(element.dataset.max, 10);
-                element.querySelector('[data-step-action="decrement"]').disabled = originalValue <= min;
-                element.querySelector('[data-step-action="increment"]').disabled = originalValue >= max;
+                const step1 = parseInt(element.dataset.step1 || '1', 10);
+                const step10 = parseInt(element.dataset.step10 || '10', 10);
+                const currentValInt = parseInt(originalValue, 10);
+
+                element.querySelector('[data-step-action="decrement-10"]').disabled = currentValInt < min + step10;
+                element.querySelector('[data-step-action="decrement-1"]').disabled = currentValInt <= min;
+                element.querySelector('[data-step-action="increment-1"]').disabled = currentValInt >= max;
+                element.querySelector('[data-step-action="increment-10"]').disabled = currentValInt > max - step10;
+                // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
             }
         }
 
@@ -175,6 +183,7 @@ export function initAdminServerSettingsManager() {
         }
         // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
 
+        // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (4 BOTONES) ▼▼▼ ---
         if (stepAction) {
             const wrapper = button.closest('.component-stepper');
             if (!wrapper || wrapper.classList.contains('disabled-interactive')) return;
@@ -185,17 +194,33 @@ export function initAdminServerSettingsManager() {
             const valueDisplay = wrapper.querySelector('.stepper-value');
             const min = parseInt(wrapper.dataset.min, 10);
             const max = parseInt(wrapper.dataset.max, 10);
-            const step = parseInt(wrapper.dataset.step, 10) || 1;
+            
+            // Leer los pasos de los atributos data
+            const step1 = parseInt(wrapper.dataset.step1 || '1', 10);
+            const step10 = parseInt(wrapper.dataset.step10 || '10', 10);
+
             let currentValue = parseInt(wrapper.dataset.currentValue, 10);
-
             let newValue = currentValue;
+            let stepAmount = 0;
 
-            if (stepAction === 'increment') {
-                newValue = currentValue + step;
-            } else if (stepAction === 'decrement') {
-                newValue = currentValue - step;
+            // Determinar el monto del paso
+            switch (stepAction) {
+                case 'increment-1':
+                    stepAmount = step1;
+                    break;
+                case 'increment-10':
+                    stepAmount = step10;
+                    break;
+                case 'decrement-1':
+                    stepAmount = -step1;
+                    break;
+                case 'decrement-10':
+                    stepAmount = -step10;
+                    break;
             }
 
+            newValue = currentValue + stepAmount;
+            
             if (!isNaN(min) && newValue < min) newValue = min;
             if (!isNaN(max) && newValue > max) newValue = max;
             
@@ -203,12 +228,16 @@ export function initAdminServerSettingsManager() {
 
             if (valueDisplay) valueDisplay.textContent = newValue;
             
-            wrapper.querySelector('[data-step-action="decrement"]').disabled = newValue <= min;
-            wrapper.querySelector('[data-step-action="increment"]').disabled = newValue >= max;
+            // Actualizar el estado deshabilitado de los 4 botones
+            wrapper.querySelector('[data-step-action="decrement-10"]').disabled = newValue < min + step10;
+            wrapper.querySelector('[data-step-action="decrement-1"]').disabled = newValue <= min;
+            wrapper.querySelector('[data-step-action="increment-1"]').disabled = newValue >= max;
+            wrapper.querySelector('[data-step-action="increment-10"]').disabled = newValue > max - step10;
             
             await handleSettingUpdate(wrapper, stepperAction, newValue.toString());
             return;
         }
+        // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
 
         if (action) {
             const domainCard = button.closest('#admin-domain-card');
@@ -352,5 +381,5 @@ export function initAdminServerSettingsManager() {
     if (document.querySelector('.section-content[data-section="admin-server-settings"]')) {
         // fetchAndUpdateUserCount(); // <-- ¡LÍNEA ELIMINADA!
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▲▲▲ ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
 }
