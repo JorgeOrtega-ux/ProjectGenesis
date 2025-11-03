@@ -1,0 +1,2568 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
+
+/* ====================================== */
+/* ============ GENERALES =============== */
+/* ====================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    font-family: "Roboto Condensed", sans-serif;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    background-color: #f5f5fa;
+}
+
+.body-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.0178571429em;
+}
+
+.page-wrapper {
+    width: 100%;
+    height: 100%;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    background-color: #f5f5fa;
+}
+
+.general-content {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #00000020;
+}
+
+.general-content-top {
+    width: 100%;
+    height: auto;
+    border-bottom: 1px solid #00000020;
+    z-index: 999;
+    transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    position: relative;
+}
+
+.general-content-top.shadow {
+    box-shadow: 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+    border: transparent;
+}
+
+.general-content-bottom {
+    position: relative;
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.general-content-scrolleable {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    overflow: auto;
+}
+
+/* ====================================== */
+/* ============== HEADER ================ */
+/* ====================================== */
+
+.header {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    padding: 8px;
+    gap: 8px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.header-left {
+    display: flex;
+    flex: 0 0 auto;
+}
+
+.header-right {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 0 0 auto;
+}
+
+.header-item {
+    display: flex;
+    flex-direction: row;
+    width: auto;
+    height: 100%;
+    gap: 8px;
+}
+
+.header-button {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    background-color: transparent;
+    border-radius: 8px;
+    border: 1px solid #00000020;
+    cursor: pointer;
+    outline: none;
+    user-select: none;
+}
+
+.header-button:hover {
+    background-color: #f5f5fa;
+}
+
+.header-button.header-profile {
+    border-radius: 50px;
+    border: 1px solid #ffffff40;
+    padding: 0;
+    position: relative;
+}
+
+.header-profile::before {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease, border-width 0.2s ease;
+    pointer-events: none;
+    z-index: 2;
+    background-image: none;
+}
+
+.header-profile[data-role="user"]::before {
+    border-color: #cccccc;
+}
+
+.header-profile[data-role="moderator"]::before {
+    border-color: #0000FF;
+}
+
+.header-profile[data-role="administrator"]::before {
+    border-color: #FF0000;
+}
+
+.header-profile[data-role="founder"]::before {
+    border: none;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    background-image: conic-gradient(from 300deg,
+        #D32029 0deg 90deg,
+        #206BD3 90deg 210deg,
+        #28A745 210deg 300deg,
+        #FFC107 300deg 360deg);
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+}
+
+.header-profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    position: relative;
+    z-index: 1;
+    border-radius: 50%;
+}
+
+/* ====================================== */
+/* ============= MODULOS ================ */
+/* ====================================== */
+
+.module-content.module-surface {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    padding: 8px;
+    z-index: 999;
+}
+
+.module-surface .menu-content {
+    width: 280px;
+    height: 100%;
+    background-color: #ffffff;
+    padding: 8px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #00000020;
+}
+
+/* --- ▼▼▼ CLASES ANTIGUAS ELIMINADAS ▼▼▼ --- */
+/* .module-content.module-select ... */
+/* .module-select .menu-content ... */
+/* .module-content.module-trigger-select ... */
+/* .module-trigger-select .menu-content ... */
+/* --- ▲▲▲ CLASES ANTIGUAS ELIMINADAS ▲▲▲ --- */
+
+
+/* ====================================== */
+/* ============= POPOVERS =============== */
+/* ====================================== */
+/* --- ▼▼▼ NUEVO BLOQUE DE CÓDIGO ▼▼▼ --- */
+.popover-module {
+    position: absolute;
+    top: calc(100% + 5px);
+    z-index: 10;
+    display: none;
+}
+
+.popover-module.active {
+    display: block;
+}
+
+.popover-module .menu-content {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #00000020;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Modificador para anclar a la derecha (Menú de Perfil) */
+.popover-module--anchor-right {
+    left: auto;
+    right: 5px;
+    width: 325px; /* Ancho fijo del menú de perfil */
+}
+ .popover-module--anchor-right .menu-content {
+    width: 100%;
+ }
+
+
+/* Modificador para anclar al ancho (Dropdowns de Settings) */
+.popover-module--anchor-width {
+    left: 0;
+    right: 0;
+    width: 100%;
+}
+ .popover-module--anchor-width .menu-content {
+    width: 100%;
+ }
+/* --- ▲▲▲ FIN NUEVO BLOQUE DE CÓDIGO ▲▲▲ --- */
+
+/* ====================================== */
+/* ============= MENUS ================= */
+/* ====================================== */
+
+.menu-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    gap: 4px;
+    user-select: none;
+}
+
+/* ▼▼▼ AÑADE ESTAS NUEVAS CLASES AQUÍ ▼▼▼ */
+.menu-layout {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.menu-layout__top {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.menu-layout__bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Esto añade una línea separadora si el menú inferior tiene enlaces */
+.menu-layout__bottom .menu-list:not(:empty) {
+    padding-top: 8px;
+    border-top: 1px solid #00000020;
+    margin-top: 4px;
+}
+/* ▲▲▲ FIN DE CLASES NUEVAS ▲▲▲ */
+
+.menu-link {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: row;
+    width: 100%;
+    height: 40px;
+    position: relative;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.menu-link-icon {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    align-items: center;
+    width: 45px;
+    height: 100%;
+}
+
+.menu-link-text {
+    display: block;
+    flex: 1 1 auto;
+    text-align: start;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    align-self: center;
+}
+
+.menu-link.active {
+    background-color: #f5f5fa;
+}
+
+.menu-link:hover {
+    background-color: #f5f5fa;
+}
+
+.menu-link-check-icon {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    align-items: center;
+    width: 45px;
+    height: 100%;
+    color: #000;
+}
+
+/* ====================================== */
+/* ============= SECCIONES ============== */
+/* ====================================== */
+
+.main-sections {
+    display: flex;
+    width: 100%;
+    height: inherit;
+}
+
+.section-content {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --- ▼▼▼ CLASE MODIFICADA ▼▼▼ --- */
+.section-content:has(.component-wrapper) {
+    align-items: flex-start;
+}
+/* --- ▲▲▲ CLASE MODIFICADA ▲▲▲ --- */
+
+
+/* ====================================== */
+/* ============ NOT FOUND (404) ========= */
+/* ====================================== */
+
+.not-found-container {
+    text-align: center;
+    padding: 40px 24px;
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+.not-found-badge {
+    display: inline-block;
+    background-color: transparent;
+    padding: 6px 16px;
+    border: 1px solid #00000020;
+    border-radius: 99px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+
+.not-found-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 16px;
+}
+
+.not-found-text {
+    font-size: 18px;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+/* ====================================== */
+/* ========= AUTENTICACION (AUTH) ======= */
+/* ====================================== */
+
+.auth-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 24px;
+    margin: 0 auto;
+}
+
+.auth-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.auth-input-group {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-input-group label {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #6b7280;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    transform-origin: top left;
+}
+
+.auth-input-group input[type="email"],
+.auth-input-group input[type="password"],
+.auth-input-group input[type="text"] {
+    width: 100%;
+    height: 52px;
+    padding: 20px 48px 8px 12px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: transparent;
+    color: #000;
+}
+
+.auth-input-group input:focus~label,
+.auth-input-group input:not(:placeholder-shown)~label {
+    top: 8px;
+    transform: translateY(0);
+    font-size: 12px;
+}
+
+.auth-input-group input:focus,
+.auth-input-group input:not(:placeholder-shown) {
+    border-color: #000;
+}
+
+.auth-input-group input:focus~label,
+.auth-input-group input:not(:placeholder-shown)~label {
+    color: #000;
+}
+
+.auth-toggle-password {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    height: 40px;
+    width: 40px;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    outline: none;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.auth-toggle-password:hover {
+    background-color: #f5f5fa;
+}
+
+.auth-toggle-password:focus-visible {
+    border-radius: 50%;
+}
+
+.auth-input-group input:focus~.auth-toggle-password,
+.auth-input-group input:not(:placeholder-shown)~.auth-toggle-password {
+    color: #000;
+}
+
+/* ▼▼▼ REGLAS CSS ELIMINADAS ▼▼▼ */
+/* .auth-generate-username { ... } */
+/* .auth-input-group input#register-username { ... } */
+/* ▲▲▲ REGLAS CSS ELIMINADAS ▲▲▲ */
+
+
+.auth-button {
+    /* display: block; */ /* <-- LÍNEA ELIMINADA */
+    /* line-height: 52px; */ /* <-- LÍNEA ELIMINADA */
+    display: flex; /* <-- LÍNEA AÑADIDA */
+    align-items: center; /* <-- LÍNEA AÑADIDA */
+    justify-content: center; /* <-- LÍNEA AÑADIDA */
+    height: 52px;
+    padding: 0; 
+    text-align: center; 
+    text-decoration: none; 
+    border: none;
+    border-radius: 8px;
+    background-color: #000;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    flex: 1;
+}
+
+.auth-link {
+    text-align: center;
+    font-size: 14px;
+    color: #000;
+}
+
+.auth-link a {
+    color: #000;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-link a:hover {
+    text-decoration: underline;
+}
+
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- */
+.auth-error-message {
+    padding: 12px;
+    background-color: transparent;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+    border-radius: 8px;
+    font-size: 14px;
+    /* display: none; */ /* <-- LÍNEA ELIMINADA */
+}
+/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
+.auth-input-group input:focus~label,
+.auth-input-group input:not(:placeholder-shown)~label {
+    color: #000;
+}
+
+/* --- ▼▼▼ INICIO DE NUEVA CLASE ▼▼▼ --- */
+.auth-input-group input.auth-input-error {
+    border-color: #c62828; /* Color rojo de error */
+}
+
+/* Mantener el borde rojo incluso when enfocado */
+.auth-input-group input.auth-input-error:focus {
+    border-color: #c62828;
+    box-shadow: none;
+}/* --- ▼▼▼ INICIO DE NUEVA CLASE ▼▼▼ --- */
+.auth-button-spinner {
+    display: block;
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.2); /* Blanco transparente */
+    border-top-color: #ffffff; /* Blanco sólido */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+.auth-form fieldset.auth-step {
+    border: none;
+    padding: 0;
+    margin: 0;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.auth-step:not(.active) {
+    display: none;
+}
+
+.auth-step-indicator {
+    font-size: 14px;
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.auth-verification-text {
+    font-size: 15px;
+    color: #1f2937;
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.auth-step-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+}
+
+.auth-button-back {
+    height: 52px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #000000;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    flex: 0 0 auto;
+    padding: 0 20px;
+}
+
+.auth-button-back:hover {
+    background-color: #f5f5fa;
+}
+
+.logout-spinner {
+    display: block;
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* ====================================== */
+/* ========= COMPONENTES (NUEVO) ======== */
+/* ====================================== */
+
+/* --- ▼▼▼ SECCIÓN MODIFICADA (ANTES SETTINGS) ▼▼▼ --- */
+
+.component-wrapper {
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.component-page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    text-align: center;
+}
+
+.component-page-description {
+    font-size: 16px;
+    color: #6b7280;
+    line-height: 1.6;
+    margin-bottom: 0;
+    text-align: center;
+}
+
+.component-header-card {
+    border: 1px solid #00000020;
+    border-radius: 12px;
+    padding: 24px;
+    background-color: #ffffff;
+}
+
+/* 1. El Bloque Principal (Block) */
+.component-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center; /* Alineación por defecto para filas simples */
+    justify-content: space-between;
+    border: 1px solid #00000020;
+    border-radius: 12px;
+    padding: 24px;
+    background-color: #ffffff;
+}
+
+/* 2. Los Elementos (Elements) */
+.component-card__content {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 16px;
+}
+
+.component-card__icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #00000020;
+    background-color: transparent;
+    color: #000000;
+    flex-shrink: 0;
+}
+
+.component-card__icon .material-symbols-rounded {
+    font-size: 28px;
+}
+
+.component-card__avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 1px solid #ffffff40;
+    padding: 0;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.component-card__avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    position: relative;
+    z-index: 1;
+    border-radius: 50%;
+}
+
+.component-card__avatar::before {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease, border-width 0.2s ease;
+    pointer-events: none;
+    z-index: 2;
+    background-image: none;
+}
+
+.component-card__avatar[data-role="user"]::before {
+    border-color: #cccccc;
+}
+.component-card__avatar[data-role="moderator"]::before {
+    border-color: #0000FF;
+}
+.component-card__avatar[data-role="administrator"]::before {
+    border-color: #FF0000;
+}
+
+/* --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ --- */
+.component-card__avatar[data-role="founder"]::before {
+    border: none;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    background-image: conic-gradient(from 300deg,
+        #D32029 0deg 90deg,
+        #206BD3 90deg 210deg,
+        #28A745 210deg 300deg,
+        #FFC107 300deg 360deg);
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+    /* transform: rotate(300deg); */ /* <-- LÍNEA ELIMINADA */
+}
+/* --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ --- */
+
+.component-card__avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    z-index: 2;
+    cursor: pointer;
+}
+
+.component-card__avatar-overlay .material-symbols-rounded {
+    font-size: 16px;
+}
+
+.component-card__avatar:hover .component-card__avatar-overlay {
+    opacity: 1;
+}
+
+.component-card__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 25px;
+    width: 100%; /* Para que el input de username/email ocupe todo el ancho */
+}
+
+.component-card__title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #000000;
+}
+
+.component-card__description {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.component-card__actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* 3. Los Modificadores (Modifiers) */
+
+/* Modificador para formularios y toggles */
+.component-card--edit-mode {
+    align-items: flex-end;
+    gap: 8px; /* <-- AÑADIDO PARA ESTANDARIZAR */
+}
+
+/* Modificador para selectores (Idioma, Tema) */
+.component-card--column {
+    flex-direction: column;
+    align-items: stretch;
+}
+.component-card--column .component-card__actions {
+    margin-top: 8px; /* Margen superior solo en desktop */
+}
+.component-card--column .component-card__content {
+    flex: unset;
+}
+
+/* Modificador para tarjetas de acción (Adm. Dispositivos, Eliminar) */
+.component-card--action {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px; /* <-- AÑADIDO PARA ESTANDARIZAR */
+}
+.component-card--action .component-card__actions {
+    justify-content: flex-end; /* Alinear a la derecha */
+    /* margin-top: 16px; */ /* <-- ELIMINADO */
+}
+.component-card--action .component-card__content {
+    flex: unset;
+}
+
+
+/* Modificador para tarjetas de peligro */
+.component-card--danger {
+    border-color: #ef9a9a;
+}
+.component-card--danger .component-card__title {
+    color: #c62828;
+}
+
+/* Clase para errores inline */
+.component-card__error {
+    background-color: #fbebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* 4. Clases de componentes que viven DENTRO de las tarjetas */
+
+.component-button {
+    height: 40px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #000000;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    padding: 0 16px;
+    flex-shrink: 0;
+}
+
+.component-button:hover {
+    background-color: #f5f5fa;
+}
+
+.component-button.danger {
+    color: #c62828;
+    border-color: #ef9a9a;
+}
+
+.component-button.danger:hover {
+    background-color: #fbebee;
+    color: #c62828;
+    border-color: #c62828;
+}
+
+.component-text-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: transparent;
+    color: #000;
+    margin-top: 4px;
+}
+
+.component-text-input:focus {
+    border-color: #000;
+}
+
+/* .settings-card-avatar-error -> Eliminada, usar .component-card__error */
+
+.component-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 24px;
+}
+
+.component-toggle-switch .component-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .3s;
+    border-radius: 34px;
+}
+
+.component-toggle-switch .component-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+.component-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.component-toggle-switch input:checked+.component-toggle-slider {
+    background-color: #000;
+}
+
+.component-toggle-switch input:focus+.component-toggle-slider {
+    box-shadow: 0 0 1px #000;
+}
+
+.component-toggle-switch input:checked+.component-toggle-slider:before {
+    transform: translateX(16px);
+}
+
+/* --- ▼▼▼ INICIO DE NUEVOS COMPONENTES ESTANDARIZADOS ▼▼▼ --- */
+
+/* Inputs (copiados de .modal__input-group) */
+.component-input-group {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.component-input-group label {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #6b7280;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    transform-origin: top left;
+}
+
+.component-input-group .component-input {
+    width: 100%;
+    height: 52px;
+    padding: 20px 12px 8px 12px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: transparent;
+    color: #000;
+}
+
+.component-input-group .component-input:focus~label,
+.component-input-group .component-input:not(:placeholder-shown)~label {
+    top: 8px;
+    transform: translateY(0);
+    font-size: 12px;
+}
+.component-input-group .component-input:focus,
+.component-input-group .component-input:not(:placeholder-shown) {
+    border-color: #000;
+}
+.component-input-group .component-input:focus~label,
+.component-input-group .component-input:not(:placeholder-shown)~label {
+    color: #000;
+}
+
+/* Botones de Acción (copiados de .modal__button-small) */
+.component-action-button {
+    height: 40px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    line-height: 1;
+    padding: 0 16px;
+}
+
+.component-action-button--secondary {
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #00000020;
+}
+.component-action-button--secondary:hover {
+    background-color: #f5f5fa;
+}
+
+.component-action-button--primary {
+    background-color: #000;
+    color: #ffffff;
+    border: 1px solid #000;
+}
+.component-action-button--primary:hover {
+    background-color: #333;
+    border-color: #333;
+}
+
+.component-action-button--danger {
+    background-color: #c62828;
+    color: #ffffff;
+    border: 1px solid #c62828;
+}
+.component-action-button--danger:hover {
+    background-color: #b71c1c;
+}
+
+.component-action-button:disabled {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    border-color: #e0e0e0;
+    cursor: not-allowed;
+    opacity: 1; 
+}
+.component-action-button--danger:disabled {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    border-color: #e0e0e0;
+}
+
+/* Caja de Advertencia (copiada de .modal-warning-box) */
+.component-warning-box {
+    background-color: #fbebee; /* Color de peligro */
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+.component-warning-box .material-symbols-rounded {
+    color: #c62828; /* Color de peligro */
+    font-size: 20px;
+    margin-top: 2px;
+}
+.component-warning-box p {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #3f3c33;
+    margin: 0; 
+}
+.component-warning-box p strong {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+/* Lista (copiada de .modal__list) */
+.component-list {
+    list-style-type: disc;
+    margin: 0 0 0 20px; /* Margen izquierdo para bullets */
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+ .component-list li {
+    font-size: 14px;
+    color: #1f2937;
+    line-height: 1.5;
+}
+
+/* --- ▲▲▲ FIN DE NUEVOS COMPONENTES ESTANDARIZADOS ▲▲▲ --- */
+
+/* --- ▲▲▲ FIN DE LA SECCIÓN REFACTORIZADA ▲▲▲ --- */
+
+
+/* ====================================== */
+/* =========== SELECTOR TRIGGER ========= */
+/* ====================================== */
+
+.trigger-select-wrapper {
+    position: relative;
+    width: 265px;
+    height: 40px;
+}
+
+.trigger-selector {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    background-color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    padding: 0 8px 0 12px;
+    user-select: none;
+}
+
+.trigger-selector:hover {
+    background-color: #f5f5fa;
+}
+
+.trigger-select-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 12px;
+}
+
+.trigger-select-icon .material-symbols-rounded {
+    font-size: 20px;
+}
+
+.trigger-select-text {
+    flex-grow: 1;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.trigger-select-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+/* ====================================== */
+/* ============= MODALES ================ */
+/* ====================================== */
+
+/* --- ▼▼▼ BLOQUE DE CÓDIGO MODIFICADO (RENOMBRADO) ▼▼▼ --- */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1999;
+    display: none; /* MODIFICADO - Inicia oculto */
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: modalFadeIn 0.2s ease-out forwards;
+}
+
+/* Clase 'active' añadida para controlar la visibilidad */
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 465px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px #00000040;
+    padding: 24px;
+    position: relative;
+    animation: modalContentScaleIn 0.2s ease-out forwards;
+    transform-origin: center center;
+    display: flex; /* Añadido */
+    flex-direction: column; /* Añadido */
+    gap: 16px; /* Añadido - Espacio entre header, body, footer */
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5fa;
+    color: #000000;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    z-index: 2001;
+    transition: background-color 0.2s;
+}
+
+.modal-close-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.modal-close-btn .material-symbols-rounded {
+    font-size: 20px;
+}
+
+/* Mantener esta regla para los errores */
+.modal-content .auth-error-message {
+    /* display: block; */ /* <-- LÍNEA ELIMINADA */
+    margin-bottom: 0; /* Ajuste */
+}
+
+/* --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- */
+
+
+/* --- ▼▼▼ NUEVO BLOQUE DE CÓDIGO (BEM) ▼▼▼ --- */
+
+.modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Alinear al inicio por si el título es largo */
+}
+
+.modal__title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+    text-align: left;
+    padding-right: 40px; /* Espacio para el botón de cerrar */
+    line-height: 1.3;
+}
+
+.modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal__description {
+    font-size: 14px;
+    color: #000;
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: left;
+    margin: 0;
+}
+
+.modal__description strong {
+    color: #1f2937;
+    font-weight: 600;
+}
+
+/* Inputs (copiados de .auth-input-group) */
+.modal__input-group {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal__input-group label {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #6b7280;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    transform-origin: top left;
+}
+
+.modal__input-group input[type="email"],
+.modal__input-group input[type="password"],
+.modal__input-group input[type="text"] {
+    width: 100%;
+    height: 52px;
+    padding: 20px 12px 8px 12px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: transparent;
+    color: #000;
+}
+
+.modal__input-group input:focus~label,
+.modal__input-group input:not(:placeholder-shown)~label {
+    top: 8px;
+    transform: translateY(0);
+    font-size: 12px;
+}
+.modal__input-group input:focus,
+.modal__input-group input:not(:placeholder-shown) {
+    border-color: #000;
+}
+.modal__input-group input:focus~label,
+.modal__input-group input:not(:placeholder-shown)~label {
+    color: #000;
+}
+
+/* Listas (para modal de eliminar cuenta) */
+.modal__list {
+    list-style-type: disc;
+    margin: 0 0 0 20px; /* Margen izquierdo para bullets */
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+ .modal__list li {
+    font-size: 14px;
+    color: #1f2937;
+    line-height: 1.5;
+}
+
+/* Footer (para botones) */
+.modal__footer {
+    display: flex;
+    flex-direction: row; /* Default: row */
+    gap: 12px;
+    /* margin-top: 8px; */ /* <-- ELIMINADO */
+    /* border-top: 1px solid #00000020; */ /* <-- ELIMINADO */
+    /* padding-top: 16px; */ /* <-- ELIMINADO */
+}
+
+.modal__footer--column {
+    flex-direction: column;
+}
+
+.modal__footer-text {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.modal__footer-text a {
+    color: #000;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+.modal__footer-text a:hover {
+    text-decoration: underline;
+}
+
+
+/* Botones (reemplazan .auth-button y .auth-button-back) */
+.modal__button {
+    height: 52px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    flex: auto; /* Ocupar espacio disponible */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    line-height: 1;
+}
+
+.modal__button--primary {
+    background-color: #000;
+    color: #ffffff;
+    border: 1px solid #000;
+}
+.modal__button--primary:hover {
+    background-color: #333;
+}
+
+.modal__button--secondary {
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #00000020;
+}
+.modal__button--secondary:hover {
+    background-color: #f5f5fa;
+}
+
+.modal__button--danger {
+    background-color: #c62828;
+    color: #ffffff;
+    border: 1px solid #c62828;
+}
+.modal__button--danger:hover {
+    background-color: #b71c1c;
+}
+
+/* --- ▲▲▲ FIN NUEVO BLOQUE DE CÓDIGO (BEM) ▲▲▲ --- */
+
+
+/* ====================================== */
+/* ============= ALERTAS ================ */
+/* ====================================== */
+
+#alert-container {
+    position: absolute; /* MODIFICADO DE fixed A absolute */
+    bottom: 5px; /* MODIFICADO DE 12px */
+    left: 5px; /* MODIFICADO DE 12px */
+    width: 325px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 8px;
+    /* Ya no es 'fixed', así que se posicionará
+       relativo a '.general-content' */
+}
+
+.alert-toast {
+    width: 100%;
+    min-height: 48px;
+    background-color: #333;
+    color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px #00000040;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    animation-duration: 0.3s;
+    animation-timing-function: ease-out;
+    animation-fill-mode: forwards;
+}
+
+.alert-toast.enter {
+    animation-name: alertFadeIn;
+}
+
+.alert-toast.exit {
+    animation-name: alertFadeOut;
+}
+
+.alert-toast-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.alert-toast-icon .material-symbols-rounded {
+    font-size: 20px;
+}
+
+.alert-toast-message {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.alert-toast.alert-type-info {
+    background-color: #333;
+    color: #ffffff;
+}
+
+.alert-toast.alert-type-success {
+    background-color: #333;
+    color: #ffffff;
+}
+
+.alert-toast.alert-type-error {
+    background-color: #333;
+    color: #ffffff;
+}
+
+/* ====================================== */
+/* ============== TOOLTIP =============== */
+/* ====================================== */
+
+.tooltip {
+    position: fixed;
+    z-index: 2001;
+    display: none;
+    min-width: 100px;
+    max-width: 300px;
+    width: auto;
+    padding: 4px 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.0178571429em;
+    text-align: center;
+    color: #fff;
+    background-color: #000;
+    border-radius: 6px;
+    border: 1px solid #ffffff20;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+.tooltip.tooltip--with-shortcut {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+}
+
+.tooltip .tooltip-text {
+    line-height: 1.2;
+}
+
+.tooltip .tooltip-shortcut {
+    opacity: 0.7;
+}
+
+.tooltip .tooltip-shortcut kbd {
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-family: monospace;
+}
+
+.dark-theme .tooltip .tooltip-shortcut kbd {
+    background-color: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.tooltip::before {
+    position: absolute;
+    background-color: #000;
+    border: 1px solid #ffffff20;
+    content: "";
+}
+
+.tooltip[data-popper-placement^="bottom"]::before {
+    top: -5px;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 2px 0 0 0;
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.tooltip[data-popper-placement^="top"]::before {
+    bottom: -5px;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    border-top: none;
+    border-left: none;
+    border-radius: 0 0 2px 0;
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.tooltip[data-popper-placement^="right"]::before {
+    top: 50%;
+    left: -5px;
+    width: 10px;
+    height: 10px;
+    border-top: none;
+    border-right: none;
+    border-radius: 0 0 0 2px;
+    transform: translateY(-50%) rotate(45deg);
+}
+
+.tooltip[data-popper-placement^="left"]::before {
+    top: 50%;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    border-left: none;
+    border-bottom: none;
+    border-radius: 0 2px 0 0;
+    transform: translateY(-50%) rotate(45deg);
+}
+
+/* ====================================== */
+/* ============ UTILIDADES ============== */
+/* ====================================== */
+
+.active {
+    display: flex;
+}
+
+.disabled {
+    display: none;
+}
+
+.disabled-interactive {
+    pointer-events: none !important;
+    opacity: 0.5 !important;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+/* --- ▼▼▼ NUEVAS CLASES DE UTILIDAD ▼▼▼ --- */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.mb-16 {
+    margin-bottom: 16px;
+}
+
+.mb-24 {
+    margin-bottom: 24px;
+}
+/* --- ▲▲▲ FIN NUEVAS CLASES ▲▲▲ --- */
+
+.overflow-y {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    scrollbar-color: #00000080 transparent;
+    scrollbar-width: thin;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ====================================== */
+/* ============ ANIMACIONES ============= */
+/* ====================================== */
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes alertFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes alertFadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modalContentScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+.component-card--edit-mode {
+    align-items: flex-end;
+    gap: 8px;
+}
+/* ====================================== */
+/* = COMPONENTE STEPPER (ADMIN SERVER)  = */
+/* ====================================== */
+
+.component-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    background-color: #ffffff;
+    height: 40px; /* <<< ALTURA DE 40PX SOLICITADA */
+    width: 100%;
+    padding: 0 4px; /* Padding para los botones */
+    box-sizing: border-box;
+    user-select: none;
+    transition: opacity 0.2s, background-color 0.2s;
+}
+
+/* Estado deshabilitado para el JS */
+.component-stepper.disabled-interactive {
+    pointer-events: none;
+    opacity: 0.7;
+    background-color: #f5f5fa;
+}
+
+.stepper-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;  /* Ajustado para 40px de alto */
+    height: 32px; /* Ajustado para 40px de alto */
+    background-color: transparent;
+    border: none;
+    border-radius: 8px; /* Redondeo para el hover */
+    cursor: pointer;
+    color: #000;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+    padding: 0;
+    outline: none;
+}
+
+.stepper-button:hover:not(:disabled) {
+    background-color: #f5f5fa;
+}
+
+.stepper-button:disabled {
+    color: #00000040;
+    cursor: not-allowed;
+    background-color: transparent;
+}
+
+.stepper-value {
+    flex-grow: 1;
+    text-align: center;
+    font-size: 16px; /* Mantenemos el tamaño de fuente */
+    font-weight: 600;
+    color: #000;
+    padding: 0 8px;
+}
+
+/* ====================================== */
+/* =  LISTA DE DOMINIOS (ADMIN SERVER)  = */
+/* ====================================== */
+
+.domain-card-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 8px;
+    width: 100%;
+}
+
+.domain-card-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: transparent;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #000;
+    position: relative;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.domain-card-item .material-symbols-rounded {
+    font-size: 18px;
+    color: #6b7280;
+}
+
+.domain-card-item:hover {
+    border-color: #000;
+}
+.section-content[data-section="admin-users"] .component-wrapper,
+.section-content[data-section="admin-backups"] .component-wrapper {
+    /* --- MODIFICADO --- */
+    padding-top: 82px; 
+    /* --- FIN MODIFICACIÓN --- */
+    /* ¡YA NO SE NECESITA TRANSICIÓN NI CLASE .search-active! */
+}
+.domain-card-delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.8);
+    transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+}
+
+.domain-card-item:hover .domain-card-delete {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+}
+
+.domain-card-delete .material-symbols-rounded {
+    font-size: 16px;
+    color: #fff;
+}
+
+/* ====================================== */
+/* ============= MEDIA QUERIES =========== */
+/* ====================================== */
+
+/* ====================================== */
+/* ============= MEDIA QUERIES =========== */
+/* ====================================== */
+
+@media (max-width: 468px) {
+    .module-content.module-surface {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+    }
+
+    .module-surface .menu-content {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        box-shadow: unset;
+        border: none;
+    }
+
+    .component-wrapper .component-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    #avatar-section.component-card {
+        align-items: center;
+    }
+
+    #avatar-section .component-card__actions {
+        width: 100%;
+    }
+    .component-card__actions {
+        justify-content: flex-end;
+        width: 100%;
+        margin-top: 0 !important;
+    }
+
+    .component-card__actions .component-button {
+        flex: 1;
+    }
+
+    .component-card--column .component-card__actions {
+        justify-content: flex-start;
+    }
+    .trigger-select-wrapper {
+        width: 100%;
+    }
+    #avatar-actions-default,
+    #avatar-actions-custom,
+    #avatar-actions-preview {
+        display: flex;
+        width: 100%;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        padding: 0;
+    }
+
+    .general-content {
+        border-radius: 0;
+    }
+}
+
+@media (max-width: 400px) {
+    #alert-container {
+        left: 5px;
+        right: 5px;
+        width: auto;
+    }
+}
+
+.delete-account-user-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 35px;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 99px;
+    border: 1px solid #00000020;
+    margin: 0 auto;
+    max-width: 100%;
+}
+
+.delete-account-user-avatar {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.delete-account-user-email {
+    font-size: 15px;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.delete-account-bullets {
+    list-style-type: disc;
+    margin: 0 0 16px 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background-color: transparent;
+    border: none;
+}
+
+.delete-account-bullets li {
+    position: static;
+    padding-left: 0;
+    font-size: 14px;
+    color: #1f2937;
+    line-height: 1.5;
+}
+
+.delete-account-bullets li::before {
+    display: none;
+}/* ====================================== */
+/* ============= PAGE LOADER ============= */
+/* ====================================== */
+.page-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: none;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9998;
+    pointer-events: none;
+    min-height: 300px;
+}
+
+.page-loader.active {
+    display: flex;
+}
+
+.page-loader .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* ====================================== */
+/* = MODAL ELIMINAR CUENTA (NUEVOS)     = */
+/* ====================================== */
+
+#delete-account-modal .modal__title {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.modal-warning-box {
+    background-color: #e3f2fd;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.modal-warning-box .material-symbols-rounded {
+    color: #0d6efd;
+    font-size: 20px;
+    margin-top: 2px;
+}
+
+.modal-warning-box p {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #3f3c33;
+    margin: 0; 
+}
+
+.modal-warning-box p strong {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+#delete-account-modal .modal__description {
+    font-size: 14px;
+    color: #333333;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: left;
+    margin: 0;
+}
+
+#delete-account-modal .modal__description strong {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+#delete-account-modal .modal__description a {
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+#delete-account-modal .modal__description a:hover {
+    text-decoration: underline;
+}
+
+#delete-account-modal .modal__list {
+    list-style-type: disc;
+    margin: 0 0 0 20px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+ #delete-account-modal .modal__list li {
+    font-size: 14px;
+    color: #333333;
+    line-height: 1.5;
+}
+
+.modal__footer--small-buttons {
+    justify-content: flex-end;
+}
+
+.modal__button-small {
+    height: 40px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    line-height: 1;
+    padding: 0 16px;
+}
+
+.modal__button-small--secondary {
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #00000020;
+}
+.modal__button-small--secondary:hover {
+    background-color: #f5f5fa;
+}
+
+.modal__button-small--primary {
+    background-color: #000;
+    color: #ffffff;
+    border: 1px solid #000;
+}
+.modal__button-small--primary:hover {
+    background-color: #333;
+    border-color: #333;
+}
+
+.modal__button-small--danger {
+    background-color: #c62828;
+    color: #ffffff;
+    border: 1px solid #c62828;
+}
+.modal__button-small--danger:hover {
+    background-color: #b71c1c;
+}
+
+.modal__button-small:disabled {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    border-color: #e0e0e0;
+    cursor: not-allowed;
+    opacity: 1; 
+}
+.modal__button-small--danger:disabled {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    border-color: #e0e0e0;
+}
+
+/* ====================================== */
+/* =  ESTILOS ADMIN - GESTIONAR USUARIOS = */
+/* ====================================== */
+
+.user-list-container {
+    display: flex;
+    flex-direction: column; /* Apila las tarjetas verticalmente */
+    gap: 16px; /* Espacio entre cada tarjeta de usuario */
+}
+
+.user-card-item {
+    display: flex;
+    align-items: center; /* Alinea verticalmente los elementos dentro de la tarjeta */
+    background-color: #ffffff; /* Color de fondo de tus tarjetas */
+    border: 1px solid #00000020; /* Borde estándar de tus componentes */
+    border-radius: 12px; /* Borde redondeado de tus tarjetas */
+    padding: 16px 20px;
+    gap: 20px; /* Espacio entre el avatar y los detalles */
+    /* --- ▼▼▼ NUEVAS PROPIEDADES ▼▼▼ --- */
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+/* --- ▼▼▼ NUEVA CLASE ▼▼▼ --- */
+.user-card-item:hover {
+    background-color: #f5f5fa;
+}
+
+/* --- ▼▼▼ NUEVA CLASE ▼▼▼ --- */
+.user-card-item.selected {
+    border-color: #000000; /* Azul */
+}
+
+
+/* Clases para el avatar eliminadas (.user-card-avatar-wrapper, .user-card-avatar) */
+/* Ahora usamos .component-card__avatar que ya existe */
+
+.user-card-details {
+    display: flex;
+    flex-wrap: wrap; /* Envuelve los ítems de detalle si no hay espacio */
+    gap: 10px; /* Espacio entre los "pills" de detalle */
+    flex-grow: 1; /* Permite que los detalles ocupen el espacio restante */
+}
+
+.user-card-detail-item {
+    display: flex;
+    align-items: center;
+    background-color: transparent; /* Fondo de tus inputs */
+    border: 1px solid #00000020; /* Borde de tus inputs */
+    border-radius: 50px; /* Borde redondeado de tus inputs/botones */
+    padding: 8px 12px;
+    font-size: 14px; /* Tamaño de fuente de tus botones/inputs */
+    color: #000000; /* Color de texto de tus inputs */
+    gap: 8px; /* Espacio entre label y value */
+}
+
+.user-card-detail-label {
+    font-weight: 600; /* Texto de etiqueta más fuerte */
+    color: #6b7280; /* Color de texto de descripción/labels */
+}
+
+.user-card-detail-value {
+    font-weight: 500;
+}
+
+/* Clase .user-card-actions eliminada */
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .user-card-item {
+        flex-direction: column; /* Apila elementos en pantallas pequeñas */
+        align-items: flex-start;
+        padding: 16px;
+        gap: 16px;
+    }
+    
+    .user-card-item .component-card__avatar {
+        margin: 0 auto; /* Centra el avatar en móvil */
+    }
+    
+    .user-card-details {
+        width: 100%; /* Los detalles ocupan todo el ancho */
+    }
+
+    .user-card-detail-item {
+        width: 100%; /* Cada "pill" ocupa todo el ancho */
+        box-sizing: border-box;
+    }
+}
+/* ====================================== */
+/* =  ESTILOS PAGE TOOLBAR (GENÉRICO)   = */
+/* ====================================== */
+
+
+/* --- ▼▼▼ NUEVO: Contenedor para AMBOS toolbars ▼▼▼ --- */
+.page-toolbar-container {
+    /* Esto es lo que solía ser el .admin-toolbar-floating */
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    max-width: 500px;
+    width: 95%;
+    
+    /* Propiedades del container */
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Espacio entre el toolbar principal y el de búsqueda */
+    box-sizing: border-box;
+}
+/* --- ▼▼▼ NUEVO: Posicionamiento del Popover de Filtro ▼▼▼ */
+.page-toolbar-container .popover-module[data-module="modulePageFilter"] {
+    position: absolute;
+    top: calc(100% + 8px); /* Debajo del primer toolbar */
+    left: 0;
+    right: auto;
+    width: 280px; /* Ancho estándar del menú */
+    z-index: 10;
+}
+
+/* --- ▼▼▼ NUEVO: Botón de filtro activo ▼▼▼ */
+.page-toolbar-button[data-action="toggleModulePageFilter"].active {
+    border-color: #000000;
+    background-color: #000000;
+    color: #ffffff;
+}
+
+/* --- ▼▼▼ NUEVO: Encabezado para menús (reutilizable) ▼▼▼ */
+.menu-header {
+    padding: 8px 12px 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    user-select: none;
+}
+.page-toolbar-floating {
+    display: flex;
+    /* justify-content: space-between; */ /* <-- ELIMINADO */
+    align-items: center;
+    width: 100%;
+    padding: 8px 8px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #00000020;
+    box-sizing: border-box;
+    height: auto;
+    position: relative; /* <-- AÑADIDO */
+}
+
+/* --- ▼▼▼ INICIO DE REGLAS CORREGIDAS PARA VISTAS DE TOOLBAR ▼▼▼ --- */
+
+/* Los contenedores de estado (default/selection) son los hijos directos */
+.toolbar-action-default,
+.toolbar-action-selection {
+    display: flex;
+    justify-content: space-between; /* <-- AÑADIDO */
+    align-items: center; /* <-- AÑADIDO */
+    width: 100%; /* <-- AÑADIDO */
+    gap: 8px; /* <-- AÑADIDO */
+}
+
+.page-toolbar-left,
+.page-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 1. Estilo base para los botones (CORREGIDO A ICON-ONLY) */
+.page-toolbar-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* --- MODIFICADO --- */
+    width: 35px;  /* 50px (altura barra) - 8px*2 (padding) = 34px */
+    height: 35px; /* 50px (altura barra) - 8px*2 (padding) = 34px */
+    /* --- FIN MODIFICACIÓN --- */
+    background-color: transparent;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    /* --- ▼▼▼ LÍNEAS ELIMINADAS (NO MÁS BOTONES DE TEXTO) ▼▼▼ --- */
+    /* width: auto; */
+    /* padding: 0 12px; */
+}
+.page-toolbar-button:not(:disabled):hover {
+    background-color: #f5f5fa;
+}
+.page-toolbar-button:disabled {
+    color: #00000040;
+    cursor: not-allowed;
+    opacity: 0.7; /* <-- MODIFICADO */
+}
+
+/* --- ▼▼▼ REGLA ELIMINADA (YA NO ES NECESARIA) ▼▼▼ --- */
+/* .page-toolbar-button:has(.material-symbols-rounded:only-child) { ... } */
+
+
+/* 2. Estilo para el CONTENEDOR de paginación */
+.page-toolbar-pagination {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 35px;
+    border: 1px solid #00000020;
+    border-radius: 8px; 
+    overflow: hidden;
+}
+
+/* 3. SOBREESCRIBIR los botones DENTRO del contenedor de paginación */
+.page-toolbar-pagination .page-toolbar-button {
+    border: none;
+    border-radius: 0;
+    /* --- MODIFICADO --- */
+    width: 34px; /* Forzar tamaño de icono */
+    /* --- FIN MODIFICACIÓN --- */
+    padding: 0; /* Asegurarse que no tenga padding */
+}
+
+/* 4. Estilo para el TEXTO de paginación */
+.page-toolbar-page-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+    padding: 0 12px;
+    user-select: none;
+    /* --- MODIFICADO --- */
+    height: 34px; /* 50px (altura barra) - 8px*2 (padding) = 34px */
+    /* --- FIN MODIFICACIÓN --- */
+    display: flex;
+    align-items: center;
+}
+
+/* --- ▼▼▼ NUEVO: Estilo para el botón de búsqueda ACTIVO ▼▼▼ --- */
+.page-toolbar-button[data-action="admin-toggle-search"].active {
+    border-color: #000000; /* Azul como en la imagen */
+    background-color: #000000;
+    color: #ffffff;
+}
+
+/* --- ▼▼▼ NUEVO: Estilo para la barra de búsqueda ▼▼▼ --- */
+.page-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    /* --- MODIFICADO --- */
+    height: auto; /* Altura fija de 50px */
+    /* --- FIN MODIFICACIÓN --- */
+    background-color: #ffffff;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    box-sizing: border-box;
+    width: 100%; /* <-- AÑADIDO PARA QUE LLENE EL NUEVO DIV FLOTANTE */
+}
+/* Añadir al final de assets/css/styles.css */
+
+/* Para los toolbars (incluyendo la barra de búsqueda) */
+.page-toolbar-floating.disabled {
+    display: none;
+}
+.page-toolbar-floating.active {
+    display: flex;
+}
+
+/* Para los estados de edición en admin-edit-user.php */
+.component-card__content.disabled,
+.component-card__actions.disabled {
+    display: none;
+}
+.component-card__content.active,
+.component-card__actions.active {
+    display: flex;
+}
+
+/* Para los pasos en los formularios de settings */
+.component-card.disabled {
+    display: none;
+}
+.component-card.active {
+    display: flex;
+}
+
+/* Para los mensajes de error */
+.component-card__error {
+    display: none; /* Oculto por defecto */
+}
+.component-card__error.active {
+    display: block; /* O 'flex' si necesita centrar contenido */
+}
+
+/* Para los pasos de autenticación (auth-manager.js usa 'block') */
+.auth-step.active {
+    display: flex; /* Aseguramos que 'active' signifique 'flex' */
+}
+.auth-error-message {
+    display: none; /* Oculto por defecto */
+}
+.auth-error-message.active {
+    display: block;
+}
+.page-search-bar .material-symbols-rounded {
+    color: #6b7280;
+    font-size: 20px;
+}
+
+.page-search-bar .page-search-input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 500;
+    color: #000;
+}
+
+.page-search-bar .page-search-input::placeholder {
+    color: #6b7280;
+    font-weight: 400;
+}
+
+/* --- ▼▼▼ INICIO DE REGLAS CORREGIDAS PARA VISTAS DE TOOLBAR ▼▼▼ --- */
+
+/* Por defecto, las acciones de selección están ocultas */
+.toolbar-action-selection {
+    display: none;
+}
+/* Por defecto, las acciones default están visibles */
+.toolbar-action-default {
+    display: flex;
+}
+
+
+/* Cuando la selección está activa... */
+.page-toolbar-container.selection-active .toolbar-action-default {
+    display: none; /* Ocultar acciones default */
+}
+.page-toolbar-container.selection-active .toolbar-action-selection {
+    display: flex; /* Mostrar acciones de selección */
+}
+/* --- ▲▲▲ FIN DE REGLAS CORREGIDAS PARA VISTAS DE TOOLBAR ▲▲▲ --- */
+
+
+/* Ajuste para móvil */
+@media (max-width: 700px) {
+    /* Esta regla ahora aplica al nuevo contenedor, lo cual es correcto */
+    .page-toolbar-container {
+        width: calc(100% - 32px);
+    }
+    
+    /* --- ▼▼▼ REGLAS ELIMINADAS (YA NO SON NECESARIAS) ▼▼▼ --- */
+    /* .page-toolbar-button[data-i18n] { ... } */
+    /* .page-toolbar-button[data-i18n] .material-symbols-rounded { ... } */
+    /* .page-toolbar-button[data-action="admin-clear-selection"] { ... } */
+}
