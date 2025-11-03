@@ -1,0 +1,38 @@
+[31-Oct-2025 02:56:58 UTC] PHP Warning:  move_uploaded_file(E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1761879418.png): Failed to open stream: No such file or directory in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 142
+[31-Oct-2025 02:56:58 UTC] PHP Warning:  move_uploaded_file(): Unable to move &quot;C:\xampp\tmp\phpF244.tmp&quot; to &quot;E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1761879418.png&quot; in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 142
+[31-Oct-2025 02:57:15 UTC] PHP Warning:  move_uploaded_file(E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1761879435.png): Failed to open stream: No such file or directory in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 142
+[31-Oct-2025 02:57:15 UTC] PHP Warning:  move_uploaded_file(): Unable to move &quot;C:\xampp\tmp\php35D6.tmp&quot; to &quot;E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1761879435.png&quot; in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 142
+[02-Nov-2025 18:28:11 UTC] PHP Warning:  include(../includes/sections/admin/create-user.php): Failed to open stream: No such file or directory in E:\xampp\htdocs\ProjectGenesis\config\router.php on line 403
+[02-Nov-2025 18:28:12 UTC] PHP Warning:  include(): Failed opening '../includes/sections/admin/create-user.php' for inclusion (include_path='C:\xampp\php\PEAR') in E:\xampp\htdocs\ProjectGenesis\config\router.php on line 403
+[02-Nov-2025 21:55:10 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:55:19 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:55:31 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:55:35 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:55:36 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:56:15 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:56:36 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:57:24 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:57:26 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[02-Nov-2025 21:58:02 UTC] PHP Warning:  Undefined variable $allowRegistrationStatus in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\server-settings.php on line 50
+[03-Nov-2025 16:52:29 UTC] PHP Fatal error:  Uncaught TypeError: logDatabaseError(): Argument #1 ($e) must be of type PDOException, Exception given, called in E:\xampp\htdocs\ProjectGenesis\api\backup_handler.php on line 138 and defined in E:\xampp\htdocs\ProjectGenesis\config\config.php:183
+Stack trace:
+#0 E:\xampp\htdocs\ProjectGenesis\api\backup_handler.php(138): logDatabaseError(Object(Exception), 'backup_handler ...')
+#1 {main}
+  thrown in E:\xampp\htdocs\ProjectGenesis\config\config.php on line 183
+[03-Nov-2025 16:52:50 UTC] PHP Fatal error:  Uncaught TypeError: logDatabaseError(): Argument #1 ($e) must be of type PDOException, Exception given, called in E:\xampp\htdocs\ProjectGenesis\api\backup_handler.php on line 138 and defined in E:\xampp\htdocs\ProjectGenesis\config\config.php:183
+Stack trace:
+#0 E:\xampp\htdocs\ProjectGenesis\api\backup_handler.php(138): logDatabaseError(Object(Exception), 'backup_handler ...')
+#1 {main}
+  thrown in E:\xampp\htdocs\ProjectGenesis\config\config.php on line 183
+[03-Nov-2025 16:57:07 UTC] PHP Fatal error:  Uncaught TypeError: logDatabaseError(): Argument #1 ($e) must be of type PDOException, Exception given, called in E:\xampp\htdocs\ProjectGenesis\api\backup_handler.php on line 138 and defined in E:\xampp\htdocs\ProjectGenesis\config\config.php:183
+Stack trace:
+#0 E:\xampp\htdocs\ProjectGenesis\api\backup_handler.php(138): logDatabaseError(Object(Exception), 'backup_handler ...')
+#1 {main}
+  thrown in E:\xampp\htdocs\ProjectGenesis\config\config.php on line 183
+[03-Nov-2025 18:27:16 UTC] PHP Fatal error:  Cannot redeclare formatBackupSize() (previously declared in E:\xampp\htdocs\ProjectGenesis\config\router.php:71) in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\manage-backups.php on line 50
+[03-Nov-2025 18:27:48 UTC] PHP Fatal error:  Cannot redeclare formatBackupSize() (previously declared in E:\xampp\htdocs\ProjectGenesis\config\router.php:71) in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\manage-backups.php on line 50
+[03-Nov-2025 18:29:29 UTC] PHP Fatal error:  Cannot redeclare formatBackupSize() (previously declared in E:\xampp\htdocs\ProjectGenesis\config\router.php:71) in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\manage-backups.php on line 50
+[03-Nov-2025 18:31:43 UTC] PHP Fatal error:  Cannot redeclare formatBackupSize() (previously declared in E:\xampp\htdocs\ProjectGenesis\config\router.php:71) in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\manage-backups.php on line 50
+[03-Nov-2025 18:58:36 UTC] PHP Warning:  include(E:\xampp\htdocs\ProjectGenesis\includes/main/404.php): Failed to open stream: No such file or directory in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\manage-backups.php on line 18
+[03-Nov-2025 18:58:36 UTC] PHP Warning:  include(): Failed opening 'E:\xampp\htdocs\ProjectGenesis\includes/main/404.php' for inclusion (include_path='C:\xampp\php\PEAR') in E:\xampp\htdocs\ProjectGenesis\includes\sections\admin\manage-backups.php on line 18
+[03-Nov-2025 20:49:42 UTC] PHP Warning:  Undefined variable $userId in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 539
