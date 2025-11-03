@@ -140,9 +140,9 @@ function formatBackupSize($bytes) {
                 </div>
             </div>
         <?php else: ?>
-            <div class="user-list-container" id="backup-list-container">
+            <div class="card-list-container" id="backup-list-container">
                 <?php foreach ($backupFiles as $file): ?>
-                    <div class="user-card-item" 
+                    <div class="card-item" 
                          data-backup-filename="<?php echo htmlspecialchars($file['filename']); ?>"
                          style="gap: 16px; padding: 16px;">
                     
@@ -150,19 +150,19 @@ function formatBackupSize($bytes) {
                             <span class="material-symbols-rounded" style="font-size: 28px;">database</span>
                         </div>
 
-                        <div class="user-card-details">
+                        <div class="card-item-details">
 
-                            <div class="user-card-detail-item user-card-detail-item--full" style="border: none; padding: 0; background: none;">
-                                <span class="user-card-detail-value" style="font-size: 16px; font-weight: 600;"><?php echo htmlspecialchars($file['filename']); ?></span>
+                            <div class="card-detail-item card-detail-item--full" style="border: none; padding: 0; background: none;">
+                                <span class="card-detail-value" style="font-size: 16px; font-weight: 600;"><?php echo htmlspecialchars($file['filename']); ?></span>
                             </div>
 
-                            <div class="user-card-detail-item">
-                                <span class="user-card-detail-label" data-i18n="admin.backups.labelDate"></span>
-                                <span class="user-card-detail-value"><?php echo date('d/m/Y H:i:s', $file['created_at']); ?></span>
+                            <div class="card-detail-item">
+                                <span class="card-detail-label" data-i18n="admin.backups.labelDate"></span>
+                                <span class="card-detail-value"><?php echo date('d/m/Y H:i:s', $file['created_at']); ?></span>
                             </div>
-                            <div class="user-card-detail-item">
-                                <span class="user-card-detail-label" data-i18n="admin.backups.labelSize"></span>
-                                <span class="user-card-detail-value"><?php echo formatBackupSize($file['size']); ?></span>
+                            <div class="card-detail-item">
+                                <span class="card-detail-label" data-i18n="admin.backups.labelSize"></span>
+                                <span class="card-detail-value"><?php echo formatBackupSize($file['size']); ?></span>
                             </div>
                         </div>
 

@@ -353,7 +353,7 @@ try {
             </div>
 
         <?php else: ?>
-            <div class="user-list-container">
+            <div class="card-list-container">
                 <?php foreach ($usersList as $user): ?>
                     <?php
                     $avatarUrl = $user['profile_image_url'] ?? $defaultAvatar;
@@ -361,7 +361,7 @@ try {
                         $avatarUrl = "https://ui-avatars.com/api/?name=" . urlencode($user['username']) . "&size=100&background=e0e0e0&color=ffffff";
                     }
                     ?>
-                    <div class="user-card-item" 
+                    <div class="card-item" 
                          data-user-id="<?php echo $user['id']; ?>"
                          data-user-role="<?php echo htmlspecialchars($user['role']); ?>"
                          data-user-status="<?php echo htmlspecialchars($user['account_status']); ?>"
@@ -372,32 +372,32 @@ try {
                                 class="component-card__avatar-image">
                         </div>
 
-                        <div class="user-card-details">
+                        <div class="card-item-details">
 
-                            <div class="user-card-detail-item user-card-detail-item--full">
-                                <span class="user-card-detail-label" data-i18n="admin.users.labelUsername"></span>
-                                <span class="user-card-detail-value"><?php echo htmlspecialchars($user['username']); ?></span>
+                            <div class="card-detail-item card-detail-item--full">
+                                <span class="card-detail-label" data-i18n="admin.users.labelUsername"></span>
+                                <span class="card-detail-value"><?php echo htmlspecialchars($user['username']); ?></span>
                             </div>
 
-                            <div class="user-card-detail-item">
-                                <span class="user-card-detail-label" data-i18n="admin.users.labelRole"></span>
-                                <span class="user-card-detail-value"><?php echo htmlspecialchars(ucfirst($user['role'])); ?></span>
+                            <div class="card-detail-item">
+                                <span class="card-detail-label" data-i18n="admin.users.labelRole"></span>
+                                <span class="card-detail-value"><?php echo htmlspecialchars(ucfirst($user['role'])); ?></span>
                             </div>
-                            <div class="user-card-detail-item">
-                                <span class="user-card-detail-label" data-i18n="admin.users.labelCreated"></span>
-                                <span class="user-card-detail-value"><?php echo (new DateTime($user['created_at']))->format('d/m/Y'); ?></span>
+                            <div class="card-detail-item">
+                                <span class="card-detail-label" data-i18n="admin.users.labelCreated"></span>
+                                <span class="card-detail-value"><?php echo (new DateTime($user['created_at']))->format('d/m/Y'); ?></span>
                             </div>
 
                             <?php if ($user['email']): ?>
-                                <div class="user-card-detail-item user-card-detail-item--full">
-                                    <span class="user-card-detail-label" data-i18n="admin.users.labelEmail"></span>
-                                    <span class="user-card-detail-value"><?php echo htmlspecialchars($user['email']); ?></span>
+                                <div class="card-detail-item card-detail-item--full">
+                                    <span class="card-detail-label" data-i18n="admin.users.labelEmail"></span>
+                                    <span class="card-detail-value"><?php echo htmlspecialchars($user['email']); ?></span>
                                 </div>
                             <?php endif; ?>
 
-                            <div class="user-card-detail-item">
-                                <span class="user-card-detail-label" data-i18n="admin.users.labelStatus"></span>
-                                <span class="user-card-detail-value"><?php echo htmlspecialchars(ucfirst($user['account_status'])); ?></span>
+                            <div class="card-detail-item">
+                                <span class="card-detail-label" data-i18n="admin.users.labelStatus"></span>
+                                <span class="card-detail-value"><?php echo htmlspecialchars(ucfirst($user['account_status'])); ?></span>
                             </div>
                         </div>
 

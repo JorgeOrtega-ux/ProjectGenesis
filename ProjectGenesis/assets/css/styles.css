@@ -2211,13 +2211,14 @@ body {
 /* =  ESTILOS ADMIN - GESTIONAR USUARIOS = */
 /* ====================================== */
 
-.user-list-container {
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- */
+.card-list-container {
     display: flex;
     flex-direction: column; /* Apila las tarjetas verticalmente */
     gap: 16px; /* Espacio entre cada tarjeta de usuario */
 }
 
-.user-card-item {
+.card-item {
     display: flex;
     align-items: center; /* Alinea verticalmente los elementos dentro de la tarjeta */
     background-color: #ffffff; /* Color de fondo de tus tarjetas */
@@ -2231,12 +2232,12 @@ body {
 }
 
 /* --- ▼▼▼ NUEVA CLASE ▼▼▼ --- */
-.user-card-item:hover {
+.card-item:hover {
     background-color: #f5f5fa;
 }
 
 /* --- ▼▼▼ NUEVA CLASE ▼▼▼ --- */
-.user-card-item.selected {
+.card-item.selected {
     border-color: #000000; /* Azul */
 }
 
@@ -2244,14 +2245,14 @@ body {
 /* Clases para el avatar eliminadas (.user-card-avatar-wrapper, .user-card-avatar) */
 /* Ahora usamos .component-card__avatar que ya existe */
 
-.user-card-details {
+.card-item-details {
     display: flex;
     flex-wrap: wrap; /* Envuelve los ítems de detalle si no hay espacio */
     gap: 10px; /* Espacio entre los "pills" de detalle */
     flex-grow: 1; /* Permite que los detalles ocupen el espacio restante */
 }
 
-.user-card-detail-item {
+.card-detail-item {
     display: flex;
     align-items: center;
     background-color: transparent; /* Fondo de tus inputs */
@@ -2263,38 +2264,41 @@ body {
     gap: 8px; /* Espacio entre label y value */
 }
 
-.user-card-detail-label {
+.card-detail-label {
     font-weight: 600; /* Texto de etiqueta más fuerte */
     color: #6b7280; /* Color de texto de descripción/labels */
 }
 
-.user-card-detail-value {
+.card-detail-value {
     font-weight: 500;
 }
+/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
 
 /* Clase .user-card-actions eliminada */
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .user-card-item {
+    /* --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- */
+    .card-item {
         flex-direction: column; /* Apila elementos en pantallas pequeñas */
         align-items: flex-start;
         padding: 16px;
         gap: 16px;
     }
     
-    .user-card-item .component-card__avatar {
+    .card-item .component-card__avatar {
         margin: 0 auto; /* Centra el avatar en móvil */
     }
     
-    .user-card-details {
+    .card-item-details {
         width: 100%; /* Los detalles ocupan todo el ancho */
     }
 
-    .user-card-detail-item {
+    .card-detail-item {
         width: 100%; /* Cada "pill" ocupa todo el ancho */
         box-sizing: border-box;
     }
+    /* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
 }
 /* ====================================== */
 /* =  ESTILOS PAGE TOOLBAR (GENÉRICO)   = */

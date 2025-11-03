@@ -73,7 +73,9 @@ export function initAdminBackupsManager() {
     }
 
     function clearBackupSelection() {
-        const selectedCard = document.querySelector('.user-card-item.selected[data-backup-filename]');
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        const selectedCard = document.querySelector('.card-item.selected[data-backup-filename]');
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         if (selectedCard) {
             selectedCard.classList.remove('selected');
         }
@@ -151,7 +153,9 @@ export function initAdminBackupsManager() {
      * Añade la tarjeta del nuevo backup a la lista
      */
     function renderNewBackup(backupData) {
-        const listContainer = document.querySelector('.user-list-container');
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        const listContainer = document.querySelector('.card-list-container');
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         if (!listContainer) return;
 
         // Quitar el mensaje de "no hay copias" si existe
@@ -161,7 +165,9 @@ export function initAdminBackupsManager() {
         }
 
         const newCard = document.createElement('div');
-        newCard.className = 'user-card-item';
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        newCard.className = 'card-item';
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         newCard.dataset.backupFilename = backupData.filename;
         newCard.style = "gap: 16px; padding: 16px;"; // Estilos inline como en el PHP
 
@@ -169,17 +175,17 @@ export function initAdminBackupsManager() {
             <div class="component-card__icon" style="width: 50px; height: 50px; flex-shrink: 0; background-color: #f5f5fa;">
                 <span class="material-symbols-rounded" style="font-size: 28px;">database</span>
             </div>
-            <div class="user-card-details">
-                <div class="user-card-detail-item user-card-detail-item--full" style="border: none; padding: 0; background: none;">
-                    <span class="user-card-detail-value" style="font-size: 16px; font-weight: 600;">${backupData.filename}</span>
+            <div class="card-item-details">
+                <div class="card-detail-item card-detail-item--full" style="border: none; padding: 0; background: none;">
+                    <span class="card-detail-value" style="font-size: 16px; font-weight: 600;">${backupData.filename}</span>
                 </div>
-                <div class="user-card-detail-item">
-                    <span class="user-card-detail-label" data-i18n="admin.backups.labelDate"></span>
-                    <span class="user-card-detail-value">${formatBackupDate(backupData.created_at)}</span>
+                <div class="card-detail-item">
+                    <span class="card-detail-label" data-i18n="admin.backups.labelDate"></span>
+                    <span class="card-detail-value">${formatBackupDate(backupData.created_at)}</span>
                 </div>
-                <div class="user-card-detail-item">
-                    <span class="user-card-detail-label" data-i18n="admin.backups.labelSize"></span>
-                    <span class="user-card-detail-value">${formatBackupSize(backupData.size)}</span>
+                <div class="card-detail-item">
+                    <span class="card-detail-label" data-i18n="admin.backups.labelSize"></span>
+                    <span class="card-detail-value">${formatBackupSize(backupData.size)}</span>
                 </div>
             </div>
         `;
@@ -197,12 +203,16 @@ export function initAdminBackupsManager() {
      * Elimina la tarjeta del backup de la lista
      */
     function removeDeletedBackup(filename) {
-        const cardToRemove = document.querySelector(`.user-card-item[data-backup-filename="${filename}"]`);
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        const cardToRemove = document.querySelector(`.card-item[data-backup-filename="${filename}"]`);
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         if (cardToRemove) {
             cardToRemove.remove();
         }
 
-        const listContainer = document.querySelector('.user-list-container');
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        const listContainer = document.querySelector('.card-list-container');
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         if (listContainer && listContainer.children.length === 0) {
             listContainer.innerHTML = `
                 <div class="component-card">
@@ -222,7 +232,7 @@ export function initAdminBackupsManager() {
             if (desc) desc.textContent = getTranslation('admin.backups.noBackupsDesc');
         }
     }
-    // --- ▲▲▲ FIN DE NUEVAS FUNCIONES DE RENDERIZADO ▲▲▲ ---
+    // --- ▲▲▲ FIN DE NUEVAS FUNCIONES DE RENDERIZADO ---
 
 
     /**
@@ -287,7 +297,9 @@ export function initAdminBackupsManager() {
         }
 
         // 2. Manejar selección de item
-        const backupCard = event.target.closest('.user-card-item[data-backup-filename]');
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        const backupCard = event.target.closest('.card-item[data-backup-filename]');
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         if (backupCard) {
             event.preventDefault();
             const filename = backupCard.dataset.backupFilename;
@@ -295,7 +307,9 @@ export function initAdminBackupsManager() {
             if (selectedBackupFile === filename) {
                 clearBackupSelection();
             } else {
-                const oldSelected = document.querySelector('.user-card-item.selected[data-backup-filename]');
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                const oldSelected = document.querySelector('.card-item.selected[data-backup-filename]');
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 if (oldSelected) {
                     oldSelected.classList.remove('selected');
                 }

@@ -51,7 +51,7 @@ export function initAdminManager() {
     }
 
     function clearAdminUserSelection() {
-        const selectedCard = document.querySelector('.user-card-item.selected');
+        const selectedCard = document.querySelector('.card-item.selected');
         if (selectedCard) {
             selectedCard.classList.remove('selected');
         }
@@ -89,7 +89,7 @@ export function initAdminManager() {
     }
 
     function setListLoadingState(isLoading) {
-        const listContainer = document.querySelector('.user-list-container');
+        const listContainer = document.querySelector('.card-list-container');
         if (listContainer) {
             listContainer.style.opacity = isLoading ? '0.5' : '1';
             listContainer.style.pointerEvents = isLoading ? 'none' : 'auto';
@@ -119,7 +119,7 @@ export function initAdminManager() {
     }
 
     function renderUserList(users, totalUsers) {
-        const listContainer = document.querySelector('.user-list-container');
+        const listContainer = document.querySelector('.card-list-container');
         if (!listContainer) return;
 
         if (totalUsers === 0 || users.length === 0) {
@@ -147,7 +147,7 @@ export function initAdminManager() {
         let userListHtml = '';
         users.forEach(user => {
             userListHtml += `
-                <div class="user-card-item" 
+                <div class="card-item" 
                      data-user-id="${user.id}"
                      data-user-role="${user.role}"
                      data-user-status="${user.status}">
@@ -156,27 +156,27 @@ export function initAdminManager() {
                         <img src="${user.avatarUrl}" alt="${user.username}" class="component-card__avatar-image">
                     </div>
 
-                    <div class="user-card-details">
-                        <div class="user-card-detail-item user-card-detail-item--full">
-                            <span class="user-card-detail-label" data-i18n="admin.users.labelUsername"></span>
-                            <span class="user-card-detail-value">${user.username}</span>
+                    <div class="card-item-details">
+                        <div class="card-detail-item card-detail-item--full">
+                            <span class="card-detail-label" data-i18n="admin.users.labelUsername"></span>
+                            <span class="card-detail-value">${user.username}</span>
                         </div>
-                        <div class="user-card-detail-item">
-                            <span class="user-card-detail-label" data-i18n="admin.users.labelRole"></span>
-                            <span class="user-card-detail-value">${user.roleDisplay}</span>
+                        <div class="card-detail-item">
+                            <span class="card-detail-label" data-i18n="admin.users.labelRole"></span>
+                            <span class="card-detail-value">${user.roleDisplay}</span>
                         </div>
-                        <div class="user-card-detail-item">
-                            <span class="user-card-detail-label" data-i18n="admin.users.labelCreated"></span>
-                            <span class="user-card-detail-value">${user.createdAt}</span>
+                        <div class="card-detail-item">
+                            <span class="card-detail-label" data-i18n="admin.users.labelCreated"></span>
+                            <span class="card-detail-value">${user.createdAt}</span>
                         </div>
                         ${user.email ? `
-                        <div class="user-card-detail-item user-card-detail-item--full">
-                            <span class="user-card-detail-label" data-i18n="admin.users.labelEmail"></span>
-                            <span class="user-card-detail-value">${user.email}</span>
+                        <div class="card-detail-item card-detail-item--full">
+                            <span class="card-detail-label" data-i18n="admin.users.labelEmail"></span>
+                            <span class="card-detail-value">${user.email}</span>
                         </div>` : ''}
-                        <div class="user-card-detail-item">
-                            <span class="user-card-detail-label" data-i18n="admin.users.labelStatus"></span>
-                            <span class="user-card-detail-value">${user.statusDisplay}</span>
+                        <div class="card-detail-item">
+                            <span class="card-detail-label" data-i18n="admin.users.labelStatus"></span>
+                            <span class="card-detail-value">${user.statusDisplay}</span>
                         </div>
                     </div>
                 </div>`;
@@ -208,7 +208,7 @@ export function initAdminManager() {
             updatePaginationControls(result.currentPage, result.totalPages, result.totalUsers);
         } else {
             showAlert(getTranslation(result.message || 'js.auth.errorUnknown'), 'error');
-            const listContainer = document.querySelector('.user-list-container');
+            const listContainer = document.querySelector('.card-list-container');
             if (listContainer) {
                 listContainer.innerHTML = `<div class="component-card"><p>${getTranslation('js.api.errorServer')}</p></div>`;
             }
@@ -243,7 +243,7 @@ export function initAdminManager() {
             deactivateAllModules();
 
             
-            const selectedCard = document.querySelector('.user-card-item.selected');
+            const selectedCard = document.querySelector('.card-item.selected');
             
             if (actionType === 'admin-set-role') {
                 selectedAdminUserRole = newValue;
@@ -251,11 +251,11 @@ export function initAdminManager() {
                     selectedCard.dataset.userRole = newValue;
                     
                     const newRoleText = buttonEl.querySelector('.menu-link-text span').textContent;
-                    const labels = selectedCard.querySelectorAll('.user-card-detail-label');
+                    const labels = selectedCard.querySelectorAll('.card-detail-label');
                     labels.forEach(label => {
                         if (label.dataset.i18n === 'admin.users.labelRole') { 
                             const valueEl = label.nextElementSibling;
-                            if (valueEl && valueEl.classList.contains('user-card-detail-value')) {
+                            if (valueEl && valueEl.classList.contains('card-detail-value')) {
                                 valueEl.textContent = newRoleText;
                             }
                         }
@@ -270,11 +270,11 @@ export function initAdminManager() {
                     selectedCard.dataset.userStatus = newValue;
                     
                     const newStatusText = buttonEl.querySelector('.menu-link-text span').textContent;
-                    const labels = selectedCard.querySelectorAll('.user-card-detail-label');
+                    const labels = selectedCard.querySelectorAll('.card-detail-label');
                     labels.forEach(label => {
                         if (label.dataset.i18n === 'admin.users.labelStatus') { 
                             const valueEl = label.nextElementSibling;
-                            if (valueEl && valueEl.classList.contains('user-card-detail-value')) {
+                            if (valueEl && valueEl.classList.contains('card-detail-value')) {
                                 valueEl.textContent = newStatusText;
                             }
                         }
@@ -317,14 +317,14 @@ export function initAdminManager() {
 
     document.body.addEventListener('click', async function (event) {
         
-        const userCard = event.target.closest('.user-card-item[data-user-id]');
+        const userCard = event.target.closest('.card-item[data-user-id]');
         if (userCard) {
             event.preventDefault();
             const userId = userCard.dataset.userId;
             if (selectedAdminUserId === userId) {
                 clearAdminUserSelection();
             } else {
-                const oldSelected = document.querySelector('.user-card-item.selected');
+                const oldSelected = document.querySelector('.card-item.selected');
                 if (oldSelected) {
                     oldSelected.classList.remove('selected');
                 }
@@ -406,8 +406,9 @@ export function initAdminManager() {
                 
                 button.blur();
             }
-            return;
+            return; 
         }
+
 
         if (action === 'admin-page-next' || action === 'admin-page-prev') {
             event.preventDefault();
@@ -674,11 +675,11 @@ export function initAdminManager() {
     document.addEventListener('click', function (event) {
         const clickedOnModule = event.target.closest('[data-module].active');
         const clickedOnButton = event.target.closest('[data-action]');
-        const clickedOnUserCard = event.target.closest('.user-card-item[data-user-id]');
+        const clickedOnUserCard = event.target.closest('.card-item[data-user-id]');
         
         // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
         // Prevenir que se deseleccione el usuario si se hace clic en OTRA tarjeta (como un backup)
-        const clickedOnAnyCard = event.target.closest('.user-card-item');
+        const clickedOnAnyCard = event.target.closest('.card-item');
 
         // Solo limpiar si no se hizo clic en un módulo, un botón, o CUALQUIER tarjeta
         if (!clickedOnModule && !clickedOnButton && !clickedOnAnyCard) {
@@ -687,7 +688,7 @@ export function initAdminManager() {
         // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
     });
 
-    const userListContainer = document.querySelector('.user-list-container');
+    const userListContainer = document.querySelector('.card-list-container');
     if (userListContainer) {
         applyTranslations(userListContainer);
     }
