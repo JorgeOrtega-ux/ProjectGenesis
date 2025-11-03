@@ -516,7 +516,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             exit;
                         }
 
-                        // --- BLOQUE DE USUARIOS CONCURRENTES ELIMINADO ---
+                        // --- ▼▼▼ INICIO DE MODIFICACIÓN (RESTAURACIÓN DE LÓGICA DE CONTEO) ▼▼▼ ---
+                        
+                        // 1. Obtener el límite
+                        $maxUsers = (int)($GLOBALS['site_settings']['max_concurrent_users'] ?? 500); 
+
+                        // 2. Obtener el conteo actual del servidor Python
+                        $currentUserCount = 0;
+                        try {
+                            $context = stream_context_create(['http' => ['timeout' => 2.0]]);
+                            // El servidor de conteo está ahora en 8765
+                            $jsonResponse = file_get_contents('http://127.0.0.1:8766/count', false, $context); 
+                            
+                            if ($jsonResponse === false) {
+                                // Fallar si no se puede verificar el conteo (más seguro)
+                                logDatabaseError(new Exception("No se pudo contactar al servidor de conteo en http://127.0.0.1:8766/count"), 'auth_handler - concurrent_users_check');
+                                throw new Exception('js.api.errorServer'); 
+                            }
+
+                            $data = json_decode($jsonResponse, true);
+                            if (isset($data['active_users'])) {
+                                $currentUserCount = (int)$data['active_users'];
+                            }
+                        } catch (Exception $e) {
+                            // Captura tanto el error de file_get_contents como el de la BD
+                            logDatabaseError($e, 'auth_handler - concurrent_users_check');
+                            $response['message'] = 'js.api.errorServer'; 
+                            echo json_encode($response);
+                            exit;
+                        }
+
+                        // 3. Comparar y actuar
+                        if ($currentUserCount >= $maxUsers) {
+                            // Servidor lleno. Denegar inicio de sesión.
+                            $response['success'] = false;
+                            $response['redirect_to_status'] = 'server_full';
+                            $response['message'] = 'js.auth.errorServerFull';
+                            echo json_encode($response);
+                            exit;
+                        }
+                        
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN (RESTAURACIÓN DE LÓGICA DE CONTEO) ▲▲▲ ---
 
                         clearFailedAttempts($pdo, $email);
 
@@ -875,4 +915,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 echo json_encode($response);
 exit;
-?>
