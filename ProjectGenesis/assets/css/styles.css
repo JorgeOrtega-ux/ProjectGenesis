@@ -274,7 +274,7 @@ body {
 /* --- ▲▲▲ FIN NUEVO BLOQUE DE CÓDIGO ▲▲▲ --- */
 
 /* ====================================== */
-/* ============== MENUS ================= */
+/* ============= MENUS ================= */
 /* ====================================== */
 
 .menu-list {
@@ -285,6 +285,34 @@ body {
     gap: 4px;
     user-select: none;
 }
+
+/* ▼▼▼ AÑADE ESTAS NUEVAS CLASES AQUÍ ▼▼▼ */
+.menu-layout {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.menu-layout__top {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.menu-layout__bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Esto añade una línea separadora si el menú inferior tiene enlaces */
+.menu-layout__bottom .menu-list:not(:empty) {
+    padding-top: 8px;
+    border-top: 1px solid #00000020;
+    margin-top: 4px;
+}
+/* ▲▲▲ FIN DE CLASES NUEVAS ▲▲▲ */
 
 .menu-link {
     display: flex;
