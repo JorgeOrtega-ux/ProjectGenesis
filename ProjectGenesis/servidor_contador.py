@@ -49,8 +49,10 @@ async def run_ws_server():
     """
     Inicia y mantiene vivo el servidor WebSocket.
     """
-    logging.info(f"[WS] Iniciando servidor WebSocket en ws://127.0.0.1:8765")
-    async with websockets.serve(ws_handler, "127.0.0.1", 8765):
+    logging.info(f"[WS] Iniciando servidor WebSocket en ws://0.0.0.0:8765")
+    # --- ▼▼▼ CORRECCIÓN ▼▼▼ ---
+    async with websockets.serve(ws_handler, "0.0.0.0", 8765):
+    # --- ▲▲▲ FIN CORRECCIÓN ▲▲▲ ---
         await asyncio.Event().wait()  # Correr indefinidamente
 
 async def run_http_server():
@@ -61,8 +63,10 @@ async def run_http_server():
     http_app.router.add_get("/count", http_handler)
     http_runner = web.AppRunner(http_app)
     await http_runner.setup()
-    http_site = web.TCPSite(http_runner, "127.0.0.1", 8766)
-    logging.info(f"[HTTP] Iniciando servidor HTTP en http://127.0.0.1:8766")
+    # --- ▼▼▼ CORRECCIÓN ▼▼▼ ---
+    http_site = web.TCPSite(http_runner, "0.0.0.0", 8766)
+    # --- ▲▲▲ FIN CORRECCIÓN ▲▲▲ ---
+    logging.info(f"[HTTP] Iniciando servidor HTTP en http://0.0.0.0:8766")
     await http_site.start()
     await asyncio.Event().wait() # Correr indefinidamente
 

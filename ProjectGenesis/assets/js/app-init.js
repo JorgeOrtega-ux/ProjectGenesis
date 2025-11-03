@@ -12,7 +12,7 @@ import { initAdminServerSettingsManager } from './modules/admin-server-settings-
 // Se eliminan las importaciones de admin-backups-manager y admin-restore-backup-manager
 // Se añade la importación del nuevo módulo combinado
 import { initAdminBackupModule } from './modules/admin-backup-module.js'; 
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager } from './services/i18n-manager.js'; 
 import { initTooltipManager } from './services/tooltip-manager.js'; 
@@ -22,7 +22,7 @@ const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
 window.lastKnownUserCount = null; // Almacén global para el conteo
-// --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▲▲▲ ---
+// --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
 
 function applyTheme(theme) {
     if (theme === 'light') {
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Se eliminan las llamadas a initAdminBackupsManager() y initAdminRestoreBackupManager()
     // Se añade la llamada al nuevo módulo combinado
     initAdminBackupModule();
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
     // El Router se inicializa al final
     initRouter(); 
@@ -91,15 +91,30 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (window.isUserLoggedIn) {
     // --- ▲▲▲ ¡FIN DE CAMBIO! ▲▲▲ ---
         let ws;
-        const wsUrl = "ws://127.0.0.1:8765";
+        
+        // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
+        
+        // 1. Usar el host de la ventana (ej: 192.168.1.100 o localhost)
+        //    Si no existe (poco probable), usar '127.0.0.1' como fallback.
+        const wsHost = window.wsHost || '127.0.0.1';
+        
+        // 2. Construir la URL del WebSocket dinámicamente
+        const wsUrl = `ws://${wsHost}:8765`;
+        
+        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
+
 
         function connectWebSocket() {
             try {
+                // --- ▼▼▼ CORRECCIÓN ▼▼▼ ---
+                // Usar la URL dinámica en lugar de la fija
                 ws = new WebSocket(wsUrl);
+                // --- ▲▲▲ FIN CORRECCIÓN ▲▲▲ ---
+                
                 window.ws = ws; // Hacemos 'ws' global por si se necesita
 
                 ws.onopen = () => {
-                    console.log("[WS_Counter] Conectado al servidor de conteo.");
+                    console.log("[WS_Counter] Conectado al servidor de conteo en:", wsUrl);
                 };
 
                 // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---

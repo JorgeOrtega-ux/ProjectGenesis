@@ -47,6 +47,11 @@
             window.projectBasePath = '<?php echo $basePath; ?>';
             window.csrfToken = '<?php echo $_SESSION['csrf_token'] ?? ''; ?>';
             
+            // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+            // Esta es la IP o dominio (ej. 192.168.1.100) que el navegador usó para cargar la página.
+            window.wsHost = '<?php echo $_SERVER['HTTP_HOST']; ?>';
+            // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+
             // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
             // Esta variable SÍ nos dice si el usuario está logueado
             window.isUserLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
