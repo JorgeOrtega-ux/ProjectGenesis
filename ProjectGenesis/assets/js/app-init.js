@@ -124,19 +124,38 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 display.setAttribute('data-i18n', ''); 
                             }
                         } 
-                        // --- ¡NUEVO! MANEJAR LA EXPULSIÓN FORZADA ---
+                        // --- ▼▼▼ ¡INICIO DE LA LÓGICA MODIFICADA! ▼▼▼ ---
+                        // Lógica para 'force_logout' (Expulsión por otra sesión O reactivación)
                         else if (data.type === 'force_logout') {
-                            console.log("[WS] Recibida orden de desconexión forzada desde otra sesión.");
+                            console.log("[WS] Recibida orden de desconexión forzada (logout o reactivación).");
                             
-                            // (Necesitarás añadir 'js.logout.forced' a tus archivos JSON)
-                            window.showAlert(getTranslation('js.logout.forced'), 'info', 5000);
+                            // (Añade 'js.logout.forced' a tus JSONs: "Tu sesión ha caducado, por favor inicia sesión de nuevo.")
+                            window.showAlert(getTranslation('js.logout.forced') || 'Tu sesión ha caducado, por favor inicia sesión de nuevo.', 'info', 5000);
                             
-                            // Forzar un refresco. El bootstrapper.php (PHP)
-                            // detectará el auth_token inválido y redirigirá al login.
+                            // Forzar un refresco.
+                            // 1. Si fue un logout, bootstrapper verá el token inválido -> /login
+                            // 2. Si fue una reactivación, bootstrapper verá el token inválido -> /login
                             setTimeout(() => {
                                 window.location.reload();
                             }, 3000); // 3 seg para que el usuario lea el aviso
                         }
+                        // Lógica para 'account_status_update' (SÓLO Suspensión o Eliminación)
+                        else if (data.type === 'account_status_update') {
+                            const newStatus = data.status;
+                            
+                            if (newStatus === 'suspended' || newStatus === 'deleted') {
+                                const msgKey = (newStatus === 'suspended') ? 'js.auth.errorAccountSuspended' : 'js.auth.errorAccountDeleted';
+                                console.log(`[WS] Recibida orden de estado: ${newStatus}`);
+                                window.showAlert(getTranslation(msgKey), 'error', 5000);
+
+                                // Redirigir a la página de estado
+                                setTimeout(() => {
+                                    window.location.href = `${window.projectBasePath}/account-status/${newStatus}`;
+                                }, 3000);
+                            }
+                            // Ya no hay 'else if (newStatus === 'active')'
+                        }
+                        // --- ▲▲▲ ¡FIN DE LA LÓGICA MODIFICADA! ▲▲▲ ---
                     } catch (e) {
                         console.error("[WS] Error al parsear mensaje:", e);
                     }

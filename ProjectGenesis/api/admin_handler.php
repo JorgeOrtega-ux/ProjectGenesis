@@ -346,7 +346,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // --- FIN DE 'create-user' ---
         
     // --- Lógica existente para 'set-role' y 'set-status' ---
-    } elseif ($action === 'set-role' || $action === 'set-status') {
+    } elseif ($action === 'set-role') {
 
         $targetUserId = $_POST['target_user_id'] ?? 0;
         $newValue = $_POST['new_value'] ?? '';
@@ -383,45 +383,141 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             // === ▲▲▲ FIN LÓGICA DE PERMISOS ▲▲▲ ===
             
-            if ($action === 'set-role') {
-                $allowedRoles = ['user', 'moderator', 'administrator', 'founder'];
-                if (!in_array($newValue, $allowedRoles)) {
-                    throw new Exception('js.api.invalidAction');
-                }
-                if ($newValue === 'founder' && $targetRole !== 'founder') {
-                    $response['message'] = 'js.admin.errorFounderAssign';
-                    echo json_encode($response);
-                    exit;
-                }
-                if ($adminRole === 'administrator' && $newValue === 'administrator') {
-                    $response['message'] = 'js.admin.errorInvalidRole';
-                    echo json_encode($response);
-                    exit;
-                }
-                $stmt_update = $pdo->prepare("UPDATE users SET role = ? WHERE id = ?");
-                $stmt_update->execute([$newValue, $targetUserId]);
-                $response['success'] = true;
-                $response['message'] = 'js.admin.successRole';
-
-            } elseif ($action === 'set-status') {
-                $allowedStatus = ['active', 'suspended', 'deleted'];
-                if (!in_array($newValue, $allowedStatus)) {
-                    throw new Exception('js.api.invalidAction');
-                }
-                $stmt_update = $pdo->prepare("UPDATE users SET account_status = ? WHERE id = ?");
-                $stmt_update->execute([$newValue, $targetUserId]);
-                $response['success'] = true;
-                $response['message'] = 'js.admin.successStatus';
+            $allowedRoles = ['user', 'moderator', 'administrator', 'founder'];
+            if (!in_array($newValue, $allowedRoles)) {
+                throw new Exception('js.api.invalidAction');
             }
+            if ($newValue === 'founder' && $targetRole !== 'founder') {
+                $response['message'] = 'js.admin.errorFounderAssign';
+                echo json_encode($response);
+                exit;
+            }
+            if ($adminRole === 'administrator' && $newValue === 'administrator') {
+                $response['message'] = 'js.admin.errorInvalidRole';
+                echo json_encode($response);
+                exit;
+            }
+            $stmt_update = $pdo->prepare("UPDATE users SET role = ? WHERE id = ?");
+            $stmt_update->execute([$newValue, $targetUserId]);
+            $response['success'] = true;
+            $response['message'] = 'js.admin.successRole';
 
         } catch (PDOException $e) {
-            logDatabaseError($e, 'admin_handler');
+            logDatabaseError($e, 'admin_handler - set-role');
+            $response['message'] = 'js.api.errorDatabase';
+        } catch (Exception $e) {
+            $response['message'] = $e->getMessage();
+        }
+    
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (set-status) ▼▼▼ ---
+    } elseif ($action === 'set-status') {
+
+        $targetUserId = $_POST['target_user_id'] ?? 0;
+        $newValue = $_POST['new_value'] ?? '';
+
+        if (empty($targetUserId) || $newValue === '') {
+            $response['message'] = 'js.auth.errorCompleteFields';
+            echo json_encode($response);
+            exit;
+        }
+
+        if ($targetUserId == $adminUserId) {
+            $response['message'] = 'js.admin.errorSelf';
+            echo json_encode($response);
+            exit;
+        }
+
+        try {
+            $stmt_target = $pdo->prepare("SELECT role, account_status FROM users WHERE id = ?");
+            $stmt_target->execute([$targetUserId]);
+            $targetUser = $stmt_target->fetch();
+
+            if (!$targetUser) {
+                $response['message'] = 'js.auth.errorUserNotFound';
+                echo json_encode($response);
+                exit;
+            }
+            $targetRole = $targetUser['role'];
+
+            if (!canAdminModifyTarget($adminRole, $targetRole)) {
+                 $response['message'] = ($targetRole === 'founder') ? 'js.admin.errorFounderTarget' : 'js.admin.errorAdminTarget';
+                 echo json_encode($response);
+                 exit;
+            }
+            
+            $allowedStatus = ['active', 'suspended', 'deleted'];
+            if (!in_array($newValue, $allowedStatus)) {
+                throw new Exception('js.api.invalidAction');
+            }
+            
+            // 1. Actualizar la base de datos
+            $stmt_update = $pdo->prepare("UPDATE users SET account_status = ? WHERE id = ?");
+            $stmt_update->execute([$newValue, $targetUserId]);
+
+            // 2. Notificar al servidor WebSocket (Fire and Forget)
+            try {
+                
+                $curl_endpoint = '';
+                $curl_payload = [];
+
+                if ($newValue === 'suspended' || $newValue === 'deleted') {
+                    // --- CASO 1: SUSPENDER O ELIMINAR ---
+                    // Notificar al cliente para que vea la página de estado.
+                    $curl_endpoint = 'http://127.0.0.1:8766/update-status';
+                    $curl_payload = json_encode([
+                        'user_id' => (int)$targetUserId,
+                        'status'  => $newValue
+                    ]);
+
+                } else {
+                    // --- CASO 2: REACTIVAR ---
+                    // Forzar un logout de todas las sesiones de ese usuario.
+                    
+                    // A. Generar nuevo auth_token en la BD
+                    $newAuthToken = bin2hex(random_bytes(32));
+                    $stmt_token = $pdo->prepare("UPDATE users SET auth_token = ? WHERE id = ?");
+                    $stmt_token->execute([$newAuthToken, $targetUserId]);
+                    
+                    // B. Enviar señal de 'kick' a Python
+                    $curl_endpoint = 'http://127.0.0.1:8766/kick';
+                    $curl_payload = json_encode([
+                        'user_id' => (int)$targetUserId,
+                        'exclude_session_id' => 'admin_kick_reactivate' // ID falso para no excluir a nadie
+                    ]);
+                }
+
+                // Enviar la petición a Python
+                $ch = curl_init($curl_endpoint);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $curl_payload);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/json',
+                    'Content-Length: ' . strlen($curl_payload)
+                ]);
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); // 500ms
+                curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        // 500ms
+
+                curl_exec($ch); // No nos importa la respuesta, solo enviar
+                curl_close($ch);
+                
+            } catch (Exception $e) {
+                // Si el servidor WS falla, no detener la acción del admin.
+                logDatabaseError($e, 'admin_handler - set-status (ws_notify_fail)');
+            }
+
+            // 3. Responder al admin
+            $response['success'] = true;
+            $response['message'] = 'js.admin.successStatus';
+
+        } catch (PDOException $e) {
+            logDatabaseError($e, 'admin_handler - set-status');
             $response['message'] = 'js.api.errorDatabase';
         } catch (Exception $e) {
             $response['message'] = $e->getMessage();
         }
     }
-    // --- Fin de la lógica 'set-role' / 'set-status' ---
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN (set-status) ▲▲▲ ---
     
     // === ▼▼▼ INICIO DE NUEVAS ACCIONES DE EDICIÓN DE ADMIN ▼▼▼ ===
 

@@ -157,6 +157,53 @@ async def http_handler_kick(request):
     except Exception as e:
         logging.error(f"[HTTP-KICK] Error al procesar expulsión: {e}")
         return web.json_response({"status": "error", "message": str(e)}, status=400)
+
+# --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! ▼▼▼ ---
+async def http_handler_update_status(request):
+    """
+    Recibe una orden de actualización de estado desde PHP (endpoint interno).
+    Espera un JSON: {"user_id": 123, "status": "suspended"}
+    """
+    if request.method != 'POST':
+        return web.Response(status=405) # Solo permitir POST
+
+    try:
+        data = await request.json()
+        user_id = int(data.get("user_id"))
+        new_status = data.get("status") # "suspended", "deleted"
+
+        if not user_id or not new_status:
+            raise ValueError("Faltan user_id o status")
+            
+        logging.info(f"[HTTP-STATUS] Recibida orden de estado para user_id={user_id}, nuevo estado={new_status}")
+
+        # Buscar las conexiones de este usuario
+        websockets_to_notify = CLIENTS_BY_USER_ID.get(user_id)
+        if not websockets_to_notify:
+            logging.info(f"[HTTP-STATUS] No se encontraron conexiones activas para user_id={user_id}.")
+            return web.json_response({"status": "ok", "notified": 0})
+        
+        # Preparar el mensaje de actualización
+        status_message = json.dumps({"type": "account_status_update", "status": new_status})
+        tasks = []
+        notified_count = 0
+        
+        # Iterar sobre una copia del set
+        for ws in list(websockets_to_notify):
+            logging.info(f"[HTTP-STATUS] Enviando actualización a una sesión de user_id={user_id}")
+            tasks.append(ws.send(status_message))
+            notified_count += 1
+
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+        return web.json_response({"status": "ok", "notified": notified_count})
+
+    except Exception as e:
+        logging.error(f"[HTTP-STATUS] Error al procesar actualización de estado: {e}")
+        return web.json_response({"status": "error", "message": str(e)}, status=400)
+# --- ▲▲▲ ¡FIN DE NUEVA FUNCIÓN! ▲▲▲ ---
+
 # --- ▲▲▲ FIN DE MODIFICACIÓN: MANEJADOR DE HTTP ▼▼▼ ---
 
 
@@ -174,6 +221,9 @@ async def run_http_server():
     http_app.router.add_get("/count", http_handler_count)
     # Endpoint interno para la expulsión (solo POST)
     http_app.router.add_post("/kick", http_handler_kick) 
+    # --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
+    http_app.router.add_post("/update-status", http_handler_update_status) 
+    # --- ▲▲▲ ¡FIN DE NUEVA LÍNEA! ▲▲▲ ---
     
     http_runner = web.AppRunner(http_app)
     await http_runner.setup()
