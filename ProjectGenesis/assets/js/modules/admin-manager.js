@@ -59,6 +59,9 @@ export function initAdminManager() {
         selectedAdminUserId = null;
         selectedAdminUserRole = null;
         selectedAdminUserStatus = null;
+        
+        // Al limpiar la selección, también cerramos cualquier popover (Filtro/Búsqueda)
+        closeAllToolbarModes();
     }
     
     function updateAdminModals() {
@@ -185,8 +188,10 @@ export function initAdminManager() {
         applyTranslations(listContainer);
     }
 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    // Se elimina la llamada a clearAdminUserSelection() de esta función.
     async function fetchAndRenderUsers() {
-        clearAdminUserSelection();
+        // clearAdminUserSelection(); // <-- LÍNEA ELIMINADA
         setListLoadingState(true);
 
         const formData = new FormData();
@@ -216,6 +221,7 @@ export function initAdminManager() {
 
         setListLoadingState(false);
     }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     async function handleAdminAction(actionType, targetUserId, newValue, buttonEl) {
         if (!targetUserId) {
@@ -315,6 +321,65 @@ export function initAdminManager() {
         }
     }
 
+    /**
+     * Cierra todos los "modos" de la toolbar (búsqueda, filtros, etc.)
+     * y desactiva sus botones.
+     */
+    function closeAllToolbarModes() {
+        // 1. Ocultar la barra de búsqueda
+        const searchBarContainer = document.getElementById('page-search-bar-container');
+        if (searchBarContainer) {
+            searchBarContainer.classList.remove('active');
+            searchBarContainer.classList.add('disabled');
+        }
+        // 2. Quitar 'active' del botón de búsqueda
+        const searchButton = document.querySelector('[data-action="admin-toggle-search"]');
+        if (searchButton) {
+            searchButton.classList.remove('active');
+        }
+
+        // 3. Ocultar el popover de filtro (usando la función existente de main-controller)
+        deactivateAllModules(); 
+        
+        // 4. Quitar 'active' del botón de filtro
+        const filterButton = document.querySelector('[data-action="toggleModulePageFilter"]');
+        if (filterButton) {
+            filterButton.classList.remove('active');
+        }
+        
+        // (Añadir aquí cualquier otro botón/modo futuro que se agregue)
+    }
+
+    /**
+     * Activa el modo de búsqueda.
+     */
+    function openSearchMode() {
+        const searchBarContainer = document.getElementById('page-search-bar-container');
+        const searchButton = document.querySelector('[data-action="admin-toggle-search"]');
+        
+        if (searchBarContainer && searchButton) {
+            searchButton.classList.add('active');
+            searchBarContainer.classList.add('active');
+            searchBarContainer.classList.remove('disabled');
+            searchBarContainer.querySelector('.page-search-input')?.focus();
+        }
+    }
+
+    /**
+     * Activa el modo de filtro.
+     */
+    function openFilterMode() {
+        const module = document.querySelector(`[data-module="modulePageFilter"]`);
+        const filterButton = document.querySelector('[data-action="toggleModulePageFilter"]');
+
+        if (module && filterButton) {
+            filterButton.classList.add('active');
+            module.classList.add('active');
+            module.classList.remove('disabled');
+        }
+    }
+
+
     document.body.addEventListener('click', async function (event) {
         
         const userCard = event.target.closest('.card-item[data-user-id]');
@@ -322,7 +387,7 @@ export function initAdminManager() {
             event.preventDefault();
             const userId = userCard.dataset.userId;
             if (selectedAdminUserId === userId) {
-                clearAdminUserSelection();
+                clearAdminUserSelection(); // Esto ahora también llama a closeAllToolbarModes()
             } else {
                 const oldSelected = document.querySelector('.card-item.selected');
                 if (oldSelected) {
@@ -332,7 +397,11 @@ export function initAdminManager() {
                 selectedAdminUserId = userId;
                 selectedAdminUserRole = userCard.dataset.userRole;
                 selectedAdminUserStatus = userCard.dataset.userStatus;
-                enableSelectionActions();
+                
+                // Cierra cualquier popover (Filtros, Búsqueda) antes de mostrar la barra de selección.
+                closeAllToolbarModes(); 
+
+                enableSelectionActions(); // Muestra la barra de selección
             }
             return;
         }
@@ -400,10 +469,8 @@ export function initAdminManager() {
                 
                 const newUsername = `user${timestamp}${suffix}`;
                 
-                // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                 const maxUserLength = window.maxUsernameLength || 32;
                 input.value = newUsername.substring(0, maxUserLength);
-                // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                 
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 
@@ -425,6 +492,9 @@ export function initAdminManager() {
 
             if (nextPage >= 1 && nextPage <= totalPages && nextPage !== currentPage) {
                 currentPage = nextPage; 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                clearAdminUserSelection(); // Limpia la selección y cierra popovers
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 fetchAndRenderUsers();  
             }
             return;
@@ -433,39 +503,45 @@ export function initAdminManager() {
         if (action === 'admin-toggle-search') {
             event.preventDefault();
             const searchButton = button;
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-            const searchBarContainer = document.getElementById('page-search-bar-container');
-            if (!searchBarContainer) return;
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-            
             const isActive = searchButton.classList.contains('active');
             
-            if (isActive) {
-                searchButton.classList.remove('active');
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-                searchBarContainer.classList.remove('active');
-                searchBarContainer.classList.add('disabled');
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-                const searchInput = searchBarContainer.querySelector('.page-search-input');
+            closeAllToolbarModes(); // Cierra todo primero
+
+            if (!isActive) {
+                // Si no estaba activo, ábrelo
+                openSearchMode();
+            } else {
+                // Si estaba activo y se hizo clic de nuevo...
+                const searchInput = document.getElementById('page-search-bar-container')?.querySelector('.page-search-input');
                 if (searchInput) searchInput.value = '';
                 
                 if (currentSearch !== '') {
                     currentSearch = ''; 
                     currentPage = 1;
                     hideTooltip();
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                    // clearAdminUserSelection() ya fue llamado por closeAllToolbarModes()
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     fetchAndRenderUsers(); 
                 }
-            } else {
-                searchButton.classList.add('active');
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-                searchBarContainer.classList.add('active');
-                searchBarContainer.classList.remove('disabled');
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-                searchBarContainer.querySelector('.page-search-input')?.focus();
             }
             return;
         }
         
+        if (action === 'toggleModulePageFilter') {
+            event.stopPropagation(); // Previene que 'main-controller' cierre el módulo
+            const filterButton = button;
+            const isActive = filterButton.classList.contains('active');
+
+            closeAllToolbarModes(); // Cierra todo primero
+            
+            if (!isActive) {
+                // Si no estaba activo, ábrelo
+                openFilterMode();
+            }
+            return;
+        }
+
         if (action === 'admin-clear-selection') {
             event.preventDefault();
             clearAdminUserSelection();
@@ -502,7 +578,9 @@ export function initAdminManager() {
         if (action === 'admin-set-filter') {
             event.preventDefault();
             hideTooltip();
-            deactivateAllModules(); 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            clearAdminUserSelection(); // Limpia la selección y cierra popovers
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             const newSort = button.dataset.sort;
             const newOrder = button.dataset.order;
@@ -541,17 +619,15 @@ export function initAdminManager() {
             return;
         }
 
-        if (action === 'toggleModulePageFilter' || 
-            action === 'toggleModuleAdminRole' || 
+        if (action === 'toggleModuleAdminRole' || 
             action === 'toggleModuleAdminStatus' ||
             action === 'toggleModuleAdminCreateRole') { 
             
             event.stopPropagation();
             let moduleName;
             
-            if (action === 'toggleModulePageFilter') {
-                moduleName = 'modulePageFilter';
-            } else if (action === 'toggleModuleAdminRole') {
+            // 'toggleModulePageFilter' ya no es manejado aquí
+            if (action === 'toggleModuleAdminRole') {
                 if (!selectedAdminUserId) return; 
                 moduleName = 'moduleAdminRole';
                 updateAdminModals();
@@ -591,18 +667,15 @@ export function initAdminManager() {
         const password = form.querySelector('#admin-create-password').value;
         const passwordConfirm = form.querySelector('#admin-create-password-confirm').value; 
 
-        // --- ▼▼▼ MODIFICACIÓN: Constantes de Window ▼▼▼ ---
         const minUserLength = window.minUsernameLength || 6;
         const maxUserLength = window.maxUsernameLength || 32;
         const maxEmailLen = window.maxEmailLength || 255;
         const minPassLength = window.minPasswordLength || 8;
         const maxPassLength = window.maxPasswordLength || 72;
-        // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
 
         if (!username || !email || !password || !passwordConfirm) { 
             showCreateUserError('js.auth.errorCompleteAllFields'); return;
         }
-        // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
         if (username.length < minUserLength || username.length > maxUserLength) {
             showCreateUserError('js.auth.errorUsernameLength', {min: minUserLength, max: maxUserLength}); return;
         }
@@ -615,7 +688,6 @@ export function initAdminManager() {
         if (password.length < minPassLength || password.length > maxPassLength) {
             showCreateUserError('js.auth.errorPasswordLength', {min: minPassLength, max: maxPassLength}); return;
         }
-        // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
         if (password !== passwordConfirm) {
             showCreateUserError('js.auth.errorPasswordMismatch'); return;
         }
@@ -676,7 +748,11 @@ export function initAdminManager() {
         currentSearch = newQuery;
         currentPage = 1; 
         
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        // Llamamos a la función de fetch SIN limpiar la selección
+        // (así no se cierra la barra de búsqueda).
         fetchAndRenderUsers(); 
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     });
 
     document.addEventListener('keydown', function (event) {
@@ -690,15 +766,12 @@ export function initAdminManager() {
         const clickedOnButton = event.target.closest('[data-action]');
         const clickedOnUserCard = event.target.closest('.card-item[data-user-id]');
         
-        // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
-        // Prevenir que se deseleccione el usuario si se hace clic en OTRA tarjeta (como un backup)
         const clickedOnAnyCard = event.target.closest('.card-item');
 
         // Solo limpiar si no se hizo clic en un módulo, un botón, o CUALQUIER tarjeta
         if (!clickedOnModule && !clickedOnButton && !clickedOnAnyCard) {
             clearAdminUserSelection();
         }
-        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
     });
 
     const userListContainer = document.querySelector('.card-list-container');
