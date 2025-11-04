@@ -455,7 +455,7 @@ export function initSettingsManager() {
             if (newEmail.length > (window.maxEmailLength || 255)) {
                 showInlineError(card, 'js.auth.errorEmailLength'); return;
             }
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
 
             toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
 
@@ -652,6 +652,11 @@ export function initSettingsManager() {
             const saveTrigger = target.closest('#password-update-save');
             const newPassInput = document.getElementById('password-update-new'); 
             const confirmPassInput = document.getElementById('password-update-confirm'); 
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            const logoutOthersCheckbox = document.getElementById('password-logout-others');
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
             if (!newPassInput || !confirmPassInput) return;
 
@@ -675,6 +680,11 @@ export function initSettingsManager() {
             formData.append('new_password', newPassInput.value);
             formData.append('confirm_password', confirmPassInput.value);
             formData.append('csrf_token', getCsrfTokenFromPage()); 
+
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            const logoutOthers = logoutOthersCheckbox ? logoutOthersCheckbox.checked : true;
+            formData.append('logout_others', logoutOthers ? '1' : '0');
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
             const result = await callSettingsApi(formData);

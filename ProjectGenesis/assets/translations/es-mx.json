@@ -246,7 +246,9 @@
     },
     "password": {
       "title": "Actualizar Contraseña",
-      "description": "Para mayor seguridad, primero verifica tu identidad y luego crea tu nueva contraseña."
+      "description": "Para mayor seguridad, primero verifica tu identidad y luego crea tu nueva contraseña.",
+      "logoutOthersLabel": "Cerrar otras sesiones",
+      "logoutOthersDesc": "Se cerrará la sesión en todos tus otros dispositivos."
     },
     "email": {
       "description": "Verifica tu identidad para cambiar la dirección de correo electrónico asociada a tu cuenta.",

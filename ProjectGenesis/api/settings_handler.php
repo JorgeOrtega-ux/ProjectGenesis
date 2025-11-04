@@ -605,6 +605,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $newPassword = $_POST['new_password'] ?? '';
                 $confirmPassword = $_POST['confirm_password'] ?? '';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                $logoutOthers = $_POST['logout_others'] ?? '1'; // Default '1' (true)
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 if (empty($newPassword) || empty($confirmPassword)) {
                     throw new Exception('js.settings.errorNewPasswordEmpty');
@@ -631,14 +634,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $newHashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
 
-                $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
-                $stmt->execute([$newHashedPassword, $userId]);
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                // Si $logoutOthers es '1', generamos un nuevo token.
+                // Si no, NO actualizamos el auth_token.
+                if ($logoutOthers === '1') {
+                    $newAuthToken = bin2hex(random_bytes(32));
+                    $stmt = $pdo->prepare("UPDATE users SET password = ?, auth_token = ? WHERE id = ?");
+                    $stmt->execute([$newHashedPassword, $newAuthToken, $userId]);
+                    $_SESSION['auth_token'] = $newAuthToken; // Actualizar la sesión actual
+                } else {
+                    $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+                    $stmt->execute([$newHashedPassword, $userId]);
+                }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
                 $stmt_log_pass = $pdo->prepare(
                     "INSERT INTO user_audit_logs (user_id, change_type, old_value, new_value, changed_by_ip) 
                      VALUES (?, 'password', ?, ?, ?)"
                 );
                 $stmt_log_pass->execute([$userId, $oldHashedPassword, $newHashedPassword, getIpAddress()]);
+
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Lógica de Logout copiada) ▼▼▼ ---
+                if ($logoutOthers === '1') {
+                    // Invalidar todas las demás entradas de metadatos
+                    $currentMetadataId = $_SESSION['metadata_id'] ?? 0;
+                    $stmt_meta_invalidate = $pdo->prepare(
+                        "UPDATE user_metadata SET is_active = 0 WHERE user_id = ? AND id != ?"
+                    );
+                    $stmt_meta_invalidate->execute([$userId, $currentMetadataId]);
+                    
+                    // Notificar al servidor WebSocket (Fire and Forget)
+                    try {
+                        $sessionIdToExclude = $submittedToken; // Token CSRF de la sesión actual
+                        
+                        $kickPayload = json_encode([
+                            'user_id' => (int)$userId,
+                            'exclude_session_id' => $sessionIdToExclude
+                        ]);
+
+                        $ch = curl_init('http://127.0.0.1:8766/kick');
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        curl_setopt($ch, CURLOPT_POST, true);
+                        curl_setopt($ch, CURLOPT_POSTFIELDS, $kickPayload);
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                            'Content-Type: application/json',
+                            'Content-Length: ' . strlen($kickPayload)
+                        ]);
+                        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
+                        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
+
+                        curl_exec($ch);
+                        curl_close($ch);
+                        
+                    } catch (Exception $e) {
+                        logDatabaseError($e, 'settings_handler - update-password (kick_ws_fail)');
+                    }
+                }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 $newTimestamp = gmdate('Y-m-d H:i:s'); 
 

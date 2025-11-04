@@ -56,6 +56,19 @@
                 <label for="password-update-confirm" data-i18n="settings.login.modalConfirmPass"></label>
             </div>
 
+            <div class="component-checkbox-label">
+                <div class="component-card__text">
+                    <label for="password-logout-others" class="component-card__title" data-i18n="settings.password.logoutOthersLabel"></label>
+                    <p class="component-card__description" data-i18n="settings.password.logoutOthersDesc"></p>
+                </div>
+                <label class="component-toggle-switch">
+                    <input type="checkbox"
+                           id="password-logout-others"
+                           name="logout_others"
+                           checked>
+                    <span class="component-toggle-slider"></span>
+                </label>
+            </div>
             <div class="component-card__actions">
                 <button type="button" class="component-action-button component-action-button--secondary" data-action="toggleSectionSettingsLogin" data-i18n="settings.profile.cancel"></button>
                 <button type="button" class="component-action-button component-action-button--primary" id="password-update-save" data-i18n="settings.login.savePassword"></button>
