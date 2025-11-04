@@ -766,13 +766,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_maintenance->execute([$newValue]);
             
             $registrationValue = null;
+            $kicked_users_count = 0; // Contador para la nueva lógica
 
             // ¡LÓGICA DE VINCULACIÓN!
-            // Si el modo mantenimiento se ACTIVA, forzar el bloqueo de registros.
+            // Si el modo mantenimiento se ACTIVA, forzar el bloqueo de registros Y EXPULSAR USUARIOS.
             if ($newValue === '1') {
+                // 1. Forzar bloqueo de registros
                 $stmt_registration = $pdo->prepare("UPDATE site_settings SET setting_value = '0' WHERE setting_key = 'allow_new_registrations'");
                 $stmt_registration->execute();
                 $registrationValue = '0';
+                
+                // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE EXPULSIÓN MASIVA ▼▼▼ ---
+                
+                // 2. Obtener IDs de todos los usuarios (no-staff) activos
+                $stmt_users_to_kick = $pdo->prepare(
+                    "SELECT id FROM users WHERE role = 'user' AND account_status = 'active'"
+                );
+                $stmt_users_to_kick->execute();
+                $userIdsToKick = $stmt_users_to_kick->fetchAll(PDO::FETCH_COLUMN);
+                
+                if (!empty($userIdsToKick)) {
+                    $kicked_users_count = count($userIdsToKick);
+                    // 3. Notificar al servidor WebSocket (Fire and Forget)
+                    try {
+                        $kickPayload = json_encode([
+                            'user_ids' => $userIdsToKick // Enviar el array de IDs
+                        ]);
+
+                        $ch = curl_init('http://127.0.0.1:8766/kick-bulk'); // Nuevo endpoint
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        curl_setopt($ch, CURLOPT_POST, true);
+                        curl_setopt($ch, CURLOPT_POSTFIELDS, $kickPayload);
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                            'Content-Type: application/json',
+                            'Content-Length: ' . strlen($kickPayload)
+                        ]);
+                        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); // 500ms
+                        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        // 500ms
+
+                        curl_exec($ch); // No nos importa la respuesta, solo enviar
+                        curl_close($ch);
+                        
+                    } catch (Exception $e) {
+                        // Si el servidor WS falla, no detener la acción del admin.
+                        logDatabaseError($e, 'admin_handler - maintenance (kick_bulk_ws_fail)');
+                    }
+                }
+                // --- ▲▲▲ FIN DE NUEVA LÓGICA DE EXPULSIÓN MASIVA ▲▲▲ ---
             }
             
             $pdo->commit();
@@ -782,6 +822,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['newValue'] = $newValue;
             if ($registrationValue !== null) {
                 $response['registrationValue'] = $registrationValue; // Enviar el valor forzado al JS
+            }
+            if ($kicked_users_count > 0) {
+                 // (Opcional) Informar al admin cuántos usuarios fueron expulsados
+                 // $response['message'] .= " (Expulsando a $kicked_users_count usuarios)";
             }
 
         } catch (Exception $e) {

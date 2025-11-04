@@ -1,5 +1,6 @@
 <?php
 // FILE: api/auth_handler.php
+// (CÓDIGO MODIFICADO PARA PERMITIR ACCESO A STAFF AUNQUE ESTÉ LLENO)
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -523,12 +524,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             exit;
                         }
 
-                        // --- ▼▼▼ INICIO DE MODIFICACIÓN (RESTAURACIÓN DE LÓGICA DE CONTEO) ▼▼▼ ---
-                        
-                        // 1. Obtener el límite
+                        // --- ▼▼▼ INICIO DE MODIFICACIÓN (LÍMITE DE USUARIOS Y ROLES) ▼▼▼ ---
+                            
+                        // 1. Obtener el rol del usuario que intenta iniciar sesión
+                        $userRole = $user['role'];
+                        $isPrivilegedUser = in_array($userRole, ['moderator', 'administrator', 'founder']);
+
+                        // 2. Obtener el límite
                         $maxUsers = (int)($GLOBALS['site_settings']['max_concurrent_users'] ?? 500); 
 
-                        // 2. Obtener el conteo actual del servidor Python
+                        // 3. Obtener el conteo actual del servidor Python
                         $currentUserCount = 0;
                         try {
                             $context = stream_context_create(['http' => ['timeout' => 2.0]]);
@@ -553,8 +558,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             exit;
                         }
 
-                        // 3. Comparar y actuar
-                        if ($currentUserCount >= $maxUsers) {
+                        // 4. Comparar y actuar
+                        // Si el servidor está lleno Y el usuario NO es privilegiado, rechazarlo.
+                        if ($currentUserCount >= $maxUsers && !$isPrivilegedUser) {
                             // Servidor lleno. Denegar inicio de sesión.
                             $response['success'] = false;
                             $response['redirect_to_status'] = 'server_full';
@@ -562,8 +568,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             echo json_encode($response);
                             exit;
                         }
+                        // Si el usuario es privilegiado, se le permite continuar aunque $currentUserCount >= $maxUsers.
                         
-                        // --- ▲▲▲ FIN DE MODIFICACIÓN (RESTAURACIÓN DE LÓGICA DE CONTEO) ▲▲▲ ---
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN (LÍMITE DE USUARIOS Y ROLES) ▲▲▲ ---
 
                         clearFailedAttempts($pdo, $email);
 

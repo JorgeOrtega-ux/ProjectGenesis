@@ -159,6 +159,50 @@ async def http_handler_kick(request):
         return web.json_response({"status": "error", "message": str(e)}, status=400)
 
 # --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! ▼▼▼ ---
+async def http_handler_kick_bulk(request):
+    """
+    Recibe una orden de expulsión masiva desde PHP (para mantenimiento).
+    Espera un JSON: {"user_ids": [1, 2, 3...]}
+    """
+    if request.method != 'POST':
+        return web.Response(status=405) # Solo permitir POST
+
+    try:
+        data = await request.json()
+        user_ids = data.get("user_ids")
+
+        if not isinstance(user_ids, list):
+            raise ValueError("Falta 'user_ids' o no es una lista")
+            
+        logging.info(f"[HTTP-KICK-BULK] Recibida orden de expulsión masiva para {len(user_ids)} IDs de usuario.")
+
+        websockets_to_kick = set()
+        
+        # Recolectar todos los websockets de los usuarios afectados
+        for user_id in user_ids:
+            ws_set = CLIENTS_BY_USER_ID.get(int(user_id))
+            if ws_set:
+                websockets_to_kick.update(ws_set)
+
+        if not websockets_to_kick:
+            logging.info(f"[HTTP-KICK-BULK] No se encontraron conexiones activas para los IDs proporcionados.")
+            return web.json_response({"status": "ok", "kicked": 0})
+        
+        # Preparar el mensaje de expulsión
+        kick_message = json.dumps({"type": "force_logout"})
+        tasks = [ws.send(kick_message) for ws in websockets_to_kick]
+        
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+        logging.info(f"[HTTP-KICK-BULK] Se enviaron {len(tasks)} órdenes de expulsión.")
+        return web.json_response({"status": "ok", "kicked": len(tasks)})
+
+    except Exception as e:
+        logging.error(f"[HTTP-KICK-BULK] Error al procesar expulsión masiva: {e}")
+        return web.json_response({"status": "error", "message": str(e)}, status=400)
+# --- ▲▲▲ ¡FIN DE NUEVA FUNCIÓN! ▲▲▲ ---
+
 async def http_handler_update_status(request):
     """
     Recibe una orden de actualización de estado desde PHP (endpoint interno).
@@ -223,6 +267,10 @@ async def run_http_server():
     http_app.router.add_post("/kick", http_handler_kick) 
     # --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
     http_app.router.add_post("/update-status", http_handler_update_status) 
+    # --- ▲▲▲ ¡FIN DE NUEVA LÍNEA! ▲▲▲ ---
+    
+    # --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
+    http_app.router.add_post("/kick-bulk", http_handler_kick_bulk)
     # --- ▲▲▲ ¡FIN DE NUEVA LÍNEA! ▲▲▲ ---
     
     http_runner = web.AppRunner(http_app)
