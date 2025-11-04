@@ -1,3 +1,6 @@
+// FILE: assets/js/modules/settings-manager.js
+// (CÓDIGO MODIFICADO PARA EVITAR CONFLICTOS CON ADMIN)
+
 import { callSettingsApi }  from '../services/api-service.js';
 import { deactivateAllModules }  from '../app/main-controller.js';
 import { getTranslation, loadTranslations, applyTranslations } from '../services/i18n-manager.js';
@@ -485,7 +488,7 @@ export function initSettingsManager() {
             return;
         }
 
-
+        // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
         const clickedLink = target.closest('.popover-module .menu-link'); 
         if (clickedLink && card) { 
             e.preventDefault();
@@ -493,6 +496,17 @@ export function initSettingsManager() {
 
             const menuList = clickedLink.closest('.menu-list');
             const module = clickedLink.closest('.popover-module[data-preference-type]'); 
+            
+            // ¡ESTA ES LA LÍNEA CLAVE!
+            // Si el módulo no tiene 'data-preference-type', no es un clic de preferencias.
+            // (Ej. es el dropdown de roles de admin).
+            // Cerramos el popover y dejamos que otro listener (admin-manager.js) lo maneje.
+            if (!module) {
+                deactivateAllModules();
+                return;
+            }
+            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+
             const wrapper = card.querySelector('.trigger-select-wrapper'); 
             const trigger = wrapper?.querySelector('.trigger-selector');
             const triggerTextEl = trigger?.querySelector('.trigger-select-text span');
@@ -504,7 +518,7 @@ export function initSettingsManager() {
             const newIconName = clickedLink.querySelector('.menu-link-icon span')?.textContent;
 
 
-            if (!menuList || !module || !wrapper || !trigger || !triggerTextEl || !newTextKey || !newValue || !prefType || !triggerIconEl) { 
+            if (!menuList || !wrapper || !trigger || !triggerTextEl || !newTextKey || !newValue || !prefType || !triggerIconEl) { 
                  console.error("Error finding elements for preference change", {menuList, module, wrapper, trigger, triggerTextEl, newTextKey, newValue, prefType, triggerIconEl});
                  deactivateAllModules();
                 return;

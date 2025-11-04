@@ -1,8 +1,40 @@
+// FILE: assets/js/modules/admin-manager.js
+// (CÓDIGO MODIFICADO - Sin listener 'submit', ahora usa 'click' para crear usuario)
+
 import { callAdminApi } from '../services/api-service.js';
 import { showAlert } from '../services/alert-manager.js';
 import { getTranslation, applyTranslations } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js';
+
+/**
+ * Genera una contraseña segura aleatoria.
+ * @param {number} length La longitud de la contraseña (default 16)
+ * @returns {string} Una contraseña segura.
+ */
+function generateSecurePassword(length = 16) {
+    const lower = 'abcdefghijklmnopqrstuvwxyz';
+    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numbers = '0123456789';
+    const special = '!@#$%^&*()_+[]{}|;:,.<>?';
+    const all = lower + upper + numbers + special;
+    
+    let password = '';
+    // Asegurar al menos uno de cada tipo
+    password += lower[Math.floor(Math.random() * lower.length)];
+    password += upper[Math.floor(Math.random() * upper.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += special[Math.floor(Math.random() * special.length)];
+    
+    // Rellenar el resto
+    for (let i = 4; i < length; i++) {
+        password += all[Math.floor(Math.random() * all.length)];
+    }
+    
+    // Mezclar (barajar) la contraseña para que los primeros 4 no sean predecibles
+    return password.split('').sort(() => 0.5 - Math.random()).join('');
+}
+
 
 export function initAdminManager() {
 
@@ -188,10 +220,7 @@ export function initAdminManager() {
         applyTranslations(listContainer);
     }
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-    // Se elimina la llamada a clearAdminUserSelection() de esta función.
     async function fetchAndRenderUsers() {
-        // clearAdminUserSelection(); // <-- LÍNEA ELIMINADA
         setListLoadingState(true);
 
         const formData = new FormData();
@@ -221,7 +250,6 @@ export function initAdminManager() {
 
         setListLoadingState(false);
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     async function handleAdminAction(actionType, targetUserId, newValue, buttonEl) {
         if (!targetUserId) {
@@ -298,7 +326,7 @@ export function initAdminManager() {
     }
 
     function showCreateUserError(messageKey, data = null) {
-        const errorDiv = document.querySelector('#admin-create-card .component-card__error');
+        const errorDiv = document.querySelector('#admin-create-card-actions .component-card__error');
         if (!errorDiv) return;
 
         let message = getTranslation(messageKey);
@@ -309,14 +337,14 @@ export function initAdminManager() {
         }
         
         errorDiv.textContent = message;
-        errorDiv.classList.add('active'); // <-- MODIFICADO
+        errorDiv.classList.add('active'); 
         errorDiv.classList.remove('disabled');
     }
     
     function hideCreateUserError() {
-        const errorDiv = document.querySelector('#admin-create-card .component-card__error');
+        const errorDiv = document.querySelector('#admin-create-card-actions .component-card__error');
         if (errorDiv) {
-            errorDiv.classList.remove('active'); // <-- MODIFICADO
+            errorDiv.classList.remove('active'); 
             errorDiv.classList.add('disabled');
         }
     }
@@ -346,8 +374,6 @@ export function initAdminManager() {
         if (filterButton) {
             filterButton.classList.remove('active');
         }
-        
-        // (Añadir aquí cualquier otro botón/modo futuro que se agregue)
     }
 
     /**
@@ -387,7 +413,7 @@ export function initAdminManager() {
             event.preventDefault();
             const userId = userCard.dataset.userId;
             if (selectedAdminUserId === userId) {
-                clearAdminUserSelection(); // Esto ahora también llama a closeAllToolbarModes()
+                clearAdminUserSelection(); 
             } else {
                 const oldSelected = document.querySelector('.card-item.selected');
                 if (oldSelected) {
@@ -398,10 +424,8 @@ export function initAdminManager() {
                 selectedAdminUserRole = userCard.dataset.userRole;
                 selectedAdminUserStatus = userCard.dataset.userStatus;
                 
-                // Cierra cualquier popover (Filtros, Búsqueda) antes de mostrar la barra de selección.
                 closeAllToolbarModes(); 
-
-                enableSelectionActions(); // Muestra la barra de selección
+                enableSelectionActions(); 
             }
             return;
         }
@@ -475,9 +499,130 @@ export function initAdminManager() {
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 
                 button.blur();
+                hideCreateUserError(); // Ocultar error al generar
             }
             return; 
         }
+
+        if (action === 'admin-generate-password') {
+            event.preventDefault();
+            const passInput = document.getElementById('admin-create-password');
+            if (passInput) {
+                passInput.value = generateSecurePassword(16);
+                hideCreateUserError(); // Ocultar error al generar
+            }
+            return;
+        }
+        
+        if (action === 'admin-copy-password') {
+            event.preventDefault();
+            const passInput = document.getElementById('admin-create-password');
+            if (passInput && passInput.value) {
+                
+                if (!navigator.clipboard) {
+                    try {
+                        passInput.focus();
+                        passInput.select();
+                        document.execCommand('copy');
+                        passInput.blur();
+                        showAlert(getTranslation('js.admin.passwordCopied') || 'Contraseña copiada al portapapeles', 'success');
+                    } catch (err) {
+                        showAlert(getTranslation('js.admin.passwordCopyError') || 'Error al copiar la contraseña', 'error');
+                        console.error('Error al copiar (fallback):', err);
+                    }
+                } else {
+                    navigator.clipboard.writeText(passInput.value)
+                        .then(() => {
+                            showAlert(getTranslation('js.admin.passwordCopied') || 'Contraseña copiada al portapapeles', 'success');
+                        })
+                        .catch(err => {
+                            showAlert(getTranslation('js.admin.passwordCopyError') || 'Error al copiar la contraseña', 'error');
+                            console.error('Error al copiar (clipboard API):', err);
+                        });
+                }
+            }
+            return;
+        }
+        
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Submit de Crear Usuario) ▼▼▼ ---
+        if (action === 'admin-create-user-submit') {
+            event.preventDefault();
+            const button = event.target.closest('#admin-create-user-submit');
+            
+            hideCreateUserError();
+
+            const usernameInput = document.getElementById('admin-create-username');
+            const emailInput = document.getElementById('admin-create-email');
+            const passwordInput = document.getElementById('admin-create-password');
+            const roleInput = document.getElementById('admin-create-role-input');
+            const is2faCheckbox = document.getElementById('admin-create-2fa');
+            const csrfInput = document.querySelector('input[name="csrf_token"]');
+
+            const username = usernameInput ? usernameInput.value : '';
+            const email = emailInput ? emailInput.value : '';
+            const password = passwordInput ? passwordInput.value : '';
+            const role = roleInput ? roleInput.value : 'user';
+            const is2fa = is2faCheckbox ? (is2faCheckbox.checked ? '1' : '0') : '0';
+            const csrfToken = csrfInput ? csrfInput.value : '';
+
+            const minUserLength = window.minUsernameLength || 6;
+            const maxUserLength = window.maxUsernameLength || 32;
+            const maxEmailLen = window.maxEmailLength || 255;
+            // No se necesita min/max pass, ya que es generado
+
+            if (!username || !email || !password) { 
+                showCreateUserError('js.auth.errorCompleteAllFields'); return;
+            }
+            if (username.length < minUserLength || username.length > maxUserLength) {
+                showCreateUserError('js.auth.errorUsernameLength', {min: minUserLength, max: maxUserLength}); return;
+            }
+            if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                showCreateUserError('js.auth.errorInvalidEmail'); return;
+            }
+            if (email.length > maxEmailLen) {
+                showCreateUserError('js.auth.errorEmailLength'); return;
+            }
+            
+            if (button) {
+                button.disabled = true;
+                button.dataset.originalText = button.innerHTML;
+                button.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;"></span>`;
+            }
+
+            const formData = new FormData();
+            formData.append('action', 'create-user');
+            formData.append('username', username);
+            formData.append('email', email);
+            formData.append('password', password);
+            formData.append('role', role);
+            formData.append('is_2fa_enabled', is2fa);
+            formData.append('csrf_token', csrfToken);
+
+            const result = await callAdminApi(formData);
+
+            if (result.success) {
+                showAlert(getTranslation(result.message || 'admin.create.success'), 'success');
+                
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.href = window.projectBasePath + '/admin/manage-users';
+                    link.setAttribute('data-nav-js', 'true');
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                }, 1500);
+
+            } else {
+                showCreateUserError(result.message || 'js.auth.errorUnknown', result.data);
+                
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = button.dataset.originalText || getTranslation('admin.create.createButton');
+                }
+            }
+            return;
+        }
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA (Submit de Crear Usuario) ▲▲▲ ---
 
 
         if (action === 'admin-page-next' || action === 'admin-page-prev') {
@@ -492,9 +637,7 @@ export function initAdminManager() {
 
             if (nextPage >= 1 && nextPage <= totalPages && nextPage !== currentPage) {
                 currentPage = nextPage; 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-                clearAdminUserSelection(); // Limpia la selección y cierra popovers
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                clearAdminUserSelection(); 
                 fetchAndRenderUsers();  
             }
             return;
@@ -505,13 +648,11 @@ export function initAdminManager() {
             const searchButton = button;
             const isActive = searchButton.classList.contains('active');
             
-            closeAllToolbarModes(); // Cierra todo primero
+            closeAllToolbarModes(); 
 
             if (!isActive) {
-                // Si no estaba activo, ábrelo
                 openSearchMode();
             } else {
-                // Si estaba activo y se hizo clic de nuevo...
                 const searchInput = document.getElementById('page-search-bar-container')?.querySelector('.page-search-input');
                 if (searchInput) searchInput.value = '';
                 
@@ -519,9 +660,6 @@ export function initAdminManager() {
                     currentSearch = ''; 
                     currentPage = 1;
                     hideTooltip();
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-                    // clearAdminUserSelection() ya fue llamado por closeAllToolbarModes()
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     fetchAndRenderUsers(); 
                 }
             }
@@ -529,14 +667,13 @@ export function initAdminManager() {
         }
         
         if (action === 'toggleModulePageFilter') {
-            event.stopPropagation(); // Previene que 'main-controller' cierre el módulo
+            event.stopPropagation(); 
             const filterButton = button;
             const isActive = filterButton.classList.contains('active');
 
-            closeAllToolbarModes(); // Cierra todo primero
+            closeAllToolbarModes(); 
             
             if (!isActive) {
-                // Si no estaba activo, ábrelo
                 openFilterMode();
             }
             return;
@@ -578,9 +715,7 @@ export function initAdminManager() {
         if (action === 'admin-set-filter') {
             event.preventDefault();
             hideTooltip();
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-            clearAdminUserSelection(); // Limpia la selección y cierra popovers
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            clearAdminUserSelection(); 
 
             const newSort = button.dataset.sort;
             const newOrder = button.dataset.order;
@@ -626,7 +761,6 @@ export function initAdminManager() {
             event.stopPropagation();
             let moduleName;
             
-            // 'toggleModulePageFilter' ya no es manejado aquí
             if (action === 'toggleModuleAdminRole') {
                 if (!selectedAdminUserId) return; 
                 moduleName = 'moduleAdminRole';
@@ -651,79 +785,9 @@ export function initAdminManager() {
         }
     });
 
-    document.body.addEventListener('submit', async function(event) {
-        if (event.target.id !== 'admin-create-user-form') {
-            return;
-        }
-        event.preventDefault();
-        
-        const form = event.target;
-        const button = form.querySelector('#admin-create-user-submit');
-        
-        hideCreateUserError();
-
-        const username = form.querySelector('#admin-create-username').value;
-        const email = form.querySelector('#admin-create-email').value;
-        const password = form.querySelector('#admin-create-password').value;
-        const passwordConfirm = form.querySelector('#admin-create-password-confirm').value; 
-
-        const minUserLength = window.minUsernameLength || 6;
-        const maxUserLength = window.maxUsernameLength || 32;
-        const maxEmailLen = window.maxEmailLength || 255;
-        const minPassLength = window.minPasswordLength || 8;
-        const maxPassLength = window.maxPasswordLength || 72;
-
-        if (!username || !email || !password || !passwordConfirm) { 
-            showCreateUserError('js.auth.errorCompleteAllFields'); return;
-        }
-        if (username.length < minUserLength || username.length > maxUserLength) {
-            showCreateUserError('js.auth.errorUsernameLength', {min: minUserLength, max: maxUserLength}); return;
-        }
-        if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-            showCreateUserError('js.auth.errorInvalidEmail'); return;
-        }
-        if (email.length > maxEmailLen) {
-            showCreateUserError('js.auth.errorEmailLength'); return;
-        }
-        if (password.length < minPassLength || password.length > maxPassLength) {
-            showCreateUserError('js.auth.errorPasswordLength', {min: minPassLength, max: maxPassLength}); return;
-        }
-        if (password !== passwordConfirm) {
-            showCreateUserError('js.auth.errorPasswordMismatch'); return;
-        }
-
-        if (button) {
-            button.disabled = true;
-            button.dataset.originalText = button.innerHTML;
-            button.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;"></span>`;
-        }
-
-        const formData = new FormData(form);
-        formData.append('action', 'create-user');
-
-        const result = await callAdminApi(formData);
-
-        if (result.success) {
-            showAlert(getTranslation(result.message || 'admin.create.success'), 'success');
-            
-            setTimeout(() => {
-                const link = document.createElement('a');
-                link.href = window.projectBasePath + '/admin/manage-users';
-                link.setAttribute('data-nav-js', 'true');
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-            }, 1500);
-
-        } else {
-            showCreateUserError(result.message || 'js.auth.errorUnknown', result.data);
-            
-            if (button) {
-                button.disabled = false;
-                button.innerHTML = button.dataset.originalText || getTranslation('admin.create.createButton');
-            }
-        }
-    });
+    // --- ▼▼▼ ESTE LISTENER HA SIDO ELIMINADO ▼▼▼ ---
+    // document.body.addEventListener('submit', async function(event) { ... });
+    // --- ▲▲▲ FIN DE LA ELIMINACIÓN ▲▲▲ ---
 
     document.body.addEventListener('input', function(event) {
         const input = event.target.closest('#admin-create-user-form .component-input');
@@ -748,11 +812,7 @@ export function initAdminManager() {
         currentSearch = newQuery;
         currentPage = 1; 
         
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-        // Llamamos a la función de fetch SIN limpiar la selección
-        // (así no se cierra la barra de búsqueda).
         fetchAndRenderUsers(); 
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     });
 
     document.addEventListener('keydown', function (event) {

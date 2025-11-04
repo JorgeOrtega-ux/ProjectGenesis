@@ -216,18 +216,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = 'js.api.errorDatabase';
         }
         
-    // --- ▼▼▼ ¡NUEVA ACCIÓN 'create-user'! ▼▼▼ ---
+    // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN 'create-user'! ▼▼▼ ---
     } elseif ($action === 'create-user') {
         try {
             // 1. Obtener datos
             $username = trim($_POST['username'] ?? '');
             $email = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
-            $passwordConfirm = $_POST['password_confirm'] ?? ''; // <-- NUEVA VARIABLE
+            // $passwordConfirm = $_POST['password_confirm'] ?? ''; // <-- ELIMINADO
             $role = $_POST['role'] ?? 'user';
+            $is_2fa_enabled = isset($_POST['is_2fa_enabled']) && $_POST['is_2fa_enabled'] === '1' ? 1 : 0; // <-- AÑADIDO
 
             // 2. Validar Campos Vacíos
-            if (empty($username) || empty($email) || empty($password) || empty($passwordConfirm) || empty($role)) { // <-- CAMPO AÑADIDO
+            if (empty($username) || empty($email) || empty($password) || empty($role)) { // <-- CAMPO ELIMINADO
                 throw new Exception('js.auth.errorCompleteAllFields');
             }
 
@@ -236,28 +237,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!in_array($role, $allowedRoles)) {
                 throw new Exception('admin.create.errorRole'); // Nueva clave i18n
             }
-            // (La comprobación de 'founder' no es necesaria, ya que no está en $allowedRoles)
 
             // 4. Validar Email
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---
             $domainsString = $GLOBALS['site_settings']['allowed_email_domains'] ?? '';
             $allowedDomains = preg_split('/[\s,]+/', $domainsString, -1, PREG_SPLIT_NO_EMPTY);
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $emailDomain = substr($email, strrpos($email, '@') + 1);
 
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 throw new Exception('js.auth.errorInvalidEmail');
             }
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             if (strlen($email) > $maxEmailLength) {
                 throw new Exception('js.auth.errorEmailLength');
             }
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---
             if (!empty($allowedDomains) && !in_array(strtolower($emailDomain), $allowedDomains)) {
                 throw new Exception('js.auth.errorEmailDomain');
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $stmt_check_email = $pdo->prepare("SELECT id FROM users WHERE email = ?");
             $stmt_check_email->execute([$email]);
             if ($stmt_check_email->fetch()) {
@@ -265,34 +259,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // 5. Validar Username
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             if (strlen($username) < $minUsernameLength) {
                 throw new Exception('js.auth.errorUsernameMinLength');
             }
             if (strlen($username) > $maxUsernameLength) {
                 throw new Exception('js.auth.errorUsernameMaxLength');
             }
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
             $stmt_check_user = $pdo->prepare("SELECT id FROM users WHERE username = ?");
             $stmt_check_user->execute([$username]);
             if ($stmt_check_user->fetch()) {
                 throw new Exception('js.auth.errorUsernameInUse');
             }
 
-            // 6. Validar Contraseña
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
+            // 6. Validar Contraseña (Solo longitud, ya no hay confirmación)
             if (strlen($password) < $minPasswordLength) {
                 throw new Exception('js.auth.errorPasswordMinLength');
             }
             if (strlen($password) > $maxPasswordLength) {
                 throw new Exception('js.auth.errorPasswordLength');
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-            // --- ▼▼▼ NUEVA VALIDACIÓN ▼▼▼ ---
-            if ($password !== $passwordConfirm) {
-                throw new Exception('js.auth.errorPasswordMismatch');
-            }
-            // --- ▲▲▲ FIN NUEVA VALIDACIÓN ▲▲▲ ---
+            // --- ELIMINADA LA VALIDACIÓN DE 'password' y 'passwordConfirm' ---
 
 
             // 7. Si todo es válido, crear usuario
@@ -300,10 +286,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $authToken = bin2hex(random_bytes(32));
 
             $stmt_insert = $pdo->prepare(
-                "INSERT INTO users (email, username, password, role, auth_token, account_status) 
-                 VALUES (?, ?, ?, ?, ?, 'active')"
+                "INSERT INTO users (email, username, password, role, is_2fa_enabled, auth_token, account_status) 
+                 VALUES (?, ?, ?, ?, ?, ?, 'active')"
             );
-            $stmt_insert->execute([$email, $username, $passwordHash, $role, $authToken]);
+            $stmt_insert->execute([$email, $username, $passwordHash, $role, $is_2fa_enabled, $authToken]);
             $newUserId = $pdo->lastInsertId();
 
             // 8. Generar Avatar por defecto
@@ -332,18 +318,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Capturar errores de validación
             $response['message'] = $e->getMessage();
             $data = [];
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
             if ($response['message'] === 'js.auth.errorPasswordMinLength') $data['length'] = $minPasswordLength;
             if ($response['message'] === 'js.auth.errorPasswordLength') $data = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             if ($response['message'] === 'js.auth.errorUsernameMinLength') $data['length'] = $minUsernameLength;
             if ($response['message'] === 'js.auth.errorUsernameMaxLength') $data['length'] = $maxUsernameLength;
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
             if (!empty($data)) $response['data'] = $data;
         }
-
-    // --- FIN DE 'create-user' ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN 'create-user' ▲▲▲ ---
         
     // --- Lógica existente para 'set-role' y 'set-status' ---
     } elseif ($action === 'set-role') {
@@ -542,7 +523,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['data'] = ['size' => $maxSizeMB];
                 throw new Exception('js.settings.errorAvatarSize');
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
             $finfo = new finfo(FILEINFO_MIME_TYPE);
             $mimeType = $finfo->file($file['tmp_name']);
