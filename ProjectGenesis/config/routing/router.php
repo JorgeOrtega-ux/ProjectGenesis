@@ -99,8 +99,14 @@ $allowedPages = [
     'login'    => '../../includes/sections/auth/login.php',
     '404'      => '../../includes/sections/main/404.php', 
     'db-error' => '../../includes/sections/main/db-error.php', 
-    'maintenance' => '../../includes/sections/main/maintenance.php', // <-- ¡NUEVA LÍNEA!
-    'server-full' => '../../includes/sections/main/server-full.php', // <-- ¡NUEVA LÍNEA!
+    
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+    // Las siguientes 4 rutas ahora apuntan al NUEVO archivo unificado
+    'maintenance' => '../../includes/sections/main/status-page.php',
+    'server-full' => '../../includes/sections/main/status-page.php',
+    'account-status-deleted'   => '../../includes/sections/main/status-page.php',
+    'account-status-suspended' => '../../includes/sections/main/status-page.php',
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     'register-step1' => '../../includes/sections/auth/register.php',
     'register-step2' => '../../includes/sections/auth/register.php',
@@ -119,9 +125,6 @@ $allowedPages = [
     'settings-change-email'    => '../../includes/sections/settings/actions/change-email.php',
     'settings-toggle-2fa'      => '../../includes/sections/settings/actions/toggle-2fa.php',
     'settings-delete-account'  => '../../includes/sections/settings/actions/delete-account.php',
-
-    'account-status-deleted'   => '../../includes/sections/auth/account-status.php',
-    'account-status-suspended' => '../../includes/sections/auth/account-status.php',
     
     // --- ▼▼▼ PÁGINAS DE ADMIN MODIFICADAS ▼▼▼ ---
     'admin-dashboard'          => '../../includes/sections/admin/dashboard.php',
@@ -133,7 +136,7 @@ $allowedPages = [
     // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     'admin-manage-backups'     => '../../includes/sections/admin/manage-backups.php',
     // 'admin-restore-backup'     => '../../includes/sections/admin/restore-backup.php', // <-- ¡ELIMINADA!
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
     // --- ▲▲▲ FIN DE PÁGINAS DE ADMIN ▲▲▲ ---
 ];
@@ -152,12 +155,10 @@ $isSettingsPage = strpos($page, 'settings-') === 0;
 // --- ▼▼▼ NUEVA LÍNEA ▼▼▼ ---
 $isAdminPage = strpos($page, 'admin-') === 0;
 
-$accountStatusType = 'none'; 
-if ($page === 'account-status-deleted') {
-    $accountStatusType = 'deleted';
-} elseif ($page === 'account-status-suspended') {
-    $accountStatusType = 'suspended';
-}
+// --- ▼▼▼ BLOQUE ELIMINADO ▼▼▼ ---
+// La variable $accountStatusType ya no es necesaria aquí,
+// porque el nuevo 'status-page.php' usa $CURRENT_SECTION.
+// --- ▲▲▲ FIN BLOQUE ELIMINADO ▲▲▲ ---
 
 if (!isset($_SESSION['user_id']) && !$isAuthPage && $page !== '404') {
     http_response_code(403); 
