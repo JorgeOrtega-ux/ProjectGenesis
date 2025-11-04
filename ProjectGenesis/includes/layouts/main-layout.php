@@ -47,6 +47,10 @@
             window.projectBasePath = '<?php echo $basePath; ?>';
             window.csrfToken = '<?php echo $_SESSION['csrf_token'] ?? ''; ?>';
             
+            // --- ▼▼▼ ¡LÍNEA AÑADIDA! ▼▼▼ ---
+            window.userId = <?php echo $_SESSION['user_id'] ?? 0; ?>; 
+            // --- ▲▲▲ ¡FIN DE LÍNEA AÑADIDA! ▲▲▲ ---
+
             // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
             // Esta es la IP o dominio (ej. 192.168.1.100) que el navegador usó para cargar la página.
             window.wsHost = '<?php echo $_SERVER['HTTP_HOST']; ?>';

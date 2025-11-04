@@ -14,7 +14,7 @@ import { initAdminServerSettingsManager } from './modules/admin-server-settings-
 import { initAdminBackupModule } from './modules/admin-backup-module.js'; 
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 import { showAlert } from './services/alert-manager.js'; 
-import { initI18nManager } from './services/i18n-manager.js'; 
+import { initI18nManager, getTranslation } from './services/i18n-manager.js'; // <-- ¡MODIFICADO! IMPORTAR GETTRANSLATION
 import { initTooltipManager } from './services/tooltip-manager.js'; 
 
 const htmlEl = document.documentElement;
@@ -84,89 +84,80 @@ document.addEventListener('DOMContentLoaded', async function () {
     
     initTooltipManager(); 
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLIENTE WEBSOCKET PARA CONTEO DE CONCURRENTES) ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLIENTE WEBSOCKET PARA CONTEO Y EXPULSIÓN) ▼▼▼ ---
     
-    // Solo conectar si el usuario está logueado (indicado por la existencia de un csrfToken)
-    // --- ▼▼▼ ¡CAMBIO DE CONDICIÓN! ▼▼▼ ---
+    // window.isUserLoggedIn (definido en main-layout.php)
     if (window.isUserLoggedIn) {
-    // --- ▲▲▲ ¡FIN DE CAMBIO! ▲▲▲ ---
         let ws;
         
-        // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
-        
-        // 1. Usar el host de la ventana (ej: 192.168.1.100 o localhost)
-        //    Si no existe (poco probable), usar '127.0.0.1' como fallback.
         const wsHost = window.wsHost || '127.0.0.1';
-        
-        // 2. Construir la URL del WebSocket dinámicamente
         const wsUrl = `ws://${wsHost}:8765`;
         
-        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
-
-
         function connectWebSocket() {
             try {
-                // --- ▼▼▼ CORRECCIÓN ▼▼▼ ---
-                // Usar la URL dinámica en lugar de la fija
                 ws = new WebSocket(wsUrl);
-                // --- ▲▲▲ FIN CORRECCIÓN ▲▲▲ ---
-                
                 window.ws = ws; // Hacemos 'ws' global por si se necesita
 
                 ws.onopen = () => {
-                    console.log("[WS_Counter] Conectado al servidor de conteo en:", wsUrl);
+                    console.log("[WS] Conectado al servidor en:", wsUrl);
+                    
+                    // --- ¡NUEVO! ENVIAR MENSAJE DE AUTENTICACIÓN ---
+                    // window.userId y window.csrfToken vienen de main-layout.php
+                    const authMessage = {
+                        type: "auth",
+                        user_id: window.userId || 0,       // Añadido en main-layout.php
+                        session_id: window.csrfToken || "" // Usamos el token CSRF como ID de sesión
+                    };
+                    ws.send(JSON.stringify(authMessage));
                 };
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
                 ws.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
-                        // Si el servidor nos envía un mensaje tipo 'user_count'
+                        
+                        // Lógica existente para 'user_count'
                         if (data.type === 'user_count') {
-                            
-                            // 1. Guardar siempre el último conteo conocido
                             window.lastKnownUserCount = data.count; 
-                            
-                            // 2. Intentar actualizar la UI si ya existe
                             const display = document.getElementById('concurrent-users-display');
                             if (display) {
                                 display.textContent = data.count;
                                 display.setAttribute('data-i18n', ''); 
                             }
+                        } 
+                        // --- ¡NUEVO! MANEJAR LA EXPULSIÓN FORZADA ---
+                        else if (data.type === 'force_logout') {
+                            console.log("[WS] Recibida orden de desconexión forzada desde otra sesión.");
+                            
+                            // (Necesitarás añadir 'js.logout.forced' a tus archivos JSON)
+                            window.showAlert(getTranslation('js.logout.forced'), 'info', 5000);
+                            
+                            // Forzar un refresco. El bootstrapper.php (PHP)
+                            // detectará el auth_token inválido y redirigirá al login.
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 3000); // 3 seg para que el usuario lea el aviso
                         }
                     } catch (e) {
                         console.error("[WS] Error al parsear mensaje:", e);
                     }
                 };
-                // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▲▲▲ ---
-
-
+                
                 ws.onclose = (event) => {
-                    console.log("[WS_Counter] Desconectado del servidor de conteo.", event.reason);
+                    console.log("[WS] Desconectado del servidor de conteo.", event.reason);
                     
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-                    // Si nos desconectamos, mostramos '---'
                     const display = document.getElementById('concurrent-users-display');
                     if (display) {
                         display.textContent = '---';
-                        display.setAttribute('data-i18n', ''); // Quitar i18n
-                    }
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-                    
-                    // Opcional: intentar reconectar si no es un cierre normal
-                    if (event.code !== 1000) {
-                         // console.log("[WS_Counter] Intentando reconectar en 5s...");
-                         // setTimeout(connectWebSocket, 5000); // Reconectar cada 5 seg
+                        display.setAttribute('data-i18n', ''); 
                     }
                 };
 
                 ws.onerror = (error) => {
-                    console.error("[WS_Counter] Error de WebSocket:", error);
-                    // El 'onclose' se llamará después de esto.
+                    console.error("[WS] Error de WebSocket:", error);
                 };
 
             } catch (e) {
-                console.error("[WS_Counter] No se pudo crear la conexión WebSocket:", e);
+                console.error("[WS] No se pudo crear la conexión WebSocket:", e);
             }
         }
 
@@ -176,8 +167,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Asegurarse de cerrar la conexión al cerrar la pestaña
         window.addEventListener('beforeunload', () => {
             if (ws && ws.readyState === WebSocket.OPEN) {
-                // Enviar un código de cierre normal para que el servidor
-                // no lo marque como un error.
                 ws.close(1000, "Navegación de usuario"); 
             }
         });

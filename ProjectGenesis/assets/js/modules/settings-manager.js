@@ -427,7 +427,7 @@ export function initSettingsManager() {
                     step2Card.classList.remove('disabled');
                     focusInputAndMoveCursorToEnd(document.getElementById('email-input-new'));
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
                 window.showAlert(getTranslation(result.message || 'js.settings.successVerification'), 'success');
             } else {
                 showInlineError(card, result.message || 'js.settings.errorVerification');
@@ -635,7 +635,7 @@ export function initSettingsManager() {
                     step2Card.classList.remove('disabled');
                     focusInputAndMoveCursorToEnd(document.getElementById('password-update-new'));
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
             } else {
                 showInlineError(step1Card, result.message || 'js.settings.errorVerification', result.data);
             }
@@ -734,11 +734,29 @@ export function initSettingsManager() {
             if (result.success) {
                 window.showAlert(getTranslation('js.settings.infoLogoutAll'), 'success');
 
+                // --- INICIO DE LA CORRECCIÓN ---
                 setTimeout(() => {
                     const token = getCsrfTokenFromPage(); 
-                    const logoutUrl = (window.projectBasePath || '') + '/config/logout.php';
-                    window.location.href = `${logoutUrl}?csrf_token=${encodeURIComponent(token)}`;
+                    
+                    // 1. Corregir la ruta
+                    const logoutUrl = (window.projectBasePath || '') + '/config/actions/logout.php';
+
+                    // 2. Usar un formulario POST, no un GET
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = logoutUrl;
+                    form.style.display = 'none';
+
+                    const tokenInput = document.createElement('input');
+                    tokenInput.type = 'hidden';
+                    tokenInput.name = 'csrf_token';
+                    tokenInput.value = token;
+
+                    form.appendChild(tokenInput);
+                    document.body.appendChild(form);
+                    form.submit();
                 }, 1500);
+                // --- FIN DE LA CORRECCIÓN ---
 
             } else {
                 window.showAlert(getTranslation(result.message || 'js.settings.errorLogoutAll'), 'error');

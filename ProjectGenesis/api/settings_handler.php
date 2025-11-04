@@ -768,6 +768,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$newAuthToken, $userId]);
 
                 $_SESSION['auth_token'] = $newAuthToken;
+                
+                // --- ▼▼▼ ¡NUEVO! LLAMAR AL WEBSOCKET PARA EXPULSAR ▼▼▼ ---
+                try {
+                    // Obtener el ID de sesión actual (que NO queremos expulsar)
+                    $sessionIdToExclude = $_POST['csrf_token']; // Usamos el token CSRF que es único por sesión
+                    
+                    $kickPayload = json_encode([
+                        'user_id' => (int)$userId, // Asegurarnos que sea un int
+                        'exclude_session_id' => $sessionIdToExclude
+                    ]);
+
+                    // Usar 127.0.0.1 (localhost) ya que PHP y Python corren en el mismo servidor
+                    $ch = curl_init('http://127.0.0.1:8766/kick');
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_POST, true);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $kickPayload);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                        'Content-Type: application/json',
+                        'Content-Length: ' . strlen($kickPayload)
+                    ]);
+                    // ¡Importante! Poner un timeout corto para no hacer esperar al usuario
+                    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); // 500ms para conectar
+                    curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        // 500ms para toda la operación
+
+                    curl_exec($ch); // No nos importa la respuesta, solo enviar la señal
+                    curl_close($ch);
+                    
+                } catch (Exception $e) {
+                    // Si el servidor WS falla, no detener el logout.
+                    // Solo registrar el error.
+                    logDatabaseError($e, 'settings_handler - logout-all (kick_ws_fail)');
+                }
+                // --- ▲▲▲ FIN DE LO NUEVO ▲▲▲ ---
 
                 $response['success'] = true;
                 $response['message'] = 'js.settings.successLogoutAll';
