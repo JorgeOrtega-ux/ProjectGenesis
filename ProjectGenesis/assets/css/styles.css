@@ -1972,13 +1972,25 @@ body {
     .trigger-select-wrapper {
         width: 100%;
     }
+    
+    /* --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ --- */
+    /* EL BUG ESTABA AQUÍ. 
+      Se eliminó "display: flex;" de esta regla. 
+      Ahora, la visibilidad la controlan las clases .active y .disabled,
+      y esta regla solo se encarga de que el contenedor activo ocupe el 100% del ancho.
+      También se añadieron los IDs de la página de admin (#admin-avatar-actions-*)
+    */
     #avatar-actions-default,
     #avatar-actions-custom,
-    #avatar-actions-preview {
-        display: flex;
+    #avatar-actions-preview,
+    #admin-avatar-actions-default,
+    #admin-avatar-actions-custom,
+    #admin-avatar-actions-preview {
+        /* display: flex;  <-- ESTA LÍNEA CAUSABA EL BUG. Se elimina. */
         width: 100%;
-        gap: 12px;
+        gap: 12px; /* 'gap' es redundante por el style="" pero inofensivo */
     }
+    /* --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ --- */
 }
 
 @media (max-width: 768px) {
