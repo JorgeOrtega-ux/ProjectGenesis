@@ -1,6 +1,6 @@
 <?php
 // FILE: includes/sections/admin/create-user.php
-// (CÓDIGO MODIFICADO - SIN ETIQUETA <form>)
+// (CÓDIGO MODIFICADO - El Rol ahora es un componente separado)
 
 $roleMap = [
     'user' => 'admin.users.roleUser',
@@ -51,51 +51,61 @@ $currentRoleIcon = $roleIconMap[$defaultRole];
                 <label for="admin-create-email" data-i18n="admin.create.emailLabel"></label>
             </div>
 
-            <div class="component-card__text" style="width: 100%; margin-top: 8px;">
-                <h2 class="component-card__title" data-i18n="admin.create.roleLabel"></h2>
-            </div>
-            <div class="trigger-select-wrapper" style="width: 100%;">
-                <div class="trigger-selector" data-action="toggleModuleAdminCreateRole">
-                    <div class="trigger-select-icon">
-                        <span class="material-symbols-rounded"><?php echo $currentRoleIcon; ?></span>
-                    </div>
-                    <div class="trigger-select-text">
-                        <span data-i18n="<?php echo htmlspecialchars($currentRoleKey); ?>"></span>
-                    </div>
-                    <div class="trigger-select-arrow">
-                        <span class="material-symbols-rounded">arrow_drop_down</span>
-                    </div>
-                </div>
+            </div> 
 
-                <div class="popover-module popover-module--anchor-width body-title disabled"
-                     data-module="moduleAdminCreateRole">
-                    <div class="menu-content">
-                        <div class="menu-list">
-                            <?php
-                            foreach ($roleMap as $key => $textKey):
-                                $isActive = ($key === $defaultRole);
-                                $iconName = $roleIconMap[$key];
-                            ?>
-                                <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>"
-                                     data-value="<?php echo htmlspecialchars($key); ?>">
-                                    <div class="menu-link-icon">
-                                        <span class="material-symbols-rounded"><?php echo $iconName; ?></span>
-                                    </div>
-                                    <div class="menu-link-text">
-                                        <span data-i18n="<?php echo htmlspecialchars($textKey); ?>"></span>
-                                    </div>
-                                    <div class="menu-link-check-icon">
-                                        <?php if ($isActive): ?>
-                                            <span class="material-symbols-rounded">check</span>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
+        <div class="component-card component-card--column">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="admin.create.roleLabel"></h2>
+                    <p class="component-card__description" data-i18n="admin.create.roleDesc">Selecciona el nivel de permisos para el nuevo usuario.</p>
+                </div>
+            </div>
+            <div class="component-card__actions">
+                <div class="trigger-select-wrapper" style="width: 100%;">
+                    <div class="trigger-selector" data-action="toggleModuleAdminCreateRole">
+                        <div class="trigger-select-icon">
+                            <span class="material-symbols-rounded"><?php echo $currentRoleIcon; ?></span>
+                        </div>
+                        <div class="trigger-select-text">
+                            <span data-i18n="<?php echo htmlspecialchars($currentRoleKey); ?>"></span>
+                        </div>
+                        <div class="trigger-select-arrow">
+                            <span class="material-symbols-rounded">arrow_drop_down</span>
                         </div>
                     </div>
-                </div>
-            </div> 
-        </div> <div class="component-card component-card--action" id="admin-password-section" style="gap: 16px;">
+
+                    <div class="popover-module popover-module--anchor-width body-title disabled"
+                         data-module="moduleAdminCreateRole">
+                        <div class="menu-content">
+                            <div class="menu-list">
+                                <?php
+                                foreach ($roleMap as $key => $textKey):
+                                    $isActive = ($key === $defaultRole);
+                                    $iconName = $roleIconMap[$key];
+                                ?>
+                                    <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>"
+                                         data-value="<?php echo htmlspecialchars($key); ?>">
+                                        <div class="menu-link-icon">
+                                            <span class="material-symbols-rounded"><?php echo $iconName; ?></span>
+                                        </div>
+                                        <div class="menu-link-text">
+                                            <span data-i18n="<?php echo htmlspecialchars($textKey); ?>"></span>
+                                        </div>
+                                        <div class="menu-link-check-icon">
+                                            <?php if ($isActive): ?>
+                                                <span class="material-symbols-rounded">check</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+            </div>
+        </div>
+
+        <div class="component-card component-card--action" id="admin-password-section" style="gap: 16px;">
             <div class="component-card__content">
                 <div class="component-card__icon">
                     <span class="material-symbols-rounded">password</span>
@@ -116,7 +126,9 @@ $currentRoleIcon = $roleIconMap[$defaultRole];
                 <button type="button" class="component-button" id="admin-generate-password-btn" data-action="admin-generate-password" data-i18n="admin.create.generatePass">Generar</button>
                 <button type="button" class="component-button" id="admin-copy-password-btn" data-action="admin-copy-password" data-i18n="admin.create.copyPass">Copiar</button>
             </div>
-        </div> <div class="component-card component-card--edit-mode">
+        </div> 
+        
+        <div class="component-card component-card--edit-mode">
             <div class="component-card__content">
                 <div class="component-card__icon">
                     <span class="material-symbols-rounded">shield_lock</span>
@@ -135,12 +147,15 @@ $currentRoleIcon = $roleIconMap[$defaultRole];
                     <span class="component-toggle-slider"></span>
                 </label>
             </div>
-        </div> <div class="component-card component-card--action" id="admin-create-card-actions">
+        </div> 
+        
+        <div class="component-card component-card--action" id="admin-create-card-actions">
             <div class="component-card__error disabled" style="width: 100%;"></div>
             
             <div class="component-card__actions" style="width: 100%;">
                 <button type="button" class="component-action-button component-action-button--secondary" data-action="toggleSectionAdminManageUsers" data-i18n="admin.create.cancelButton"></button>
                 <button type="button" class="component-action-button component-action-button--primary" id="admin-create-user-submit" data-action="admin-create-user-submit" data-i18n="admin.create.createButton"></button>
             </div>
-        </div> </div>
+        </div> 
+    </div>
 </div>
