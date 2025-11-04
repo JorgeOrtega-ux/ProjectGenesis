@@ -11,6 +11,20 @@ ini_set('session.use_only_cookies', 1);
 ini_set('session.cookie_httponly', 1);
 ini_set('session.cookie_samesite', 'Lax');
 
+// --- ▼▼▼ INICIO DE LA MODIFICACIÓN (SESIÓN 90 DÍAS) ▼▼▼ ---
+
+// 60 seg * 60 min * 24 hr * 90 días = 3 meses (aprox)
+$session_lifetime = 60 * 60 * 24 * 90; // 7,776,000 segundos
+
+// Para 6 meses (aprox 180 días):
+// $session_lifetime = 60 * 60 * 24 * 180; 
+
+// Para "nunca" (o un tiempo muy largo, ej. 10 años):
+// $session_lifetime = 60 * 60 * 24 * 365 * 10;
+
+ini_set('session.cookie_lifetime', $session_lifetime);
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
 session_start();
 
 date_default_timezone_set('UTC');

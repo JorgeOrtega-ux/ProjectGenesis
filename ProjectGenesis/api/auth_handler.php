@@ -118,6 +118,11 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
     }
 
 
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (SESIÓN 90 DÍAS) ▼▼▼ ---
+    $session_lifetime = 60 * 60 * 24 * 90; // 90 días
+    session_set_cookie_params($session_lifetime);
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+    
     session_regenerate_id(true);
 
     $_SESSION['user_id'] = $userId;
@@ -570,7 +575,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                         // Si el usuario es privilegiado, se le permite continuar aunque $currentUserCount >= $maxUsers.
                         
-                        // --- ▲▲▲ FIN DE MODIFICACIÓN (LÍMITE DE USUARIOS Y ROLES) ▲▲▲ ---
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN (LÍMITE DE USUARIOS Y ROLES) ▼▼▼ ---
 
                         clearFailedAttempts($pdo, $email);
 
@@ -595,6 +600,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
 
                         } else {
+                            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (SESIÓN 90 DÍAS) ▼▼▼ ---
+                            $session_lifetime = 60 * 60 * 24 * 90; // 90 días
+                            session_set_cookie_params($session_lifetime);
+                            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                            
                             session_regenerate_id(true);
 
                             $authToken = $user['auth_token'];
@@ -677,6 +687,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $user = $stmt_user->fetch();
 
                         if ($user) {
+                            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (SESIÓN 90 DÍAS) ▼▼▼ ---
+                            $session_lifetime = 60 * 60 * 24 * 90; // 90 días
+                            session_set_cookie_params($session_lifetime);
+                            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                            
                             session_regenerate_id(true);
 
                             $authToken = $user['auth_token'];
