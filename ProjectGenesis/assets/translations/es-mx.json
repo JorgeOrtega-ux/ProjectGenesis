@@ -35,7 +35,8 @@
   "admin": {
     "dashboard": {
       "title": "Dashboard",
-      "description": "Resumen general de la actividad del sitio."
+      "description": "Resumen general de la actividad del sitio.",
+      "manageLogs": "Administrar logs"
     },
     "users": {
       "title": "Gestionar Usuarios",
@@ -136,12 +137,13 @@
       "maxConcurrentUsersTitle": "Límite Máximo de Usuarios",
       "maxConcurrentUsersDesc": "El número máximo de usuarios que pueden estar conectados al mismo tiempo."
     },
-    "backups": {
+   "backups": {
       "title": "Copias de Seguridad",
       "description": "Crea o restaura una copia de seguridad de la base de datos. Esta es una acción peligrosa y solo para fundadores.",
       "createTooltip": "Crear nueva copia de seguridad",
       "restoreTooltip": "Restaurar copia seleccionada",
       "deleteTooltip": "Eliminar copia seleccionada",
+      "downloadTooltip": "Descargar copia seleccionada",
       "clearSelection": "Quitar selección",
       "errorDirTitle": "Error de Directorio",
       "errorDirCreate": "Error: No se pudo crear el directorio de backups. Revisa los permisos.",
@@ -160,7 +162,8 @@
       "errorDelete": "No se pudo eliminar el archivo. Revisa los permisos.",
       "successCreate": "Copia de seguridad creada exitosamente.",
       "successRestore": "Restauración completada. La página se recargará.",
-      "successDelete": "Copia de seguridad eliminada."
+      "successDelete": "Copia de seguridad eliminada.",
+      "errorDownload": "No se pudo preparar la descarga del archivo."
     },
     "restore": {
       "title": "Confirmar Restauración",

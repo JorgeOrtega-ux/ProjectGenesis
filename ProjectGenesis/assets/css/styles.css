@@ -1884,13 +1884,13 @@ body {
 .domain-card-item:hover {
     border-color: #000;
 }
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIDO DASHBOARD) ▼▼▼ --- */
 .section-content[data-section="admin-users"] .component-wrapper,
-.section-content[data-section="admin-backups"] .component-wrapper {
-    /* --- MODIFICADO --- */
+.section-content[data-section="admin-backups"] .component-wrapper,
+.section-content[data-section="admin-dashboard"] .component-wrapper {
     padding-top: 82px; 
-    /* --- FIN MODIFICACIÓN --- */
-    /* ¡YA NO SE NECESITA TRANSICIÓN NI CLASE .search-active! */
 }
+/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
 .domain-card-delete {
     display: flex;
     align-items: center;

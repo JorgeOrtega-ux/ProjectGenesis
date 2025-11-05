@@ -3,13 +3,12 @@
 // (CÓDIGO MODIFICADO CON MÉTODO 2 - PURO PHP)
 
 include '../config/config.php';
-header('Content-Type: application/json');
-
-$response = ['success' => false, 'message' => 'js.api.invalidAction'];
+// --- ENCABEZADO JSON MOVIDO ---
 
 // --- 1. Validación de Seguridad Estricta ---
 
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'founder') {
+    header('Content-Type: application/json'); // Enviar error como JSON
     $response['message'] = 'js.admin.errorAdminTarget';
     echo json_encode($response);
     exit;
@@ -17,6 +16,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role
 
 $submittedToken = $_POST['csrf_token'] ?? '';
 if (!validateCsrfToken($submittedToken)) {
+    header('Content-Type: application/json'); // Enviar error como JSON
     $response['message'] = 'js.api.errorSecurityRefresh';
     echo json_encode($response);
     exit;
@@ -28,13 +28,15 @@ $backupDir = dirname(__DIR__) . '/backups';
 
 if (!is_dir($backupDir)) {
     if (!@mkdir($backupDir, 0755, true)) {
+        header('Content-Type: application/json'); // Enviar error como JSON
         $response['message'] = 'admin.backups.errorDirCreate';
-        logDatabaseError(new Exception("API: No se pudo crear el directorio de backups: " . $backupDir), 'backup_handler');
+        logDatabaseError(new Exception("API: No se pudo crear el directorio de backups en: " . $backupDir), 'backup_handler');
         echo json_encode($response);
         exit;
     }
 }
 if (!is_writable($backupDir)) {
+    header('Content-Type: application/json'); // Enviar error como JSON
     $response['message'] = 'admin.backups.errorDirWrite';
     logDatabaseError(new Exception("API: El directorio de backups no tiene permisos de escritura: " . $backupDir), 'backup_handler');
     echo json_encode($response);
@@ -144,6 +146,47 @@ function restoreDatabasePDO($pdo, $filepath) {
 // --- 3. Manejador de Acciones ---
 
 $action = $_POST['action'] ?? '';
+
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (MANEJO DE DESCARGA) ▼▼▼ ---
+if ($action === 'download-backup') {
+    try {
+        $filename = $_POST['filename'] ?? '';
+        $safeFilename = basename($filename); // Sanitización CRÍTICA
+        $filepath = $backupDir . '/' . $safeFilename;
+
+        if (empty($safeFilename) || $safeFilename !== $filename || !file_exists($filepath) || !is_readable($filepath)) {
+            throw new Exception('admin.backups.errorFileNotFound');
+        }
+
+        // Si el archivo existe y es legible, enviar los encabezados de descarga
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream'); // O application/sql
+        header('Content-Disposition: attachment; filename="' . $safeFilename . '"');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($filepath));
+        
+        // Limpiar cualquier buffer de salida
+        ob_clean();
+        flush();
+        
+        // Leer el archivo y enviarlo al cliente
+        readfile($filepath);
+        exit; // Terminar el script
+
+    } catch (Exception $e) {
+        logDatabaseError($e, 'backup_handler - download-backup');
+        http_response_code(404); // Enviar un error 404 si no se encuentra
+        die('Error: ' . $e->getMessage()); // Mostrar error simple
+    }
+}
+// --- ▲▲▲ FIN DE MODIFICACIÓN (MANEJO DE DESCARGA) ▲▲▲ ---
+
+
+// --- Si no es una descarga, es una API JSON normal ---
+header('Content-Type: application/json');
+$response = ['success' => false, 'message' => 'js.api.invalidAction'];
 
 try {
     if ($action === 'create-backup') {

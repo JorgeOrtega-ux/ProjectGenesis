@@ -202,6 +202,13 @@ else {
                         data-tooltip="admin.backups.restoreTooltip" disabled>
                         <span class="material-symbols-rounded">restore</span>
                     </button>
+                    
+                    <button type="button"
+                        class="page-toolbar-button"
+                        data-action="admin-backup-download"
+                        data-tooltip="admin.backups.downloadTooltip" disabled>
+                        <span class="material-symbols-rounded">download</span>
+                    </button>
                     <button type="button"
                         class="page-toolbar-button"
                         data-action="admin-backup-delete"

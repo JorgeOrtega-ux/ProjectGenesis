@@ -139,7 +139,7 @@ export function initAdminBackupModule() {
         // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
         // Volver a habilitar solo los botones de la vista 'default'
         toolbarContainer.querySelectorAll('.toolbar-action-default button').forEach(btn => btn.disabled = false);
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
         
         clearBackupSelection();
     }
@@ -457,6 +457,58 @@ export function initAdminBackupModule() {
                 clearBackupSelection();
                 break;
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+            // --- ▼▼▼ INICIO DE NUEVA LÓGICA ▼▼▼ ---
+            case 'admin-backup-download':
+                if (!selectedBackupFile) {
+                    showAlert(getTranslation('admin.backups.errorNoSelection'), 'error');
+                    return;
+                }
+
+                try {
+                    const csrfToken = window.csrfToken || '';
+                    
+                    // Crear un formulario temporal para enviar la solicitud POST
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = API_ENDPOINT_BACKUP; // Endpoint definido al inicio del archivo
+                    form.style.display = 'none';
+
+                    // Añadir la acción
+                    const actionInput = document.createElement('input');
+                    actionInput.type = 'hidden';
+                    actionInput.name = 'action';
+                    actionInput.value = 'download-backup';
+                    form.appendChild(actionInput);
+
+                    // Añadir el token CSRF
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrf_token';
+                    csrfInput.value = csrfToken;
+                    form.appendChild(csrfInput);
+
+                    // Añadir el nombre del archivo
+                    const fileInput = document.createElement('input');
+                    fileInput.type = 'hidden';
+                    fileInput.name = 'filename';
+                    fileInput.value = selectedBackupFile;
+                    form.appendChild(fileInput);
+
+                    // Enviar el formulario
+                    document.body.appendChild(form);
+                    form.submit();
+                    document.body.removeChild(form);
+                    
+                    // Deseleccionar después de iniciar la descarga
+                    clearBackupSelection();
+
+                } catch (error) {
+                    console.error('Error al crear el formulario de descarga:', error);
+                    showAlert(getTranslation('admin.backups.errorDownload'), 'error');
+                }
+                break;
+            // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
 
             case 'admin-backup-clear-selection':
                 clearBackupSelection();
