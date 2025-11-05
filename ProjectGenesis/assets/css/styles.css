@@ -179,10 +179,10 @@ body {
     right: -4px;
     bottom: -4px;
     background-image: conic-gradient(from 300deg,
-        #D32029 0deg 90deg,
-        #206BD3 90deg 210deg,
-        #28A745 210deg 300deg,
-        #FFC107 300deg 360deg);
+            #D32029 0deg 90deg,
+            #206BD3 90deg 210deg,
+            #28A745 210deg 300deg,
+            #FFC107 300deg 360deg);
     mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
     -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
 }
@@ -219,18 +219,9 @@ body {
     box-shadow: 0 4px 12px #00000020;
 }
 
-/* --- ▼▼▼ CLASES ANTIGUAS ELIMINADAS ▼▼▼ --- */
-/* .module-content.module-select ... */
-/* .module-select .menu-content ... */
-/* .module-content.module-trigger-select ... */
-/* .module-trigger-select .menu-content ... */
-/* --- ▲▲▲ CLASES ANTIGUAS ELIMINADAS ▲▲▲ --- */
-
-
 /* ====================================== */
 /* ============= POPOVERS =============== */
 /* ====================================== */
-/* --- ▼▼▼ NUEVO BLOQUE DE CÓDIGO ▼▼▼ --- */
 .popover-module {
     position: absolute;
     top: calc(100% + 5px);
@@ -251,27 +242,25 @@ body {
     flex-direction: column;
 }
 
-/* Modificador para anclar a la derecha (Menú de Perfil) */
 .popover-module--anchor-right {
     left: auto;
     right: 5px;
-    width: 325px; /* Ancho fijo del menú de perfil */
+    width: 325px;
 }
- .popover-module--anchor-right .menu-content {
+
+.popover-module--anchor-right .menu-content {
     width: 100%;
- }
+}
 
-
-/* Modificador para anclar al ancho (Dropdowns de Settings) */
 .popover-module--anchor-width {
     left: 0;
     right: 0;
     width: 100%;
 }
- .popover-module--anchor-width .menu-content {
+
+.popover-module--anchor-width .menu-content {
     width: 100%;
- }
-/* --- ▲▲▲ FIN NUEVO BLOQUE DE CÓDIGO ▲▲▲ --- */
+}
 
 /* ====================================== */
 /* ============= MENUS ================= */
@@ -286,7 +275,6 @@ body {
     user-select: none;
 }
 
-/* ▼▼▼ AÑADE ESTAS NUEVAS CLASES AQUÍ ▼▼▼ */
 .menu-layout {
     display: flex;
     flex-direction: column;
@@ -306,13 +294,11 @@ body {
     gap: 4px;
 }
 
-/* Esto añade una línea separadora si el menú inferior tiene enlaces */
 .menu-layout__bottom .menu-list:not(:empty) {
     padding-top: 8px;
     border-top: 1px solid #00000020;
     margin-top: 4px;
 }
-/* ▲▲▲ FIN DE CLASES NUEVAS ▲▲▲ */
 
 .menu-link {
     display: flex;
@@ -380,12 +366,9 @@ body {
     align-items: center;
 }
 
-/* --- ▼▼▼ CLASE MODIFICADA ▼▼▼ --- */
 .section-content:has(.component-wrapper) {
     align-items: flex-start;
 }
-/* --- ▲▲▲ CLASE MODIFICADA ▲▲▲ --- */
-
 
 /* ====================================== */
 /* ============ NOT FOUND (404) ========= */
@@ -531,22 +514,14 @@ body {
     color: #000;
 }
 
-/* ▼▼▼ REGLAS CSS ELIMINADAS ▼▼▼ */
-/* .auth-generate-username { ... } */
-/* .auth-input-group input#register-username { ... } */
-/* ▲▲▲ REGLAS CSS ELIMINADAS ▲▲▲ */
-
-
 .auth-button {
-    /* display: block; */ /* <-- LÍNEA ELIMINADA */
-    /* line-height: 52px; */ /* <-- LÍNEA ELIMINADA */
-    display: flex; /* <-- LÍNEA AÑADIDA */
-    align-items: center; /* <-- LÍNEA AÑADIDA */
-    justify-content: center; /* <-- LÍNEA AÑADIDA */
+    display: flex;
+    align-items: center;
+    justify-content: center;
     height: 52px;
-    padding: 0; 
-    text-align: center; 
-    text-decoration: none; 
+    padding: 0;
+    text-align: center;
+    text-decoration: none;
     border: none;
     border-radius: 8px;
     background-color: #000;
@@ -574,7 +549,6 @@ body {
     text-decoration: underline;
 }
 
-/* --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- */
 .auth-error-message {
     padding: 12px;
     background-color: transparent;
@@ -582,40 +556,37 @@ body {
     border: 1px solid #ef9a9a;
     border-radius: 8px;
     font-size: 14px;
-    display: none; /* <-- LÍNEA AÑADIDA */
+    display: none;
 }
 
-/* --- ▼▼▼ INICIO DE NUEVA CLASE ▼▼▼ --- */
 .auth-error-message.active {
     display: block;
 }
-/* --- ▲▲▲ FIN DE NUEVA CLASE ▲▲▲ --- */
-/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
 
 .auth-input-group input:focus~label,
 .auth-input-group input:not(:placeholder-shown)~label {
     color: #000;
 }
 
-/* --- ▼▼▼ INICIO DE NUEVA CLASE ▼▼▼ --- */
 .auth-input-group input.auth-input-error {
-    border-color: #c62828; /* Color rojo de error */
+    border-color: #c62828;
 }
 
-/* Mantener el borde rojo incluso when enfocado */
 .auth-input-group input.auth-input-error:focus {
     border-color: #c62828;
     box-shadow: none;
-}/* --- ▼▼▼ INICIO DE NUEVA CLASE ▼▼▼ --- */
+}
+
 .auth-button-spinner {
     display: block;
     width: 24px;
     height: 24px;
-    border: 3px solid rgba(255, 255, 255, 0.2); /* Blanco transparente */
-    border-top-color: #ffffff; /* Blanco sólido */
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #ffffff;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
+
 .auth-form fieldset.auth-step {
     border: none;
     padding: 0;
@@ -681,8 +652,6 @@ body {
 /* ========= COMPONENTES (NUEVO) ======== */
 /* ====================================== */
 
-/* --- ▼▼▼ SECCIÓN MODIFICADA (ANTES SETTINGS) ▼▼▼ --- */
-
 .component-wrapper {
     width: 100%;
     max-width: 700px;
@@ -715,11 +684,10 @@ body {
     background-color: #ffffff;
 }
 
-/* 1. El Bloque Principal (Block) */
 .component-card {
     display: flex;
     flex-direction: row;
-    align-items: center; /* Alineación por defecto para filas simples */
+    align-items: center;
     justify-content: space-between;
     border: 1px solid #00000020;
     border-radius: 12px;
@@ -727,7 +695,6 @@ body {
     background-color: #ffffff;
 }
 
-/* 2. Los Elementos (Elements) */
 .component-card__content {
     display: flex;
     flex: 1 1 auto;
@@ -790,14 +757,15 @@ body {
 .component-card__avatar[data-role="user"]::before {
     border-color: #cccccc;
 }
+
 .component-card__avatar[data-role="moderator"]::before {
     border-color: #0000FF;
 }
+
 .component-card__avatar[data-role="administrator"]::before {
     border-color: #FF0000;
 }
 
-/* --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ --- */
 .component-card__avatar[data-role="founder"]::before {
     border: none;
     top: -4px;
@@ -805,15 +773,13 @@ body {
     right: -4px;
     bottom: -4px;
     background-image: conic-gradient(from 300deg,
-        #D32029 0deg 90deg,
-        #206BD3 90deg 210deg,
-        #28A745 210deg 300deg,
-        #FFC107 300deg 360deg);
+            #D32029 0deg 90deg,
+            #206BD3 90deg 210deg,
+            #28A745 210deg 300deg,
+            #FFC107 300deg 360deg);
     mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
     -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
-    /* transform: rotate(300deg); */ /* <-- LÍNEA ELIMINADA */
 }
-/* --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ --- */
 
 .component-card__avatar-overlay {
     position: absolute;
@@ -845,7 +811,7 @@ body {
     display: flex;
     flex-direction: column;
     line-height: 25px;
-    width: 100%; /* Para que el input de username/email ocupe todo el ancho */
+    width: 100%;
 }
 
 .component-card__title {
@@ -867,50 +833,46 @@ body {
     flex-shrink: 0;
 }
 
-/* 3. Los Modificadores (Modifiers) */
-
-/* Modificador para formularios y toggles */
 .component-card--edit-mode {
     align-items: flex-end;
-    gap: 8px; /* <-- AÑADIDO PARA ESTANDARIZAR */
+    gap: 8px;
 }
 
-/* Modificador para selectores (Idioma, Tema) */
 .component-card--column {
     flex-direction: column;
     align-items: stretch;
 }
+
 .component-card--column .component-card__actions {
-    margin-top: 8px; /* Margen superior solo en desktop */
+    margin-top: 8px;
 }
+
 .component-card--column .component-card__content {
     flex: unset;
 }
 
-/* Modificador para tarjetas de acción (Adm. Dispositivos, Eliminar) */
 .component-card--action {
     flex-direction: column;
     align-items: stretch;
-    gap: 8px; /* <-- AÑADIDO PARA ESTANDARIZAR */
+    gap: 8px;
 }
+
 .component-card--action .component-card__actions {
-    justify-content: flex-end; /* Alinear a la derecha */
-    /* margin-top: 16px; */ /* <-- ELIMINADO */
+    justify-content: flex-end;
 }
+
 .component-card--action .component-card__content {
     flex: unset;
 }
 
-
-/* Modificador para tarjetas de peligro */
 .component-card--danger {
     border-color: #ef9a9a;
 }
+
 .component-card--danger .component-card__title {
     color: #c62828;
 }
 
-/* Clase para errores inline */
 .component-card__error {
     background-color: #fbebee;
     color: #c62828;
@@ -920,8 +882,6 @@ body {
     font-size: 14px;
     line-height: 1.5;
 }
-
-/* 4. Clases de componentes que viven DENTRO de las tarjetas */
 
 .component-button {
     height: 40px;
@@ -969,8 +929,6 @@ body {
 .component-text-input:focus {
     border-color: #000;
 }
-
-/* .settings-card-avatar-error -> Eliminada, usar .component-card__error */
 
 .component-toggle-switch {
     position: relative;
@@ -1022,9 +980,6 @@ body {
     transform: translateX(16px);
 }
 
-/* --- ▼▼▼ INICIO DE NUEVOS COMPONENTES ESTANDARIZADOS ▼▼▼ --- */
-
-/* Inputs (copiados de .modal__input-group) */
 .component-input-group {
     position: relative;
     display: flex;
@@ -1063,16 +1018,17 @@ body {
     transform: translateY(0);
     font-size: 12px;
 }
+
 .component-input-group .component-input:focus,
 .component-input-group .component-input:not(:placeholder-shown) {
     border-color: #000;
 }
+
 .component-input-group .component-input:focus~label,
 .component-input-group .component-input:not(:placeholder-shown)~label {
     color: #000;
 }
 
-/* Botones de Acción (copiados de .modal__button-small) */
 .component-action-button {
     height: 40px;
     border-radius: 8px;
@@ -1094,6 +1050,7 @@ body {
     color: #000000;
     border: 1px solid #00000020;
 }
+
 .component-action-button--secondary:hover {
     background-color: #f5f5fa;
 }
@@ -1103,6 +1060,7 @@ body {
     color: #ffffff;
     border: 1px solid #000;
 }
+
 .component-action-button--primary:hover {
     background-color: #333;
     border-color: #333;
@@ -1113,6 +1071,7 @@ body {
     color: #ffffff;
     border: 1px solid #c62828;
 }
+
 .component-action-button--danger:hover {
     background-color: #b71c1c;
 }
@@ -1122,58 +1081,56 @@ body {
     color: #adb5bd;
     border-color: #e0e0e0;
     cursor: not-allowed;
-    opacity: 1; 
+    opacity: 1;
 }
+
 .component-action-button--danger:disabled {
     background-color: #f8f9fa;
     color: #adb5bd;
     border-color: #e0e0e0;
 }
 
-/* Caja de Advertencia (copiada de .modal-warning-box) */
 .component-warning-box {
-    background-color: #fbebee; /* Color de peligro */
+    background-color: #fbebee;
     border-radius: 8px;
     padding: 16px;
     display: flex;
     align-items: flex-start;
     gap: 12px;
 }
+
 .component-warning-box .material-symbols-rounded {
-    color: #c62828; /* Color de peligro */
+    color: #c62828;
     font-size: 20px;
     margin-top: 2px;
 }
+
 .component-warning-box p {
     font-size: 14px;
     line-height: 1.5;
     color: #3f3c33;
-    margin: 0; 
+    margin: 0;
 }
+
 .component-warning-box p strong {
     font-weight: 700;
     color: #1f2937;
 }
 
-/* Lista (copiada de .modal__list) */
 .component-list {
     list-style-type: disc;
-    margin: 0 0 0 20px; /* Margen izquierdo para bullets */
+    margin: 0 0 0 20px;
     padding: 0;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
- .component-list li {
+
+.component-list li {
     font-size: 14px;
     color: #1f2937;
     line-height: 1.5;
 }
-
-/* --- ▲▲▲ FIN DE NUEVOS COMPONENTES ESTANDARIZADOS ▲▲▲ --- */
-
-/* --- ▲▲▲ FIN DE LA SECCIÓN REFACTORIZADA ▲▲▲ --- */
-
 
 /* ====================================== */
 /* =========== SELECTOR TRIGGER ========= */
@@ -1236,8 +1193,6 @@ body {
 /* ============= MODALES ================ */
 /* ====================================== */
 
-/* --- ▼▼▼ BLOQUE DE CÓDIGO MODIFICADO (RENOMBRADO) ▼▼▼ --- */
-
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -1246,14 +1201,13 @@ body {
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.6);
     z-index: 1999;
-    display: none; /* MODIFICADO - Inicia oculto */
+    display: none;
     align-items: center;
     justify-content: center;
     padding: 16px;
     animation: modalFadeIn 0.2s ease-out forwards;
 }
 
-/* Clase 'active' añadida para controlar la visibilidad */
 .modal-overlay.active {
     display: flex;
 }
@@ -1268,9 +1222,9 @@ body {
     position: relative;
     animation: modalContentScaleIn 0.2s ease-out forwards;
     transform-origin: center center;
-    display: flex; /* Añadido */
-    flex-direction: column; /* Añadido */
-    gap: 16px; /* Añadido - Espacio entre header, body, footer */
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .modal-close-btn {
@@ -1299,21 +1253,14 @@ body {
     font-size: 20px;
 }
 
-/* Mantener esta regla para los errores */
 .modal-content .auth-error-message {
-    /* display: block; */ /* <-- LÍNEA ELIMINADA */
-    margin-bottom: 0; /* Ajuste */
+    margin-bottom: 0;
 }
-
-/* --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- */
-
-
-/* --- ▼▼▼ NUEVO BLOQUE DE CÓDIGO (BEM) ▼▼▼ --- */
 
 .modal__header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start; /* Alinear al inicio por si el título es largo */
+    align-items: flex-start;
 }
 
 .modal__title {
@@ -1321,7 +1268,7 @@ body {
     font-weight: 700;
     color: #1f2937;
     text-align: left;
-    padding-right: 40px; /* Espacio para el botón de cerrar */
+    padding-right: 40px;
     line-height: 1.3;
 }
 
@@ -1345,7 +1292,6 @@ body {
     font-weight: 600;
 }
 
-/* Inputs (copiados de .auth-input-group) */
 .modal__input-group {
     position: relative;
     display: flex;
@@ -1385,38 +1331,36 @@ body {
     transform: translateY(0);
     font-size: 12px;
 }
+
 .modal__input-group input:focus,
 .modal__input-group input:not(:placeholder-shown) {
     border-color: #000;
 }
+
 .modal__input-group input:focus~label,
 .modal__input-group input:not(:placeholder-shown)~label {
     color: #000;
 }
 
-/* Listas (para modal de eliminar cuenta) */
 .modal__list {
     list-style-type: disc;
-    margin: 0 0 0 20px; /* Margen izquierdo para bullets */
+    margin: 0 0 0 20px;
     padding: 0;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
- .modal__list li {
+
+.modal__list li {
     font-size: 14px;
     color: #1f2937;
     line-height: 1.5;
 }
 
-/* Footer (para botones) */
 .modal__footer {
     display: flex;
-    flex-direction: row; /* Default: row */
+    flex-direction: row;
     gap: 12px;
-    /* margin-top: 8px; */ /* <-- ELIMINADO */
-    /* border-top: 1px solid #00000020; */ /* <-- ELIMINADO */
-    /* padding-top: 16px; */ /* <-- ELIMINADO */
 }
 
 .modal__footer--column {
@@ -1436,12 +1380,11 @@ body {
     text-decoration: none;
     cursor: pointer;
 }
+
 .modal__footer-text a:hover {
     text-decoration: underline;
 }
 
-
-/* Botones (reemplazan .auth-button y .auth-button-back) */
 .modal__button {
     height: 52px;
     border-radius: 8px;
@@ -1449,7 +1392,7 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
-    flex: auto; /* Ocupar espacio disponible */
+    flex: auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1462,6 +1405,7 @@ body {
     color: #ffffff;
     border: 1px solid #000;
 }
+
 .modal__button--primary:hover {
     background-color: #333;
 }
@@ -1471,6 +1415,7 @@ body {
     color: #000000;
     border: 1px solid #00000020;
 }
+
 .modal__button--secondary:hover {
     background-color: #f5f5fa;
 }
@@ -1480,28 +1425,24 @@ body {
     color: #ffffff;
     border: 1px solid #c62828;
 }
+
 .modal__button--danger:hover {
     background-color: #b71c1c;
 }
-
-/* --- ▲▲▲ FIN NUEVO BLOQUE DE CÓDIGO (BEM) ▲▲▲ --- */
-
 
 /* ====================================== */
 /* ============= ALERTAS ================ */
 /* ====================================== */
 
 #alert-container {
-    position: absolute; /* MODIFICADO DE fixed A absolute */
-    bottom: 5px; /* MODIFICADO DE 12px */
-    left: 5px; /* MODIFICADO DE 12px */
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
     width: 325px;
     z-index: 2000;
     display: flex;
     flex-direction: column-reverse;
     gap: 8px;
-    /* Ya no es 'fixed', así que se posicionará
-       relativo a '.general-content' */
 }
 
 .alert-toast {
@@ -1696,7 +1637,6 @@ body {
     border: 0;
 }
 
-/* --- ▼▼▼ NUEVAS CLASES DE UTILIDAD ▼▼▼ --- */
 .text-center {
     text-align: center;
 }
@@ -1712,7 +1652,6 @@ body {
 .mb-24 {
     margin-bottom: 24px;
 }
-/* --- ▲▲▲ FIN NUEVAS CLASES ▲▲▲ --- */
 
 .overflow-y {
     overflow-x: hidden;
@@ -1783,146 +1722,11 @@ body {
         transform: scale(1);
     }
 }
+
 .component-card--edit-mode {
     align-items: flex-end;
     gap: 8px;
 }
-/* ====================================== */
-/* = COMPONENTE STEPPER (ADMIN SERVER)  = */
-/* ====================================== */
-
-.component-stepper {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border: 1px solid #00000020;
-    border-radius: 8px;
-    background-color: #ffffff;
-    height: 40px; /* <<< ALTURA DE 40PX SOLICITADA */
-    width: 100%;
-    padding: 0 4px; /* Padding para los botones */
-    box-sizing: border-box;
-    user-select: none;
-    transition: opacity 0.2s, background-color 0.2s;
-}
-
-/* Estado deshabilitado para el JS */
-.component-stepper.disabled-interactive {
-    pointer-events: none;
-    opacity: 0.7;
-    background-color: #f5f5fa;
-}
-
-.stepper-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;  /* Ajustado para 40px de alto */
-    height: 32px; /* Ajustado para 40px de alto */
-    background-color: transparent;
-    border: none;
-    border-radius: 8px; /* Redondeo para el hover */
-    cursor: pointer;
-    color: #000;
-    transition: background-color 0.2s;
-    flex-shrink: 0;
-    padding: 0;
-    outline: none;
-}
-
-.stepper-button:hover:not(:disabled) {
-    background-color: #f5f5fa;
-}
-
-.stepper-button:disabled {
-    color: #00000040;
-    cursor: not-allowed;
-    background-color: transparent;
-}
-
-.stepper-value {
-    flex-grow: 1;
-    text-align: center;
-    font-size: 16px; /* Mantenemos el tamaño de fuente */
-    font-weight: 600;
-    color: #000;
-    padding: 0 8px;
-}
-
-/* ====================================== */
-/* =  LISTA DE DOMINIOS (ADMIN SERVER)  = */
-/* ====================================== */
-
-.domain-card-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding-top: 8px;
-    width: 100%;
-}
-
-.domain-card-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background-color: transparent;
-    border: 1px solid #00000020;
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #000;
-    position: relative;
-    transition: border-color 0.2s, background-color 0.2s;
-}
-
-.domain-card-item .material-symbols-rounded {
-    font-size: 18px;
-    color: #6b7280;
-}
-
-.domain-card-item:hover {
-    border-color: #000;
-}
-/* --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIDO DASHBOARD) ▼▼▼ --- */
-.section-content[data-section="admin-users"] .component-wrapper,
-.section-content[data-section="admin-backups"] .component-wrapper,
-.section-content[data-section="admin-dashboard"] .component-wrapper {
-    padding-top: 82px; 
-}
-/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
-.domain-card-delete {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background-color: #000;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    opacity: 0;
-    visibility: hidden;
-    transform: scale(0.8);
-    transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
-}
-
-.domain-card-item:hover .domain-card-delete {
-    opacity: 1;
-    visibility: visible;
-    transform: scale(1);
-}
-
-.domain-card-delete .material-symbols-rounded {
-    font-size: 16px;
-    color: #fff;
-}
-
-/* ====================================== */
-/* ============= MEDIA QUERIES =========== */
-/* ====================================== */
 
 /* ====================================== */
 /* ============= MEDIA QUERIES =========== */
@@ -1956,6 +1760,7 @@ body {
     #avatar-section .component-card__actions {
         width: 100%;
     }
+
     .component-card__actions {
         justify-content: flex-end;
         width: 100%;
@@ -1969,28 +1774,17 @@ body {
     .component-card--column .component-card__actions {
         justify-content: flex-start;
     }
+
     .trigger-select-wrapper {
         width: 100%;
     }
-    
-    /* --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ --- */
-    /* EL BUG ESTABA AQUÍ. 
-      Se eliminó "display: flex;" de esta regla. 
-      Ahora, la visibilidad la controlan las clases .active y .disabled,
-      y esta regla solo se encarga de que el contenedor activo ocupe el 100% del ancho.
-      También se añadieron los IDs de la página de admin (#admin-avatar-actions-*)
-    */
+
     #avatar-actions-default,
     #avatar-actions-custom,
-    #avatar-actions-preview,
-    #admin-avatar-actions-default,
-    #admin-avatar-actions-custom,
-    #admin-avatar-actions-preview {
-        /* display: flex;  <-- ESTA LÍNEA CAUSABA EL BUG. Se elimina. */
+    #avatar-actions-preview {
         width: 100%;
-        gap: 12px; /* 'gap' es redundante por el style="" pero inofensivo */
+        gap: 12px;
     }
-    /* --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ --- */
 }
 
 @media (max-width: 768px) {
@@ -2060,7 +1854,9 @@ body {
 
 .delete-account-bullets li::before {
     display: none;
-}/* ====================================== */
+}
+
+/* ====================================== */
 /* ============= PAGE LOADER ============= */
 /* ====================================== */
 .page-loader {
@@ -2119,7 +1915,7 @@ body {
     font-size: 14px;
     line-height: 1.5;
     color: #3f3c33;
-    margin: 0; 
+    margin: 0;
 }
 
 .modal-warning-box p strong {
@@ -2159,7 +1955,8 @@ body {
     flex-direction: column;
     gap: 4px;
 }
- #delete-account-modal .modal__list li {
+
+#delete-account-modal .modal__list li {
     font-size: 14px;
     color: #333333;
     line-height: 1.5;
@@ -2190,6 +1987,7 @@ body {
     color: #000000;
     border: 1px solid #00000020;
 }
+
 .modal__button-small--secondary:hover {
     background-color: #f5f5fa;
 }
@@ -2199,6 +1997,7 @@ body {
     color: #ffffff;
     border: 1px solid #000;
 }
+
 .modal__button-small--primary:hover {
     background-color: #333;
     border-color: #333;
@@ -2209,6 +2008,7 @@ body {
     color: #ffffff;
     border: 1px solid #c62828;
 }
+
 .modal__button-small--danger:hover {
     background-color: #b71c1c;
 }
@@ -2218,460 +2018,11 @@ body {
     color: #adb5bd;
     border-color: #e0e0e0;
     cursor: not-allowed;
-    opacity: 1; 
+    opacity: 1;
 }
+
 .modal__button-small--danger:disabled {
     background-color: #f8f9fa;
     color: #adb5bd;
     border-color: #e0e0e0;
-}
-
-/* ====================================== */
-/* =  ESTILOS ADMIN - GESTIONAR USUARIOS = */
-/* ====================================== */
-
-/* --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- */
-.card-list-container {
-    display: flex;
-    flex-direction: column; /* Apila las tarjetas verticalmente */
-    gap: 16px; /* Espacio entre cada tarjeta de usuario */
-}
-
-.card-item {
-    display: flex;
-    align-items: center; /* Alinea verticalmente los elementos dentro de la tarjeta */
-    background-color: #ffffff; /* Color de fondo de tus tarjetas */
-    border: 1px solid #00000020; /* Borde estándar de tus componentes */
-    border-radius: 12px; /* Borde redondeado de tus tarjetas */
-    padding: 16px 20px;
-    gap: 20px; /* Espacio entre el avatar y los detalles */
-    /* --- ▼▼▼ NUEVAS PROPIEDADES ▼▼▼ --- */
-    cursor: pointer;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-/* --- ▼▼▼ NUEVA CLASE ▼▼▼ --- */
-.card-item:hover {
-    background-color: #f5f5fa;
-}
-
-/* --- ▼▼▼ NUEVA CLASE ▼▼▼ --- */
-.card-item.selected {
-    border-color: #000000; /* Azul */
-}
-
-
-/* Clases para el avatar eliminadas (.user-card-avatar-wrapper, .user-card-avatar) */
-/* Ahora usamos .component-card__avatar que ya existe */
-
-.card-item-details {
-    display: flex;
-    flex-wrap: wrap; /* Envuelve los ítems de detalle si no hay espacio */
-    gap: 10px; /* Espacio entre los "pills" de detalle */
-    flex-grow: 1; /* Permite que los detalles ocupen el espacio restante */
-}
-
-.card-detail-item {
-    display: flex;
-    align-items: center;
-    background-color: transparent; /* Fondo de tus inputs */
-    border: 1px solid #00000020; /* Borde de tus inputs */
-    border-radius: 50px; /* Borde redondeado de tus inputs/botones */
-    padding: 8px 12px;
-    font-size: 14px; /* Tamaño de fuente de tus botones/inputs */
-    color: #000000; /* Color de texto de tus inputs */
-    gap: 8px; /* Espacio entre label y value */
-}
-
-.card-detail-label {
-    font-weight: 600; /* Texto de etiqueta más fuerte */
-    color: #6b7280; /* Color de texto de descripción/labels */
-}
-
-.card-detail-value {
-    font-weight: 500;
-}
-/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
-
-/* Clase .user-card-actions eliminada */
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    /* --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- */
-    .card-item {
-        flex-direction: column; /* Apila elementos en pantallas pequeñas */
-        align-items: flex-start;
-        padding: 16px;
-        gap: 16px;
-    }
-    
-    .card-item .component-card__avatar {
-        margin: 0 auto; /* Centra el avatar en móvil */
-    }
-    
-    .card-item-details {
-        width: 100%; /* Los detalles ocupan todo el ancho */
-    }
-
-    .card-detail-item {
-        width: 100%; /* Cada "pill" ocupa todo el ancho */
-        box-sizing: border-box;
-    }
-    /* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
-}
-/* ====================================== */
-/* =  ESTILOS PAGE TOOLBAR (GENÉRICO)   = */
-/* ====================================== */
-
-
-/* --- ▼▼▼ NUEVO: Contenedor para AMBOS toolbars ▼▼▼ --- */
-.page-toolbar-container {
-    /* Esto es lo que solía ser el .admin-toolbar-floating */
-    position: absolute;
-    top: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-    max-width: 500px;
-    width: 95%;
-    
-    /* Propiedades del container */
-    display: flex;
-    flex-direction: column;
-    gap: 8px; /* Espacio entre el toolbar principal y el de búsqueda */
-    box-sizing: border-box;
-}
-/* --- ▼▼▼ NUEVO: Posicionamiento del Popover de Filtro ▼▼▼ */
-.page-toolbar-container .popover-module[data-module="modulePageFilter"] {
-    position: absolute;
-    top: calc(100% + 8px); /* Debajo del primer toolbar */
-    left: 0;
-    right: auto;
-    width: 280px; /* Ancho estándar del menú */
-    z-index: 10;
-}
-
-/* --- ▼▼▼ NUEVO: Botón de filtro activo ▼▼▼ */
-.page-toolbar-button[data-action="toggleModulePageFilter"].active {
-    border-color: #000000;
-    background-color: #000000;
-    color: #ffffff;
-}
-
-/* --- ▼▼▼ NUEVO: Encabezado para menús (reutilizable) ▼▼▼ */
-.menu-header {
-    padding: 8px 12px 4px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-    user-select: none;
-}
-.page-toolbar-floating {
-    display: flex;
-    /* justify-content: space-between; */ /* <-- ELIMINADO */
-    align-items: center;
-    width: 100%;
-    padding: 8px 8px;
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px #00000020;
-    box-sizing: border-box;
-    height: auto;
-    position: relative; /* <-- AÑADIDO */
-}
-
-/* --- ▼▼▼ INICIO DE REGLAS CORREGIDAS PARA VISTAS DE TOOLBAR ▼▼▼ --- */
-
-/* Los contenedores de estado (default/selection) son los hijos directos */
-.toolbar-action-default,
-.toolbar-action-selection {
-    display: flex;
-    justify-content: space-between; /* <-- AÑADIDO */
-    align-items: center; /* <-- AÑADIDO */
-    width: 100%; /* <-- AÑADIDO */
-    gap: 8px; /* <-- AÑADIDO */
-}
-
-.page-toolbar-left,
-.page-toolbar-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* 1. Estilo base para los botones (CORREGIDO A ICON-ONLY) */
-.page-toolbar-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* --- MODIFICADO --- */
-    width: 35px;  /* 50px (altura barra) - 8px*2 (padding) = 34px */
-    height: 35px; /* 50px (altura barra) - 8px*2 (padding) = 34px */
-    /* --- FIN MODIFICACIÓN --- */
-    background-color: transparent;
-    border: 1px solid #00000020;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
-    /* --- ▼▼▼ LÍNEAS ELIMINADAS (NO MÁS BOTONES DE TEXTO) ▼▼▼ --- */
-    /* width: auto; */
-    /* padding: 0 12px; */
-}
-.page-toolbar-button:not(:disabled):hover {
-    background-color: #f5f5fa;
-}
-.page-toolbar-button:disabled {
-    color: #00000040;
-    cursor: not-allowed;
-    opacity: 0.7; /* <-- MODIFICADO */
-}
-
-/* --- ▼▼▼ REGLA ELIMINADA (YA NO ES NECESARIA) ▼▼▼ --- */
-/* .page-toolbar-button:has(.material-symbols-rounded:only-child) { ... } */
-
-
-/* 2. Estilo para el CONTENEDOR de paginación */
-.page-toolbar-pagination {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    height: 35px;
-    border: 1px solid #00000020;
-    border-radius: 8px; 
-    overflow: hidden;
-}
-
-/* 3. SOBREESCRIBIR los botones DENTRO del contenedor de paginación */
-.page-toolbar-pagination .page-toolbar-button {
-    border: none;
-    border-radius: 0;
-    /* --- MODIFICADO --- */
-    width: 34px; /* Forzar tamaño de icono */
-    /* --- FIN MODIFICACIÓN --- */
-    padding: 0; /* Asegurarse que no tenga padding */
-}
-
-/* 4. Estilo para el TEXTO de paginación */
-.page-toolbar-page-text {
-    font-size: 14px;
-    font-weight: 500;
-    color: #6b7280;
-    padding: 0 12px;
-    user-select: none;
-    /* --- MODIFICADO --- */
-    height: 34px; /* 50px (altura barra) - 8px*2 (padding) = 34px */
-    /* --- FIN MODIFICACIÓN --- */
-    display: flex;
-    align-items: center;
-}
-
-/* --- ▼▼▼ NUEVO: Estilo para el botón de búsqueda ACTIVO ▼▼▼ --- */
-.page-toolbar-button[data-action="admin-toggle-search"].active {
-    border-color: #000000; /* Azul como en la imagen */
-    background-color: #000000;
-    color: #ffffff;
-}
-
-/* --- ▼▼▼ NUEVO: Estilo para la barra de búsqueda ▼▼▼ --- */
-.page-search-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 12px;
-    /* --- MODIFICADO --- */
-    height: auto; /* Altura fija de 50px */
-    /* --- FIN MODIFICACIÓN --- */
-    background-color: #ffffff;
-    border: 1px solid #00000020;
-    border-radius: 8px;
-    box-sizing: border-box;
-    width: 100%; /* <-- AÑADIDO PARA QUE LLENE EL NUEVO DIV FLOTANTE */
-}
-/* Añadir al final de assets/css/styles.css */
-
-/* Para los toolbars (incluyendo la barra de búsqueda) */
-.page-toolbar-floating.disabled {
-    display: none;
-}
-.page-toolbar-floating.active {
-    display: flex;
-}
-
-/* Para los estados de edición en admin-edit-user.php */
-.component-card__content.disabled,
-.component-card__actions.disabled {
-    display: none;
-}
-.component-card__content.active,
-.component-card__actions.active {
-    display: flex;
-}
-
-/* Para los pasos en los formularios de settings */
-.component-card.disabled {
-    display: none;
-}
-.component-card.active {
-    display: flex;
-}
-
-/* Para los mensajes de error */
-.component-card__error {
-    display: none; /* Oculto por defecto */
-}
-.component-card__error.active {
-    display: block; /* O 'flex' si necesita centrar contenido */
-}
-
-/* Para los pasos de autenticación (auth-manager.js usa 'block') */
-.auth-step.active {
-    display: flex; /* Aseguramos que 'active' signifique 'flex' */
-}
-.auth-error-message {
-    display: none; /* Oculto por defecto */
-}
-.auth-error-message.active {
-    display: block;
-}
-.page-search-bar .material-symbols-rounded {
-    color: #6b7280;
-    font-size: 20px;
-}
-
-.page-search-bar .page-search-input {
-    width: 100%;
-    height: 100%;
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: 14px;
-    font-weight: 500;
-    color: #000;
-}
-
-.page-search-bar .page-search-input::placeholder {
-    color: #6b7280;
-    font-weight: 400;
-}
-
-/* --- ▼▼▼ INICIO DE REGLAS CORREGIDAS PARA VISTAS DE TOOLBAR ▼▼▼ --- */
-
-/* Por defecto, las acciones de selección están ocultas */
-.toolbar-action-selection {
-    display: none;
-}
-/* Por defecto, las acciones default están visibles */
-.toolbar-action-default {
-    display: flex;
-}
-
-
-/* Cuando la selección está activa... */
-.page-toolbar-container.selection-active .toolbar-action-default {
-    display: none; /* Ocultar acciones default */
-}
-.page-toolbar-container.selection-active .toolbar-action-selection {
-    display: flex; /* Mostrar acciones de selección */
-}
-/* --- ▲▲▲ FIN DE REGLAS CORREGIDAS PARA VISTAS DE TOOLBAR ▲▲▲ --- */
-
-
-/* Ajuste para móvil */
-@media (max-width: 700px) {
-    /* Esta regla ahora aplica al nuevo contenedor, lo cual es correcto */
-    .page-toolbar-container {
-        width: calc(100% - 32px);
-    }
-    
-    /* --- ▼▼▼ REGLAS ELIMINADAS (YA NO SON NECESARIAS) ▼▼▼ --- */
-    /* .page-toolbar-button[data-i18n] { ... } */
-    /* .page-toolbar-button[data-i18n] .material-symbols-rounded { ... } */
-    /* .page-toolbar-button[data-action="admin-clear-selection"] { ... } */
-}/* ====================================== */
-/* =  COMPONENTE ACORDEÓN (NUEVO)       = */
-/* ====================================== */
-
-/* Este es el cabecero de categoría. 
-  Está diseñado para que parezca una tarjeta, 
-  exactamente como en tu imagen.
-*/
-.component-accordion__header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px;
-    cursor: pointer;
-    user-select: none;
-    
-    /* Apariencia de tarjeta */
-    border: 1px solid #00000020;
-    border-radius: 12px;
-    background-color: #ffffff;
-    transition: all 0.2s ease-in-out;
-}
-
-/* Oscurecer al pasar el ratón solo si está CERRADO */
-.component-accordion__header:not(.active):hover {
-    background-color: #f5f5fa;
-}
-
-/* Mantener el fondo oscuro si está ABIERTO (como en tu foto)
-  En esta versión, el cabecero NO se fusiona con las tarjetas,
-  así que mantiene sus bordes redondeados.
-*/
-.component-accordion__header.active {
-    background-color: #f5f5fa;
-}
-
-.component-accordion__icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #00000020;
-    background-color: #ffffff;
-    color: #000000;
-    flex-shrink: 0;
-}
-
-.component-accordion__icon .material-symbols-rounded {
-    font-size: 24px;
-}
-
-.component-accordion__text {
-    flex-grow: 1;
-}
-
-.component-accordion__title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #000000;
-    line-height: 1.4;
-}
-
-.component-accordion__description {
-    font-size: 14px;
-    color: #6b7280;
-    line-height: 1.4;
-}
-
-.component-accordion__arrow {
-    flex-shrink: 0;
-    transition: transform 0.3s ease;
-}
-
-/* Gira la flecha cuando el cabecero tiene la clase .active */
-.component-accordion__header.active .component-accordion__arrow {
-    transform: rotate(180deg);
-}
-
-/* Esta regla oculta el contenido que no está activo.
-  (El JS se encargará de poner 'display: flex'
-  a las tarjetas .component-card hermanas)
-*/
-.component-accordion__content {
-    display: none; 
 }

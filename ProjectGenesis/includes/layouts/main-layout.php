@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded">
     <link rel="stylesheet" type="text/css" href="<?php echo $basePath; ?>/assets/css/styles.css">
+    <link rel="stylesheet" type="text/css" href="<?php echo $basePath; ?>/assets/css/admin-styles.css">
     <title>ProjectGenesis</title>
 </head>
 
@@ -35,7 +36,7 @@
                         <div class="main-sections">
                             <?php ?>
                         </div>
-                        
+
                     </div>
                 </div>
 
@@ -46,9 +47,9 @@
         <script>
             window.projectBasePath = '<?php echo $basePath; ?>';
             window.csrfToken = '<?php echo $_SESSION['csrf_token'] ?? ''; ?>';
-            
+
             // --- ▼▼▼ ¡LÍNEA AÑADIDA! ▼▼▼ ---
-            window.userId = <?php echo $_SESSION['user_id'] ?? 0; ?>; 
+            window.userId = <?php echo $_SESSION['user_id'] ?? 0; ?>;
             // --- ▲▲▲ ¡FIN DE LÍNEA AÑADIDA! ▲▲▲ ---
 
             // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
@@ -66,7 +67,7 @@
 
             // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
             window.avatarMaxSizeMB = <?php echo $GLOBALS['site_settings']['avatar_max_size_mb'] ?? 2; ?>;
-            
+
             // --- ▼▼▼ ¡LÍNEAS MODIFICADAS/AÑADIDAS! ▼▼▼ ---
             window.minPasswordLength = <?php echo $GLOBALS['site_settings']['min_password_length'] ?? 8; ?>;
             window.maxPasswordLength = <?php echo $GLOBALS['site_settings']['max_password_length'] ?? 72; ?>;
