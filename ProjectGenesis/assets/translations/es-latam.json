@@ -40,6 +40,38 @@
       "sendFeedback": "Enviar Comentarios"
     }
   },
+  "home": {
+    "noGroups": {
+      "title": "Aún no estás en ningún grupo",
+      "description": "Únete a un grupo con un código de invitación o explora grupos públicos.",
+      "joinButton": "Unirme a un grupo",
+      "exploreButton": "Explorar grupos"
+    },
+    "myGroups": {
+      "title": "Mis Grupos",
+      "description": "Esta es tu página principal. Aquí verás la actividad de tus grupos."
+    }
+  },
+  "groups": {
+    "join": {
+      "title": "Unirse a un Grupo",
+      "description": "Ingresa un código de invitación para unirte a un grupo existente.",
+      "accessCodeTitle": "Código de Invitación",
+      "accessCodeDesc": "Pídele el código al administrador del grupo.",
+      "accessCodeLabel": "Código de acceso",
+      "button": "Unirme al grupo",
+      "js": {
+        "error": {
+          "codeEmpty": "Por favor, ingresa un código de acceso.",
+          "codeInvalid": "El código de acceso no es válido o ha expirado.",
+          "alreadyJoined": "Ya eres miembro de este grupo."
+        },
+        "success": {
+          "joined": "¡Te has unido al grupo! Redirigiendo..."
+        }
+      }
+    }
+  },
   "help": {
     "legal": {
       "title": "Aviso Legal",

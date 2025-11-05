@@ -223,6 +223,7 @@ if (empty($path) || $path === '/') {
 $pathsToPages = [
     '/'           => 'home',
     '/explorer'   => 'explorer',
+    '/join-group' => 'join-group', // <-- RUTA AÑADIDA
     '/login'      => 'login',
     '/maintenance' => 'maintenance', 
     '/server-full' => 'server-full', // <-- ¡NUEVA LÍNEA!

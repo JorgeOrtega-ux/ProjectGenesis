@@ -17,6 +17,7 @@ let currentMenuType = null;
 const routes = {
     'toggleSectionHome': 'home',
     'toggleSectionExplorer': 'explorer',
+    'toggleSectionJoinGroup': 'join-group', // <-- RUTA AÑADIDA
     'toggleSectionLogin': 'login',
     'toggleSectionMaintenance': 'maintenance', // <-- ¡NUEVA LÍNEA!
     'toggleSectionServerFull': 'server-full', // <--- AÑADE ESTA LÍNEA
@@ -66,6 +67,7 @@ const routes = {
 const paths = {
     '/': 'toggleSectionHome',
     '/explorer': 'toggleSectionExplorer',
+    '/join-group': 'toggleSectionJoinGroup', // <-- RUTA AÑADIDA
     '/login': 'toggleSectionLogin',
     '/maintenance': 'toggleSectionMaintenance', // <-- ¡NUEVA LÍNEA!
     '/server-full': 'toggleSectionServerFull', // <--- AÑADE ESTA LÍNEA
@@ -212,7 +214,7 @@ async function loadPage(page, action, fetchParams = null) {
                 }
             }
         }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▲▲▲ ---
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
 
         let link;
         if (page === 'register-step3') {
@@ -358,8 +360,8 @@ export function initRouter() {
 
     document.body.addEventListener('click', e => {
       const link = e.target.closest(
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR /help) ▼▼▼ ---
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/help"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"]'
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR .component-action-button) ▼▼▼ ---
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/help"], .component-button[data-action*="toggleSection"], .component-action-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"]'
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         );
 
@@ -370,9 +372,11 @@ export function initRouter() {
             hideTooltip();
             // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
-            if (link.classList.contains('component-button') && !link.hasAttribute('data-action') && !link.hasAttribute('data-nav-js')) { 
+            // --- ▼▼▼ MODIFICACIÓN: Cambiado 'component-button' a 'component-action-button' ---
+            if (link.classList.contains('component-action-button') && !link.hasAttribute('data-action') && !link.hasAttribute('data-nav-js')) { 
                 return;
             }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
             e.preventDefault();

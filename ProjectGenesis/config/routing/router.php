@@ -9,7 +9,7 @@ include '../config.php';
 // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
 // El bloque que comprobaba si ($pdo === null) se ha eliminado.
 // Si config.php falla, la ejecución se detendrá antes de llegar aquí.
-// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▼▼▼ ---
 
 
 function showRegistrationError($basePath, $messageKey, $detailsKey) {
@@ -96,6 +96,7 @@ $CURRENT_SECTION = $page;
 $allowedPages = [
     'home'     => '../../includes/sections/main/home.php',
     'explorer' => '../../includes/sections/main/explorer.php',
+    'join-group' => '../../includes/sections/main/join-group.php', // <-- PÁGINA AÑADIDA
     'login'    => '../../includes/sections/auth/login.php',
     '404'      => '../../includes/sections/main/404.php', 
     'db-error' => '../../includes/sections/main/db-error.php', 

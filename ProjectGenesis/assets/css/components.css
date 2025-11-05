@@ -1653,6 +1653,52 @@
     gap: 16px; /* Espacio entre cada tarjeta de usuario */
 }
 
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN (GRID PARA GRUPOS) ▼▼▼ --- */
+[data-section="home"] .card-list-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+/* --- ▼▼▼ INICIO DE ESTILOS AÑADIDOS ▼▼▼ --- */
+/* Estilos para la tarjeta de "Sin Grupos" en Home */
+[data-section="home"] .no-groups-card {
+    margin-top: 24px;
+    align-items: center;
+    text-align: center;
+    padding: 32px;
+}
+
+[data-section="home"] .no-groups-card .component-card__icon {
+    background-color: transparent;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 16px;
+    border: none;
+}
+
+[data-section="home"] .no-groups-card .component-card__icon .material-symbols-rounded {
+    font-size: 60px;
+    color: #6b7280;
+}
+
+[data-section="home"] .no-groups-card .component-card__title {
+    font-size: 20px;
+}
+
+[data-section="home"] .no-groups-card .component-card__description {
+    max-width: 300px;
+    margin-top: 8px;
+}
+
+[data-section="home"] .no-groups-card .component-card__actions {
+    margin-top: 24px;
+    gap: 12px;
+    width: 100%;
+    justify-content: center;
+}
+/* --- ▲▲▲ FIN DE ESTILOS AÑADIDOS ▲▲▲ --- */
+
 .card-item {
     display: flex;
     align-items: center; /* Alinea verticalmente los elementos dentro de la tarjeta */
@@ -2016,4 +2062,49 @@
         width: 100%;
         gap: 12px;
     }
+
+    /* --- ▼▼▼ NUEVOS ESTILOS PARA HOME (MÓVIL) ▼▼▼ --- */
+    [data-section="home"] .component-card__actions {
+        flex-direction: column;
+        width: 100%;
+        max-width: 300px;
+    }
+    /* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */
+}
+
+/* ====================================== */
+/* =  BOTÓN DE ACCIÓN FLOTANTE (FAB)    = */
+/* ====================================== */
+
+.fab-container {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000; /* Sobre el contenido, debajo de modales (2000) */
+}
+
+.fab-button {
+    width: 56px;
+    height: 56px;
+    background-color: #000; /* Color primario */
+    color: #ffffff; /* Color de icono */
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    outline: none;
+}
+
+.fab-button:hover {
+    background-color: #333; /* Más claro al pasar el mouse */
+    transform: scale(1.05);
+}
+
+.fab-button .material-symbols-rounded {
+    font-size: 28px;
+    font-weight: 600;
 }

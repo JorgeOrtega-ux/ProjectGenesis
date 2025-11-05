@@ -12,6 +12,7 @@ import { initAdminServerSettingsManager } from './modules/admin-server-settings-
 // Se eliminan las importaciones de admin-backups-manager y admin-restore-backup-manager
 // Se añade la importación del nuevo módulo combinado
 import { initAdminBackupModule } from './modules/admin-backup-module.js'; 
+import { initGroupsManager } from './modules/groups-manager.js'; // <-- MÓDULO AÑADIDO
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager, getTranslation } from './services/i18n-manager.js'; // <-- ¡MODIFICADO! IMPORTAR GETTRANSLATION
@@ -77,6 +78,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Se eliminan las llamadas a initAdminBackupsManager() y initAdminRestoreBackupManager()
     // Se añade la llamada al nuevo módulo combinado
     initAdminBackupModule();
+    initGroupsManager(); // <-- MÓDULO AÑADIDO
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
     // El Router se inicializa al final

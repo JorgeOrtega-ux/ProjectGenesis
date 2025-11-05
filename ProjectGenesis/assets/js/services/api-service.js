@@ -3,7 +3,10 @@ import { getTranslation } from './i18n-manager.js';
 const API_ENDPOINTS = {
     AUTH: `${window.projectBasePath}/api/auth_handler.php`,
     SETTINGS: `${window.projectBasePath}/api/settings_handler.php`,
-    ADMIN: `${window.projectBasePath}/api/admin_handler.php` // <-- AÑADIDO
+    ADMIN: `${window.projectBasePath}/api/admin_handler.php`,
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    GROUPS: `${window.projectBasePath}/api/groups_handler.php`
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 };
 
 async function _post(url, formData) {
@@ -61,5 +64,14 @@ async function callAdminApi(formData) {
     return _post(API_ENDPOINTS.ADMIN, formData);
 }
 
-export { callAuthApi, callSettingsApi, callAdminApi }; // <-- AÑADIDO A EXPORT
+/**
+ * Llama al manejador de la API de grupos.
+ * @param {FormData} formData Los datos del formulario a enviar.
+ * @returns {Promise<object>} La respuesta JSON del servidor.
+ */
+async function callGroupsApi(formData) {
+    return _post(API_ENDPOINTS.GROUPS, formData);
+}
+
+export { callAuthApi, callSettingsApi, callAdminApi, callGroupsApi }; // <-- MODIFICADO
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
