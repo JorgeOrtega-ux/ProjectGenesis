@@ -7,33 +7,13 @@ import { getTranslation, applyTranslations } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js';
 
-/**
- * Genera una contraseña segura aleatoria.
- * @param {number} length La longitud de la contraseña (default 16)
- * @returns {string} Una contraseña segura.
- */
+// --- ▼▼▼ FUNCIÓN ELIMINADA ▼▼▼ ---
+/*
 function generateSecurePassword(length = 16) {
-    const lower = 'abcdefghijklmnopqrstuvwxyz';
-    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const numbers = '0123456789';
-    const special = '!@#$%^&*()_+[]{}|;:,.<>?';
-    const all = lower + upper + numbers + special;
-    
-    let password = '';
-    // Asegurar al menos uno de cada tipo
-    password += lower[Math.floor(Math.random() * lower.length)];
-    password += upper[Math.floor(Math.random() * upper.length)];
-    password += numbers[Math.floor(Math.random() * numbers.length)];
-    password += special[Math.floor(Math.random() * special.length)];
-    
-    // Rellenar el resto
-    for (let i = 4; i < length; i++) {
-        password += all[Math.floor(Math.random() * all.length)];
-    }
-    
-    // Mezclar (barajar) la contraseña para que los primeros 4 no sean predecibles
-    return password.split('').sort(() => 0.5 - Math.random()).join('');
+    // ... (función eliminada)
 }
+*/
+// --- ▲▲▲ FUNCIÓN ELIMINADA ▲▲▲ ---
 
 
 export function initAdminManager() {
@@ -504,15 +484,40 @@ export function initAdminManager() {
             return; 
         }
 
+        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ ---
         if (action === 'admin-generate-password') {
             event.preventDefault();
             const passInput = document.getElementById('admin-create-password');
-            if (passInput) {
-                passInput.value = generateSecurePassword(16);
-                hideCreateUserError(); // Ocultar error al generar
+            const generateBtn = button; // 'button' es el elemento clickeado
+            
+            if (passInput && generateBtn && !generateBtn.disabled) {
+                
+                // 1. Mostrar estado de carga
+                generateBtn.disabled = true;
+                const originalBtnText = generateBtn.innerHTML;
+                generateBtn.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;"></span>`;
+
+                const formData = new FormData();
+                formData.append('action', 'admin-generate-password');
+                
+                // 2. Llamar a la API
+                const result = await callAdminApi(formData);
+
+                // 3. Manejar resultado
+                if (result.success && result.password) {
+                    passInput.value = result.password;
+                    hideCreateUserError(); // Ocultar error al generar
+                } else {
+                    showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+                }
+                
+                // 4. Restaurar botón
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = originalBtnText;
             }
             return;
         }
+        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
         
         if (action === 'admin-copy-password') {
             event.preventDefault();

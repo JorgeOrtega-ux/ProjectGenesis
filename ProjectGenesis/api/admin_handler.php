@@ -93,8 +93,39 @@ function canAdminModifyTarget($adminRole, $targetRole) {
 }
 // --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
 
+// --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! (Lógica de JS portada a PHP) ▼▼▼ ---
+/**
+ * Genera una contraseña segura aleatoria en PHP.
+ * @param {number} length La longitud de la contraseña (default 16)
+ * @returns {string} Una contraseña segura.
+ */
+function generateSecurePasswordPhp($length = 16) {
+    $lower = 'abcdefghijklmnopqrstuvwxyz';
+    $upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $numbers = '0123456789';
+    $special = '!@#$%^&*()_+[]{}|;:,.<>?';
+    $all = $lower . $upper . $numbers . $special;
+
+    $password = '';
+    // Asegurar al menos uno de cada tipo
+    $password .= $lower[random_int(0, strlen($lower) - 1)];
+    $password .= $upper[random_int(0, strlen($upper) - 1)];
+    $password .= $numbers[random_int(0, strlen($numbers) - 1)];
+    $password .= $special[random_int(0, strlen($special) - 1)];
+
+    // Rellenar el resto
+    for ($i = 4; $i < $length; $i++) {
+        $password .= $all[random_int(0, strlen($all) - 1)];
+    }
+
+    // Mezclar (barajar)
+    return str_shuffle($password);
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+
+
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (CONSTANTES GLOBALES) ▼▼▼ ---
-// Cargar valores desde $GLOBALS
+// Cargar valores desde $GLOBALS a variables locales
 $minPasswordLength = (int)($GLOBALS['site_settings']['min_password_length'] ?? 8);
 $maxPasswordLength = (int)($GLOBALS['site_settings']['max_password_length'] ?? 72);
 $minUsernameLength = (int)($GLOBALS['site_settings']['min_username_length'] ?? 6);
@@ -499,6 +530,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     // --- ▲▲▲ FIN DE LA MODIFICACIÓN (set-status) ▲▲▲ ---
+
+    // --- ▼▼▼ ¡NUEVO BLOQUE DE ACCIÓN AÑADIDO! ▼▼▼ ---
+    elseif ($action === 'admin-generate-password') {
+        try {
+            // No se necesita $targetUserId, solo el permiso del admin, que ya está validado.
+            $newPassword = generateSecurePasswordPhp(16); // Llama a la nueva función PHP
+            
+            $response['success'] = true;
+            $response['password'] = $newPassword;
+
+        } catch (Exception $e) {
+            logDatabaseError($e, 'admin_handler - admin-generate-password');
+            $response['message'] = 'js.api.errorServer'; // Error genérico
+        }
+    }
+    // --- ▲▲▲ FIN DE NUEVO BLOQUE DE ACCIÓN ▲▲▲ ---
     
     // === ▼▼▼ INICIO DE NUEVAS ACCIONES DE EDICIÓN DE ADMIN ▼▼▼ ===
 
