@@ -1751,12 +1751,6 @@
     z-index: 10;
 }
 
-.page-toolbar-button[data-action="toggleModulePageFilter"].active {
-    border-color: #000000;
-    background-color: #000000;
-    color: #ffffff;
-}
-
 .menu-header {
     padding: 8px 12px 4px;
     font-size: 12px;
@@ -1843,7 +1837,8 @@
     align-items: center;
 }
 
-.page-toolbar-button[data-action="admin-toggle-search"].active {
+.page-toolbar-button[data-action="admin-toggle-search"].active,
+.page-toolbar-button[data-action="toggleModulePageFilter"].active {
     border-color: #000000;
     background-color: #000000;
     color: #ffffff;

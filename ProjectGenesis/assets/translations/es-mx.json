@@ -137,7 +137,7 @@
       "maxConcurrentUsersTitle": "Límite Máximo de Usuarios",
       "maxConcurrentUsersDesc": "El número máximo de usuarios que pueden estar conectados al mismo tiempo."
     },
-   "backups": {
+    "backups": {
       "title": "Copias de Seguridad",
       "description": "Crea o restaura una copia de seguridad de la base de datos. Esta es una acción peligrosa y solo para fundadores.",
       "createTooltip": "Crear nueva copia de seguridad",
@@ -173,7 +173,8 @@
       "backupDate": "Fecha de Creación",
       "backupSize": "Tamaño del Archivo",
       "cancelButton": "Cancelar (Volver a Backups)",
-      "confirmButton": "Confirmar y Restaurar"
+      "confirmButton": "Confirmar y Restaurar",
+      "restoring": "Restaurando..."
     },
     "delete": {
       "title": "Confirmar Eliminación",
@@ -184,6 +185,16 @@
       "backupSize": "Tamaño del Archivo",
       "cancelButton": "Cancelar (Volver a Backups)",
       "confirmButton": "Confirmar y Eliminar"
+    },
+    "logs": {
+      "viewTitle": "Viendo Log",
+      "errorTitle": "Error",
+      "title": "Administrar Logs",
+      "description": "Revisa los logs de errores del sistema y la base de datos.",
+      "noLogsTitle": "No hay logs",
+      "noLogsDesc": "No se encontraron archivos .log en el directorio.",
+      "labelDate": "Última modif.",
+      "labelSize": "Tamaño"
     }
   },
   "settings": {
@@ -582,6 +593,8 @@
       "domainRemoveError": "Error al eliminar el dominio.",
       "domainExists": "Este dominio ya existe en la lista.",
       "errorUserCount": "Error al obtener el conteo de usuarios.",
+      "passwordCopied": "Contraseña copiada al portapapeles",
+      "passwordCopyError": "Error al copiar la contraseña",
       "backups": {
         "errorNoSelection": "Por favor, selecciona una copia de seguridad primero.",
         "errorGeneric": "Ocurrió un error al procesar la copia de seguridad.",
@@ -591,6 +604,9 @@
       "restore": {
         "restoring": "Restaurando...",
         "errorNoFile": "Error: No se especificó ningún archivo de restauración."
+      },
+      "logs": {
+        "errorNoSelection": "Por favor, selecciona un archivo de log primero."
       }
     }
   },
