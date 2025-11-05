@@ -49,19 +49,7 @@
                         </div>
 
                     </div>
-                    <!-- ▼▼▼ INICIO DE MODIFICACIÓN: BOTÓN FLOTANTE AÑADIDO ▼▼▼ -->
-                    <?php if (isset($_SESSION['user_id'])): ?>
-                    <div class="fab-container">
-                        <!-- La clave de traducción 'home.noGroups.joinButton' ya existe y significa "Unirme a un grupo" -->
-                        <button class="fab-button" 
-                                data-action="toggleSectionJoinGroup" 
-                                data-tooltip="home.noGroups.joinButton">
-                            <span class="material-symbols-rounded">add</span>
-                        </button>
                     </div>
-                    <?php endif; ?>
-                    <!-- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ -->
-                </div>
 
                 <div id="alert-container"></div>
             </div>

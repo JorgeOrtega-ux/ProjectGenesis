@@ -35,6 +35,11 @@ $userRole = $_SESSION['role'] ?? 'user';
     <div class="header-right">
         <div class="header-item">
 
+            <div class="header-button"
+                data-action="toggleSectionJoinGroup"
+                data-tooltip="home.noGroups.joinButton"> 
+                <span class="material-symbols-rounded">add</span>
+            </div>
             <div class="header-button header-profile"
                 data-action="toggleModuleSelect"
                 data-role="<?php echo htmlspecialchars($userRole); ?>"

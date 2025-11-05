@@ -108,4 +108,46 @@ INSERT INTO site_settings (setting_key, setting_value) VALUES
 ('code_resend_cooldown_seconds', '60'),
 -- --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
 ('max_concurrent_users', '500');
--- --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
+
+-- --- ▼▼▼ INICIO DE TABLAS DE GRUPOS ▼▼▼ ---
+
+DROP TABLE IF EXISTS `groups`;
+CREATE TABLE `groups` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uuid` char(36) NOT NULL DEFAULT (uuid()),
+  `name` varchar(255) NOT NULL,
+  `group_type` enum('municipio','universidad','preparatoria','general') NOT NULL DEFAULT 'general',
+  `access_key` varchar(20) NOT NULL,
+  `privacy` enum('publico','privado') NOT NULL DEFAULT 'privado',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uuid` (`uuid`),
+  UNIQUE KEY `access_key` (`access_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+DROP TABLE IF EXISTS `user_groups`;
+CREATE TABLE `user_groups` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `group_id` int(11) NOT NULL,
+  `role` enum('member','admin','owner') NOT NULL DEFAULT 'member',
+  `joined_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_in_group` (`user_id`,`group_id`),
+  KEY `fk_user_groups_user` (`user_id`),
+  KEY `fk_user_groups_group` (`group_id`),
+  CONSTRAINT `fk_user_groups_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_user_groups_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --- ▼▼▼ INSERCIÓN DE GRUPOS DE EJEMPLO ▼▼▼ ---
+INSERT INTO `groups` (`name`, `group_type`, `access_key`, `privacy`) VALUES
+('Universidad de Tamaulipas', 'universidad', 'UT2025', 'privado'),
+('Municipio de Matamoros', 'municipio', 'MTMS25', 'privado'),
+('Prepa Cbtis 135', 'preparatoria', 'CBTIS135', 'privado'),
+('Grupo de Pruebas', 'general', 'TEST123', 'privado'),
+('Comunidad Pública', 'general', 'PUBLIC01', 'publico');
+
+-- --- ▲▲▲ FIN DE TABLAS DE GRUPOS ▲▲▲ ---
+
+SET FOREIGN_KEY_CHECKS=1;

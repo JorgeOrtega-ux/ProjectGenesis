@@ -360,8 +360,8 @@ export function initRouter() {
 
     document.body.addEventListener('click', e => {
       const link = e.target.closest(
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR .component-action-button) ▼▼▼ ---
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/help"], .component-button[data-action*="toggleSection"], .component-action-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"]'
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR .header-button) ▼▼▼ ---
+            '.header-button[data-action*="toggleSection"], .menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/help"], .component-button[data-action*="toggleSection"], .component-action-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"]'
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         );
 
