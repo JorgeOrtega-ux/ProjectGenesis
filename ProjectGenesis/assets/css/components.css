@@ -1654,48 +1654,73 @@
 }
 
 /* --- ▼▼▼ INICIO DE MODIFICACIÓN (GRID PARA GRUPOS) ▼▼▼ --- */
-[data-section="home"] .card-list-container {
+/* Esta regla ahora aplica a 'home' (vacío) y a 'my-groups' (la nueva lista) */
+[data-section="home"] .card-list-container,
+[data-section="my-groups"] .card-list-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 16px;
 }
 
-/* --- ▼▼▼ INICIO DE ESTILOS AÑADIDOS ▼▼▼ --- */
-/* Estilos para la tarjeta de "Sin Grupos" en Home */
-[data-section="home"] .no-groups-card {
-    margin-top: 24px;
+/* --- ▼▼▼ INICIO DE ESTILOS MOVIDOS (Antes en home.php, ahora globales) ▼▼▼ --- */
+/* Tarjeta de "Comunidad Pública" (reutilizada para todos los grupos) */
+.home-community-card {
+    display: flex;
     align-items: center;
-    text-align: center;
-    padding: 32px;
+    gap: 16px;
+    padding: 16px;
+    background-color: #ffffff;
+    border: 1px solid #00000020;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-[data-section="home"] .no-groups-card .component-card__icon {
-    background-color: transparent;
-    width: 60px;
-    height: 60px;
-    margin-bottom: 16px;
-    border: none;
+.home-community-card:hover {
+    background-color: #f5f5fa; /* Feedback al pasar el mouse */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-[data-section="home"] .no-groups-card .component-card__icon .material-symbols-rounded {
-    font-size: 60px;
-    color: #6b7280;
-}
-
-[data-section="home"] .no-groups-card .component-card__title {
-    font-size: 20px;
-}
-
-[data-section="home"] .no-groups-card .component-card__description {
-    max-width: 300px;
-    margin-top: 8px;
-}
-
-[data-section="home"] .no-groups-card .component-card__actions {
-    margin-top: 24px;
-    gap: 12px;
-    width: 100%;
+.home-community-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background-color: #f5f5fa; /* Fondo gris claro para el icono */
+    display: flex;
+    align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+}
+
+.home-community-icon .material-symbols-rounded {
+    font-size: 24px;
+    color: #333;
+}
+
+.home-community-text h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.home-community-text p {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.3;
+}
+/* --- ▲▲▲ FIN DE ESTILOS MOVIDOS ▲▲▲ --- */
+
+
+/* Estilos para la tarjeta de "Sin Grupos" (AHORA SOLO EN MY-GROUPS) */
+[data-section="my-groups"] .component-card[style*="align-items: center"] {
+    /* Este es un selector débil para la tarjeta "sin grupos" en my-groups.php */
+    margin-top: 16px;
+}
+[data-section="my-groups"] .component-card[style*="align-items: center"] .component-card__actions {
+    display: flex; /* Asegura que se muestre */
 }
 /* --- ▲▲▲ FIN DE ESTILOS AÑADIDOS ▲▲▲ --- */
 
@@ -2063,8 +2088,8 @@
         gap: 12px;
     }
 
-    /* --- ▼▼▼ NUEVOS ESTILOS PARA HOME (MÓVIL) ▼▼▼ --- */
-    [data-section="home"] .component-card__actions {
+    /* --- ▼▼▼ NUEVOS ESTILOS PARA MY-GROUPS (MÓVIL) ▼▼▼ --- */
+    [data-section="my-groups"] .component-card[style*="align-items: center"] .component-card__actions {
         flex-direction: column;
         width: 100%;
         max-width: 300px;

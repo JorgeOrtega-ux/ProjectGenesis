@@ -9,7 +9,8 @@
     },
     "buttons": {
       "menu": "Menú principal",
-      "profile": "Perfil y configuración"
+      "profile": "Perfil y configuración",
+      "myGroups": "Mis Grupos"
     }
   },
   "sidebar": {
@@ -21,6 +22,7 @@
     },
     "main": {
       "home": "Página principal",
+      "myGroups": "Mis Grupos",
       "explore": "Explorar comunidades"
     },
     "admin": {
@@ -41,6 +43,10 @@
     }
   },
   "home": {
+    "empty": {
+      "title": "Página Principal",
+      "description": "Esta es tu página principal. El contenido se añadirá próximamente."
+    },
     "noGroups": {
       "title": "Aún no estás en ningún grupo",
       "description": "Únete a un grupo con un código de invitación o explora grupos públicos.",
@@ -50,6 +56,18 @@
     "myGroups": {
       "title": "Mis Grupos",
       "description": "Esta es tu página principal. Aquí verás la actividad de tus grupos."
+    }
+  },
+  "mygroups": {
+    "title": "Mis Grupos",
+    "description": "Aquí puedes ver y gestionar todos los grupos a los que perteneces.",
+    "noGroups": {
+      "title": "Aún no estás en ningún grupo",
+      "description": "Únete a un grupo usando el botón de 'Unirme a un grupo' en el encabezado.",
+      "joinButton": "Unirme a un grupo"
+    },
+    "card": {
+      "view": "Ver publicaciones..."
     }
   },
   "groups": {

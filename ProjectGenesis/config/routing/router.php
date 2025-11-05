@@ -96,7 +96,10 @@ $CURRENT_SECTION = $page;
 $allowedPages = [
     'home'     => '../../includes/sections/main/home.php',
     'explorer' => '../../includes/sections/main/explorer.php',
-    'join-group' => '../../includes/sections/main/join-group.php', // <-- PÁGINA AÑADIDA
+    'join-group' => '../../includes/sections/main/join-group.php',
+    // --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
+    'my-groups'  => '../../includes/sections/main/my-groups.php',
+    // --- ▲▲▲ ¡FIN DE LÍNEA AÑADIDA! ▲▲▲ ---
     'login'    => '../../includes/sections/auth/login.php',
     '404'      => '../../includes/sections/main/404.php', 
     'db-error' => '../../includes/sections/main/db-error.php', 
@@ -107,7 +110,7 @@ $allowedPages = [
     'server-full' => '../../includes/sections/main/status-page.php',
     'account-status-deleted'   => '../../includes/sections/main/status-page.php',
     'account-status-suspended' => '../../includes/sections/main/status-page.php',
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▼▼▼ ---
 
     'register-step1' => '../../includes/sections/auth/register.php',
     'register-step2' => '../../includes/sections/auth/register.php',
