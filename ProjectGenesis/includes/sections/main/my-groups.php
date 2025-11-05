@@ -1,20 +1,32 @@
 <?php
 // FILE: includes/sections/main/my-groups.php
-// (Este es un ARCHIVO NUEVO)
+// (Este es un ARCHIVO MODIFICADO)
 
 // 1. Lógica para obtener los grupos del usuario
 $user_groups = [];
 try {
     if (isset($_SESSION['user_id'], $pdo)) {
+        
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Consulta SQL) ▼▼▼ ---
+        // Ahora también obtenemos el conteo de miembros y la privacidad
         $stmt = $pdo->prepare(
-            "SELECT g.name, g.group_type 
+            "SELECT 
+                g.id,
+                g.name, 
+                g.group_type,
+                g.privacy,
+                (SELECT COUNT(ug_inner.user_id) 
+                 FROM user_groups ug_inner 
+                 WHERE ug_inner.group_id = g.id) AS member_count
              FROM groups g
-             JOIN user_groups ug ON g.id = ug.group_id
-             WHERE ug.user_id = ?
+             JOIN user_groups ug_main ON g.id = ug_main.group_id
+             WHERE ug_main.user_id = ?
+             GROUP BY g.id, g.name, g.group_type, g.privacy
              ORDER BY g.name"
         );
         $stmt->execute([$_SESSION['user_id']]);
         $user_groups = $stmt->fetchAll();
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (Consulta SQL) ▲▲▲ ---
     }
 } catch (PDOException $e) {
     logDatabaseError($e, 'my-groups.php - load user groups');
@@ -65,24 +77,55 @@ $groupIconMap = [
 
         <?php else: ?>
             
-            <div class="card-list-container" style="padding-top: 16px;">
+            <!-- --- ▼▼▼ INICIO DE MODIFICACIÓN (Estructura de Tarjeta) ▼▼▼ --- -->
+            <div class="card-list-container">
                 
                 <?php foreach ($user_groups as $group): ?>
                     <?php
+                        // Lógica para iconos y texto
                         $iconType = $group['group_type'] ?? 'default';
                         $iconName = $groupIconMap[$iconType] ?? $groupIconMap['default'];
+                        $privacyIcon = ($group['privacy'] === 'publico') ? 'public' : 'lock';
+                        $memberTextKey = ($group['member_count'] == 1) ? 'mygroups.card.member' : 'mygroups.card.members';
+                        $privacyTextKey = 'mygroups.card.privacy' . ucfirst($group['privacy']);
                     ?>
-                    <div class="home-community-card">
-                        <div class="home-community-icon">
-                            <span class="material-symbols-rounded"><?php echo $iconName; ?></span>
+                    
+                    <!-- INICIO DE LA NUEVA TARJETA (basada en tu ejemplo) -->
+                    <div class="card-item" style="gap: 16px; padding: 16px; cursor: pointer;" data-group-id="<?php echo $group['id']; ?>">
+                        
+                        <!-- Icono del Grupo -->
+                        <div class="component-card__icon" style="width: 50px; height: 50px; flex-shrink: 0; background-color: #f5f5fa;">
+                            <span class="material-symbols-rounded" style="font-size: 28px;"><?php echo $iconName; ?></span>
                         </div>
-                        <div class="home-community-text">
-                            <h4><?php echo htmlspecialchars($group['name']); ?></h4>
-                            <p data-i18n="mygroups.card.view">Ver publicaciones...</p>
+
+                        <!-- Detalles (Título y Badges) -->
+                        <div class="card-item-details">
+
+                            <!-- Título (usando el estilo de tu ejemplo) -->
+                            <div class="card-detail-item card-detail-item--full" style="border: none; padding: 0; background: none;">
+                                <span class="card-detail-value" style="font-size: 16px; font-weight: 600;"><?php echo htmlspecialchars($group['name']); ?></span>
+                            </div>
+
+                            <!-- Badge de Miembros -->
+                            <div class="card-detail-item">
+                                <span class="material-symbols-rounded" style="font-size: 16px; color: #6b7280;">group</span>
+                                <span class="card-detail-value"><?php echo htmlspecialchars($group['member_count']); ?> <span data-i18n="<?php echo $memberTextKey; ?>"></span></span>
+                            </div>
+                            
+                            <!-- Badge de Privacidad -->
+                            <div class="card-detail-item">
+                                <span class="material-symbols-rounded" style="font-size: 16px; color: #6b7280;"><?php echo $privacyIcon; ?></span>
+                                <span class="card-detail-value" data-i18n="<?php echo $privacyTextKey; ?>"></span>
+                            </div>
                         </div>
                     </div>
+                    <!-- FIN DE LA NUEVA TARJETA -->
+
                 <?php endforeach; ?>
 
-            </div> <?php endif; ?>
+            </div>
+            <!-- --- ▲▲▲ FIN DE MODIFICACIÓN (Estructura de Tarjeta) ▲▲▲ --- -->
+        <?php endif; ?>
 
-    </div> </div>
+    </div>
+</div>

@@ -1653,15 +1653,6 @@
     gap: 16px; /* Espacio entre cada tarjeta de usuario */
 }
 
-/* --- ▼▼▼ INICIO DE MODIFICACIÓN (GRID PARA GRUPOS) ▼▼▼ --- */
-/* Esta regla ahora aplica a 'home' (vacío) y a 'my-groups' (la nueva lista) */
-[data-section="home"] .card-list-container,
-[data-section="my-groups"] .card-list-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-}
-
 /* --- ▼▼▼ INICIO DE ESTILOS MOVIDOS (Antes en home.php, ahora globales) ▼▼▼ --- */
 /* Tarjeta de "Comunidad Pública" (reutilizada para todos los grupos) */
 .home-community-card {
