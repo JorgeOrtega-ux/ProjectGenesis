@@ -53,6 +53,14 @@ const routes = {
     // 'toggleSectionAdminRestoreBackup': 'admin-restore-backup', // <-- ¡ELIMINADA!
     'toggleSectionAdminManageLogs': 'admin-manage-logs', // <-- ¡NUEVA LÍNEA!
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+
+    // --- ▼▼▼ INICIO DE NUEVAS RUTAS (HELP) ▼▼▼ ---
+    'toggleSectionHelpLegalNotice': 'help-legal-notice',
+    'toggleSectionHelpPrivacyPolicy': 'help-privacy-policy',
+    'toggleSectionHelpCookiesPolicy': 'help-cookies-policy',
+    'toggleSectionHelpTermsConditions': 'help-terms-conditions',
+    'toggleSectionHelpSendFeedback': 'help-send-feedback',
+    // --- ▲▲▲ FIN DE NUEVAS RUTAS (HELP) ▲▲▲ ---
 };
 
 const paths = {
@@ -94,6 +102,14 @@ const paths = {
     // '/admin/restore-backup': 'toggleSectionAdminRestoreBackup', // <-- ¡ELIMINADA!
     '/admin/manage-logs': 'toggleSectionAdminManageLogs', // <-- ¡NUEVA LÍNEA!
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+
+    // --- ▼▼▼ INICIO DE NUEVAS RUTAS (HELP) ▼▼▼ ---
+    '/help/legal-notice': 'toggleSectionHelpLegalNotice',
+    '/help/privacy-policy': 'toggleSectionHelpPrivacyPolicy',
+    '/help/cookies-policy': 'toggleSectionHelpCookiesPolicy',
+    '/help/terms-conditions': 'toggleSectionHelpTermsConditions',
+    '/help/send-feedback': 'toggleSectionHelpSendFeedback',
+    // --- ▲▲▲ FIN DE NUEVAS RUTAS (HELP) ▲▲▲ ---
 };
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
@@ -124,12 +140,15 @@ async function loadPage(page, action, fetchParams = null) {
     
     const isSettingsPage = page.startsWith('settings-');
     const isAdminPage = page.startsWith('admin-');
+    const isHelpPage = page.startsWith('help-'); // <-- ¡NUEVA LÍNEA!
     
     let menuType = 'main';
     if (isSettingsPage) {
         menuType = 'settings';
     } else if (isAdminPage) {
         menuType = 'admin';
+    } else if (isHelpPage) { // <-- ¡NUEVO BLOQUE!
+        menuType = 'help';
     }
 
     if (currentMenuType === null || currentMenuType !== menuType) {
@@ -246,13 +265,13 @@ export function handleNavigation() {
     if (path === '' || path === '/') path = '/';
 
     if (path === '/settings') {
+        history.replaceState(null, '', `${basePath}/settings/your-profile`);
         path = '/settings/your-profile';
-        history.replaceState(null, '', `${basePath}${path}`);
     }
     
     if (path === '/admin') {
+        history.replaceState(null, '', `${basePath}/admin/dashboard`);
         path = '/admin/dashboard';
-        history.replaceState(null, '', `${basePath}${path}`);
     }
 
     const action = paths[path];
@@ -316,6 +335,13 @@ function updateMenuState(currentAction) {
     
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
+    // --- ▼▼▼ INICIO DE NUEVO BLOQUE (HELP) ▼▼▼ ---
+    if (currentAction && currentAction.startsWith('toggleSectionHelp')) {
+        menuAction = currentAction;
+    }
+    // --- ▲▲▲ FIN DE NUEVO BLOQUE (HELP) ▲▲▲ ---
+
+
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
         const linkAction = link.getAttribute('data-action');
 
@@ -332,8 +358,8 @@ export function initRouter() {
 
     document.body.addEventListener('click', e => {
       const link = e.target.closest(
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SE ELIMINA restore-backup) ▼▼▼ ---
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"]'
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR /help) ▼▼▼ ---
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/help"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"]'
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         );
 
@@ -425,6 +451,8 @@ export function initRouter() {
         initialMenuType = 'settings';
     } else if (initialPath.startsWith('/admin')) {
         initialMenuType = 'admin';
+    } else if (initialPath.startsWith('/help')) { // <-- ¡NUEVA LÍNEA!
+        initialMenuType = 'help';
     }
     currentMenuType = initialMenuType;
 

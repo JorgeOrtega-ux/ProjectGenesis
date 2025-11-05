@@ -79,6 +79,62 @@
                         </div>
                         
                     <?php 
+                    elseif (isset($isHelpPage) && $isHelpPage): 
+                    ?>
+                        <div class="menu-link" data-action="toggleSectionHome">
+                            <div class="menu-link-icon">
+                                <span class="material-symbols-rounded">arrow_back</span>
+                            </div>
+                            <div class="menu-link-text">
+                                <span data-i18n="sidebar.help.backToHome">Volver a Inicio</span>
+                            </div>
+                        </div>
+                        
+                        <div class="menu-link" data-action="toggleSectionHelpSendFeedback">
+                            <div class="menu-link-icon">
+                                <span class="material-symbols-rounded">feedback</span>
+                            </div>
+                            <div class="menu-link-text">
+                                <span data-i18n="sidebar.help.sendFeedback">Enviar comentarios</span>
+                            </div>
+                        </div>
+
+                        <div class="menu-link" data-action="toggleSectionHelpLegalNotice">
+                            <div class="menu-link-icon">
+                                <span class="material-symbols-rounded">gavel</span>
+                            </div>
+                            <div class="menu-link-text">
+                                <span data-i18n="sidebar.help.legalNotice">Aviso legal</span>
+                            </div>
+                        </div>
+
+                        <div class="menu-link" data-action="toggleSectionHelpPrivacyPolicy">
+                            <div class="menu-link-icon">
+                                <span class="material-symbols-rounded">policy</span>
+                            </div>
+                            <div class="menu-link-text">
+                                <span data-i18n="sidebar.help.privacyPolicy">Política de privacidad</span>
+                            </div>
+                        </div>
+                        
+                        <div class="menu-link" data-action="toggleSectionHelpCookiesPolicy">
+                            <div class="menu-link-icon">
+                                <span class="material-symbols-rounded">cookie</span>
+                            </div>
+                            <div class="menu-link-text">
+                                <span data-i18n="sidebar.help.cookiesPolicy">Política de cookies</span>
+                            </div>
+                        </div>
+                        
+                        <div class="menu-link" data-action="toggleSectionHelpTermsConditions">
+                            <div class="menu-link-icon">
+                                <span class="material-symbols-rounded">description</span>
+                            </div>
+                            <div class="menu-link-text">
+                                <span data-i18n="sidebar.help.termsConditions">Términos y condiciones</span>
+                            </div>
+                        </div>
+                    <?php 
                     else: 
                     ?>
                         <div class="menu-link active" data-action="toggleSectionHome">

@@ -6,15 +6,19 @@
 include '../config.php';
 // --- ▲▲▲ FIN DE CAMBIO ▲▲▲ ---
 
-if (!isset($_SESSION['user_id'])) {
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (PERMITIR PÚBLICO) ▼▼▼ ---
+// Si el tipo es 'help', no requerimos sesión de usuario
+$type = $_GET['type'] ?? 'main';
+
+if ($type !== 'help' && !isset($_SESSION['user_id'])) {
     http_response_code(403); 
     exit;
 }
-
-$type = $_GET['type'] ?? 'main';
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 $isSettingsPage = ($type === 'settings');
 $isAdminPage = ($type === 'admin'); 
+$isHelpPage = ($type === 'help'); // <-- ¡NUEVA LÍNEA!
 
 // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (VALIDACIÓN DE ROL) ▼▼▼ ---
 if ($isAdminPage) {

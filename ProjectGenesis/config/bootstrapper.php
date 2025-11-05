@@ -304,13 +304,29 @@ $pathsToPages = [
     '/admin/restore-backup'     => 'admin-restore-backup', // <-- ¡AÑADIDA!
     '/admin/manage-logs'        => 'admin-manage-logs', // <-- ¡NUEVA LÍNEA AÑADIDA!
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+    // --- ▼▼▼ INICIO DE NUEVAS RUTAS (HELP) ▼▼▼ ---
+    '/help/legal-notice'      => 'help-legal-notice',
+    '/help/privacy-policy'    => 'help-privacy-policy',
+    '/help/cookies-policy'    => 'help-cookies-policy',
+    '/help/terms-conditions'  => 'help-terms-conditions',
+    '/help/send-feedback'     => 'help-send-feedback',
+    // --- ▲▲▲ FIN DE NUEVAS RUTAS (HELP) ▲▲▲ ---
 ];
 
 // 3. Determinar la página actual y los tipos de página
 $currentPage = $pathsToPages[$path] ?? '404';
 
-// --- ▼▼▼ MODIFICACIÓN: Añadir 'server-full' a $authPages ▼▼▼ ---
-$authPages = ['login', 'maintenance', 'server-full']; 
+// --- ▼▼▼ MODIFICACIÓN: Añadir 'server-full' y páginas de ayuda públicas a $authPages ▼▼▼ ---
+$authPages = [
+    'login', 
+    'maintenance', 
+    'server-full',
+    'help-legal-notice',
+    'help-privacy-policy',
+    'help-cookies-policy',
+    'help-terms-conditions'
+]; 
 $isAuthPage = in_array($currentPage, $authPages) || 
               strpos($currentPage, 'register-') === 0 ||
               strpos($currentPage, 'reset-') === 0 ||
@@ -319,6 +335,7 @@ $isAuthPage = in_array($currentPage, $authPages) ||
 
 $isSettingsPage = strpos($currentPage, 'settings-') === 0;
 $isAdminPage = strpos($currentPage, 'admin-') === 0;
+$isHelpPage = strpos($currentPage, 'help-') === 0; // <-- ¡NUEVA LÍNEA!
 
 // 4. Lógica de Autorización y Redirecciones
 if ($isAdminPage && isset($_SESSION['user_id'])) {
@@ -344,8 +361,16 @@ if (!isset($_SESSION['user_id']) && !$isAuthPage) {
     exit;
 }
 // Redirigir a home si está logueado e intenta ir a auth
-// --- ▼▼▼ MODIFICACIÓN: Añadir 'server-full' a la exclusión ▼▼▼ ---
-if (isset($_SESSION['user_id']) && $isAuthPage && $currentPage !== 'maintenance' && $currentPage !== 'server-full') { 
+// --- ▼▼▼ MODIFICACIÓN: Añadir 'server-full' y las páginas de ayuda a la exclusión ▼▼▼ ---
+if (isset($_SESSION['user_id']) && 
+    $isAuthPage && 
+    $currentPage !== 'maintenance' && 
+    $currentPage !== 'server-full' &&
+    $currentPage !== 'help-legal-notice' &&
+    $currentPage !== 'help-privacy-policy' &&
+    $currentPage !== 'help-cookies-policy' &&
+    $currentPage !== 'help-terms-conditions'
+) { 
     if ($maintenanceMode !== '1') {
          header('Location: ' . $basePath . '/');
          exit;
@@ -366,6 +391,6 @@ if ($path === '/admin') {
 }
 // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
-// Las variables $currentPage, $isAuthPage, $isSettingsPage, $isAdminPage
+// Las variables $currentPage, $isAuthPage, $isSettingsPage, $isAdminPage, $isHelpPage
 // están ahora disponibles globalmente para los scripts que se incluyan después.
 ?>

@@ -30,6 +30,41 @@
       "createUsers": "Crear usuario",
       "serverSettings": "Configuracion del servidor",
       "manageBackups": "Copias de seguridad"
+    },
+    "help": {
+      "backToHome": "Volver a Inicio",
+      "legalNotice": "Aviso Legal",
+      "privacyPolicy": "Política de Privacidad",
+      "cookiesPolicy": "Política de Cookies",
+      "termsConditions": "Términos y Condiciones",
+      "sendFeedback": "Enviar Comentarios"
+    }
+  },
+  "help": {
+    "legal": {
+      "title": "Aviso Legal",
+      "description": "Información legal sobre ProjectGenesis."
+    },
+    "privacy": {
+      "title": "Política de Privacidad",
+      "description": "Cómo manejamos tus datos."
+    },
+    "cookies": {
+      "title": "Política de Cookies",
+      "description": "Información sobre las cookies que usamos."
+    },
+    "terms": {
+      "title": "Términos y Condiciones",
+      "description": "Reglas de uso de la plataforma."
+    },
+    "feedback": {
+      "title": "Enviar Comentarios",
+      "description": "¿Tienes algún problema o sugerencia? Háznoslo saber.",
+      "subject": "Asunto",
+      "message": "Tu mensaje",
+      "send": "Enviar",
+      "success": "¡Gracias! Tu comentario ha sido enviado.",
+      "error": "No se pudo enviar tu comentario. Inténtalo más tarde."
     }
   },
   "admin": {

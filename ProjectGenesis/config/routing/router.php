@@ -140,11 +140,27 @@ $allowedPages = [
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
     // --- ▲▲▲ FIN DE PÁGINAS DE ADMIN ▲▲▲ ---
+
+    // --- ▼▼▼ INICIO DE NUEVAS PÁGINAS (HELP) ▼▼▼ ---
+    'help-legal-notice'      => '../../includes/sections/help/legal-notice.php',
+    'help-privacy-policy'    => '../../includes/sections/help/privacy-policy.php',
+    'help-cookies-policy'    => '../../includes/sections/help/cookies-policy.php',
+    'help-terms-conditions'  => '../../includes/sections/help/terms-conditions.php',
+    'help-send-feedback'     => '../../includes/sections/help/send-feedback.php',
+    // --- ▲▲▲ FIN DE NUEVAS PÁGINAS (HELP) ▲▲▲ ---
 ];
 // --- ▲▲▲ FIN DE CAMBIO DE RUTA ▲▲▲ ---
 
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
-$authPages = ['login', 'maintenance', 'server-full']; // 'maintenance' y 'server-full' se tratan como páginas de auth
+$authPages = [
+    'login', 
+    'maintenance', 
+    'server-full',
+    'help-legal-notice',
+    'help-privacy-policy',
+    'help-cookies-policy',
+    'help-terms-conditions'
+];
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 $isAuthPage = in_array($page, $authPages) || 
@@ -155,6 +171,7 @@ $isAuthPage = in_array($page, $authPages) ||
 $isSettingsPage = strpos($page, 'settings-') === 0;
 // --- ▼▼▼ NUEVA LÍNEA ▼▼▼ ---
 $isAdminPage = strpos($page, 'admin-') === 0;
+$isHelpPage = strpos($page, 'help-') === 0; // <-- ¡NUEVA LÍNEA!
 
 // --- ▼▼▼ BLOQUE ELIMINADO ▼▼▼ ---
 // La variable $accountStatusType ya no es necesaria aquí,
@@ -220,7 +237,9 @@ if (array_key_exists($page, $allowedPages)) {
                     $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
                     $currentTime = new DateTime('now', new DateTimeZone('UTC'));
                     $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
-                    $cooldownConstant = 60; 
+                    // --- ▼▼▼ MODIFICACIÓN: Leer desde GLOBALS ▼▼▼ ---
+                    $cooldownConstant = (int)($GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? 60);
+                    // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ --- 
 
                     if ($secondsPassed < $cooldownConstant) {
                         $initialCooldown = $cooldownConstant - $secondsPassed;
@@ -259,7 +278,9 @@ if (array_key_exists($page, $allowedPages)) {
                     $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
                     $currentTime = new DateTime('now', new DateTimeZone('UTC'));
                     $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
-                    $cooldownConstant = 60; // 60 segundos
+                    // --- ▼▼▼ MODIFICACIÓN: Leer desde GLOBALS ▼▼▼ ---
+                    $cooldownConstant = (int)($GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? 60);
+                    // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
 
                     if ($secondsPassed < $cooldownConstant) {
                         $initialCooldown = $cooldownConstant - $secondsPassed;
@@ -284,7 +305,9 @@ if (array_key_exists($page, $allowedPages)) {
         $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
         $profileImageUrl = $_SESSION['profile_image_url'] ?? $defaultAvatar;
         if (empty($profileImageUrl)) $profileImageUrl = $defaultAvatar;
-        $isDefaultAvatar = strpos($profileImageUrl, 'ui-avatars.com') !== false || strpos($profileImageUrl, 'user-' . $_SESSION['user_id'] . '.png') !== false;
+        // --- ▼▼▼ MODIFICACIÓN: Detección de avatar default mejorada ▼▼▼ ---
+        $isDefaultAvatar = strpos($profileImageUrl, '/assets/uploads/avatars_uploaded/') === false;
+        // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
         $usernameForAlt = $_SESSION['username'] ?? 'Usuario';
         $userRole = $_SESSION['role'] ?? 'user';
         $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
@@ -309,16 +332,23 @@ if (array_key_exists($page, $allowedPages)) {
             $lastLog = $stmt_pass_log->fetch();
 
             if ($lastLog) {
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (IntlDateFormatter) ▼▼▼ ---
+                // (Usar un formato simple si IntlDateFormatter no existe)
                 if (!class_exists('IntlDateFormatter')) {
-                    $date = new DateTime($lastLog['changed_at']);
-                    // ¡MODIFICADO!
+                    $date = new DateTime($lastLog['changed_at'], new DateTimeZone('UTC'));
+                    $date->setTimezone(new DateTimeZone('America/Chicago')); // O tu zona local
                     $lastPasswordUpdateText = 'Última actualización: ' . $date->format('d/m/Y \a \l\a\s H:i');
                 } else {
-                    // ¡MODIFICADO!
-                    $formatter = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::SHORT, 'UTC');
+                    $formatter = new IntlDateFormatter(
+                        'es_ES', // O el idioma/locale que prefieras
+                        IntlDateFormatter::LONG, 
+                        IntlDateFormatter::SHORT, 
+                        'America/Chicago' // O tu zona local
+                    );
                     $timestamp = strtotime($lastLog['changed_at']);
                     $lastPasswordUpdateText = 'Última actualización: ' . $formatter->format($timestamp);
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             } else {
                 $lastPasswordUpdateText = 'settings.login.lastPassUpdateNever'; 
             }
@@ -326,16 +356,22 @@ if (array_key_exists($page, $allowedPages)) {
             // 3. Format creation date for delete description
             $accountCreationDateText = ''; // <-- NUEVA variable
             if ($accountCreatedDate) {
+                 // --- ▼▼▼ INICIO DE MODIFICACIÓN (IntlDateFormatter) ▼▼▼ ---
                 if (!class_exists('IntlDateFormatter')) {
-                     $date = new DateTime($accountCreatedDate);
-                     // ¡MODIFICADO!
-                     $accountCreationDateText = 'Cuenta creada el ' . $date->format('d/m/Y \a \l\a\s H:i');
+                     $date = new DateTime($accountCreatedDate, new DateTimeZone('UTC'));
+                     $date->setTimezone(new DateTimeZone('America/Chicago'));
+                     $accountCreationDateText = 'Cuenta creada el ' . $date->format('d/m/Y');
                 } else {
-                    // ¡MODIFICADO!
-                    $formatter = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::SHORT, 'UTC');
+                    $formatter = new IntlDateFormatter(
+                        'es_ES', 
+                        IntlDateFormatter::LONG, 
+                        IntlDateFormatter::NONE, // Sin hora
+                        'America/Chicago'
+                    );
                     $timestamp = strtotime($accountCreatedDate);
                     $accountCreationDateText = 'Cuenta creada el ' . $formatter->format($timestamp);
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
             
             // La descripción principal SIEMPRE usa la clave de traducción.
@@ -357,7 +393,9 @@ if (array_key_exists($page, $allowedPages)) {
     } elseif ($page === 'settings-change-email') {
          $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
          $initialEmailCooldown = 0;
-         $cooldownConstant = 60; // 60 segundos
+         // --- ▼▼▼ MODIFICACIÓN: Leer desde GLOBALS ▼▼▼ ---
+         $cooldownConstant = (int)($GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? 60);
+         // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
          $identifier = $_SESSION['user_id'];
          $codeType = 'email_change';
 
@@ -470,7 +508,9 @@ if (array_key_exists($page, $allowedPages)) {
                 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
                 $profileImageUrl = $editUser['profile_image_url'] ?? $defaultAvatar;
                 if (empty($profileImageUrl)) $profileImageUrl = $defaultAvatar;
-                $isDefaultAvatar = strpos($profileImageUrl, 'ui-avatars.com') !== false || strpos($profileImageUrl, 'user-' . $editUser['id'] . '.png') !== false;
+                // --- ▼▼▼ MODIFICACIÓN: Detección de avatar default mejorada ▼▼▼ ---
+                $isDefaultAvatar = strpos($profileImageUrl, '/assets/uploads/avatars_uploaded/') === false;
+                // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
 
             } catch (PDOException $e) {
                 logDatabaseError($e, 'router - admin-edit-user');
