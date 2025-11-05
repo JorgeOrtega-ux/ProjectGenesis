@@ -2588,4 +2588,90 @@ body {
     /* .page-toolbar-button[data-i18n] { ... } */
     /* .page-toolbar-button[data-i18n] .material-symbols-rounded { ... } */
     /* .page-toolbar-button[data-action="admin-clear-selection"] { ... } */
+}/* ====================================== */
+/* =  COMPONENTE ACORDEÓN (NUEVO)       = */
+/* ====================================== */
+
+/* Este es el cabecero de categoría. 
+  Está diseñado para que parezca una tarjeta, 
+  exactamente como en tu imagen.
+*/
+.component-accordion__header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    cursor: pointer;
+    user-select: none;
+    
+    /* Apariencia de tarjeta */
+    border: 1px solid #00000020;
+    border-radius: 12px;
+    background-color: #ffffff;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Oscurecer al pasar el ratón solo si está CERRADO */
+.component-accordion__header:not(.active):hover {
+    background-color: #f5f5fa;
+}
+
+/* Mantener el fondo oscuro si está ABIERTO (como en tu foto)
+  En esta versión, el cabecero NO se fusiona con las tarjetas,
+  así que mantiene sus bordes redondeados.
+*/
+.component-accordion__header.active {
+    background-color: #f5f5fa;
+}
+
+.component-accordion__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #00000020;
+    background-color: #ffffff;
+    color: #000000;
+    flex-shrink: 0;
+}
+
+.component-accordion__icon .material-symbols-rounded {
+    font-size: 24px;
+}
+
+.component-accordion__text {
+    flex-grow: 1;
+}
+
+.component-accordion__title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #000000;
+    line-height: 1.4;
+}
+
+.component-accordion__description {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+.component-accordion__arrow {
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+/* Gira la flecha cuando el cabecero tiene la clase .active */
+.component-accordion__header.active .component-accordion__arrow {
+    transform: rotate(180deg);
+}
+
+/* Esta regla oculta el contenido que no está activo.
+  (El JS se encargará de poner 'display: flex'
+  a las tarjetas .component-card hermanas)
+*/
+.component-accordion__content {
+    display: none; 
 }

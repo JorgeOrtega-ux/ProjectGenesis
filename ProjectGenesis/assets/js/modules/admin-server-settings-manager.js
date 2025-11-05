@@ -30,19 +30,14 @@ function showInlineError(cardElement, messageKey, data = null) {
     cardElement.parentNode.insertBefore(errorDiv, cardElement.nextSibling);
 }
 
-// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN ▼▼▼ ---
-/**
- * Llama a la API para obtener el conteo de usuarios concurrentes y actualizar la UI.
- */
+// --- ▼▼▼ LÓGICA DE CONTEO DE USUARIOS (SIN CAMBIOS) ▼▼▼ ---
 async function fetchAndUpdateUserCount() {
     const display = document.getElementById('concurrent-users-display');
     const refreshBtn = document.getElementById('refresh-concurrent-users');
     if (!display || !refreshBtn) return;
 
-    // Guardar texto original del botón (traducción)
     const originalBtnText = refreshBtn.innerHTML;
     
-    // Estado de carga
     display.textContent = getTranslation('admin.server.concurrentUsersLoading');
     refreshBtn.disabled = true;
     refreshBtn.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;"></span>`;
@@ -53,7 +48,6 @@ async function fetchAndUpdateUserCount() {
 
     try {
         const result = await callAdminApi(formData);
-
         if (result.success) {
             display.textContent = result.count;
         } else {
@@ -64,14 +58,14 @@ async function fetchAndUpdateUserCount() {
         display.textContent = 'Error';
         showAlert(getTranslation('js.api.errorServer'), 'error');
     } finally {
-        // Restaurar botón
         refreshBtn.disabled = false;
         refreshBtn.innerHTML = originalBtnText;
     }
 }
-// --- ▲▲▲ FIN NUEVA FUNCIÓN ▲▲▲ ---
+// --- ▲▲▲ FIN LÓGICA DE CONTEO DE USUARIOS ▲▲▲ ---
 
 async function handleSettingUpdate(element, action, newValue) {
+    // ... [FUNCIÓN handleSettingUpdate (SIN CAMBIOS)] ...
     const formData = new FormData();
     formData.append('action', action);
     formData.append('new_value', newValue);
@@ -114,7 +108,6 @@ async function handleSettingUpdate(element, action, newValue) {
                 const valueDisplay = element.querySelector('.stepper-value');
                 if (valueDisplay) valueDisplay.textContent = originalValue;
                 
-                // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (4 BOTONES) ▼▼▼ ---
                 const min = parseInt(element.dataset.min, 10);
                 const max = parseInt(element.dataset.max, 10);
                 const step1 = parseInt(element.dataset.step1 || '1', 10);
@@ -125,7 +118,6 @@ async function handleSettingUpdate(element, action, newValue) {
                 element.querySelector('[data-step-action="decrement-1"]').disabled = currentValInt <= min;
                 element.querySelector('[data-step-action="increment-1"]').disabled = currentValInt >= max;
                 element.querySelector('[data-step-action="increment-10"]').disabled = currentValInt > max - step10;
-                // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
             }
         }
 
@@ -153,6 +145,48 @@ async function handleSettingUpdate(element, action, newValue) {
 export function initAdminServerSettingsManager() {
 
     document.body.addEventListener('click', async (e) => {
+        
+        // --- ▼▼▼ INICIO DE LÓGICA DE ACORDEÓN MODIFICADA ▼▼▼ ---
+        const accordionHeader = e.target.closest('.component-accordion__header[data-action="toggle-accordion"]');
+        if (accordionHeader) {
+            e.preventDefault();
+            
+            // Prevenir que el clic en un stepper dentro de un cabecero (si existiera) lo cierre
+            if (e.target.closest('.component-stepper')) {
+                return;
+            }
+            
+            // 1. Alternar el estado visual del cabecero (para la flecha)
+            accordionHeader.classList.toggle('active');
+            const isActive = accordionHeader.classList.contains('active');
+
+            // 2. Iterar sobre los *siguientes hermanos* y ocultar/mostrar
+            let nextElement = accordionHeader.nextElementSibling;
+            
+            while (nextElement) {
+                // Si encontramos otra cabecera, nos detenemos
+                if (nextElement.classList.contains('component-accordion__header')) {
+                    break;
+                }
+                
+                // Si es una tarjeta de contenido, la alternamos
+                if (nextElement.classList.contains('component-card')) {
+                    if (isActive) {
+                        nextElement.classList.add('active');
+                        nextElement.classList.remove('disabled');
+                    } else {
+                        nextElement.classList.add('disabled');
+                        nextElement.classList.remove('active');
+                    }
+                }
+                
+                // Pasamos al siguiente hermano
+                nextElement = nextElement.nextElementSibling;
+            }
+            return; // Detener el procesamiento, fue un clic en el acordeón
+        }
+        // --- ▲▲▲ FIN DE LÓGICA DE ACORDEÓN MODIFICADA ▲▲▲ ---
+
         const button = e.target.closest('button[data-step-action], button[data-action]');
         if (!button) return;
         
@@ -162,18 +196,9 @@ export function initAdminServerSettingsManager() {
         const action = button.dataset.action;
         const stepAction = button.dataset.stepAction;
 
-        // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ ---
         if (action === 'admin-refresh-user-count') {
-            // NOTA: Esta acción fallará porque 'get-concurrent-users' no existe
-            // en 'admin_handler.php'. Se deja por si se quiere reimplementar.
-            // await fetchAndUpdateUserCount();
-            
-            // Solución temporal: pedir al WebSocket que re-envíe el conteo
             if (window.ws && window.ws.readyState === WebSocket.OPEN) {
-                 // (Actualmente el servidor python no maneja mensajes entrantes,
-                 // pero si lo hiciera, aquí se enviaría la solicitud)
                  console.log("Pidiendo actualización de conteo (función no implementada en servidor)");
-                 // Por ahora, solo mostramos el último que tengamos
                  if (window.lastKnownUserCount !== null) {
                     const display = document.getElementById('concurrent-users-display');
                     if (display) display.textContent = window.lastKnownUserCount;
@@ -181,10 +206,9 @@ export function initAdminServerSettingsManager() {
             }
             return;
         }
-        // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
-
-        // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (4 BOTONES) ▼▼▼ ---
+        
         if (stepAction) {
+            // ... [LÓGICA DEL STEPPER (SIN CAMBIOS)] ...
             const wrapper = button.closest('.component-stepper');
             if (!wrapper || wrapper.classList.contains('disabled-interactive')) return;
 
@@ -195,7 +219,6 @@ export function initAdminServerSettingsManager() {
             const min = parseInt(wrapper.dataset.min, 10);
             const max = parseInt(wrapper.dataset.max, 10);
             
-            // Leer los pasos de los atributos data
             const step1 = parseInt(wrapper.dataset.step1 || '1', 10);
             const step10 = parseInt(wrapper.dataset.step10 || '10', 10);
 
@@ -203,7 +226,6 @@ export function initAdminServerSettingsManager() {
             let newValue = currentValue;
             let stepAmount = 0;
 
-            // Determinar el monto del paso
             switch (stepAction) {
                 case 'increment-1':
                     stepAmount = step1;
@@ -228,7 +250,6 @@ export function initAdminServerSettingsManager() {
 
             if (valueDisplay) valueDisplay.textContent = newValue;
             
-            // Actualizar el estado deshabilitado de los 4 botones
             wrapper.querySelector('[data-step-action="decrement-10"]').disabled = newValue < min + step10;
             wrapper.querySelector('[data-step-action="decrement-1"]').disabled = newValue <= min;
             wrapper.querySelector('[data-step-action="increment-1"]').disabled = newValue >= max;
@@ -237,9 +258,9 @@ export function initAdminServerSettingsManager() {
             await handleSettingUpdate(wrapper, stepperAction, newValue.toString());
             return;
         }
-        // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
 
         if (action) {
+            // ... [LÓGICA DE GESTIÓN DE DOMINIOS (SIN CAMBIOS)] ...
             const domainCard = button.closest('#admin-domain-card');
             if (!domainCard) return;
 
@@ -337,7 +358,7 @@ export function initAdminServerSettingsManager() {
     });
 
     document.body.addEventListener('change', async (e) => {
-        
+        // ... [LÓGICA 'change' PARA TOGGLES (SIN CAMBIOS)] ...
         const input = e.target;
         
         if (input.closest('.component-stepper') || input.closest('#admin-domain-card')) return;
@@ -360,6 +381,7 @@ export function initAdminServerSettingsManager() {
     });
     
     document.body.addEventListener('blur', async (e) => {
+        // ... [LÓGICA 'blur' PARA INPUTS (SIN CAMBIOS)] ...
         const input = e.target;
         
         if (input.id !== 'setting-allowed-email-domains') return;
@@ -376,10 +398,7 @@ export function initAdminServerSettingsManager() {
 
     }, true); 
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
-    // Cargar el conteo inicial cuando se carga la página de ajustes
     if (document.querySelector('.section-content[data-section="admin-server-settings"]')) {
-        // fetchAndUpdateUserCount(); // <-- ¡LÍNEA ELIMINADA!
+        // (Lógica de conteo de usuarios sin cambios)
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
 }
