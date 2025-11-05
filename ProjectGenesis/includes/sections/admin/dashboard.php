@@ -9,9 +9,8 @@
                 <div class="page-toolbar-left">
                     <button type="button"
                         class="page-toolbar-button"
-                        data-action="admin-manage-logs"
+                        data-action="toggleSectionAdminManageLogs"
                         data-tooltip="admin.dashboard.manageLogs"
-                        disabled 
                         >
                         <span class="material-symbols-rounded">history</span>
                     </button>

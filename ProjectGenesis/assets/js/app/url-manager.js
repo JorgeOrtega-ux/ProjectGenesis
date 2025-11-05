@@ -51,6 +51,7 @@ const routes = {
     // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     'toggleSectionAdminManageBackups': 'admin-manage-backups',
     // 'toggleSectionAdminRestoreBackup': 'admin-restore-backup', // <-- ¡ELIMINADA!
+    'toggleSectionAdminManageLogs': 'admin-manage-logs', // <-- ¡NUEVA LÍNEA!
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 };
 
@@ -91,6 +92,7 @@ const paths = {
     // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     '/admin/manage-backups': 'toggleSectionAdminManageBackups',
     // '/admin/restore-backup': 'toggleSectionAdminRestoreBackup', // <-- ¡ELIMINADA!
+    '/admin/manage-logs': 'toggleSectionAdminManageLogs', // <-- ¡NUEVA LÍNEA!
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 };
 
@@ -304,6 +306,14 @@ function updateMenuState(currentAction) {
         menuAction = 'toggleSectionAdminManageBackups';
     }
     // La regla para 'toggleSectionAdminRestoreBackup' se ha eliminado
+    
+    // --- ¡NUEVA LÍNEA! ---
+    // No necesitamos una acción de menú, pero si quisiéramos resaltarla:
+    if (currentAction === 'toggleSectionAdminManageLogs') {
+         menuAction = 'toggleSectionAdminDashboard'; // Resalta 'Dashboard'
+    }
+    // --- FIN NUEVA LÍNEA ---
+    
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {

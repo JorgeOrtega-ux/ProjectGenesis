@@ -302,7 +302,8 @@ $pathsToPages = [
     // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     '/admin/manage-backups'     => 'admin-manage-backups',
     '/admin/restore-backup'     => 'admin-restore-backup', // <-- ¡AÑADIDA!
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+    '/admin/manage-logs'        => 'admin-manage-logs', // <-- ¡NUEVA LÍNEA AÑADIDA!
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 ];
 
 // 3. Determinar la página actual y los tipos de página
@@ -328,8 +329,8 @@ if ($isAdminPage && isset($_SESSION['user_id'])) {
     }
     
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (SEGURIDAD DE BACKUPS) ▼▼▼ ---
-    // Solo los 'founder' pueden ver las páginas de backups
-    if (($currentPage === 'admin-manage-backups' || $currentPage === 'admin-restore-backup') && $userRole !== 'founder') {
+    // Solo los 'founder' pueden ver las páginas de backups y logs
+    if (($currentPage === 'admin-manage-backups' || $currentPage === 'admin-restore-backup' || $currentPage === 'admin-manage-logs') && $userRole !== 'founder') {
         $isAdminPage = true; // Sigue siendo admin, pero...
         $currentPage = '404'; // No tiene permiso para esta página específica
     }

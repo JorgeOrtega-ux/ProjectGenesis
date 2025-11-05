@@ -22,6 +22,10 @@ export function initAdminManager() {
     let selectedAdminUserRole = null;
     let selectedAdminUserStatus = null;
     
+    // --- ▼▼▼ INICIO DE NUEVA LÓGICA (LOGS) ▼▼▼ ---
+    let selectedAdminLogFile = null;
+    // --- ▲▲▲ FIN DE NUEVA LÓGICA (LOGS) ▲▲▲ ---
+    
     let currentPage = 1;
     let currentSearch = '';
     let currentSort = '';
@@ -75,6 +79,37 @@ export function initAdminManager() {
         // Al limpiar la selección, también cerramos cualquier popover (Filtro/Búsqueda)
         closeAllToolbarModes();
     }
+    
+    // --- ▼▼▼ INICIO DE NUEVAS FUNCIONES (LOGS) ▼▼▼ ---
+    function enableLogSelectionActions() {
+        const toolbarContainer = document.getElementById('log-toolbar-container');
+        if (!toolbarContainer) return;
+        toolbarContainer.classList.add('selection-active');
+        const selectionButtons = toolbarContainer.querySelectorAll('.toolbar-action-selection button');
+        selectionButtons.forEach(btn => {
+            btn.disabled = false;
+        });
+    }
+
+    function disableLogSelectionActions() {
+        const toolbarContainer = document.getElementById('log-toolbar-container');
+        if (!toolbarContainer) return;
+        toolbarContainer.classList.remove('selection-active');
+        const selectionButtons = toolbarContainer.querySelectorAll('.toolbar-action-selection button');
+        selectionButtons.forEach(btn => {
+            btn.disabled = true;
+        });
+    }
+
+    function clearLogSelection() {
+        const selectedCard = document.querySelector('.card-item.selected[data-log-filename]');
+        if (selectedCard) {
+            selectedCard.classList.remove('selected');
+        }
+        disableLogSelectionActions();
+        selectedAdminLogFile = null;
+    }
+    // --- ▲▲▲ FIN DE NUEVAS FUNCIONES (LOGS) ▲▲▲ ---
     
     function updateAdminModals() {
         const roleModule = document.querySelector('[data-module="moduleAdminRole"]');
@@ -410,6 +445,27 @@ export function initAdminManager() {
             return;
         }
 
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (SELECCIÓN DE LOGS) ▼▼▼ ---
+        const logCard = event.target.closest('.card-item[data-log-filename]');
+        if (logCard) {
+            event.preventDefault();
+            const filename = logCard.dataset.logFilename;
+            
+            if (selectedAdminLogFile === filename) {
+                clearLogSelection();
+            } else {
+                const oldSelected = document.querySelector('.card-item.selected[data-log-filename]');
+                if (oldSelected) {
+                    oldSelected.classList.remove('selected');
+                }
+                logCard.classList.add('selected');
+                selectedAdminLogFile = filename;
+                enableLogSelectionActions();
+            }
+            return;
+        }
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA (SELECCIÓN DE LOGS) ▲▲▲ ---
+
         const createRoleLink = event.target.closest('[data-module="moduleAdminCreateRole"] .menu-link');
         if (createRoleLink) {
             event.preventDefault();
@@ -448,6 +504,15 @@ export function initAdminManager() {
 
         const button = event.target.closest('[data-action]');
         if (!button) {
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLICK FUERA) ▼▼▼ ---
+            // Limpiar selección de LOGS si se hace clic fuera
+            const clickedOnAnyCard = event.target.closest('.card-item');
+            const clickedOnModule = event.target.closest('[data-module].active');
+
+            if (!clickedOnModule && !clickedOnButton && !clickedOnAnyCard) {
+                clearLogSelection();
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN (CLICK FUERA) ▲▲▲ ---
             return;
         }
         const action = button.getAttribute('data-action');
@@ -690,6 +755,37 @@ export function initAdminManager() {
             return;
         }
 
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (LOGS) ▼▼▼ ---
+        if (action === 'admin-log-clear-selection') {
+            event.preventDefault();
+            clearLogSelection();
+            return;
+        }
+        
+        if (action === 'admin-log-view') {
+            if (!selectedAdminLogFile) {
+                // (Debes añadir esta clave a tus JSON)
+                showAlert(getTranslation('js.admin.logs.errorNoSelection') || "Por favor, selecciona un archivo de log primero.", 'error');
+                event.preventDefault(); 
+                event.stopImmediatePropagation();
+                return;
+            }
+            
+            // Navegar a la URL con el parámetro 'view'
+            const linkUrl = window.projectBasePath + '/admin/manage-logs?view=' + encodeURIComponent(selectedAdminLogFile);
+            
+            const link = document.createElement('a');
+            link.href = linkUrl;
+            link.setAttribute('data-nav-js', 'true'); 
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            
+            clearLogSelection(); 
+            return;
+        }
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA (LOGS) ▲▲▲ ---
+
         if (action === 'toggleSectionAdminEditUser') {
             if (!selectedAdminUserId) {
                 showAlert(getTranslation('js.admin.errorNoSelection'), 'error');
@@ -823,6 +919,7 @@ export function initAdminManager() {
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
             clearAdminUserSelection();
+            clearLogSelection(); // <-- LÍNEA AÑADIDA
         }
     });
 
@@ -836,6 +933,7 @@ export function initAdminManager() {
         // Solo limpiar si no se hizo clic en un módulo, un botón, o CUALQUIER tarjeta
         if (!clickedOnModule && !clickedOnButton && !clickedOnAnyCard) {
             clearAdminUserSelection();
+            clearLogSelection(); // <-- LÍNEA AÑADIDA
         }
     });
 
