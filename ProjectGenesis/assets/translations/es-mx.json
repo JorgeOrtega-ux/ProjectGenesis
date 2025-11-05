@@ -67,7 +67,11 @@
       "joinButton": "Unirme a un grupo"
     },
     "card": {
-      "view": "Ver publicaciones..."
+      "view": "Ver publicaciones...",
+      "member": "miembro",
+      "members": "miembros",
+      "privacyPrivado": "Privado",
+      "privacyPublico": "Público"
     }
   },
   "groups": {
