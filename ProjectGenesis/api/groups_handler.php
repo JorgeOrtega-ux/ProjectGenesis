@@ -31,7 +31,9 @@ if (!validateCsrfToken($submittedToken)) {
 $action = $_POST['action'] ?? '';
 
 if ($action === 'join-group') {
-    $access_code = trim($_POST['access_code'] ?? '');
+    // --- ▼▼▼ MODIFICACIÓN: Limpiar guiones del código ▼▼▼ ---
+    $access_code = str_replace('-', '', trim($_POST['access_code'] ?? ''));
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     try {
         // Validación 1: Código no vacío

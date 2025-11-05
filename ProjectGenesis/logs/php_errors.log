@@ -28,3 +28,4 @@
 [05-Nov-2025 16:49:31 UTC] PHP Warning:  Undefined variable $profileImageUrl in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\home.php on line 218
 [05-Nov-2025 16:49:31 UTC] PHP Warning:  Undefined variable $usernameForAlt in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\home.php on line 219
 [05-Nov-2025 16:53:08 UTC] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 619
+[05-Nov-2025 17:54:22 UTC] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 123

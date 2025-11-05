@@ -165,4 +165,20 @@ function getPreferredLanguage($acceptLanguage) {
 
     return $defaultLanguage;
 }
+
+// --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! ▼▼▼ ---
+/**
+ * Genera un código de acceso de grupo aleatorio (12 caracteres).
+ */
+function generateGroupAccessCode() {
+    $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $code = '';
+    $max = strlen($chars) - 1;
+    for ($i = 0; $i < 12; $i++) {
+        $code .= $chars[random_int(0, $max)];
+    }
+    // No se formatea con guiones en la BD, solo en el input
+    return $code; 
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
 ?>

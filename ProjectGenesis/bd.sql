@@ -109,14 +109,16 @@ INSERT INTO site_settings (setting_key, setting_value) VALUES
 -- --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
 ('max_concurrent_users', '500');
 
--- --- ▼▼▼ INICIO DE TABLAS DE GRUPOS ▼▼▼ ---
+-- --- ▼▼▼ INICIO DE TABLAS DE GRUPOS (MODIFICADAS) ▼▼▼ ---
 
 DROP TABLE IF EXISTS `groups`;
 CREATE TABLE `groups` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `uuid` char(36) NOT NULL DEFAULT (uuid()),
   `name` varchar(255) NOT NULL,
-  `group_type` enum('municipio','universidad','preparatoria','general') NOT NULL DEFAULT 'general',
+  -- --- ▼▼▼ MODIFICACIÓN DE ENUM Y DEFAULT ▼▼▼ ---
+  `group_type` enum('municipio','universidad') NOT NULL DEFAULT 'municipio',
+  -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
   `access_key` varchar(20) NOT NULL,
   `privacy` enum('publico','privado') NOT NULL DEFAULT 'privado',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -140,14 +142,13 @@ CREATE TABLE `user_groups` (
   CONSTRAINT `fk_user_groups_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --- ▼▼▼ INSERCIÓN DE GRUPOS DE EJEMPLO ▼▼▼ ---
+-- --- ▼▼▼ MODIFICACIÓN DE DATOS DE EJEMPLO ▼▼▼ ---
 INSERT INTO `groups` (`name`, `group_type`, `access_key`, `privacy`) VALUES
-('Universidad de Tamaulipas', 'universidad', 'UT2025', 'privado'),
-('Municipio de Matamoros', 'municipio', 'MTMS25', 'privado'),
-('Prepa Cbtis 135', 'preparatoria', 'CBTIS135', 'privado'),
-('Grupo de Pruebas', 'general', 'TEST123', 'privado'),
-('Comunidad Pública', 'general', 'PUBLIC01', 'publico');
-
--- --- ▲▲▲ FIN DE TABLAS DE GRUPOS ▲▲▲ ---
+('Universidad de Tamaulipas', 'universidad', 'UTAM1234ABCD', 'privado'),
+('Municipio de Matamoros', 'municipio', 'MTMS5678EFGH', 'privado'),
+('Prepa Cbtis 135', 'universidad', 'CBTS9012IJKL', 'privado'),
+('Grupo de Pruebas', 'municipio', 'TEST3456MNOP', 'privado'),
+('Comunidad Pública', 'municipio', 'PUBL7890QRST', 'publico');
+-- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 SET FOREIGN_KEY_CHECKS=1;

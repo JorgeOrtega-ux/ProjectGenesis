@@ -88,7 +88,7 @@ export function initGroupsManager() {
         const formData = new FormData();
         formData.append('action', 'join-group');
         formData.append('access_code', accessCode);
-        formData.append('csrf_token', csrfToken.value);
+        formData.append('csrf_token', csrfTokenInput.value);
 
         try {
             // 5. Llamar a la API (asumiendo que 'callGroupsApi' fue añadida a api-service.js)
@@ -123,11 +123,28 @@ export function initGroupsManager() {
         }
     });
 
-    // Limpiar errores al escribir en el input
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN: Listener de input actualizado ▼▼▼ ---
+    // Limpiar errores y formatear input al escribir
     document.body.addEventListener('input', (event) => {
         const accessCodeInput = event.target.closest('#join-group-access-code');
         if (accessCodeInput) {
+            // Ocultar error
             hideInlineError(accessCodeInput.closest('#join-group-card'));
+            
+            // Formatear: XXXX-XXXX-XXXX y Mayúsculas
+            let input = accessCodeInput.value.replace(/[^0-9a-zA-Z]/g, '');
+            input = input.toUpperCase();
+            input = input.substring(0, 12); // 12 caracteres
+
+            let formatted = '';
+            for (let i = 0; i < input.length; i++) {
+                if (i > 0 && i % 4 === 0) {
+                    formatted += '-';
+                }
+                formatted += input[i];
+            }
+            accessCodeInput.value = formatted;
         }
     });
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
