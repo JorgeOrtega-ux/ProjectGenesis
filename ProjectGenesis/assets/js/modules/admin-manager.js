@@ -504,15 +504,16 @@ export function initAdminManager() {
 
         const button = event.target.closest('[data-action]');
         if (!button) {
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLICK FUERA) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLICK FUERA) Y CORRECCIÓN DE ERROR ▼▼▼ ---
             // Limpiar selección de LOGS si se hace clic fuera
             const clickedOnAnyCard = event.target.closest('.card-item');
             const clickedOnModule = event.target.closest('[data-module].active');
 
-            if (!clickedOnModule && !clickedOnButton && !clickedOnAnyCard) {
+            // ¡CORRECCIÓN! Se comprueba la variable 'button', no 'clickedOnButton'
+            if (!clickedOnModule && !button && !clickedOnAnyCard) {
                 clearLogSelection();
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN (CLICK FUERA) ▲▲▲ ---
+            // --- ▲▲▲ FIN DE MODIFICACIÓN (CLICK FUERA) Y CORRECCIÓN DE ERROR ▲▲▲ ---
             return;
         }
         const action = button.getAttribute('data-action');

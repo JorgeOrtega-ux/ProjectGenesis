@@ -34,7 +34,11 @@ $userRole = $_SESSION['role'] ?? 'user';
     </div>
     <div class="header-right">
         <div class="header-item">
-
+<div class="header-button"
+                data-action="toggleModuleSurface"
+                data-tooltip="header.buttons.menu">
+                <span class="material-symbols-rounded">add</span>
+            </div>
             <div class="header-button header-profile"
                 data-action="toggleModuleSelect"
                 data-role="<?php echo htmlspecialchars($userRole); ?>"
@@ -78,7 +82,8 @@ $userRole = $_SESSION['role'] ?? 'user';
                         <span data-i18n="header.profile.settings"></span>
                     </div>
                 </div>
-                <div class="menu-link">
+                
+                <div class="menu-link" data-action="toggleSectionHelpLegalNotice">
                     <div class="menu-link-icon">
                         <span class="material-symbols-rounded">help</span>
                     </div>
@@ -86,7 +91,6 @@ $userRole = $_SESSION['role'] ?? 'user';
                         <span data-i18n="header.profile.help"></span>
                     </div>
                 </div>
-
                 <div class="menu-link" data-action="logout">
                     <div class="menu-link-icon">
                         <span class="material-symbols-rounded">logout</span>

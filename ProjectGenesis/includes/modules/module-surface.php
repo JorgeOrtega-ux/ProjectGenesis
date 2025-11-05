@@ -1,5 +1,5 @@
 <?php
-// FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-98418948306e47bc505f1797114031c3351b5e33/ProjectGenesis/includes/modules/module-surface.php
+// FILE: includes/modules/module-surface.php
 ?>
 <div class="module-content module-surface body-title disabled" data-module="moduleSurface">
     <div class="menu-content">
@@ -89,15 +89,6 @@
                                 <span data-i18n="sidebar.help.backToHome">Volver a Inicio</span>
                             </div>
                         </div>
-                        
-                        <div class="menu-link" data-action="toggleSectionHelpSendFeedback">
-                            <div class="menu-link-icon">
-                                <span class="material-symbols-rounded">feedback</span>
-                            </div>
-                            <div class="menu-link-text">
-                                <span data-i18n="sidebar.help.sendFeedback">Enviar comentarios</span>
-                            </div>
-                        </div>
 
                         <div class="menu-link" data-action="toggleSectionHelpLegalNotice">
                             <div class="menu-link-icon">
@@ -134,7 +125,16 @@
                                 <span data-i18n="sidebar.help.termsConditions">Términos y condiciones</span>
                             </div>
                         </div>
-                    <?php 
+
+                        <div class="menu-link" data-action="toggleSectionHelpSendFeedback">
+                            <div class="menu-link-icon">
+                                <span class="material-symbols-rounded">feedback</span>
+                            </div>
+                            <div class="menu-link-text">
+                                <span data-i18n="sidebar.help.sendFeedback">Enviar comentarios</span>
+                            </div>
+                        </div>
+                        <?php 
                     else: 
                     ?>
                         <div class="menu-link active" data-action="toggleSectionHome">

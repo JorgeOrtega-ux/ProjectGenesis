@@ -16,7 +16,13 @@
         <div class="main-content">
             <div class="general-content">
 
-                <?php if (!$isAuthPage): ?>
+                <?php 
+                // --- ▼▼▼ ¡AQUÍ ESTÁ LA CORRECCIÓN! ▼▼▼ ---
+                // En lugar de (!$isAuthPage), comprobamos si la sesión existe.
+                // El header SÓLO debe mostrarse si el usuario está logueado.
+                if (isset($_SESSION['user_id'])): 
+                // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+                ?>
                     <div class="general-content-top">
                         <?php include 'includes/layouts/header.php'; ?>
                     </div>
@@ -24,7 +30,12 @@
 
                 <div class="general-content-bottom">
 
-                    <?php if (!$isAuthPage): ?>
+                    <?php 
+                    // --- ▼▼▼ ¡AQUÍ ESTÁ LA OTRA CORRECCIÓN! ▼▼▼ ---
+                    // El menú lateral también debe mostrarse solo si el usuario está logueado.
+                    if (isset($_SESSION['user_id'])): 
+                    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+                    ?>
                         <?php include 'includes/modules/module-surface.php'; ?>
                     <?php endif; ?>
 
@@ -50,7 +61,7 @@
 
             // --- ▼▼▼ ¡LÍNEA AÑADIDA! ▼▼▼ ---
             window.userId = <?php echo $_SESSION['user_id'] ?? 0; ?>;
-            // --- ▲▲▲ ¡FIN DE LÍNEA AÑADIDA! ▲▲▲ ---
+            // --- ▲▲▲ ¡FIN DE LÍNEA AÑADIDA! ▼▼▼ ---
 
             // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
             // Esta es la IP o dominio (ej. 192.168.1.100) que el navegador usó para cargar la página.

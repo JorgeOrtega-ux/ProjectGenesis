@@ -209,52 +209,9 @@ if (isset($_SESSION['user_id'])) {
 // $basePath y $pdo (para rol de admin) se definieron en bootstrapper.php
 // $GLOBALS['site_settings'] se definió en bootstrapper.php
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
-$maintenanceMode = $GLOBALS['site_settings']['maintenance_mode'] ?? '0';
-$userRole = $_SESSION['role'] ?? 'user'; // Asumir 'user' si no está logueado
-$isPrivilegedUser = in_array($userRole, ['moderator', 'administrator', 'founder']);
-
+// --- ▼▼▼ INICIO DE BLOQUE REORDENADO (PASO 1) ▼▼▼ ---
+// 1. Analizar la URL PRIMERO
 $requestUri = $_SERVER['REQUEST_URI'];
-$isMaintenancePage = (strpos($requestUri, '/maintenance') !== false);
-$isLoginPage = (strpos($requestUri, '/login') !== false);
-$isApiCall = (strpos($requestUri, '/api/') !== false);
-$isConfigCall = (strpos($requestUri, '/config/') !== false); // Permitir logout
-
-// --- ▼▼▼ NUEVA VARIABLE AÑADIDA ▼▼▼ ---
-$isServerFullPage = (strpos($requestUri, '/server-full') !== false);
-
-
-// Si el modo mantenimiento está ACTIVO
-if ($maintenanceMode === '1') {
-
-    // --- ▼▼▼ ¡INICIO DE LA LÓGICA DE REDIRECCIÓN MODIFICADA! ▼▼▼ ---
-
-    // CASO 1: Usuario NO logueado
-    if (!isset($_SESSION['user_id'])) {
-        // --- ▼▼▼ ¡ESTA ES LA LÍNEA MODIFICADA! ▼▼▼ ---
-        // Si no está logueado, CUALQUIER página que no sea login, maintenance, la API,
-        // o los scripts de config (para logout) debe redirigir a /login.
-        if (!$isLoginPage && !$isMaintenancePage && !$isApiCall && !$isConfigCall) {
-        // --- ▲▲▲ ¡FIN DE LA LÍNEA MODIFICADA! ▲▲▲ ---
-             header('Location: ' . $basePath . '/login');
-             exit;
-        }
-    } 
-    // CASO 2: Usuario SÍ logueado
-    else {
-        // El usuario está logueado, aplicar la lógica de staff
-        // Si NO es staff Y NO está en una página de "gracia" -> redirigir a /maintenance
-        if (!$isPrivilegedUser && !$isMaintenancePage && !$isLoginPage && !$isApiCall && !$isConfigCall && !$isServerFullPage) {
-            header('Location: ' . $basePath . '/maintenance');
-            exit;
-        }
-    }
-    // --- ▲▲▲ FIN DE LA LÓGICA DE REDIRECCIÓN MODIFICADA ▲▲▲ ---
-}
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
-
-// 1. Analizar la URL
 $requestPath = strtok($requestUri, '?'); 
 
 $path = str_replace($basePath, '', $requestPath);
@@ -303,7 +260,7 @@ $pathsToPages = [
     '/admin/manage-backups'     => 'admin-manage-backups',
     '/admin/restore-backup'     => 'admin-restore-backup', // <-- ¡AÑADIDA!
     '/admin/manage-logs'        => 'admin-manage-logs', // <-- ¡NUEVA LÍNEA AÑADIDA!
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
     // --- ▼▼▼ INICIO DE NUEVAS RUTAS (HELP) ▼▼▼ ---
     '/help/legal-notice'      => 'help-legal-notice',
@@ -336,6 +293,49 @@ $isAuthPage = in_array($currentPage, $authPages) ||
 $isSettingsPage = strpos($currentPage, 'settings-') === 0;
 $isAdminPage = strpos($currentPage, 'admin-') === 0;
 $isHelpPage = strpos($currentPage, 'help-') === 0; // <-- ¡NUEVA LÍNEA!
+// --- ▲▲▲ FIN DE BLOQUE REORDENADO ▲▲▲ ---
+
+
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) (PASO 2) ▼▼▼ ---
+$maintenanceMode = $GLOBALS['site_settings']['maintenance_mode'] ?? '0';
+$userRole = $_SESSION['role'] ?? 'user'; // Asumir 'user' si no está logueado
+$isPrivilegedUser = in_array($userRole, ['moderator', 'administrator', 'founder']);
+
+// Definir variables de contexto basadas en $currentPage (que ya está definida)
+$isMaintenancePage = ($currentPage === 'maintenance');
+$isLoginPage = ($currentPage === 'login');
+$isApiCall = (strpos($requestUri, '/api/') !== false);
+$isConfigCall = (strpos($requestUri, '/config/') !== false); // Permitir logout
+$isServerFullPage = ($currentPage === 'server-full');
+
+
+// Si el modo mantenimiento está ACTIVO
+if ($maintenanceMode === '1') {
+
+    // --- ▼▼▼ ¡INICIO DE LA LÓGICA DE REDIRECCIÓN CORREGIDA! ▼▼▼ ---
+
+    // CASO 1: Usuario NO logueado
+    if (!isset($_SESSION['user_id'])) {
+        // Si no está logueado, CUALQUIER página que no sea de login, mantenimiento,
+        // API, config, O AYUDA, debe redirigir a /login.
+        if (!$isLoginPage && !$isMaintenancePage && !$isApiCall && !$isConfigCall && !$isHelpPage) {
+             header('Location: ' . $basePath . '/login');
+             exit;
+        }
+    } 
+    // CASO 2: Usuario SÍ logueado
+    else {
+        // El usuario está logueado, aplicar la lógica de staff
+        // Si NO es staff Y NO está en una página de "gracia" -> redirigir a /maintenance
+        if (!$isPrivilegedUser && !$isMaintenancePage && !$isLoginPage && !$isApiCall && !$isConfigCall && !$isServerFullPage && !$isHelpPage) {
+            header('Location: ' . $basePath . '/maintenance');
+            exit;
+        }
+    }
+    // --- ▲▲▲ FIN DE LA LÓGICA DE REDIRECCIÓN CORREGIDA ▲▲▲ ---
+}
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
 // 4. Lógica de Autorización y Redirecciones
 if ($isAdminPage && isset($_SESSION['user_id'])) {
