@@ -1,6 +1,6 @@
 <?php
 // FILE: api/admin_handler.php
-// (CÓDIGO MODIFICADO - Añadidas acciones para 'groups')
+// (CÓDIGO MODIFICADO - 'admin-update-group' ahora acepta actualizaciones parciales)
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -141,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sort_by_sql = ($sort_by_param === '') ? 'created_at' : $sort_by_param;
             $sort_order_sql = ($sort_order_param === '') ? 'DESC' : $sort_order_param;
 
-            $usersPerPage = 20; // <-- AUMENTADO DE 1 A 20 (esto estaba en 1 en tu archivo original)
+            $usersPerPage = 20; 
             $totalUsers = 0;
             $totalPages = 1;
 
@@ -391,7 +391,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
     } elseif ($action === 'set-role') {
-        // (Lógica existente... sin cambios)
+        
         $targetUserId = $_POST['target_user_id'] ?? 0;
         $newValue = $_POST['new_value'] ?? '';
 
@@ -447,7 +447,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     
     } elseif ($action === 'set-status') {
-        // (Lógica existente... sin cambios)
+        
         $targetUserId = $_POST['target_user_id'] ?? 0;
         $newValue = $_POST['new_value'] ?? '';
 
@@ -530,7 +530,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     
     } elseif ($action === 'admin-generate-password') {
-        // (Lógica existente... sin cambios)
+        
         try {
             $newPassword = generateSecurePasswordPhp(16);
             $response['success'] = true;
@@ -541,7 +541,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     
     } elseif ($action === 'admin-upload-avatar') {
-        // (Lógica existente... sin cambios)
+        
         try {
             $targetUserId = $_POST['target_user_id'] ?? 0;
             if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
@@ -592,7 +592,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
     } elseif ($action === 'admin-remove-avatar') {
-        // (Lógica existente... sin cambios)
+        
         try {
             $targetUserId = $_POST['target_user_id'] ?? 0;
             $stmt_target = $pdo->prepare("SELECT role, username, profile_image_url FROM users WHERE id = ?");
@@ -620,7 +620,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     
     } elseif ($action === 'admin-update-username') {
-        // (Lógica existente... sin cambios)
+        
         try {
             $targetUserId = $_POST['target_user_id'] ?? 0;
             $newUsername = trim($_POST['username'] ?? '');
@@ -675,7 +675,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     
     } elseif ($action === 'admin-update-email') {
-        // (Lógica existente... sin cambios)
+        
         try {
             $targetUserId = $_POST['target_user_id'] ?? 0;
             $newEmail = trim($_POST['email'] ?? '');
@@ -718,7 +718,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     
     } elseif ($action === 'admin-update-password') {
-        // (Lógica existente... sin cambios)
+        
         try {
             $targetUserId = $_POST['target_user_id'] ?? 0;
             $newPassword = $_POST['new_password'] ?? '';
@@ -758,9 +758,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             elseif ($response['message'] === 'js.auth.errorPasswordLength') $response['data'] = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
         }
     
-    // --- ▼▼▼ INICIO DE NUEVA LÓGICA (GRUPOS) ▼▼▼ ---
+    
     } elseif ($action === 'admin-generate-group-code') {
-        // Solo 'founder' puede generar códigos (o el rol que definas)
+        
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
             echo json_encode($response);
@@ -768,7 +768,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         try {
-            // Reutilizamos la función de utilities.php
+            
             $newCode = generateGroupAccessCode();
             
             $response['success'] = true;
@@ -779,8 +779,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = 'js.api.errorServer';
         }
         
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (admin-update-group) ▼▼▼ ---
     } elseif ($action === 'admin-update-group') {
-        // Solo 'founder' puede editar grupos (o el rol que definas)
+        // Solo 'founder' puede editar grupos
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
             echo json_encode($response);
@@ -789,51 +790,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         try {
             $targetGroupId = (int)($_POST['target_group_id'] ?? 0);
-            $newName = trim($_POST['name'] ?? '');
-            $newPrivacy = trim($_POST['privacy'] ?? '');
-            $newAccessKey = trim($_POST['access_key'] ?? '');
+            $fieldToUpdate = trim($_POST['field'] ?? '');
+            $newValue = trim($_POST['new_value'] ?? '');
 
-            if (empty($targetGroupId) || empty($newName) || empty($newPrivacy) || empty($newAccessKey)) {
+            if (empty($targetGroupId) || empty($fieldToUpdate) || $newValue === '') {
                 throw new Exception('js.auth.errorCompleteAllFields');
             }
             
-            if ($newPrivacy !== 'publico' && $newPrivacy !== 'privado') {
-                throw new Exception('js.api.invalidAction'); // Valor de privacidad no válido
+            $allowedFields = ['name', 'privacy', 'access_key'];
+            if (!in_array($fieldToUpdate, $allowedFields)) {
+                throw new Exception('js.api.invalidAction'); // Campo no válido
+            }
+
+            // Validaciones específicas por campo
+            if ($fieldToUpdate === 'privacy') {
+                if ($newValue !== 'publico' && $newValue !== 'privado') {
+                    throw new Exception('js.api.invalidAction'); // Valor de privacidad no válido
+                }
             }
             
-            if (strlen($newAccessKey) !== 12) {
-                // (Debes añadir 'admin.groups.errorKeyLength' a tus JSON)
-                throw new Exception('admin.groups.errorKeyLength');
+            elseif ($fieldToUpdate === 'access_key') {
+                $newValue = str_replace('-', '', $newValue); // Limpiar guiones por si acaso
+                if (strlen($newValue) !== 12) {
+                    throw new Exception('admin.groups.errorKeyLength');
+                }
+                // Verificar si la clave de acceso ya existe en OTRO grupo
+                $stmt_check_key = $pdo->prepare("SELECT id FROM `groups` WHERE access_key = ? AND id != ?");
+                $stmt_check_key->execute([$newValue, $targetGroupId]);
+                if ($stmt_check_key->fetch()) {
+                    throw new Exception('admin.groups.errorKeyInUse');
+                }
             }
             
-            // Verificar si la clave de acceso ya existe en OTRO grupo
-            $stmt_check_key = $pdo->prepare("SELECT id FROM `groups` WHERE access_key = ? AND id != ?");
-            $stmt_check_key->execute([$newAccessKey, $targetGroupId]);
-            if ($stmt_check_key->fetch()) {
-                // (Debes añadir 'admin.groups.errorKeyInUse' a tus JSON)
-                throw new Exception('admin.groups.errorKeyInUse');
+            elseif ($fieldToUpdate === 'name') {
+                 if (empty($newValue)) {
+                    throw new Exception('js.auth.errorCompleteAllFields'); // Nombre no puede estar vacío
+                 }
             }
 
             // Todo en orden, actualizar
+            // Usar el nombre de campo directamente (ya validado en la lista blanca)
             $stmt_update = $pdo->prepare(
-                "UPDATE `groups` SET name = ?, privacy = ?, access_key = ? WHERE id = ?"
+                "UPDATE `groups` SET `$fieldToUpdate` = ? WHERE id = ?"
             );
-            $stmt_update->execute([$newName, $newPrivacy, $newAccessKey, $targetGroupId]);
+            $stmt_update->execute([$newValue, $targetGroupId]);
 
             $response['success'] = true;
-            $response['message'] = 'admin.groups.successUpdate'; // (Añadir a JSON)
+            $response['message'] = 'admin.groups.successUpdate';
+            $response['updatedField'] = $fieldToUpdate;
+            $response['newValue'] = $newValue;
 
         } catch (PDOException $e) {
-            logDatabaseError($e, 'admin_handler - admin-update-group');
+            logDatabaseError($e, 'admin_handler - admin-update-group (partial)');
             $response['message'] = 'js.api.errorDatabase';
         } catch (Exception $e) {
             $response['message'] = $e->getMessage();
         }
     }
-    // --- ▲▲▲ FIN DE NUEVA LÓGICA (GRUPOS) ▲▲▲ ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     elseif ($action === 'update-maintenance-mode') {
-        // (Lógica existente... sin cambios)
+        
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
             echo json_encode($response);
@@ -910,7 +927,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     
     } elseif ($action === 'update-registration-mode') {
-        // (Lógica existente... sin cambios)
+        
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
             echo json_encode($response);
@@ -942,7 +959,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     
     } elseif ($action === 'admin-add-domain') {
-        // (Lógica existente... sin cambios)
+        
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
             echo json_encode($response);
@@ -976,7 +993,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
     } elseif ($action === 'admin-remove-domain') {
-        // (Lógica existente... sin cambios)
+        
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
             echo json_encode($response);
@@ -1012,7 +1029,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action === 'update-max-email-length' || $action === 'update-code-resend-cooldown' ||
         $action === 'update-max-concurrent-users'
     ) {
-        // (Lógica existente... sin cambios)
+        
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
             echo json_encode($response);
@@ -1064,7 +1081,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     
     } elseif ($action === 'create-backup' || $action === 'restore-backup' || $action === 'delete-backup') {
-        // (Lógica existente... sin cambios)
+        
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
             echo json_encode($response);
@@ -1100,13 +1117,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 $response['success'] = true;
                 $response['message'] = 'admin.backups.successCreate';
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Devolver datos del nuevo backup) ▼▼▼
+                
                 $response['newBackup'] = [
                     'filename' => $filename,
                     'size' => filesize($filepath),
                     'created_at' => filemtime($filepath)
                 ];
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                
 
             } elseif ($action === 'restore-backup') {
                 $filename = $_POST['filename'] ?? '';
@@ -1145,9 +1162,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 $response['success'] = true;
                 $response['message'] = 'admin.backups.successDelete';
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Devolver nombre del archivo eliminado) ▼▼▼ ---
+                
                 $response['deletedFilename'] = $safeFilename;
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                
             }
         
         } catch (Exception $e) {

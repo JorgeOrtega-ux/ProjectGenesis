@@ -1,5 +1,5 @@
 // FILE: assets/js/modules/admin-manager.js
-// (CÓDIGO MODIFICADO - Añadida lógica para selección de grupos y edición de grupos)
+// (CÓDIGO MODIFICADO - Añadida lógica para edición de grupos en línea)
 
 import { callAdminApi } from '../services/api-service.js';
 import { showAlert } from '../services/alert-manager.js';
@@ -29,9 +29,9 @@ export function initAdminManager() {
 
     const adminSection = document.querySelector('.section-content[data-section]');
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Selector de sección) ▼▼▼ ---
+    
     if (adminSection && adminSection.dataset.section === 'admin-manage-users') {
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    
         const mainToolbar = document.querySelector('.page-toolbar-floating[data-current-page]');
         if (mainToolbar) {
             userCurrentPage = parseInt(mainToolbar.dataset.currentPage, 10) || 1;
@@ -47,9 +47,9 @@ export function initAdminManager() {
         }
     }
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Selector de sección) ▼▼▼ ---
+    
     if (adminSection && adminSection.dataset.section === 'admin-manage-groups') {
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    
         const mainToolbar = document.querySelector('.page-toolbar-floating[data-current-page]');
         if (mainToolbar) {
             groupCurrentPage = parseInt(mainToolbar.dataset.currentPage, 10) || 1;
@@ -123,7 +123,7 @@ export function initAdminManager() {
         selectedAdminLogFile = null;
     }
 
-    // --- ▼▼▼ INICIO DE NUEVAS FUNCIONES (GRUPOS) ▼▼▼ ---
+    
     function enableGroupSelectionActions() {
         const toolbarContainer = document.getElementById('group-toolbar-container');
         if (!toolbarContainer) return;
@@ -154,7 +154,7 @@ export function initAdminManager() {
         
         closeAllToolbarModes();
     }
-    // --- ▲▲▲ FIN DE NUEVAS FUNCIONES (GRUPOS) ▲▲▲ ---
+    
     
     function updateAdminModals() {
         const roleModule = document.querySelector('[data-module="moduleAdminRole"]');
@@ -379,7 +379,7 @@ export function initAdminManager() {
                 </div>`;
         });
         listContainer.innerHTML = groupListHtml;
-        // Re-aplicar traducciones para los "badges" (ej. Miembros, Privado)
+        
         applyTranslations(listContainer);
     }
     
@@ -511,10 +511,12 @@ export function initAdminManager() {
         }
     }
     
-    // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Errores en Edición de Grupo) ▼▼▼ ---
+    
+    // --- ▼▼▼ MODIFICACIÓN (Usar nuevo ID de error) ▼▼▼ ---
     function showEditGroupError(messageKey, data = null) {
-        const errorDiv = document.querySelector('#admin-edit-group-card-actions .component-card__error');
+        const errorDiv = document.querySelector('#admin-edit-group-error');
         if (!errorDiv) return;
+    // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
 
         let message = getTranslation(messageKey);
         if (data) {
@@ -528,14 +530,112 @@ export function initAdminManager() {
         errorDiv.classList.remove('disabled');
     }
 
+    // --- ▼▼▼ MODIFICACIÓN (Usar nuevo ID de error) ▼▼▼ ---
     function hideEditGroupError() {
-        const errorDiv = document.querySelector('#admin-edit-group-card-actions .component-card__error');
+        const errorDiv = document.querySelector('#admin-edit-group-error');
         if (errorDiv) {
             errorDiv.classList.remove('active'); 
             errorDiv.classList.add('disabled');
         }
     }
-    // --- ▲▲▲ FIN DE NUEVA LÓGICA (Errores en Edición de Grupo) ▲▲▲ ---
+    // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+
+    // --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (Guardado parcial de grupo) ▼▼▼ ---
+    /**
+     * Maneja una actualización de un solo campo para un grupo.
+     * @param {string} field El campo de la BD (name, privacy, access_key).
+     * @param {string} newValue El nuevo valor a guardar.
+     * @param {HTMLElement} cardElement El .component-card que contiene el input/botón.
+     * @param {HTMLElement} [buttonElement=null] El botón de guardado (para el spinner).
+     */
+    async function handleAdminGroupUpdate(field, newValue, cardElement, buttonElement = null) {
+        hideEditGroupError(); // Ocultar error general
+
+        const wrapper = cardElement.closest('.component-wrapper');
+        const targetIdInput = wrapper.querySelector('#admin-edit-target-group-id');
+        const csrfInput = wrapper.querySelector('input[name="csrf_token"]');
+        
+        if (!targetIdInput || !csrfInput) {
+            console.error('No se encontró target_group_id o csrf_token');
+            return;
+        }
+
+        const targetGroupId = targetIdInput.value;
+        const csrfToken = csrfInput.value;
+        
+        // Mostrar spinner si es un botón
+        if (buttonElement) {
+            buttonElement.disabled = true;
+            buttonElement.dataset.originalText = buttonElement.innerHTML;
+            buttonElement.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;"></span>`;
+        } else {
+            // Deshabilitar el trigger del dropdown
+            cardElement.querySelector('.trigger-selector')?.classList.add('disabled-interactive');
+        }
+        
+        const formData = new FormData();
+        formData.append('action', 'admin-update-group');
+        formData.append('target_group_id', targetGroupId);
+        formData.append('field', field);
+        formData.append('new_value', newValue);
+        formData.append('csrf_token', csrfToken);
+
+        const result = await callAdminApi(formData);
+
+        if (result.success) {
+            showAlert(getTranslation(result.message || 'admin.groups.successUpdate'), 'success');
+
+            // Lógica específica si el guardado fue de un botón (edit-in-place)
+            if (buttonElement) {
+                // Actualizar el texto estático
+                const displayElement = cardElement.querySelector('#admin-group-name-display-text');
+                if (displayElement) {
+                    displayElement.textContent = newValue;
+                    displayElement.dataset.originalValue = newValue;
+                }
+                // Volver al modo vista
+                cardElement.querySelector('#admin-group-name-edit-state').classList.remove('active');
+                cardElement.querySelector('#admin-group-name-edit-state').classList.add('disabled');
+                cardElement.querySelector('#admin-group-name-actions-edit').classList.remove('active');
+                cardElement.querySelector('#admin-group-name-actions-edit').classList.add('disabled');
+                cardElement.querySelector('#admin-group-name-view-state').classList.add('active');
+                cardElement.querySelector('#admin-group-name-view-state').classList.remove('disabled');
+                cardElement.querySelector('#admin-group-name-actions-view').classList.add('active');
+                cardElement.querySelector('#admin-group-name-actions-view').classList.remove('disabled');
+            }
+            
+            // Lógica específica para el header
+            if (field === 'name') {
+                const headerTitle = document.querySelector('.component-header-card strong');
+                if (headerTitle) {
+                    headerTitle.textContent = newValue;
+                }
+            }
+            
+        } else {
+            // Mostrar error
+            showEditGroupError(result.message || 'js.auth.errorUnknown', result.data);
+            
+            // Revertir el input si es un 'edit-in-place'
+            if (buttonElement) {
+                const inputElement = cardElement.querySelector('#admin-group-name-input');
+                const displayElement = cardElement.querySelector('#admin-group-name-display-text');
+                if (inputElement && displayElement) {
+                    inputElement.value = displayElement.dataset.originalValue;
+                }
+            }
+            // NOTA: No revertimos el dropdown, el usuario puede volver a seleccionarlo.
+        }
+
+        // Restaurar botones/dropdowns
+        if (buttonElement) {
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = buttonElement.dataset.originalText;
+        } else {
+            cardElement.querySelector('.trigger-selector')?.classList.remove('disabled-interactive');
+        }
+    }
+    // --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
 
     function closeAllToolbarModes() {
         const searchBarContainer = document.getElementById('page-search-bar-container');
@@ -587,7 +687,7 @@ export function initAdminManager() {
             event.preventDefault();
             const userId = userCard.dataset.userId;
             
-            clearAdminGroupSelection(); // <-- Limpiar selección de grupo
+            clearAdminGroupSelection(); 
             
             if (selectedAdminUserId === userId) {
                 clearAdminUserSelection(); 
@@ -612,8 +712,8 @@ export function initAdminManager() {
             event.preventDefault();
             const filename = logCard.dataset.logFilename;
             
-            clearAdminGroupSelection(); // <-- Limpiar selección de grupo
-            clearAdminUserSelection(); // <-- Limpiar selección de usuario
+            clearAdminGroupSelection(); 
+            clearAdminUserSelection(); 
             
             if (selectedAdminLogFile === filename) {
                 clearLogSelection();
@@ -629,14 +729,14 @@ export function initAdminManager() {
             return;
         }
 
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (SELECCIÓN DE GRUPO) ▼▼▼ ---
+        
         const groupCard = event.target.closest('.card-item[data-group-id]');
         if (groupCard) {
             event.preventDefault();
             const groupId = groupCard.dataset.groupId;
             
-            clearAdminUserSelection(); // <-- Limpiar selección de usuario
-            clearLogSelection(); // <-- Limpiar selección de log
+            clearAdminUserSelection(); 
+            clearLogSelection(); 
             
             if (selectedAdminGroupId === groupId) {
                 clearAdminGroupSelection(); 
@@ -653,7 +753,7 @@ export function initAdminManager() {
             }
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA (SELECCIÓN DE GRUPO) ▲▲▲ ---
+        
 
         const createRoleLink = event.target.closest('[data-module="moduleAdminCreateRole"] .menu-link');
         if (createRoleLink) {
@@ -691,30 +791,39 @@ export function initAdminManager() {
             return;
         }
         
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Selector de Privacidad de Grupo) ▼▼▼ ---
+        
+        // --- ▼▼▼ MODIFICACIÓN (Lógica copiada de settings-manager.js y adaptada) ▼▼▼ ---
         const editGroupPrivacyLink = event.target.closest('[data-module="moduleAdminEditGroupPrivacy"] .menu-link');
         if (editGroupPrivacyLink) {
             event.preventDefault();
-            const newValue = editGroupPrivacyLink.dataset.value;
-            if (!newValue) return;
+            
+            const cardElement = editGroupPrivacyLink.closest('.component-card');
+            if (!cardElement) return;
 
-            const hiddenInput = document.getElementById('admin-edit-group-privacy-input');
-            if (hiddenInput) {
-                hiddenInput.value = newValue;
-            }
-
-            const trigger = document.querySelector('[data-action="toggleModuleAdminEditGroupPrivacy"]');
+            // 1. Obtener elementos de la UI
+            const menuList = editGroupPrivacyLink.closest('.menu-list');
+            const trigger = cardElement.querySelector('[data-action="toggleModuleAdminEditGroupPrivacy"]');
             const textEl = trigger.querySelector('.trigger-select-text span');
             const iconEl = trigger.querySelector('.trigger-select-icon span');
+            const hiddenInput = cardElement.querySelector('#admin-group-privacy-input');
             
+            // 2. Obtener nuevos valores del link clickeado
+            const newValue = editGroupPrivacyLink.dataset.value;
             const newTextKey = editGroupPrivacyLink.querySelector('.menu-link-text span').dataset.i18n;
             const newIconName = editGroupPrivacyLink.querySelector('.menu-link-icon span').textContent;
-
+            
+            if (editGroupPrivacyLink.classList.contains('active')) {
+                deactivateAllModules();
+                return; // No hacer nada si ya está activo
+            }
+            
+            // 3. Actualizar la UI del trigger
             if (textEl) textEl.setAttribute('data-i18n', newTextKey);
             if (textEl) textEl.textContent = getTranslation(newTextKey);
             if (iconEl) iconEl.textContent = newIconName;
+            if (hiddenInput) hiddenInput.value = newValue;
 
-            const menuList = editGroupPrivacyLink.closest('.menu-list');
+            // 4. Actualizar estado "active" en la lista
             menuList.querySelectorAll('.menu-link').forEach(link => {
                 link.classList.remove('active');
                 const icon = link.querySelector('.menu-link-check-icon');
@@ -725,9 +834,13 @@ export function initAdminManager() {
             if (iconContainer) iconContainer.innerHTML = '<span class="material-symbols-rounded">check</span>';
 
             deactivateAllModules();
+
+            // 5. Llamar a la API para guardar (auto-save)
+            await handleAdminGroupUpdate('privacy', newValue, cardElement, null);
+            
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA (Selector de Privacidad de Grupo) ▲▲▲ ---
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         const button = event.target.closest('[data-action]');
         if (!button) {
@@ -736,15 +849,15 @@ export function initAdminManager() {
 
             if (!clickedOnModule && !button && !clickedOnAnyCard) {
                 clearLogSelection();
-                clearAdminUserSelection(); // <-- Limpiar selección de usuario
-                clearAdminGroupSelection(); // <-- Limpiar selección de grupo
+                clearAdminUserSelection(); 
+                clearAdminGroupSelection(); 
             }
             return;
         }
         const action = button.getAttribute('data-action');
 
         if (action === 'admin-generate-username') {
-            // (Lógica existente... sin cambios)
+            
             event.preventDefault();
             const inputId = button.getAttribute('data-toggle');
             const input = document.getElementById(inputId);
@@ -771,7 +884,7 @@ export function initAdminManager() {
         }
 
         if (action === 'admin-generate-password') {
-            // (Lógica existente... sin cambios)
+            
             event.preventDefault();
             const passInput = document.getElementById('admin-create-password');
             const generateBtn = button;
@@ -800,7 +913,7 @@ export function initAdminManager() {
         }
         
         if (action === 'admin-copy-password') {
-            // (Lógica existente... sin cambios)
+            
             event.preventDefault();
             const passInput = document.getElementById('admin-create-password');
             if (passInput && passInput.value) {
@@ -828,7 +941,7 @@ export function initAdminManager() {
             return;
         }
         
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Botones de Edición de Grupo) ▼▼▼ ---
+        
         if (action === 'admin-generate-group-code') {
             event.preventDefault();
             const codeInput = document.getElementById('admin-edit-group-access-key');
@@ -837,18 +950,27 @@ export function initAdminManager() {
             if (codeInput && generateBtn && !generateBtn.disabled) {
                 generateBtn.disabled = true;
                 const originalBtnText = generateBtn.innerHTML;
-                // Usamos el spinner de admin-create-user
+                
                 generateBtn.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;"></span>`;
 
                 const formData = new FormData();
                 formData.append('action', 'admin-generate-group-code');
-                // No se necesita CSRF de la página principal, el handler lo cogerá del form
+                
                 
                 const result = await callAdminApi(formData);
 
                 if (result.success && result.code) {
                     codeInput.value = result.code;
+                    
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Auto-guardar al generar) ▼▼▼ ---
+                    const cardElement = generateBtn.closest('.component-card');
+                    if (cardElement) {
+                        // Llamar a la función de guardado parcial, sin botón
+                        await handleAdminGroupUpdate('access_key', result.code, cardElement, null);
+                    }
                     hideEditGroupError();
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
                 } else {
                     showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
                 }
@@ -863,7 +985,7 @@ export function initAdminManager() {
             event.preventDefault();
             const codeInput = document.getElementById('admin-edit-group-access-key');
             if (codeInput && codeInput.value) {
-                // Lógica de copiado (igual que admin-copy-password)
+                
                 if (!navigator.clipboard) {
                     try {
                         codeInput.focus();
@@ -883,75 +1005,70 @@ export function initAdminManager() {
             return;
         }
         
-        if (action === 'admin-edit-group-submit') {
+        // --- ▼▼▼ ACCIÓN ELIMINADA (admin-edit-group-submit) ▼▼▼ ---
+        // if (action === 'admin-edit-group-submit') { ... }
+        // --- ▲▲▲ FIN DE ACCIÓN ELIMINADA ▲▲▲ ---
+
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Guardar Nombre de Grupo) ▼▼▼ ---
+        if (action === 'admin-group-name-edit-trigger') {
             event.preventDefault();
-            const submitButton = button;
-            
-            hideEditGroupError();
-
-            const form = submitButton.closest('.component-wrapper');
-            if (!form) return;
-
-            const nameInput = form.querySelector('#admin-edit-group-name');
-            const privacyInput = form.querySelector('#admin-edit-group-privacy-input');
-            const accessKeyInput = form.querySelector('#admin-edit-group-access-key');
-            const groupIdInput = form.querySelector('#admin-edit-target-group-id');
-            const csrfInput = form.querySelector('input[name="csrf_token"]');
-
-            const groupName = nameInput ? nameInput.value : '';
-            const privacy = privacyInput ? privacyInput.value : '';
-            const accessKey = accessKeyInput ? accessKeyInput.value : '';
-            const groupId = groupIdInput ? groupIdInput.value : '0';
-            const csrfToken = csrfInput ? csrfInput.value : '';
-
-            if (!groupName || !privacy || !accessKey || groupId === '0') { 
-                showEditGroupError('js.auth.errorCompleteAllFields'); return;
-            }
-
-            if (accessKey.length !== 12) {
-                // (Debes añadir 'admin.groups.errorKeyLength' a tus JSON)
-                showEditGroupError('admin.groups.errorKeyLength'); return;
-            }
-            
-            submitButton.disabled = true;
-            submitButton.dataset.originalText = submitButton.innerHTML;
-            submitButton.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;"></span>`;
-
-            const formData = new FormData();
-            formData.append('action', 'admin-update-group');
-            formData.append('target_group_id', groupId);
-            formData.append('name', groupName);
-            formData.append('privacy', privacy);
-            formData.append('access_key', accessKey);
-            formData.append('csrf_token', csrfToken);
-
-            const result = await callAdminApi(formData);
-
-            if (result.success) {
-                // (Debes añadir 'admin.groups.successUpdate' a tus JSON)
-                showAlert(getTranslation(result.message || 'admin.groups.successUpdate'), 'success');
-                
-                setTimeout(() => {
-                    const link = document.createElement('a');
-                    link.href = window.projectBasePath + '/admin/manage-groups';
-                    link.setAttribute('data-nav-js', 'true');
-                    document.body.appendChild(link);
-                    link.click();
-                    link.remove();
-                }, 1500);
-
-            } else {
-                showEditGroupError(result.message || 'js.auth.errorUnknown', result.data);
-                
-                submitButton.disabled = false;
-                submitButton.innerHTML = submitButton.dataset.originalText || getTranslation('admin.create.saveChanges'); // (Usa clave i18n correcta)
+            const card = button.closest('.component-card');
+            if (card) {
+                hideEditGroupError(); // Ocultar error general
+                card.querySelector('#admin-group-name-view-state').classList.remove('active');
+                card.querySelector('#admin-group-name-view-state').classList.add('disabled');
+                card.querySelector('#admin-group-name-actions-view').classList.remove('active');
+                card.querySelector('#admin-group-name-actions-view').classList.add('disabled');
+                card.querySelector('#admin-group-name-edit-state').classList.add('active');
+                card.querySelector('#admin-group-name-edit-state').classList.remove('disabled');
+                card.querySelector('#admin-group-name-actions-edit').classList.add('active');
+                card.querySelector('#admin-group-name-actions-edit').classList.remove('disabled');
+                card.querySelector('#admin-group-name-input')?.focus();
             }
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA (Botones de Edición de Grupo) ▲▲▲ ---
+
+        if (action === 'admin-group-name-cancel-trigger') {
+            event.preventDefault();
+            const card = button.closest('.component-card');
+            if (card) {
+                hideEditGroupError(); // Ocultar error general
+                const displayElement = card.querySelector('#admin-group-name-display-text');
+                const inputElement = card.querySelector('#admin-group-name-input');
+                if (displayElement && inputElement) {
+                    inputElement.value = displayElement.dataset.originalValue;
+                }
+                card.querySelector('#admin-group-name-edit-state').classList.remove('active');
+                card.querySelector('#admin-group-name-edit-state').classList.add('disabled');
+                card.querySelector('#admin-group-name-actions-edit').classList.remove('active');
+                card.querySelector('#admin-group-name-actions-edit').classList.add('disabled');
+                card.querySelector('#admin-group-name-view-state').classList.add('active');
+                card.querySelector('#admin-group-name-view-state').classList.remove('disabled');
+                card.querySelector('#admin-group-name-actions-view').classList.add('active');
+                card.querySelector('#admin-group-name-actions-view').classList.remove('disabled');
+            }
+            return;
+        }
+
+        if (action === 'admin-group-name-save-trigger-btn') {
+            event.preventDefault();
+            const card = button.closest('.component-card');
+            const inputElement = card.querySelector('#admin-group-name-input');
+            const newValue = inputElement ? inputElement.value : '';
+
+            if (!newValue.trim()) {
+                showEditGroupError('js.auth.errorCompleteAllFields');
+                return;
+            }
+            
+            // Llamar a la función de guardado parcial, pasando el botón
+            await handleAdminGroupUpdate('name', newValue, card, button);
+            return;
+        }
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
         
         if (action === 'admin-create-user-submit') {
-            // (Lógica existente... sin cambios)
+            
             event.preventDefault();
             const button = event.target.closest('#admin-create-user-submit');
             
@@ -1029,7 +1146,7 @@ export function initAdminManager() {
         }
 
         if (action === 'admin-page-next' || action === 'admin-page-prev') {
-            // (Lógica existente... sin cambios)
+            
             event.preventDefault();
             hideTooltip();
             
@@ -1051,7 +1168,7 @@ export function initAdminManager() {
                 let nextPage = (action === 'admin-page-next') ? groupCurrentPage + 1 : groupCurrentPage - 1;
                 if (nextPage >= 1 && nextPage <= totalPages && nextPage !== groupCurrentPage) {
                     groupCurrentPage = nextPage;
-                    clearAdminGroupSelection(); // <-- Limpiar selección de grupo
+                    clearAdminGroupSelection(); 
                     fetchAndRenderGroups();
                 }
             }
@@ -1059,7 +1176,7 @@ export function initAdminManager() {
         }
         
         if (action === 'admin-toggle-search') {
-            // (Lógica existente... sin cambios)
+            
             event.preventDefault();
             const searchButton = button;
             const isActive = searchButton.classList.contains('active');
@@ -1094,7 +1211,7 @@ export function initAdminManager() {
         }
         
         if (action === 'toggleModulePageFilter') {
-            // (Lógica existente... sin cambios)
+            
             event.stopPropagation(); 
             const filterButton = button;
             const isActive = filterButton.classList.contains('active');
@@ -1111,23 +1228,23 @@ export function initAdminManager() {
             return;
         }
         
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (GRUPOS) ▼▼▼ ---
+        
         if (action === 'admin-group-clear-selection') {
             event.preventDefault();
             clearAdminGroupSelection();
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA (GRUPOS) ▲▲▲ ---
+        
 
         if (action === 'admin-log-clear-selection') {
-            // (Lógica existente... sin cambios)
+            
             event.preventDefault();
             clearLogSelection();
             return;
         }
         
         if (action === 'admin-log-view') {
-            // (Lógica existente... sin cambios)
+            
             if (!selectedAdminLogFile) {
                 showAlert(getTranslation('js.admin.logs.errorNoSelection') || "Por favor, selecciona un archivo de log primero.", 'error');
                 event.preventDefault(); 
@@ -1149,7 +1266,7 @@ export function initAdminManager() {
         }
 
         if (action === 'toggleSectionAdminEditUser') {
-            // (Lógica existente... sin cambios)
+            
             if (!selectedAdminUserId) {
                 showAlert(getTranslation('js.admin.errorNoSelection'), 'error');
                 event.preventDefault(); 
@@ -1175,16 +1292,16 @@ export function initAdminManager() {
             return;
         }
         
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (GRUPOS) ▼▼▼ ---
+        
         if (action === 'toggleSectionAdminEditGroup') {
             if (!selectedAdminGroupId) {
-                showAlert(getTranslation('js.admin.errorNoSelection'), 'error'); // Reutilizamos la clave
+                showAlert(getTranslation('js.admin.errorNoSelection'), 'error'); 
                 event.preventDefault(); 
                 event.stopImmediatePropagation();
                 return;
             }
             
-            // Navegar a la nueva página de edición de grupo (que crearás)
+            
             const linkUrl = window.projectBasePath + '/admin/edit-group?id=' + selectedAdminGroupId;
             
             const link = document.createElement('a');
@@ -1198,10 +1315,10 @@ export function initAdminManager() {
             deactivateAllModules(); 
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA (GRUPOS) ▲▲▲ ---
+        
         
         if (action === 'admin-set-filter') {
-            // (Lógica existente... sin cambios)
+            
             event.preventDefault();
             hideTooltip();
             clearAdminUserSelection(); 
@@ -1236,7 +1353,7 @@ export function initAdminManager() {
         }
         
         if (action === 'admin-set-role' || action === 'admin-set-status') {
-            // (Lógica existente... sin cambios)
+            
             event.preventDefault();
             hideTooltip();
             const newValue = button.dataset.value;
@@ -1246,10 +1363,10 @@ export function initAdminManager() {
 
         if (action === 'toggleModuleAdminRole' || 
             action === 'toggleModuleAdminStatus' ||
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadido módulo de grupo) ▼▼▼ ---
+            
             action === 'toggleModuleAdminCreateRole' ||
             action === 'toggleModuleAdminEditGroupPrivacy') { 
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            
             
             event.stopPropagation();
             let moduleName;
@@ -1264,12 +1381,12 @@ export function initAdminManager() {
                 updateAdminModals();
             } else if (action === 'toggleModuleAdminCreateRole') { 
                 moduleName = 'moduleAdminCreateRole';
-            // --- ▼▼▼ INICIO DE NUEVA LÓGICA (GRUPOS) ▼▼▼ ---
+            
             } else if (action === 'toggleModuleAdminEditGroupPrivacy') {
                 moduleName = 'moduleAdminEditGroupPrivacy';
-                // (No se necesita updateAdminModals, el estado se carga en el PHP de la página de edición)
+                
             }
-            // --- ▲▲▲ FIN DE NUEVA LÓGICA (GRUPOS) ▲▲▲ ---
+            
             
             const module = document.querySelector(`[data-module="${moduleName}"]`);
             if (module) {
@@ -1289,16 +1406,57 @@ export function initAdminManager() {
             hideCreateUserError();
         }
         
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (GRUPOS) ▼▼▼ ---
-        const groupInput = event.target.closest('#admin-edit-group-form .component-input');
+        
+        // --- ▼▼▼ MODIFICACIÓN (Selector de input) ▼▼▼ ---
+        const groupInput = event.target.closest('#admin-edit-group-form .component-input, #admin-edit-group-form .component-text-input');
         if (groupInput) {
             hideEditGroupError();
+            // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Ocultar error al escribir) ▼▼▼ ---
+            // Ocultar error en línea específico del componente
+            const card = groupInput.closest('.component-card');
+            if (card) {
+                const errorDiv = card.nextElementSibling;
+                if (errorDiv && errorDiv.classList.contains('component-card__error')) {
+                    errorDiv.classList.remove('active');
+                    errorDiv.classList.add('disabled');
+                }
+            }
+            // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA (GRUPOS) ▲▲▲ ---
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     });
 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Auto-guardar Access Key en 'blur') ▼▼▼ ---
+    document.body.addEventListener('blur', async function(event) {
+        const accessKeyInput = event.target.closest('#admin-edit-group-access-key');
+        if (accessKeyInput) {
+            const cardElement = accessKeyInput.closest('.component-card');
+            const newValue = accessKeyInput.value.trim().toUpperCase().replace(/-/g, '');
+            
+            // Formatear el valor en el input
+            let formatted = '';
+            for (let i = 0; i < newValue.length; i++) {
+                if (i > 0 && i % 4 === 0) {
+                    formatted += '-';
+                }
+                formatted += newValue[i];
+            }
+            accessKeyInput.value = formatted;
+            
+            // Si el valor (sin guiones) tiene 12 caracteres, intentar guardarlo
+            if (newValue.length === 12) {
+                await handleAdminGroupUpdate('access_key', newValue, cardElement, null);
+            } else if (newValue.length > 0) {
+                // Si no tiene 12, mostrar un error
+                showEditGroupError('admin.groups.errorKeyLength');
+            }
+        }
+    }, true); // Usar 'true' para capturar el evento 'blur'
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+
     document.body.addEventListener('keydown', function(event) {
-        // (Lógica existente... sin cambios)
+        
         const searchInput = event.target.closest('.page-search-input');
         if (!searchInput || event.key !== 'Enter') {
             return;
@@ -1328,7 +1486,7 @@ export function initAdminManager() {
         if (event.key === 'Escape') {
             clearAdminUserSelection();
             clearLogSelection();
-            clearAdminGroupSelection(); // <-- LÍNEA AÑADIDA
+            clearAdminGroupSelection(); 
         }
     });
 
@@ -1340,7 +1498,7 @@ export function initAdminManager() {
         if (!clickedOnModule && !clickedOnButton && !clickedOnAnyCard) {
             clearAdminUserSelection();
             clearLogSelection();
-            clearAdminGroupSelection(); // <-- LÍNEA AÑADIDA
+            clearAdminGroupSelection(); 
         }
     });
 
