@@ -1,5 +1,5 @@
-// FILE: assets/js/app/main-controller.js
-// (CÓDIGO MODIFICADO PARA USAR PUSHSTATE Y CARGAR PÁGINA)
+// RUTA: assets/js/app/main-controller.js
+// (CÓDIGO COMPLETO CORREGIDO)
 
 import { getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js'; 
@@ -163,12 +163,15 @@ function initMainController() {
 
         if (action.startsWith('toggle')) {
             
+            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
             if (action === 'toggleModulePageFilter' || 
                 action === 'toggleModuleAdminRole' || 
                action === 'toggleModuleAdminStatus' ||
-                action === 'toggleModuleAdminCreateRole') { 
-                return; 
+                action === 'toggleModuleAdminCreateRole' ||
+                action === 'toggleModuleAdminEditGroupPrivacy') { 
+                return; // Dejar que admin-manager.js se encargue
             }
+            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
             
             event.stopPropagation();
 

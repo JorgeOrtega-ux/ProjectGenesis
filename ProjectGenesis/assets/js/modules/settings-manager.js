@@ -199,6 +199,16 @@ export function initSettingsManager() {
 
     document.body.addEventListener('click', async (e) => {
         const target = e.target;
+        
+        // --- ▼▼▼ INICIO DE LA CORRECCIÓN (GUARDIA) ▼▼▼ ---
+        // Si el clic ocurrió dentro de una sección de admin, no hacer nada.
+        // Esto previene que este listener interfiera con admin-manager.js
+        const activeSection = target.closest('.section-content.active');
+        if (activeSection && activeSection.dataset.section && activeSection.dataset.section.startsWith('admin-')) {
+            return;
+        }
+        // --- ▲▲▲ FIN DE LA CORRECCIÓN (GUARDIA) ▲▲▲ ---
+
         const card = target.closest('.component-card'); 
 
         const avatarCard = document.getElementById('avatar-section');
@@ -336,7 +346,7 @@ export function initSettingsManager() {
                     showInlineError(usernameCard, 'js.auth.errorUsernameLength', { min: minUserLength, max: maxUserLength });
                     return;
                 }
-                // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+                // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
 
                 toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
 
@@ -964,7 +974,7 @@ export function initSettingsManager() {
                     } else {
                          errorDiv.remove(); 
                     }
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
                  }
             }
         }
