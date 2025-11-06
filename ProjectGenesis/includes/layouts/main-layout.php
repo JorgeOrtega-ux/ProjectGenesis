@@ -55,6 +55,77 @@
             </div>
         </div>
 
+        <!-- ▼▼▼ INICIO DE LÓGICA Y HTML DEL MODAL DE GRUPOS ▼▼▼ -->
+        <?php
+        // Esta lógica solo se ejecuta si el usuario está logueado
+        if (isset($_SESSION['user_id'], $pdo)) {
+            $user_groups = [];
+            try {
+                // Reutilizamos la lógica de 'my-groups.php' para obtener los grupos
+                $stmt = $pdo->prepare(
+                    "SELECT 
+                        g.id,
+                        g.name
+                     FROM groups g
+                     JOIN user_groups ug_main ON g.id = ug_main.group_id
+                     WHERE ug_main.user_id = ?
+                     GROUP BY g.id, g.name
+                     ORDER BY g.name"
+                );
+                $stmt->execute([$_SESSION['user_id']]);
+                $user_groups = $stmt->fetchAll();
+            } catch (PDOException $e) {
+                logDatabaseError($e, 'main-layout.php - load user groups for modal');
+            }
+        ?>
+        <div class="modal-overlay disabled" id="group-select-modal" data-action="closeGroupSelectModal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal__header">
+                    <h2 class="modal__title" data-i18n="modals.selectGroup.title">Seleccionar Grupo</h2>
+                    <button type="button" class="modal-close-btn" data-action="closeGroupSelectModal">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+                
+                <div class="modal__body" id="group-select-modal-body">
+                    <?php if (empty($user_groups)): ?>
+                        <div class="component-card component-card--column" style="text-align: center; padding: 32px; box-shadow: none; border: none;">
+                            <div class="component-card__icon" style="background-color: transparent; width: 60px; height: 60px; margin-bottom: 16px; border: none;">
+                                <span class="material-symbols-rounded" style="font-size: 60px; color: #6b7280;">groups</span>
+                            </div>
+                            <h2 class="component-card__title" style="font-size: 20px;" data-i18n="modals.selectGroup.noGroups">
+                                No perteneces a ningún grupo.
+                            </h2>
+                            <div class="component-card__actions" style="margin-top: 24px; gap: 12px; width: 100%; justify-content: center; display: flex;">
+                                <button type="button" 
+                                   class="component-action-button component-action-button--primary" 
+                                   data-action="toggleSectionJoinGroup" 
+                                   data-i18n="modals.selectGroup.joinButton">
+                                   Unirme a un grupo
+                                </button>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <div class="group-modal-list">
+                            <?php foreach ($user_groups as $group): ?>
+                                <a href="#" class="group-modal-item" 
+                                   data-group-id="<?php echo $group['id']; ?>" 
+                                   data-group-name="<?php echo htmlspecialchars($group['name']); ?>">
+                                    <span class="material-symbols-rounded">label</span>
+                                    <span class="group-modal-item-text"><?php echo htmlspecialchars($group['name']); ?></span>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        <?php
+        } // Fin del if (isset($_SESSION['user_id']))
+        ?>
+        <!-- ▲▲▲ FIN DEL MODAL DE GRUPOS ▲▲▲ -->
+
+
         <script>
             window.projectBasePath = '<?php echo $basePath; ?>';
             window.csrfToken = '<?php echo $_SESSION['csrf_token'] ?? ''; ?>';

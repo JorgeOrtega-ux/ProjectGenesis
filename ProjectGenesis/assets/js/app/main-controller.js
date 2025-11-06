@@ -1,4 +1,3 @@
-
 import { getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js'; 
 
@@ -16,6 +15,12 @@ function initMainController() {
     let closeOnClickOutside = true;
     let closeOnEscape = true;
     
+    // --- ▼▼▼ INICIO DE LÓGICA AÑADIDA PARA MODAL DE GRUPOS ▼▼▼ ---
+    const groupSelectModal = document.getElementById('group-select-modal');
+    const groupSelectBtn = document.getElementById('select-group-btn');
+    const groupDisplay = document.getElementById('selected-group-display');
+    const groupDisplayText = groupDisplay ? groupDisplay.querySelector('.toolbar-group-text') : null;
+    // --- ▲▲▲ FIN DE LÓGICA AÑADIDA ▲▲▲ ---
 
     document.body.addEventListener('click', async function (event) {
         
@@ -27,10 +32,59 @@ function initMainController() {
         }
 
         if (!button) {
+            // --- ▼▼▼ INICIO DE LÓGICA AÑADIDA (CERRAR MODAL AL CLICAR FUERA) ▼▼▼ ---
+            // Si se hace clic fuera de un botón y es en el overlay del modal de grupos
+            if (groupSelectModal && event.target === groupSelectModal) {
+                groupSelectModal.classList.add('disabled');
+                groupSelectModal.classList.remove('active');
+            }
+            // --- ▲▲▲ FIN DE LÓGICA AÑADIDA ▲▲▲ ---
             return;
         }
 
         const action = button.getAttribute('data-action');
+
+        // --- ▼▼▼ INICIO DE LÓGICA AÑADIDA PARA MODAL DE GRUPOS ▼▼▼ ---
+        if (action === 'toggleGroupSelectModal') {
+            event.preventDefault();
+            if (groupSelectModal) {
+                groupSelectModal.classList.remove('disabled');
+                groupSelectModal.classList.add('active');
+            }
+            return; 
+        }
+
+        if (action === 'closeGroupSelectModal') {
+            event.preventDefault();
+            if (groupSelectModal) {
+                groupSelectModal.classList.add('disabled');
+                groupSelectModal.classList.remove('active');
+            }
+            return;
+        }
+        
+        // Listener para los items dentro del modal de grupos
+        const groupItem = event.target.closest('.group-modal-item');
+        if (groupItem && groupSelectModal) {
+            event.preventDefault();
+            const groupName = groupItem.dataset.groupName;
+            
+            if (groupDisplay && groupDisplayText) {
+                groupDisplayText.textContent = groupName;
+                groupDisplayText.removeAttribute('data-i18n'); // Quitar i18n para que no se sobrescriba
+                groupDisplay.classList.add('active');
+            }
+            
+            // Cerrar el modal
+            groupSelectModal.classList.add('disabled');
+            groupSelectModal.classList.remove('active');
+            
+            // Cerrar el menú lateral (si estuviera abierto en móvil)
+            deactivateAllModules();
+            return;
+        }
+        // --- ▲▲▲ FIN DE LÓGICA AÑADIDA ▲▲▲ ---
+
 
         if (action === 'logout') {
             event.preventDefault();
@@ -107,6 +161,12 @@ function initMainController() {
         
 
         } else if (action.startsWith('toggleSection')) {
+             // --- ▼▼▼ LÓGICA AÑADIDA (CERRAR MODAL AL NAVEGAR) ▼▼▼ ---
+            if (groupSelectModal) {
+                groupSelectModal.classList.add('disabled');
+                groupSelectModal.classList.remove('active');
+            }
+            // --- ▲▲▲ FIN DE LÓGICA AÑADIDA ▲▲▲ ---
             return;
         }
 
@@ -151,8 +211,11 @@ function initMainController() {
             const clickedOnButton = event.target.closest('[data-action]');
             
             const clickedOnCardItem = event.target.closest('.card-item');
-            
-            if (!clickedOnModule && !clickedOnButton && !clickedOnCardItem) {
+
+            // --- ▼▼▼ MODIFICACIÓN: NO CERRAR SI SE HACE CLIC EN EL MODAL DE GRUPO ▼▼▼ ---
+            const clickedOnGroupModal = event.target.closest('#group-select-modal');
+            if (!clickedOnModule && !clickedOnButton && !clickedOnCardItem && !clickedOnGroupModal) {
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 deactivateAllModules();
             }
         });
@@ -162,6 +225,12 @@ function initMainController() {
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 deactivateAllModules();
+                // --- ▼▼▼ LÓGICA AÑADIDA (CERRAR MODAL CON ESCAPE) ▼▼▼ ---
+                if (groupSelectModal) {
+                    groupSelectModal.classList.add('disabled');
+                    groupSelectModal.classList.remove('active');
+                }
+                // --- ▲▲▲ FIN DE LÓGICA AÑADIDA ▲▲▲ ---
             }
         });
     }

@@ -13,6 +13,19 @@
       "myGroups": "Mis Grupos"
     }
   },
+  "toolbar": {
+    "buttons": {
+      "selectGroup": "Seleccionar Grupo"
+    },
+    "noGroupSelected": "Ningún grupo"
+  },
+  "modals": {
+    "selectGroup": {
+      "title": "Seleccionar Grupo",
+      "noGroups": "No perteneces a ningún grupo.",
+      "joinButton": "Unirme a un grupo"
+    }
+  },
   "sidebar": {
     "settings": {
       "backToHome": "Volver a Inicio",

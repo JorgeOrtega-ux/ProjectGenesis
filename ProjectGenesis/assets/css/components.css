@@ -1610,7 +1610,9 @@
 .section-content[data-section="admin-dashboard"] .component-wrapper,
 .section-content[data-section="admin-logs"] .component-wrapper,
 .section-content[data-section="admin-backups-delete-confirm"] .component-wrapper,
-.section-content[data-section="admin-backups-restore-confirm"] .component-wrapper {
+.section-content[data-section="admin-backups-restore-confirm"] .component-wrapper,
+/* --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ --- */
+.section-content[data-section="home"] .component-wrapper {
     padding-top: 82px; 
 }
 /* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
@@ -2124,3 +2126,78 @@
     font-size: 28px;
     font-weight: 600;
 }
+
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (TOOLBAR HOME) ▼▼▼ --- */
+.toolbar-group-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 35px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    padding: 0 12px 0 8px;
+    background-color: #f5f5fa;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+    user-select: none;
+}
+
+.toolbar-group-display .material-symbols-rounded {
+    font-size: 18px;
+}
+
+.toolbar-group-display.active {
+    color: #000;
+    background-color: #ffffff;
+    border-color: #000000;
+}
+
+.toolbar-group-display.active .material-symbols-rounded {
+    color: #000;
+}
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS (TOOLBAR HOME) ▲▲▲ --- */
+
+
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (MODAL GRUPOS) ▼▼▼ --- */
+.group-modal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 40vh;
+    overflow-y: auto;
+    /* Estilos para el scrollbar (copiados de .overflow-y) */
+    scroll-behavior: smooth;
+    scrollbar-color: #00000080 transparent;
+    scrollbar-width: thin;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.group-modal-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 48px;
+    padding: 0 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    color: #1f2937;
+    transition: background-color 0.2s ease;
+}
+
+.group-modal-item:hover {
+    background-color: #f5f5fa;
+}
+
+.group-modal-item .material-symbols-rounded {
+    font-size: 20px;
+    color: #6b7280;
+}
+
+.group-modal-item-text {
+    font-size: 16px;
+    font-weight: 500;
+}
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS (MODAL GRUPOS) ▲▲▲ --- */
