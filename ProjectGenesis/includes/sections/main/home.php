@@ -214,26 +214,44 @@ if (!empty($current_group_members)) {
         </div>
         </div>
     
-    <div class="component-wrapper" style="padding-top: 82px;"> 
+    <div class="component-wrapper" style="display: flex; flex-direction: column; height: 100%; padding-bottom: 16px; padding-left: 0; padding-right: 0;"> 
 
-        <div class="auth-container text-center" style="margin-top: 10vh;"> 
+        <div class="chat-layout-container">
             
-            <h1 class="auth-title" 
-                id="home-chat-placeholder" 
-                data-i18n="<?php echo $homeH1TextKey; ?>"
-                data-i18n-key-default="home.chat.selectGroup"
-                data-i18n-key-selected="home.chat.chattingWith"
-                style="font-size: 24px; color: #6b7280; font-weight: 500; line-height: 1.6;">
-                
-                <?php
-                // Imprimir el texto HTML inicial
-                echo $homeH1Text;
-                ?>
-            </h1>
+            <div class="chat-layout__top">
+                <div class="auth-container text-center" style="margin-top: 10vh;"> 
+                    
+                    <h1 class="auth-title" 
+                        id="home-chat-placeholder" 
+                        data-i18n="<?php echo $homeH1TextKey; ?>"
+                        data-i18n-key-default="home.chat.selectGroup"
+                        data-i18n-key-selected="home.chat.chattingWith"
+                        style="font-size: 24px; color: #6b7280; font-weight: 500; line-height: 1.6;">
+                        
+                        <?php
+                        // Imprimir el texto HTML inicial
+                        echo $homeH1Text;
+                        ?>
+                    </h1>
+                </div>
             </div>
 
-    </div>
-
+            <div class="chat-layout__bottom <?php echo (!isset($current_group_info) || !$current_group_info) ? 'hidden' : ''; ?>">
+                <div class="chat-input-container">
+                    <div class="chat-input__text-area" contenteditable="true" data-placeholder="Placeholder"></div>
+                    
+                    <div class="chat-input__buttons-row">
+                        <button class="chat-input__button chat-input__button--attach" data-tooltip="Adjuntar">
+                            <span class="material-symbols-rounded">add</span>
+                        </button>
+                        <button class="chat-input__button chat-input__button--send" data-tooltip="Enviar">
+                            <span class="material-symbols-rounded">send</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
     <div class="module-content module-members-surface body-title disabled" data-module="moduleGroupMembers">
         <div class="menu-content">
             
