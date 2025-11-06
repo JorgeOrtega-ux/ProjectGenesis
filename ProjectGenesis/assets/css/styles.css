@@ -192,7 +192,7 @@ body {
     flex-grow: 1; /* Ocupa todo el ancho */
     text-align: center;  /* Solicitado */
     border: 1px solid #00000020; /* Solicitado (usando color estándar) */
-    border-radius: 16px; /* Solicitado */
+    border-radius: 8px; /* Solicitado */
     padding: 12px 16px; /* Padding interno */
     margin: 16px; /* Margen exterior (reemplaza el padding del header) */
 }
@@ -251,7 +251,7 @@ body {
     margin: 0;
     padding: 8px 12px; /* Solicitado */
     border: 1px solid #00000020; /* Solicitado (usando color estándar) */
-    border-radius: 16px; /* Solicitado (usando el mismo que .member-item) */
+    border-radius: 8px; /* Solicitado (usando el mismo que .member-item) */
     box-sizing: border-box; /* Añadido para consistencia */
 }
 /* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
@@ -269,7 +269,7 @@ body {
     gap: 8px; /* Espacio entre avatar y nombre */
     /* ▼▼▼ MODIFICADO ▼▼▼ */
     padding: 8px 12px; /* Padding de la píldora (AJUSTADO) */
-    border-radius: 16px; /* Bordes redondeados de píldora (MODIFICADO) */
+    border-radius: 8px; /* Bordes redondeados de píldora (MODIFICADO) */
     /* ▲▲▲ FIN MODIFICACIÓN ▲▲▲ */
     border: 1px solid #00000020;
     /* ▼▼▼ MODIFICADO ▼▼▼ */

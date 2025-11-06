@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 console.error("[WS] No se pudo crear la conexión WebSocket:", e);
             }
         }
-        
+        connectWebSocket();
         // (El resto de la lógica de 'beforeunload' se omite por brevedad,
         // pero debe permanecer en tu archivo si ya existía)
         
