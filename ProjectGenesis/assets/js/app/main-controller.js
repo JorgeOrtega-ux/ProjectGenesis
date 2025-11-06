@@ -1,5 +1,9 @@
+// FILE: assets/js/app/main-controller.js
+// (CÓDIGO MODIFICADO PARA USAR PUSHSTATE Y CARGAR PÁGINA)
+
 import { getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js'; 
+import { handleNavigation } from '../app/url-manager.js'; // <-- ¡AÑADIDO!
 
 const deactivateAllModules = (exceptionModule = null) => {
     document.querySelectorAll('[data-module].active').forEach(activeModule => {
@@ -15,68 +19,49 @@ function initMainController() {
     let closeOnClickOutside = true;
     let closeOnEscape = true;
     
-    // --- ▼▼▼ ¡CORRECCIÓN! (ELIMINADO DE AQUÍ) ▼▼▼ ---
-    // NO podemos cachear estas variables aquí, porque #selected-group-display
-    // no existe hasta que 'home.php' se carga dinámicamente.
-    // const groupDisplay = document.getElementById('selected-group-display'); // <-- ELIMINADO
-    // const groupDisplayText = groupDisplay ? groupDisplay.querySelector('.toolbar-group-text') : null; // <-- ELIMINADO
-    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
-
     document.body.addEventListener('click', async function (event) {
         
-        // --- ▼▼▼ ¡LÓGICA CORREGIDA Y MEJORADA! ▼▼▼ ---
         // 1. Comprobar si se hizo clic en un item de grupo (esto debe ir primero)
         const groupItem = event.target.closest('.group-select-item');
         if (groupItem) { 
             event.preventDefault();
             
-            // 2. Buscar los elementos de la toolbar AHORA, en el momento del clic.
-            const groupDisplay = document.getElementById('selected-group-display');
-            const groupDisplayText = groupDisplay ? groupDisplay.querySelector('.toolbar-group-text') : null;
+            // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA ▼▼▼ ---
             
-            // 3. Obtener los datos del item clickeado
-            const groupName = groupItem.dataset.groupName; 
-            const groupI18nKey = groupItem.dataset.i18nKey; 
-            
-            // 4. Actualizar la barra de herramientas (el "box")
-            if (groupDisplay && groupDisplayText) {
-                if (groupI18nKey) {
-                    // Caso: "Ningún grupo"
-                    const translatedText = getTranslation(groupI18nKey);
-                    groupDisplayText.textContent = translatedText;
-                    groupDisplayText.setAttribute('data-i18n', groupI18nKey);
-                    groupDisplay.classList.remove('active');
-                } else {
-                    // Caso: Un grupo real
-                    groupDisplayText.textContent = groupName;
-                    groupDisplayText.removeAttribute('data-i18n');
-                    groupDisplay.classList.add('active');
-                }
+            // 1. Obtener datos del ítem clickeado
+            const groupName = groupItem.dataset.groupName;
+            const groupUuid = groupItem.dataset.groupUuid; // <-- ¡NUEVO!
+            const groupI18nKey = groupItem.dataset.i18nKey;
+
+            // 2. Determinar la nueva URL
+            let newUrl;
+            if (groupUuid) {
+                // URL para un grupo específico
+                newUrl = window.projectBasePath + '/c/' + groupUuid;
+            } else {
+                // URL para "Ningún grupo" (la raíz)
+                newUrl = window.projectBasePath + '/';
             }
 
-            // 5. Actualizar el estado "active" dentro del popover (para el check)
-            const menuList = groupItem.closest('.menu-list');
-            if (menuList) {
-                // Quitar 'active' y 'check' de todos
-                menuList.querySelectorAll('.menu-link.group-select-item').forEach(link => {
-                    link.classList.remove('active');
-                    const icon = link.querySelector('.menu-link-check-icon');
-                    if (icon) icon.innerHTML = '';
-                });
-
-                // Poner 'active' y 'check' solo en el clickeado
-                groupItem.classList.add('active');
-                const iconContainer = groupItem.querySelector('.menu-link-check-icon');
-                if (iconContainer) {
-                    iconContainer.innerHTML = '<span class="material-symbols-rounded">check</span>';
-                }
-            }
-            
-            // 6. Cerrar el popover
+            // 3. Cerrar el popover
             deactivateAllModules();
+            
+            // 4. Comprobar si la URL ya es la actual (evitar recarga innecesaria)
+            const currentPath = window.location.pathname;
+            if (currentPath === newUrl) {
+                return; // Ya estamos en esta URL
+            }
+
+            // 5. Actualizar la URL en el navegador
+            history.pushState(null, '', newUrl);
+
+            // 6. Llamar al router para que cargue el contenido de la nueva URL
+            // (Esto recargará la sección 'home' con los datos correctos)
+            handleNavigation(); 
+            
             return; // Terminar
+            // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
         }
-        // --- ▲▲▲ ¡FIN DE LA LÓGICA CORREGIDA! ▲▲▲ ---
         
 
         // El resto de la lógica de clics para [data-action] va después

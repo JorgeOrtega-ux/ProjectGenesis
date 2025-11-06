@@ -69,6 +69,10 @@
     "myGroups": {
       "title": "Mis Grupos",
       "description": "Esta es tu página principal. Aquí verás la actividad de tus grupos."
+    },
+    "chat": {
+      "selectGroup": "Selecciona un grupo para comenzar a chatear",
+      "chattingWith": "Próximamente aquí estará el chat de <strong>%groupName%</strong>"
     }
   },
   "mygroups": {

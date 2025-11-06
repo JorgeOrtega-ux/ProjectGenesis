@@ -1,30 +1,48 @@
 <?php
 // FILE: includes/sections/main/home.php
-// (Contenido MODIFICADO para añadir la nueva barra de herramientas)
+// (Contenido MODIFICADO para cargar grupo desde URL y cambiar texto)
 
-// --- ▼▼▼ INICIO DE LÓGICA PHP MOVIDA DE main-layout.php ▼▼▼ ---
-// Esta lógica solo se ejecuta si el usuario está logueado
+// --- ▼▼▼ INICIO DE LÓGICA DE CARGA DE GRUPO ▼▼▼ ---
+// $current_group_info y $currentGroupUuid son definidos en config/routing/router.php
+// $pdo y $_SESSION['user_id'] están disponibles
+
+$user_groups = []; // Para el Popover
+
 if (isset($_SESSION['user_id'], $pdo)) {
-    $user_groups = [];
+    
+    // 1. Obtener TODOS los grupos del usuario para el popover
     try {
-        // Reutilizamos la lógica de 'my-groups.php' para obtener los grupos
-        $stmt = $pdo->prepare(
+        $stmt_all = $pdo->prepare(
             "SELECT 
                 g.id,
-                g.name
+                g.name,
+                g.uuid -- ¡IMPORTANTE! Añadir UUID para el JS
              FROM groups g
              JOIN user_groups ug_main ON g.id = ug_main.group_id
              WHERE ug_main.user_id = ?
-             GROUP BY g.id, g.name
+             GROUP BY g.id, g.name, g.uuid
              ORDER BY g.name"
         );
-        $stmt->execute([$_SESSION['user_id']]);
-        $user_groups = $stmt->fetchAll();
+        $stmt_all->execute([$_SESSION['user_id']]);
+        $user_groups = $stmt_all->fetchAll();
     } catch (PDOException $e) {
         logDatabaseError($e, 'home.php - load user groups for popover');
     }
 }
-// --- ▲▲▲ FIN DE LÓGICA PHP MOVIDA ▲▲▲ ---
+
+// 2. Preparar el texto para el H1 (basado en la variable del router)
+$homeH1TextKey = 'home.chat.selectGroup';
+$homeH1Text = '';
+if (isset($current_group_info) && $current_group_info) {
+    // Si hay un grupo, preparamos la clave y el texto
+    $homeH1TextKey = 'home.chat.chattingWith';
+    // (El JS reemplazará %groupName% en el H1, pero lo pre-cargamos por si JS falla)
+    $homeH1Text = "Próximamente aquí estará el chat de <strong>" . htmlspecialchars($current_group_info['name']) . "</strong>";
+} else {
+    // Si no hay grupo, usamos el texto por defecto
+    $homeH1Text = "Selecciona un grupo para comenzar a chatear";
+}
+// --- ▲▲▲ FIN DE LÓGICA DE CARGA DE GRUPO ▲▲▲ ---
 ?>
 
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'home') ? 'active' : 'disabled'; ?>" data-section="home">
@@ -41,11 +59,20 @@ if (isset($_SESSION['user_id'], $pdo)) {
                         <span class="material-symbols-rounded">groups</span>
                     </button>
                     
-                    <div class="toolbar-group-display" id="selected-group-display">
+                    <div class="toolbar-group-display <?php echo (isset($current_group_info) && $current_group_info) ? 'active' : ''; ?>" id="selected-group-display">
                         <span class="material-symbols-rounded">label</span>
-                        <span class="toolbar-group-text" data-i18n="toolbar.noGroupSelected">Ningún grupo</span>
+                        
+                        <?php if (isset($current_group_info) && $current_group_info): ?>
+                            <span class="toolbar-group-text">
+                                <?php echo htmlspecialchars($current_group_info['name']); ?>
+                            </span>
+                        <?php else: ?>
+                            <span class="toolbar-group-text" data-i18n="toolbar.noGroupSelected">
+                                Ningún grupo
+                            </span>
+                        <?php endif; ?>
                     </div>
-                </div>
+                    </div>
 
                 <div class="page-toolbar-right">
                     <button type="button"
@@ -86,7 +113,7 @@ if (isset($_SESSION['user_id'], $pdo)) {
                     <div class="menu-list">
                         <div class="menu-header" data-i18n="modals.selectGroup.title">Seleccionar Grupo</div>
                         
-                        <div class="menu-link group-select-item"
+                        <div class="menu-link group-select-item <?php echo (!isset($current_group_info) || !$current_group_info) ? 'active' : ''; ?>"
                              data-group-id="none"
                              data-i18n-key="toolbar.noGroupSelected">
                             <div class="menu-link-icon">
@@ -96,34 +123,52 @@ if (isset($_SESSION['user_id'], $pdo)) {
                                 <span data-i18n="toolbar.noGroupSelected">Ningún grupo</span>
                             </div>
                             <div class="menu-link-check-icon">
-                                </div>
+                                <?php if (!isset($current_group_info) || !$current_group_info): ?>
+                                    <span class="material-symbols-rounded">check</span>
+                                <?php endif; ?>
+                            </div>
                         </div>
-
                         <?php foreach ($user_groups as $group): ?>
-                            <div class="menu-link group-select-item" 
+                            <?php $is_active_group = (isset($current_group_info) && $current_group_info && $group['id'] === $current_group_info['id']); ?>
+                            <div class="menu-link group-select-item <?php echo $is_active_group ? 'active' : ''; ?>" 
                                  data-group-id="<?php echo $group['id']; ?>" 
-                                 data-group-name="<?php echo htmlspecialchars($group['name']); ?>">
-                                <div class="menu-link-icon">
+                                 data-group-name="<?php echo htmlspecialchars($group['name']); ?>"
+                                 data-group-uuid="<?php echo htmlspecialchars($group['uuid']); ?>"> <div class="menu-link-icon">
                                     <span class="material-symbols-rounded">label</span>
                                 </div>
                                 <div class="menu-link-text">
                                     <span><?php echo htmlspecialchars($group['name']); ?></span>
                                 </div>
                                 <div class="menu-link-check-icon">
+                                    <?php if ($is_active_group): ?>
+                                        <span class="material-symbols-rounded">check</span>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
-                    </div>
+                        </div>
                 <?php endif; ?>
             </div>
         </div>
         </div>
-    <div class="component-wrapper" style="padding-top: 82px;"> <div class="component-header-card">
-            <h1 class="component-page-title" data-i18n="home.empty.title">Página Principal</h1>
-            <p class="component-page-description" data-i18n="home.empty.description">
-                Esta es tu página principal. El contenido se añadirá próximamente.
-            </p>
-        </div>
+    
+    <div class="component-wrapper" style="padding-top: 82px;"> 
+
+        <div class="auth-container text-center" style="margin-top: 10vh;"> 
+            
+            <h1 class="auth-title" 
+                id="home-chat-placeholder" 
+                data-i18n="<?php echo $homeH1TextKey; ?>"
+                data-i18n-key-default="home.chat.selectGroup"
+                data-i18n-key-selected="home.chat.chattingWith"
+                style="font-size: 24px; color: #6b7280; font-weight: 500; line-height: 1.6;">
+                
+                <?php
+                // Imprimir el texto HTML inicial
+                echo $homeH1Text;
+                ?>
+            </h1>
+            </div>
 
     </div>
 </div>

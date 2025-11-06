@@ -1,5 +1,5 @@
 // RUTA: assets/js/app/url-manager.js
-// (CÓDIGO MODIFICADO)
+// (CÓDIGO MODIFICADO PARA RUTAS DINÁMICAS DE GRUPO)
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
@@ -186,16 +186,22 @@ async function loadPage(page, action, fetchParams = null) {
 
     try {
         let queryString = '';
-
-        if (fetchParams) {
-            queryString = new URLSearchParams(fetchParams).toString().replace(/\+/g, '%20');
         
-        } else {
-            const browserQuery = window.location.search;
+        // ▼▼▼ INICIO DE LA MODIFICACIÓN (Usar fetchParams) ▼▼▼
+        // Crear un objeto URLSearchParams a partir de fetchParams (si existen)
+        const params = new URLSearchParams(fetchParams || {});
+        
+        // Si no se pasaron fetchParams, usar los de la URL del navegador (para paginación, etc.)
+        if (params.toString() === '') {
+             const browserQuery = window.location.search;
             if (browserQuery) {
                 queryString = browserQuery.substring(1); 
             }
+        } else {
+            // Si SÍ se pasaron fetchParams (ej. uuid), usarlos
+            queryString = params.toString();
         }
+        // ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
         
         // ▼▼▼ CAMBIO AQUÍ ▼▼▼
         const fetchUrl = `${basePath}/config/routing/router.php?page=${page}${queryString ? `&${queryString}` : ''}`;
@@ -282,7 +288,20 @@ export function handleNavigation() {
         path = '/admin/dashboard';
     }
 
-    const action = paths[path];
+    let action = paths[path];
+    let fetchParams = null; // <-- Variable para guardar params dinámicos
+
+    // ▼▼▼ INICIO DE LA MODIFICACIÓN (Router dinámico) ▼▼▼
+    if (!action) {
+        // No es una ruta estática, ¿es una ruta de grupo?
+        // Regex para /c/UUID
+        const groupMatch = path.match(/^\/c\/([a-f0-9\-]{36})$/i);
+        if (groupMatch) {
+            action = 'toggleSectionHome'; // Cargar la home page
+            fetchParams = { uuid: groupMatch[1] }; // Pasar el UUID como parámetro
+        }
+    }
+    // ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
 
     if (!action) {
         loadPage('404', null); 
@@ -292,7 +311,7 @@ export function handleNavigation() {
     const page = routes[action];
 
     if (page) {
-        loadPage(page, action); 
+        loadPage(page, action, fetchParams); // <-- Pasar fetchParams a loadPage
     } else {
         loadPage('404', null);
     }
