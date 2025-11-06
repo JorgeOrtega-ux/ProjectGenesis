@@ -15,12 +15,12 @@ function initMainController() {
     let closeOnClickOutside = true;
     let closeOnEscape = true;
     
-    // --- ▼▼▼ INICIO DE LÓGICA AÑADIDA PARA MODAL DE GRUPOS ▼▼▼ ---
-    const groupSelectModal = document.getElementById('group-select-modal');
-    const groupSelectBtn = document.getElementById('select-group-btn');
+    // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (ELIMINAR VARIABLES DEL MODAL) ▼▼▼ ---
+    // const groupSelectModal = document.getElementById('group-select-modal'); // <-- ELIMINADO
+    // const groupSelectBtn = document.getElementById('select-group-btn'); // <-- ELIMINADO
     const groupDisplay = document.getElementById('selected-group-display');
     const groupDisplayText = groupDisplay ? groupDisplay.querySelector('.toolbar-group-text') : null;
-    // --- ▲▲▲ FIN DE LÓGICA AÑADIDA ▲▲▲ ---
+    // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
 
     document.body.addEventListener('click', async function (event) {
         
@@ -32,58 +32,60 @@ function initMainController() {
         }
 
         if (!button) {
-            // --- ▼▼▼ INICIO DE LÓGICA AÑADIDA (CERRAR MODAL AL CLICAR FUERA) ▼▼▼ ---
-            // Si se hace clic fuera de un botón y es en el overlay del modal de grupos
-            if (groupSelectModal && event.target === groupSelectModal) {
-                groupSelectModal.classList.add('disabled');
-                groupSelectModal.classList.remove('active');
-            }
-            // --- ▲▲▲ FIN DE LÓGICA AÑADIDA ▲▲▲ ---
+            // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (ELIMINAR IF) ▼▼▼ ---
+            // if (groupSelectModal && event.target === groupSelectModal) { ... } // <-- ELIMINADO
+            // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
             return;
         }
 
         const action = button.getAttribute('data-action');
 
-        // --- ▼▼▼ INICIO DE LÓGICA AÑADIDA PARA MODAL DE GRUPOS ▼▼▼ ---
+        // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (ELIMINAR ACCIONES DEL MODAL) ▼▼▼ ---
+        /*
         if (action === 'toggleGroupSelectModal') {
-            event.preventDefault();
-            if (groupSelectModal) {
-                groupSelectModal.classList.remove('disabled');
-                groupSelectModal.classList.add('active');
-            }
-            return; 
+            // ... LÓGICA ELIMINADA ...
         }
 
         if (action === 'closeGroupSelectModal') {
-            event.preventDefault();
-            if (groupSelectModal) {
-                groupSelectModal.classList.add('disabled');
-                groupSelectModal.classList.remove('active');
-            }
-            return;
+            // ... LÓGICA ELIMINADA ...
         }
+        */
+        // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
         
-        // Listener para los items dentro del modal de grupos
-        const groupItem = event.target.closest('.group-modal-item');
-        if (groupItem && groupSelectModal) {
+        // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (SELECTOR DE ITEM) ▼▼▼ ---
+        // Listener para los items dentro del NUEVO popover de grupos
+        const groupItem = event.target.closest('.group-select-item');
+        if (groupItem) { // <-- Se quita la comprobación de groupSelectModal
             event.preventDefault();
-            const groupName = groupItem.dataset.groupName;
+            
+            // --- NUEVA LÓGICA ---
+            const groupName = groupItem.dataset.groupName; // Será "Grupo A" o undefined
+            const groupI18nKey = groupItem.dataset.i18nKey; // Será "toolbar.noGroupSelected" o undefined
+            // --- FIN NUEVA LÓGICA ---
             
             if (groupDisplay && groupDisplayText) {
-                groupDisplayText.textContent = groupName;
-                groupDisplayText.removeAttribute('data-i18n'); // Quitar i18n para que no se sobrescriba
-                groupDisplay.classList.add('active');
+                
+                // --- LÓGICA REVISADA ---
+                if (groupI18nKey) {
+                    // Es el item "Ningún grupo"
+                    const translatedText = getTranslation(groupI18nKey); // Obtener traducción JS
+                    groupDisplayText.textContent = translatedText; // Poner el texto traducido
+                    groupDisplayText.setAttribute('data-i18n', groupI18nKey); // Restaurar el atributo i18n
+                    groupDisplay.classList.remove('active');
+                } else {
+                    // Es un item de grupo real
+                    groupDisplayText.textContent = groupName;
+                    groupDisplayText.removeAttribute('data-i18n'); // Quitar i18n para que no se sobrescriba
+                    groupDisplay.classList.add('active');
+                }
+                // --- FIN LÓGICA REVISADA ---
             }
             
-            // Cerrar el modal
-            groupSelectModal.classList.add('disabled');
-            groupSelectModal.classList.remove('active');
-            
-            // Cerrar el menú lateral (si estuviera abierto en móvil)
+            // Cerrar el popover (que es un módulo estándar)
             deactivateAllModules();
             return;
         }
-        // --- ▲▲▲ FIN DE LÓGICA AÑADIDA ▲▲▲ ---
+        // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
 
 
         if (action === 'logout') {
@@ -161,12 +163,9 @@ function initMainController() {
         
 
         } else if (action.startsWith('toggleSection')) {
-             // --- ▼▼▼ LÓGICA AÑADIDA (CERRAR MODAL AL NAVEGAR) ▼▼▼ ---
-            if (groupSelectModal) {
-                groupSelectModal.classList.add('disabled');
-                groupSelectModal.classList.remove('active');
-            }
-            // --- ▲▲▲ FIN DE LÓGICA AÑADIDA ▲▲▲ ---
+             // --- ▼▼▼ LÓGICA MODIFICADA (ELIMINAR IF) ▼▼▼ ---
+            // if (groupSelectModal) { ... } // <-- ELIMINADO
+            // --- ▲▲▲ FIN LÓGICA MODIFICADA ▲▲▲ ---
             return;
         }
 
@@ -177,12 +176,18 @@ function initMainController() {
 
         if (action.startsWith('toggle')) {
             
+            // --- ▼▼▼ INICIO DE LÓGICA CORREGIDA ▼▼▼ ---
+            // ESTA ES LA LÓGICA QUE FALTABA
             if (action === 'toggleModulePageFilter' || 
                 action === 'toggleModuleAdminRole' || 
                action === 'toggleModuleAdminStatus' ||
-                action === 'toggleModuleAdminCreateRole') {
+                action === 'toggleModuleAdminCreateRole') { 
+                // Estas acciones se manejan en admin-manager.js, así que las ignoramos aquí
                 return; 
             }
+            
+            // Si la acción es 'toggleModuleGroupSelect', NO se ignora y continúa.
+            // --- ▲▲▲ FIN DE LÓGICA CORREGIDA ▲▲▲ ---
 
             event.stopPropagation();
 
@@ -212,9 +217,8 @@ function initMainController() {
             
             const clickedOnCardItem = event.target.closest('.card-item');
 
-            // --- ▼▼▼ MODIFICACIÓN: NO CERRAR SI SE HACE CLIC EN EL MODAL DE GRUPO ▼▼▼ ---
-            const clickedOnGroupModal = event.target.closest('#group-select-modal');
-            if (!clickedOnModule && !clickedOnButton && !clickedOnCardItem && !clickedOnGroupModal) {
+            // --- ▼▼▼ MODIFICACIÓN: ELIMINAR CHECK DE MODAL ▼▼▼ ---
+            if (!clickedOnModule && !clickedOnButton && !clickedOnCardItem) {
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 deactivateAllModules();
             }
@@ -225,12 +229,9 @@ function initMainController() {
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 deactivateAllModules();
-                // --- ▼▼▼ LÓGICA AÑADIDA (CERRAR MODAL CON ESCAPE) ▼▼▼ ---
-                if (groupSelectModal) {
-                    groupSelectModal.classList.add('disabled');
-                    groupSelectModal.classList.remove('active');
-                }
-                // --- ▲▲▲ FIN DE LÓGICA AÑADIDA ▲▲▲ ---
+                // --- ▼▼▼ LÓGICA MODIFICADA (ELIMINAR IF) ▼▼▼ ---
+                // if (groupSelectModal) { ... } // <-- ELIMINADO
+                // --- ▲▲▲ FIN LÓGICA MODIFICADA ▲▲▲ ---
             }
         });
     }
