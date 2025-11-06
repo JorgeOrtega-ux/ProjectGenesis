@@ -38,7 +38,7 @@ if (isset($_SESSION['user_id'], $pdo)) {
                  FROM users u
                  JOIN user_groups ug ON u.id = ug.user_id
                  WHERE ug.group_id = ?
-                 ORDER BY ug.role ASC, u.username ASC" // Ordenar por rol y luego nombre
+                 ORDER BY FIELD(ug.role, 'owner', 'admin', 'member'), u.username ASC" // <-- Ordenar por rol
             );
             $stmt_members->execute([$current_group_info['id']]);
             $current_group_members = $stmt_members->fetchAll();
@@ -63,6 +63,33 @@ if (isset($current_group_info) && $current_group_info) {
     // Si no hay grupo, usamos el texto por defecto
     $homeH1Text = "Selecciona un grupo para comenzar a chatear";
 }
+
+// --- ▼▼▼ INICIO DE NUEVA LÓGICA DE AGRUPACIÓN ▼▼▼ ---
+$grouped_members = [
+    'owner' => [],
+    'admin' => [],
+    'member' => []
+];
+
+// Asignar nombres de roles a claves i18n
+$member_role_headings = [
+    'owner' => 'members.heading.owner',
+    'admin' => 'members.heading.admin',
+    'member' => 'members.heading.member'
+];
+
+if (!empty($current_group_members)) {
+    foreach ($current_group_members as $member) {
+        $role = $member['group_role'] ?? 'member';
+        if (isset($grouped_members[$role])) {
+            $grouped_members[$role][] = $member;
+        } else {
+            $grouped_members['member'][] = $member; // Fallback
+        }
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA LÓGICA DE AGRUPACIÓN ▲▲▲ ---
+
 // --- ▲▲▲ FIN DE LÓGICA DE CARGA DE GRUPO ▲▲▲ ---
 ?>
 
@@ -210,7 +237,8 @@ if (isset($current_group_info) && $current_group_info) {
         <div class="menu-content">
             
             <div class="members-header">
-                <h3 class="members-title" data-i18n="members.title">Miembros del Grupo</h3>
+                <!-- Título cambiado para coincidir con la imagen -->
+                <h3 class="members-title" data-i18n="members.title">Lista de miembros</h3>
                 <button class="modal-close-btn" data-action="toggleModuleGroupMembers">
                     <span class="material-symbols-rounded">close</span>
                 </button>
@@ -233,31 +261,42 @@ if (isset($current_group_info) && $current_group_info) {
 
                 <?php else: ?>
                     
-                    <div class="member-list">
                     <?php 
                     $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
-                    foreach ($current_group_members as $member): 
-                        $avatarUrl = $member['profile_image_url'] ?? $defaultAvatar;
-                        if (empty($avatarUrl)) {
-                            $avatarUrl = "https://ui-avatars.com/api/?name=" . urlencode($member['username']) . "&size=100&background=e0e0e0&color=ffffff";
-                        }
+                    
+                    // Iterar sobre los grupos de roles
+                    foreach ($grouped_members as $role => $members_in_role):
+                        if (!empty($members_in_role)):
                     ?>
-                        <div class="member-item" data-role="<?php echo htmlspecialchars($member['group_role']); ?>" data-user-role="<?php echo htmlspecialchars($member['user_role']); ?>">
-                            <div class="component-card__avatar member-avatar" data-role="<?php echo htmlspecialchars($member['user_role']); ?>">
-                                <img src="<?php echo htmlspecialchars($avatarUrl); ?>"
-                                     alt="<?php echo htmlspecialchars($member['username']); ?>"
-                                     class="component-card__avatar-image">
-                            </div>
-                            <div class="member-info">
-                                <span class="member-name"><?php echo htmlspecialchars($member['username']); ?></span>
-                                <span class="member-role" data-i18n="members.role.<?php echo htmlspecialchars($member['group_role']); ?>">
-                                    <?php echo ucfirst($member['group_role']); ?>
-                                </span>
-                            </div>
+                        <!-- Nuevo Encabezado de Rol -->
+                        <h4 class="member-list-heading" data-i18n="<?php echo $member_role_headings[$role]; ?>">
+                            <?php // El texto se rellenará por i18n ?>
+                        </h4>
+                        
+                        <!-- Lista de miembros para este rol -->
+                        <div class="member-list">
+                            <?php 
+                            foreach ($members_in_role as $member): 
+                                $avatarUrl = $member['profile_image_url'] ?? $defaultAvatar;
+                                if (empty($avatarUrl)) {
+                                    $avatarUrl = "https://ui-avatars.com/api/?name=" . urlencode($member['username']) . "&size=100&background=e0e0e0&color=ffffff";
+                                }
+                            ?>
+                                <!-- Nuevo item de miembro (pill) -->
+                                <div class="member-item" data-user-id="<?php echo htmlspecialchars($member['id']); ?>" data-user-role="<?php echo htmlspecialchars($member['user_role']); ?>">
+                                    <div class="component-card__avatar member-avatar" data-role="<?php echo htmlspecialchars($member['user_role']); ?>">
+                                        <img src="<?php echo htmlspecialchars($avatarUrl); ?>"
+                                             alt="<?php echo htmlspecialchars($member['username']); ?>"
+                                             class="component-card__avatar-image">
+                                    </div>
+                                    <span class="member-name"><?php echo htmlspecialchars($member['username']); ?></span>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-                    <?php endforeach; ?>
-                    </div>
-
+                    <?php 
+                        endif;
+                    endforeach; 
+                    ?>
                 <?php endif; ?>
             </div>
         </div>

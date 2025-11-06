@@ -10,7 +10,8 @@
     "buttons": {
       "menu": "Menú principal",
       "profile": "Perfil y configuración",
-      "myGroups": "Mis Grupos"
+      "myGroups": "Mis Grupos",
+      "groupMembers": "Lista de miembros"
     }
   },
   "toolbar": {
@@ -89,6 +90,16 @@
       "members": "miembros",
       "privacyPrivado": "Privado",
       "privacyPublico": "Público"
+    }
+  },
+  "members": {
+    "title": "Lista de miembros",
+    "noGroup": "Selecciona un grupo para ver sus miembros.",
+    "noMembers": "Este grupo aún no tiene miembros.",
+    "heading": {
+      "owner": "Fundadores",
+      "admin": "Administradores",
+      "member": "Miembros"
     }
   },
   "groups": {
