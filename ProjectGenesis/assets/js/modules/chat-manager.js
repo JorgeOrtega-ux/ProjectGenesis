@@ -1,5 +1,5 @@
 // ARCHIVO: assets/js/modules/chat-manager.js
-// (Versión corregida usando Event Delegation)
+// (Versión corregida usando Event Delegation y creación/eliminación dinámica)
 
 // Almacenará los archivos seleccionados.
 const attachedFiles = new Map();
@@ -10,46 +10,67 @@ const attachedFiles = new Map();
 export function initChatManager() {
     
     // 1. Listener para el clic en el botón de adjuntar (+)
-    // Escucha en 'document.body' en lugar de en el botón directamente.
     document.body.addEventListener('click', (event) => {
         const attachButton = event.target.closest('#chat-attach-button');
         
-        // Si el elemento clickeado (o uno de sus padres) es el botón:
         if (attachButton) {
             const fileInput = document.getElementById('chat-file-input');
             if (fileInput) {
-                fileInput.click(); // Dispara el input de archivo oculto
+                fileInput.click(); 
             }
         }
     });
 
     // 2. Listener para cuando se seleccionan archivos
-    // También delegado al 'document.body'.
     document.body.addEventListener('change', (event) => {
         const fileInput = event.target.closest('#chat-file-input');
         
-        // Si el evento 'change' vino de nuestro input de archivo:
         if (fileInput) {
             const files = fileInput.files;
             if (!files) return;
 
-            const previewContainer = document.getElementById('chat-preview-container');
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            
+            // 1. Encontrar el 'wrapper' principal
             const inputWrapper = document.getElementById('chat-input-wrapper');
-
-            if (!previewContainer || !inputWrapper) {
-                console.error("No se encontraron los elementos del preview del chat.");
+            if (!inputWrapper) {
+                console.error("No se encontró #chat-input-wrapper.");
                 return;
             }
+
+            // 2. Buscar si el contenedor de preview YA existe
+            let previewContainer = document.getElementById('chat-preview-container');
+
+            // 3. Si NO existe, crearlo
+            if (!previewContainer) {
+                previewContainer = document.createElement('div');
+                previewContainer.className = 'chat-input__previews';
+                previewContainer.id = 'chat-preview-container';
+                
+                // 4. Insertarlo en el lugar correcto (antes del área de texto)
+                const textArea = inputWrapper.querySelector('.chat-input__text-area');
+                if (textArea) {
+                    inputWrapper.insertBefore(previewContainer, textArea);
+                } else {
+                    // Fallback por si el text-area no está
+                    inputWrapper.prepend(previewContainer); 
+                }
+            }
+            
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
             for (const file of files) {
                 if (file.type.startsWith('image/')) {
                     const fileId = `file-${Date.now()}-${Math.random()}`;
                     attachedFiles.set(fileId, file);
+                    
+                    // 5. Pasamos el contenedor (existente o recién creado) a la función
                     createPreview(file, fileId, previewContainer, inputWrapper);
                 }
             }
 
-            // Limpiar el input para permitir seleccionar el mismo archivo de nuevo
+            // Limpiar el input
             fileInput.value = '';
         }
     });
@@ -57,7 +78,6 @@ export function initChatManager() {
 
 /**
  * Crea la vista previa de la imagen y la añade al DOM.
- * (Esta función no necesita cambios)
  */
 function createPreview(file, fileId, previewContainer, inputWrapper) {
     const reader = new FileReader();
@@ -76,6 +96,8 @@ function createPreview(file, fileId, previewContainer, inputWrapper) {
             </button>
         `;
 
+        // Importante: El listener se añade aquí, capturando 'previewContainer'
+        // y 'inputWrapper' del scope de esta función.
         previewItem.querySelector('.chat-preview-remove').addEventListener('click', () => {
             removePreview(fileId, previewContainer, inputWrapper);
         });
@@ -89,7 +111,7 @@ function createPreview(file, fileId, previewContainer, inputWrapper) {
 
 /**
  * Elimina una vista previa del DOM y el archivo del Map.
- * (Esta función no necesita cambios)
+ * Si el contenedor queda vacío, lo elimina.
  */
 function removePreview(fileId, previewContainer, inputWrapper) {
     attachedFiles.delete(fileId);
@@ -99,7 +121,18 @@ function removePreview(fileId, previewContainer, inputWrapper) {
         previewItem.remove();
     }
 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    
+    // 1. Comprobar si el contenedor quedó vacío
     if (previewContainer.children.length === 0) {
+        
+        // 2. Quitar la clase del wrapper principal
         inputWrapper.classList.remove('has-previews');
+        
+        // 3. Eliminar el contenedor de preview del DOM
+        if (previewContainer.parentNode) {
+            previewContainer.parentNode.removeChild(previewContainer);
+        }
     }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }

@@ -240,9 +240,7 @@ if (!empty($current_group_members)) {
                 
                 <input type="file" id="chat-file-input" class="visually-hidden" accept="image/png, image/jpeg, image/gif, image/webp" multiple>
 
-                <div class="chat-input-container" id="chat-input-wrapper"> <div class="chat-input__previews" id="chat-preview-container">
-                        </div>
-
+                <div class="chat-input-container" id="chat-input-wrapper">
                     <div class="chat-input__text-area" contenteditable="true" data-placeholder="Placeholder"></div>
                     
                     <div class="chat-input__buttons-row">
