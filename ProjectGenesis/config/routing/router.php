@@ -60,10 +60,6 @@ function showResetError($basePath, $messageKey, $detailsKey) {
     echo '</body></html>';
 }
 
-// --- ▼▼▼ INICIO DE FUNCIONES HELPER (COPIADAS DE MANAGE-BACKUPS.PHP) ▼▼▼ ---
-/**
- * Formatea bytes a un tamaño legible (KB, MB, GB)
- */
 function formatBackupSize($bytes) {
     if ($bytes < 1024) return $bytes . ' B';
     $kb = $bytes / 1024;
@@ -73,38 +69,28 @@ function formatBackupSize($bytes) {
     $gb = $mb / 1024;
     return round($gb, 2) . ' GB';
 }
-/**
- * Formatea un timestamp a fecha legible
- */
 function formatBackupDate($timestamp) {
      return date('d/m/Y H:i:s', $timestamp);
 }
-// --- ▲▲▲ FIN DE FUNCIONES HELPER ▲▲▲ ---
 
 
 $page = $_GET['page'] ?? 'home';
 
 $CURRENT_SECTION = $page; 
 
-// --- ▼▼▼ CAMBIO DE RUTA (TODOS LOS ../includes A ../../includes) ▼▼▼ ---
 $allowedPages = [
     'home'     => '../../includes/sections/main/home.php',
     'explorer' => '../../includes/sections/main/explorer.php',
     'join-group' => '../../includes/sections/main/join-group.php',
-    // --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
     'my-groups'  => '../../includes/sections/main/my-groups.php',
-    // --- ▲▲▲ ¡FIN DE LÍNEA AÑADIDA! ▲▲▲ ---
     'login'    => '../../includes/sections/auth/login.php',
     '404'      => '../../includes/sections/main/404.php', 
     'db-error' => '../../includes/sections/main/db-error.php', 
     
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-    // Las siguientes 4 rutas ahora apuntan al NUEVO archivo unificado
     'maintenance' => '../../includes/sections/main/status-page.php',
     'server-full' => '../../includes/sections/main/status-page.php',
     'account-status-deleted'   => '../../includes/sections/main/status-page.php',
     'account-status-suspended' => '../../includes/sections/main/status-page.php',
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▼▼▼ ---
 
     'register-step1' => '../../includes/sections/auth/register.php',
     'register-step2' => '../../includes/sections/auth/register.php',
@@ -124,33 +110,27 @@ $allowedPages = [
     'settings-toggle-2fa'      => '../../includes/sections/settings/actions/toggle-2fa.php',
     'settings-delete-account'  => '../../includes/sections/settings/actions/delete-account.php',
     
-    // --- ▼▼▼ PÁGINAS DE ADMIN MODIFICADAS ▼▼▼ ---
     'admin-dashboard'          => '../../includes/sections/admin/dashboard.php',
-    'admin-manage-users'       => '../../includes/sections/admin/manage-users.php', // <--- CLAVE MODIFICADA
-    'admin-create-user'        => '../../includes/sections/admin/create-user.php', // <--- ¡NUEVA LÍNEA!
-    'admin-edit-user'          => '../../includes/sections/admin/admin-edit-user.php', // <--- ¡NUEVA LÍNEA!
-    'admin-server-settings'    => '../../includes/sections/admin/server-settings.php', // <--- ¡NUEVA LÍNEA!
+    'admin-manage-users'       => '../../includes/sections/admin/manage-users.php',
+    'admin-create-user'        => '../../includes/sections/admin/create-user.php',
+    'admin-edit-user'          => '../../includes/sections/admin/admin-edit-user.php',
+    'admin-server-settings'    => '../../includes/sections/admin/server-settings.php',
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     'admin-manage-backups'     => '../../includes/sections/admin/manage-backups.php',
-    // 'admin-restore-backup'     => '../../includes/sections/admin/restore-backup.php', // <-- ¡ELIMINADA!
-    'admin-manage-logs'        => '../../includes/sections/admin/manage-logs.php', // <-- ¡NUEVA LÍNEA AÑADIDA!
-    'admin-manage-groups'      => '../../includes/sections/admin/manage-groups.php', // <-- ¡NUEVA LÍNEA!
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+    'admin-manage-logs'        => '../../includes/sections/admin/manage-logs.php',
+    'admin-manage-groups'      => '../../includes/sections/admin/manage-groups.php',
+    
+    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
+    'admin-edit-group'         => '../../includes/sections/admin/admin-edit-group.php',
+    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
 
-    // --- ▲▲▲ FIN DE PÁGINAS DE ADMIN ▲▲▲ ---
-
-    // --- ▼▼▼ INICIO DE NUEVAS PÁGINAS (HELP) ▼▼▼ ---
     'help-legal-notice'      => '../../includes/sections/help/legal-notice.php',
     'help-privacy-policy'    => '../../includes/sections/help/privacy-policy.php',
     'help-cookies-policy'    => '../../includes/sections/help/cookies-policy.php',
     'help-terms-conditions'  => '../../includes/sections/help/terms-conditions.php',
     'help-send-feedback'     => '../../includes/sections/help/send-feedback.php',
-    // --- ▲▲▲ FIN DE NUEVAS PÁGINAS (HELP) ▲▲▲ ---
 ];
-// --- ▲▲▲ FIN DE CAMBIO DE RUTA ▲▲▲ ---
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
 $authPages = [
     'login', 
     'maintenance', 
@@ -160,7 +140,6 @@ $authPages = [
     'help-cookies-policy',
     'help-terms-conditions'
 ];
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 $isAuthPage = in_array($page, $authPages) || 
               strpos($page, 'register-') === 0 ||
@@ -168,9 +147,8 @@ $isAuthPage = in_array($page, $authPages) ||
               strpos($page, 'account-status-') === 0; 
 
 $isSettingsPage = strpos($page, 'settings-') === 0;
-// --- ▼▼▼ NUEVA LÍNEA ▼▼▼ ---
 $isAdminPage = strpos($page, 'admin-') === 0;
-$isHelpPage = strpos($page, 'help-') === 0; // <-- ¡NUEVA LÍNEA!
+$isHelpPage = strpos($page, 'help-') === 0;
 
 if (!isset($_SESSION['user_id']) && !$isAuthPage && $page !== '404') {
     http_response_code(403); 
@@ -179,17 +157,13 @@ if (!isset($_SESSION['user_id']) && !$isAuthPage && $page !== '404') {
     exit; 
 }
 
-// --- ▼▼▼ ¡NUEVO BLOQUE DE SEGURIDAD PARA ADMIN! ▼▼▼ ---
 if ($isAdminPage && isset($_SESSION['user_id'])) {
     $userRole = $_SESSION['role'] ?? 'user';
     if ($userRole !== 'administrator' && $userRole !== 'founder') {
-        // Si no es admin o founder, no se le niega el acceso con 403,
-        // simplemente se le cambia la página a '404'.
         $page = '404';
         $CURRENT_SECTION = '404';
     }
 }
-// --- ▲▲▲ FIN DEL BLOQUE DE SEGURIDAD ▲▲▲ ---
 
 
 if (array_key_exists($page, $allowedPages)) {
@@ -198,12 +172,14 @@ if (array_key_exists($page, $allowedPages)) {
     $initialCooldown = 0; 
 
     if ($page === 'register-step1') {
+        // ... (lógica de register-step1 sin cambios)
         $CURRENT_REGISTER_STEP = 1;
         unset($_SESSION['registration_step']);
         unset($_SESSION['registration_email']); 
         echo '<script>sessionStorage.removeItem("regEmail"); sessionStorage.removeItem("regPass");</script>';
 
     } elseif ($page === 'register-step2') {
+        // ... (lógica de register-step2 sin cambios)
         if (!isset($_SESSION['registration_step']) || $_SESSION['registration_step'] < 2) {
             showRegistrationError($basePath, 'page.error.400title', 'page.error.regStep1');
             exit; 
@@ -211,6 +187,7 @@ if (array_key_exists($page, $allowedPages)) {
         $CURRENT_REGISTER_STEP = 2;
 
     } elseif ($page === 'register-step3') {
+        // ... (lógica de register-step3 sin cambios)
         if (!isset($_SESSION['registration_step']) || $_SESSION['registration_step'] < 3) {
             showRegistrationError($basePath, 'page.error.400title', 'page.error.regStep2');
             exit;
@@ -228,9 +205,7 @@ if (array_key_exists($page, $allowedPages)) {
                     $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
                     $currentTime = new DateTime('now', new DateTimeZone('UTC'));
                     $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
-                    // --- ▼▼▼ MODIFICACIÓN: Leer desde GLOBALS ▼▼▼ ---
                     $cooldownConstant = (int)($GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? 60);
-                    // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ --- 
 
                     if ($secondsPassed < $cooldownConstant) {
                         $initialCooldown = $cooldownConstant - $secondsPassed;
@@ -246,12 +221,14 @@ if (array_key_exists($page, $allowedPages)) {
     $CURRENT_RESET_STEP = 1; 
 
     if ($page === 'reset-step1') {
+        // ... (lógica de reset-step1 sin cambios)
         $CURRENT_RESET_STEP = 1;
         unset($_SESSION['reset_step']);
         unset($_SESSION['reset_email']); 
         echo '<script>sessionStorage.removeItem("resetEmail"); sessionStorage.removeItem("resetCode");</script>';
 
     } elseif ($page === 'reset-step2') {
+        // ... (lógica de reset-step2 sin cambios)
         if (!isset($_SESSION['reset_step']) || $_SESSION['reset_step'] < 2) {
             showResetError($basePath, 'page.error.400title', 'page.error.resetStep1');
             exit;
@@ -269,9 +246,7 @@ if (array_key_exists($page, $allowedPages)) {
                     $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
                     $currentTime = new DateTime('now', new DateTimeZone('UTC'));
                     $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
-                    // --- ▼▼▼ MODIFICACIÓN: Leer desde GLOBALS ▼▼▼ ---
                     $cooldownConstant = (int)($GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? 60);
-                    // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
 
                     if ($secondsPassed < $cooldownConstant) {
                         $initialCooldown = $cooldownConstant - $secondsPassed;
@@ -284,6 +259,7 @@ if (array_key_exists($page, $allowedPages)) {
         }
 
     } elseif ($page === 'reset-step3') {
+        // ... (lógica de reset-step3 sin cambios)
         if (!isset($_SESSION['reset_step']) || $_SESSION['reset_step'] < 3) {
             showResetError($basePath, 'page.error.400title', 'page.error.resetStep2');
             exit;
@@ -292,16 +268,14 @@ if (array_key_exists($page, $allowedPages)) {
     }
 
 
-    // ▼▼▼ INICIO DE LA MODIFICACIÓN (Pasar UUID a home.php) ▼▼▼
-    $currentGroupUuid = null; // Variable para home.php
-    $current_group_info = null; // Variable para home.php
+    $currentGroupUuid = null;
+    $current_group_info = null;
     
     if ($page === 'home' && isset($_GET['uuid'])) {
-        // A UUID was passed in the URL, let's validate it
+        // ... (lógica de home/uuid sin cambios)
         if (preg_match('/^[a-f0-9\-]{36}$/i', $_GET['uuid'])) {
             $currentGroupUuid = $_GET['uuid'];
             
-            // Now, check if the user is ACTUALLY a member of this group
             if (isset($_SESSION['user_id'], $pdo)) {
                  try {
                     $stmt_current = $pdo->prepare(
@@ -313,19 +287,17 @@ if (array_key_exists($page, $allowedPages)) {
                     );
                     $stmt_current->execute([$currentGroupUuid, $_SESSION['user_id']]);
                     $current_group_info = $stmt_current->fetch();
-                    // If not a member, $current_group_info remains null, which is correct
                 } catch (PDOException $e) {
                     logDatabaseError($e, 'router.php - load home group from uuid');
                     $current_group_info = null;
                 }
             }
         }
-        // If UUID is invalid or not set, both variables remain null.
     }
-    // ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
 
 
     if ($page === 'settings-profile') {
+        // ... (lógica de settings-profile sin cambios)
         $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
         $profileImageUrl = $_SESSION['profile_image_url'] ?? $defaultAvatar;
         if (empty($profileImageUrl)) $profileImageUrl = $defaultAvatar;
@@ -339,6 +311,7 @@ if (array_key_exists($page, $allowedPages)) {
         $openLinksInNewTab = (int)($_SESSION['open_links_in_new_tab'] ?? 1); 
 
     } elseif ($page === 'settings-login') {
+        // ... (lógica de settings-login sin cambios)
         try {
             $stmt_user = $pdo->prepare("SELECT is_2fa_enabled, created_at FROM users WHERE id = ?");
             $stmt_user->execute([$_SESSION['user_id']]);
@@ -353,15 +326,10 @@ if (array_key_exists($page, $allowedPages)) {
             if ($lastLog) {
                 if (!class_exists('IntlDateFormatter')) {
                     $date = new DateTime($lastLog['changed_at'], new DateTimeZone('UTC'));
-                    $date->setTimezone(new DateTimeZone('America/Chicago')); // O tu zona local
+                    $date->setTimezone(new DateTimeZone('America/Chicago'));
                     $lastPasswordUpdateText = 'Última actualización: ' . $date->format('d/m/Y \a \l\a\s H:i');
                 } else {
-                    $formatter = new IntlDateFormatter(
-                        'es_ES', 
-                        IntlDateFormatter::LONG, 
-                        IntlDateFormatter::SHORT, 
-                        'America/Chicago'
-                    );
+                    $formatter = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::SHORT, 'America/Chicago');
                     $timestamp = strtotime($lastLog['changed_at']);
                     $lastPasswordUpdateText = 'Última actualización: ' . $formatter->format($timestamp);
                 }
@@ -376,80 +344,64 @@ if (array_key_exists($page, $allowedPages)) {
                      $date->setTimezone(new DateTimeZone('America/Chicago'));
                      $accountCreationDateText = 'Cuenta creada el ' . $date->format('d/m/Y');
                 } else {
-                    $formatter = new IntlDateFormatter(
-                        'es_ES', 
-                        IntlDateFormatter::LONG, 
-                        IntlDateFormatter::NONE,
-                        'America/Chicago'
-                    );
+                    $formatter = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::NONE, 'America/Chicago');
                     $timestamp = strtotime($accountCreatedDate);
                     $accountCreationDateText = 'Cuenta creada el ' . $formatter->format($timestamp);
                 }
             }
-            
             $deleteAccountDescText = 'settings.login.deleteAccountDesc'; 
-
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - settings-login');
             $is2faEnabled = 0;
             $lastPasswordUpdateText = 'settings.login.lastPassUpdateError'; 
-            $deleteAccountDescText = 'settings.login.deleteAccountDesc'; // Fallback
-            $accountCreationDateText = ''; // Fallback
+            $deleteAccountDescText = 'settings.login.deleteAccountDesc';
+            $accountCreationDateText = '';
         }
 
     } elseif ($page === 'settings-accessibility') {
+        // ... (lógica de settings-accessibility sin cambios)
         $userTheme = $_SESSION['theme'] ?? 'system';
         $increaseMessageDuration = (int)($_SESSION['increase_message_duration'] ?? 0);
     
     } elseif ($page === 'settings-change-email') {
+        // ... (lógica de settings-change-email sin cambios)
          $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
          $initialEmailCooldown = 0;
          $cooldownConstant = (int)($GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? 60);
          $identifier = $_SESSION['user_id'];
          $codeType = 'email_change';
-
          try {
             $stmt = $pdo->prepare("SELECT created_at FROM verification_codes WHERE identifier = ? AND code_type = ? ORDER BY created_at DESC LIMIT 1");
             $stmt->execute([$identifier, $codeType]);
             $codeData = $stmt->fetch();
-
             $secondsPassed = -1;
-
             if ($codeData) {
                 $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
                 $currentTime = new DateTime('now', new DateTimeZone('UTC'));
                 $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
             }
-
             if (!$codeData || $secondsPassed === -1 || $secondsPassed >= $cooldownConstant) {
                 $stmt_delete = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = ?");
                 $stmt_delete->execute([$identifier, $codeType]);
-
                 $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
                 $code = '';
                 $max = strlen($chars) - 1;
                 for ($i = 0; $i < 12; $i++) { $code .= $chars[random_int(0, $max)]; }
                 $verificationCode = substr($code, 0, 4) . '-' . substr($code, 4, 4) . '-' . substr($code, 8, 4);
                 $verificationCode = str_replace('-', '', $verificationCode); 
-
-                $stmt_insert = $pdo->prepare(
-                    "INSERT INTO verification_codes (identifier, code_type, code) 
-                     VALUES (?, ?, ?)"
-                );
+                $stmt_insert = $pdo->prepare("INSERT INTO verification_codes (identifier, code_type, code) VALUES (?, ?, ?)");
                 $stmt_insert->execute([$identifier, $codeType, $verificationCode]);
-
                 $initialEmailCooldown = $cooldownConstant;
-
             } else {
                 $initialEmailCooldown = $cooldownConstant - $secondsPassed;
             }
-
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - settings-change-email-cooldown');
             $initialEmailCooldown = 0; 
         }
 
     } elseif ($page === 'settings-toggle-2fa') {
+        // ... (lógica de settings-toggle-2fa sin cambios)
          try {
             $stmt_2fa = $pdo->prepare("SELECT is_2fa_enabled FROM users WHERE id = ?");
             $stmt_2fa->execute([$_SESSION['user_id']]);
@@ -459,6 +411,7 @@ if (array_key_exists($page, $allowedPages)) {
              $is2faEnabled = 0;
          }
     } elseif ($page === 'settings-delete-account') {
+        // ... (lógica de settings-delete-account sin cambios)
          $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
          $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
          $profileImageUrl = $_SESSION['profile_image_url'] ?? $defaultAvatar;
@@ -466,10 +419,12 @@ if (array_key_exists($page, $allowedPages)) {
     }
     
     elseif ($page === 'admin-manage-users') { 
+        // ... (lógica de admin-manage-users sin cambios)
         $adminCurrentPage = (int)($_GET['p'] ?? 1);
         if ($adminCurrentPage < 1) $adminCurrentPage = 1;
     }
     elseif ($page === 'admin-edit-user') {
+        // ... (lógica de admin-edit-user sin cambios)
         $targetUserId = (int)($_GET['id'] ?? 0);
         if ($targetUserId === 0) {
             $page = '404';
@@ -479,34 +434,65 @@ if (array_key_exists($page, $allowedPages)) {
                 $stmt_user = $pdo->prepare("SELECT id, username, email, password, profile_image_url, role FROM users WHERE id = ?");
                 $stmt_user->execute([$targetUserId]);
                 $editUser = $stmt_user->fetch();
-
                 if (!$editUser) {
                     $page = '404';
                     $CURRENT_SECTION = '404';
                 }
-
                 $adminRole = $_SESSION['role'] ?? 'user';
                 if ($editUser['role'] === 'founder' && $adminRole !== 'founder') {
                     $page = '404'; 
                     $CURRENT_SECTION = '404';
                 }
-                
                 $editUser['password_hash'] = $editUser['password'];
                 unset($editUser['password']);
-                
                 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
                 $profileImageUrl = $editUser['profile_image_url'] ?? $defaultAvatar;
                 if (empty($profileImageUrl)) $profileImageUrl = $defaultAvatar;
                 $isDefaultAvatar = strpos($profileImageUrl, '/assets/uploads/avatars_uploaded/') === false;
-
             } catch (PDOException $e) {
                 logDatabaseError($e, 'router - admin-edit-user');
                 $page = '404';
                 $CURRENT_SECTION = '404';
             }
         }
-    }
-    elseif ($page === 'admin-server-settings') {
+    
+    // --- ▼▼▼ INICIO DE NUEVA LÓGICA (PARA admin-edit-group) ▼▼▼ ---
+    } elseif ($page === 'admin-edit-group') {
+        $targetGroupId = (int)($_GET['id'] ?? 0);
+        
+        // 1. Validar que el admin sea 'founder'
+        if ($_SESSION['role'] !== 'founder') {
+             $page = '404';
+             $CURRENT_SECTION = '404';
+        } 
+        // 2. Validar que el ID exista
+        elseif ($targetGroupId === 0) {
+            $page = '404';
+            $CURRENT_SECTION = '404';
+        } 
+        // 3. Obtener datos del grupo
+        else {
+            try {
+                $stmt_group = $pdo->prepare("SELECT id, name, group_type, privacy, access_key FROM `groups` WHERE id = ?");
+                $stmt_group->execute([$targetGroupId]);
+                $editGroup = $stmt_group->fetch();
+
+                if (!$editGroup) {
+                    // El grupo no existe
+                    $page = '404';
+                    $CURRENT_SECTION = '404';
+                }
+                // Si existe, la variable $editGroup estará disponible para el include
+            } catch (PDOException $e) {
+                logDatabaseError($e, 'router - admin-edit-group');
+                $page = '404';
+                $CURRENT_SECTION = '404';
+            }
+        }
+    // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
+    
+    } elseif ($page === 'admin-server-settings') {
+        // ... (lógica de admin-server-settings sin cambios)
         $maintenanceModeStatus = $GLOBALS['site_settings']['maintenance_mode'] ?? '0';
         $allowRegistrationStatus = $GLOBALS['site_settings']['allow_new_registrations'] ?? '1';
     }

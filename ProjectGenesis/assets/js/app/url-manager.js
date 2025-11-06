@@ -12,7 +12,6 @@ const pageLoader = document.getElementById('page-loader');
 let loaderTimer = null;
 let currentMenuType = null; 
 
-// ... [El objeto 'routes' y 'paths' permanecen SIN CAMBIOS] ...
 const routes = {
     'toggleSectionHome': 'home',
     'toggleSectionExplorer': 'explorer',
@@ -51,7 +50,11 @@ const routes = {
 
     'toggleSectionAdminManageBackups': 'admin-manage-backups',
     'toggleSectionAdminManageLogs': 'admin-manage-logs', 
-    'toggleSectionAdminManageGroups': 'admin-manage-groups', // <-- ¡NUEVA LÍNEA!
+    'toggleSectionAdminManageGroups': 'admin-manage-groups',
+    
+    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
+    'toggleSectionAdminEditGroup': 'admin-edit-group',
+    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
 
     'toggleSectionHelpLegalNotice': 'help-legal-notice',
     'toggleSectionHelpPrivacyPolicy': 'help-privacy-policy',
@@ -98,7 +101,11 @@ const paths = {
 
     '/admin/manage-backups': 'toggleSectionAdminManageBackups',
     '/admin/manage-logs': 'toggleSectionAdminManageLogs', 
-    '/admin/manage-groups': 'toggleSectionAdminManageGroups', // <-- ¡NUEVA LÍNEA!
+    '/admin/manage-groups': 'toggleSectionAdminManageGroups',
+
+    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
+    '/admin/edit-group': 'toggleSectionAdminEditGroup',
+    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
 
     '/help/legal-notice': 'toggleSectionHelpLegalNotice',
     '/help/privacy-policy': 'toggleSectionHelpPrivacyPolicy',
@@ -193,13 +200,9 @@ async function loadPage(page, action, fetchParams = null) {
         contentContainer.innerHTML = html;
         applyTranslations(contentContainer);
         
-        // --- ▼▼▼ INICIO DE LÍNEA MODIFICADA ▼▼▼ ---
-        // Después de cargar el contenido Y las traducciones,
-        // aplicar el estado online/offline a la nueva UI.
         if (window.applyOnlineStatusToAllMembers) {
             window.applyOnlineStatusToAllMembers();
         }
-        // --- ▲▲▲ FIN DE LÍNEA MODIFICADA ▲▲▲ ---
 
         if (page === 'admin-server-settings') {
             if (window.lastKnownUserCount !== null) {
@@ -331,9 +334,13 @@ function updateMenuState(currentAction) {
          menuAction = 'toggleSectionAdminDashboard'; 
     }
     
-    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
     if (currentAction === 'toggleSectionAdminManageGroups') {
         menuAction = 'toggleSectionAdminManageGroups';
+    }
+    
+    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
+    if (currentAction === 'toggleSectionAdminEditGroup') {
+        menuAction = 'toggleSectionAdminManageGroups'; // Mantener "Gestionar Grupos" activo
     }
     // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
     
@@ -359,7 +366,7 @@ export function initRouter() {
     document.body.addEventListener('click', e => {
       const link = e.target.closest(
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR NUEVA RUTA AL LISTENER) ▼▼▼ ---
-            '.header-button[data-action*="toggleSection"], .menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/help"], a[href*="/my-groups"], .component-button[data-action*="toggleSection"], .component-action-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], a[href*="/admin/manage-groups"]'
+            '.header-button[data-action*="toggleSection"], .menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/help"], a[href*="/my-groups"], .component-button[data-action*="toggleSection"], .component-action-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], a[href*="/admin/manage-groups"], a[href*="/admin/edit-group"]'
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         );
 
@@ -378,7 +385,9 @@ export function initRouter() {
             if (link.hasAttribute('data-action')) {
                 action = link.getAttribute('data-action');
 
-                if (action === 'toggleSectionAdminEditUser') {
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadido chequeo de grupo) ▼▼▼ ---
+                if (action === 'toggleSectionAdminEditUser' || action === 'toggleSectionAdminEditGroup') {
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     e.stopImmediatePropagation();
                     return; 
                 }
