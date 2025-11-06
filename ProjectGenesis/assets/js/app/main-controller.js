@@ -15,16 +15,71 @@ function initMainController() {
     let closeOnClickOutside = true;
     let closeOnEscape = true;
     
-    // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (ELIMINAR VARIABLES DEL MODAL) ▼▼▼ ---
-    // const groupSelectModal = document.getElementById('group-select-modal'); // <-- ELIMINADO
-    // const groupSelectBtn = document.getElementById('select-group-btn'); // <-- ELIMINADO
-    const groupDisplay = document.getElementById('selected-group-display');
-    const groupDisplayText = groupDisplay ? groupDisplay.querySelector('.toolbar-group-text') : null;
-    // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
+    // --- ▼▼▼ ¡CORRECCIÓN! (ELIMINADO DE AQUÍ) ▼▼▼ ---
+    // NO podemos cachear estas variables aquí, porque #selected-group-display
+    // no existe hasta que 'home.php' se carga dinámicamente.
+    // const groupDisplay = document.getElementById('selected-group-display'); // <-- ELIMINADO
+    // const groupDisplayText = groupDisplay ? groupDisplay.querySelector('.toolbar-group-text') : null; // <-- ELIMINADO
+    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
     document.body.addEventListener('click', async function (event) {
         
+        // --- ▼▼▼ ¡LÓGICA CORREGIDA Y MEJORADA! ▼▼▼ ---
+        // 1. Comprobar si se hizo clic en un item de grupo (esto debe ir primero)
+        const groupItem = event.target.closest('.group-select-item');
+        if (groupItem) { 
+            event.preventDefault();
+            
+            // 2. Buscar los elementos de la toolbar AHORA, en el momento del clic.
+            const groupDisplay = document.getElementById('selected-group-display');
+            const groupDisplayText = groupDisplay ? groupDisplay.querySelector('.toolbar-group-text') : null;
+            
+            // 3. Obtener los datos del item clickeado
+            const groupName = groupItem.dataset.groupName; 
+            const groupI18nKey = groupItem.dataset.i18nKey; 
+            
+            // 4. Actualizar la barra de herramientas (el "box")
+            if (groupDisplay && groupDisplayText) {
+                if (groupI18nKey) {
+                    // Caso: "Ningún grupo"
+                    const translatedText = getTranslation(groupI18nKey);
+                    groupDisplayText.textContent = translatedText;
+                    groupDisplayText.setAttribute('data-i18n', groupI18nKey);
+                    groupDisplay.classList.remove('active');
+                } else {
+                    // Caso: Un grupo real
+                    groupDisplayText.textContent = groupName;
+                    groupDisplayText.removeAttribute('data-i18n');
+                    groupDisplay.classList.add('active');
+                }
+            }
+
+            // 5. Actualizar el estado "active" dentro del popover (para el check)
+            const menuList = groupItem.closest('.menu-list');
+            if (menuList) {
+                // Quitar 'active' y 'check' de todos
+                menuList.querySelectorAll('.menu-link.group-select-item').forEach(link => {
+                    link.classList.remove('active');
+                    const icon = link.querySelector('.menu-link-check-icon');
+                    if (icon) icon.innerHTML = '';
+                });
+
+                // Poner 'active' y 'check' solo en el clickeado
+                groupItem.classList.add('active');
+                const iconContainer = groupItem.querySelector('.menu-link-check-icon');
+                if (iconContainer) {
+                    iconContainer.innerHTML = '<span class="material-symbols-rounded">check</span>';
+                }
+            }
+            
+            // 6. Cerrar el popover
+            deactivateAllModules();
+            return; // Terminar
+        }
+        // --- ▲▲▲ ¡FIN DE LA LÓGICA CORREGIDA! ▲▲▲ ---
         
+
+        // El resto de la lógica de clics para [data-action] va después
         const button = event.target.closest('[data-action]');
 
         if (button) {
@@ -32,62 +87,12 @@ function initMainController() {
         }
 
         if (!button) {
-            // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (ELIMINAR IF) ▼▼▼ ---
-            // if (groupSelectModal && event.target === groupSelectModal) { ... } // <-- ELIMINADO
-            // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
+            // Si no es un botón de acción ni un groupItem, salir
             return;
         }
 
         const action = button.getAttribute('data-action');
-
-        // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (ELIMINAR ACCIONES DEL MODAL) ▼▼▼ ---
-        /*
-        if (action === 'toggleGroupSelectModal') {
-            // ... LÓGICA ELIMINADA ...
-        }
-
-        if (action === 'closeGroupSelectModal') {
-            // ... LÓGICA ELIMINADA ...
-        }
-        */
-        // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
         
-        // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (SELECTOR DE ITEM) ▼▼▼ ---
-        // Listener para los items dentro del NUEVO popover de grupos
-        const groupItem = event.target.closest('.group-select-item');
-        if (groupItem) { // <-- Se quita la comprobación de groupSelectModal
-            event.preventDefault();
-            
-            // --- NUEVA LÓGICA ---
-            const groupName = groupItem.dataset.groupName; // Será "Grupo A" o undefined
-            const groupI18nKey = groupItem.dataset.i18nKey; // Será "toolbar.noGroupSelected" o undefined
-            // --- FIN NUEVA LÓGICA ---
-            
-            if (groupDisplay && groupDisplayText) {
-                
-                // --- LÓGICA REVISADA ---
-                if (groupI18nKey) {
-                    // Es el item "Ningún grupo"
-                    const translatedText = getTranslation(groupI18nKey); // Obtener traducción JS
-                    groupDisplayText.textContent = translatedText; // Poner el texto traducido
-                    groupDisplayText.setAttribute('data-i18n', groupI18nKey); // Restaurar el atributo i18n
-                    groupDisplay.classList.remove('active');
-                } else {
-                    // Es un item de grupo real
-                    groupDisplayText.textContent = groupName;
-                    groupDisplayText.removeAttribute('data-i18n'); // Quitar i18n para que no se sobrescriba
-                    groupDisplay.classList.add('active');
-                }
-                // --- FIN LÓGICA REVISADA ---
-            }
-            
-            // Cerrar el popover (que es un módulo estándar)
-            deactivateAllModules();
-            return;
-        }
-        // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
-
-
         if (action === 'logout') {
             event.preventDefault();
             const logoutButton = button;
@@ -163,9 +168,6 @@ function initMainController() {
         
 
         } else if (action.startsWith('toggleSection')) {
-             // --- ▼▼▼ LÓGICA MODIFICADA (ELIMINAR IF) ▼▼▼ ---
-            // if (groupSelectModal) { ... } // <-- ELIMINADO
-            // --- ▲▲▲ FIN LÓGICA MODIFICADA ▲▲▲ ---
             return;
         }
 
@@ -176,19 +178,13 @@ function initMainController() {
 
         if (action.startsWith('toggle')) {
             
-            // --- ▼▼▼ INICIO DE LÓGICA CORREGIDA ▼▼▼ ---
-            // ESTA ES LA LÓGICA QUE FALTABA
             if (action === 'toggleModulePageFilter' || 
                 action === 'toggleModuleAdminRole' || 
                action === 'toggleModuleAdminStatus' ||
                 action === 'toggleModuleAdminCreateRole') { 
-                // Estas acciones se manejan en admin-manager.js, así que las ignoramos aquí
                 return; 
             }
             
-            // Si la acción es 'toggleModuleGroupSelect', NO se ignora y continúa.
-            // --- ▲▲▲ FIN DE LÓGICA CORREGIDA ▲▲▲ ---
-
             event.stopPropagation();
 
             let moduleName = action.substring(6);
@@ -214,12 +210,10 @@ function initMainController() {
         document.addEventListener('click', function (event) {
             const clickedOnModule = event.target.closest('[data-module].active');
             const clickedOnButton = event.target.closest('[data-action]');
-            
+            const clickedOnGroupItem = event.target.closest('.group-select-item');
             const clickedOnCardItem = event.target.closest('.card-item');
 
-            // --- ▼▼▼ MODIFICACIÓN: ELIMINAR CHECK DE MODAL ▼▼▼ ---
-            if (!clickedOnModule && !clickedOnButton && !clickedOnCardItem) {
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            if (!clickedOnModule && !clickedOnButton && !clickedOnCardItem && !clickedOnGroupItem) {
                 deactivateAllModules();
             }
         });
@@ -229,9 +223,6 @@ function initMainController() {
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 deactivateAllModules();
-                // --- ▼▼▼ LÓGICA MODIFICADA (ELIMINAR IF) ▼▼▼ ---
-                // if (groupSelectModal) { ... } // <-- ELIMINADO
-                // --- ▲▲▲ FIN LÓGICA MODIFICADA ▲▲▲ ---
             }
         });
     }

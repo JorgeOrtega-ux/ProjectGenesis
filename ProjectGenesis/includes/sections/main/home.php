@@ -29,12 +29,11 @@ if (isset($_SESSION['user_id'], $pdo)) {
 
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'home') ? 'active' : 'disabled'; ?>" data-section="home">
 
-    <!-- ▼▼▼ INICIO DE LA TOOLBAR MODIFICADA ▼▼▼ -->
     <div class="page-toolbar-container" id="home-toolbar-container">
         <div class="page-toolbar-floating">
             <div class="toolbar-action-default">
+                
                 <div class="page-toolbar-left">
-                    <!-- Botón para abrir el POPOVER -->
                     <button type="button"
                         class="page-toolbar-button"
                         data-action="toggleModuleGroupSelect" 
@@ -42,16 +41,31 @@ if (isset($_SESSION['user_id'], $pdo)) {
                         <span class="material-symbols-rounded">groups</span>
                     </button>
                     
-                    <!-- Div para mostrar el grupo seleccionado -->
                     <div class="toolbar-group-display" id="selected-group-display">
                         <span class="material-symbols-rounded">label</span>
                         <span class="toolbar-group-text" data-i18n="toolbar.noGroupSelected">Ningún grupo</span>
                     </div>
                 </div>
-            </div>
+
+                <div class="page-toolbar-right">
+                    <button type="button"
+                        class="page-toolbar-button"
+                        data-action="toggleSectionMyGroups"
+                        data-tooltip="header.buttons.myGroups"> 
+                        <span class="material-symbols-rounded">view_list</span>
+                    </button>
+
+                    <button type="button"
+                        class="page-toolbar-button"
+                        data-action="toggleSectionJoinGroup"
+                        data-tooltip="home.noGroups.joinButton"> 
+                        <span class="material-symbols-rounded">add</span>
+                    </button>
+                </div>
+                
+                </div>
         </div>
 
-        <!-- ▼▼▼ INICIO DE NUEVO POPOVER DE GRUPOS ▼▼▼ -->
         <div class="popover-module body-title disabled" 
              data-module="moduleGroupSelect"
              style="width: 300px; left: 8px; right: auto; top: calc(100% + 8px);">
@@ -72,7 +86,6 @@ if (isset($_SESSION['user_id'], $pdo)) {
                     <div class="menu-list">
                         <div class="menu-header" data-i18n="modals.selectGroup.title">Seleccionar Grupo</div>
                         
-                        <!-- Opción para "Ningún grupo" -->
                         <div class="menu-link group-select-item"
                              data-group-id="none"
                              data-i18n-key="toolbar.noGroupSelected">
@@ -83,8 +96,7 @@ if (isset($_SESSION['user_id'], $pdo)) {
                                 <span data-i18n="toolbar.noGroupSelected">Ningún grupo</span>
                             </div>
                             <div class="menu-link-check-icon">
-                                <!-- Lógica JS podría añadir 'check' aquí si es la opción activa -->
-                            </div>
+                                </div>
                         </div>
 
                         <?php foreach ($user_groups as $group): ?>
@@ -105,14 +117,8 @@ if (isset($_SESSION['user_id'], $pdo)) {
                 <?php endif; ?>
             </div>
         </div>
-        <!-- ▲▲▲ FIN DE NUEVO POPOVER DE GRUPOS ▲▲▲ -->
-
-    </div>
-    <!-- ▲▲▲ FIN DE LA TOOLBAR MODIFICADA ▲▲▲ -->
-
-    <div class="component-wrapper" style="padding-top: 82px;"> <!-- Añadido padding-top para la toolbar -->
-
-        <div class="component-header-card">
+        </div>
+    <div class="component-wrapper" style="padding-top: 82px;"> <div class="component-header-card">
             <h1 class="component-page-title" data-i18n="home.empty.title">Página Principal</h1>
             <p class="component-page-description" data-i18n="home.empty.description">
                 Esta es tu página principal. El contenido se añadirá próximamente.
