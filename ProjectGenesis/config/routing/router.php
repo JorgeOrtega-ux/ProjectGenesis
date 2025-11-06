@@ -135,6 +135,7 @@ $allowedPages = [
     'admin-manage-backups'     => '../../includes/sections/admin/manage-backups.php',
     // 'admin-restore-backup'     => '../../includes/sections/admin/restore-backup.php', // <-- ¡ELIMINADA!
     'admin-manage-logs'        => '../../includes/sections/admin/manage-logs.php', // <-- ¡NUEVA LÍNEA AÑADIDA!
+    'admin-manage-groups'      => '../../includes/sections/admin/manage-groups.php', // <-- ¡NUEVA LÍNEA!
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
     // --- ▲▲▲ FIN DE PÁGINAS DE ADMIN ▲▲▲ ---

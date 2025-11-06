@@ -51,6 +51,7 @@ const routes = {
 
     'toggleSectionAdminManageBackups': 'admin-manage-backups',
     'toggleSectionAdminManageLogs': 'admin-manage-logs', 
+    'toggleSectionAdminManageGroups': 'admin-manage-groups', // <-- ¡NUEVA LÍNEA!
 
     'toggleSectionHelpLegalNotice': 'help-legal-notice',
     'toggleSectionHelpPrivacyPolicy': 'help-privacy-policy',
@@ -97,6 +98,7 @@ const paths = {
 
     '/admin/manage-backups': 'toggleSectionAdminManageBackups',
     '/admin/manage-logs': 'toggleSectionAdminManageLogs', 
+    '/admin/manage-groups': 'toggleSectionAdminManageGroups', // <-- ¡NUEVA LÍNEA!
 
     '/help/legal-notice': 'toggleSectionHelpLegalNotice',
     '/help/privacy-policy': 'toggleSectionHelpPrivacyPolicy',
@@ -329,6 +331,12 @@ function updateMenuState(currentAction) {
          menuAction = 'toggleSectionAdminDashboard'; 
     }
     
+    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
+    if (currentAction === 'toggleSectionAdminManageGroups') {
+        menuAction = 'toggleSectionAdminManageGroups';
+    }
+    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
+    
     if (currentAction && currentAction.startsWith('toggleSectionHelp')) {
         menuAction = currentAction;
     }
@@ -350,7 +358,9 @@ export function initRouter() {
 
     document.body.addEventListener('click', e => {
       const link = e.target.closest(
-            '.header-button[data-action*="toggleSection"], .menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/help"], a[href*="/my-groups"], .component-button[data-action*="toggleSection"], .component-action-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"]'
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR NUEVA RUTA AL LISTENER) ▼▼▼ ---
+            '.header-button[data-action*="toggleSection"], .menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/help"], a[href*="/my-groups"], .component-button[data-action*="toggleSection"], .component-action-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], a[href*="/admin/manage-groups"]'
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         );
 
         if (link) {

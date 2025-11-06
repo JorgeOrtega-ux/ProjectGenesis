@@ -247,6 +247,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = 'js.api.errorDatabase';
         }
         
+    // --- ▼▼▼ INICIO DE NUEVO BLOQUE 'get-groups' ▼▼▼ ---
+    } elseif ($action === 'get-groups') {
+        
+        try {
+            // 1. OBTENER PARÁMETROS
+            $adminCurrentPage = (int)($_POST['p'] ?? 1);
+            if ($adminCurrentPage < 1) $adminCurrentPage = 1;
+
+            $searchQuery = trim($_POST['q'] ?? '');
+            $isSearching = !empty($searchQuery);
+            
+            // (Omitimos ordenamiento por ahora, tal como se pidió)
+            $sort_by_sql = 'name';
+            $sort_order_sql = 'ASC';
+
+            $groupsPerPage = 20; // Límite por página
+            $totalGroups = 0;
+            $totalPages = 1;
+
+            // 2. Contar el total de grupos (con filtro si existe)
+            $sqlCount = "SELECT COUNT(*) FROM `groups`"; // `groups` es una palabra reservada
+            if ($isSearching) {
+                $sqlCount .= " WHERE (name LIKE :query OR access_key LIKE :query)";
+            }
+            
+            $totalGroupsStmt = $pdo->prepare($sqlCount);
+            
+            if ($isSearching) {
+                $searchParam = '%' . $searchQuery . '%';
+                $totalGroupsStmt->bindParam(':query', $searchParam, PDO::PARAM_STR);
+            }
+            
+            $totalGroupsStmt->execute();
+            $totalGroups = (int)$totalGroupsStmt->fetchColumn();
+
+            if ($totalGroups > 0) {
+                $totalPages = (int)ceil($totalGroups / $groupsPerPage);
+            } else {
+                $totalPages = 1;
+            }
+            if ($adminCurrentPage > $totalPages) $adminCurrentPage = $totalPages;
+            $offset = ($adminCurrentPage - 1) * $groupsPerPage;
+
+            // 3. Obtener los grupos para la página actual
+            $sqlSelect = "SELECT 
+                            g.id, g.name, g.group_type, g.privacy, g.created_at, g.access_key,
+                            (SELECT COUNT(ug.user_id) FROM user_groups ug WHERE ug.group_id = g.id) AS member_count
+                          FROM `groups` g";
+            
+            if ($isSearching) {
+                $sqlSelect .= " WHERE (g.name LIKE :query OR g.access_key LIKE :query)";
+            }
+            $sqlSelect .= " ORDER BY $sort_by_sql $sort_order_sql LIMIT :limit OFFSET :offset";
+            
+            $stmt = $pdo->prepare($sqlSelect);
+            
+            if ($isSearching) {
+                $stmt->bindParam(':query', $searchParam, PDO::PARAM_STR);
+            }
+            $stmt->bindValue(':limit', $groupsPerPage, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            $groupsList = $stmt->fetchAll();
+            
+            // 4. Formatear datos para el JSON
+            $formattedGroups = [];
+            foreach ($groupsList as $group) {
+                $formattedGroups[] = [
+                    'id' => $group['id'],
+                    'name' => htmlspecialchars($group['name']),
+                    'type' => htmlspecialchars(ucfirst($group['group_type'])),
+                    'privacy' => htmlspecialchars(ucfirst($group['privacy'])),
+                    'privacy_raw' => htmlspecialchars($group['privacy']),
+                    'access_key' => htmlspecialchars($group['access_key']),
+                    'member_count' => (int)$group['member_count'],
+                    'createdAt' => (new DateTime($group['created_at']))->format('d/m/Y')
+                ];
+            }
+
+            // 5. Devolver la respuesta JSON
+            $response['success'] = true;
+            $response['groups'] = $formattedGroups;
+            $response['totalGroups'] = $totalGroups;
+            $response['totalPages'] = $totalPages;
+            $response['currentPage'] = $adminCurrentPage;
+
+        } catch (PDOException $e) {
+            logDatabaseError($e, 'admin_handler - get-groups');
+            $response['message'] = 'js.api.errorDatabase';
+        }
+    // --- ▲▲▲ FIN DE NUEVO BLOQUE 'get-groups' ▲▲▲ ---
+        
     // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN 'create-user'! ▼▼▼ ---
     } elseif ($action === 'create-user') {
         try {
@@ -646,7 +738,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             if (strlen($newUsername) < $minUsernameLength) throw new Exception('js.auth.errorUsernameMinLength');
             if (strlen($newUsername) > $maxUsernameLength) throw new Exception('js.auth.errorUsernameMaxLength');
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
             if ($newUsername === $oldUsername) throw new Exception('js.settings.errorUsernameIsCurrent');
 
             $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
@@ -690,7 +782,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             if ($response['message'] === 'js.auth.errorUsernameMinLength') $response['data'] = ['length' => $minUsernameLength];
             elseif ($response['message'] === 'js.auth.errorUsernameMaxLength') $response['data'] = ['length' => $maxUsernameLength];
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
         }
     }
     
@@ -709,7 +801,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($newEmail) || !filter_var($newEmail, FILTER_VALIDATE_EMAIL)) throw new Exception('js.auth.errorInvalidEmail');
             // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             if (strlen($newEmail) > $maxEmailLength) throw new Exception('js.auth.errorEmailLength');
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
             if ($newEmail === $oldEmail) throw new Exception('js.settings.errorEmailIsCurrent');
             
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---

@@ -44,6 +44,7 @@
       "dashboard": "Dashboard",
       "manageUsers": "Gestionar usuarios",
       "createUsers": "Crear usuario",
+      "manageGroups": "Gestionar Grupos",
       "serverSettings": "Configuracion del servidor",
       "manageBackups": "Copias de seguridad"
     },
@@ -218,6 +219,15 @@
       "passwordNew": "Nueva Contraseña (Opcional)",
       "passwordConfirm": "Confirmar Nueva Contraseña",
       "errorPassEmpty": "Los campos de nueva contraseña están vacíos. No se realizaron cambios."
+    },
+    "groups": {
+      "title": "Gestionar Grupos",
+      "description": "Busca, edita o gestiona los grupos del sistema.",
+      "search": "Buscar grupos",
+      "noResultsTitle": "Sin resultados",
+      "noGroupsTitle": "No hay grupos creados",
+      "noResultsDesc": "No hay grupos que coincidan con tu término de búsqueda.",
+      "noGroupsDesc": "Aún no se ha creado ningún grupo en el sistema."
     },
     "server": {
       "title": "Configuración del Servidor",

@@ -26,23 +26,47 @@ export function initAdminManager() {
     let selectedAdminLogFile = null;
     // --- ▲▲▲ FIN DE NUEVA LÓGICA (LOGS) ▲▲▲ ---
     
-    let currentPage = 1;
-    let currentSearch = '';
-    let currentSort = '';
-    let currentOrder = '';
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (ESTADO SEPARADO) ▼▼▼ ---
+    // Estado para "Gestionar Usuarios"
+    let userCurrentPage = 1;
+    let userCurrentSearch = '';
+    let userCurrentSort = '';
+    let userCurrentOrder = '';
 
-    const mainToolbar = document.querySelector('.page-toolbar-floating[data-current-page]');
-    if (mainToolbar) {
-        currentPage = parseInt(mainToolbar.dataset.currentPage, 10) || 1;
+    // Estado para "Gestionar Grupos"
+    let groupCurrentPage = 1;
+    let groupCurrentSearch = '';
+    // (Omitimos sort/order por ahora para grupos)
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+    // Detectar en qué página estamos para inicializar el estado correcto
+    const adminSection = document.querySelector('.section-content[data-section]');
+    
+    if (adminSection && adminSection.dataset.section === 'admin-users') {
+        const mainToolbar = document.querySelector('.page-toolbar-floating[data-current-page]');
+        if (mainToolbar) {
+            userCurrentPage = parseInt(mainToolbar.dataset.currentPage, 10) || 1;
+        }
+        const searchInput = document.querySelector('.page-search-input');
+        if (searchInput) {
+            userCurrentSearch = searchInput.value || '';
+        }
+        const activeFilter = document.querySelector('[data-module="modulePageFilter"] .menu-link.active');
+        if (activeFilter) {
+            userCurrentSort = activeFilter.dataset.sort || '';
+            userCurrentOrder = activeFilter.dataset.order || '';
+        }
     }
-    const searchInput = document.querySelector('.page-search-input');
-    if (searchInput) {
-        currentSearch = searchInput.value || '';
-    }
-    const activeFilter = document.querySelector('[data-module="modulePageFilter"] .menu-link.active');
-    if (activeFilter) {
-        currentSort = activeFilter.dataset.sort || '';
-        currentOrder = activeFilter.dataset.order || '';
+    
+    if (adminSection && adminSection.dataset.section === 'admin-groups') {
+        const mainToolbar = document.querySelector('.page-toolbar-floating[data-current-page]');
+        if (mainToolbar) {
+            groupCurrentPage = parseInt(mainToolbar.dataset.currentPage, 10) || 1;
+        }
+        const searchInput = document.querySelector('.page-search-input');
+        if (searchInput) {
+            groupCurrentSearch = searchInput.value || '';
+        }
     }
 
 
@@ -138,6 +162,8 @@ export function initAdminManager() {
         }
     }
 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (FUNCIONES SEPARADAS) ▼▼▼ ---
+
     function setListLoadingState(isLoading) {
         const listContainer = document.querySelector('.card-list-container');
         if (listContainer) {
@@ -146,13 +172,13 @@ export function initAdminManager() {
         }
     }
 
-    function updatePaginationControls(currentPage, totalPages, totalUsers) {
+    function updatePaginationControls(currentPage, totalPages, totalItems) {
         const pageText = document.querySelector('.page-toolbar-page-text');
         const prevButton = document.querySelector('[data-action="admin-page-prev"]');
         const nextButton = document.querySelector('[data-action="admin-page-next"]');
 
         if (pageText) {
-            pageText.textContent = (totalUsers == 0) ? '--' : `${currentPage} / ${totalPages}`;
+            pageText.textContent = (totalItems == 0) ? '--' : `${currentPage} / ${totalPages}`;
         }
         if (prevButton) {
             prevButton.disabled = (currentPage <= 1);
@@ -168,12 +194,14 @@ export function initAdminManager() {
         }
     }
 
+    // --- Funciones para 'get-users' ---
+
     function renderUserList(users, totalUsers) {
         const listContainer = document.querySelector('.card-list-container');
         if (!listContainer) return;
 
         if (totalUsers === 0 || users.length === 0) {
-            const isSearching = currentSearch !== '';
+            const isSearching = userCurrentSearch !== '';
             const icon = isSearching ? 'person_search' : 'person_off';
             const titleKey = isSearching ? 'admin.users.noResultsTitle' : 'admin.users.noUsersTitle';
             const descKey = isSearching ? 'admin.users.noResultsDesc' : 'admin.users.noUsersDesc';
@@ -240,10 +268,10 @@ export function initAdminManager() {
 
         const formData = new FormData();
         formData.append('action', 'get-users');
-        formData.append('p', currentPage);
-        formData.append('q', currentSearch);
-        formData.append('s', currentSort);
-        formData.append('o', currentOrder);
+        formData.append('p', userCurrentPage);
+        formData.append('q', userCurrentSearch);
+        formData.append('s', userCurrentSort);
+        formData.append('o', userCurrentOrder);
         
         const csrfInput = document.querySelector('input[name="csrf_token"]');
         if (csrfInput) {
@@ -265,6 +293,113 @@ export function initAdminManager() {
 
         setListLoadingState(false);
     }
+    
+    // --- ¡NUEVO! Funciones para 'get-groups' ---
+
+    function renderGroupList(groups, totalGroups) {
+        const listContainer = document.querySelector('.card-list-container');
+        if (!listContainer) return;
+
+        if (totalGroups === 0 || groups.length === 0) {
+            const isSearching = groupCurrentSearch !== '';
+            const icon = isSearching ? 'search_off' : 'groups';
+            const titleKey = isSearching ? 'admin.groups.noResultsTitle' : 'admin.groups.noGroupsTitle';
+            const descKey = isSearching ? 'admin.groups.noResultsDesc' : 'admin.groups.noGroupsDesc';
+            
+            listContainer.innerHTML = `
+                <div class="component-card">
+                    <div class="component-card__content">
+                        <div class="component-card__icon">
+                            <span class="material-symbols-rounded">${icon}</span>
+                        </div>
+                        <div class="component-card__text">
+                            <h2 class="component-card__title" data-i18n="${titleKey}"></h2>
+                            <p class="component-card__description" data-i18n="${descKey}"></p>
+                        </div>
+                    </div>
+                </div>`;
+            applyTranslations(listContainer);
+            return;
+        }
+
+        let groupListHtml = '';
+        groups.forEach(group => {
+            const privacyIcon = (group.privacy_raw === 'publico') ? 'public' : 'lock';
+            
+            groupListHtml += `
+                <div class="card-item" 
+                     data-group-id="${group.id}">
+                    
+                    <div class="component-card__icon" style="width: 50px; height: 50px; flex-shrink: 0; background-color: #f5f5fa;">
+                         <span class="material-symbols-rounded" style="font-size: 28px;">${group.type === 'Universidad' ? 'school' : 'account_balance'}</span>
+                    </div>
+
+                    <div class="card-item-details">
+                        <div class="card-detail-item card-detail-item--full">
+                            <span class="card-detail-label">Nombre</span>
+                            <span class="card-detail-value">${group.name}</span>
+                        </div>
+                        <div class="card-detail-item">
+                            <span class="card-detail-label">Miembros</span>
+                            <span class="card-detail-value">${group.member_count}</span>
+                        </div>
+                        <div class="card-detail-item">
+                            <span class="card-detail-label">Privacidad</span>
+                            <span class="material-symbols-rounded" style="font-size: 16px; color: #6b7280;">${privacyIcon}</span>
+                            <span class="card-detail-value">${group.privacy}</span>
+                        </div>
+                        <div class="card-detail-item">
+                            <span class="card-detail-label">Tipo</span>
+                            <span class="card-detail-value">${group.type}</span>
+                        </div>
+                        <div class="card-detail-item">
+                            <span class="card-detail-label">Clave</span>
+                            <span class="card-detail-value">${group.access_key}</span>
+                        </div>
+                        <div class="card-detail-item">
+                            <span class="card-detail-label">Creación</span>
+                            <span class="card-detail-value">${group.createdAt}</span>
+                        </div>
+                    </div>
+                </div>`;
+        });
+        listContainer.innerHTML = groupListHtml;
+        // No se aplica i18n aquí porque usé texto estático (Nombre, Miembros, etc.)
+        // Si usaras claves i18n, llamarías a applyTranslations(listContainer);
+    }
+    
+    async function fetchAndRenderGroups() {
+        setListLoadingState(true);
+
+        const formData = new FormData();
+        formData.append('action', 'get-groups');
+        formData.append('p', groupCurrentPage);
+        formData.append('q', groupCurrentSearch);
+        // (Omitimos sort/order)
+        
+        const csrfInput = document.querySelector('input[name="csrf_token"]');
+        if (csrfInput) {
+            formData.append('csrf_token', csrfInput.value);
+        }
+
+        const result = await callAdminApi(formData);
+
+        if (result.success) {
+            renderGroupList(result.groups, result.totalGroups);
+            updatePaginationControls(result.currentPage, result.totalPages, result.totalGroups);
+        } else {
+            showAlert(getTranslation(result.message || 'js.auth.errorUnknown'), 'error');
+            const listContainer = document.querySelector('.card-list-container');
+            if (listContainer) {
+                listContainer.innerHTML = `<div class="component-card"><p>${getTranslation('js.api.errorServer')}</p></div>`;
+            }
+        }
+
+        setListLoadingState(false);
+    }
+
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (FUNCIONES SEPARADAS) ▲▲▲ ---
+
     
     async function handleAdminAction(actionType, targetUserId, newValue, buttonEl) {
         if (!targetUserId) {
@@ -695,21 +830,32 @@ export function initAdminManager() {
         }
         // --- ▲▲▲ FIN DE NUEVA LÓGICA (Submit de Crear Usuario) ▲▲▲ ---
 
-
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (PAGINACIÓN CON ESTADO SEPARADO) ▼▼▼ ---
         if (action === 'admin-page-next' || action === 'admin-page-prev') {
             event.preventDefault();
             hideTooltip();
             
             const toolbar = button.closest('.page-toolbar-floating[data-current-page]');
             if (!toolbar) return;
-            
-            const totalPages = parseInt(toolbar.dataset.totalPages, 10);
-            let nextPage = (action === 'admin-page-next') ? currentPage + 1 : currentPage - 1;
+            const section = button.closest('.section-content');
+            if (!section) return;
 
-            if (nextPage >= 1 && nextPage <= totalPages && nextPage !== currentPage) {
-                currentPage = nextPage; 
-                clearAdminUserSelection(); 
-                fetchAndRenderUsers();  
+            const totalPages = parseInt(toolbar.dataset.totalPages, 10);
+            
+            if (section.dataset.section === 'admin-users') {
+                let nextPage = (action === 'admin-page-next') ? userCurrentPage + 1 : userCurrentPage - 1;
+                if (nextPage >= 1 && nextPage <= totalPages && nextPage !== userCurrentPage) {
+                    userCurrentPage = nextPage; 
+                    clearAdminUserSelection(); 
+                    fetchAndRenderUsers();  
+                }
+            } else if (section.dataset.section === 'admin-groups') {
+                let nextPage = (action === 'admin-page-next') ? groupCurrentPage + 1 : groupCurrentPage - 1;
+                if (nextPage >= 1 && nextPage <= totalPages && nextPage !== groupCurrentPage) {
+                    groupCurrentPage = nextPage;
+                    // (clearAdminGroupSelection();) // Aún no hay selección de grupos
+                    fetchAndRenderGroups();
+                }
             }
             return;
         }
@@ -718,7 +864,9 @@ export function initAdminManager() {
             event.preventDefault();
             const searchButton = button;
             const isActive = searchButton.classList.contains('active');
-            
+            const section = button.closest('.section-content');
+            if (!section) return;
+
             closeAllToolbarModes(); 
 
             if (!isActive) {
@@ -727,17 +875,28 @@ export function initAdminManager() {
                 const searchInput = document.getElementById('page-search-bar-container')?.querySelector('.page-search-input');
                 if (searchInput) searchInput.value = '';
                 
-                if (currentSearch !== '') {
-                    currentSearch = ''; 
-                    currentPage = 1;
-                    hideTooltip();
-                    fetchAndRenderUsers(); 
+                if (section.dataset.section === 'admin-users') {
+                    if (userCurrentSearch !== '') {
+                        userCurrentSearch = ''; 
+                        userCurrentPage = 1;
+                        hideTooltip();
+                        fetchAndRenderUsers(); 
+                    }
+                } else if (section.dataset.section === 'admin-groups') {
+                    if (groupCurrentSearch !== '') {
+                        groupCurrentSearch = '';
+                        groupCurrentPage = 1;
+                        hideTooltip();
+                        fetchAndRenderGroups();
+                    }
                 }
             }
             return;
         }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (PAGINACIÓN Y BÚSQUEDA) ▲▲▲ ---
         
         if (action === 'toggleModulePageFilter') {
+            // (Esto solo aplica a admin-users por ahora, así que no se necesita lógica condicional)
             event.stopPropagation(); 
             const filterButton = button;
             const isActive = filterButton.classList.contains('active');
@@ -822,14 +981,14 @@ export function initAdminManager() {
             const newSort = button.dataset.sort;
             const newOrder = button.dataset.order;
 
-            if (currentSort === newSort && currentOrder === newOrder) {
+            if (userCurrentSort === newSort && userCurrentOrder === newOrder) {
                 return; 
             }
 
             if (newSort !== undefined && newOrder !== undefined) {
-                currentSort = newSort;
-                currentOrder = newOrder;
-                currentPage = 1;
+                userCurrentSort = newSort;
+                userCurrentOrder = newOrder;
+                userCurrentPage = 1;
                 
                 const menuList = button.closest('.menu-list');
                 if (menuList) {
@@ -898,6 +1057,7 @@ export function initAdminManager() {
         }
     });
 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (BÚSQUEDA CON ESTADO SEPARADO) ▼▼▼ ---
     document.body.addEventListener('keydown', function(event) {
         const searchInput = event.target.closest('.page-search-input');
         if (!searchInput || event.key !== 'Enter') {
@@ -908,14 +1068,22 @@ export function initAdminManager() {
         hideTooltip();
         
         const newQuery = searchInput.value;
-        
-        if (currentSearch === newQuery) return; 
-        
-        currentSearch = newQuery;
-        currentPage = 1; 
-        
-        fetchAndRenderUsers(); 
+        const section = searchInput.closest('.section-content');
+        if (!section) return;
+
+        if (section.dataset.section === 'admin-users') {
+            if (userCurrentSearch === newQuery) return; 
+            userCurrentSearch = newQuery;
+            userCurrentPage = 1; 
+            fetchAndRenderUsers(); 
+        } else if (section.dataset.section === 'admin-groups') {
+            if (groupCurrentSearch === newQuery) return;
+            groupCurrentSearch = newQuery;
+            groupCurrentPage = 1;
+            fetchAndRenderGroups();
+        }
     });
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (BÚSQUEDA) ▲▲▲ ---
 
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {

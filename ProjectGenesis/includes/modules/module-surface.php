@@ -78,7 +78,14 @@
                             </div>
                         </div>
                         
-                    <?php 
+                        <div class="menu-link" data-action="toggleSectionAdminManageGroups">
+                            <div class="menu-link-icon">
+                                <span class="material-symbols-rounded">groups</span>
+                            </div>
+                            <div class="menu-link-text">
+                                <span data-i18n="sidebar.admin.manageGroups">Gestionar Grupos</span> </div>
+                        </div>
+                        <?php 
                     elseif (isset($isHelpPage) && $isHelpPage): 
                     ?>
                         <div class="menu-link" data-action="toggleSectionHome">
