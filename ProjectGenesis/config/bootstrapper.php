@@ -224,9 +224,7 @@ $pathsToPages = [
     '/'           => 'home',
     '/explorer'   => 'explorer',
     '/join-group' => 'join-group',
-    // --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
     '/my-groups'  => 'my-groups',
-    // --- ▲▲▲ ¡FIN DE LÍNEA AÑADIDA! ▲▲▲ ---
     '/login'      => 'login',
     '/maintenance' => 'maintenance', 
     '/server-full' => 'server-full',
@@ -260,19 +258,20 @@ $pathsToPages = [
     '/admin/edit-user'          => 'admin-edit-user', 
     '/admin/server-settings'    => 'admin-server-settings', 
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     '/admin/manage-backups'     => 'admin-manage-backups',
-    '/admin/restore-backup'     => 'admin-restore-backup', // <-- ¡AÑADIDA!
-    '/admin/manage-logs'        => 'admin-manage-logs', // <-- ¡NUEVA LÍNEA AÑADIDA!
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+    '/admin/restore-backup'     => 'admin-restore-backup', 
+    '/admin/manage-logs'        => 'admin-manage-logs', 
 
-    // --- ▼▼▼ INICIO DE NUEVAS RUTAS (HELP) ▼▼▼ ---
+    // --- ▼▼▼ AÑADE ESTAS DOS LÍNEAS AQUÍ ▼▼▼ ---
+    '/admin/manage-groups'      => 'admin-manage-groups',
+    '/admin/edit-group'         => 'admin-edit-group',
+    // --- ▲▲▲ FIN DE LAS LÍNEAS A AÑADIR ▲▲▲ ---
+
     '/help/legal-notice'      => 'help-legal-notice',
     '/help/privacy-policy'    => 'help-privacy-policy',
     '/help/cookies-policy'    => 'help-cookies-policy',
     '/help/terms-conditions'  => 'help-terms-conditions',
     '/help/send-feedback'     => 'help-send-feedback',
-    // --- ▲▲▲ FIN DE NUEVAS RUTAS (HELP) ▲▲▲ ---
 ];
 
 // 3. Determinar la página actual y los tipos de página
