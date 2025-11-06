@@ -1,5 +1,5 @@
 // RUTA: assets/js/app-init.js
-// (CÓDIGO COMPLETO CORREGIDO)
+// (CÓDIGO MODIFICADO)
 
 import { initMainController } from './app/main-controller.js';
 import { initRouter } from './app/url-manager.js';
@@ -10,6 +10,9 @@ import { initAdminEditUserManager } from './modules/admin-edit-user-manager.js';
 import { initAdminServerSettingsManager } from './modules/admin-server-settings-manager.js';
 import { initAdminBackupModule } from './modules/admin-backup-module.js'; 
 import { initGroupsManager } from './modules/groups-manager.js'; 
+// --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+import { initChatManager } from './modules/chat-manager.js';
+// --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager, getTranslation } from './services/i18n-manager.js'; 
 import { initTooltipManager } from './services/tooltip-manager.js'; 
@@ -120,6 +123,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     initAdminServerSettingsManager();
     initAdminBackupModule();
     initGroupsManager(); 
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    initChatManager(); // Inicializa el nuevo módulo de chat
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     initRouter(); 
     
@@ -198,7 +204,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         else if (data.type === 'force_logout') {
                             console.log("[WS] Recibida orden de desconexión forzada (logout o reactivación).");
                             
-                            window.showAlert(getTranslation('js.logout.forced') || 'Tu sesión ha caducado, por favor inicia sesión de nuevo.', 'info', 5000);
+                            window.showAlert(getTranslation('js.logout.forced') || 'Tu sesión ha caducado o ha sido cerrada desde otro dispositivo. Por favor, inicia sesión de nuevo.', 'info', 5000);
                             
                             setTimeout(() => {
                                 window.location.reload();

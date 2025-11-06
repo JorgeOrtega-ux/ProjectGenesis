@@ -237,11 +237,16 @@ if (!empty($current_group_members)) {
             </div>
 
             <div class="chat-layout__bottom <?php echo (!isset($current_group_info) || !$current_group_info) ? 'hidden' : ''; ?>">
-                <div class="chat-input-container">
+                
+                <input type="file" id="chat-file-input" class="visually-hidden" accept="image/png, image/jpeg, image/gif, image/webp" multiple>
+
+                <div class="chat-input-container" id="chat-input-wrapper"> <div class="chat-input__previews" id="chat-preview-container">
+                        </div>
+
                     <div class="chat-input__text-area" contenteditable="true" data-placeholder="Placeholder"></div>
                     
                     <div class="chat-input__buttons-row">
-                        <button class="chat-input__button chat-input__button--attach" data-tooltip="Adjuntar">
+                        <button class="chat-input__button chat-input__button--attach" id="chat-attach-button" data-tooltip="Adjuntar">
                             <span class="material-symbols-rounded">add</span>
                         </button>
                         <button class="chat-input__button chat-input__button--send" data-tooltip="Enviar">
@@ -250,7 +255,7 @@ if (!empty($current_group_members)) {
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
         </div>
     <div class="module-content module-members-surface body-title disabled" data-module="moduleGroupMembers">
         <div class="menu-content">
