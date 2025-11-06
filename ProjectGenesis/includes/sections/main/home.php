@@ -7,6 +7,7 @@
 // $pdo y $_SESSION['user_id'] están disponibles
 
 $user_groups = []; // Para el Popover
+$current_group_members = []; // <-- ¡NUEVO! Para el panel de miembros
 
 if (isset($_SESSION['user_id'], $pdo)) {
     
@@ -28,6 +29,26 @@ if (isset($_SESSION['user_id'], $pdo)) {
     } catch (PDOException $e) {
         logDatabaseError($e, 'home.php - load user groups for popover');
     }
+
+    // --- ▼▼▼ ¡NUEVA LÓGICA! OBTENER MIEMBROS SI HAY GRUPO SELECCIONADO ▼▼▼ ---
+    if (isset($current_group_info) && $current_group_info) {
+        try {
+            $stmt_members = $pdo->prepare(
+                "SELECT u.id, u.username, u.profile_image_url, u.role as user_role, ug.role as group_role
+                 FROM users u
+                 JOIN user_groups ug ON u.id = ug.user_id
+                 WHERE ug.group_id = ?
+                 ORDER BY ug.role ASC, u.username ASC" // Ordenar por rol y luego nombre
+            );
+            $stmt_members->execute([$current_group_info['id']]);
+            $current_group_members = $stmt_members->fetchAll();
+        } catch (PDOException $e) {
+            logDatabaseError($e, 'home.php - load group members');
+            // $current_group_members se mantendrá vacío
+        }
+    }
+    // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
+
 }
 
 // 2. Preparar el texto para el H1 (basado en la variable del router)
@@ -75,6 +96,18 @@ if (isset($current_group_info) && $current_group_info) {
                     </div>
 
                 <div class="page-toolbar-right">
+                    <!-- --- ▼▼▼ ¡NUEVO BOTÓN DE MIEMBROS AÑADIDO! ▼▼▼ --- -->
+                    <button type="button"
+                        class="page-toolbar-button"
+                        id="toggle-members-panel-btn"
+                        data-action="toggleModuleGroupMembers"
+                        data-tooltip="header.buttons.groupMembers"
+                        <?php echo (!isset($current_group_info) || !$current_group_info) ? 'disabled' : ''; ?>
+                        > 
+                        <span class="material-symbols-rounded">group</span>
+                    </button>
+                    <!-- --- ▲▲▲ FIN DE BOTÓN AÑADIDO ▲▲▲ --- -->
+
                     <button type="button"
                         class="page-toolbar-button"
                         data-action="toggleSectionMyGroups"
@@ -171,4 +204,64 @@ if (isset($current_group_info) && $current_group_info) {
             </div>
 
     </div>
+
+    <!-- --- ▼▼▼ ¡NUEVO PANEL DE MIEMBROS AÑADIDO! ▼▼▼ --- -->
+    <div class="module-content module-members-surface body-title disabled" data-module="moduleGroupMembers">
+        <div class="menu-content">
+            
+            <div class="members-header">
+                <h3 class="members-title" data-i18n="members.title">Miembros del Grupo</h3>
+                <button class="modal-close-btn" data-action="toggleModuleGroupMembers">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+            
+            <div class="members-list-container">
+                <?php if (!isset($current_group_info) || !$current_group_info): ?>
+                    
+                    <div class="members-empty-state">
+                        <span class="material-symbols-rounded">group_off</span>
+                        <p data-i18n="members.noGroup">Selecciona un grupo para ver sus miembros.</p>
+                    </div>
+
+                <?php elseif (empty($current_group_members)): ?>
+
+                    <div class="members-empty-state">
+                        <span class="material-symbols-rounded">person_off</span>
+                        <p data-i18n="members.noMembers">Este grupo aún no tiene miembros.</p>
+                    </div>
+
+                <?php else: ?>
+                    
+                    <div class="member-list">
+                    <?php 
+                    $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+                    foreach ($current_group_members as $member): 
+                        $avatarUrl = $member['profile_image_url'] ?? $defaultAvatar;
+                        if (empty($avatarUrl)) {
+                            $avatarUrl = "https://ui-avatars.com/api/?name=" . urlencode($member['username']) . "&size=100&background=e0e0e0&color=ffffff";
+                        }
+                    ?>
+                        <div class="member-item" data-role="<?php echo htmlspecialchars($member['group_role']); ?>" data-user-role="<?php echo htmlspecialchars($member['user_role']); ?>">
+                            <div class="component-card__avatar member-avatar" data-role="<?php echo htmlspecialchars($member['user_role']); ?>">
+                                <img src="<?php echo htmlspecialchars($avatarUrl); ?>"
+                                     alt="<?php echo htmlspecialchars($member['username']); ?>"
+                                     class="component-card__avatar-image">
+                            </div>
+                            <div class="member-info">
+                                <span class="member-name"><?php echo htmlspecialchars($member['username']); ?></span>
+                                <span class="member-role" data-i18n="members.role.<?php echo htmlspecialchars($member['group_role']); ?>">
+                                    <?php echo ucfirst($member['group_role']); ?>
+                                </span>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                    </div>
+
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <!-- --- ▲▲▲ FIN DE PANEL AÑADIDO ▲▲▲ --- -->
+
 </div>

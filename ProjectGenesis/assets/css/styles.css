@@ -144,6 +144,179 @@ body {
     box-shadow: 0 4px 12px #00000020;
 }
 
+
+/* --- ▼▼▼ ¡ESTILOS CORREGIDOS PARA EL PANEL DE MIEMBROS! ▼▼▼ --- */
+
+.module-content.module-members-surface {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 8px;
+    height: 100%;
+    width: 300px; /* Ancho del panel de miembros */
+    z-index: 998; /* Justo debajo del menú principal (999) */
+
+    
+    /* --- ¡MODIFICACIÓN! --- */
+    /* Se eliminan 'transform' y 'transition' */
+    /* El display es controlado por .active y .disabled */
+    
+    flex-direction: column;
+}
+
+/* Se elimina .module-content.module-members-surface.active */
+
+.module-members-surface .menu-content {
+    width: 100%;
+    height: 100%;    background-color: #ffffff;
+    box-shadow: -4px 0 12px #00000020;
+    display: flex;
+    border-radius: 8px;
+    flex-direction: column;
+    padding: 0; /* Sin padding, el header y el content lo manejan */
+}
+
+.members-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid #00000020;
+    flex-shrink: 0;
+}
+
+.members-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.members-list-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 16px;
+    /* Estilos para el scrollbar */
+    scroll-behavior: smooth;
+    scrollbar-color: #00000080 transparent;
+    scrollbar-width: thin;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.members-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 100%;
+    color: #6b7280;
+    padding: 24px;
+}
+
+.members-empty-state .material-symbols-rounded {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.members-empty-state p {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.member-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.member-item:hover {
+    background-color: #f5f5fa;
+}
+
+.member-avatar {
+    width: 40px; /* Más pequeño que el de settings */
+    height: 40px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative; /* Para los bordes de rol */
+}
+
+.member-avatar .component-card__avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    position: relative;
+    z-index: 1;
+    border-radius: 50%;
+}
+
+/* Bordes de rol (copiados de .component-card__avatar) */
+.member-avatar::before {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    top: -3px; /* Más pequeño */
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border: 2px solid transparent;
+    z-index: 2;
+    background-image: none;
+}
+.member-avatar[data-user-role="user"]::before { border-color: #cccccc; }
+.member-avatar[data-user-role="moderator"]::before { border-color: #0000FF; }
+.member-avatar[data-user-role="administrator"]::before { border-color: #FF0000; }
+.member-avatar[data-user-role="founder"]::before {
+    border: none;
+    background-image: conic-gradient(from 300deg, #D32029 0deg 90deg, #206BD3 90deg 210deg, #28A745 210deg 300deg, #FFC107 300deg 360deg);
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+}
+
+
+.member-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.member-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.member-role {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+/* Roles de grupo (opcional, pero útil) */
+.member-item[data-role="owner"] .member-role,
+.member-item[data-role="admin"] .member-role {
+    color: #c62828; /* Resaltar roles de admin/owner */
+    font-weight: 600;
+}
+/* --- ▲▲▲ FIN DE ESTILOS DE MIEMBROS ▲▲▲ --- */
+
+
 /* ====================================== */
 /* ============= POPOVERS =============== */
 /* ====================================== */
@@ -520,6 +693,13 @@ body {
         box-shadow: unset;
         border: none;
     }
+
+    /* --- ▼▼▼ ¡NUEVOS ESTILOS PARA PANEL DE MIEMBROS (MÓVIL)! ▼▼▼ --- */
+    .module-content.module-members-surface {
+        width: 100%; /* Ocupar todo el ancho en móvil */
+        box-shadow: 0 0 12px #00000020; /* Sombra ligera */
+    }
+    /* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */
 }
 
 @media (max-width: 768px) {
