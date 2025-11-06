@@ -2294,11 +2294,13 @@
 
 .chat-input__buttons-row {
     display: flex;
-    justify-content: flex-end; /* Alinea los botones a la derecha */
-    gap: 4px; /* Espacio entre los botones */
-    padding-top: 4px; /* Pequeño padding arriba para separarlo del text area */
-    padding-right: 4px; /* Ajuste para que los botones no se peguen al borde del input */
-    padding-bottom: 4px; /* Ajuste para que los botones no se peguen al borde del input */
+    justify-content: space-between; /* <-- MODIFICADO (de 'flex-end') */
+    align-items: center;          /* <-- AÑADIDO (buena práctica) */
+    gap: 4px;
+    padding-top: 4px;
+    padding-right: 4px;
+    padding-bottom: 4px;
+    padding-left: 4px;            /* <-- AÑADIDO (para simetría) */
 }
 
 .chat-input__button {
