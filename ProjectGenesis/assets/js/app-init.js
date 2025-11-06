@@ -1,5 +1,5 @@
-// FILE: assets/js/app-init.js
-// (CÓDIGO MODIFICADO PARA USAR EL MÓDULO DE BACKUP COMBINADO)
+// RUTA: assets/js/app-init.js
+// (CÓDIGO COMPLETO CORREGIDO)
 
 import { initMainController } from './app/main-controller.js';
 import { initRouter } from './app/url-manager.js';
@@ -8,22 +8,69 @@ import { initSettingsManager } from './modules/settings-manager.js';
 import { initAdminManager } from './modules/admin-manager.js';
 import { initAdminEditUserManager } from './modules/admin-edit-user-manager.js';
 import { initAdminServerSettingsManager } from './modules/admin-server-settings-manager.js';
-// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-// Se eliminan las importaciones de admin-backups-manager y admin-restore-backup-manager
-// Se añade la importación del nuevo módulo combinado
 import { initAdminBackupModule } from './modules/admin-backup-module.js'; 
-import { initGroupsManager } from './modules/groups-manager.js'; // <-- MÓDULO AÑADIDO
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+import { initGroupsManager } from './modules/groups-manager.js'; 
 import { showAlert } from './services/alert-manager.js'; 
-import { initI18nManager, getTranslation } from './services/i18n-manager.js'; // <-- ¡MODIFICADO! IMPORTAR GETTRANSLATION
+import { initI18nManager, getTranslation } from './services/i18n-manager.js'; 
 import { initTooltipManager } from './services/tooltip-manager.js'; 
 
 const htmlEl = document.documentElement;
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
-window.lastKnownUserCount = null; // Almacén global para el conteo
-// --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
+window.lastKnownUserCount = null; 
+
+// --- ▼▼▼ INICIO DE NUEVAS FUNCIONES DE PRESENCIA ▼▼▼ ---
+
+/**
+ * Almacén global para saber quién está conectado.
+ * Se actualiza por WebSocket.
+ */
+window.onlineUserIds = new Set();
+
+/**
+ * Actualiza la UI para un usuario específico, añadiendo o quitando la clase 'online'.
+ * @param {string|number} userId - El ID del usuario a actualizar.
+ * @param {string} status - "online" o "offline".
+ */
+window.setMemberStatus = (userId, status) => {
+    // Buscar *todos* los avatares de miembros que coincidan con este ID
+    // (Puede estar en el panel de miembros, en listas de chat, etc.)
+    const avatars = document.querySelectorAll(`.member-avatar[data-user-id="${userId}"]`);
+    
+    if (avatars.length === 0) {
+        return; // El usuario no está visible en la UI
+    }
+
+    avatars.forEach(avatar => {
+        if (status === 'online') {
+            avatar.classList.add('online');
+        } else {
+            avatar.classList.remove('online');
+        }
+    });
+};
+
+/**
+ * Itera sobre el Set global y aplica el estado 'online' a todos
+ * los miembros visibles en la UI.
+ * Se llama al cargar una página (ej. home) o al recibir la lista de presencia.
+ */
+window.applyOnlineStatusToAllMembers = () => {
+    // 1. Limpiar todos los estados "online" existentes
+    document.querySelectorAll('.member-avatar.online').forEach(avatar => {
+        avatar.classList.remove('online');
+    });
+
+    // 2. Aplicar el estado "online" a los usuarios del Set
+    if (window.onlineUserIds && window.onlineUserIds.size > 0) {
+        window.onlineUserIds.forEach(userId => {
+            window.setMemberStatus(userId, 'online');
+        });
+    }
+};
+
+// --- ▲▲▲ FIN DE NUEVAS FUNCIONES DE PRESENCIA ▲▲▲ ---
+
 
 function applyTheme(theme) {
     if (theme === 'light') {
@@ -66,29 +113,19 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     initMainController();
     
-    // Los listeners de los módulos deben registrarse ANTES que el router
-    
     initAuthManager();
     initSettingsManager();
     initAdminManager();
     initAdminEditUserManager();
     initAdminServerSettingsManager();
-    
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-    // Se eliminan las llamadas a initAdminBackupsManager() y initAdminRestoreBackupManager()
-    // Se añade la llamada al nuevo módulo combinado
     initAdminBackupModule();
-    initGroupsManager(); // <-- MÓDULO AÑADIDO
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+    initGroupsManager(); 
 
-    // El Router se inicializa al final
     initRouter(); 
     
     initTooltipManager(); 
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLIENTE WEBSOCKET PARA CONTEO Y EXPULSIÓN) ▼▼▼ ---
     
-    // window.isUserLoggedIn (definido en main-layout.php)
     if (window.isUserLoggedIn) {
         let ws;
         
@@ -98,26 +135,24 @@ document.addEventListener('DOMContentLoaded', async function () {
         function connectWebSocket() {
             try {
                 ws = new WebSocket(wsUrl);
-                window.ws = ws; // Hacemos 'ws' global por si se necesita
+                window.ws = ws; 
 
                 ws.onopen = () => {
                     console.log("[WS] Conectado al servidor en:", wsUrl);
                     
-                    // --- ¡NUEVO! ENVIAR MENSAJE DE AUTENTICACIÓN ---
-                    // window.userId y window.csrfToken vienen de main-layout.php
                     const authMessage = {
                         type: "auth",
-                        user_id: window.userId || 0,       // Añadido en main-layout.php
-                        session_id: window.csrfToken || "" // Usamos el token CSRF como ID de sesión
+                        user_id: window.userId || 0,       
+                        session_id: window.csrfToken || "" 
                     };
                     ws.send(JSON.stringify(authMessage));
                 };
 
+                // --- ▼▼▼ INICIO DE MANEJADOR DE MENSAJES MODIFICADO ▼▼▼ ---
                 ws.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
                         
-                        // Lógica existente para 'user_count'
                         if (data.type === 'user_count') {
                             window.lastKnownUserCount = data.count; 
                             const display = document.getElementById('concurrent-users-display');
@@ -126,22 +161,49 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 display.setAttribute('data-i18n', ''); 
                             }
                         } 
-                        // --- ▼▼▼ ¡INICIO DE LA LÓGICA MODIFICADA! ▼▼▼ ---
-                        // Lógica para 'force_logout' (Expulsión por otra sesión O reactivación)
+                        
+                        // --- ¡NUEVO! Caso 1: Lista inicial de presencia ---
+                        else if (data.type === 'presence_list') {
+                            if (data.user_ids && Array.isArray(data.user_ids)) {
+                                window.onlineUserIds.clear(); // Limpiar el Set
+                                data.user_ids.forEach(id => window.onlineUserIds.add(id));
+                                
+                                console.log(`[WS-PRESENCE] Recibida lista de ${window.onlineUserIds.size} usuarios online.`);
+                                
+                                // Aplicar a la UI (si la lista de miembros está visible)
+                                if (window.applyOnlineStatusToAllMembers) {
+                                    window.applyOnlineStatusToAllMembers();
+                                }
+                            }
+                        }
+
+                        // --- ¡NUEVO! Caso 2: Un usuario cambia de estado ---
+                        else if (data.type === 'user_status') {
+                            if (data.user_id && data.status) {
+                                console.log(`[WS-STATUS] Usuario ${data.user_id} está ${data.status}`);
+                                if (data.status === 'online') {
+                                    window.onlineUserIds.add(data.user_id);
+                                } else {
+                                    window.onlineUserIds.delete(data.user_id);
+                                }
+                                
+                                // Aplicar a la UI (si el miembro está visible)
+                                if (window.setMemberStatus) {
+                                    window.setMemberStatus(data.user_id, data.status);
+                                }
+                            }
+                        }
+
+                        // --- (Lógica existente) ---
                         else if (data.type === 'force_logout') {
                             console.log("[WS] Recibida orden de desconexión forzada (logout o reactivación).");
                             
-                            // (Añade 'js.logout.forced' a tus JSONs: "Tu sesión ha caducado, por favor inicia sesión de nuevo.")
                             window.showAlert(getTranslation('js.logout.forced') || 'Tu sesión ha caducado, por favor inicia sesión de nuevo.', 'info', 5000);
                             
-                            // Forzar un refresco.
-                            // 1. Si fue un logout, bootstrapper verá el token inválido -> /login
-                            // 2. Si fue una reactivación, bootstrapper verá el token inválido -> /login
                             setTimeout(() => {
                                 window.location.reload();
-                            }, 3000); // 3 seg para que el usuario lea el aviso
+                            }, 3000); 
                         }
-                        // Lógica para 'account_status_update' (SÓLO Suspensión o Eliminación)
                         else if (data.type === 'account_status_update') {
                             const newStatus = data.status;
                             
@@ -150,14 +212,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 console.log(`[WS] Recibida orden de estado: ${newStatus}`);
                                 window.showAlert(getTranslation(msgKey), 'error', 5000);
 
-                                // Redirigir a la página de estado
                                 setTimeout(() => {
                                     window.location.href = `${window.projectBasePath}/account-status/${newStatus}`;
                                 }, 3000);
                             }
-                            // Ya no hay 'else if (newStatus === 'active')'
                         }
-                        // --- ▲▲▲ ¡FIN DE LA LÓGICA MODIFICADA! ▲▲▲ ---
+                        // --- ▲▲▲ FIN DE MANEJADOR DE MENSAJES MODIFICADO ▲▲▲ ---
+                        
                     } catch (e) {
                         console.error("[WS] Error al parsear mensaje:", e);
                     }
@@ -171,6 +232,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                         display.textContent = '---';
                         display.setAttribute('data-i18n', ''); 
                     }
+                    
+                    // Limpiar todos los indicadores de "online"
+                    window.onlineUserIds.clear();
+                    if (window.applyOnlineStatusToAllMembers) {
+                        window.applyOnlineStatusToAllMembers();
+                    }
                 };
 
                 ws.onerror = (error) => {
@@ -181,17 +248,14 @@ document.addEventListener('DOMContentLoaded', async function () {
                 console.error("[WS] No se pudo crear la conexión WebSocket:", e);
             }
         }
-
-        // Iniciar la conexión
-        connectWebSocket();
-
-        // Asegurarse de cerrar la conexión al cerrar la pestaña
+        
+        // (El resto de la lógica de 'beforeunload' se omite por brevedad,
+        // pero debe permanecer en tu archivo si ya existía)
+        
         window.addEventListener('beforeunload', () => {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.close(1000, "Navegación de usuario"); 
             }
         });
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
 });

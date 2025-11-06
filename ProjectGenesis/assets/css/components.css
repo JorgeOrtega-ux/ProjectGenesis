@@ -2201,3 +2201,23 @@
     font-weight: 500;
 }
 /* --- ▲▲▲ FIN DE NUEVOS ESTILOS (MODAL GRUPOS) ▲▲▲ --- */
+.member-avatar::after {
+    content: '';
+    position: absolute;
+    /* --- ▼▼▼ AJUSTA ESTOS VALORES PARA POSICIONAR EL PUNTO ▼▼▼ --- */
+    bottom: -2px; /* Ligeramente fuera del avatar */
+    right: -2px;  /* Ligeramente fuera del avatar */
+    /* --- ▲▲▲ FIN DE AJUSTE ▲▲▲ --- */
+    width: 10px;  /* Tamaño del punto */
+    height: 10px; /* Tamaño del punto */
+    background-color: #c62828; /* Rojo (offline) por defecto */
+    border-radius: 50%;
+    border: 2px solid #ffffff; /* Borde blanco para separar del avatar/borde de rol */
+    z-index: 3; /* Debe estar encima del borde de rol (z-index: 2) */
+    box-sizing: border-box;
+    transition: background-color 0.3s ease;
+}
+
+.member-avatar.online::after {
+    background-color: #4CAF50; /* Verde (online) */
+}

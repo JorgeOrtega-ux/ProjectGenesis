@@ -1,12 +1,10 @@
 // RUTA: assets/js/app/url-manager.js
-// (CÓDIGO MODIFICADO PARA RUTAS DINÁMICAS DE GRUPO)
+// (CÓDIGO COMPLETO CORREGIDO)
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
 import { applyTranslations, getTranslation } from '../services/i18n-manager.js';
-// --- ▼▼▼ INICIO DE LA CORRECCIÓN (IMPORTAR) ▼▼▼ ---
 import { hideTooltip } from '../services/tooltip-manager.js';
-// --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
 const contentContainer = document.querySelector('.main-sections');
 const pageLoader = document.getElementById('page-loader');
@@ -14,16 +12,15 @@ const pageLoader = document.getElementById('page-loader');
 let loaderTimer = null;
 let currentMenuType = null; 
 
+// ... [El objeto 'routes' y 'paths' permanecen SIN CAMBIOS] ...
 const routes = {
     'toggleSectionHome': 'home',
     'toggleSectionExplorer': 'explorer',
     'toggleSectionJoinGroup': 'join-group',
-    // --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
     'toggleSectionMyGroups': 'my-groups',
-    // --- ▲▲▲ ¡FIN DE LÍNEA AÑADIDA! ▲▲▲ ---
     'toggleSectionLogin': 'login',
-    'toggleSectionMaintenance': 'maintenance', // <-- ¡NUEVA LÍNEA!
-    'toggleSectionServerFull': 'server-full', // <--- AÑADE ESTA LÍNEA
+    'toggleSectionMaintenance': 'maintenance', 
+    'toggleSectionServerFull': 'server-full', 
 
     'toggleSectionRegisterStep1': 'register-step1',
     'toggleSectionRegisterStep2': 'register-step2',
@@ -50,33 +47,26 @@ const routes = {
     'toggleSectionAdminManageUsers': 'admin-manage-users', 
     'toggleSectionAdminCreateUser': 'admin-create-user', 
     'toggleSectionAdminEditUser': 'admin-edit-user', 
-    'toggleSectionAdminServerSettings': 'admin-server-settings', // <-- ¡NUEVA LÍNEA!
+    'toggleSectionAdminServerSettings': 'admin-server-settings', 
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     'toggleSectionAdminManageBackups': 'admin-manage-backups',
-    // 'toggleSectionAdminRestoreBackup': 'admin-restore-backup', // <-- ¡ELIMINADA!
-    'toggleSectionAdminManageLogs': 'admin-manage-logs', // <-- ¡NUEVA LÍNEA!
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+    'toggleSectionAdminManageLogs': 'admin-manage-logs', 
 
-    // --- ▼▼▼ INICIO DE NUEVAS RUTAS (HELP) ▼▼▼ ---
     'toggleSectionHelpLegalNotice': 'help-legal-notice',
     'toggleSectionHelpPrivacyPolicy': 'help-privacy-policy',
     'toggleSectionHelpCookiesPolicy': 'help-cookies-policy',
     'toggleSectionHelpTermsConditions': 'help-terms-conditions',
     'toggleSectionHelpSendFeedback': 'help-send-feedback',
-    // --- ▲▲▲ FIN DE NUEVAS RUTAS (HELP) ▲▲▲ ---
 };
 
 const paths = {
     '/': 'toggleSectionHome',
     '/explorer': 'toggleSectionExplorer',
     '/join-group': 'toggleSectionJoinGroup',
-    // --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
     '/my-groups': 'toggleSectionMyGroups',
-    // --- ▲▲▲ ¡FIN DE LÍNEA AÑADIDA! ▲▲▲ ---
     '/login': 'toggleSectionLogin',
-    '/maintenance': 'toggleSectionMaintenance', // <-- ¡NUEVA LÍNEA!
-    '/server-full': 'toggleSectionServerFull', // <--- AÑADE ESTA LÍNEA
+    '/maintenance': 'toggleSectionMaintenance', 
+    '/server-full': 'toggleSectionServerFull', 
 
     '/register': 'toggleSectionRegisterStep1',
     '/register/additional-data': 'toggleSectionRegisterStep2',
@@ -103,22 +93,18 @@ const paths = {
     '/admin/manage-users': 'toggleSectionAdminManageUsers', 
     '/admin/create-user': 'toggleSectionAdminCreateUser', 
     '/admin/edit-user': 'toggleSectionAdminEditUser', 
-    '/admin/server-settings': 'toggleSectionAdminServerSettings', // <-- ¡NUEVA LÍNEA!
+    '/admin/server-settings': 'toggleSectionAdminServerSettings', 
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     '/admin/manage-backups': 'toggleSectionAdminManageBackups',
-    // '/admin/restore-backup': 'toggleSectionAdminRestoreBackup', // <-- ¡ELIMINADA!
-    '/admin/manage-logs': 'toggleSectionAdminManageLogs', // <-- ¡NUEVA LÍNEA!
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+    '/admin/manage-logs': 'toggleSectionAdminManageLogs', 
 
-    // --- ▼▼▼ INICIO DE NUEVAS RUTAS (HELP) ▼▼▼ ---
     '/help/legal-notice': 'toggleSectionHelpLegalNotice',
     '/help/privacy-policy': 'toggleSectionHelpPrivacyPolicy',
     '/help/cookies-policy': 'toggleSectionHelpCookiesPolicy',
     '/help/terms-conditions': 'toggleSectionHelpTermsConditions',
     '/help/send-feedback': 'toggleSectionHelpSendFeedback',
-    // --- ▲▲▲ FIN DE NUEVAS RUTAS (HELP) ▲▲▲ ---
 };
+
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
 
@@ -148,23 +134,21 @@ async function loadPage(page, action, fetchParams = null) {
     
     const isSettingsPage = page.startsWith('settings-');
     const isAdminPage = page.startsWith('admin-');
-    const isHelpPage = page.startsWith('help-'); // <-- ¡NUEVA LÍNEA!
+    const isHelpPage = page.startsWith('help-'); 
     
     let menuType = 'main';
     if (isSettingsPage) {
         menuType = 'settings';
     } else if (isAdminPage) {
         menuType = 'admin';
-    } else if (isHelpPage) { // <-- ¡NUEVO BLOQUE!
+    } else if (isHelpPage) { 
         menuType = 'help';
     }
 
     if (currentMenuType === null || currentMenuType !== menuType) {
         currentMenuType = menuType; 
         
-        // ▼▼▼ CAMBIO AQUÍ ▼▼▼
         fetch(`${basePath}/config/routing/menu_router.php?type=${menuType}`)
-        // ▲▲▲ FIN DEL CAMBIO ▲▲▲
             .then(res => res.text())
             .then(menuHtml => {
                 const oldMenu = document.querySelector('[data-module="moduleSurface"]');
@@ -187,25 +171,18 @@ async function loadPage(page, action, fetchParams = null) {
     try {
         let queryString = '';
         
-        // ▼▼▼ INICIO DE LA MODIFICACIÓN (Usar fetchParams) ▼▼▼
-        // Crear un objeto URLSearchParams a partir de fetchParams (si existen)
         const params = new URLSearchParams(fetchParams || {});
         
-        // Si no se pasaron fetchParams, usar los de la URL del navegador (para paginación, etc.)
         if (params.toString() === '') {
              const browserQuery = window.location.search;
             if (browserQuery) {
                 queryString = browserQuery.substring(1); 
             }
         } else {
-            // Si SÍ se pasaron fetchParams (ej. uuid), usarlos
             queryString = params.toString();
         }
-        // ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
         
-        // ▼▼▼ CAMBIO AQUÍ ▼▼▼
         const fetchUrl = `${basePath}/config/routing/router.php?page=${page}${queryString ? `&${queryString}` : ''}`;
-        // ▲▲▲ FIN DEL CAMBIO ▲▲▲
 
         const response = await fetch(fetchUrl);
         
@@ -213,10 +190,15 @@ async function loadPage(page, action, fetchParams = null) {
 
         contentContainer.innerHTML = html;
         applyTranslations(contentContainer);
+        
+        // --- ▼▼▼ INICIO DE LÍNEA MODIFICADA ▼▼▼ ---
+        // Después de cargar el contenido Y las traducciones,
+        // aplicar el estado online/offline a la nueva UI.
+        if (window.applyOnlineStatusToAllMembers) {
+            window.applyOnlineStatusToAllMembers();
+        }
+        // --- ▲▲▲ FIN DE LÍNEA MODIFICADA ▲▲▲ ---
 
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
-        // Después de cargar el HTML y las traducciones,
-        // aplicar el conteo de usuarios que pudo llegar antes.
         if (page === 'admin-server-settings') {
             if (window.lastKnownUserCount !== null) {
                 const display = document.getElementById('concurrent-users-display');
@@ -226,7 +208,6 @@ async function loadPage(page, action, fetchParams = null) {
                 }
             }
         }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
 
         let link;
         if (page === 'register-step3') {
@@ -289,19 +270,15 @@ export function handleNavigation() {
     }
 
     let action = paths[path];
-    let fetchParams = null; // <-- Variable para guardar params dinámicos
+    let fetchParams = null; 
 
-    // ▼▼▼ INICIO DE LA MODIFICACIÓN (Router dinámico) ▼▼▼
     if (!action) {
-        // No es una ruta estática, ¿es una ruta de grupo?
-        // Regex para /c/UUID
         const groupMatch = path.match(/^\/c\/([a-f0-9\-]{36})$/i);
         if (groupMatch) {
-            action = 'toggleSectionHome'; // Cargar la home page
-            fetchParams = { uuid: groupMatch[1] }; // Pasar el UUID como parámetro
+            action = 'toggleSectionHome'; 
+            fetchParams = { uuid: groupMatch[1] }; 
         }
     }
-    // ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
 
     if (!action) {
         loadPage('404', null); 
@@ -311,7 +288,7 @@ export function handleNavigation() {
     const page = routes[action];
 
     if (page) {
-        loadPage(page, action, fetchParams); // <-- Pasar fetchParams a loadPage
+        loadPage(page, action, fetchParams); 
     } else {
         loadPage('404', null);
     }
@@ -341,32 +318,20 @@ function updateMenuState(currentAction) {
     if (currentAction === 'toggleSectionAdminEditUser') {
         menuAction = 'toggleSectionAdminManageUsers';
     }
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
     if (currentAction === 'toggleSectionAdminServerSettings') {
         menuAction = 'toggleSectionAdminServerSettings';
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     if (currentAction === 'toggleSectionAdminManageBackups') {
         menuAction = 'toggleSectionAdminManageBackups';
     }
-    // La regla para 'toggleSectionAdminRestoreBackup' se ha eliminado
-    
-    // --- ¡NUEVA LÍNEA! ---
-    // No necesitamos una acción de menú, pero si quisiéramos resaltarla:
     if (currentAction === 'toggleSectionAdminManageLogs') {
-         menuAction = 'toggleSectionAdminDashboard'; // Resalta 'Dashboard'
+         menuAction = 'toggleSectionAdminDashboard'; 
     }
-    // --- FIN NUEVA LÍNEA ---
     
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
-
-    // --- ▼▼▼ INICIO DE NUEVO BLOQUE (HELP) ▼▼▼ ---
     if (currentAction && currentAction.startsWith('toggleSectionHelp')) {
         menuAction = currentAction;
     }
-    // --- ▲▲▲ FIN DE NUEVO BLOQUE (HELP) ▲▲▲ ---
 
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
@@ -385,24 +350,16 @@ export function initRouter() {
 
     document.body.addEventListener('click', e => {
       const link = e.target.closest(
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir .header-button y la nueva acción) ▼▼▼ ---
             '.header-button[data-action*="toggleSection"], .menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/help"], a[href*="/my-groups"], .component-button[data-action*="toggleSection"], .component-action-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"]'
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         );
 
         if (link) {
             
-            // --- ▼▼▼ INICIO DE LA CORRECCIÓN (LLAMAR) ▼▼▼ ---
-            // Ocultar cualquier tooltip abierto tan pronto como se haga clic en un enlace de navegación.
             hideTooltip();
-            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
-            // --- ▼▼▼ MODIFICACIÓN: Cambiado 'component-button' a 'component-action-button' ---
             if (link.classList.contains('component-action-button') && !link.hasAttribute('data-action') && !link.hasAttribute('data-nav-js')) { 
                 return;
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
 
             e.preventDefault();
 
@@ -411,21 +368,11 @@ export function initRouter() {
             if (link.hasAttribute('data-action')) {
                 action = link.getAttribute('data-action');
 
-                // --- ▼▼▼ ¡ESTA ES LA CORRECCIÓN! ▼▼▼ ---
                 if (action === 'toggleSectionAdminEditUser') {
-                    // Esta acción es especial y la maneja 'admin-manager.js'
-                    // porque necesita el ID del usuario seleccionado.
-                    // Detenemos este listener para que el otro pueda actuar.
                     e.stopImmediatePropagation();
                     return; 
                 }
-                // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
                 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (ELIMINADO) ▼▼▼ ---
-                // La regla 'toggleSectionAdminRestoreBackup' se ha eliminado
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
-
                 page = routes[action];
                 newPath = Object.keys(paths).find(key => paths[key] === action);
             } else {
@@ -480,7 +427,7 @@ export function initRouter() {
         initialMenuType = 'settings';
     } else if (initialPath.startsWith('/admin')) {
         initialMenuType = 'admin';
-    } else if (initialPath.startsWith('/help')) { // <-- ¡NUEVA LÍNEA!
+    } else if (initialPath.startsWith('/help')) { 
         initialMenuType = 'help';
     }
     currentMenuType = initialMenuType;

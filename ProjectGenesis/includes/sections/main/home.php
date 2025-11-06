@@ -280,8 +280,10 @@ if (!empty($current_group_members)) {
                                 }
                             ?>
                                 <div class="member-item" data-user-id="<?php echo htmlspecialchars($member['id']); ?>" data-user-role="<?php echo htmlspecialchars($member['user_role']); ?>">
-                                    <div class="component-card__avatar member-avatar" data-role="<?php echo htmlspecialchars($member['user_role']); ?>">
-                                        <img src="<?php echo htmlspecialchars($avatarUrl); ?>"
+                                    <div class="component-card__avatar member-avatar" 
+                                         data-role="<?php echo htmlspecialchars($member['user_role']); ?>"
+                                         data-user-id="<?php echo htmlspecialchars($member['id']); ?>">
+                                <img src="<?php echo htmlspecialchars($avatarUrl); ?>"
                                              alt="<?php echo htmlspecialchars($member['username']); ?>"
                                              class="component-card__avatar-image">
                                     </div>
