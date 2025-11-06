@@ -176,14 +176,27 @@ body {
     padding: 0; /* Sin padding, el header y el content lo manejan */
 }
 
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- */
 .members-header {
     display: flex;
-    justify-content: space-between;
+    /* justify-content: space-between; */ /* Se elimina para que el wrapper ocupe todo */
     align-items: center;
-    padding: 16px;
+    padding: 0; /* Se elimina padding para que el wrapper lo controle */
     border-bottom: 1px solid #00000020;
     flex-shrink: 0;
 }
+/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
+
+/* --- ▼▼▼ INICIO DE NUEVA REGLA ▼▼▼ --- */
+.members-title-wrapper {
+    flex-grow: 1; /* Ocupa todo el ancho */
+    text-align: center;  /* Solicitado */
+    border: 1px solid #00000020; /* Solicitado (usando color estándar) */
+    border-radius: 16px; /* Solicitado */
+    padding: 12px 16px; /* Padding interno */
+    margin: 16px; /* Margen exterior (reemplaza el padding del header) */
+}
+/* --- ▲▲▲ FIN DE NUEVA REGLA ▲▲▲ --- */
 
 .members-title {
     font-size: 18px;
@@ -230,14 +243,18 @@ body {
     line-height: 1.5;
 }
 
-/* NUEVO: Encabezado para el grupo (Fundadores, etc.) */
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN (NUEVA REGLA) ▼▼▼ --- */
 .member-list-heading {
     font-size: 16px;
     font-weight: 600;
     color: #1f2937;
     margin: 0;
-    padding: 0 8px; /* Pequeño padding para alinear */
+    padding: 8px 12px; /* Solicitado */
+    border: 1px solid #00000020; /* Solicitado (usando color estándar) */
+    border-radius: 16px; /* Solicitado (usando el mismo que .member-item) */
+    box-sizing: border-box; /* Añadido para consistencia */
 }
+/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
 
 .member-list {
     display: flex;
@@ -250,26 +267,35 @@ body {
     display: flex;
     align-items: center;
     gap: 8px; /* Espacio entre avatar y nombre */
-    padding: 4px 12px 4px 6px; /* Padding de la píldora */
-    border-radius: 50px; /* Bordes redondeados de píldora */
+    /* ▼▼▼ MODIFICADO ▼▼▼ */
+    padding: 8px 12px; /* Padding de la píldora (AJUSTADO) */
+    border-radius: 16px; /* Bordes redondeados de píldora (MODIFICADO) */
+    /* ▲▲▲ FIN MODIFICACIÓN ▲▲▲ */
     border: 1px solid #00000020;
-    width: fit-content; /* Se ajusta al contenido */
-    max-width: 200px; /* Ancho máximo antes de truncar */
+    /* ▼▼▼ MODIFICADO ▼▼▼ */
+    width: 100%; /* Se ajusta al contenido (MODIFICADO) */
+    max-width: 100%; /* Ancho máximo antes de truncar (MODIFICADO) */
+    /* ▲▲▲ FIN MODIFICACIÓN ▲▲▲ */
     transition: background-color 0.2s ease;
+    box-sizing: border-box; /* Añadido para que el padding no rompa el width 100% */
 }
+
 
 .member-item:hover {
     background-color: #f5f5fa;
 }
 
-/* MODIFICADO: Avatar más pequeño */
-.member-avatar {
-    width: 24px;
-    height: 24px;
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN (REGLA DE ESPECIFICIDAD) ▼▼▼ --- */
+/* MODIFICADO: Estilo del avatar (aumentar especificidad) */
+.component-card__avatar.member-avatar {
+    width: 25px;
+    height: 25px;
+/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
     border-radius: 50%;
     flex-shrink: 0;
     position: relative; /* Para los bordes de rol */
 }
+
 
 .member-avatar .component-card__avatar-image {
     width: 100%;

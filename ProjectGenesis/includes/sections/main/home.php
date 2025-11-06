@@ -123,7 +123,6 @@ if (!empty($current_group_members)) {
                     </div>
 
                 <div class="page-toolbar-right">
-                    <!-- --- ▼▼▼ ¡NUEVO BOTÓN DE MIEMBROS AÑADIDO! ▼▼▼ --- -->
                     <button type="button"
                         class="page-toolbar-button"
                         id="toggle-members-panel-btn"
@@ -133,8 +132,6 @@ if (!empty($current_group_members)) {
                         > 
                         <span class="material-symbols-rounded">group</span>
                     </button>
-                    <!-- --- ▲▲▲ FIN DE BOTÓN AÑADIDO ▲▲▲ --- -->
-
                     <button type="button"
                         class="page-toolbar-button"
                         data-action="toggleSectionMyGroups"
@@ -232,17 +229,14 @@ if (!empty($current_group_members)) {
 
     </div>
 
-    <!-- --- ▼▼▼ ¡NUEVO PANEL DE MIEMBROS AÑADIDO! ▼▼▼ --- -->
     <div class="module-content module-members-surface body-title disabled" data-module="moduleGroupMembers">
         <div class="menu-content">
             
             <div class="members-header">
-                <!-- Título cambiado para coincidir con la imagen -->
-                <h3 class="members-title" data-i18n="members.title">Lista de miembros</h3>
-                <button class="modal-close-btn" data-action="toggleModuleGroupMembers">
-                    <span class="material-symbols-rounded">close</span>
-                </button>
-            </div>
+                <div class="members-title-wrapper">
+                    <h3 class="members-title" data-i18n="members.title">Lista de miembros</h3>
+                </div>
+                </div>
             
             <div class="members-list-container">
                 <?php if (!isset($current_group_info) || !$current_group_info): ?>
@@ -268,12 +262,10 @@ if (!empty($current_group_members)) {
                     foreach ($grouped_members as $role => $members_in_role):
                         if (!empty($members_in_role)):
                     ?>
-                        <!-- Nuevo Encabezado de Rol -->
                         <h4 class="member-list-heading" data-i18n="<?php echo $member_role_headings[$role]; ?>">
                             <?php // El texto se rellenará por i18n ?>
                         </h4>
                         
-                        <!-- Lista de miembros para este rol -->
                         <div class="member-list">
                             <?php 
                             foreach ($members_in_role as $member): 
@@ -282,7 +274,6 @@ if (!empty($current_group_members)) {
                                     $avatarUrl = "https://ui-avatars.com/api/?name=" . urlencode($member['username']) . "&size=100&background=e0e0e0&color=ffffff";
                                 }
                             ?>
-                                <!-- Nuevo item de miembro (pill) -->
                                 <div class="member-item" data-user-id="<?php echo htmlspecialchars($member['id']); ?>" data-user-role="<?php echo htmlspecialchars($member['user_role']); ?>">
                                     <div class="component-card__avatar member-avatar" data-role="<?php echo htmlspecialchars($member['user_role']); ?>">
                                         <img src="<?php echo htmlspecialchars($avatarUrl); ?>"
@@ -301,6 +292,4 @@ if (!empty($current_group_members)) {
             </div>
         </div>
     </div>
-    <!-- --- ▲▲▲ FIN DE PANEL AÑADIDO ▲▲▲ --- -->
-
-</div>
+    </div>
