@@ -127,12 +127,13 @@ CREATE TABLE `groups` (
   UNIQUE KEY `access_key` (`access_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --- ▼▼▼ ¡TABLA USER_GROUPS CORREGIDA! ▼▼▼ ---
 DROP TABLE IF EXISTS `user_groups`;
 CREATE TABLE `user_groups` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `group_id` int(11) NOT NULL,
-  `role` enum('member','admin','owner') NOT NULL DEFAULT 'member',
+  /* La columna 'role' ha sido eliminada. El rol se gestiona globalmente. */
   `joined_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_in_group` (`user_id`,`group_id`),
@@ -141,6 +142,7 @@ CREATE TABLE `user_groups` (
   CONSTRAINT `fk_user_groups_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_user_groups_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- --- ▲▲▲ ¡FIN DE CORRECCIÓN! ▲▲▲ ---
 
 -- --- ▼▼▼ MODIFICACIÓN DE DATOS DE EJEMPLO ▼▼▼ ---
 INSERT INTO `groups` (`name`, `group_type`, `access_key`, `privacy`) VALUES

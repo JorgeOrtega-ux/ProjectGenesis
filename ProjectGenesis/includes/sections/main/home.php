@@ -30,15 +30,16 @@ if (isset($_SESSION['user_id'], $pdo)) {
         logDatabaseError($e, 'home.php - load user groups for popover');
     }
 
-    // --- ▼▼▼ ¡NUEVA LÓGICA! OBTENER MIEMBROS SI HAY GRUPO SELECCIONADO ▼▼▼ ---
+    // --- ▼▼▼ ¡INICIO DE CORRECCIÓN (SQL)! OBTENER MIEMBROS ▼▼▼ ---
     if (isset($current_group_info) && $current_group_info) {
         try {
+            // Se elimina ug.role de SELECT y se ordena por u.role (rol global)
             $stmt_members = $pdo->prepare(
-                "SELECT u.id, u.username, u.profile_image_url, u.role as user_role, ug.role as group_role
+                "SELECT u.id, u.username, u.profile_image_url, u.role as user_role
                  FROM users u
                  JOIN user_groups ug ON u.id = ug.user_id
                  WHERE ug.group_id = ?
-                 ORDER BY FIELD(ug.role, 'owner', 'admin', 'member'), u.username ASC" // <-- Ordenar por rol
+                 ORDER BY FIELD(u.role, 'founder', 'administrator', 'moderator', 'user'), u.username ASC"
             );
             $stmt_members->execute([$current_group_info['id']]);
             $current_group_members = $stmt_members->fetchAll();
@@ -47,7 +48,7 @@ if (isset($_SESSION['user_id'], $pdo)) {
             // $current_group_members se mantendrá vacío
         }
     }
-    // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
+    // --- ▲▲▲ ¡FIN DE CORRECCIÓN (SQL)! ▲▲▲ ---
 
 }
 
@@ -64,31 +65,35 @@ if (isset($current_group_info) && $current_group_info) {
     $homeH1Text = "Selecciona un grupo para comenzar a chatear";
 }
 
-// --- ▼▼▼ INICIO DE NUEVA LÓGICA DE AGRUPACIÓN ▼▼▼ ---
+// --- ▼▼▼ ¡INICIO DE CORRECCIÓN (Agrupación)! ▼▼▼ ---
+// Agrupar por roles GLOBALES
 $grouped_members = [
-    'owner' => [],
-    'admin' => [],
-    'member' => []
+    'founder' => [],
+    'administrator' => [],
+    'moderator' => [],
+    'user' => []
 ];
 
-// Asignar nombres de roles a claves i18n
+// Asignar nombres de roles a claves i18n (usando las claves de admin)
 $member_role_headings = [
-    'owner' => 'members.heading.owner',
-    'admin' => 'members.heading.admin',
-    'member' => 'members.heading.member'
+    'founder' => 'admin.users.roleFounder',
+    'administrator' => 'admin.users.roleAdministrator',
+    'moderator' => 'admin.users.roleModerator',
+    'user' => 'admin.users.roleUser'
 ];
 
 if (!empty($current_group_members)) {
     foreach ($current_group_members as $member) {
-        $role = $member['group_role'] ?? 'member';
+        // Agrupar por el 'user_role' (rol global)
+        $role = $member['user_role'] ?? 'user';
         if (isset($grouped_members[$role])) {
             $grouped_members[$role][] = $member;
         } else {
-            $grouped_members['member'][] = $member; // Fallback
+            $grouped_members['user'][] = $member; // Fallback a 'user'
         }
     }
 }
-// --- ▲▲▲ FIN DE NUEVA LÓGICA DE AGRUPACIÓN ▲▲▲ ---
+// --- ▲▲▲ ¡FIN DE CORRECCIÓN (Agrupación)! ▲▲▲ ---
 
 // --- ▲▲▲ FIN DE LÓGICA DE CARGA DE GRUPO ▲▲▲ ---
 ?>

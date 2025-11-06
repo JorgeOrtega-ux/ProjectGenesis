@@ -62,10 +62,11 @@ if ($action === 'join-group') {
             throw new Exception('groups.join.js.error.alreadyJoined');
         }
 
-        // Éxito: Unir al usuario al grupo
-        // Asumimos un rol de 'member' por defecto
-        $stmt_join = $pdo->prepare("INSERT INTO user_groups (user_id, group_id, role) VALUES (?, ?, 'member')");
+        // --- ▼▼▼ ¡INICIO DE CORRECCIÓN! ▼▼▼ ---
+        // Éxito: Unir al usuario al grupo (sin rol)
+        $stmt_join = $pdo->prepare("INSERT INTO user_groups (user_id, group_id) VALUES (?, ?)");
         $stmt_join->execute([$userId, $groupId]);
+        // --- ▲▲▲ ¡FIN DE CORRECCIÓN! ▲▲▲ ---
 
         // (Añadir a es-mx.json) groups.join.js.success.joined
         $response['success'] = true;
