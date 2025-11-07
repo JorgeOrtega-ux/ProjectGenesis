@@ -101,16 +101,22 @@ INSERT INTO site_settings (setting_key, setting_value) VALUES
 ('code_resend_cooldown_seconds', '60'),
 ('max_concurrent_users', '500');
 
--- --- ▼▼▼ INICIO DE NUEVAS TABLAS ▼▼▼ ---
+-- --- ▼▼▼ INICIO DE TABLAS MODIFICADAS ▼▼▼ ---
 
 DROP TABLE IF EXISTS communities;
 CREATE TABLE communities (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    -- --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    uuid CHAR(36) NOT NULL,
+    -- --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
     name VARCHAR(100) NOT NULL,
     privacy ENUM('public', 'private') NOT NULL DEFAULT 'public',
     access_code VARCHAR(50) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    INDEX idx_access_code (access_code)
+    INDEX idx_access_code (access_code),
+    -- --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    UNIQUE KEY uk_uuid (uuid)
+    -- --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 );
 
 DROP TABLE IF EXISTS user_communities;
@@ -124,11 +130,11 @@ CREATE TABLE user_communities (
     UNIQUE KEY uk_user_community (user_id, community_id)
 );
 
--- Insertar datos de ejemplo
-INSERT INTO communities (name, privacy, access_code) VALUES
-('Matamoros', 'public', NULL),
-('Valle Hermoso', 'public', NULL),
-('Universidad A', 'private', 'UNIA123'),
-('Universidad B', 'private', 'UNIB456');
+-- Insertar datos de ejemplo (con UUIDs)
+INSERT INTO communities (uuid, name, privacy, access_code) VALUES
+('a1b2c3d4-e5f6-7890-1234-abcdeffedcba', 'Matamoros', 'public', NULL),
+('b2c3d4e5-f6a7-8901-2345-bcdeffedcba1', 'Valle Hermoso', 'public', NULL),
+('c3d4e5f6-a7b8-9012-3456-cdeffedcba12', 'Universidad A', 'private', 'UNIA123'),
+('d4e5f6a7-b8c9-0123-4567-deffedcba123', 'Universidad B', 'private', 'UNIB456');
 
--- --- ▲▲▲ FIN DE NUEVAS TABLAS ▲▲▲ ---
+-- --- ▲▲▲ FIN DE TABLAS MODIFICADAS ▲▲▲ ---

@@ -78,6 +78,18 @@
             window.codeResendCooldownSeconds = <?php echo $GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? 60; ?>;
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+            
+            // --- ▼▼▼ INICIO DE NUEVO BLOQUE (INYECCIÓN DE DATOS DE URL) ▼▼▼ ---
+            window.initialCommunityId = <?php echo json_encode($_SESSION['initial_community_id'] ?? null); ?>;
+            window.initialCommunityName = <?php echo json_encode($_SESSION['initial_community_name'] ?? null); ?>;
+            window.initialCommunityUuid = <?php echo json_encode($_SESSION['initial_community_uuid'] ?? null); ?>;
+            <?php
+                // Limpiar las variables de sesión para que no persistan en la navegación SPA
+                unset($_SESSION['initial_community_id']);
+                unset($_SESSION['initial_community_name']);
+                unset($_SESSION['initial_community_uuid']);
+            ?>
+            // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 
             window.userLanguage = '<?php echo $jsLanguage; ?>';
         </script>

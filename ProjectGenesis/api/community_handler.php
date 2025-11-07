@@ -28,8 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         if ($action === 'get-my-communities') {
             $stmt = $pdo->prepare(
-                "SELECT c.id, c.name 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (SELECT) ▼▼▼ ---
+                "SELECT c.id, c.name, c.uuid 
                  FROM communities c
+                -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                  JOIN user_communities uc ON c.id = uc.community_id
                  WHERE uc.user_id = ?
                  ORDER BY c.name ASC"
@@ -38,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $communities = $stmt->fetchAll();
             
             $response['success'] = true;
-            $response['communities'] = $communities;
+            $response['communities'] = $communities; // El UUID ahora se incluye aquí
 
         } elseif ($action === 'join-community') {
             $communityId = (int)($_POST['community_id'] ?? 0);
@@ -79,7 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.join_group.invalidCode');
             }
 
-            $stmt_find = $pdo->prepare("SELECT id FROM communities WHERE access_code = ? AND privacy = 'private'");
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SELECT) ▼▼▼ ---
+            $stmt_find = $pdo->prepare("SELECT id, name, uuid FROM communities WHERE access_code = ? AND privacy = 'private'");
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $stmt_find->execute([$accessCode]);
             $community = $stmt_find->fetch();
 
@@ -101,6 +105,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
             $response['message'] = 'js.join_group.joinSuccess';
             $response['communityName'] = $community['name'] ?? 'Comunidad'; // Opcional
+            // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+            $response['communityUuid'] = $community['uuid'] ?? ''; // Devolver también el UUID
+            // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
         }
 
     } catch (Exception $e) {

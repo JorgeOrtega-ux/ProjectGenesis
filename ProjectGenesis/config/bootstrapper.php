@@ -262,13 +262,48 @@ if (empty($path) || $path === '/') {
     $path = '/';
 }
 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (RUTAS DINÁMICAS) ▼▼▼ ---
+// Limpiar las variables de sesión de carga inicial
+unset($_SESSION['initial_community_id']);
+unset($_SESSION['initial_community_name']);
+unset($_SESSION['initial_community_uuid']);
+
+// Comprobar si es una ruta de comunidad (ej. /c/a1b2c3d4-...)
+if (preg_match('/^\/c\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
+    $communityUuid = $matches[1]; // Guardar el UUID real
+    
+    try {
+        // Buscar la comunidad en la BD
+        $stmt = $pdo->prepare("SELECT id, name FROM communities WHERE uuid = ?");
+        $stmt->execute([$communityUuid]);
+        $community = $stmt->fetch();
+        
+        if ($community) {
+            // Si la encontramos, guardamos los datos en la sesión para el JS
+            $_SESSION['initial_community_id'] = $community['id'];
+            $_SESSION['initial_community_name'] = $community['name'];
+            $_SESSION['initial_community_uuid'] = $communityUuid;
+        }
+    } catch (PDOException $e) {
+        logDatabaseError($e, 'bootstrapper - community-uuid-lookup');
+    }
+    
+    // Asignar el placeholder para el array de mapeo
+    $path = '/c/uuid-placeholder';
+}
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+
 // 2. Mapa de rutas
 $pathsToPages = [
     '/'           => 'home',
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    '/c/uuid-placeholder' => 'home', // Ruta placeholder para comunidades
+    // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
     '/explorer'   => 'explorer',
     '/login'      => 'login',
     '/maintenance' => 'maintenance', 
-    '/server-full' => 'server-full', // <-- ¡NUEVA LÍNEA!
+    '/server-full' => 'server-full', 
     
     '/register'                 => 'register-step1',
     '/register/additional-data' => 'register-step2',
@@ -299,11 +334,9 @@ $pathsToPages = [
     '/admin/edit-user'          => 'admin-edit-user', 
     '/admin/server-settings'    => 'admin-server-settings', 
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     '/admin/manage-backups'     => 'admin-manage-backups',
-    '/admin/restore-backup'     => 'admin-restore-backup', // <-- ¡AÑADIDA!
-    '/admin/manage-logs'        => 'admin-manage-logs', // <-- ¡NUEVA LÍNEA AÑADIDA!
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    '/admin/restore-backup'     => 'admin-restore-backup', 
+    '/admin/manage-logs'        => 'admin-manage-logs', 
 ];
 
 // 3. Determinar la página actual y los tipos de página

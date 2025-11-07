@@ -6,6 +6,9 @@ import { deactivateAllModules } from '../app/main-controller.js';
 
 let currentCommunityId = null;
 let currentCommunityName = null;
+// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+let currentCommunityUuid = null;
+// --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 
 /**
  * Muestra u oculta un spinner simple en los botones de unirse/abandonar
@@ -83,14 +86,22 @@ function updateJoinButtonUI(button, newAction) {
  * Selecciona una comunidad y actualiza la toolbar
  * @param {string} communityId ID de la comunidad
  * @param {string} communityName Nombre de la comunidad
+ * @param {string} communityUuid UUID de la comunidad
  */
-function selectCommunity(communityId, communityName) {
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (FUNCIÓN selectCommunity) ▼▼▼ ---
+function selectCommunity(communityId, communityName, communityUuid = null) {
     currentCommunityId = communityId;
     currentCommunityName = communityName;
+    currentCommunityUuid = communityUuid;
     
     // Guardar en sessionStorage para persistencia entre recargas
     sessionStorage.setItem('currentCommunityId', communityId);
     sessionStorage.setItem('currentCommunityName', communityName);
+    if (communityUuid) {
+        sessionStorage.setItem('currentCommunityUuid', communityUuid);
+    } else {
+        sessionStorage.removeItem('currentCommunityUuid');
+    }
 
     const displayDiv = document.getElementById('current-group-display');
     if (displayDiv) {
@@ -99,7 +110,7 @@ function selectCommunity(communityId, communityName) {
         displayDiv.classList.add('active');
     }
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Actualizar clase active en popover) ▼▼▼ ---
+    // Actualizar clase active en popover
     const popover = document.querySelector('[data-module="moduleSelectGroup"]');
     if (popover) {
         popover.querySelectorAll('.menu-link').forEach(link => {
@@ -110,31 +121,71 @@ function selectCommunity(communityId, communityName) {
             activeLink.classList.add('active');
         }
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
-    // (Opcional: aquí podrías disparar una recarga de contenido para el grupo)
-    console.log(`Grupo seleccionado: ${communityName} (ID: ${communityId})`);
+    // --- ¡NUEVA LÓGICA DE URL! ---
+    let newPath;
+    const basePath = window.projectBasePath || '/ProjectGenesis';
+
+    if (communityId === 'main_feed' || !communityUuid) {
+        newPath = basePath + '/';
+    } else {
+        newPath = basePath + '/c/' + communityUuid;
+    }
+
+    // Cambiar la URL solo si es diferente
+    if (window.location.pathname !== newPath) {
+        // Usar pushState para cambiar la URL sin recargar la página
+        history.pushState({ communityId: communityId }, '', newPath);
+    }
+    // --- FIN NUEVA LÓGICA DE URL ---
+
+    console.log(`Grupo seleccionado: ${communityName} (ID: ${communityId}, UUID: ${communityUuid})`);
     
     deactivateAllModules();
 }
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 /**
  * Carga la comunidad guardada al iniciar la app
  */
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (FUNCIÓN loadSavedCommunity) ▼▼▼ ---
 function loadSavedCommunity() {
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Default a "Feed principal") ▼▼▼ ---
-    const savedId = sessionStorage.getItem('currentCommunityId') || 'main_feed';
-    const savedName = sessionStorage.getItem('currentCommunityName') || getTranslation('home.popover.mainFeed');
+    const mainFeedName = getTranslation('home.popover.mainFeed');
+    const basePath = window.projectBasePath || '/ProjectGenesis';
 
-    // Llamar a selectCommunity para actualizar el display
-    // (No es necesario pasar el nombre, selectCommunity lo cogerá del elemento o de la traducción)
-    if (savedId === 'main_feed') {
-        selectCommunity('main_feed', getTranslation('home.popover.mainFeed'));
-    } else {
-        selectCommunity(savedId, savedName);
+    // Prioridad 1: Carga directa de URL de comunidad (PHP nos dio los datos)
+    if (window.initialCommunityId && window.initialCommunityName && window.initialCommunityUuid) {
+        selectCommunity(
+            window.initialCommunityId,
+            window.initialCommunityName,
+            window.initialCommunityUuid
+        );
+        // Limpiar para que no se re-use en navegación SPA
+        window.initialCommunityId = null;
+        window.initialCommunityName = null;
+        window.initialCommunityUuid = null;
+        return;
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    
+    // Prioridad 2: Carga directa de URL de Main Feed (/)
+    if (window.location.pathname === basePath || window.location.pathname === basePath + '/') {
+         selectCommunity(
+            'main_feed',
+            mainFeedName,
+            null
+         );
+         return;
+    }
+
+    // Prioridad 3: Persistencia de Sesión (fallback)
+    // (p.ej. recargar la página de /settings, el display debe recordar la última comunidad)
+    const savedId = sessionStorage.getItem('currentCommunityId') || 'main_feed';
+    const savedName = sessionStorage.getItem('currentCommunityName') || mainFeedName;
+    const savedUuid = sessionStorage.getItem('currentCommunityUuid') || null;
+
+    selectCommunity(savedId, savedName, savedUuid);
 }
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
 export function initCommunityManager() {
@@ -147,13 +198,15 @@ export function initCommunityManager() {
         
         // --- ▼▼▼ INICIO DE MODIFICACIÓN (Manejar clic en popover) ▼▼▼ ---
         if (!button) {
-            // --- Lógica para seleccionar grupo del popover ---
+            // Lógica para seleccionar grupo del popover
             const groupLink = e.target.closest('[data-module="moduleSelectGroup"] .menu-link[data-community-id]');
             if (groupLink) {
                 e.preventDefault();
                 const communityId = groupLink.dataset.communityId;
-                const communityName = groupLink.querySelector('.menu-link-text').textContent;
-                selectCommunity(communityId, communityName);
+                const communityName = groupLink.dataset.communityName; // Usar el nuevo atributo
+                const communityUuid = groupLink.dataset.communityUuid || null; // Usar el nuevo atributo
+                
+                selectCommunity(communityId, communityName, communityUuid);
             }
             return;
         }
@@ -230,7 +283,20 @@ export function initCommunityManager() {
             if (result.success) {
                 window.showAlert(getTranslation(result.message || 'js.join_group.joinSuccess'), 'success');
                 codeInput.value = '';
-                // Opcional: Redirigir a home
+                // Opcional: Redirigir a home y seleccionar el nuevo grupo
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Seleccionar al unirse) ▼▼▼ ---
+                if (result.communityName && result.communityUuid && result.communityId) {
+                     // Llama a selectCommunity para cambiar la URL y guardar el estado
+                     selectCommunity(result.communityId, result.communityName, result.communityUuid);
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                    // Navegar a la página de inicio
+                    const link = document.createElement('a');
+                    link.href = window.projectBasePath + '/';
+                    link.setAttribute('data-nav-js', 'true');
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                }
             } else {
                 showJoinGroupError(result.message || 'js.join_group.apiError');
             }
@@ -256,15 +322,17 @@ export function initCommunityManager() {
                 return; // Si se está cerrando, no hacer nada
             }
             
-            // 1. Obtener el ID seleccionado actualmente desde el display
-            const displayDiv = document.getElementById('current-group-display');
-            const currentSelectedId = displayDiv ? displayDiv.dataset.communityId : 'main_feed';
+            // 1. Obtener el ID seleccionado actualmente (desde la variable global)
+            const currentSelectedId = currentCommunityId || 'main_feed';
 
             // 2. Añadir "Feed principal" estáticamente
             const mainFeedText = getTranslation('home.popover.mainFeed');
             const mainFeedActive = (currentSelectedId === 'main_feed') ? 'active' : '';
             listElement.innerHTML = `
-                <div class="menu-link ${mainFeedActive}" data-community-id="main_feed">
+                <div class="menu-link ${mainFeedActive}" 
+                     data-community-id="main_feed" 
+                     data-community-name="${mainFeedText}" 
+                     data-community-uuid="">
                     <div class="menu-link-icon">
                         <span class="material-symbols-rounded">feed</span>
                     </div>
@@ -274,7 +342,7 @@ export function initCommunityManager() {
                 </div>
             `;
 
-            // 3. Añadir separador (opcional pero recomendado)
+            // 3. Añadir separador
             listElement.innerHTML += `<div style="height: 1px; background-color: #00000020; margin: 4px 8px;"></div>`;
             
             // 4. Cargar el resto de comunidades
@@ -291,7 +359,10 @@ export function initCommunityManager() {
                     result.communities.forEach(community => {
                         const communityActive = (currentSelectedId == community.id) ? 'active' : '';
                         listElement.innerHTML += `
-                            <div class="menu-link ${communityActive}" data-community-id="${community.id}">
+                            <div class="menu-link ${communityActive}" 
+                                 data-community-id="${community.id}" 
+                                 data-community-name="${community.name}" 
+                                 data-community-uuid="${community.uuid}">
                                 <div class="menu-link-icon">
                                     <span class="material-symbols-rounded">group</span>
                                 </div>

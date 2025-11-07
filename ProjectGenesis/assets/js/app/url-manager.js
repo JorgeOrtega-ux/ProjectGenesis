@@ -253,17 +253,32 @@ export function handleNavigation() {
     let path = window.location.pathname.replace(basePath, '');
     if (path === '' || path === '/') path = '/';
 
-    if (path === '/settings') {
-        path = '/settings/your-profile';
-        history.replaceState(null, '', `${basePath}${path}`);
-    }
-    
-    if (path === '/admin') {
-        path = '/admin/dashboard';
-        history.replaceState(null, '', `${basePath}${path}`);
-    }
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (RUTAS DINÁMICAS) ▼▼▼ ---
+    let action = null;
+    const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
 
-    const action = paths[path];
+    if (path === '/') {
+        action = 'toggleSectionHome';
+    } else if (communityUuidRegex.test(path)) {
+        action = 'toggleSectionHome';
+        // Opcional: guardar el UUID para que 'home' lo use
+        // const matches = path.match(communityUuidRegex);
+        // window.currentCommunityUuid = matches[1]; 
+    } else {
+        // Lógica existente para otras rutas
+        if (path === '/settings') {
+            path = '/settings/your-profile';
+            history.replaceState(null, '', `${basePath}${path}`);
+        }
+        
+        if (path === '/admin') {
+            path = '/admin/dashboard';
+            history.replaceState(null, '', `${basePath}${path}`);
+        }
+        
+        action = paths[path];
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     if (!action) {
         loadPage('404', null); 
@@ -346,6 +361,14 @@ function updateMenuState(currentAction) {
 export function initRouter() {
 
     document.body.addEventListener('click', e => {
+      // --- ▼▼▼ INICIO DE MODIFICACIÓN (NO INTERCEPTAR CLICS DE COMUNIDAD) ▼▼▼ ---
+      const communityLink = e.target.closest('[data-module="moduleSelectGroup"] .menu-link[data-community-id]');
+      if (communityLink) {
+          // Dejar que community-manager.js maneje este clic
+          return;
+      }
+      // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
       const link = e.target.closest(
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (SE ELIMINA restore-backup) ▼▼▼ ---
             '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"]' // <- Se añadió .auth-button-back
