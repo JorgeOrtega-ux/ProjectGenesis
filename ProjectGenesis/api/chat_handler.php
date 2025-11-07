@@ -188,7 +188,7 @@ if ($action === 'send-message') {
         
         // 5. Commit y Notificar al WebSocket (¡SOLO UN MENSAJE!)
         $pdo->commit();
-        
+        $messageTimestamp = gmdate('Y-m-d H:i:s');
         // Construir el payload ÚNICO para el WS
         $ws_payload = [
             "type" => "new_chat_message",
