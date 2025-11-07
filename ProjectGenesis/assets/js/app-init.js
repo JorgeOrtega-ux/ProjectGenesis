@@ -11,6 +11,7 @@ import { initAdminServerSettingsManager } from './modules/admin-server-settings-
 import { initAdminBackupModule } from './modules/admin-backup-module.js'; 
 // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
 import { initCommunityManager } from './modules/community-manager.js';
+import { initPublicationManager } from './modules/publication-manager.js'; // <-- NUEVA
 // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager, getTranslation } from './services/i18n-manager.js'; // <-- ¡MODIFICADO! IMPORTAR GETTRANSLATION
@@ -72,6 +73,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     initAdminBackupModule();
     // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
     initCommunityManager();
+    initPublicationManager(); // <-- NUEVA
     // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 
     // El Router se inicializa al final

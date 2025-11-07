@@ -110,6 +110,8 @@ $allowedPages = [
 
     // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
     'join-group' => '../../includes/sections/main/join-group.php',
+    'create-publication' => '../../includes/sections/main/create-publication.php', // <-- NUEVA
+    'create-poll' => '../../includes/sections/main/create-publication.php', // <-- NUEVA (apunta al mismo archivo)
     // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     'register-step1' => '../../includes/sections/auth/register.php',

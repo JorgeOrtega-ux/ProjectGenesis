@@ -138,3 +138,81 @@ INSERT INTO communities (uuid, name, privacy, access_code) VALUES
 ('d4e5f6a7-b8c9-0123-4567-deffedcba123', 'Universidad B', 'private', 'UNIB456');
 
 -- --- ▲▲▲ FIN DE TABLAS MODIFICADAS ▲▲▲ ---
+
+
+-- ---
+-- Tablas para el sistema de Publicaciones
+-- ---
+
+DROP TABLE IF EXISTS `publication_attachments`;
+DROP TABLE IF EXISTS `publication_files`;
+DROP TABLE IF EXISTS `community_publications`;
+
+--
+-- Estructura para la tabla `community_publications`
+-- (Adaptada de `group_messages`)
+--
+CREATE TABLE `community_publications` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `community_id` INT NOT NULL,
+  `user_id` INT NOT NULL,
+  
+  -- El texto de la publicación.
+  `text_content` TEXT NULL DEFAULT NULL, 
+  
+  -- Tipo de publicación (post, poll)
+  `post_type` ENUM('post', 'poll') NOT NULL DEFAULT 'post',
+
+  `created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
+
+  -- Llaves foráneas
+  FOREIGN KEY (community_id) REFERENCES `communities`(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES `users`(id) ON DELETE CASCADE,
+  
+  -- Índices
+  KEY `idx_community_timestamp` (`community_id`,`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Estructura para la tabla `publication_files`
+-- (Adaptada de `chat_files`)
+--
+CREATE TABLE `publication_files` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,      -- Quién subió el archivo
+  `community_id` INT NOT NULL, -- A qué comunidad pertenece (para limpieza/organización)
+  
+  `file_name_system` VARCHAR(255) NOT NULL,
+  `file_name_original` VARCHAR(255) NOT NULL,
+  `public_url` VARCHAR(512) NOT NULL,
+  `file_type` VARCHAR(100) NOT NULL, -- ej: "image/png", "video/mp4"
+  `file_size` INT NOT NULL,
+  
+  `created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
+
+  -- Llaves foráneas
+  FOREIGN KEY (user_id) REFERENCES `users`(id) ON DELETE CASCADE,
+  FOREIGN KEY (community_id) REFERENCES `communities`(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Estructura para la tabla `publication_attachments`
+-- (Adaptada de `message_attachments`)
+--
+CREATE TABLE `publication_attachments` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `publication_id` INT NOT NULL, -- FK a community_publications.id
+  `file_id` INT NOT NULL,        -- FK a publication_files.id
+  
+  -- Para mostrar las fotos en el orden que el usuario las subió
+  `sort_order` INT NOT NULL DEFAULT 0, 
+
+  -- Llaves foráneas
+  FOREIGN KEY (publication_id) REFERENCES `community_publications`(id) ON DELETE CASCADE,
+  FOREIGN KEY (file_id) REFERENCES `publication_files`(id) ON DELETE CASCADE,
+  
+  -- Asegura que no se pueda adjuntar el mismo archivo dos veces a la misma publicación
+  UNIQUE KEY `idx_publication_file` (`publication_id`, `file_id`) 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+

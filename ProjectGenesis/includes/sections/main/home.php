@@ -53,7 +53,8 @@
         <div class="popover-module popover-module--anchor-left body-title disabled" data-module="moduleCreatePost" style="top: calc(100% + 8px); left: 8px; width: 300px;">
             <div class="menu-content">
                 <div class="menu-list">
-                    <div class="menu-link" data-action="home-create-post">
+                    <!-- --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- -->
+                    <div class="menu-link" data-action="toggleSectionCreatePublication">
                         <div class="menu-link-icon">
                             <span class="material-symbols-rounded">post_add</span>
                         </div>
@@ -61,7 +62,7 @@
                             <span data-i18n="home.popover.newPost">Crear publicación</span>
                         </div>
                     </div>
-                    <div class="menu-link" data-action="home-create-poll">
+                    <div class="menu-link" data-action="toggleSectionCreatePoll">
                         <div class="menu-link-icon">
                             <span class="material-symbols-rounded">poll</span>
                         </div>
@@ -69,6 +70,7 @@
                             <span data-i18n="home.popover.newPoll">Crear encuesta</span>
                         </div>
                     </div>
+                    <!-- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- -->
                 </div>
             </div>
         </div>

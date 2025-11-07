@@ -25,6 +25,8 @@ const routes = {
 
     // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
     'toggleSectionJoinGroup': 'join-group',
+    'toggleSectionCreatePublication': 'create-publication', // <-- NUEVA
+    'toggleSectionCreatePoll': 'create-poll', // <-- NUEVA
     // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     'toggleSectionRegisterStep1': 'register-step1',
@@ -70,6 +72,8 @@ const paths = {
 
     // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
     '/join-group': 'toggleSectionJoinGroup',
+    '/create-publication': 'toggleSectionCreatePublication', // <-- NUEVA
+    '/create-poll': 'toggleSectionCreatePoll', // <-- NUEVA
     // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     '/register': 'toggleSectionRegisterStep1',
@@ -288,7 +292,7 @@ export function handleNavigation() {
         
         action = paths[path];
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
     if (!action) {
         loadPage('404', null); 
@@ -350,8 +354,10 @@ function updateMenuState(currentAction) {
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
     // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
-    // Si la acción es "Unirse a Grupo", resalta "Home" en el menú
-    if (currentAction === 'toggleSectionJoinGroup') {
+    // Si la acción es "Unirse a Grupo", "Crear Publicación" o "Crear Encuesta", resalta "Home" en el menú
+    if (currentAction === 'toggleSectionJoinGroup' || 
+        currentAction === 'toggleSectionCreatePublication' || 
+        currentAction === 'toggleSectionCreatePoll') {
         menuAction = 'toggleSectionHome';
     }
     // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
@@ -380,8 +386,8 @@ export function initRouter() {
       // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
       const link = e.target.closest(
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SE ELIMINA restore-backup) ▼▼▼ ---
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"]' // <- Se añadió .auth-button-back
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SE ELIMINA restore-backup Y SE AÑADEN ACCIONES) ▼▼▼ ---
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"]'
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         );
 
