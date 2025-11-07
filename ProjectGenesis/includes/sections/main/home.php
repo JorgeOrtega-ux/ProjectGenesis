@@ -216,6 +216,21 @@ try {
                             <?php endforeach; ?>
                         </div>
                         <?php endif; ?>
+                        
+                        <div class="post-actions-container">
+                            <button type="button" class="component-action-button--icon" data-tooltip="home.actions.like">
+                                <span class="material-symbols-rounded">favorite</span>
+                                <span class="action-text" data-i18n="home.actions.like">Me gusta</span>
+                            </button>
+                            <button type="button" class="component-action-button--icon" data-tooltip="home.actions.comment">
+                                <span class="material-symbols-rounded">chat_bubble</span>
+                                <span class="action-text" data-i18n="home.actions.comment">Comentar</span>
+                            </button>
+                            <button type="button" class="component-action-button--icon" data-tooltip="home.actions.share">
+                                <span class="material-symbols-rounded">share</span>
+                                <span class="action-text" data-i18n="home.actions.share">Compartir</span>
+                            </button>
+                        </div>
                         </div>
                 <?php endforeach; ?>
             <?php endif; ?>

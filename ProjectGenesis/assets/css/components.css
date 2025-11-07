@@ -2201,25 +2201,105 @@ select.component-input:invalid {
 
 .post-attachment-item {
     width: 100%;
-    height: 100%;
+    /* height: 100%; */ /* MODIFICADO */
     position: relative;
-    padding-top: 100%; /* Aspect ratio 1:1 */
+    /* padding-top: 100%; */ /* MODIFICADO */
     border: 1px solid #00000010;
     background-color: #f5f5fa;
     border-radius: 4px;
 }
 
 .post-attachment-item img {
-    position: absolute;
-    top: 0;
-    left: 0;
+    /* position: absolute; */ /* MODIFICADO */
+    /* top: 0; */ /* MODIFICADO */
+    /* left: 0; */ /* MODIFICADO */
     width: 100%;
-    height: 100%;
+    /* height: 100%; */ /* MODIFICADO */
+    height: auto; /* AÑADIDO */
     object-fit: cover;
     cursor: pointer;
+    display: block; /* AÑADIDO */
+    max-height: 512px; /* AÑADIDO - Límite para imágenes individuales */
+    border-radius: 4px; /* AÑADIDO - Para que la imagen única tenga bordes redondeados */
 }
+
+/* --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ --- */
+/* Restaurar la lógica de cuadrícula (grid) para 2 o más imágenes */
+.post-attachments-container[data-count="2"] .post-attachment-item,
+.post-attachments-container[data-count="3"] .post-attachment-item,
+.post-attachments-container[data-count="4"] .post-attachment-item {
+    padding-top: 100%; /* RE-AÑADIDO: Aspect ratio 1:1 */
+    height: 0; /* RE-AÑADIDO: Truco de padding */
+}
+
+.post-attachments-container[data-count="2"] .post-attachment-item img,
+.post-attachments-container[data-count="3"] .post-attachment-item img,
+.post-attachments-container[data-count="4"] .post-attachment-item img {
+    position: absolute; /* RE-AÑADIDO */
+    top: 0; /* RE-AÑADIDO */
+    left: 0; /* RE-AÑADIDO */
+    height: 100%; /* RE-AÑADIDO */
+    border-radius: 0; /* RE-AÑADIDO: La imagen ocupa todo, el contenedor ya tiene el radio */
+    max-height: none; /* RE-AÑADIDO: Quitar el límite de altura en la cuadrícula */
+}
+/* --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ --- */
+
 
 /* Ajuste para la imagen 1 de 3 (para que no sea 1:1) */
 .post-attachments-container[data-count="3"] .post-attachment-item:first-child {
     padding-top: 50%; /* Aspect ratio 2:1 */
+}
+
+/* ====================================== */
+/* =  ACCIONES DE PUBLICACIÓN (NUEVO)   = */
+/* ====================================== */
+
+.post-actions-container {
+    display: flex;
+    justify-content: space-around; /* Distribuir uniformemente */
+    gap: 8px;
+    width: 100%;
+    margin-top: 12px; /* Espacio arriba */
+    padding-top: 12px; /* Espacio arriba */
+    border-top: 1px solid #00000020; /* Separador */
+}
+
+.component-action-button--icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex: 1; /* Ocupar espacio equitativo */
+    height: 36px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: transparent;
+    color: #6b7280; /* Color grisáceo */
+    font-size: 14px;
+    font-weight: 600;
+    font-family: "Roboto Condensed", sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    outline: none;
+    white-space: nowrap;
+}
+
+.component-action-button--icon:hover {
+    background-color: #f5f5fa; /* Hover sutil */
+    color: #000; /* Color más oscuro al pasar el ratón */
+}
+
+.component-action-button--icon .material-symbols-rounded {
+    font-size: 20px;
+}
+
+/* Ocultar texto en móviles si se ve muy apretado */
+@media (max-width: 400px) {
+    .component-action-button--icon .action-text {
+        display: none;
+    }
+    .component-action-button--icon {
+        flex: 0 1 auto; /* No crecer, solo ocupar lo necesario */
+    }
 }
