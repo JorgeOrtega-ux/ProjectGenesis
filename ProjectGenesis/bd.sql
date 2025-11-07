@@ -154,7 +154,7 @@ DROP TABLE IF EXISTS `community_publications`;
 --
 CREATE TABLE `community_publications` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `community_id` INT NOT NULL,
+ `community_id` INT NULL DEFAULT NULL,
   `user_id` INT NOT NULL,
   
   -- El texto de la publicación.
@@ -179,8 +179,8 @@ CREATE TABLE `community_publications` (
 --
 CREATE TABLE `publication_files` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `user_id` INT NOT NULL,      -- Quién subió el archivo
-  `community_id` INT NOT NULL, -- A qué comunidad pertenece (para limpieza/organización)
+ `user_id` INT NOT NULL,      -- Quién subió el archivo
+  `community_id` INT NULL DEFAULT NULL, -- A qué comunidad pertenece (para limpieza/organización)
   
   `file_name_system` VARCHAR(255) NOT NULL,
   `file_name_original` VARCHAR(255) NOT NULL,
