@@ -5,6 +5,7 @@
 // Esta variable viene de config/routing/router.php
 global $pdo; 
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+$userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 
 $publications = [];
 $currentCommunityId = null;
@@ -22,7 +23,6 @@ try {
             $currentCommunityId = $community['id'];
             $currentCommunityNameKey = $community['name']; // Usar el nombre real
             
-            // --- ▼▼▼ INICIO DE SQL MODIFICADO (CON GROUP_CONCAT) ▼▼▼ ---
             $stmt_posts = $pdo->prepare(
                 "SELECT 
                     p.*, 
@@ -40,7 +40,6 @@ try {
                  ORDER BY p.created_at DESC
                  LIMIT 50"
             );
-            // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
             $stmt_posts->execute([$currentCommunityId]);
             $publications = $stmt_posts->fetchAll();
         } else {
@@ -51,8 +50,6 @@ try {
     
     if ($communityUuid === null) {
         // --- VISTA DE FEED PRINCIPAL ---
-        
-        // --- ▼▼▼ INICIO DE SQL MODIFICADO (CON GROUP_CONCAT) ▼▼▼ ---
         $stmt_posts = $pdo->prepare(
             "SELECT 
                 p.*, 
@@ -72,7 +69,6 @@ try {
              ORDER BY p.created_at DESC
              LIMIT 50"
         );
-        // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
         $stmt_posts->execute();
         $publications = $stmt_posts->fetchAll();
     }
@@ -177,36 +173,37 @@ try {
                     $postAvatar = $post['profile_image_url'] ?? $defaultAvatar;
                     if (empty($postAvatar)) $postAvatar = $defaultAvatar;
                     
-                    // --- ▼▼▼ INICIO DE LÓGICA DE ADJUNTOS ▼▼▼ ---
                     $attachments = [];
                     if (!empty($post['attachments'])) {
                         $attachments = explode(',', $post['attachments']);
                     }
                     $attachmentCount = count($attachments);
-                    // --- ▲▲▲ FIN DE LÓGICA DE ADJUNTOS ▲▲▲ ---
                 ?>
-                    <div class="component-card component-card--column" style="align-items: stretch; gap: 8px; padding: 16px;">
-                        <div class="component-card__content" style="gap: 12px; padding-bottom: 8px; border-bottom: 1px solid #00000020;">
-                            <div class="component-card__avatar" style="width: 40px; height: 40px; flex-shrink: 0;">
-                                <img src="<?php echo htmlspecialchars($postAvatar); ?>" alt="<?php echo htmlspecialchars($post['username']); ?>" class="component-card__avatar-image">
-                            </div>
-                            <div class="component-card__text">
-                                <h2 class="component-card__title" style="font-size: 16px;"><?php echo htmlspecialchars($post['username']); ?></h2>
-                                <p class="component-card__description" style="font-size: 13px;">
-                                    <?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?>
-                                    <?php if (isset($post['community_name']) && $post['community_name']): ?>
-                                        <span style="color: #6b7280;"> &middot; en <strong><?php echo htmlspecialchars($post['community_name']); ?></strong></span>
-                                    <?php endif; ?>
-                                </p>
+                    <div class="component-card component-card--post" style="padding: 0; align-items: stretch; flex-direction: column;">
+                        
+                        <div class="post-card-header">
+                            <div class="component-card__content" style="gap: 12px; padding-bottom: 0; border-bottom: none;">
+                                <div class="component-card__avatar" style="width: 40px; height: 40px; flex-shrink: 0;">
+                                    <img src="<?php echo htmlspecialchars($postAvatar); ?>" alt="<?php echo htmlspecialchars($post['username']); ?>" class="component-card__avatar-image">
+                                </div>
+                                <div class="component-card__text">
+                                    <h2 class="component-card__title" style="font-size: 16px;"><?php echo htmlspecialchars($post['username']); ?></h2>
+                                    <p class="component-card__description" style="font-size: 13px;">
+                                        <?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?>
+                                        <?php if (isset($post['community_name']) && $post['community_name']): ?>
+                                            <span style="color: #6b7280;"> &middot; en <strong><?php echo htmlspecialchars($post['community_name']); ?></strong></span>
+                                        <?php endif; ?>
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        
+
                         <?php if (!empty($post['text_content'])): ?>
-                            <div class="component-card__content">
+                            <div class="post-card-content">
                                 <p style="font-size: 15px; line-height: 1.6; color: #1f2937; white-space: pre-wrap; width: 100%;"><?php echo htmlspecialchars($post['text_content']); ?></p>
                             </div>
                         <?php endif; ?>
-                        
+
                         <?php if ($attachmentCount > 0): ?>
                         <div class="post-attachments-container" data-count="<?php echo $attachmentCount; ?>">
                             <?php foreach ($attachments as $imgUrl): ?>
@@ -218,21 +215,33 @@ try {
                         <?php endif; ?>
                         
                         <div class="post-actions-container">
-                            <button type="button" class="component-action-button--icon" data-tooltip="home.actions.like">
-                                <span class="material-symbols-rounded">favorite</span>
-                                <span class="action-text" data-i18n="home.actions.like">Me gusta</span>
-                            </button>
-                            <button type="button" class="component-action-button--icon" data-tooltip="home.actions.comment">
-                                <span class="material-symbols-rounded">chat_bubble</span>
-                                <span class="action-text" data-i18n="home.actions.comment">Comentar</span>
-                            </button>
-                            <button type="button" class="component-action-button--icon" data-tooltip="home.actions.share">
-                                <span class="material-symbols-rounded">share</span>
-                                <span class="action-text" data-i18n="home.actions.share">Compartir</span>
-                            </button>
+                            <div class="post-actions-left">
+                                <button type="button" class="component-action-button--icon" data-tooltip="home.actions.like">
+                                    <span class="material-symbols-rounded">favorite</span>
+                                    </button>
+                                <button type="button" class="component-action-button--icon" data-tooltip="home.actions.comment">
+                                    <span class="material-symbols-rounded">chat_bubble</span>
+                                    </button>
+                                <button type="button" class="component-action-button--icon" data-tooltip="home.actions.share">
+                                    <span class="material-symbols-rounded">send</span>
+                                </button>
+                            </div>
+                            <div class="post-actions-right">
+                                <button type="button" class="component-action-button--icon" data-tooltip="home.actions.save">
+                                    <span class="material-symbols-rounded">bookmark</span>
+                                </button>
+                            </div>
                         </div>
+                        
+                        <div class="post-comment-input-container">
+                            <div class="post-comment-avatar">
+                                <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Tu avatar">
+                            </div>
+                            <input type="text" class="post-comment-input" placeholder="Añade un comentario...">
                         </div>
-                <?php endforeach; ?>
+                        
+                    </div>
+                    <?php endforeach; ?>
             <?php endif; ?>
         </div>
 

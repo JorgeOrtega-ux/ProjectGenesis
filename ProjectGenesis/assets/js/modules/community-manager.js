@@ -204,7 +204,9 @@ export function initCommunityManager() {
     // loadSavedCommunity(); // <--- ¡CAMBIO! Esta línea se elimina de aquí.
 
     document.body.addEventListener('click', async (e) => {
-        const button = e.target.closest('button[data-action], button[data-auth-action]');
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Selector de botones) ▼▼▼ ---
+        const button = e.target.closest('button[data-action], button[data-auth-action], button[data-tooltip]');
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         
         // --- ▼▼▼ INICIO DE MODIFICACIÓN (Manejar clic en popover) ▼▼▼ ---
         if (!button) {
@@ -224,6 +226,10 @@ export function initCommunityManager() {
 
         const action = button.dataset.action;
         const authAction = button.dataset.authAction;
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Nueva variable) ▼▼▼ ---
+        const tooltipAction = button.dataset.tooltip;
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
         // --- Unirse a comunidad pública ---
         if (action === 'join-community') {
@@ -312,6 +318,31 @@ export function initCommunityManager() {
             }
             togglePrimaryButtonSpinner(button, false);
         }
+
+        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (Mostrar/Ocultar Comentarios) ▼▼▼ ---
+        else if (tooltipAction === 'home.actions.comment') {
+            e.preventDefault();
+            
+            // 1. Encontrar la tarjeta de publicación principal
+            const postCard = button.closest('.component-card--post');
+            if (!postCard) return;
+
+            // 2. Encontrar el contenedor de comentarios dentro de ESA tarjeta
+            const commentContainer = postCard.querySelector('.post-comment-input-container');
+            if (!commentContainer) return;
+
+            // 3. Mostrar/Ocultar
+            commentContainer.classList.toggle('active');
+            
+            // 4. Si se muestra, hacer focus en el input
+            if (commentContainer.classList.contains('active')) {
+                const commentInput = commentContainer.querySelector('.post-comment-input');
+                if (commentInput) {
+                    commentInput.focus();
+                }
+            }
+        }
+        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 
         // --- ▼▼▼ INICIO DE MODIFICACIÓN (Abrir popover de "Mis Grupos") ▼▼▼ ---
         else if (action === 'home-select-group') {
