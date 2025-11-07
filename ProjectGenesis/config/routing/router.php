@@ -165,7 +165,7 @@ $isAdminPage = strpos($page, 'admin-') === 0;
 // porque el nuevo 'status-page.php' usa $CURRENT_SECTION.
 // --- ▲▲▲ FIN BLOQUE ELIMINADO ▲▲▲ ---
 
-if (!isset($_SESSION['user_id']) && !$isAuthPage && $page !== '404' && $page !== 'join-group') { // <-- Modificación: Permitir join-group
+if (!isset($_SESSION['user_id']) && !$isAuthPage) { // <-- Modificación: NO permitir join-group sin auth
     http_response_code(403); 
     $CURRENT_SECTION = '404'; 
     include $allowedPages['404'];
@@ -224,7 +224,7 @@ if (array_key_exists($page, $allowedPages)) {
                     $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
                     $currentTime = new DateTime('now', new DateTimeZone('UTC'));
                     $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
-                    $cooldownConstant = 60; 
+                    $cooldownConstant = (int)($GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? 60); 
 
                     if ($secondsPassed < $cooldownConstant) {
                         $initialCooldown = $cooldownConstant - $secondsPassed;
@@ -263,7 +263,7 @@ if (array_key_exists($page, $allowedPages)) {
                     $lastCodeTime = new DateTime($codeData['created_at'], new DateTimeZone('UTC'));
                     $currentTime = new DateTime('now', new DateTimeZone('UTC'));
                     $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
-                    $cooldownConstant = 60; // 60 segundos
+                    $cooldownConstant = (int)($GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? 60);
 
                     if ($secondsPassed < $cooldownConstant) {
                         $initialCooldown = $cooldownConstant - $secondsPassed;
@@ -297,62 +297,37 @@ if (array_key_exists($page, $allowedPages)) {
         $userUsageType = $_SESSION['usage_type'] ?? 'personal';
         $openLinksInNewTab = (int)($_SESSION['open_links_in_new_tab'] ?? 1); 
 
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Lógica de 'settings-login' actualizada) ▼▼▼ ---
     } elseif ($page === 'settings-login') {
         try {
-            // 1. Fetch user data (2FA status and creation date)
             $stmt_user = $pdo->prepare("SELECT is_2fa_enabled, created_at FROM users WHERE id = ?");
             $stmt_user->execute([$_SESSION['user_id']]);
             $userData = $stmt_user->fetch();
             $is2faEnabled = $userData ? (int)$userData['is_2fa_enabled'] : 0;
             $accountCreatedDate = $userData ? $userData['created_at'] : null;
 
-            // 2. Fetch password log
             $stmt_pass_log = $pdo->prepare("SELECT changed_at FROM user_audit_logs WHERE user_id = ? AND change_type = 'password' ORDER BY changed_at DESC LIMIT 1");
             $stmt_pass_log->execute([$_SESSION['user_id']]);
             $lastLog = $stmt_pass_log->fetch();
 
             if ($lastLog) {
-                if (!class_exists('IntlDateFormatter')) {
-                    $date = new DateTime($lastLog['changed_at']);
-                    // ¡MODIFICADO!
-                    $lastPasswordUpdateText = 'Última actualización: ' . $date->format('d/m/Y \a \l\a\s H:i');
-                } else {
-                    // ¡MODIFICADO!
-                    $formatter = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::SHORT, 'UTC');
-                    $timestamp = strtotime($lastLog['changed_at']);
-                    $lastPasswordUpdateText = 'Última actualización: ' . $formatter->format($timestamp);
-                }
+                $lastPasswordUpdateText = 'Última actualización: ' . (new DateTime($lastLog['changed_at']))->format('d/m/Y H:i');
             } else {
                 $lastPasswordUpdateText = 'settings.login.lastPassUpdateNever'; 
             }
 
-            // 3. Format creation date for delete description
-            $accountCreationDateText = ''; // <-- NUEVA variable
+            $accountCreationDateText = '';
             if ($accountCreatedDate) {
-                if (!class_exists('IntlDateFormatter')) {
-                     $date = new DateTime($accountCreatedDate);
-                     // ¡MODIFICADO!
-                     $accountCreationDateText = 'Cuenta creada el ' . $date->format('d/m/Y \a \l\a\s H:i');
-                } else {
-                    // ¡MODIFICADO!
-                    $formatter = new IntlDateFormatter('es_ES', IntlDateFormatter::LONG, IntlDateFormatter::SHORT, 'UTC');
-                    $timestamp = strtotime($accountCreatedDate);
-                    $accountCreationDateText = 'Cuenta creada el ' . $formatter->format($timestamp);
-                }
+                 $accountCreationDateText = 'Cuenta creada el ' . (new DateTime($accountCreatedDate))->format('d/m/Y');
             }
-            
-            // La descripción principal SIEMPRE usa la clave de traducción.
             $deleteAccountDescText = 'settings.login.deleteAccountDesc'; 
 
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - settings-login');
             $is2faEnabled = 0;
             $lastPasswordUpdateText = 'settings.login.lastPassUpdateError'; 
-            $deleteAccountDescText = 'settings.login.deleteAccountDesc'; // Fallback
-            $accountCreationDateText = ''; // Fallback
+            $deleteAccountDescText = 'settings.login.deleteAccountDesc';
+            $accountCreationDateText = '';
         }
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     } elseif ($page === 'settings-accessibility') {
         $userTheme = $_SESSION['theme'] ?? 'system';
@@ -361,12 +336,11 @@ if (array_key_exists($page, $allowedPages)) {
     } elseif ($page === 'settings-change-email') {
          $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
          $initialEmailCooldown = 0;
-         $cooldownConstant = 60; // 60 segundos
+         $cooldownConstant = (int)($GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? 60);
          $identifier = $_SESSION['user_id'];
          $codeType = 'email_change';
 
          try {
-            // 1. Buscar el código más reciente
             $stmt = $pdo->prepare("SELECT created_at FROM verification_codes WHERE identifier = ? AND code_type = ? ORDER BY created_at DESC LIMIT 1");
             $stmt->execute([$identifier, $codeType]);
             $codeData = $stmt->fetch();
@@ -379,15 +353,10 @@ if (array_key_exists($page, $allowedPages)) {
                 $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
             }
 
-            // 2. Decidir si generar un código nuevo
             if (!$codeData || $secondsPassed === -1 || $secondsPassed >= $cooldownConstant) {
-                // No hay código o el último ya expiró, generar uno nuevo
-                
-                // (Opcional: borrar códigos viejos de este tipo)
                 $stmt_delete = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = ?");
                 $stmt_delete->execute([$identifier, $codeType]);
 
-                // Generar nuevo código (lógica de settings_handler.php)
                 $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
                 $code = '';
                 $max = strlen($chars) - 1;
@@ -401,13 +370,9 @@ if (array_key_exists($page, $allowedPages)) {
                 );
                 $stmt_insert->execute([$identifier, $codeType, $verificationCode]);
 
-                // (Aquí iría la lógica de envío de email real)
-
-                // Establecer el cooldown completo
                 $initialEmailCooldown = $cooldownConstant;
 
             } else {
-                // Ya hay un código reciente, solo calcular el tiempo restante
                 $initialEmailCooldown = $cooldownConstant - $secondsPassed;
             }
 
@@ -426,25 +391,36 @@ if (array_key_exists($page, $allowedPages)) {
              $is2faEnabled = 0;
          }
     } elseif ($page === 'settings-delete-account') {
-         // Pre-cargar datos del usuario para la página de confirmación
          $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
          $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
          $profileImageUrl = $_SESSION['profile_image_url'] ?? $defaultAvatar;
          if (empty($profileImageUrl)) $profileImageUrl = $defaultAvatar;
-    }
     
-    // --- ▼▼▼ BLOQUE MODIFICADO PARA ADMIN ▼▼▼ ---
-    elseif ($page === 'admin-manage-users') { // <--- LÓGICA MODIFICADA
-        // Capturar el parámetro 'p' (page) de la URL
-        // El router ha sido llamado con &p=X
+    // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (join-group) ▼▼▼ ---
+    } elseif ($page === 'join-group') {
+        try {
+            $stmt_public = $pdo->prepare("SELECT id, name FROM communities WHERE privacy = 'public' ORDER BY name ASC");
+            $stmt_public->execute();
+            $publicCommunities = $stmt_public->fetchAll();
+            
+            $stmt_joined = $pdo->prepare("SELECT community_id FROM user_communities WHERE user_id = ?");
+            $stmt_joined->execute([$_SESSION['user_id']]);
+            $joinedCommunityIds = $stmt_joined->fetchAll(PDO::FETCH_COLUMN);
+            
+        } catch (PDOException $e) {
+            logDatabaseError($e, 'router - join-group');
+            $publicCommunities = [];
+            $joinedCommunityIds = [];
+        }
+    // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
+
+    } elseif ($page === 'admin-manage-users') {
         $adminCurrentPage = (int)($_GET['p'] ?? 1);
         if ($adminCurrentPage < 1) $adminCurrentPage = 1;
     }
-    // === ▼▼▼ BLOQUE AÑADIDO ▼▼▼ ===
     elseif ($page === 'admin-edit-user') {
         $targetUserId = (int)($_GET['id'] ?? 0);
         if ($targetUserId === 0) {
-            // No ID provided, treat as 404
             $page = '404';
             $CURRENT_SECTION = '404';
         } else {
@@ -454,23 +430,19 @@ if (array_key_exists($page, $allowedPages)) {
                 $editUser = $stmt_user->fetch();
 
                 if (!$editUser) {
-                    // User not found, treat as 404
                     $page = '404';
                     $CURRENT_SECTION = '404';
                 }
 
-                // (Opcional) Validación de permisos: un admin no puede editar a un fundador
                 $adminRole = $_SESSION['role'] ?? 'user';
                 if ($editUser['role'] === 'founder' && $adminRole !== 'founder') {
-                    $page = '404'; // O una página de "acceso denegado"
+                    $page = '404'; 
                     $CURRENT_SECTION = '404';
                 }
                 
-                // Renombrar 'password' a 'password_hash' para claridad en la vista
                 $editUser['password_hash'] = $editUser['password'];
                 unset($editUser['password']);
                 
-                // Determinar si el avatar es el default
                 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
                 $profileImageUrl = $editUser['profile_image_url'] ?? $defaultAvatar;
                 if (empty($profileImageUrl)) $profileImageUrl = $defaultAvatar;
@@ -483,26 +455,12 @@ if (array_key_exists($page, $allowedPages)) {
             }
         }
     }
-    // --- ▼▼▼ INICIO DE BLOQUE ELIMINADO ▼▼▼ ---
-    // El bloque 'elseif ($page === 'admin-restore-backup')' se ha eliminado.
-    // --- ▲▲▲ FIN DE BLOQUE ELIMINADO ▲▲▲ ---
-    
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
     elseif ($page === 'admin-server-settings') {
-        // Cargar el estado actual del modo mantenimiento para el toggle
-        // $GLOBALS['site_settings'] fue cargado en bootstrapper.php
         $maintenanceModeStatus = $GLOBALS['site_settings']['maintenance_mode'] ?? '0';
-        
-        // --- ▼▼▼ ¡ESTA ES LA LÍNEA QUE FALTABA! ▼▼▼ ---
         $allowRegistrationStatus = $GLOBALS['site_settings']['allow_new_registrations'] ?? '1';
-        // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-    
     elseif ($isAdminPage) {
-        // Lógica general para otras páginas de admin si es necesario
     }
-    // --- ▲▲▲ FIN DEL BLOQUE ▲▲▲ ---
     
     
     include $allowedPages[$page];

@@ -8,11 +8,10 @@ import { initSettingsManager } from './modules/settings-manager.js';
 import { initAdminManager } from './modules/admin-manager.js';
 import { initAdminEditUserManager } from './modules/admin-edit-user-manager.js';
 import { initAdminServerSettingsManager } from './modules/admin-server-settings-manager.js';
-// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-// Se eliminan las importaciones de admin-backups-manager y admin-restore-backup-manager
-// Se añade la importación del nuevo módulo combinado
 import { initAdminBackupModule } from './modules/admin-backup-module.js'; 
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+import { initCommunityManager } from './modules/community-manager.js';
+// --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager, getTranslation } from './services/i18n-manager.js'; // <-- ¡MODIFICADO! IMPORTAR GETTRANSLATION
 import { initTooltipManager } from './services/tooltip-manager.js'; 
@@ -20,9 +19,7 @@ import { initTooltipManager } from './services/tooltip-manager.js';
 const htmlEl = document.documentElement;
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
 window.lastKnownUserCount = null; // Almacén global para el conteo
-// --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
 
 function applyTheme(theme) {
     if (theme === 'light') {
@@ -72,21 +69,16 @@ document.addEventListener('DOMContentLoaded', async function () {
     initAdminManager();
     initAdminEditUserManager();
     initAdminServerSettingsManager();
-    
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-    // Se eliminan las llamadas a initAdminBackupsManager() y initAdminRestoreBackupManager()
-    // Se añade la llamada al nuevo módulo combinado
     initAdminBackupModule();
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    initCommunityManager();
+    // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 
     // El Router se inicializa al final
     initRouter(); 
     
     initTooltipManager(); 
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLIENTE WEBSOCKET PARA CONTEO Y EXPULSIÓN) ▼▼▼ ---
-    
-    // window.isUserLoggedIn (definido en main-layout.php)
     if (window.isUserLoggedIn) {
         let ws;
         
@@ -101,8 +93,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 ws.onopen = () => {
                     console.log("[WS] Conectado al servidor en:", wsUrl);
                     
-                    // --- ¡NUEVO! ENVIAR MENSAJE DE AUTENTICACIÓN ---
-                    // window.userId y window.csrfToken vienen de main-layout.php
                     const authMessage = {
                         type: "auth",
                         user_id: window.userId || 0,       // Añadido en main-layout.php
@@ -115,7 +105,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     try {
                         const data = JSON.parse(event.data);
                         
-                        // Lógica existente para 'user_count'
                         if (data.type === 'user_count') {
                             window.lastKnownUserCount = data.count; 
                             const display = document.getElementById('concurrent-users-display');
@@ -124,22 +113,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 display.setAttribute('data-i18n', ''); 
                             }
                         } 
-                        // --- ▼▼▼ ¡INICIO DE LA LÓGICA MODIFICADA! ▼▼▼ ---
-                        // Lógica para 'force_logout' (Expulsión por otra sesión O reactivación)
                         else if (data.type === 'force_logout') {
                             console.log("[WS] Recibida orden de desconexión forzada (logout o reactivación).");
                             
-                            // (Añade 'js.logout.forced' a tus JSONs: "Tu sesión ha caducado, por favor inicia sesión de nuevo.")
                             window.showAlert(getTranslation('js.logout.forced') || 'Tu sesión ha caducado, por favor inicia sesión de nuevo.', 'info', 5000);
                             
-                            // Forzar un refresco.
-                            // 1. Si fue un logout, bootstrapper verá el token inválido -> /login
-                            // 2. Si fue una reactivación, bootstrapper verá el token inválido -> /login
                             setTimeout(() => {
                                 window.location.reload();
                             }, 3000); // 3 seg para que el usuario lea el aviso
                         }
-                        // Lógica para 'account_status_update' (SÓLO Suspensión o Eliminación)
                         else if (data.type === 'account_status_update') {
                             const newStatus = data.status;
                             
@@ -148,14 +130,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 console.log(`[WS] Recibida orden de estado: ${newStatus}`);
                                 window.showAlert(getTranslation(msgKey), 'error', 5000);
 
-                                // Redirigir a la página de estado
                                 setTimeout(() => {
                                     window.location.href = `${window.projectBasePath}/account-status/${newStatus}`;
                                 }, 3000);
                             }
-                            // Ya no hay 'else if (newStatus === 'active')'
                         }
-                        // --- ▲▲▲ ¡FIN DE LA LÓGICA MODIFICADA! ▲▲▲ ---
                     } catch (e) {
                         console.error("[WS] Error al parsear mensaje:", e);
                     }
@@ -180,16 +159,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         }
 
-        // Iniciar la conexión
         connectWebSocket();
 
-        // Asegurarse de cerrar la conexión al cerrar la pestaña
         window.addEventListener('beforeunload', () => {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.close(1000, "Navegación de usuario"); 
             }
         });
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 });

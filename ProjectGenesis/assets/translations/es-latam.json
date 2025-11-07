@@ -608,17 +608,36 @@
     "main": {
       "title": "Página Principal",
       "description": "Bienvenido a tu página de inicio. Selecciona un grupo o únete a uno nuevo para comenzar."
+    },
+    "popover": {
+      "title": "Mis Grupos",
+      "loading": "Cargando...",
+      "noGroups": "No estás en ningún grupo."
     }
   },
   "join_group": {
     "title": "Unirse a un Grupo",
-    "description": "Ingresa el código de invitación para unirte a un grupo existente.",
+    "description": "Ingresa el código de invitación para unirte a un grupo privado o selecciona una comunidad pública.",
     "codeLabel": "Código de invitación*",
     "joinButton": "Unirse al Grupo",
     "cancelButton": "Cancelar",
     "backTooltip": "Volver a Inicio",
-    "formTitle": "Ingresa tu código",
+    "formTitle": "Ingresa un código privado",
     "formDescription": "El código de invitación distingue mayúsculas y minúsculas.",
-    "legal": "Al hacer clic en 'Unirse', aceptas nuestras <a href=\"#\">Normas de la Comunidad</a>."
+    "legal": "Al hacer clic en 'Unirse', aceptas nuestras <a href=\"#\">Normas de la Comunidad</a>.",
+    "publicTitle": "Comunidades Públicas",
+    "publicDesc": "Únete a una comunidad abierta.",
+    "noPublic": "No hay comunidades públicas disponibles.",
+    "join": "Unirme",
+    "leave": "Abandonar"
+  },
+  "js": {
+    "join_group": {
+      "invalidCode": "El código de acceso es incorrecto o no existe.",
+      "alreadyMember": "Ya eres miembro de esta comunidad.",
+      "joinSuccess": "Te has unido a la comunidad.",
+      "leaveSuccess": "Has abandonado la comunidad.",
+      "apiError": "Error al procesar la solicitud."
+    }
   }
 }

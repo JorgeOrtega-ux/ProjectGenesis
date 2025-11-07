@@ -1605,7 +1605,8 @@
     border-color: #000;
 }
 /* --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIDO DASHBOARD Y HOME) ▼▼▼ --- */
-.section-content[data-section="home"] .component-wrapper, /* <-- LÍNEA AÑADIDA */
+.section-content[data-section="home"] .component-wrapper,
+.section-content[data-section="join-group"] .component-wrapper, /* <-- LÍNEA AÑADIDA */
 .section-content[data-section="admin-users"] .component-wrapper,
 .section-content[data-section="admin-backups"] .component-wrapper,
 .section-content[data-section="admin-dashboard"] .component-wrapper,
@@ -1849,6 +1850,31 @@
     background-color: #000000;
     color: #ffffff;
 }
+
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (HOME) ▼▼▼ --- */
+.page-toolbar-group-display {
+    display: none; /* Oculto por defecto */
+    align-items: center;
+    height: 35px;
+    padding: 0 12px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+    background-color: #f5f5fa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.page-toolbar-group-display.active {
+    display: flex; /* Mostrar cuando tenga contenido */
+}
+
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS (HOME) ▲▲▲ --- */
+
 
 .page-search-bar {
     display: flex;

@@ -3,7 +3,10 @@ import { getTranslation } from './i18n-manager.js';
 const API_ENDPOINTS = {
     AUTH: `${window.projectBasePath}/api/auth_handler.php`,
     SETTINGS: `${window.projectBasePath}/api/settings_handler.php`,
-    ADMIN: `${window.projectBasePath}/api/admin_handler.php` // <-- AÑADIDO
+    ADMIN: `${window.projectBasePath}/api/admin_handler.php`,
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    COMMUNITY: `${window.projectBasePath}/api/community_handler.php`
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 };
 
 async function _post(url, formData) {
@@ -56,10 +59,14 @@ async function callSettingsApi(formData) {
     return _post(API_ENDPOINTS.SETTINGS, formData);
 }
 
-// --- ▼▼▼ NUEVA FUNCIÓN AÑADIDA ▼▼▼ ---
 async function callAdminApi(formData) {
     return _post(API_ENDPOINTS.ADMIN, formData);
 }
 
-export { callAuthApi, callSettingsApi, callAdminApi }; // <-- AÑADIDO A EXPORT
+// --- ▼▼▼ NUEVA FUNCIÓN AÑADIDA ▼▼▼ ---
+async function callCommunityApi(formData) {
+    return _post(API_ENDPOINTS.COMMUNITY, formData);
+}
+
+export { callAuthApi, callSettingsApi, callAdminApi, callCommunityApi }; // <-- AÑADIDO A EXPORT
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---

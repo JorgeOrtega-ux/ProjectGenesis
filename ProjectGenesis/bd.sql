@@ -12,9 +12,7 @@ CREATE TABLE users (
     role ENUM('user', 'moderator', 'administrator', 'founder') NOT NULL DEFAULT 'user',
     is_2fa_enabled TINYINT(1) NOT NULL DEFAULT 0,
     auth_token VARCHAR(64) NULL DEFAULT NULL,
-    -- ▼▼▼ Columna añadida ▼▼▼
     account_status ENUM('active', 'suspended', 'deleted') NOT NULL DEFAULT 'active',
-    -- ▲▲▲ Columna añadida ▲▲▲
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -41,7 +39,6 @@ CREATE TABLE security_logs (
     INDEX idx_ip_time (ip_address, created_at)
 );
 
--- --- ▼▼▼ TABLA MODIFICADA ▼▼▼ ---
 DROP TABLE IF EXISTS user_metadata;
 CREATE TABLE user_metadata (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -54,7 +51,6 @@ CREATE TABLE user_metadata (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     , INDEX idx_user_active (user_id, is_active)
 );
--- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 DROP TABLE IF EXISTS user_audit_logs;
 CREATE TABLE user_audit_logs (
@@ -81,7 +77,6 @@ CREATE TABLE user_preferences (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- --- ▼▼▼ INICIO DE NUEVA TABLA Y DATOS ▼▼▼ ---
 DROP TABLE IF EXISTS site_settings;
 CREATE TABLE site_settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -89,7 +84,6 @@ CREATE TABLE site_settings (
     setting_value TEXT
 );
 
--- Insertar las configuraciones por defecto
 INSERT INTO site_settings (setting_key, setting_value) VALUES
 ('maintenance_mode', '0'),
 ('allow_new_registrations', '1'),
@@ -101,11 +95,40 @@ INSERT INTO site_settings (setting_key, setting_value) VALUES
 ('allowed_email_domains', 'gmail.com\noutlook.com\nhotmail.com\nyahoo.com\nicloud.com'),
 ('min_password_length', '8'),
 ('max_password_length', '72'),
--- --- ▼▼▼ MODIFICACIÓN: Claves añadidas ▼▼▼ ---
 ('min_username_length', '6'),
 ('max_username_length', '32'),
 ('max_email_length', '255'),
 ('code_resend_cooldown_seconds', '60'),
--- --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
 ('max_concurrent_users', '500');
--- --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
+
+-- --- ▼▼▼ INICIO DE NUEVAS TABLAS ▼▼▼ ---
+
+DROP TABLE IF EXISTS communities;
+CREATE TABLE communities (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    privacy ENUM('public', 'private') NOT NULL DEFAULT 'public',
+    access_code VARCHAR(50) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    INDEX idx_access_code (access_code)
+);
+
+DROP TABLE IF EXISTS user_communities;
+CREATE TABLE user_communities (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    community_id INT NOT NULL,
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_user_community (user_id, community_id)
+);
+
+-- Insertar datos de ejemplo
+INSERT INTO communities (name, privacy, access_code) VALUES
+('Matamoros', 'public', NULL),
+('Valle Hermoso', 'public', NULL),
+('Universidad A', 'private', 'UNIA123'),
+('Universidad B', 'private', 'UNIB456');
+
+-- --- ▲▲▲ FIN DE NUEVAS TABLAS ▲▲▲ ---
