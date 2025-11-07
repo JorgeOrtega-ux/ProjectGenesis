@@ -33,7 +33,7 @@ function togglePrimaryButtonSpinner(button, isLoading) {
     button.disabled = isLoading;
     if (isLoading) {
         button.dataset.originalText = button.innerHTML;
-        button.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;"></span>`;
+        button.innerHTML = `<span class"logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;"></span>`;
     } else {
         button.innerHTML = button.dataset.originalText;
     }
@@ -95,8 +95,22 @@ function selectCommunity(communityId, communityName) {
     const displayDiv = document.getElementById('current-group-display');
     if (displayDiv) {
         displayDiv.textContent = communityName;
+        displayDiv.setAttribute('data-community-id', communityId); // Guardar el ID aquí
         displayDiv.classList.add('active');
     }
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Actualizar clase active en popover) ▼▼▼ ---
+    const popover = document.querySelector('[data-module="moduleSelectGroup"]');
+    if (popover) {
+        popover.querySelectorAll('.menu-link').forEach(link => {
+            link.classList.remove('active');
+        });
+        const activeLink = popover.querySelector(`.menu-link[data-community-id="${communityId}"]`);
+        if (activeLink) {
+            activeLink.classList.add('active');
+        }
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     // (Opcional: aquí podrías disparar una recarga de contenido para el grupo)
     console.log(`Grupo seleccionado: ${communityName} (ID: ${communityId})`);
@@ -108,12 +122,18 @@ function selectCommunity(communityId, communityName) {
  * Carga la comunidad guardada al iniciar la app
  */
 function loadSavedCommunity() {
-    const savedId = sessionStorage.getItem('currentCommunityId');
-    const savedName = sessionStorage.getItem('currentCommunityName');
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Default a "Feed principal") ▼▼▼ ---
+    const savedId = sessionStorage.getItem('currentCommunityId') || 'main_feed';
+    const savedName = sessionStorage.getItem('currentCommunityName') || getTranslation('home.popover.mainFeed');
 
-    if (savedId && savedName) {
+    // Llamar a selectCommunity para actualizar el display
+    // (No es necesario pasar el nombre, selectCommunity lo cogerá del elemento o de la traducción)
+    if (savedId === 'main_feed') {
+        selectCommunity('main_feed', getTranslation('home.popover.mainFeed'));
+    } else {
         selectCommunity(savedId, savedName);
     }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
 
 
@@ -124,8 +144,9 @@ export function initCommunityManager() {
 
     document.body.addEventListener('click', async (e) => {
         const button = e.target.closest('button[data-action], button[data-auth-action]');
+        
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Manejar clic en popover) ▼▼▼ ---
         if (!button) {
-            
             // --- Lógica para seleccionar grupo del popover ---
             const groupLink = e.target.closest('[data-module="moduleSelectGroup"] .menu-link[data-community-id]');
             if (groupLink) {
@@ -136,6 +157,7 @@ export function initCommunityManager() {
             }
             return;
         }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         const action = button.dataset.action;
         const authAction = button.dataset.authAction;
@@ -215,7 +237,7 @@ export function initCommunityManager() {
             togglePrimaryButtonSpinner(button, false);
         }
 
-        // --- Abrir popover de "Mis Grupos" ---
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Abrir popover de "Mis Grupos") ▼▼▼ ---
         else if (action === 'home-select-group') {
             e.preventDefault();
             e.stopPropagation(); // Detener para que el 'click' de main-controller no lo cierre
@@ -233,9 +255,29 @@ export function initCommunityManager() {
             if (!popover.classList.contains('active')) {
                 return; // Si se está cerrando, no hacer nada
             }
+            
+            // 1. Obtener el ID seleccionado actualmente desde el display
+            const displayDiv = document.getElementById('current-group-display');
+            const currentSelectedId = displayDiv ? displayDiv.dataset.communityId : 'main_feed';
 
-            listElement.innerHTML = `<div class="menu-link" data-i18n="home.popover.loading">Cargando...</div>`;
+            // 2. Añadir "Feed principal" estáticamente
+            const mainFeedText = getTranslation('home.popover.mainFeed');
+            const mainFeedActive = (currentSelectedId === 'main_feed') ? 'active' : '';
+            listElement.innerHTML = `
+                <div class="menu-link ${mainFeedActive}" data-community-id="main_feed">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">feed</span>
+                    </div>
+                    <div class="menu-link-text">
+                        ${mainFeedText}
+                    </div>
+                </div>
+            `;
 
+            // 3. Añadir separador (opcional pero recomendado)
+            listElement.innerHTML += `<div style="height: 1px; background-color: #00000020; margin: 4px 8px;"></div>`;
+            
+            // 4. Cargar el resto de comunidades
             const formData = new FormData();
             formData.append('action', 'get-my-communities');
 
@@ -243,23 +285,28 @@ export function initCommunityManager() {
 
             if (result.success && result.communities) {
                 if (result.communities.length === 0) {
-                    listElement.innerHTML = `<div class="menu-link" data-i18n="home.popover.noGroups">No estás en ningún grupo.</div>`;
+                    listElement.innerHTML += `<div class="menu-link" data-i18n="home.popover.noGroups" style="pointer-events: none; opacity: 0.7;">No estás en ningún grupo.</div>`;
                 } else {
-                    listElement.innerHTML = result.communities.map(community => `
-                        <div class="menu-link" data-community-id="${community.id}">
-                            <div class="menu-link-icon">
-                                <span class="material-symbols-rounded">group</span>
+                    // 5. Añadir las comunidades (append)
+                    result.communities.forEach(community => {
+                        const communityActive = (currentSelectedId == community.id) ? 'active' : '';
+                        listElement.innerHTML += `
+                            <div class="menu-link ${communityActive}" data-community-id="${community.id}">
+                                <div class="menu-link-icon">
+                                    <span class="material-symbols-rounded">group</span>
+                                </div>
+                                <div class="menu-link-text">
+                                    ${community.name}
+                                </div>
                             </div>
-                            <div class="menu-link-text">
-                                ${community.name}
-                            </div>
-                        </div>
-                    `).join('');
+                        `;
+                    });
                 }
             } else {
-                listElement.innerHTML = `<div class="menu-link" data-i18n="js.api.errorServer">Error al cargar grupos.</div>`;
+                listElement.innerHTML += `<div class="menu-link" data-i18n="js.api.errorServer" style="pointer-events: none; opacity: 0.7;">Error al cargar grupos.</div>`;
             }
         }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     });
 
     // Listener para ocultar el error en `join-group.php`

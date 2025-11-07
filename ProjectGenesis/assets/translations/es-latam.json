@@ -612,7 +612,8 @@
     "popover": {
       "title": "Mis Grupos",
       "loading": "Cargando...",
-      "noGroups": "No estás en ningún grupo."
+      "noGroups": "No estás en ningún grupo.",
+      "mainFeed": "Feed principal"
     }
   },
   "join_group": {

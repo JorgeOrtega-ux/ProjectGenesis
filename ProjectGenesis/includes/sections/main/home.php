@@ -9,9 +9,11 @@
                 
                 <div class="page-toolbar-left">
                     
-                    <!-- --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- -->
-                    <div id="current-group-display" class="page-toolbar-group-display">
-                        <!-- El JS pondrá aquí el nombre del grupo -->
+                    <div id="current-group-display" 
+                         class="page-toolbar-group-display active" 
+                         data-i18n="home.popover.mainFeed" 
+                         data-community-id="main_feed">
+                        Feed principal
                     </div>
                     
                     <button type="button"
@@ -20,8 +22,6 @@
                         data-tooltip="home.toolbar.selectGroup">
                         <span class="material-symbols-rounded">group</span>
                     </button>
-                    <!-- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- -->
-
                     <button type="button"
                         class="page-toolbar-button"
                         data-action="toggleSectionJoinGroup" 
@@ -35,7 +35,6 @@
 
             </div>
             
-        <!-- --- ▼▼▼ INICIO DE POPOVER AÑADIDO ▼▼▼ --- -->
         <div class="popover-module popover-module--anchor-left body-title disabled" data-module="moduleSelectGroup" style="top: calc(100% + 8px); left: 8px; width: 300px;">
             <div class="menu-content">
                 <div class="menu-header" data-i18n="home.popover.title">Mis Grupos</div>
@@ -44,8 +43,7 @@
                 </div>
             </div>
         </div>
-        <!-- --- ▲▲▲ FIN DE POPOVER AÑADIDO ▲▲▲ --- -->
-    </div>
+        </div>
 
     <div class="component-wrapper">
 
