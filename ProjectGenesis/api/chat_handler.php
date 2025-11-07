@@ -1,5 +1,6 @@
 <?php
-// FILE: api/chat_handler.php (NUEVO ARCHIVO)
+// FILE: api/chat_handler.php
+// (CÓDIGO MODIFICADO para el nuevo esquema de 3 tablas)
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -16,6 +17,7 @@ if (!isset($_SESSION['user_id'])) {
 $userId = (int)$_SESSION['user_id'];
 $username = $_SESSION['username'];
 $profileImageUrl = $_SESSION['profile_image_url'];
+$userRole = $_SESSION['role'] ?? 'user';
 
 // 2. Validar Método POST y Token CSRF
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -58,7 +60,7 @@ function notifyWebSocketServer($url, $payload) {
 }
 
 // ==========================================================
-// ACCIÓN PRINCIPAL: ENVIAR MENSAJE
+// ACCIÓN PRINCIPAL: ENVIAR MENSAJE (LÓGICA COMPLETAMENTE NUEVA)
 // ==========================================================
 if ($action === 'send-message') {
     try {
@@ -68,11 +70,16 @@ if ($action === 'send-message') {
         $messageText = trim($_POST['message_text'] ?? '');
         $uploadedImages = $_FILES['images'] ?? [];
 
+        // Tratar el texto vacío como NULL
+        $messageTextContent = !empty($messageText) ? $messageText : null;
+        $hasFiles = !empty($uploadedImages['name'][0]);
+
         if (empty($groupUuid)) {
             throw new Exception('Error: ID de grupo no proporcionado.');
         }
 
-        if (empty($messageText) && empty($uploadedImages['name'][0])) {
+        // Validar que el mensaje no esté completamente vacío
+        if ($messageTextContent === null && !$hasFiles) {
             throw new Exception('Error: No se puede enviar un mensaje vacío.');
         }
 
@@ -92,36 +99,16 @@ if ($action === 'send-message') {
         }
         $groupId = (int)$group['id'];
 
-        $messagesToSend = []; // Array de mensajes a transmitir
+        // --- INICIO DE NUEVA LÓGICA ---
 
-        // 2. Procesar Texto (si existe)
-        if (!empty($messageText)) {
-            $stmt_insert_text = $pdo->prepare(
-                "INSERT INTO group_messages (group_id, user_id, message_type, content, created_at) 
-                 VALUES (?, ?, 'text', ?, NOW())"
-            );
-            $stmt_insert_text->execute([$groupId, $userId, $messageText]);
-            
-            $messagesToSend[] = [
-                "type" => "new_chat_message",
-                "message" => [
-                    "id" => (int)$pdo->lastInsertId(),
-                    "user_id" => $userId,
-                    "username" => $username,
-                    "profile_image_url" => $profileImageUrl,
-                    "message_type" => "text",
-                    "content" => htmlspecialchars($messageText),
-                    "created_at" => date('Y-m-d H:i:s')
-                ]
-            ];
-        }
+        $attachment_file_ids = []; // Almacenará los IDs de `chat_files`
+        $attachments_for_payload = []; // Almacenará los datos para el WS
 
-        // 3. Procesar Imágenes (si existen)
-        if (!empty($uploadedImages['name'][0])) {
+        // 2. Procesar Archivos (si existen)
+        if ($hasFiles) {
             $imageCount = count($uploadedImages['name']);
-            // (Límite de 5 imágenes por mensaje)
-            if ($imageCount > 5) {
-                throw new Exception('No puedes subir más de 5 imágenes a la vez.');
+            if ($imageCount > 9) { // Límite de 9 imágenes por mensaje
+                throw new Exception('No puedes subir más de 9 imágenes a la vez.');
             }
 
             $uploadDir = dirname(__DIR__) . '/assets/uploads/chat_files';
@@ -146,59 +133,87 @@ if ($action === 'send-message') {
                 $mimeType = $finfo->file($fileTmpName);
                 if (!in_array($mimeType, $allowedTypes)) continue;
 
-                $extension = pathinfo($fileNameOriginal, PATHINFO_EXTENSION);
+                $extension = strtolower(pathinfo($fileNameOriginal, PATHINFO_EXTENSION));
+                // Asegurar extensión válida
+                if ($extension === 'jpeg') $extension = 'jpg';
+                if (!in_array($mimeType, $allowedTypes)) $extension = 'jpg'; // Fallback
+                
                 $fileNameSystem = uniqid('chat_' . $userId . '_', true) . '.' . $extension;
                 $filePath = $uploadDir . '/' . $fileNameSystem;
                 $publicUrl = $publicBaseUrl . '/' . $fileNameSystem;
 
                 if (move_uploaded_file($fileTmpName, $filePath)) {
-                    // a. Guardar en 'uploaded_files'
+                    // a. Guardar en 'chat_files'
                     $stmt_file = $pdo->prepare(
-                        "INSERT INTO uploaded_files (user_id, group_id, file_name_system, file_name_original, file_path, public_url, file_type, file_size, created_at)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())"
+                        "INSERT INTO chat_files (user_id, group_id, file_name_system, file_name_original, public_url, file_type, file_size, created_at)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())"
                     );
-                    $stmt_file->execute([$userId, $groupId, $fileNameSystem, $fileNameOriginal, $filePath, $publicUrl, $mimeType, $fileSize]);
+                    $stmt_file->execute([$userId, $groupId, $fileNameSystem, $fileNameOriginal, $publicUrl, $mimeType, $fileSize]);
                     $fileId = (int)$pdo->lastInsertId();
-
-                    // b. Guardar en 'group_messages'
-                    $stmt_insert_img = $pdo->prepare(
-                        "INSERT INTO group_messages (group_id, user_id, message_type, content, file_id, created_at) 
-                         VALUES (?, ?, 'image', ?, ?, NOW())"
-                    );
-                    $stmt_insert_img->execute([$groupId, $userId, $publicUrl, $fileId]);
                     
-                    $messagesToSend[] = [
-                        "type" => "new_chat_message",
-                        "message" => [
-                            "id" => (int)$pdo->lastInsertId(),
-                            "user_id" => $userId,
-                            "username" => $username,
-                            "profile_image_url" => $profileImageUrl,
-                            "message_type" => "image",
-                            "content" => htmlspecialchars($publicUrl),
-                            "created_at" => date('Y-m-d H:i:s')
-                        ]
+                    $attachment_file_ids[] = $fileId; // Guardar ID para la tabla puente
+                    
+                    // Guardar datos para el payload del WS
+                    $attachments_for_payload[] = [
+                        'id' => $fileId,
+                        'public_url' => $publicUrl,
+                        'file_type' => $mimeType
                     ];
                 }
             }
         }
-        
-        // 4. Commit y Notificar al WebSocket
-        $pdo->commit();
-        
-        if (!empty($messagesToSend)) {
-            foreach ($messagesToSend as $msgPayload) {
-                $broadcastPayload = json_encode([
-                    "group_uuid" => $groupUuid,
-                    "message_payload" => json_encode($msgPayload) // El payload interno debe ser un string JSON
-                ]);
-                notifyWebSocketServer($WS_BROADCAST_URL, $broadcastPayload);
+
+        // 3. Crear la "Burbuja" de Mensaje
+        $stmt_insert_msg = $pdo->prepare(
+            "INSERT INTO group_messages (group_id, user_id, text_content, created_at) 
+             VALUES (?, ?, ?, NOW())"
+        );
+        // Insertar el texto (o NULL si estaba vacío)
+        $stmt_insert_msg->execute([$groupId, $userId, $messageTextContent]);
+        $messageId = (int)$pdo->lastInsertId();
+        $messageTimestamp = date('Y-m-d H:i:s'); // Usar la hora actual
+
+        // 4. Vincular Archivos al Mensaje (si se subieron)
+        if (!empty($attachment_file_ids)) {
+            $stmt_link = $pdo->prepare(
+                "INSERT INTO message_attachments (message_id, file_id, sort_order) 
+                 VALUES (?, ?, ?)"
+            );
+            foreach ($attachment_file_ids as $index => $fileId) {
+                $stmt_link->execute([$messageId, $fileId, $index]);
             }
         }
+        
+        // --- FIN DE NUEVA LÓGICA ---
+        
+        // 5. Commit y Notificar al WebSocket (¡SOLO UN MENSAJE!)
+        $pdo->commit();
+        
+        // Construir el payload ÚNICO para el WS
+        $ws_payload = [
+            "type" => "new_chat_message",
+            "message" => [
+                "id" => $messageId,
+                "user_id" => $userId,
+                "username" => $username,
+                "profile_image_url" => $profileImageUrl,
+                "user_role" => $userRole,
+                "text_content" => $messageTextContent ? htmlspecialchars($messageTextContent) : null,
+                "attachments" => $attachments_for_payload, // Array de archivos
+                "created_at" => $messageTimestamp
+            ]
+        ];
+
+        // Preparar y enviar la notificación
+        $broadcastPayload = json_encode([
+            "group_uuid" => $groupUuid,
+            "message_payload" => json_encode($ws_payload) // El payload interno debe ser un string JSON
+        ]);
+        notifyWebSocketServer($WS_BROADCAST_URL, $broadcastPayload);
 
         $response['success'] = true;
         $response['message'] = 'Mensaje enviado.';
-        $response['sent_messages'] = count($messagesToSend);
+        $response['sent_message_id'] = $messageId;
 
     } catch (PDOException $e) {
         $pdo->rollBack();

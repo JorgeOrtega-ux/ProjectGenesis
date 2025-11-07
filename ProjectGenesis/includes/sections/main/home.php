@@ -1,14 +1,11 @@
 <?php
 // FILE: includes/sections/main/home.php
-// (Contenido MODIFICADO para cargar grupo desde URL y cambiar texto)
+// (CÓDIGO MODIFICADO PARA NUEVO ESQUEMA DE BD Y SIN AGRUPACIÓN DE 60s)
 
 // --- ▼▼▼ INICIO DE LÓGICA DE CARGA DE GRUPO ▼▼▼ ---
-// $current_group_info y $currentGroupUuid son definidos en config/routing/router.php
-// $pdo y $_SESSION['user_id'] están disponibles
-
-$user_groups = []; // Para el Popover
-$current_group_members = []; // Para el panel de miembros
-$group_messages = []; // <-- ¡NUEVO! Para el historial de chat
+$user_groups = []; 
+$current_group_members = [];
+$grouped_messages = []; // Mensajes listos para renderizar
 
 if (isset($_SESSION['user_id'], $pdo)) {
     
@@ -31,10 +28,11 @@ if (isset($_SESSION['user_id'], $pdo)) {
         logDatabaseError($e, 'home.php - load user groups for popover');
     }
 
+    // 2. Si hay un grupo seleccionado (de router.php, vía $current_group_info)
     if (isset($current_group_info) && $current_group_info) {
         $currentGroupId = $current_group_info['id'];
         
-        // 2. Obtener Miembros (existente)
+        // 3. Obtener Miembros
         try {
             $stmt_members = $pdo->prepare(
                 "SELECT u.id, u.username, u.profile_image_url, u.role as user_role
@@ -49,37 +47,55 @@ if (isset($_SESSION['user_id'], $pdo)) {
             logDatabaseError($e, 'home.php - load group members');
         }
 
-        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (Cargar historial de chat) ▼▼▼ ---
+        // 4. Cargar historial de chat (NUEVA LÓGICA)
         try {
+            // Primero, obtenemos las burbujas de mensaje
             $stmt_messages = $pdo->prepare(
                 "SELECT 
-                    m.id, m.user_id, m.message_type, m.content, m.created_at,
-                    u.username, u.profile_image_url
+                    m.id, m.user_id, m.text_content, m.created_at,
+                    u.username, u.profile_image_url, u.role as user_role
                  FROM group_messages m
                  JOIN users u ON m.user_id = u.id
                  WHERE m.group_id = ?
                  ORDER BY m.created_at ASC
-                 LIMIT 50" // Cargar los últimos 50 mensajes
+                 LIMIT 50" // (Obtenemos los últimos 50 mensajes)
             );
             $stmt_messages->execute([$currentGroupId]);
-            $group_messages = $stmt_messages->fetchAll();
+            $group_messages_raw = $stmt_messages->fetchAll();
+
+            // Ahora, para cada mensaje, obtenemos sus adjuntos
+            // (Esto es N+1, pero está bien para 50 mensajes. 
+            // Se puede optimizar luego si es necesario)
+            $stmt_attachments = $pdo->prepare(
+                "SELECT cf.public_url, cf.file_type 
+                 FROM message_attachments ma
+                 JOIN chat_files cf ON ma.file_id = cf.id
+                 WHERE ma.message_id = ?
+                 ORDER BY ma.sort_order ASC
+                 LIMIT 9" // No permitimos más de 9 adjuntos
+            );
+
+            foreach($group_messages_raw as $msg) {
+                $stmt_attachments->execute([$msg['id']]);
+                $msg['attachments'] = $stmt_attachments->fetchAll(); // Añadir array de adjuntos
+                $grouped_messages[] = $msg; // Añadir el mensaje completo al array final
+            }
+
         } catch (PDOException $e) {
             logDatabaseError($e, 'home.php - load chat history');
         }
-        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
     }
 }
 
-// 2. Preparar el texto para el H1
+// 5. Preparar el texto para el H1
 $homeH1TextKey = 'home.chat.selectGroup';
 $homeH1Text = "Selecciona un grupo para comenzar a chatear"; // (i18n: home.chat.selectGroup)
 if (isset($current_group_info) && $current_group_info) {
-    // Si hay un grupo, el H1 se oculta y se muestra el chat
     $homeH1TextKey = 'home.chat.chattingWith';
     $homeH1Text = "Chat de " . htmlspecialchars($current_group_info['name']); // Fallback
 }
 
-// 3. Agrupar miembros (existente)
+// 6. Agrupar miembros
 $grouped_members = [
     'founder' => [], 'administrator' => [], 'moderator' => [], 'user' => []
 ];
@@ -100,17 +116,21 @@ if (!empty($current_group_members)) {
     }
 }
 
-// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (Renderizar burbuja de chat en PHP) ▼▼▼ ---
+// 7. Función Helper para formatear la hora
 function formatMessageTimePHP($dateTimeString) {
     try {
-        $date = new DateTime($dateTimeString, new DateTimeZone('UTC')); // Asumir UTC
-        $date->setTimezone(new DateTimeZone('America/Chicago')); // Convertir a local (¡CAMBIAR A TU ZONA HORARIA!)
+        $date = new DateTime($dateTimeString, new DateTimeZone('UTC')); 
+        $userTimezone = $_SESSION['timezone'] ?? 'UTC'; 
+        $date->setTimezone(new DateTimeZone($userTimezone)); 
         return $date->format('H:i');
     } catch (Exception $e) {
         return "--:--";
     }
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+
+// --- LÓGICA DE AGRUPACIÓN DE 60 SEGUNDOS ELIMINADA ---
+
+// --- ▲▲▲ FIN DE LÓGICA DE CARGA DE GRUPO ▲▲▲ ---
 
 ?>
 
@@ -236,35 +256,75 @@ function formatMessageTimePHP($dateTimeString) {
                     </div>
                 <?php else: ?>
                     <?php
+                    // --- ▼▼▼ INICIO DE RENDERIZADO (NUEVA LÓGICA) ▼▼▼ ---
+                    // Bucle a través de los mensajes PRE-AGRUPADOS por la BD (N+1)
                     $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
-                    foreach($group_messages as $msg):
-                        $isOwnMessage = ($msg['user_id'] == $_SESSION['user_id']);
-                        $avatarUrl = $msg['profile_image_url'] ?? $defaultAvatar;
-                        if(empty($avatarUrl)) $avatarUrl = "https://ui-avatars.com/api/?name=" . urlencode($msg['username']) . "&size=100&background=e0e0e0&color=ffffff";
+                    foreach($grouped_messages as $group):
+                        // CADA $group ES AHORA UNA BURBUJA INDIVIDUAL
+                        $isOwnMessage = ($group['user_id'] == $_SESSION['user_id']);
+                        $avatarUrl = $group['profile_image_url'] ?? $defaultAvatar;
+                        if(empty($avatarUrl)) $avatarUrl = "https://ui-avatars.com/api/?name=" . urlencode($group['username']) . "&size=100&background=e0e0e0&color=ffffff";
                         
-                        $contentHtml = '';
-                        if ($msg['message_type'] === 'text') {
-                            $contentHtml = '<div class="chat-bubble-text">' . htmlspecialchars($msg['content']) . '</div>';
-                        } else if ($msg['message_type'] === 'image') {
-                            $contentHtml = '<div class="chat-bubble-image"><img src="' . htmlspecialchars($msg['content']) . '" alt="Imagen adjunta" loading="lazy"></div>';
-                        }
                     ?>
-                        <div class="chat-bubble <?php echo $isOwnMessage ? 'is-own' : ''; ?>">
-                            <div class="chat-bubble-avatar">
-                                <img src="<?php echo $avatarUrl; ?>" alt="<?php echo htmlspecialchars($msg['username']); ?>">
+                        <div class="chat-bubble <?php echo $isOwnMessage ? 'is-own' : ''; ?>"
+                             data-user-id="<?php echo $group['user_id']; ?>"
+                             data-timestamp="<?php echo strtotime($group['created_at']); ?>">
+                            
+                            <div class="chat-bubble-avatar" data-role="<?php echo htmlspecialchars($group['user_role']); ?>">
+                                <img src="<?php echo $avatarUrl; ?>" alt="<?php echo htmlspecialchars($group['username']); ?>">
                             </div>
+                            
                             <div class="chat-bubble-content">
                                 <div class="chat-bubble-header">
-                                    <span class="chat-bubble-username"><?php echo htmlspecialchars($msg['username']); ?></span>
+                                    <span class="chat-bubble-username"><?php echo htmlspecialchars($group['username']); ?></span>
                                 </div>
-                                <?php echo $contentHtml; ?>
+                                
+                                <div class="chat-bubble-body">
+                                    <?php 
+                                    // 1. Renderizar el texto, si existe
+                                    if (!empty($group['text_content'])): 
+                                    ?>
+                                        <div class="chat-bubble-text">
+                                            <?php echo htmlspecialchars($group['text_content']); ?>
+                                        </div>
+                                    <?php 
+                                    endif; 
+
+                                    // 2. Renderizar adjuntos, si existen
+                                    if (!empty($group['attachments'])):
+                                        $attachment_count = count($group['attachments']);
+                                    ?>
+                                        <div class="chat-bubble-attachments" data-count="<?php echo $attachment_count; ?>">
+                                            <?php
+                                            // Solo iterar sobre los primeros 4
+                                            foreach (array_slice($group['attachments'], 0, 4) as $index => $attachment):
+                                            ?>
+                                                <div class="chat-bubble-image">
+                                                    <img src="<?php echo htmlspecialchars($attachment['public_url']); ?>" alt="Imagen adjunta" loading="lazy">
+                                                    
+                                                    <?php 
+                                                    // Si este es el 4to item (índice 3) Y hay más de 4 en total
+                                                    if ($index === 3 && $attachment_count > 4):
+                                                        $remaining = $attachment_count - 4;
+                                                    ?>
+                                                        <div class="chat-image-overlay">+<?php echo $remaining; ?></div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php 
+                                            endforeach; 
+                                            ?>
+                                        </div>
+                                    <?php 
+                                    endif; 
+                                    ?>
+                                </div>
+                                
                                 <div class="chat-bubble-footer">
-                                    <span class="chat-bubble-time"><?php echo formatMessageTimePHP($msg['created_at']); ?></span>
+                                    <span class="chat-bubble-time"><?php echo formatMessageTimePHP($group['created_at']); ?></span>
                                 </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
-                    
                     <script>
                         (function() {
                             const chatHistory = document.getElementById('chat-history-container');

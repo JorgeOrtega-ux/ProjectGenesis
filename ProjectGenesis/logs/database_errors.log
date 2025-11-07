@@ -72,3 +72,4 @@
 [2025-11-07 02:17:47 UTC] [auth_handler - concurrent_users_check] js.api.errorServer (Archivo: E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php, Línea: 565)
 [2025-11-07 02:20:53 UTC] [auth_handler - concurrent_users_check] No se pudo contactar al servidor de conteo en http://127.0.0.1:8766/count (Archivo: E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php, Línea: 564)
 [2025-11-07 02:20:53 UTC] [auth_handler - concurrent_users_check] js.api.errorServer (Archivo: E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php, Línea: 565)
+[2025-11-07 04:00:16 UTC] [home.php - load chat history] SQLSTATE[42S22]: Column not found: 1054 Unknown column 'm.message_type' in 'field list' (Archivo: E:\xampp\htdocs\ProjectGenesis\includes\sections\main\home.php, Línea: 62)

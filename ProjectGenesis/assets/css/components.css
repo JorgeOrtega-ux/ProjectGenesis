@@ -2417,20 +2417,50 @@
     margin-bottom: 16px;
 }
 
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN (Issue 1: Borde de Rango) ▼▼▼ --- */
 .chat-bubble-avatar {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    overflow: hidden;
+    overflow: visible; /* Permitir que el ::before se vea */
     flex-shrink: 0;
     margin-top: 4px;
+    position: relative; /* Añadido para el borde */
 }
 
 .chat-bubble-avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 50%; /* Asegurar que la imagen sea redonda */
+    position: relative; /* Añadido para z-index */
+    z-index: 1;
 }
+
+.chat-bubble-avatar::before {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    /* Ajuste para que el borde sea sutil */
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border: 2px solid transparent;
+    z-index: 2; /* Encima de la imagen */
+    background-image: none;
+}
+.chat-bubble-avatar[data-role="user"]::before { border-color: #cccccc; }
+.chat-bubble-avatar[data-role="moderator"]::before { border-color: #0000FF; }
+.chat-bubble-avatar[data-role="administrator"]::before { border-color: #FF0000; }
+.chat-bubble-avatar[data-role="founder"]::before {
+    border: none;
+    background-image: conic-gradient(from 300deg, #D32029 0deg 90deg, #206BD3 90deg 210deg, #28A745 210deg 300deg, #FFC107 300deg 360deg);
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+}
+/* --- ▲▲▲ FIN DE MODIFICACIÓN (Issue 1) ▲▲▲ --- */
+
 
 .chat-bubble-content {
     display: flex;
@@ -2448,6 +2478,15 @@
     color: #1f2937;
 }
 
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN (Issue 2 & 3: Agrupación y Collage) ▼▼▼ --- */
+
+/* ¡NUEVO! Contenedor para texto y/o imágenes */
+.chat-bubble-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Espacio entre texto e imágenes */
+}
+
 .chat-bubble-text {
     background-color: #f5f5fa; /* Fondo gris para otros */
     color: #1f2937;
@@ -2459,22 +2498,77 @@
     border-top-left-radius: 4px; /* Estilo de burbuja */
 }
 
+/* ¡NUEVO! Contenedor de collage de imágenes */
+.chat-bubble-attachments {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Cuadrícula de 2 columnas por defecto */
+    gap: 4px; /* Espacio entre imágenes */
+    max-width: 300px; /* Ancho máximo del collage */
+    border-radius: 18px; /* Redondeo general */
+    overflow: hidden; /* Importante para que las imágenes internas se corten */
+}
+
+/* Si un texto precede a las imágenes, quitar el redondeo superior */
+.chat-bubble-text + .chat-bubble-attachments {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* Si NO hay texto, las imágenes heredan el redondeo especial de la burbuja */
+.chat-bubble-body:not(:has(.chat-bubble-text)) .chat-bubble-attachments {
+    border-top-left-radius: 4px;
+}
+
+/* ¡NUEVO! Estilo para una sola imagen en el collage */
+.chat-bubble-attachments:has(.chat-bubble-image:nth-last-child(1):first-child) {
+    grid-template-columns: 1fr; /* 1 columna si solo hay 1 imagen */
+}
+
+/* ¡ESTILOS REEMPLAZADOS!
+   Estas reglas ahora se aplican a .chat-bubble-image DENTRO de .chat-bubble-attachments
+*/
 .chat-bubble-image {
-    max-width: 300px;
-    border-radius: 18px;
-    overflow: hidden;
-    border: 1px solid #00000015;
+    width: 100%;
+    height: 120px; /* Altura fija para el collage */
     background-color: #f5f5fa;
     cursor: pointer;
+    position: relative;
 }
 
 .chat-bubble-image img {
-    display: block;
     width: 100%;
-    height: auto;
-    max-height: 400px;
-    object-fit: cover;
+    height: 100%;
+    object-fit: cover; /* Rellena el espacio sin distorsionar */
+    display: block;
 }
+
+/* Una sola imagen es más alta */
+.chat-bubble-attachments:has(.chat-bubble-image:nth-last-child(1):first-child) .chat-bubble-image {
+    height: 180px;
+}
+
+/* Dos imágenes son un poco más altas */
+.chat-bubble-attachments:has(.chat-bubble-image:nth-last-child(2):first-child) .chat-bubble-image {
+    height: 140px;
+}
+
+/* Tres imágenes */
+.chat-bubble-attachments:has(.chat-bubble-image:nth-last-child(3):first-child) {
+    grid-template-columns: 1fr 1fr; /* Mantiene 2 columnas */
+}
+/* La primera de 3 ocupa todo el ancho */
+.chat-bubble-attachments:has(.chat-bubble-image:nth-last-child(3):first-child) .chat-bubble-image:first-child {
+    grid-column: 1 / 3;
+    height: 140px;
+}
+/* Las otras 2 son más pequeñas */
+.chat-bubble-attachments:has(.chat-bubble-image:nth-last-child(3):first-child) .chat-bubble-image:nth-child(n+2) {
+    height: 100px;
+}
+
+
+/* --- ▲▲▲ FIN DE MODIFICACIÓN (Issue 2 & 3) ▲▲▲ --- */
+
 
 .chat-bubble-footer {
     margin-top: 4px;
@@ -2512,6 +2606,148 @@
     border-color: transparent;
 }
 
+/* Si no hay texto, las imágenes heredan el redondeo especial de la burbuja (para .is-own) */
+.chat-bubble.is-own .chat-bubble-body:not(:has(.chat-bubble-text)) .chat-bubble-attachments {
+     border-top-left-radius: 18px;
+     border-top-right-radius: 4px;
+}
+
 .chat-bubble.is-own .chat-bubble-footer {
     text-align: right;
+}
+
+
+/* ¡NUEVO! Contenedor de cuerpo */
+.chat-bubble-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Espacio entre texto e imágenes */
+}
+
+.chat-bubble-text {
+    background-color: #f5f5fa; /* Fondo gris para otros */
+    color: #1f2937;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 16px;
+    line-height: 1.5;
+    word-break: break-word; /* Para que el texto largo se rompa */
+    border-top-left-radius: 4px; /* Estilo de burbuja */
+}
+
+/* ¡NUEVO! Contenedor de collage de imágenes */
+.chat-bubble-attachments {
+    display: grid;
+    gap: 4px; /* Espacio entre imágenes */
+    max-width: 300px; /* Ancho máximo del collage */
+    border-radius: 18px; /* Redondeo general */
+    overflow: hidden; /* Importante para que las imágenes internas se corten */
+    
+    /* Lógica de cuadrícula por defecto (2 columnas) */
+    grid-template-columns: 1fr 1fr;
+}
+
+/* Si un texto precede a las imágenes, quitar el redondeo superior */
+.chat-bubble-text + .chat-bubble-attachments {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* Si NO hay texto, las imágenes heredan el redondeo especial de la burbuja */
+.chat-bubble-body:not(:has(.chat-bubble-text)) .chat-bubble-attachments {
+    border-top-left-radius: 4px;
+}
+.chat-bubble.is-own .chat-bubble-body:not(:has(.chat-bubble-text)) .chat-bubble-attachments {
+     border-top-left-radius: 18px;
+     border-top-right-radius: 4px;
+}
+
+
+/* --- Lógica de altura y columnas basada en data-count --- */
+
+/* 1 Imagen */
+.chat-bubble-attachments[data-count="1"] {
+    grid-template-columns: 1fr;
+}
+.chat-bubble-attachments[data-count="1"] .chat-bubble-image {
+    height: 180px;
+}
+
+/* 2 Imágenes */
+.chat-bubble-attachments[data-count="2"] {
+    grid-template-columns: 1fr 1fr;
+}
+.chat-bubble-attachments[data-count="2"] .chat-bubble-image {
+    height: 140px;
+}
+
+/* 3 Imágenes (1 grande, 2 pequeñas) */
+.chat-bubble-attachments[data-count="3"] {
+    grid-template-columns: 1fr 1fr;
+}
+.chat-bubble-attachments[data-count="3"] .chat-bubble-image:first-child {
+    grid-column: 1 / 3; /* La primera ocupa 2 columnas */
+    height: 140px;
+}
+.chat-bubble-attachments[data-count="3"] .chat-bubble-image:nth-child(n+2) {
+    height: 100px; /* Las dos de abajo */
+}
+
+/* 4+ Imágenes (Cuadrícula 2x2) */
+.chat-bubble-attachments[data-count="4"],
+.chat-bubble-attachments[data-count="5"],
+.chat-bubble-attachments[data-count="6"],
+.chat-bubble-attachments[data-count="7"],
+.chat-bubble-attachments[data-count="8"],
+.chat-bubble-attachments[data-count="9"] {
+    grid-template-columns: 1fr 1fr;
+}
+.chat-bubble-attachments[data-count="4"] .chat-bubble-image,
+.chat-bubble-attachments[data-count="5"] .chat-bubble-image,
+.chat-bubble-attachments[data-count="6"] .chat-bubble-image,
+.chat-bubble-attachments[data-count="7"] .chat-bubble-image,
+.chat-bubble-attachments[data-count="8"] .chat-bubble-image,
+.chat-bubble-attachments[data-count="9"] .chat-bubble-image {
+    height: 120px; /* Altura estándar de la cuadrícula */
+}
+
+
+.chat-bubble-image {
+    width: 100%;
+    /* height: 120px; (Ahora se define por data-count) */
+    background-color: #f5f5fa;
+    cursor: pointer;
+    position: relative; /* ¡NUEVO! Necesario para el overlay */
+}
+
+.chat-bubble-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Rellena el espacio sin distorsionar */
+    display: block;
+}
+
+/* --- ¡NUEVO! Estilo para el overlay +N --- */
+.chat-image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro semitransparente */
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    pointer-events: none; /* Permite que el clic pase a la imagen de abajo */
+}
+
+/* --- ▲▲▲ FIN DE MODIFICACIÓN (Lógica de Cuadrícula de Chat) ▲▲▲ --- */
+
+
+.chat-bubble-footer {
+    margin-top: 4px;
+    padding: 0 8px;
 }
