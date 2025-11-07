@@ -88,17 +88,17 @@ const paths = {
     '/settings/toggle-2fa': 'toggleSectionSettingsToggle2fa',
     '/settings/delete-account': 'toggleSectionSettingsDeleteAccount',
 
-    '/account-status/deleted': 'toggleSectionAccountStatusDeleted',
-    '/account-status/suspended': 'toggleSectionAccountStatusSuspended',
+    '/account-status/deleted': 'account-status-deleted',
+    '/account-status/suspended': 'account-status-suspended',
     
     '/admin/dashboard': 'toggleSectionAdminDashboard',
     '/admin/manage-users': 'toggleSectionAdminManageUsers', 
     '/admin/create-user': 'toggleSectionAdminCreateUser', 
     '/admin/edit-user': 'toggleSectionAdminEditUser', 
-    '/admin/server-settings': 'toggleSectionAdminServerSettings', 
+    '/admin/server-settings': 'admin-server-settings', 
 
     '/admin/manage-backups': 'toggleSectionAdminManageBackups',
-    '/admin/manage-logs': 'toggleSectionAdminManageLogs', 
+    '/admin/manage-logs': 'admin-manage-logs', 
     '/admin/manage-groups': 'toggleSectionAdminManageGroups',
 
     '/admin/edit-group': 'toggleSectionAdminEditGroup',
@@ -252,6 +252,9 @@ async function loadPage(page, action, fetchParams = null) {
             document.body.dataset.currentGroupUuid = groupUuid || '';
         }
         // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (WS JOIN GROUP) ▲▲▲ ---
+        
+        // --- ▼▼▼ ¡BLOQUE 'setTimeout' DE SCROLL ELIMINADO! ▼▼▼ ---
+        // (Ya no es necesario gracias al CSS)
         
     } catch (error) {
         console.error('Error al cargar la página:', error);

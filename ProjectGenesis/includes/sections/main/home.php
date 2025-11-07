@@ -325,14 +325,6 @@ function formatMessageTimePHP($dateTimeString) {
                             </div>
                         </div>
                     <?php endforeach; ?>
-                    <script>
-                        (function() {
-                            const chatHistory = document.getElementById('chat-history-container');
-                            if (chatHistory) {
-                                chatHistory.scrollTop = chatHistory.scrollHeight;
-                            }
-                        })();
-                    </script>
                 <?php endif; ?>
                 
             </div>

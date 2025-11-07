@@ -2238,10 +2238,25 @@
     margin: 0 auto; /* Centrado */
 }
 
+.chat-layout-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%; /* Llenará el component-wrapper */
+    max-width: 900px; /* Más ancho que el wrapper normal */
+    margin: 0 auto; /* Centrado */
+}
+
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN (El truco de WhatsApp) ▼▼▼ --- */
 .chat-layout__top {
     flex-grow: 1; /* Ocupa todo el espacio disponible */
     overflow-y: auto; /* Para el historial de chat */
     padding: 16px;
+    
+    /* ¡LA MAGIA ESTÁ AQUÍ! */
+    display: flex;
+    flex-direction: column-reverse; /* Muestra los hijos de abajo hacia arriba */
+    
     /* Estilos de scrollbar (copiados de .overflow-y) */
     scroll-behavior: smooth;
     scrollbar-color: #00000080 transparent;
@@ -2249,24 +2264,12 @@
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
 }
+/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
 
 .chat-layout__bottom {
     flex-shrink: 0;
     padding: 0 16px 0 16px; /* Padding para la caja de chat */
 }
-
-.chat-input-container {
-    display: flex;
-    flex-direction: column; /* Ahora los elementos se apilan verticalmente */
-    gap: 4px; /* Pequeño espacio entre el text area y los botones */
-    background-color: #ffffff;
-    border: 1px solid #00000020;
-    border-radius: 28px; /* Muy redondeado, como en la foto */
-    padding: 8px;
-    min-height: 56px; /* Altura mínima */
-    box-shadow: 0 2px 8px #00000010; /* Sombra sutil */
-}
-
 .chat-input__text-area {
     flex-grow: 1;
     border: none;
