@@ -277,9 +277,9 @@ async function loadPage(page, action, fetchParams = null) {
         if (page === 'home') {
             const chatHistory = contentContainer.querySelector('#chat-history-container');
             if (chatHistory) {
-                // CORRECCIÓN: 0 es el TOPE (mensajes antiguos). 
-                // scrollHeight es el FONDO (mensajes nuevos).
-                chatHistory.scrollTop = chatHistory.scrollHeight;
+                // CORRECCIÓN: scrollHeight es el FONDO (mensajes nuevos).
+                // 0 es el TOPE (mensajes antiguos).
+                chatHistory.scrollTop = chatHistory.scrollHeight; // <-- ¡ESTA ES LA CORRECCIÓN!
             }
         }
         // --- ▲▲▲ FIN DE CORRECCIÓN DE SCROLL (LA SOLUCIÓN) ▲▲▲ ---

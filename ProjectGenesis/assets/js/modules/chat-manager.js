@@ -185,8 +185,9 @@ export function renderIncomingMessage(msgData) {
     const bubble = createBubbleElement(msgData);
 
     // 2. Comprobar si el usuario está cerca del fondo (visual)
-    // En column-reverse, el fondo visual es scrollTop = 0.
-    const isScrolledToBottom = chatHistory.scrollTop < 100;
+    // En column-reverse, el fondo visual es scrollTop MÁXIMO.
+    const maxScrollTop = chatHistory.scrollHeight - chatHistory.clientHeight;
+    const isScrolledToBottom = chatHistory.scrollTop >= (maxScrollTop - 100);
 
     // 3. Añadir al DOM
     // `prepend` lo añade al inicio del HTML, que es el fondo visual.
@@ -202,7 +203,7 @@ export function renderIncomingMessage(msgData) {
 
     // 5. Auto-scroll
     if (isScrolledToBottom) {
-        chatHistory.scrollTop = 0; // Scroll al fondo visual
+        chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll al fondo visual
     }
 }
 
@@ -283,9 +284,8 @@ async function loadMoreHistory() {
     console.log("Cargando historial anterior a:", oldestMessageId);
 
     // --- ¡CORRECCIÓN! ---
-    // 1. Guardar la altura y posición de scroll *antes* de añadir/quitar nada.
+    // 1. Guardar la altura ANTES de añadir nada.
     const oldScrollHeight = chatHistory.scrollHeight;
-    const oldScrollTop = chatHistory.scrollTop;
     
     // (Spinner eliminado para simplificar el cálculo de scroll)
 
@@ -323,8 +323,8 @@ async function loadMoreHistory() {
                 const newScrollHeight = chatHistory.scrollHeight;
                 // 3. Calcular la altura que añadimos
                 const heightAdded = newScrollHeight - oldScrollHeight;
-                // 4. Restaurar la posición de scroll anterior + la altura añadida
-                chatHistory.scrollTop = oldScrollTop + heightAdded;
+                // 4. Restaurar la posición de scroll
+                chatHistory.scrollTop = heightAdded; // Mantener el scroll en el mismo punto relativo
                 
             } else {
                 hasMoreHistory = false; // No hay más mensajes
@@ -362,10 +362,9 @@ export function initChatManager() {
 
             // --- ¡CORRECCIÓN DEL DETECTOR DE SCROLL! ---
             // "Llegar al tope" en column-reverse significa que
-            // scrollTop está cerca de su valor MÁXIMO (scrollHeight - clientHeight).
-            const scrollBuffer = 200; // 200px antes de llegar
-            const maxScrollTop = chatHistory.scrollHeight - chatHistory.clientHeight;
-            const isAtTop = chatHistory.scrollTop >= (maxScrollTop - scrollBuffer);
+            // scrollTop está cerca de 0.
+            const scrollBuffer = 50; // 50px de margen
+            const isAtTop = chatHistory.scrollTop <= scrollBuffer;
 
             if (isAtTop) {
                 loadMoreHistory();
