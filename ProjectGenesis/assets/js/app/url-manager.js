@@ -1,10 +1,13 @@
 // RUTA: assets/js/app/url-manager.js
-// (CÓDIGO COMPLETO CORREGIDO)
+// (CÓDIGO COMPLETO CORREGIDO CON LLAMADA A initChatManager)
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
 import { applyTranslations, getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js';
+// --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+import { initChatManager } from '../modules/chat-manager.js';
+// --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
 const contentContainer = document.querySelector('.main-sections');
 const pageLoader = document.getElementById('page-loader');
@@ -197,7 +200,6 @@ async function loadPage(page, action, fetchParams = null) {
         applyTranslations(contentContainer);
 
         
-        // --- (Se mantiene la corrección de Zona Horaria) ---
         function formatLocalTime(utcTimestamp) {
             try {
                 const date = new Date(utcTimestamp.replace(' ', 'T') + 'Z');
@@ -271,19 +273,25 @@ async function loadPage(page, action, fetchParams = null) {
         }
         
         
-        // --- ▼▼▼ INICIO DE CORRECCIÓN DE SCROLL (LA SOLUCIÓN) ▼▼▼ ---
-        // Después de que todo se cargue, si estamos en 'home',
-        // forzamos el scroll al fondo del contenedor.
+        // --- ▼▼▼ INICIO DE CORRECCIÓN DE SCROLL (CON LOG) ▼▼▼ ---
         if (page === 'home') {
             const chatHistory = contentContainer.querySelector('#chat-history-container');
             if (chatHistory) {
-                // CORRECCIÓN: scrollHeight es el FONDO (mensajes nuevos).
-                // 0 es el TOPE (mensajes antiguos).
-                chatHistory.scrollTop = chatHistory.scrollHeight; // <-- ¡ESTA ES LA CORRECCIÓN!
+                console.log('[Depurador URL-Manager] Página "home" cargada. Ajustando scroll a 0 (fondo).');
+                // En column-reverse, scrollTop = 0 es el FONDO (mensajes nuevos).
+                chatHistory.scrollTop = 0;
             }
         }
-        // --- ▲▲▲ FIN DE CORRECCIÓN DE SCROLL (LA SOLUCIÓN) ▲▲▲ ---
+        // --- ▲▲▲ FIN DE CORRECCIÓN DE SCROLL (CON LOG) ▲▲▲ ---
         
+        // --- ▼▼▼ INICIO DE LA CORRECCIÓN DE INICIALIZACIÓN ▼▼▼ ---
+        // Inicializar módulos específicos de la página DESPUÉS de cargar el HTML
+        if (page === 'home') {
+            console.log('[Depurador URL-Manager] Página "home" cargada. Inicializando chat-manager.js...');
+            initChatManager(); 
+        }
+        // --- ▲▲▲ FIN DE LA CORRECCIÓN DE INICIALIZACIÓN ▲▲▲ ---
+
     } catch (error) {
         console.error('Error al cargar la página:', error);
         contentContainer.innerHTML = `<h2>${getTranslation('js.url.errorLoad')}</h2>`;

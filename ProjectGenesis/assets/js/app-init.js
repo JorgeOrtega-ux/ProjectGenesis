@@ -11,7 +11,8 @@ import { initAdminServerSettingsManager } from './modules/admin-server-settings-
 import { initAdminBackupModule } from './modules/admin-backup-module.js'; 
 import { initGroupsManager } from './modules/groups-manager.js'; 
 // --- ▼▼▼ INICIO DE LÍNEA MODIFICADA ▼▼▼ ---
-import { initChatManager, renderIncomingMessage } from './modules/chat-manager.js';
+// Quitamos initChatManager de aquí, pero DEJAMOS renderIncomingMessage
+import { renderIncomingMessage } from './modules/chat-manager.js'; 
 // --- ▲▲▲ FIN DE LÍNEA MODIFICADA ▲▲▲ ---
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager, getTranslation } from './services/i18n-manager.js'; 
@@ -81,9 +82,9 @@ function initThemeManager() {
 document.addEventListener('DOMContentLoaded', async function () { 
     
     window.showAlert = showAlert;
-    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE LÍNEA MODIFICADA ▼▼▼ ---
     window.renderIncomingMessage = renderIncomingMessage; // Exponer al WebSocket
-    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+    // --- ▲▲▲ FIN DE LÍNEA MODIFICADA ▲▲▲ ---
 
     await initI18nManager();
 
@@ -96,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     initAdminServerSettingsManager();
     initAdminBackupModule();
     initGroupsManager(); 
-    initChatManager(); // Inicializa el nuevo módulo de chat
+    // initChatManager(); // <-- LÍNEA ELIMINADA DE AQUÍ
 
     initRouter(); 
     initTooltipManager(); 
@@ -108,7 +109,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         const wsHost = window.wsHost || '127.0.0.1';
         const wsUrl = `ws://${wsHost}:8765`;
         
-        // --- ▼▼▼ INICIO DE FUNCIÓN AÑADIDA ▼▼▼ ---
         /**
          * Envía un objeto JSON al WebSocket si está conectado.
          * @param {object} msgObject El objeto a enviar.
@@ -124,7 +124,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 console.warn("[WS] Intento de envío mientras WS no está conectado.", msgObject);
             }
         };
-        // --- ▲▲▲ FIN DE FUNCIÓN AÑADIDA ▲▲▲ ---
 
         function connectWebSocket() {
             try {
@@ -141,13 +140,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                     };
                     window.wsSend(authMessage); // Usar la nueva función
                     
-                    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
-                    // Al reconectar, informar al servidor de nuestro grupo actual (si lo hay)
                     const currentGroupUuid = document.body.dataset.currentGroupUuid || null;
                     if(currentGroupUuid) {
                         window.wsSend({ type: 'join_group', group_uuid: currentGroupUuid });
                     }
-                    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
                 };
 
                 ws.onmessage = (event) => {
@@ -188,14 +184,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                             }
                         }
 
-                        // --- ▼▼▼ INICIO DE NUEVO BLOQUE ▼▼▼ ---
                         else if (data.type === 'new_chat_message') {
                             if (data.message && window.renderIncomingMessage) {
-                                // Llamar a la función expuesta para renderizar el chat
                                 window.renderIncomingMessage(data.message);
                             }
                         }
-                        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 
                         else if (data.type === 'force_logout') {
                             console.log("[WS] Recibida orden de desconexión forzada (logout o reactivación).");
@@ -233,21 +226,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                         window.applyOnlineStatusToAllMembers();
                     }
                     
-                    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA (Reconexión) ▼▼▼ ---
-                    // Intentar reconectar después de 5 segundos
                     setTimeout(connectWebSocket, 5000);
-                    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA (Reconexión) ▲▲▲ ---
                 };
 
                 ws.onerror = (error) => {
                     console.error("[WS] Error de WebSocket:", error);
-                    // onclose se llamará automáticamente después de un error,
-                    // lo que activará la lógica de reconexión.
                 };
 
             } catch (e) {
                 console.error("[WS] No se pudo crear la conexión WebSocket:", e);
-                // Reintentar si la creación misma falla
                 setTimeout(connectWebSocket, 5000);
             }
         }
