@@ -48,9 +48,10 @@ Disparador (Trigger): En initChatManager, un addEventListener('scroll', ...) mon
 
 Detección (El Bug Corregido): Se activa la carga cuando el scroll llega al tope visual.
 
-En column-reverse, el tope visual (mensajes antiguos) está al final de la barra de scroll.
+En column-reverse, el tope visual (mensajes antiguos) está al final de la barra de scroll. En navegadores modernos (basados en Chromium), scrollTop es 0 en el fondo y se vuelve **negativo** a medida que se sube.
 
-La condición correcta es: chatHistory.scrollTop >= (chatHistory.scrollHeight - chatHistory.clientHeight - 200).
+La condición correcta es: `chatHistory.scrollTop <= (-(chatHistory.scrollHeight - chatHistory.clientHeight) + 200)`.
+(Es decir, cuando el scrollTop negativo está cerca de su valor mínimo posible).
 
 Llamada a la API:
 
@@ -66,10 +67,12 @@ Devuelve los 20 mensajes siguientes (de nuevo, en orden Nuevo -> Antiguo).
 
 Actualización del DOM (El "Truco" del Scroll):
 
-Guardar Posición: Se guardan oldScrollHeight y oldScrollTop antes de tocar el DOM.
+Guardar Posición: Se guardan `oldScrollHeight` y `oldScrollTop` (que será un valor negativo) antes de tocar el DOM.
 
-Añadir Mensajes: Se usa chatHistory.appendChild(bubble); para cada mensaje antiguo.
+Añadir Mensajes: Se usa `chatHistory.appendChild(bubble);` para cada mensaje antiguo.
 
 ¿Por qué appendChild? Porque "a-penar" (añadir al final del HTML) hace que los elementos aparezcan visualmente en el tope del chat (column-reverse).
 
-Restaurar Posición: Se calcula la heightAdded (la altura de los nuevos mensajes) y se re-ajusta el scroll: chatHistory.scrollTop = oldScrollTop + heightAdded;. Esto mantiene al usuario viendo el mismo mensaje que tenía en pantalla, evitando el "salto".
+Restaurar Posición: Se calcula la `heightAdded` (la altura de los nuevos mensajes). Para que el scroll no "salte", debemos ajustar el `scrollTop` (negativo) para que sea "más negativo" por la misma cantidad de altura que añadimos.
+
+La lógica correcta es: `chatHistory.scrollTop = oldScrollTop - heightAdded;`.
