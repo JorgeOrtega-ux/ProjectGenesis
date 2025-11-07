@@ -333,17 +333,18 @@ async function loadMoreHistory() {
 
                 console.log(`[Depurador loadMoreHistory] ${result.messages.length} mensajes cargados. Nuevo oldestMessageId: ${oldestMessageId}. ¿Hay más?: ${hasMoreHistory}`);
 
-                // --- ▼▼▼ ¡INICIO DE LA SEGUNDA CORRECCIÓN! ▼▼▼ ---
+                // --- ▼▼▼ ¡INICIO DE LA SEGUNDA CORRECCIÓN! (Bug 2) ▼▼▼ ---
                 // Restaurar la posición de scroll para que no "salte"
                 const newScrollHeight = chatHistory.scrollHeight;
                 const heightAdded = newScrollHeight - oldScrollHeight;
                 
                 // Ajustar el scroll para que no salte
-                // scrollTop = (Posición guardada) + (Altura de los nuevos mensajes)
-                chatHistory.scrollTop = oldScrollTop + heightAdded;
+                // scrollTop = (Posición guardada) - (Altura de los nuevos mensajes)
+                // Restamos porque el scrollTop es negativo y queremos ir "más arriba" (más negativo)
+                chatHistory.scrollTop = oldScrollTop - heightAdded;
                 
                 console.log(`[Depurador loadMoreHistory] Altura añadida: ${heightAdded}. Scroll restaurado a: ${Math.round(chatHistory.scrollTop)}`);
-                // --- ▲▲▲ ¡FIN DE LA SEGUNDA CORRECCIÓN! ▲▲▲ ---
+                // --- ▲▲▲ ¡FIN DE LA SEGUNDA CORRECCIÓN! (Bug 2) ▲▲▲ ---
                 
             } else {
                 console.log('[Depurador loadMoreHistory] No se recibieron más mensajes. Se asume que no hay más historial.');
@@ -382,7 +383,7 @@ export function initChatManager() {
         
         console.log(`[Depurador initChatManager] Iniciando. oldestMessageId: ${oldestMessageId}, hasMoreHistory: ${hasMoreHistory}`);
         
-        // --- ▼▼▼ ¡INICIO DE LA CORRECCIÓN 1 (LISTENER CON LOGS)! ▼▼▼ ---
+        // --- ▼▼▼ ¡INICIO DE LA CORRECCIÓN 1 (LISTENER CON LOGS)! (Bug 1) ▼▼▼ ---
         // Listener de Scroll para lazy loading
         chatHistory.addEventListener('scroll', () => {
             
@@ -394,25 +395,25 @@ export function initChatManager() {
             // ¡IMPORTANTE! maxScroll puede ser 0 o negativo si el contenido es más pequeño que el contenedor
             const effectiveMaxScroll = Math.max(0, maxScroll);
             
-            const isAtTop = currentScroll >= (effectiveMaxScroll - scrollBuffer);
+            // --- ¡LA LÍNEA DEL BUG CORREGIDA! ---
+            // Comprobamos si el scroll (negativo) es menor o igual que
+            // el scroll máximo (negativo) + un buffer.
+            const isAtTop = currentScroll <= (-effectiveMaxScroll + scrollBuffer);
             
             // Loguear el estado del scroll
-            console.log(`[Depurador Scroll] scrollTop: ${Math.round(currentScroll)}, maxScroll: ${Math.round(maxScroll)}, isAtTop: ${isAtTop}, isLoading: ${isLoadingHistory}, hasMore: ${hasMoreHistory}`);
+            // console.log(`[Depurador Scroll] scrollTop: ${Math.round(currentScroll)}, maxScroll: ${Math.round(maxScroll)}, isAtTop: ${isAtTop}, isLoading: ${isLoadingHistory}, hasMore: ${hasMoreHistory}`);
 
             // Salir si ya estamos cargando o si sabemos que no hay más historial
             if (isLoadingHistory || !hasMoreHistory) {
                 return;
             }
             
-            // --- ▼▼▼ ¡INICIO DE LA CORRECCIÓN DEL BUG QUE INTRODUJE! ▼▼▼ ---
             // Si oldestMessageId es 0 o -1, significa que no hay nada que cargar
             if (oldestMessageId <= 0) {
-                 // No hay ID más antiguo, así que no hay más que cargar.
                  hasMoreHistory = false;
                  chatHistory.dataset.hasMoreHistory = "false";
                  return;
             }
-            // --- ▲▲▲ ¡FIN DE LA CORRECCIÓN DEL BUG! ▲▲▲ ---
 
             if (isAtTop) {
                 console.log('%c[Depurador Scroll] ¡Disparando loadMoreHistory!', 'color: yellow; font-weight: bold;');
