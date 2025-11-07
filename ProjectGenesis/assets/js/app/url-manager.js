@@ -271,17 +271,18 @@ async function loadPage(page, action, fetchParams = null) {
         }
         
         
-        // --- ▼▼▼ INICIO DE CORRECCIÓN DE SCROLL (NUEVO) ▼▼▼ ---
+        // --- ▼▼▼ INICIO DE CORRECCIÓN DE SCROLL (LA SOLUCIÓN) ▼▼▼ ---
         // Después de que todo se cargue, si estamos en 'home',
-        // forzamos el scroll al final del contenedor.
+        // forzamos el scroll al fondo del contenedor.
         if (page === 'home') {
             const chatHistory = contentContainer.querySelector('#chat-history-container');
             if (chatHistory) {
-                // En un layout column-reverse, 0 es el fondo.
-                chatHistory.scrollTop = 0;
+                // CORRECCIÓN: 0 es el TOPE (mensajes antiguos). 
+                // scrollHeight es el FONDO (mensajes nuevos).
+                chatHistory.scrollTop = chatHistory.scrollHeight;
             }
         }
-        // --- ▲▲▲ FIN DE CORRECCIÓN DE SCROLL (NUEVO) ▲▲▲ ---
+        // --- ▲▲▲ FIN DE CORRECCIÓN DE SCROLL (LA SOLUCIÓN) ▲▲▲ ---
         
     } catch (error) {
         console.error('Error al cargar la página:', error);

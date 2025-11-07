@@ -6,6 +6,7 @@
 $user_groups = []; 
 $current_group_members = [];
 $grouped_messages = []; // Mensajes listos para renderizar
+$oldest_message_id_loaded = 0; // <--- ¡NUEVA VARIABLE!
 
 if (isset($_SESSION['user_id'], $pdo)) {
     
@@ -81,11 +82,16 @@ if (isset($_SESSION['user_id'], $pdo)) {
                 $grouped_messages[] = $msg; // Añadir el mensaje completo al array final
             }
             
-            // --- ▼▼▼ INICIO DE CORRECCIÓN (INVERTIR ARRAY) ▼▼▼ ---
-            // Como los pedimos DESC, pero los queremos imprimir ASC (para que column-reverse funcione)
-            // los invertimos en PHP.
-            $grouped_messages = array_reverse($grouped_messages);
-            // --- ▲▲▲ FIN DE CORRECCIÓN (INVERTIR ARRAY) ▲▲▲ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (YA NO SE USA array_reverse) ▼▼▼ ---
+            // $grouped_messages = array_reverse($grouped_messages); // <-- ¡LÍNEA ELIMINADA!
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+            // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Guardar ID más antiguo) ▼▼▼ ---
+            if (!empty($grouped_messages)) {
+                // Como $grouped_messages está [Nuevo...Antiguo], el último es el más antiguo
+                $oldest_message_id_loaded = $grouped_messages[count($grouped_messages) - 1]['id'];
+            }
+            // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
 
 
         } catch (PDOException $e) {
@@ -241,9 +247,11 @@ if (!empty($current_group_members)) {
 
         <div class="chat-layout-container">
             
-            <div class="chat-layout__top" id="chat-history-container">
-                
-                <?php if (!isset($current_group_info) || !$current_group_info): ?>
+            <div class="chat-layout__top" 
+                 id="chat-history-container"
+                 data-oldest-message-id="<?php echo $oldest_message_id_loaded; ?>"
+                 data-has-more-history="<?php echo (count($grouped_messages) >= 50) ? 'true' : 'false'; ?>">
+            <?php if (!isset($current_group_info) || !$current_group_info): ?>
                     <div class="auth-container text-center" style="margin-top: 10vh;"> 
                         <h1 class="auth-title" 
                             id="home-chat-placeholder" 
@@ -266,9 +274,9 @@ if (!empty($current_group_members)) {
                     ?>
                         <div class="chat-bubble <?php echo $isOwnMessage ? 'is-own' : ''; ?>"
                              data-user-id="<?php echo $group['user_id']; ?>"
-                             data-timestamp="<?php echo strtotime($group['created_at']); ?>">
-                            
-                            <div class="chat-bubble-avatar" data-role="<?php echo htmlspecialchars($group['user_role']); ?>">
+                             data-timestamp="<?php echo strtotime($group['created_at']); ?>"
+                             data-message-id="<?php echo $group['id']; ?>">
+                        <div class="chat-bubble-avatar" data-role="<?php echo htmlspecialchars($group['user_role']); ?>">
                                 <img src="<?php echo $avatarUrl; ?>" alt="<?php echo htmlspecialchars($group['username']); ?>">
                             </div>
                             

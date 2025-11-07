@@ -1,5 +1,5 @@
 // ARCHIVO: assets/js/modules/chat-manager.js
-// (Versión modificada para NUEVO PAYLOAD y SIN AGRUPACIÓN DE 60s)
+// (Versión corregida con LAZY LOAD funcionando)
 
 import { callChatApi } from '../services/api-service.js';
 import { showAlert } from '../services/alert-manager.js';
@@ -8,7 +8,12 @@ import { hideTooltip } from '../services/tooltip-manager.js';
 
 const attachedFiles = new Map();
 let isSending = false;
-// const MAX_GROUPING_TIME_MS = 60 * 1000; // <-- ELIMINADO
+
+// --- Variables de estado para Lazy Load ---
+let isLoadingHistory = false;
+let hasMoreHistory = true;
+let oldestMessageId = 0;
+
 
 /**
  * Limpia el input de chat, borra los archivos adjuntos y elimina las vistas previas.
@@ -107,25 +112,17 @@ function formatMessageTime(timestamp) {
 }
 
 
-// --- ▼▼▼ ¡FUNCIÓN RENDERINCOMINGMESSAGE MODIFICADA! ▼▼▼ ---
 /**
- * Renderiza un nuevo mensaje en la UI del chat.
- * ¡YA NO AGRUPA MENSAJES! CADA MENSAJE ES UNA NUEVA BURBUJA.
- * @param {object} msgData El objeto del mensaje (de la API/WS).
+ * Crea el HTML de una burbuja de chat (sin añadirla al DOM).
+ * @param {object} msgData El objeto del mensaje.
+ * @returns {HTMLElement} El elemento de la burbuja.
  */
-export function renderIncomingMessage(msgData) {
-    const chatHistory = document.getElementById('chat-history-container');
-    if (!chatHistory) return;
-
+function createBubbleElement(msgData) {
     const isOwnMessage = msgData.user_id === window.userId;
     const avatarUrl = msgData.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(msgData.username)}&size=100&background=e0e0e0&color=ffffff`;
     const time = formatMessageTime(msgData.created_at);
     const msgTimestamp = new Date(msgData.created_at.replace(' ', 'T') + 'Z').getTime();
 
-    // --- LÓGICA DE AGRUPACIÓN (isContinuation) ELIMINADA ---
-    // ya no se comprueba el lastBubble
-
-    // --- 3. CREAR NUEVA BURBUJA (Ahora se ejecuta siempre) ---
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble';
     if (isOwnMessage) {
@@ -133,43 +130,28 @@ export function renderIncomingMessage(msgData) {
     }
     bubble.dataset.userId = msgData.user_id;
     bubble.dataset.timestamp = msgTimestamp;
+    bubble.dataset.messageId = msgData.id; // <-- ¡Importante!
 
-    // --- LÓGICA DE RENDERIZADO DE CUERPO (NUEVA) ---
     let bodyContent = '';
-
-    // 1. Renderizar texto (si existe)
     if (msgData.text_content) {
         bodyContent += `<div class="chat-bubble-text">${msgData.text_content}</div>`;
     }
-
-    // 2. Renderizar adjuntos (si existen)
     if (msgData.attachments && msgData.attachments.length > 0) {
         const attachments = msgData.attachments;
         const attachment_count = attachments.length;
-        
         let attachmentsHtml = `<div class="chat-bubble-attachments" data-count="${attachment_count}">`;
-
-        // Iterar solo hasta 4
         for (let i = 0; i < Math.min(attachment_count, 4); i++) {
             const attachment = attachments[i];
-            attachmentsHtml += `
-                <div class="chat-bubble-image">
-                    <img src="${attachment.public_url}" alt="Imagen adjunta" loading="lazy">
-            `;
-
-            // Si es el 4to item Y hay más de 4...
+            attachmentsHtml += `<div class="chat-bubble-image"><img src="${attachment.public_url}" alt="Imagen adjunta" loading="lazy">`;
             if (i === 3 && attachment_count > 4) {
                 const remaining = attachment_count - 4;
                 attachmentsHtml += `<div class="chat-image-overlay">+${remaining}</div>`;
             }
-
-            attachmentsHtml += `</div>`; // Cierra chat-bubble-image
+            attachmentsHtml += `</div>`;
         }
-
-        attachmentsHtml += `</div>`; // Cierra chat-bubble-attachments
+        attachmentsHtml += `</div>`;
         bodyContent += attachmentsHtml;
     }
-    // --- FIN LÓGICA DE RENDERIZADO DE CUERPO ---
 
     bubble.innerHTML = `
         <div class="chat-bubble-avatar" data-role="${msgData.user_role || 'user'}">
@@ -187,24 +169,42 @@ export function renderIncomingMessage(msgData) {
             </div>
         </div>
     `;
-    
-    
-    // --- ▼▼▼ INICIO DE LA CORRECCIÓN DE SCROLL (appendChild -> prepend) ▼▼▼ ---
+    return bubble;
+}
 
-    // 4. Hacer scroll al final (solo si el usuario ya está al final)
-    // En modo column-reverse, "estar al final" significa scrollTop es cercano a 0.
-    const isScrolledToBottom = chatHistory.scrollTop < 100; // 100px de margen
-    
-    // ¡LA CORRECCIÓN ESTÁ AQUÍ! Usamos prepend()
+
+/**
+ * Renderiza un nuevo mensaje en la UI del chat (mensajes en vivo).
+ * @param {object} msgData El objeto del mensaje (de la API/WS).
+ */
+export function renderIncomingMessage(msgData) {
+    const chatHistory = document.getElementById('chat-history-container');
+    if (!chatHistory) return;
+
+    // 1. Reutilizar la lógica de creación de burbujas
+    const bubble = createBubbleElement(msgData);
+
+    // 2. Comprobar si el usuario está cerca del fondo (visual)
+    // En column-reverse, el fondo visual es scrollTop = 0.
+    const isScrolledToBottom = chatHistory.scrollTop < 100;
+
+    // 3. Añadir al DOM
+    // `prepend` lo añade al inicio del HTML, que es el fondo visual.
     chatHistory.prepend(bubble);
     
+    // 4. Actualizar el ID más antiguo si es el primer mensaje
+    if (oldestMessageId === 0) {
+        oldestMessageId = msgData.id;
+        hasMoreHistory = true; // Acaba de empezar el chat
+        chatHistory.dataset.oldestMessageId = oldestMessageId;
+        chatHistory.dataset.hasMoreHistory = "true";
+    }
+
+    // 5. Auto-scroll
     if (isScrolledToBottom) {
         chatHistory.scrollTop = 0; // Scroll al fondo visual
     }
-    
-    // --- ▲▲▲ FIN DE LA CORRECCIÓN DE SCROLL (appendChild -> prepend) ▲▲▲ ---
 }
-// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA ▲▲▲ ---
 
 
 /**
@@ -268,12 +268,113 @@ async function handleSendMessage() {
     }
 }
 
+
+// --- ▼▼▼ INICIO DE FUNCIÓN CORREGIDA (loadMoreHistory) ▼▼▼ ---
+/**
+ * Carga mensajes más antiguos cuando el usuario llega al tope del scroll.
+ */
+async function loadMoreHistory() {
+    const chatHistory = document.getElementById('chat-history-container');
+    if (!chatHistory || isLoadingHistory || !hasMoreHistory || oldestMessageId === 0) {
+        return;
+    }
+
+    isLoadingHistory = true;
+    console.log("Cargando historial anterior a:", oldestMessageId);
+
+    // --- ¡CORRECCIÓN! ---
+    // 1. Guardar la altura y posición de scroll *antes* de añadir/quitar nada.
+    const oldScrollHeight = chatHistory.scrollHeight;
+    const oldScrollTop = chatHistory.scrollTop;
+    
+    // (Spinner eliminado para simplificar el cálculo de scroll)
+
+    try {
+        const formData = new FormData();
+        formData.append('action', 'load-history');
+        formData.append('csrf_token', window.csrfToken || '');
+        formData.append('group_uuid', document.body.dataset.currentGroupUuid || '');
+        formData.append('before_id', oldestMessageId);
+
+        const result = await callChatApi(formData);
+
+        if (result.success && result.messages) {
+            if (result.messages.length > 0) {
+                // Usamos un Fragment para añadir todo de una vez
+                const fragment = document.createDocumentFragment();
+                
+                result.messages.forEach(msgData => {
+                    const bubble = createBubbleElement(msgData);
+                    fragment.appendChild(bubble); // Añadir al fragment
+                });
+                
+                // Añadir todos los mensajes antiguos al final del HTML (tope visual)
+                chatHistory.appendChild(fragment);
+
+                // Actualizar el ID más antiguo
+                oldestMessageId = result.messages[result.messages.length - 1].id;
+                chatHistory.dataset.oldestMessageId = oldestMessageId;
+                
+                hasMoreHistory = result.has_more;
+                chatHistory.dataset.hasMoreHistory = hasMoreHistory;
+
+                // --- ¡CORRECCIÓN DE SCROLL! ---
+                // 2. Calcular la nueva altura
+                const newScrollHeight = chatHistory.scrollHeight;
+                // 3. Calcular la altura que añadimos
+                const heightAdded = newScrollHeight - oldScrollHeight;
+                // 4. Restaurar la posición de scroll anterior + la altura añadida
+                chatHistory.scrollTop = oldScrollTop + heightAdded;
+                
+            } else {
+                hasMoreHistory = false; // No hay más mensajes
+                chatHistory.dataset.hasMoreHistory = "false";
+            }
+        } else {
+            showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+        }
+
+    } catch (error) {
+        console.error("Error cargando historial:", error);
+        showAlert(getTranslation('js.api.errorConnection'), 'error');
+    } finally {
+        isLoadingHistory = false;
+    }
+}
+// --- ▲▲▲ FIN DE FUNCIÓN CORREGIDA (loadMoreHistory) ▲▲▲ ---
+
+
 /**
  * Inicializa los listeners para el input de chat.
  */
 export function initChatManager() {
     
+    const chatHistory = document.getElementById('chat-history-container');
+    if (chatHistory) {
+        // Inicializar estado
+        oldestMessageId = parseInt(chatHistory.dataset.oldestMessageId || '0', 10);
+        hasMoreHistory = (chatHistory.dataset.hasMoreHistory === 'true');
+        isLoadingHistory = false;
+        
+        // Listener de Scroll para lazy loading
+        chatHistory.addEventListener('scroll', () => {
+            if (isLoadingHistory || !hasMoreHistory) return;
+
+            // --- ¡CORRECCIÓN DEL DETECTOR DE SCROLL! ---
+            // "Llegar al tope" en column-reverse significa que
+            // scrollTop está cerca de su valor MÁXIMO (scrollHeight - clientHeight).
+            const scrollBuffer = 200; // 200px antes de llegar
+            const maxScrollTop = chatHistory.scrollHeight - chatHistory.clientHeight;
+            const isAtTop = chatHistory.scrollTop >= (maxScrollTop - scrollBuffer);
+
+            if (isAtTop) {
+                loadMoreHistory();
+            }
+        });
+    }
+
     document.body.addEventListener('click', (event) => {
+        // ... (resto del listener sin cambios)
         const target = event.target;
         
         const attachButton = target.closest('#chat-attach-button');
@@ -293,21 +394,18 @@ export function initChatManager() {
     });
 
     document.body.addEventListener('change', (event) => {
+        // ... (resto del listener sin cambios)
         const fileInput = event.target.closest('#chat-file-input');
         
         if (fileInput) {
             const files = fileInput.files;
             if (!files) return;
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Límite de 9 archivos) ▼▼▼ ---
             if (attachedFiles.size + files.length > 9) {
-                // (Deberías crear una clave i18n nueva para esto)
                 showAlert("No puedes adjuntar más de 9 imágenes.", 'error'); 
                 fileInput.value = ''; // Limpiar
                 return;
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
 
             const inputWrapper = document.getElementById('chat-input-wrapper');
             if (!inputWrapper) {
@@ -331,7 +429,6 @@ export function initChatManager() {
 
             for (const file of files) {
                 if (file.type.startsWith('image/')) {
-                    // Limitar a 9 archivos en total
                     if (attachedFiles.size >= 9) {
                         showAlert("No puedes adjuntar más de 9 imágenes.", 'error');
                         break; // Salir del bucle
@@ -349,6 +446,7 @@ export function initChatManager() {
     });
 
     document.body.addEventListener('keydown', (event) => {
+        // ... (resto del listener sin cambios)
         const textInput = event.target.closest('#chat-input-text-area');
         if (textInput && event.key === 'Enter') {
             if (!event.shiftKey) {
