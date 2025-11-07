@@ -1,3 +1,5 @@
+// FILE: assets/js/app/main-controller.js
+// (Versión Corregida)
 
 import { getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js'; 
@@ -33,6 +35,7 @@ function initMainController() {
         const action = button.getAttribute('data-action');
 
         if (action === 'logout') {
+            // ... (toda la lógica de logout sin cambios) ...
             event.preventDefault();
             const logoutButton = button;
 
@@ -117,12 +120,17 @@ function initMainController() {
 
         if (action.startsWith('toggle')) {
             
+            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+            // Añade tu nueva acción a esta lista.
+            // Esto le dice al main-controller "no hagas nada, otro script se encargará".
             if (action === 'toggleModulePageFilter' || 
                 action === 'toggleModuleAdminRole' || 
                action === 'toggleModuleAdminStatus' ||
-                action === 'toggleModuleAdminCreateRole') {
+                action === 'toggleModuleAdminCreateRole' ||
+                action === 'toggleModuleCommunitySelect') { // <-- ¡AÑADE ESTA LÍNEA!
                 return; 
             }
+            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
             event.stopPropagation();
 
@@ -146,6 +154,7 @@ function initMainController() {
     });
 
     if (closeOnClickOutside) {
+        // ... (resto de la función sin cambios) ...
         document.addEventListener('click', function (event) {
             const clickedOnModule = event.target.closest('[data-module].active');
             const clickedOnButton = event.target.closest('[data-action]');
@@ -159,6 +168,7 @@ function initMainController() {
     }
 
     if (closeOnEscape) {
+        // ... (resto de la función sin cambios) ...
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 deactivateAllModules();

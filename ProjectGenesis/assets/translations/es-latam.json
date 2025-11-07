@@ -135,9 +135,17 @@
       "concurrentUsersRefresh": "Actualizar",
       "concurrentUsersLoading": "Cargando...",
       "maxConcurrentUsersTitle": "Límite Máximo de Usuarios",
-      "maxConcurrentUsersDesc": "El número máximo de usuarios que pueden estar conectados al mismo tiempo."
+      "maxConcurrentUsersDesc": "El número máximo de usuarios que pueden estar conectados al mismo tiempo.",
+      "minUserLengthTitle": "Longitud Mínima de Usuario",
+      "minUserLengthDesc": "El número mínimo de caracteres para un nombre de usuario (mín. 6).",
+      "maxUserLengthTitle": "Longitud Máxima de Usuario",
+      "maxUserLengthDesc": "El número máximo de caracteres para un nombre de usuario (máx. 32).",
+      "maxEmailLengthTitle": "Longitud Máxima de Email",
+      "maxEmailLengthDesc": "El número máximo de caracteres para un email (mín. 64, máx. 255).",
+      "codeResendCooldownTitle": "Cooldown de Reenvío de Código (Segundos)",
+      "codeResendCooldownDesc": "Segundos que un usuario debe esperar para reenviar un código de verificación (mín. 30)."
     },
-   "backups": {
+    "backups": {
       "title": "Copias de Seguridad",
       "description": "Crea o restaura una copia de seguridad de la base de datos. Esta es una acción peligrosa y solo para fundadores.",
       "createTooltip": "Crear nueva copia de seguridad",
@@ -184,6 +192,16 @@
       "backupSize": "Tamaño del Archivo",
       "cancelButton": "Cancelar (Volver a Backups)",
       "confirmButton": "Confirmar y Eliminar"
+    },
+    "logs": {
+      "viewTitle": "Viendo Log",
+      "errorTitle": "Error",
+      "title": "Administrar Logs",
+      "description": "Revisa los logs de errores del sistema y la base de datos.",
+      "noLogsTitle": "No hay logs",
+      "noLogsDesc": "No se encontraron archivos .log en el directorio.",
+      "labelDate": "Última modif.",
+      "labelSize": "Tamaño"
     }
   },
   "settings": {
@@ -582,6 +600,11 @@
       "domainRemoveError": "Error al eliminar el dominio.",
       "domainExists": "Este dominio ya existe en la lista.",
       "errorUserCount": "Error al obtener el conteo de usuarios.",
+      "passwordCopied": "Contraseña copiada al portapapeles",
+      "passwordCopyError": "Error al copiar la contraseña",
+      "logs": {
+        "errorNoSelection": "Por favor, selecciona un archivo de log primero."
+      },
       "backups": {
         "errorNoSelection": "Por favor, selecciona una copia de seguridad primero.",
         "errorGeneric": "Ocurrió un error al procesar la copia de seguridad.",
@@ -592,6 +615,21 @@
         "restoring": "Restaurando...",
         "errorNoFile": "Error: No se especificó ningún archivo de restauración."
       }
+    },
+    "join_group": {
+      "invalidCode": "El código de acceso es incorrecto o no existe.",
+      "alreadyMember": "Ya eres miembro de esta comunidad.",
+      "joinSuccess": "Te has unido a la comunidad.",
+      "leaveSuccess": "Has abandonado la comunidad.",
+      "apiError": "Error al procesar la solicitud."
+    },
+    "publication": {
+      "errorFileCount": "No puedes subir más de 4 archivos.",
+      "errorFileType": "Formato de archivo no válido. Solo se permiten imágenes (PNG, JPG, GIF, WebP).",
+      "errorFileSize": "El archivo es demasiado grande (máx %size%MB).",
+      "errorEmpty": "No puedes crear una publicación vacía. Escribe algo o adjunta un archivo.",
+      "errorNoCommunity": "Debes seleccionar una comunidad para publicar.",
+      "success": "Publicación creada exitosamente."
     }
   },
   "db": {
@@ -608,7 +646,9 @@
     },
     "main": {
       "title": "Página Principal",
-      "description": "Bienvenido a tu página de inicio. Selecciona un grupo o únete a uno nuevo para comenzar."
+      "description": "Bienvenido a tu página de inicio. Selecciona un grupo o únete a uno nuevo para comenzar.",
+      "noPosts": "No hay publicaciones en este feed todavía.",
+      "welcome": "Aquí están las últimas publicaciones."
     },
     "popover": {
       "title": "Mis Grupos",
@@ -635,13 +675,18 @@
     "join": "Unirme",
     "leave": "Abandonar"
   },
-  "js": {
-    "join_group": {
-      "invalidCode": "El código de acceso es incorrecto o no existe.",
-      "alreadyMember": "Ya eres miembro de esta comunidad.",
-      "joinSuccess": "Te has unido a la comunidad.",
-      "leaveSuccess": "Has abandonado la comunidad.",
-      "apiError": "Error al procesar la solicitud."
-    }
+  "create_publication": {
+    "backTooltip": "Volver a Inicio",
+    "title": "Crear Publicación",
+    "description": "Comparte tus ideas con la comunidad.",
+    "noCommunitiesTitle": "No estás en ninguna comunidad",
+    "noCommunitiesDesc": "Debes unirte a una comunidad antes de poder publicar.",
+    "post": "Publicación",
+    "poll": "Encuesta",
+    "destination": "Publicar en:",
+    "selectCommunity": "Seleccione una comunidad...",
+    "placeholder": "¿En qué estás pensando?",
+    "attachTooltip": "Adjuntar archivos (máx 4)",
+    "publish": "Publicar"
   }
 }

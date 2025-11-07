@@ -3,7 +3,7 @@
 import { callCommunityApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js';
-
+import { loadPage } from '../app/url-manager.js';
 let currentCommunityId = null;
 let currentCommunityName = null;
 // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
@@ -122,7 +122,7 @@ function selectCommunity(communityId, communityName, communityUuid = null) {
         }
     }
     
-    // --- ¡NUEVA LÓGICA DE URL! ---
+    // --- Lógica de URL ---
     let newPath;
     const basePath = window.projectBasePath || '/ProjectGenesis';
 
@@ -136,9 +136,19 @@ function selectCommunity(communityId, communityName, communityUuid = null) {
     if (window.location.pathname !== newPath) {
         // Usar pushState para cambiar la URL sin recargar la página
         history.pushState({ communityId: communityId }, '', newPath);
+        
+        // --- ▼▼▼ INICIO DE LA CORRECCIÓN (Llamar a loadPage) ▼▼▼ ---
+        // Después de cambiar la URL, forzar la recarga del contenido de la página 'home'
+        // con los nuevos parámetros (o sin ellos para el feed principal).
+        if (communityId === 'main_feed') {
+            loadPage('home', 'toggleSectionHome');
+        } else {
+            // Pasamos el UUID como fetchParam para que router.php lo lea
+            loadPage('home', 'toggleSectionHome', { community_uuid: communityUuid });
+        }
+        // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
     }
-    // --- FIN NUEVA LÓGICA DE URL ---
-
+    
     console.log(`Grupo seleccionado: ${communityName} (ID: ${communityId}, UUID: ${communityUuid})`);
     
     deactivateAllModules();

@@ -1,12 +1,18 @@
 // FILE: assets/js/modules/publication-manager.js
-// (VERSIÓN CORREGIDA - Valida el selector de comunidad)
+// (VERSIÓN ACTUALIZADA - Usa el trigger-selector en lugar de <select>)
 
 import { callPublicationApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
 import { showAlert } from '../services/alert-manager.js';
+// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+import { deactivateAllModules } from '../app/main-controller.js';
+// --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 
 const MAX_FILES = 4;
 let selectedFiles = []; // Array para guardar los objetos File
+// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+let selectedCommunityId = null; // Guardará el ID de la comunidad
+// --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 
 /**
  * Muestra/Oculta un spinner en el botón de Publicar.
@@ -30,11 +36,8 @@ function togglePublishSpinner(button, isLoading) {
 function validatePublicationState() {
     const textInput = document.getElementById('publication-text');
     const publishButton = document.getElementById('publish-post-btn');
-    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
-    const communitySelect = document.getElementById('publication-community-select');
-    // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
     
-    if (!textInput || !publishButton || !communitySelect) {
+    if (!textInput || !publishButton) {
         // Si no existe el select (p.ej. porque no hay comunidades), el botón debe estar deshabilitado
         if(publishButton) publishButton.disabled = true;
         return;
@@ -42,15 +45,17 @@ function validatePublicationState() {
 
     const hasText = textInput.value.trim().length > 0;
     const hasFiles = selectedFiles.length > 0;
-    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
-    const hasCommunity = communitySelect.value !== ''; // Comprueba que no sea la opción "Seleccione..."
-    // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
+    // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+    const hasCommunity = selectedCommunityId !== null; // Comprueba que se haya seleccionado un ID
+    // --- ▲▲▲ FIN LÍNEA MODIFICADA ▲▲▲ ---
     
     // Habilita el botón si hay (texto O archivos) Y si hay una comunidad seleccionada
     // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
     publishButton.disabled = (!hasText && !hasFiles) || !hasCommunity;
     // --- ▲▲▲ FIN LÍNEA MODIFICADA ▲▲▲ ---
 }
+
+// ... (Las funciones createPreviewElement, removeFilePreview y handleFileSelection permanecen sin cambios) ...
 
 /**
  * Crea el elemento DOM para la vista previa de una imagen.
@@ -156,21 +161,21 @@ async function handlePublishSubmit() {
     const publishButton = document.getElementById('publish-post-btn');
     const textInput = document.getElementById('publication-text');
     const previewContainer = document.getElementById('publication-preview-container');
-    const communitySelect = document.getElementById('publication-community-select');
 
-    if (!publishButton || !textInput || !communitySelect) return; 
+    // --- ▼▼▼ LÍNEA MODIFICADA (ya no necesitamos el select) ▼▼▼ ---
+    if (!publishButton || !textInput) return; 
 
     const textContent = textInput.value.trim();
     
     // --- ▼▼▼ LÓGICA DE VALIDACIÓN MODIFICADA ▼▼▼ ---
-    let communityId = communitySelect.value;
+    let communityId = selectedCommunityId; // Usar la variable global
 
     // Esta validación doble es por si acaso, aunque 'validatePublicationState' ya lo hace
     if (!textContent && selectedFiles.length === 0) {
         showAlert(getTranslation('js.publication.errorEmpty'), 'error');
         return;
     }
-    if (communityId === '') {
+    if (communityId === null) { // Comprobar si es null
         showAlert(getTranslation('js.publication.errorNoCommunity'), 'error');
         return;
     }
@@ -181,7 +186,7 @@ async function handlePublishSubmit() {
     const formData = new FormData();
     formData.append('action', 'create-post');
     formData.append('text_content', textContent);
-    formData.append('community_id', communityId); // <--- Ahora siempre se envía un ID
+    formData.append('community_id', communityId); // <--- Ahora se envía el ID guardado
     
     for (const file of selectedFiles) {
         formData.append('attachments[]', file, file.name);
@@ -196,8 +201,28 @@ async function handlePublishSubmit() {
             // Limpiar todo
             textInput.value = '';
             selectedFiles = [];
+            // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO/AÑADIDO ▼▼▼ ---
+            selectedCommunityId = null; 
             if (previewContainer) previewContainer.innerHTML = '';
-            communitySelect.value = ''; // Resetear el select a "Seleccione..."
+            
+            // Resetear el trigger
+            const triggerText = document.getElementById('publication-community-text');
+            const triggerIcon = document.getElementById('publication-community-icon');
+            if (triggerText) {
+                triggerText.textContent = getTranslation('create_publication.selectCommunity');
+                triggerText.removeAttribute('data-i18n'); // Quitar i18n para que no se traduzca
+            }
+            if (triggerIcon) {
+                triggerIcon.textContent = 'public'; // Icono por defecto
+            }
+            // Resetear el popover
+            const popover = document.querySelector('[data-module="moduleCommunitySelect"]');
+            if (popover) {
+                popover.querySelectorAll('.menu-link').forEach(link => link.classList.remove('active'));
+                popover.querySelectorAll('.menu-link-check-icon').forEach(icon => icon.innerHTML = '');
+            }
+            // --- ▲▲▲ FIN DE BLOQUE MODIFICADO/AÑADIDO ▲▲▲ ---
+            
             validatePublicationState(); // Deshabilitar el botón
 
             // Navegar a Home
@@ -219,6 +244,29 @@ async function handlePublishSubmit() {
     }
 }
 
+/**
+ * Resetea el trigger de comunidad a su estado inicial
+ */
+function resetCommunityTrigger() {
+    selectedCommunityId = null;
+    const triggerText = document.getElementById('publication-community-text');
+    const triggerIcon = document.getElementById('publication-community-icon');
+    
+    if (triggerText) {
+        triggerText.textContent = getTranslation('create_publication.selectCommunity');
+        triggerText.setAttribute('data-i18n', 'create_publication.selectCommunity'); // Poner i18n
+    }
+    if (triggerIcon) {
+        triggerIcon.textContent = 'public'; // Icono por defecto
+    }
+
+    const popover = document.querySelector('[data-module="moduleCommunitySelect"]');
+    if (popover) {
+        popover.querySelectorAll('.menu-link').forEach(link => link.classList.remove('active'));
+        popover.querySelectorAll('.menu-link-check-icon').forEach(icon => icon.innerHTML = '');
+    }
+}
+
 
 /**
  * Gestiona la lógica de la página de creación de publicaciones.
@@ -231,10 +279,10 @@ export function initPublicationManager() {
     if (previewContainer) previewContainer.innerHTML = '';
     const fileInput = document.getElementById('publication-file-input');
     if (fileInput) fileInput.value = '';
-    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
-    const communitySelect = document.getElementById('publication-community-select');
-    if (communitySelect) communitySelect.value = ''; // Resetear el select
-    // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
+    
+    // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+    resetCommunityTrigger(); // Resetea la variable y el trigger visual
+    // --- ▲▲▲ FIN LÍNEA MODIFICADA ▲▲▲ ---
 
 
     // --- LÓGICA DE PESTAÑAS (Sin cambios) ---
@@ -294,35 +342,86 @@ export function initPublicationManager() {
         }
     });
     
-    // --- ▼▼▼ LISTENER AÑADIDO PARA EL SELECT ▼▼▼ ---
-    // Listener para el selector de comunidad
-    document.body.addEventListener('change', (e) => {
-        const section = e.target.closest('[data-section*="create-"]');
-        if (e.target.id === 'publication-community-select' && section) {
-            validatePublicationState();
-        }
-    });
-    // --- ▲▲▲ FIN LISTENER AÑADIDO ▲▲▲ ---
-
-    // Listener para el botón de publicar
+    // --- ▼▼▼ LISTENER MODIFICADO (ahora es 'click' en lugar de 'change') ▼▼▼ ---
     document.body.addEventListener('click', (e) => {
         const section = e.target.closest('[data-section*="create-"]');
-        if (e.target.id === 'publish-post-btn' && section) {
+        if (!section) return; // Salir si no estamos en la sección de crear
+
+        // 1. Manejar clic en el Trigger
+        const trigger = e.target.closest('#publication-community-trigger[data-action="toggleModuleCommunitySelect"]');
+        if (trigger) {
+            e.preventDefault();
+            e.stopPropagation(); // Detener para que el main-controller no lo cierre
+            
+            const module = document.querySelector('[data-module="moduleCommunitySelect"]');
+            if (module) {
+                deactivateAllModules(module); // Cerrar otros
+                module.classList.toggle('disabled');
+                module.classList.toggle('active');
+            }
+            return;
+        }
+
+        // 2. Manejar clic en un Link del Popover
+        const menuLink = e.target.closest('[data-module="moduleCommunitySelect"] .menu-link[data-value]');
+        if (menuLink) {
+            e.preventDefault();
+            
+            // Obtener datos del link
+            const newId = menuLink.dataset.value;
+            const newText = menuLink.dataset.text;
+            
+            // Guardar el ID
+            selectedCommunityId = newId;
+
+            // Actualizar el Trigger
+            const triggerText = document.getElementById('publication-community-text');
+            const triggerIcon = document.getElementById('publication-community-icon');
+            
+            if (triggerText) {
+                triggerText.textContent = newText;
+                triggerText.removeAttribute('data-i18n'); // Es un nombre propio, no una clave
+            }
+            if (triggerIcon) {
+                triggerIcon.textContent = 'group'; // Icono de comunidad
+            }
+
+            // Actualizar estado 'active' en el popover
+            const menuList = menuLink.closest('.menu-list');
+            if (menuList) {
+                menuList.querySelectorAll('.menu-link').forEach(link => link.classList.remove('active'));
+                menuList.querySelectorAll('.menu-link-check-icon').forEach(icon => icon.innerHTML = '');
+            }
+            
+            menuLink.classList.add('active');
+            const checkIcon = menuLink.querySelector('.menu-link-check-icon');
+            if (checkIcon) checkIcon.innerHTML = '<span class="material-symbols-rounded">check</span>';
+
+            // Cerrar el popover
+            deactivateAllModules();
+            
+            // Re-validar el botón de publicar
+            validatePublicationState();
+            return;
+        }
+        
+        // 3. Manejar clic en el botón de Publicar
+        if (e.target.id === 'publish-post-btn') {
             e.preventDefault();
             handlePublishSubmit();
+            return;
         }
-    });
-    
-    // Listener para el botón de adjuntar
-    document.body.addEventListener('click', (e) => {
-        const section = e.target.closest('[data-section*="create-"]');
-        if (e.target.id === 'attach-files-btn' && section) {
+        
+        // 4. Manejar clic en el botón de Adjuntar
+        if (e.target.id === 'attach-files-btn') {
             e.preventDefault();
             document.getElementById('publication-file-input')?.click();
+            return;
         }
     });
+    // --- ▲▲▲ FIN LISTENER MODIFICADO ▲▲▲ ---
     
-    // Listener para el input de archivos
+    // Listener para el input de archivos (sin cambios)
     document.body.addEventListener('change', (e) => {
         const section = e.target.closest('[data-section*="create-"]');
          if (e.target.id === 'publication-file-input' && section) {

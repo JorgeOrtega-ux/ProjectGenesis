@@ -68,27 +68,54 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
                     </button>
                 </div>
 
-                <div class="component-card__content" style="width: 100%; padding-bottom: 0;">
-                    <div class="component-card__text" style="width: 100%;">
-                        <h2 class="component-card__title" data-i18n="create_publication.destination" style="margin-bottom: 8px;">Publicar en:</h2>
-                        
-                        <div class="trigger-select-wrapper" style="width: 100%;">
-                            <select class="component-input" id="publication-community-select" style="height: 52px; padding-left: 12px; font-size: 16px; background-position: right 12px center;">
-                                
-                                <option value="" selected disabled data-i18n="create_publication.selectCommunity">Seleccione una comunidad...</option>
-                                
-                                <?php // $userCommunitiesForPost es inyectada desde router.php ?>
-                                <?php foreach ($userCommunitiesForPost as $community): ?>
-                                    <option value="<?php echo htmlspecialchars($community['id']); ?>">
-                                        <?php echo htmlspecialchars($community['name']); ?>
-                                    </option>
-                                <?php endforeach; ?>
+               <div class="component-card__content" style="width: 100%; padding-bottom: 0;">
+    <div class="component-card__text" style="width: 100%;">
+        <h2 class="component-card__title" data-i18n="create_publication.destination" style="margin-bottom: 8px;">Publicar en:</h2>
+        
+        <div class="trigger-select-wrapper" style="width: 100%;">
+            <div class="trigger-selector" 
+                 id="publication-community-trigger" 
+                 data-action="toggleModuleCommunitySelect"
+                 style="height: 52px; padding: 0 12px;">
+                
+                <div class="trigger-select-icon">
+                    <span class="material-symbols-rounded" id="publication-community-icon">public</span>
+                </div>
+                <div class="trigger-select-text">
+                    <span data-i18n="create_publication.selectCommunity" id="publication-community-text">Seleccione una comunidad...</span>
+                </div>
+                <div class="trigger-select-arrow">
+                    <span class="material-symbols-rounded">arrow_drop_down</span>
+                </div>
+            </div>
 
-                            </select>
-                        </div>
-                        
+            <div class="popover-module popover-module--anchor-width body-title disabled"
+                 data-module="moduleCommunitySelect"
+                 style="top: calc(100% + 4px);">
+                <div class="menu-content">
+                    <div class="menu-list">
+                        <?php // El bucle PHP ahora crea 'menu-link' en lugar de 'option' ?>
+                        <?php foreach ($userCommunitiesForPost as $community): ?>
+                            <div class="menu-link" 
+                                 data-value="<?php echo htmlspecialchars($community['id']); ?>"
+                                 data-text="<?php echo htmlspecialchars($community['name']); ?>">
+                                <div class="menu-link-icon">
+                                    <span class="material-symbols-rounded">group</span>
+                                </div>
+                                <div class="menu-link-text">
+                                    <span><?php echo htmlspecialchars($community['name']); ?></span>
+                                </div>
+                                <div class="menu-link-check-icon">
+                                    <?php /* El JS añadirá el 'check' aquí */ ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
+            </div>
+        </div>
+        </div>
+</div>
                 <div id="post-content-area" class="active" style="width: 100%;">
                     <div class="component-input-group">
                         <textarea id="publication-text" class="component-input" rows="5" placeholder=" " style="height: 120px; resize: vertical; padding-top: 16px;"></textarea>
