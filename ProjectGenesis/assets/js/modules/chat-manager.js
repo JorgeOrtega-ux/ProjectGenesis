@@ -196,9 +196,8 @@ export function renderIncomingMessage(msgData) {
     // 4. Actualizar el ID más antiguo si es el primer mensaje
     if (oldestMessageId === 0) {
         oldestMessageId = msgData.id;
-        hasMoreHistory = true; // Acaba de empezar el chat
+        // hasMoreHistory = true; // No, esperamos a la API
         chatHistory.dataset.oldestMessageId = oldestMessageId;
-        chatHistory.dataset.hasMoreHistory = "true";
     }
 
     // 5. Auto-scroll
@@ -276,19 +275,28 @@ async function handleSendMessage() {
  */
 async function loadMoreHistory() {
     const chatHistory = document.getElementById('chat-history-container');
-    if (!chatHistory || isLoadingHistory || !hasMoreHistory || oldestMessageId === 0) {
+
+    // --- ▼▼▼ ¡INICIO DE LA CORRECCIÓN! (LA GUARDIA DEFINITIVA) ▼▼▼ ---
+    
+    // 1. Salir si no hay contenedor o ya estamos cargando
+    if (!chatHistory || isLoadingHistory) {
         return;
     }
+    
+    // 2. Salir si sabemos que no hay más historial.
+    //    PERO, permitir la carga si oldestMessageId es 0 (carga inicial de chat vacío).
+    if (!hasMoreHistory && oldestMessageId !== 0) {
+         return;
+    }
+    
+    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
     isLoadingHistory = true;
     console.log("Cargando historial anterior a:", oldestMessageId);
 
-    // --- ¡CORRECCIÓN! ---
     // 1. Guardar la altura ANTES de añadir nada.
     const oldScrollHeight = chatHistory.scrollHeight;
     
-    // (Spinner eliminado para simplificar el cálculo de scroll)
-
     try {
         const formData = new FormData();
         formData.append('action', 'load-history');
@@ -316,9 +324,8 @@ async function loadMoreHistory() {
                 chatHistory.dataset.oldestMessageId = oldestMessageId;
                 
                 hasMoreHistory = result.has_more;
-                chatHistory.dataset.hasMoreHistory = hasMoreHistory;
+                chatHistory.dataset.hasMoreHistory = hasMoreHistory.toString();
 
-                // --- ¡CORRECCIÓN DE SCROLL! ---
                 // 2. Calcular la nueva altura
                 const newScrollHeight = chatHistory.scrollHeight;
                 // 3. Calcular la altura que añadimos
@@ -327,8 +334,19 @@ async function loadMoreHistory() {
                 chatHistory.scrollTop = heightAdded; // Mantener el scroll en el mismo punto relativo
                 
             } else {
-                hasMoreHistory = false; // No hay más mensajes
+                // NO hay más mensajes
+                hasMoreHistory = false; // <-- Esto detendrá futuras llamadas
                 chatHistory.dataset.hasMoreHistory = "false";
+                
+                // --- ▼▼▼ ¡INICIO DE LA CORRECCIÓN! ▼▼▼ ---
+                // Si no recibimos mensajes y oldestMessageId sigue en 0,
+                // lo ponemos en -1 para que la condición
+                // (!hasMoreHistory && oldestMessageId !== 0) se vuelva true
+                // en el próximo scroll y se detenga.
+                if (oldestMessageId === 0) {
+                    oldestMessageId = -1; // Flag para "ya intenté cargar y no hay nada"
+                }
+                // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
             }
         } else {
             showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
@@ -356,24 +374,29 @@ export function initChatManager() {
         hasMoreHistory = (chatHistory.dataset.hasMoreHistory === 'true');
         isLoadingHistory = false;
         
+        // --- ▼▼▼ ¡INICIO DE LA CORRECCIÓN DEL LISTENER! ▼▼▼ ---
         // Listener de Scroll para lazy loading
         chatHistory.addEventListener('scroll', () => {
-            if (isLoadingHistory || !hasMoreHistory) return;
+            
+            // La única guardia aquí debe ser si ya estamos cargando algo.
+            // La lógica de "hasMoreHistory" debe vivir en la función loadMoreHistory().
+            if (isLoadingHistory) {
+                return;
+            }
 
-            // --- ¡CORRECCIÓN DEL DETECTOR DE SCROLL! ---
             // "Llegar al tope" en column-reverse significa que
             // scrollTop está cerca de 0.
             const scrollBuffer = 50; // 50px de margen
             const isAtTop = chatHistory.scrollTop <= scrollBuffer;
 
             if (isAtTop) {
-                loadMoreHistory();
+                loadMoreHistory(); // ¡Llamar a la función!
             }
         });
+        // --- ▲▲▲ FIN DE LA CORRECCIÓN DEL LISTENER ▲▲▲ ---
     }
 
     document.body.addEventListener('click', (event) => {
-        // ... (resto del listener sin cambios)
         const target = event.target;
         
         const attachButton = target.closest('#chat-attach-button');
@@ -393,7 +416,6 @@ export function initChatManager() {
     });
 
     document.body.addEventListener('change', (event) => {
-        // ... (resto del listener sin cambios)
         const fileInput = event.target.closest('#chat-file-input');
         
         if (fileInput) {
@@ -445,7 +467,6 @@ export function initChatManager() {
     });
 
     document.body.addEventListener('keydown', (event) => {
-        // ... (resto del listener sin cambios)
         const textInput = event.target.closest('#chat-input-text-area');
         if (textInput && event.key === 'Enter') {
             if (!event.shiftKey) {

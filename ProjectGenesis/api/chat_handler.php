@@ -225,7 +225,7 @@ if ($action === 'send-message') {
     }
 }
 
-// --- ▼▼▼ INICIO DE NUEVA ACCIÓN ▼▼▼ ---
+// --- ▼▼▼ INICIO DE BLOQUE CORREGIDO ▼▼▼ ---
 // ==========================================================
 // ACCIÓN: CARGAR HISTORIAL (LAZY LOAD)
 // ==========================================================
@@ -235,9 +235,13 @@ elseif ($action === 'load-history') {
         $beforeMessageId = (int)($_POST['before_id'] ?? 0);
         $limit = 20; // Cargar en bloques de 20
 
-        if (empty($groupUuid) || empty($beforeMessageId)) {
+        // --- ▼▼▼ ¡INICIO DE LA CORRECCIÓN 1! ▼▼▼ ---
+        // Se elimina la validación "empty($beforeMessageId)"
+        if (empty($groupUuid)) {
             throw new Exception('Faltan parámetros para cargar el historial.');
         }
+        // --- ▲▲▲ FIN DE LA CORRECCIÓN 1 ▲▲▲ ---
+
 
         // 1. Validar Grupo y Pertenencia
         $stmt_check_group = $pdo->prepare(
@@ -255,22 +259,41 @@ elseif ($action === 'load-history') {
         }
         $groupId = (int)$group['id'];
 
+        // --- ▼▼▼ ¡INICIO DE LA CORRECCIÓN 2! ▼▼▼ ---
         // 2. Obtener mensajes ANTERIORES al ID proporcionado
-        $stmt_messages = $pdo->prepare(
-            "SELECT 
-                m.id, m.user_id, m.text_content, m.created_at,
-                u.username, u.profile_image_url, u.role as user_role
-             FROM group_messages m
-             JOIN users u ON m.user_id = u.id
-             WHERE m.group_id = ? AND m.id < ?
-             ORDER BY m.created_at DESC
-             LIMIT ?"
-        );
-        $stmt_messages->bindParam(1, $groupId, PDO::PARAM_INT);
-        $stmt_messages->bindParam(2, $beforeMessageId, PDO::PARAM_INT);
-        $stmt_messages->bindParam(3, $limit, PDO::PARAM_INT);
+        
+        // Consulta base
+        $sql = "SELECT 
+                    m.id, m.user_id, m.text_content, m.created_at,
+                    u.username, u.profile_image_url, u.role as user_role
+                 FROM group_messages m
+                 JOIN users u ON m.user_id = u.id
+                 WHERE m.group_id = ? ";
+
+        // Si beforeMessageId es > 0, añadir la condición WHERE
+        if ($beforeMessageId > 0) {
+            $sql .= " AND m.id < ? ";
+        }
+        
+        $sql .= " ORDER BY m.created_at DESC LIMIT ?";
+        
+        $stmt_messages = $pdo->prepare($sql);
+
+        // Asignar parámetros dinámicamente
+        if ($beforeMessageId > 0) {
+            $stmt_messages->bindParam(1, $groupId, PDO::PARAM_INT);
+            $stmt_messages->bindParam(2, $beforeMessageId, PDO::PARAM_INT);
+            $stmt_messages->bindParam(3, $limit, PDO::PARAM_INT);
+        } else {
+            // Si beforeMessageId es 0, solo usamos groupId y limit
+            $stmt_messages->bindParam(1, $groupId, PDO::PARAM_INT);
+            $stmt_messages->bindParam(2, $limit, PDO::PARAM_INT);
+        }
+        
         $stmt_messages->execute();
         $group_messages_raw = $stmt_messages->fetchAll();
+        // --- ▲▲▲ FIN DE LA CORRECCIÓN 2 ▲▲▲ ---
+
 
         // 3. Obtener adjuntos (igual que en home.php)
         $stmt_attachments = $pdo->prepare(
@@ -311,7 +334,7 @@ elseif ($action === 'load-history') {
         $response['message'] = $e->getMessage();
     }
 }
-// --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
+// --- ▲▲▲ FIN DE BLOQUE CORREGIDO ---
 
 
 echo json_encode($response);
