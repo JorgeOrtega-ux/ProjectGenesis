@@ -1,10 +1,13 @@
 <?php
 // FILE: includes/sections/main/create-publication.php
-// (VERSIÓN MODIFICADA PARA ACEPTAR ARCHIVOS)
+// (VERSIÓN CORREGIDA - Sin "Feed Principal")
 
 // Determina qué pestaña está activa basada en la sección actual
 $isPollActive = ($CURRENT_SECTION === 'create-poll');
 $isPostActive = !$isPollActive;
+
+// $userCommunitiesForPost es cargada por config/routing/router.php
+$hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPost);
 ?>
 <div class="section-content overflow-y <?php echo (strpos($CURRENT_SECTION, 'create-') === 0) ? 'active' : 'disabled'; ?>" data-section="<?php echo htmlspecialchars($CURRENT_SECTION); ?>">
 
@@ -35,45 +38,84 @@ $isPostActive = !$isPollActive;
         <input type="file" id="publication-file-input" class="visually-hidden" 
                accept="image/png, image/jpeg, image/gif, image/webp" multiple>
 
-        <div class="component-card component-card--action" id="create-post-form" style="gap: 16px;">
-        
-            <div class="component-toggle-tabs" id="post-type-toggle">
-                <button type="button" class="component-toggle-tab <?php echo $isPostActive ? 'active' : ''; ?>" data-type="post">
-                    <span class="material-symbols-rounded">post_add</span>
-                    <span data-i18n="create_publication.post"></span>
-                </button>
-                <button type="button" class="component-toggle-tab <?php echo $isPollActive ? 'active' : ''; ?>" data-type="poll">
-                    <span class="material-symbols-rounded">poll</span>
-                    <span data-i18n="create_publication.poll"></span>
-                </button>
-            </div>
-
-            <div id="post-content-area" class="active" style="width: 100%;">
-                <div class="component-input-group">
-                    <textarea id="publication-text" class="component-input" rows="5" placeholder=" " style="height: 120px; resize: vertical; padding-top: 16px;"></textarea>
-                    <label for="publication-text" data-i18n="create_publication.placeholder"></label>
+        <?php if (!$hasCommunities): ?>
+            <div class="component-card">
+                <div class="component-card__content">
+                    <div class="component-card__icon">
+                        <span class="material-symbols-rounded">group_off</span>
+                    </div>
+                    <div class="component-card__text">
+                        <h2 class="component-card__title" data-i18n="create_publication.noCommunitiesTitle">No estás en ninguna comunidad</h2>
+                        <p class="component-card__description" data-i18n="create_publication.noCommunitiesDesc">Debes unirte a una comunidad antes de poder publicar.</p>
+                    </div>
+                </div>
+                <div class="component-card__actions">
+                    <button type="button" class="component-button" data-action="toggleSectionJoinGroup" data-i18n="home.toolbar.joinGroup"></button>
                 </div>
             </div>
 
-            <div class="publication-preview-container" id="publication-preview-container">
-                </div>
-            <div id="poll-content-area" class="<?php echo $isPollActive ? 'active' : 'disabled'; ?>" style="width: 100%; display: <?php echo $isPollActive ? 'flex' : 'none'; ?>; flex-direction: column; gap: 8px;">
-                <p class="component-card__description" style="text-align: center;">(Aquí irán las opciones de la encuesta...)</p>
-            </div>
+        <?php else: ?>
+            <div class="component-card component-card--action" id="create-post-form" style="gap: 16px;">
             
+                <div class="component-toggle-tabs" id="post-type-toggle">
+                    <button type="button" class="component-toggle-tab <?php echo $isPostActive ? 'active' : ''; ?>" data-type="post">
+                        <span class="material-symbols-rounded">post_add</span>
+                        <span data-i18n="create_publication.post"></span>
+                    </button>
+                    <button type="button" class="component-toggle-tab <?php echo $isPollActive ? 'active' : ''; ?>" data-type="poll">
+                        <span class="material-symbols-rounded">poll</span>
+                        <span data-i18n="create_publication.poll"></span>
+                    </button>
+                </div>
 
-            <div class="component-card__actions" style="width: 100%; justify-content: space-between;">
+                <div class="component-card__content" style="width: 100%; padding-bottom: 0;">
+                    <div class="component-card__text" style="width: 100%;">
+                        <h2 class="component-card__title" data-i18n="create_publication.destination" style="margin-bottom: 8px;">Publicar en:</h2>
+                        
+                        <div class="trigger-select-wrapper" style="width: 100%;">
+                            <select class="component-input" id="publication-community-select" style="height: 52px; padding-left: 12px; font-size: 16px; background-position: right 12px center;">
+                                
+                                <option value="" selected disabled data-i18n="create_publication.selectCommunity">Seleccione una comunidad...</option>
+                                
+                                <?php // $userCommunitiesForPost es inyectada desde router.php ?>
+                                <?php foreach ($userCommunitiesForPost as $community): ?>
+                                    <option value="<?php echo htmlspecialchars($community['id']); ?>">
+                                        <?php echo htmlspecialchars($community['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+
+                            </select>
+                        </div>
+                        
+                    </div>
+                </div>
+                <div id="post-content-area" class="active" style="width: 100%;">
+                    <div class="component-input-group">
+                        <textarea id="publication-text" class="component-input" rows="5" placeholder=" " style="height: 120px; resize: vertical; padding-top: 16px;"></textarea>
+                        <label for="publication-text" data-i18n="create_publication.placeholder"></label>
+                    </div>
+                </div>
+
+                <div class="publication-preview-container" id="publication-preview-container">
+                    </div>
+                <div id="poll-content-area" class="<?php echo $isPollActive ? 'active' : 'disabled'; ?>" style="width: 100%; display: <?php echo $isPollActive ? 'flex' : 'none'; ?>; flex-direction: column; gap: 8px;">
+                    <p class="component-card__description" style="text-align: center;">(Aquí irán las opciones de la encuesta...)</p>
+                </div>
                 
-                <button type="button" class="component-action-button component-action-button--secondary" 
-                        id="attach-files-btn" 
-                        data-tooltip="create_publication.attachTooltip">
-                    <span class="material-symbols-rounded">attach_file</span>
-                </button>
-                <button type="button" class="component-action-button component-action-button--primary" id="publish-post-btn" data-i18n="create_publication.publish" disabled>
-                    Publicar
-                </button>
-            </div>
 
+                <div class="component-card__actions" style="width: 100%; justify-content: space-between;">
+                    
+                    <button type="button" class="component-action-button component-action-button--secondary" 
+                            id="attach-files-btn" 
+                            data-tooltip="create_publication.attachTooltip">
+                        <span class="material-symbols-rounded">attach_file</span>
+                    </button>
+                    <button type="button" class="component-action-button component-action-button--primary" id="publish-post-btn" data-i18n="create_publication.publish" disabled>
+                        Publicar
+                    </button>
+                </div>
+
+            </div>
+        <?php endif; ?>
         </div>
-    </div>
 </div>

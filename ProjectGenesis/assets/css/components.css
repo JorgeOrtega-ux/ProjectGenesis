@@ -444,6 +444,31 @@
     color: #000;
 }
 
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN (Estilos para <select>) ▼▼▼ --- */
+.component-input-group select.component-input,
+select.component-input {
+    padding: 12px 12px; /* Padding ajustado para <select> */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%236b7280'%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 24px;
+}
+/* Cuando hay un valor seleccionado (no la opción disabled) */
+.component-input-group select.component-input:valid,
+select.component-input:valid {
+     color: #000;
+}
+/* Estilo para la opción "Seleccione..." */
+.component-input-group select.component-input:invalid,
+select.component-input:invalid {
+     color: #6b7280;
+}
+/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
+
+
 .component-input-group .component-input:focus~label,
 .component-input-group .component-input:not(:placeholder-shown)~label {
     top: 8px;
@@ -1607,6 +1632,8 @@
 /* --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIDO DASHBOARD Y HOME) ▼▼▼ --- */
 .section-content[data-section="home"] .component-wrapper,
 .section-content[data-section="join-group"] .component-wrapper, /* <-- LÍNEA AÑADIDA */
+.section-content[data-section="create-publication"] .component-wrapper, /* <-- LÍNEA AÑADIDA */
+.section-content[data-section="create-poll"] .component-wrapper, /* <-- LÍNEA AÑADIDA */
 .section-content[data-section="admin-users"] .component-wrapper,
 .section-content[data-section="admin-backups"] .component-wrapper,
 .section-content[data-section="admin-dashboard"] .component-wrapper,
@@ -2144,4 +2171,55 @@
 .preview-remove-btn .material-symbols-rounded {
     font-size: 16px;
     font-variation-settings: 'FILL' 1;
+}
+
+/* ====================================== */
+/* =  ESTILOS DE PUBLICACIONES (NUEVO)  = */
+/* ====================================== */
+.post-attachments-container {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.post-attachments-container[data-count="1"] {
+    grid-template-columns: 1fr;
+}
+.post-attachments-container[data-count="2"] {
+    grid-template-columns: 1fr 1fr;
+}
+.post-attachments-container[data-count="3"] {
+    grid-template-columns: 1fr 1fr;
+}
+.post-attachments-container[data-count="3"] .post-attachment-item:first-child {
+    grid-column: 1 / 3; /* El primero abarca 2 columnas */
+}
+.post-attachments-container[data-count="4"] {
+    grid-template-columns: 1fr 1fr;
+}
+
+.post-attachment-item {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    padding-top: 100%; /* Aspect ratio 1:1 */
+    border: 1px solid #00000010;
+    background-color: #f5f5fa;
+    border-radius: 4px;
+}
+
+.post-attachment-item img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* Ajuste para la imagen 1 de 3 (para que no sea 1:1) */
+.post-attachments-container[data-count="3"] .post-attachment-item:first-child {
+    padding-top: 50%; /* Aspect ratio 2:1 */
 }

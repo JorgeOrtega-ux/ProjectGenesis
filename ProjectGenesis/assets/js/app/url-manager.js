@@ -275,9 +275,13 @@ export function handleNavigation() {
         action = 'toggleSectionHome';
     } else if (communityUuidRegex.test(path)) {
         action = 'toggleSectionHome';
-        // Opcional: guardar el UUID para que 'home' lo use
-        // const matches = path.match(communityUuidRegex);
-        // window.currentCommunityUuid = matches[1]; 
+        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ ---
+        // ¡CAMBIO! En lugar de solo cargar, pasamos el UUID
+        const matches = path.match(communityUuidRegex);
+        const uuid = matches[1];
+        loadPage('home', action, { community_uuid: uuid });
+        return; // Salir de la función para evitar la llamada duplicada a loadPage
+        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
     } else {
         // Lógica existente para otras rutas
         if (path === '/settings') {
@@ -302,7 +306,10 @@ export function handleNavigation() {
     const page = routes[action];
 
     if (page) {
+        // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
+        // La llamada a loadPage para rutas no-comunidad no necesita fetchParams
         loadPage(page, action); 
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
     } else {
         loadPage('404', null);
     }

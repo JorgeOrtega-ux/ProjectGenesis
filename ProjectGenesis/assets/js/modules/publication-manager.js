@@ -1,5 +1,5 @@
 // FILE: assets/js/modules/publication-manager.js
-// (VERSIÓN COMPLETA CON SUBIDA DE ARCHIVOS)
+// (VERSIÓN CORREGIDA - Valida el selector de comunidad)
 
 import { callPublicationApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -12,7 +12,6 @@ let selectedFiles = []; // Array para guardar los objetos File
  * Muestra/Oculta un spinner en el botón de Publicar.
  */
 function togglePublishSpinner(button, isLoading) {
-    // ... (Esta función es la misma que te di en la respuesta anterior)
     if (!button) return;
     button.disabled = isLoading;
     if (isLoading) {
@@ -31,16 +30,26 @@ function togglePublishSpinner(button, isLoading) {
 function validatePublicationState() {
     const textInput = document.getElementById('publication-text');
     const publishButton = document.getElementById('publish-post-btn');
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    const communitySelect = document.getElementById('publication-community-select');
+    // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
     
-    if (!textInput || !publishButton) {
+    if (!textInput || !publishButton || !communitySelect) {
+        // Si no existe el select (p.ej. porque no hay comunidades), el botón debe estar deshabilitado
+        if(publishButton) publishButton.disabled = true;
         return;
     }
 
     const hasText = textInput.value.trim().length > 0;
     const hasFiles = selectedFiles.length > 0;
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    const hasCommunity = communitySelect.value !== ''; // Comprueba que no sea la opción "Seleccione..."
+    // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
     
-    // Habilita el botón si hay texto O si hay archivos
-    publishButton.disabled = !hasText && !hasFiles;
+    // Habilita el botón si hay (texto O archivos) Y si hay una comunidad seleccionada
+    // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+    publishButton.disabled = (!hasText && !hasFiles) || !hasCommunity;
+    // --- ▲▲▲ FIN LÍNEA MODIFICADA ▲▲▲ ---
 }
 
 /**
@@ -147,36 +156,36 @@ async function handlePublishSubmit() {
     const publishButton = document.getElementById('publish-post-btn');
     const textInput = document.getElementById('publication-text');
     const previewContainer = document.getElementById('publication-preview-container');
+    const communitySelect = document.getElementById('publication-community-select');
 
-    if (!publishButton || !textInput) return;
+    if (!publishButton || !textInput || !communitySelect) return; 
 
     const textContent = textInput.value.trim();
     
-    // Validar que haya o texto o archivos
+    // --- ▼▼▼ LÓGICA DE VALIDACIÓN MODIFICADA ▼▼▼ ---
+    let communityId = communitySelect.value;
+
+    // Esta validación doble es por si acaso, aunque 'validatePublicationState' ya lo hace
     if (!textContent && selectedFiles.length === 0) {
         showAlert(getTranslation('js.publication.errorEmpty'), 'error');
         return;
     }
-
-    let communityId = sessionStorage.getItem('currentCommunityId') || 'main_feed';
-    if (communityId === 'main_feed') {
-        communityId = null; 
+    if (communityId === '') {
+        showAlert(getTranslation('js.publication.errorNoCommunity'), 'error');
+        return;
     }
-
+    // --- ▲▲▲ FIN LÓGICA DE VALIDACIÓN ▲▲▲ ---
+    
     togglePublishSpinner(publishButton, true);
 
     const formData = new FormData();
     formData.append('action', 'create-post');
     formData.append('text_content', textContent);
-    if (communityId) {
-        formData.append('community_id', communityId);
-    }
+    formData.append('community_id', communityId); // <--- Ahora siempre se envía un ID
     
-    // --- ▼▼▼ NUEVA LÓGICA: AÑADIR ARCHIVOS AL FORMDATA ▼▼▼ ---
     for (const file of selectedFiles) {
         formData.append('attachments[]', file, file.name);
     }
-    // --- ▲▲▲ FIN NUEVA LÓGICA ▲▲▲ ---
 
     try {
         const result = await callPublicationApi(formData);
@@ -188,6 +197,7 @@ async function handlePublishSubmit() {
             textInput.value = '';
             selectedFiles = [];
             if (previewContainer) previewContainer.innerHTML = '';
+            communitySelect.value = ''; // Resetear el select a "Seleccione..."
             validatePublicationState(); // Deshabilitar el botón
 
             // Navegar a Home
@@ -215,16 +225,16 @@ async function handlePublishSubmit() {
  */
 export function initPublicationManager() {
     
-    // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA ▼▼▼ ---
-    
     // Resetear archivos al iniciar (por si el usuario navega de vuelta)
     selectedFiles = [];
     const previewContainer = document.getElementById('publication-preview-container');
     if (previewContainer) previewContainer.innerHTML = '';
     const fileInput = document.getElementById('publication-file-input');
     if (fileInput) fileInput.value = '';
-    
-    // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    const communitySelect = document.getElementById('publication-community-select');
+    if (communitySelect) communitySelect.value = ''; // Resetear el select
+    // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 
 
     // --- LÓGICA DE PESTAÑAS (Sin cambios) ---
@@ -283,6 +293,16 @@ export function initPublicationManager() {
             validatePublicationState();
         }
     });
+    
+    // --- ▼▼▼ LISTENER AÑADIDO PARA EL SELECT ▼▼▼ ---
+    // Listener para el selector de comunidad
+    document.body.addEventListener('change', (e) => {
+        const section = e.target.closest('[data-section*="create-"]');
+        if (e.target.id === 'publication-community-select' && section) {
+            validatePublicationState();
+        }
+    });
+    // --- ▲▲▲ FIN LISTENER AÑADIDO ▲▲▲ ---
 
     // Listener para el botón de publicar
     document.body.addEventListener('click', (e) => {
@@ -292,8 +312,6 @@ export function initPublicationManager() {
             handlePublishSubmit();
         }
     });
-    
-    // --- ▼▼▼ NUEVOS LISTENERS AÑADIDOS ▼▼▼ ---
     
     // Listener para el botón de adjuntar
     document.body.addEventListener('click', (e) => {
@@ -311,8 +329,6 @@ export function initPublicationManager() {
             handleFileSelection(e);
         }
     });
-    
-    // --- ▲▲▲ FIN NUEVOS LISTENERS ▲▲▲ ---
     
     // Validar estado al cargar la página
     if (document.querySelector('[data-section*="create-"].active')) {

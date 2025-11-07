@@ -1,6 +1,6 @@
 <?php
 // FILE: api/publication_handler.php
-// (VERSIÓN MODIFICADA PARA ACEPTAR ARCHIVOS)
+// (VERSIÓN CORREGIDA - community_id ES OBLIGATORIO)
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -36,7 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'create-post') {
             
             $textContent = trim($_POST['text_content'] ?? '');
+            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
+            // El ID de comunidad ahora es obligatorio.
             $communityId = $_POST['community_id'] ?? null;
+            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
             $postType = 'post'; // 'poll' se implementará a futuro
             
             $uploadedFiles = $_FILES['attachments'] ?? [];
@@ -46,6 +49,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($textContent) && empty($uploadedFiles['name'][0])) {
                 throw new Exception('js.publication.errorEmpty');
             }
+            
+            // --- ▼▼▼ MODIFICACIÓN: VALIDACIÓN DE COMUNIDAD ▼▼▼ ---
+            if (empty($communityId)) {
+                // (Debes añadir esta clave 'js.publication.errorNoCommunity' a tus JSON)
+                throw new Exception('js.publication.errorNoCommunity');
+            }
+            
+            // Comprobar que el usuario es miembro de esa comunidad
+            $stmt_check_member = $pdo->prepare("SELECT id FROM user_communities WHERE user_id = ? AND community_id = ?");
+            $stmt_check_member->execute([$userId, $communityId]);
+            if (!$stmt_check_member->fetch()) {
+                 throw new Exception('js.api.errorServer'); // Error genérico de permisos
+            }
+            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+
 
             // --- 2. Preparar Directorio de Subida ---
             $uploadDir = dirname(__DIR__) . '/assets/uploads/publications';
@@ -69,6 +87,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     "INSERT INTO publication_files (user_id, community_id, file_name_system, file_name_original, public_url, file_type, file_size)
                      VALUES (?, ?, ?, ?, ?, ?, ?)"
                 );
+                
+                // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
+                // $dbCommunityId ahora es solo (int)$communityId
+                $dbCommunityId = (int)$communityId;
+                // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
 
                 foreach ($uploadedFiles['error'] as $key => $error) {
                     if ($error !== UPLOAD_ERR_OK) {
@@ -105,7 +128,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     // Guardar en la tabla 'publication_files'
-                    $dbCommunityId = ($communityId !== null && $communityId !== 'main_feed') ? (int)$communityId : null;
                     $stmt_insert_file->execute([
                         $userId, $dbCommunityId, $systemName, $originalName, $publicUrl, $mimeType, $fileSize
                     ]);
@@ -116,7 +138,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // --- 5. Guardar la Publicación (incluso si solo tiene texto) ---
-            $dbCommunityId = ($communityId !== null && $communityId !== 'main_feed') ? (int)$communityId : null;
+            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
+            $dbCommunityId = (int)$communityId;
+            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
             
             $stmt_insert_post = $pdo->prepare(
                 "INSERT INTO community_publications (community_id, user_id, text_content, post_type)

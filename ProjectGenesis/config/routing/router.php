@@ -415,6 +415,19 @@ if (array_key_exists($page, $allowedPages)) {
             $joinedCommunityIds = [];
         }
     // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
+    
+    // --- ▼▼▼ INICIO DE NUEVO BLOQUE (create-publication) ▼▼▼ ---
+    } elseif ($page === 'create-publication' || $page === 'create-poll') {
+        $userCommunitiesForPost = [];
+        try {
+            // Cargar las comunidades a las que pertenece el usuario para el selector
+            $stmt_c = $pdo->prepare("SELECT c.id, c.name FROM communities c JOIN user_communities uc ON c.id = uc.community_id WHERE uc.user_id = ? ORDER BY c.name ASC");
+            $stmt_c->execute([$_SESSION['user_id']]);
+            $userCommunitiesForPost = $stmt_c->fetchAll();
+        } catch (PDOException $e) {
+            logDatabaseError($e, 'router - create-post-communities');
+        }
+    // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 
     } elseif ($page === 'admin-manage-users') {
         $adminCurrentPage = (int)($_GET['p'] ?? 1);
