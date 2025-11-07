@@ -108,6 +108,10 @@ $allowedPages = [
     'account-status-suspended' => '../../includes/sections/main/status-page.php',
     // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    'join-group' => '../../includes/sections/main/join-group.php',
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+
     'register-step1' => '../../includes/sections/auth/register.php',
     'register-step2' => '../../includes/sections/auth/register.php',
     'register-step3' => '../../includes/sections/auth/register.php',
@@ -161,7 +165,7 @@ $isAdminPage = strpos($page, 'admin-') === 0;
 // porque el nuevo 'status-page.php' usa $CURRENT_SECTION.
 // --- ▲▲▲ FIN BLOQUE ELIMINADO ▲▲▲ ---
 
-if (!isset($_SESSION['user_id']) && !$isAuthPage && $page !== '404') {
+if (!isset($_SESSION['user_id']) && !$isAuthPage && $page !== '404' && $page !== 'join-group') { // <-- Modificación: Permitir join-group
     http_response_code(403); 
     $CURRENT_SECTION = '404'; 
     include $allowedPages['404'];

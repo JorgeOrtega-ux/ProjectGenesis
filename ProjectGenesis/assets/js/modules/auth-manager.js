@@ -446,7 +446,7 @@ function initResetWizard() {
             // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             const cooldown = window.codeResendCooldownSeconds || 60;
             startResendTimer(linkElement, cooldown);
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
 
             const formData = new FormData();
             formData.append('action', 'reset-resend-code');
@@ -497,7 +497,7 @@ function initResetWizard() {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorEmailLength');
                     showAuthError(errorDiv, clientErrorMessage, null, emailInput);
-                // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+                // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
                 }
             }
 
@@ -645,7 +645,7 @@ function initLoginWizard() {
                 prevStepEl.classList.remove('disabled');
                 
                 if(errorDiv) errorDiv.classList.remove('active');
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
             }
             return;
         }
@@ -677,7 +677,7 @@ function initLoginWizard() {
                         
                         nextStepEl.classList.add('active');
                         nextStepEl.classList.remove('disabled');
-                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
                         
                          const nextInput = nextStepEl.querySelector('input#login-code');
                          if (nextInput) nextInput.focus();
@@ -746,7 +746,7 @@ export function initAuthManager() {
                 if (errorDiv && errorDiv.classList.contains('active')) {
                     errorDiv.classList.remove('active');
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
             }
         }
 
@@ -755,7 +755,14 @@ export function initAuthManager() {
         const isLoginCode = (e.target.id === 'login-code' && e.target.closest('#login-form'));
         
         const isSettingsEmailCode = (e.target.id === 'email-verify-code' && e.target.closest('[data-section="settings-change-email"]'));
-        if (isRegisterCode || isResetCode || isLoginCode || isSettingsEmailCode) {
+        
+        // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+        const isJoinGroupCode = (e.target.id === 'join-code' && e.target.closest('#join-group-form'));
+        // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+
+        // --- ▼▼▼ INICIO DE LÍNEA MODIFICADA ▼▼▼ ---
+        if (isRegisterCode || isResetCode || isLoginCode || isSettingsEmailCode || isJoinGroupCode) {
+        // --- ▲▲▲ FIN DE LÍNEA MODIFICADA ▲▲▲ ---
             let input = e.target.value.replace(/[^0-9a-zA-Z]/g, '');
             input = input.toUpperCase();
             input = input.substring(0, 12);

@@ -1604,7 +1604,8 @@
 .domain-card-item:hover {
     border-color: #000;
 }
-/* --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIDO DASHBOARD) ▼▼▼ --- */
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIDO DASHBOARD Y HOME) ▼▼▼ --- */
+.section-content[data-section="home"] .component-wrapper, /* <-- LÍNEA AÑADIDA */
 .section-content[data-section="admin-users"] .component-wrapper,
 .section-content[data-section="admin-backups"] .component-wrapper,
 .section-content[data-section="admin-dashboard"] .component-wrapper,

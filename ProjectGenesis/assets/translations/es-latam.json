@@ -599,5 +599,26 @@
   },
   "logout": {
     "invalidSession": "Tu sesión ha expirado o es inválida."
+  },
+  "home": {
+    "toolbar": {
+      "selectGroup": "Seleccionar grupo",
+      "joinGroup": "Unirme a un grupo"
+    },
+    "main": {
+      "title": "Página Principal",
+      "description": "Bienvenido a tu página de inicio. Selecciona un grupo o únete a uno nuevo para comenzar."
+    }
+  },
+  "join_group": {
+    "title": "Unirse a un Grupo",
+    "description": "Ingresa el código de invitación para unirte a un grupo existente.",
+    "codeLabel": "Código de invitación*",
+    "joinButton": "Unirse al Grupo",
+    "cancelButton": "Cancelar",
+    "backTooltip": "Volver a Inicio",
+    "formTitle": "Ingresa tu código",
+    "formDescription": "El código de invitación distingue mayúsculas y minúsculas.",
+    "legal": "Al hacer clic en 'Unirse', aceptas nuestras <a href=\"#\">Normas de la Comunidad</a>."
   }
 }

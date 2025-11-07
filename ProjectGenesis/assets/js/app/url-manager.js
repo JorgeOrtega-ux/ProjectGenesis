@@ -21,6 +21,10 @@ const routes = {
     'toggleSectionMaintenance': 'maintenance', // <-- ¡NUEVA LÍNEA!
     'toggleSectionServerFull': 'server-full', // <--- AÑADE ESTA LÍNEA
 
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    'toggleSectionJoinGroup': 'join-group',
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+
     'toggleSectionRegisterStep1': 'register-step1',
     'toggleSectionRegisterStep2': 'register-step2',
     'toggleSectionRegisterStep3': 'register-step3',
@@ -61,6 +65,10 @@ const paths = {
     '/login': 'toggleSectionLogin',
     '/maintenance': 'toggleSectionMaintenance', // <-- ¡NUEVA LÍNEA!
     '/server-full': 'toggleSectionServerFull', // <--- AÑADE ESTA LÍNEA
+
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    '/join-group': 'toggleSectionJoinGroup',
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     '/register': 'toggleSectionRegisterStep1',
     '/register/additional-data': 'toggleSectionRegisterStep2',
@@ -193,7 +201,7 @@ async function loadPage(page, action, fetchParams = null) {
                 }
             }
         }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▲▲▲ ---
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX CONTEO) ▼▼▼ ---
 
         let link;
         if (page === 'register-step3') {
@@ -316,6 +324,13 @@ function updateMenuState(currentAction) {
     
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    // Si la acción es "Unirse a Grupo", resalta "Home" en el menú
+    if (currentAction === 'toggleSectionJoinGroup') {
+        menuAction = 'toggleSectionHome';
+    }
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
         const linkAction = link.getAttribute('data-action');
 
@@ -333,7 +348,7 @@ export function initRouter() {
     document.body.addEventListener('click', e => {
       const link = e.target.closest(
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (SE ELIMINA restore-backup) ▼▼▼ ---
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"]'
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"]' // <- Se añadió .auth-button-back
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         );
 
