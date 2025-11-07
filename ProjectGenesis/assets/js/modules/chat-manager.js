@@ -188,11 +188,21 @@ export function renderIncomingMessage(msgData) {
         </div>
     `;
     
-    chatHistory.appendChild(bubble);
     
-    // 4. Hacer scroll al final
-    // (Comprobar si el usuario está viendo mensajes antiguos podría ir aquí)
-    chatHistory.scrollTop = chatHistory.scrollHeight;
+    // --- ▼▼▼ INICIO DE LA CORRECCIÓN DE SCROLL (appendChild -> prepend) ▼▼▼ ---
+
+    // 4. Hacer scroll al final (solo si el usuario ya está al final)
+    // En modo column-reverse, "estar al final" significa scrollTop es cercano a 0.
+    const isScrolledToBottom = chatHistory.scrollTop < 100; // 100px de margen
+    
+    // ¡LA CORRECCIÓN ESTÁ AQUÍ! Usamos prepend()
+    chatHistory.prepend(bubble);
+    
+    if (isScrolledToBottom) {
+        chatHistory.scrollTop = 0; // Scroll al fondo visual
+    }
+    
+    // --- ▲▲▲ FIN DE LA CORRECCIÓN DE SCROLL (appendChild -> prepend) ▲▲▲ ---
 }
 // --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA ▲▲▲ ---
 

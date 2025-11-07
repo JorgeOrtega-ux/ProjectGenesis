@@ -57,8 +57,8 @@ if (isset($_SESSION['user_id'], $pdo)) {
                  FROM group_messages m
                  JOIN users u ON m.user_id = u.id
                  WHERE m.group_id = ?
-                 ORDER BY m.created_at ASC
-                 LIMIT 50" // (Obtenemos los últimos 50 mensajes)
+                 ORDER BY m.created_at DESC
+                 LIMIT 50" // (Obtenemos los últimos 50 mensajes, MÁS NUEVOS PRIMERO)
             );
             $stmt_messages->execute([$currentGroupId]);
             $group_messages_raw = $stmt_messages->fetchAll();
@@ -80,6 +80,13 @@ if (isset($_SESSION['user_id'], $pdo)) {
                 $msg['attachments'] = $stmt_attachments->fetchAll(); // Añadir array de adjuntos
                 $grouped_messages[] = $msg; // Añadir el mensaje completo al array final
             }
+            
+            // --- ▼▼▼ INICIO DE CORRECCIÓN (INVERTIR ARRAY) ▼▼▼ ---
+            // Como los pedimos DESC, pero los queremos imprimir ASC (para que column-reverse funcione)
+            // los invertimos en PHP.
+            $grouped_messages = array_reverse($grouped_messages);
+            // --- ▲▲▲ FIN DE CORRECCIÓN (INVERTIR ARRAY) ▲▲▲ ---
+
 
         } catch (PDOException $e) {
             logDatabaseError($e, 'home.php - load chat history');
@@ -116,17 +123,8 @@ if (!empty($current_group_members)) {
     }
 }
 
-// 7. Función Helper para formatear la hora
-function formatMessageTimePHP($dateTimeString) {
-    try {
-        $date = new DateTime($dateTimeString, new DateTimeZone('UTC')); 
-        $userTimezone = $_SESSION['timezone'] ?? 'UTC'; 
-        $date->setTimezone(new DateTimeZone($userTimezone)); 
-        return $date->format('H:i');
-    } catch (Exception $e) {
-        return "--:--";
-    }
-}
+// 7. --- FUNCIÓN HELPER formatMessageTimePHP ELIMINADA ---
+
 
 // --- LÓGICA DE AGRUPACIÓN DE 60 SEGUNDOS ELIMINADA ---
 
@@ -320,7 +318,10 @@ function formatMessageTimePHP($dateTimeString) {
                                 </div>
                                 
                                 <div class="chat-bubble-footer">
-                                    <span class="chat-bubble-time"><?php echo formatMessageTimePHP($group['created_at']); ?></span>
+                                    <?php // --- (Se mantiene la corrección de Zona Horaria) --- ?>
+                                    <span class="chat-bubble-time" data-utc-timestamp="<?php echo htmlspecialchars($group['created_at']); ?>">
+                                        --:--
+                                    </span>
                                 </div>
                             </div>
                         </div>

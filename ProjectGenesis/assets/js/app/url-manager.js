@@ -195,7 +195,28 @@ async function loadPage(page, action, fetchParams = null) {
 
         contentContainer.innerHTML = html;
         applyTranslations(contentContainer);
+
         
+        // --- (Se mantiene la corrección de Zona Horaria) ---
+        function formatLocalTime(utcTimestamp) {
+            try {
+                const date = new Date(utcTimestamp.replace(' ', 'T') + 'Z');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${hours}:${minutes}`;
+            } catch (e) {
+                return "--:--";
+            }
+        }
+
+        contentContainer.querySelectorAll('[data-utc-timestamp]').forEach(el => {
+            const utcString = el.dataset.utcTimestamp;
+            if (utcString) {
+                el.textContent = formatLocalTime(utcString);
+            }
+        });
+        
+
         if (window.applyOnlineStatusToAllMembers) {
             window.applyOnlineStatusToAllMembers();
         }
@@ -241,20 +262,26 @@ async function loadPage(page, action, fetchParams = null) {
             });
         }
         
-        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (WS JOIN GROUP) ▼▼▼ ---
         if (page === 'home' && window.wsSend) {
             const groupUuid = fetchParams ? fetchParams.uuid : null;
             
-            // Informar al WebSocket de la sala actual
             window.wsSend({ type: 'join_group', group_uuid: groupUuid });
             
-            // Almacenar globalmente para reconexiones
             document.body.dataset.currentGroupUuid = groupUuid || '';
         }
-        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (WS JOIN GROUP) ▲▲▲ ---
         
-        // --- ▼▼▼ ¡BLOQUE 'setTimeout' DE SCROLL ELIMINADO! ▼▼▼ ---
-        // (Ya no es necesario gracias al CSS)
+        
+        // --- ▼▼▼ INICIO DE CORRECCIÓN DE SCROLL (NUEVO) ▼▼▼ ---
+        // Después de que todo se cargue, si estamos en 'home',
+        // forzamos el scroll al final del contenedor.
+        if (page === 'home') {
+            const chatHistory = contentContainer.querySelector('#chat-history-container');
+            if (chatHistory) {
+                // En un layout column-reverse, 0 es el fondo.
+                chatHistory.scrollTop = 0;
+            }
+        }
+        // --- ▲▲▲ FIN DE CORRECCIÓN DE SCROLL (NUEVO) ▲▲▲ ---
         
     } catch (error) {
         console.error('Error al cargar la página:', error);
@@ -289,13 +316,11 @@ export function handleNavigation() {
     let fetchParams = null; 
 
     if (!action) {
-        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Grupo UUID) ▼▼▼ ---
         const groupMatch = path.match(/^\/c\/([a-f0-9\-]{36})$/i);
         if (groupMatch) {
             action = 'toggleSectionHome'; 
             fetchParams = { uuid: groupMatch[1] }; 
         }
-        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (Grupo UUID) ▲▲▲ ---
     }
 
     if (!action) {
@@ -393,14 +418,11 @@ export function initRouter() {
 
             e.preventDefault();
             
-            // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Grupo UUID) ▼▼▼ ---
-            // Manejar clics de grupo desde main-controller
             const groupItem = e.target.closest('.group-select-item');
             if (groupItem) {
                 // Dejar que main-controller.js maneje la navegación del grupo
                 return;
             }
-            // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (Grupo UUID) ▲▲▲ ---
 
             let action, page, newPath, fetchParams = null;
 
@@ -426,7 +448,6 @@ export function initRouter() {
                     newPath = '/admin/dashboard';
                 }
                 
-                // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Grupo UUID) ▼▼▼ ---
                 const groupMatch = newPath.match(/^\/c\/([a-f0-9\-]{36})$/i);
                 if (groupMatch) {
                     action = 'toggleSectionHome';
@@ -436,7 +457,6 @@ export function initRouter() {
                     action = paths[newPath];
                     page = routes[action];
                 }
-                // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (Grupo UUID) ▲▲▲ ---
             }
             
             const url = link.href ? new URL(link.href) : null;
