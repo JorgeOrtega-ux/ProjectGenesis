@@ -1,19 +1,17 @@
 // FILE: assets/js/modules/community-manager.js
+// (MODIFICADO PARA MANEJAR VOTACIÓN DE ENCUESTAS)
 
-import { callCommunityApi } from '../services/api-service.js';
+import { callCommunityApi, callPublicationApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js';
 import { loadPage } from '../app/url-manager.js';
+
 let currentCommunityId = null;
 let currentCommunityName = null;
-// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
 let currentCommunityUuid = null;
-// --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 
 /**
  * Muestra u oculta un spinner simple en los botones de unirse/abandonar
- * @param {HTMLButtonElement} button El botón
- * @param {boolean} isLoading True para mostrar spinner, false para quitarlo
  */
 function toggleJoinLeaveSpinner(button, isLoading) {
     if (!button) return;
@@ -28,8 +26,6 @@ function toggleJoinLeaveSpinner(button, isLoading) {
 
 /**
  * Muestra un spinner en el botón principal de "Unirse al Grupo"
- * @param {HTMLButtonElement} button El botón
- * @param {boolean} isLoading True para mostrar spinner, false para quitarlo
  */
 function togglePrimaryButtonSpinner(button, isLoading) {
     if (!button) return;
@@ -44,7 +40,6 @@ function togglePrimaryButtonSpinner(button, isLoading) {
 
 /**
  * Muestra un error inline en el formulario de unirse
- * @param {string} messageKey Clave de traducción del error
  */
 function showJoinGroupError(messageKey) {
     const errorDiv = document.querySelector('#join-group-form .component-card__error');
@@ -67,8 +62,6 @@ function hideJoinGroupError() {
 
 /**
  * Actualiza la UI de un botón de unirse/abandonar
- * @param {HTMLButtonElement} button El botón que se clickeó
- * @param {'join' | 'leave'} newAction La nueva acción que tendrá el botón
  */
 function updateJoinButtonUI(button, newAction) {
     if (newAction === 'leave') {
@@ -84,17 +77,12 @@ function updateJoinButtonUI(button, newAction) {
 
 /**
  * Selecciona una comunidad y actualiza la toolbar
- * @param {string} communityId ID de la comunidad
- * @param {string} communityName Nombre de la comunidad
- * @param {string} communityUuid UUID de la comunidad
  */
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (FUNCIÓN selectCommunity) ▼▼▼ ---
 function selectCommunity(communityId, communityName, communityUuid = null) {
     currentCommunityId = communityId;
     currentCommunityName = communityName;
     currentCommunityUuid = communityUuid;
     
-    // Guardar en sessionStorage para persistencia entre recargas
     sessionStorage.setItem('currentCommunityId', communityId);
     sessionStorage.setItem('currentCommunityName', communityName);
     if (communityUuid) {
@@ -106,11 +94,10 @@ function selectCommunity(communityId, communityName, communityUuid = null) {
     const displayDiv = document.getElementById('current-group-display');
     if (displayDiv) {
         displayDiv.textContent = communityName;
-        displayDiv.setAttribute('data-community-id', communityId); // Guardar el ID aquí
+        displayDiv.setAttribute('data-community-id', communityId);
         displayDiv.classList.add('active');
     }
     
-    // Actualizar clase active en popover
     const popover = document.querySelector('[data-module="moduleSelectGroup"]');
     if (popover) {
         popover.querySelectorAll('.menu-link').forEach(link => {
@@ -122,7 +109,6 @@ function selectCommunity(communityId, communityName, communityUuid = null) {
         }
     }
     
-    // --- Lógica de URL ---
     let newPath;
     const basePath = window.projectBasePath || '/ProjectGenesis';
 
@@ -132,52 +118,40 @@ function selectCommunity(communityId, communityName, communityUuid = null) {
         newPath = basePath + '/c/' + communityUuid;
     }
 
-    // Cambiar la URL solo si es diferente
     if (window.location.pathname !== newPath) {
-        // Usar pushState para cambiar la URL sin recargar la página
         history.pushState({ communityId: communityId }, '', newPath);
         
-        // --- ▼▼▼ INICIO DE LA CORRECCIÓN (Llamar a loadPage) ▼▼▼ ---
-        // Después de cambiar la URL, forzar la recarga del contenido de la página 'home'
-        // con los nuevos parámetros (o sin ellos para el feed principal).
         if (communityId === 'main_feed') {
             loadPage('home', 'toggleSectionHome');
         } else {
-            // Pasamos el UUID como fetchParam para que router.php lo lea
             loadPage('home', 'toggleSectionHome', { community_uuid: communityUuid });
         }
-        // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
     }
     
     console.log(`Grupo seleccionado: ${communityName} (ID: ${communityId}, UUID: ${communityUuid})`);
     
     deactivateAllModules();
 }
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 /**
  * Carga la comunidad guardada al iniciar la app
  */
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (FUNCIÓN loadSavedCommunity) ▼▼▼ ---
-export function loadSavedCommunity() { // <--- ¡CAMBIO! Se añade "export"
+export function loadSavedCommunity() { 
     const mainFeedName = getTranslation('home.popover.mainFeed');
     const basePath = window.projectBasePath || '/ProjectGenesis';
 
-    // Prioridad 1: Carga directa de URL de comunidad (PHP nos dio los datos)
     if (window.initialCommunityId && window.initialCommunityName && window.initialCommunityUuid) {
         selectCommunity(
             window.initialCommunityId,
             window.initialCommunityName,
             window.initialCommunityUuid
         );
-        // Limpiar para que no se re-use en navegación SPA
         window.initialCommunityId = null;
         window.initialCommunityName = null;
         window.initialCommunityUuid = null;
         return;
     }
     
-    // Prioridad 2: Carga directa de URL de Main Feed (/)
     if (window.location.pathname === basePath || window.location.pathname === basePath + '/') {
          selectCommunity(
             'main_feed',
@@ -187,64 +161,104 @@ export function loadSavedCommunity() { // <--- ¡CAMBIO! Se añade "export"
          return;
     }
 
-    // Prioridad 3: Persistencia de Sesión (fallback)
-    // (p.ej. recargar la página de /settings, el display debe recordar la última comunidad)
     const savedId = sessionStorage.getItem('currentCommunityId') || 'main_feed';
     const savedName = sessionStorage.getItem('currentCommunityName') || mainFeedName;
     const savedUuid = sessionStorage.getItem('currentCommunityUuid') || null;
 
     selectCommunity(savedId, savedName, savedUuid);
 }
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (RENDERIZAR RESULTADOS DE ENCUESTA) ▼▼▼ ---
+/**
+ * Reemplaza el formulario de votación por los resultados
+ * @param {HTMLElement} pollContainer - El div .poll-container
+ * @param {object} resultsData - Los datos devueltos por la API (results, totalVotes)
+ */
+function renderPollResults(pollContainer, resultsData) {
+    const { results, totalVotes } = resultsData;
+    const currentUserId = window.userId || 0;
+    
+    let resultsHtml = '<div class="poll-results">';
+    
+    // Encontrar la opción que votó el usuario (la API no nos dice esto, pero podemos suponer la última)
+    // NOTA: La API *debería* devolver la opción votada. Asumiremos que está en resultsData.userVoteOptionId
+    // PERO... la API `vote-poll` no devuelve `user_voted_option_id`.
+    // Lo buscaremos en el formulario que *acaba de ser enviado*.
+    const form = pollContainer.querySelector('.poll-form');
+    let votedOptionId = null;
+    if (form) {
+        const formData = new FormData(form);
+        votedOptionId = formData.get('poll_option_id');
+    }
+
+    results.forEach(option => {
+        const voteCount = parseInt(option.vote_count, 10);
+        const percentage = (totalVotes > 0) ? Math.round((voteCount / totalVotes) * 100) : 0;
+        const isUserVote = (option.id == votedOptionId); // Comparar con la opción enviada
+        
+        resultsHtml += `
+            <div class="poll-option-result ${isUserVote ? 'voted-by-user' : ''}">
+                <div class="poll-option-bar" style="width: ${percentage}%;"></div>
+                <div class="poll-option-text">
+                    <span>${escapeHTML(option.option_text)}</span>
+                    ${isUserVote ? '<span class="material-symbols-rounded poll-user-vote-icon">check_circle</span>' : ''}
+                </div>
+                <div class="poll-option-percent">${percentage}%</div>
+            </div>
+        `;
+    });
+    
+    resultsHtml += `<p class="poll-total-votes" data-i18n="home.poll.totalVotes" data-count="${totalVotes}">${totalVotes} votos</p>`;
+    resultsHtml += '</div>';
+
+    pollContainer.innerHTML = resultsHtml;
+}
+
+function escapeHTML(str) {
+    return str.replace(/[&<>"']/g, function(m) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[m];
+    });
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ---
 
 
 export function initCommunityManager() {
     
-    // Cargar la comunidad seleccionada al inicio
-    // loadSavedCommunity(); // <--- ¡CAMBIO! Esta línea se elimina de aquí.
-
     document.body.addEventListener('click', async (e) => {
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Selector de botones) ▼▼▼ ---
         const button = e.target.closest('button[data-action], button[data-auth-action], button[data-tooltip]');
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Manejar clic en popover) ▼▼▼ ---
         if (!button) {
-            // Lógica para seleccionar grupo del popover
             const groupLink = e.target.closest('[data-module="moduleSelectGroup"] .menu-link[data-community-id]');
             if (groupLink) {
                 e.preventDefault();
                 const communityId = groupLink.dataset.communityId;
-                const communityName = groupLink.dataset.communityName; // Usar el nuevo atributo
-                const communityUuid = groupLink.dataset.communityUuid || null; // Usar el nuevo atributo
+                const communityName = groupLink.dataset.communityName; 
+                const communityUuid = groupLink.dataset.communityUuid || null; 
                 
                 selectCommunity(communityId, communityName, communityUuid);
             }
             return;
         }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         const action = button.dataset.action;
         const authAction = button.dataset.authAction;
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Nueva variable) ▼▼▼ ---
         const tooltipAction = button.dataset.tooltip;
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
-
-        // --- Unirse a comunidad pública ---
         if (action === 'join-community') {
             e.preventDefault();
             const communityId = button.dataset.communityId;
             if (!communityId) return;
-
             toggleJoinLeaveSpinner(button, true);
-            
             const formData = new FormData();
             formData.append('action', 'join-community');
             formData.append('community_id', communityId);
-
             const result = await callCommunityApi(formData);
-            
             if (result.success) {
                 window.showAlert(getTranslation(result.message || 'js.join_group.joinSuccess'), 'success');
                 updateJoinButtonUI(button, 'leave');
@@ -254,20 +268,15 @@ export function initCommunityManager() {
             toggleJoinLeaveSpinner(button, false);
         }
         
-        // --- Abandonar comunidad pública ---
         else if (action === 'leave-community') {
             e.preventDefault();
             const communityId = button.dataset.communityId;
             if (!communityId) return;
-
             toggleJoinLeaveSpinner(button, true);
-
             const formData = new FormData();
             formData.append('action', 'leave-community');
             formData.append('community_id', communityId);
-
             const result = await callCommunityApi(formData);
-            
             if (result.success) {
                 window.showAlert(getTranslation(result.message || 'js.join_group.leaveSuccess'), 'success');
                 updateJoinButtonUI(button, 'join');
@@ -277,41 +286,24 @@ export function initCommunityManager() {
             toggleJoinLeaveSpinner(button, false);
         }
 
-        // --- Unirse a comunidad privada por código ---
         else if (authAction === 'submit-join-code') {
             e.preventDefault();
             hideJoinGroupError();
-            
             const codeInput = document.getElementById('join-code');
             if (!codeInput || !codeInput.value) {
                 showJoinGroupError('js.join_group.invalidCode');
                 return;
             }
-            
             togglePrimaryButtonSpinner(button, true);
-
             const formData = new FormData();
             formData.append('action', 'join-private-community');
             formData.append('join_code', codeInput.value);
-
             const result = await callCommunityApi(formData);
-
             if (result.success) {
                 window.showAlert(getTranslation(result.message || 'js.join_group.joinSuccess'), 'success');
                 codeInput.value = '';
-                // Opcional: Redirigir a home y seleccionar el nuevo grupo
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Seleccionar al unirse) ▼▼▼ ---
                 if (result.communityName && result.communityUuid && result.communityId) {
-                     // Llama a selectCommunity para cambiar la URL y guardar el estado
                      selectCommunity(result.communityId, result.communityName, result.communityUuid);
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-                    // Navegar a la página de inicio
-                    const link = document.createElement('a');
-                    link.href = window.projectBasePath + '/';
-                    link.setAttribute('data-nav-js', 'true');
-                    document.body.appendChild(link);
-                    link.click();
-                    link.remove();
                 }
             } else {
                 showJoinGroupError(result.message || 'js.join_group.apiError');
@@ -319,22 +311,13 @@ export function initCommunityManager() {
             togglePrimaryButtonSpinner(button, false);
         }
 
-        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (Mostrar/Ocultar Comentarios) ▼▼▼ ---
         else if (tooltipAction === 'home.actions.comment') {
             e.preventDefault();
-            
-            // 1. Encontrar la tarjeta de publicación principal
             const postCard = button.closest('.component-card--post');
             if (!postCard) return;
-
-            // 2. Encontrar el contenedor de comentarios dentro de ESA tarjeta
             const commentContainer = postCard.querySelector('.post-comment-input-container');
             if (!commentContainer) return;
-
-            // 3. Mostrar/Ocultar
             commentContainer.classList.toggle('active');
-            
-            // 4. Si se muestra, hacer focus en el input
             if (commentContainer.classList.contains('active')) {
                 const commentInput = commentContainer.querySelector('.post-comment-input');
                 if (commentInput) {
@@ -342,31 +325,20 @@ export function initCommunityManager() {
                 }
             }
         }
-        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Abrir popover de "Mis Grupos") ▼▼▼ ---
         else if (action === 'home-select-group') {
             e.preventDefault();
-            e.stopPropagation(); // Detener para que el 'click' de main-controller no lo cierre
-            
+            e.stopPropagation(); 
             const popover = document.querySelector('[data-module="moduleSelectGroup"]');
             const listElement = document.getElementById('my-groups-list');
-            
             if (!popover || !listElement) return;
-
-            // Mostrar popover y estado de carga
-            deactivateAllModules(popover); // Cerrar otros popovers
+            deactivateAllModules(popover); 
             popover.classList.toggle('disabled');
             popover.classList.toggle('active');
-
             if (!popover.classList.contains('active')) {
-                return; // Si se está cerrando, no hacer nada
+                return; 
             }
-            
-            // 1. Obtener el ID seleccionado actualmente (desde la variable global)
             const currentSelectedId = currentCommunityId || 'main_feed';
-
-            // 2. Añadir "Feed principal" estáticamente
             const mainFeedText = getTranslation('home.popover.mainFeed');
             const mainFeedActive = (currentSelectedId === 'main_feed') ? 'active' : '';
             listElement.innerHTML = `
@@ -382,21 +354,14 @@ export function initCommunityManager() {
                     </div>
                 </div>
             `;
-
-            // 3. Añadir separador
             listElement.innerHTML += `<div style="height: 1px; background-color: #00000020; margin: 4px 8px;"></div>`;
-            
-            // 4. Cargar el resto de comunidades
             const formData = new FormData();
             formData.append('action', 'get-my-communities');
-
             const result = await callCommunityApi(formData);
-
             if (result.success && result.communities) {
                 if (result.communities.length === 0) {
                     listElement.innerHTML += `<div class="menu-link" data-i18n="home.popover.noGroups" style="pointer-events: none; opacity: 0.7;">No estás en ningún grupo.</div>`;
                 } else {
-                    // 5. Añadir las comunidades (append)
                     result.communities.forEach(community => {
                         const communityActive = (currentSelectedId == community.id) ? 'active' : '';
                         listElement.innerHTML += `
@@ -418,10 +383,48 @@ export function initCommunityManager() {
                 listElement.innerHTML += `<div class="menu-link" data-i18n="js.api.errorServer" style="pointer-events: none; opacity: 0.7;">Error al cargar grupos.</div>`;
             }
         }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     });
 
-    // Listener para ocultar el error en `join-group.php`
+    // --- ▼▼▼ INICIO DE NUEVO LISTENER (VOTAR ENCUESTA) ▼▼▼ ---
+    document.body.addEventListener('submit', async (e) => {
+        // 1. Asegurarse de que es un formulario de encuesta
+        const pollForm = e.target.closest('form.poll-form[data-action="submit-poll-vote"]');
+        if (!pollForm) return;
+        
+        e.preventDefault();
+        
+        const submitButton = pollForm.querySelector('button[type="submit"]');
+        const pollContainer = pollForm.closest('.poll-container');
+        
+        if (submitButton.disabled) return;
+        
+        const formData = new FormData(pollForm);
+        formData.append('action', 'vote-poll'); // Acción de la API
+        
+        togglePrimaryButtonSpinner(submitButton, true);
+
+        try {
+            const result = await callPublicationApi(formData);
+            
+            if (result.success && result.results) {
+                // Éxito: renderizar los resultados
+                renderPollResults(pollContainer, {
+                    results: result.results,
+                    totalVotes: result.totalVotes
+                });
+            } else {
+                // Error (ej. ya votó)
+                window.showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+                togglePrimaryButtonSpinner(submitButton, false);
+            }
+            
+        } catch (error) {
+            window.showAlert(getTranslation('js.api.errorConnection'), 'error');
+            togglePrimaryButtonSpinner(submitButton, false);
+        }
+    });
+    // --- ▲▲▲ FIN DE NUEVO LISTENER ---
+
     const joinCodeInput = document.getElementById('join-code');
     if (joinCodeInput) {
         joinCodeInput.addEventListener('input', hideJoinGroupError);

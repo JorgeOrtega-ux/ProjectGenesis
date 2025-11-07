@@ -1,6 +1,6 @@
 <?php
 // FILE: includes/sections/main/create-publication.php
-// (VERSIÓN CORREGIDA - Sin "Feed Principal")
+// (VERSÍON CORREGIDA Y AMPLIADA PARA ENCUESTAS)
 
 // Determina qué pestaña está activa basada en la sección actual
 $isPollActive = ($CURRENT_SECTION === 'create-poll');
@@ -35,10 +35,12 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
 
         <?php outputCsrfInput(); ?>
         
+        <!-- Input de archivos para 'post' -->
         <input type="file" id="publication-file-input" class="visually-hidden" 
                accept="image/png, image/jpeg, image/gif, image/webp" multiple>
 
         <?php if (!$hasCommunities): ?>
+            <!-- Vista si el usuario no tiene comunidades -->
             <div class="component-card">
                 <div class="component-card__content">
                     <div class="component-card__icon">
@@ -55,8 +57,10 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
             </div>
 
         <?php else: ?>
+            <!-- Formulario principal de creación -->
             <div class="component-card component-card--action" id="create-post-form" style="gap: 16px;">
             
+                <!-- Pestañas de Post / Encuesta -->
                 <div class="component-toggle-tabs" id="post-type-toggle">
                     <button type="button" class="component-toggle-tab <?php echo $isPostActive ? 'active' : ''; ?>" data-type="post">
                         <span class="material-symbols-rounded">post_add</span>
@@ -68,75 +72,99 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
                     </button>
                 </div>
 
+                <!-- Selector de Comunidad -->
                <div class="component-card__content" style="width: 100%; padding-bottom: 0;">
-    <div class="component-card__text" style="width: 100%;">
-        <h2 class="component-card__title" data-i18n="create_publication.destination" style="margin-bottom: 8px;">Publicar en:</h2>
-        
-        <div class="trigger-select-wrapper" style="width: 100%;">
-            <div class="trigger-selector" 
-                 id="publication-community-trigger" 
-                 data-action="toggleModuleCommunitySelect"
-                 style="height: 52px; padding: 0 12px;">
-                
-                <div class="trigger-select-icon">
-                    <span class="material-symbols-rounded" id="publication-community-icon">public</span>
-                </div>
-                <div class="trigger-select-text">
-                    <span data-i18n="create_publication.selectCommunity" id="publication-community-text">Seleccione una comunidad...</span>
-                </div>
-                <div class="trigger-select-arrow">
-                    <span class="material-symbols-rounded">arrow_drop_down</span>
-                </div>
-            </div>
-
-            <div class="popover-module popover-module--anchor-width body-title disabled"
-                 data-module="moduleCommunitySelect"
-                 style="top: calc(100% + 4px);">
-                <div class="menu-content">
-                    <div class="menu-list">
-                        <?php // El bucle PHP ahora crea 'menu-link' en lugar de 'option' ?>
-                        <?php foreach ($userCommunitiesForPost as $community): ?>
-                            <div class="menu-link" 
-                                 data-value="<?php echo htmlspecialchars($community['id']); ?>"
-                                 data-text="<?php echo htmlspecialchars($community['name']); ?>">
-                                <div class="menu-link-icon">
-                                    <span class="material-symbols-rounded">group</span>
+                    <div class="component-card__text" style="width: 100%;">
+                        <h2 class="component-card__title" data-i18n="create_publication.destination" style="margin-bottom: 8px;">Publicar en:</h2>
+                        
+                        <div class="trigger-select-wrapper" style="width: 100%;">
+                            <div class="trigger-selector" 
+                                 id="publication-community-trigger" 
+                                 data-action="toggleModuleCommunitySelect"
+                                 style="height: 52px; padding: 0 12px;">
+                                
+                                <div class="trigger-select-icon">
+                                    <span class="material-symbols-rounded" id="publication-community-icon">public</span>
                                 </div>
-                                <div class="menu-link-text">
-                                    <span><?php echo htmlspecialchars($community['name']); ?></span>
+                                <div class="trigger-select-text">
+                                    <span data-i18n="create_publication.selectCommunity" id="publication-community-text">Seleccione una comunidad...</span>
                                 </div>
-                                <div class="menu-link-check-icon">
-                                    <?php /* El JS añadirá el 'check' aquí */ ?>
+                                <div class="trigger-select-arrow">
+                                    <span class="material-symbols-rounded">arrow_drop_down</span>
                                 </div>
                             </div>
-                        <?php endforeach; ?>
+
+                            <div class="popover-module popover-module--anchor-width body-title disabled"
+                                 data-module="moduleCommunitySelect"
+                                 style="top: calc(100% + 4px);">
+                                <div class="menu-content">
+                                    <div class="menu-list">
+                                        <!-- Bucle PHP para rellenar las comunidades -->
+                                        <?php foreach ($userCommunitiesForPost as $community): ?>
+                                            <div class="menu-link" 
+                                                 data-value="<?php echo htmlspecialchars($community['id']); ?>"
+                                                 data-text="<?php echo htmlspecialchars($community['name']); ?>">
+                                                <div class="menu-link-icon">
+                                                    <span class="material-symbols-rounded">group</span>
+                                                </div>
+                                                <div class="menu-link-text">
+                                                    <span><?php echo htmlspecialchars($community['name']); ?></span>
+                                                </div>
+                                                <div class="menu-link-check-icon">
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        </div>
-</div>
-                <div id="post-content-area" class="active" style="width: 100%;">
+                
+                <!-- ÁREA DE PUBLICACIÓN (POST) -->
+                <div id="post-content-area" class="<?php echo $isPostActive ? 'active' : 'disabled'; ?>" style="width: 100%; display: <?php echo $isPostActive ? 'flex' : 'none'; ?>; flex-direction: column; gap: 8px;">
                     <div class="component-input-group">
                         <textarea id="publication-text" class="component-input" rows="5" placeholder=" " style="height: 120px; resize: vertical; padding-top: 16px;"></textarea>
                         <label for="publication-text" data-i18n="create_publication.placeholder"></label>
                     </div>
+                    <!-- Contenedor para vistas previas de imágenes -->
+                    <div class="publication-preview-container" id="publication-preview-container">
+                    </div>
                 </div>
 
-                <div class="publication-preview-container" id="publication-preview-container">
+                <!-- ÁREA DE ENCUESTA (POLL) -->
+                <div id="poll-content-area" class="<?php echo $isPollActive ? 'active' : 'disabled'; ?>" style="width: 100%; display: <?php echo $isPollActive ? 'flex' : 'none'; ?>; flex-direction: column; gap: 12px;">
+                    <!-- Input para la Pregunta -->
+                    <div class="component-input-group">
+                        <input type="text" id="poll-question" class="component-input" placeholder=" " maxlength="255">
+                        <label for="poll-question" data-i18n="create_publication.pollQuestionLabel">Escribe tu pregunta...</label>
                     </div>
-                <div id="poll-content-area" class="<?php echo $isPollActive ? 'active' : 'disabled'; ?>" style="width: 100%; display: <?php echo $isPollActive ? 'flex' : 'none'; ?>; flex-direction: column; gap: 8px;">
-                    <p class="component-card__description" style="text-align: center;">(Aquí irán las opciones de la encuesta...)</p>
+                    
+                    <!-- Contenedor dinámico para opciones -->
+                    <div id="poll-options-container" style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Las opciones de la encuesta se añadirán aquí con JS -->
+                    </div>
+                    
+                    <!-- Botón para añadir más opciones -->
+                    <button type="button" class="component-action-button component-action-button--secondary" id="add-poll-option-btn" style="height: 40px; justify-content: flex-start; gap: 8px;">
+                        <span class="material-symbols-rounded">add_circle</span>
+                        <span data-i18n="create_publication.pollAddOption">Añadir opción</span>
+                    </button>
                 </div>
                 
-
+                <!-- Acciones (Botones de adjuntar y publicar) -->
                 <div class="component-card__actions" style="width: 100%; justify-content: space-between;">
                     
                     <button type="button" class="component-action-button component-action-button--secondary" 
                             id="attach-files-btn" 
-                            data-tooltip="create_publication.attachTooltip">
+                            data-tooltip="create_publication.attachTooltip"
+                            style="<?php echo $isPollActive ? 'display: none;' : 'display: flex;'; // Ocultar si es encuesta ?>">
                         <span class="material-symbols-rounded">attach_file</span>
                     </button>
+                    
+                    <!-- Espaciador para alinear el botón de publicar a la derecha cuando "adjuntar" está oculto -->
+                    <div id="attach-files-spacer" style="<?php echo $isPollActive ? 'display: block; flex-grow: 1;' : 'display: none;'; ?>"></div>
+
                     <button type="button" class="component-action-button component-action-button--primary" id="publish-post-btn" data-i18n="create_publication.publish" disabled>
                         Publicar
                     </button>

@@ -101,22 +101,16 @@ INSERT INTO site_settings (setting_key, setting_value) VALUES
 ('code_resend_cooldown_seconds', '60'),
 ('max_concurrent_users', '500');
 
--- --- ▼▼▼ INICIO DE TABLAS MODIFICADAS ▼▼▼ ---
-
 DROP TABLE IF EXISTS communities;
 CREATE TABLE communities (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    -- --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
     uuid CHAR(36) NOT NULL,
-    -- --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
     name VARCHAR(100) NOT NULL,
     privacy ENUM('public', 'private') NOT NULL DEFAULT 'public',
     access_code VARCHAR(50) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     INDEX idx_access_code (access_code),
-    -- --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
     UNIQUE KEY uk_uuid (uuid)
-    -- --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 );
 
 DROP TABLE IF EXISTS user_communities;
@@ -130,89 +124,86 @@ CREATE TABLE user_communities (
     UNIQUE KEY uk_user_community (user_id, community_id)
 );
 
--- Insertar datos de ejemplo (con UUIDs)
 INSERT INTO communities (uuid, name, privacy, access_code) VALUES
 ('a1b2c3d4-e5f6-7890-1234-abcdeffedcba', 'Matamoros', 'public', NULL),
 ('b2c3d4e5-f6a7-8901-2345-bcdeffedcba1', 'Valle Hermoso', 'public', NULL),
 ('c3d4e5f6-a7b8-9012-3456-cdeffedcba12', 'Universidad A', 'private', 'UNIA123'),
 ('d4e5f6a7-b8c9-0123-4567-deffedcba123', 'Universidad B', 'private', 'UNIB456');
 
--- --- ▲▲▲ FIN DE TABLAS MODIFICADAS ▲▲▲ ---
-
-
--- ---
--- Tablas para el sistema de Publicaciones
--- ---
-
 DROP TABLE IF EXISTS `publication_attachments`;
 DROP TABLE IF EXISTS `publication_files`;
+DROP TABLE IF EXISTS `poll_votes`;
+DROP TABLE IF EXISTS `poll_options`;
 DROP TABLE IF EXISTS `community_publications`;
 
---
--- Estructura para la tabla `community_publications`
--- (Adaptada de `group_messages`)
---
 CREATE TABLE `community_publications` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
- `community_id` INT NULL DEFAULT NULL,
+ `community_id` INT NOT NULL, -- <<-- CAMBIO: No puede ser NULL
   `user_id` INT NOT NULL,
-  
-  -- El texto de la publicación.
   `text_content` TEXT NULL DEFAULT NULL, 
-  
-  -- Tipo de publicación (post, poll)
   `post_type` ENUM('post', 'poll') NOT NULL DEFAULT 'post',
-
   `created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
-
-  -- Llaves foráneas
   FOREIGN KEY (community_id) REFERENCES `communities`(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES `users`(id) ON DELETE CASCADE,
-  
-  -- Índices
   KEY `idx_community_timestamp` (`community_id`,`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Estructura para la tabla `publication_files`
--- (Adaptada de `chat_files`)
---
 CREATE TABLE `publication_files` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
- `user_id` INT NOT NULL,      -- Quién subió el archivo
-  `community_id` INT NULL DEFAULT NULL, -- A qué comunidad pertenece (para limpieza/organización)
-  
+ `user_id` INT NOT NULL,
+  `community_id` INT NULL DEFAULT NULL,
   `file_name_system` VARCHAR(255) NOT NULL,
   `file_name_original` VARCHAR(255) NOT NULL,
   `public_url` VARCHAR(512) NOT NULL,
-  `file_type` VARCHAR(100) NOT NULL, -- ej: "image/png", "video/mp4"
+  `file_type` VARCHAR(100) NOT NULL,
   `file_size` INT NOT NULL,
-  
   `created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
-
-  -- Llaves foráneas
   FOREIGN KEY (user_id) REFERENCES `users`(id) ON DELETE CASCADE,
   FOREIGN KEY (community_id) REFERENCES `communities`(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Estructura para la tabla `publication_attachments`
--- (Adaptada de `message_attachments`)
---
 CREATE TABLE `publication_attachments` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `publication_id` INT NOT NULL, -- FK a community_publications.id
-  `file_id` INT NOT NULL,        -- FK a publication_files.id
-  
-  -- Para mostrar las fotos en el orden que el usuario las subió
+  `publication_id` INT NOT NULL,
+  `file_id` INT NOT NULL,
   `sort_order` INT NOT NULL DEFAULT 0, 
-
-  -- Llaves foráneas
   FOREIGN KEY (publication_id) REFERENCES `community_publications`(id) ON DELETE CASCADE,
   FOREIGN KEY (file_id) REFERENCES `publication_files`(id) ON DELETE CASCADE,
-  
-  -- Asegura que no se pueda adjuntar el mismo archivo dos veces a la misma publicación
   UNIQUE KEY `idx_publication_file` (`publication_id`, `file_id`) 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --- ▼▼▼ INICIO DE NUEVAS TABLAS PARA ENCUESTAS ▼▼▼ ---
 
+--
+-- Estructura para la tabla `poll_options`
+-- Guarda el texto de cada opción de la encuesta
+--
+CREATE TABLE `poll_options` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `publication_id` INT NOT NULL, -- FK a community_publications.id
+  `option_text` VARCHAR(255) NOT NULL,
+  
+  FOREIGN KEY (publication_id) REFERENCES `community_publications`(id) ON DELETE CASCADE,
+  INDEX `idx_publication_id` (`publication_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Estructura para la tabla `poll_votes`
+-- Registra el voto de un usuario para una opción
+--
+CREATE TABLE `poll_votes` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `publication_id` INT NOT NULL, -- FK a community_publications.id (para buscar rápido si un usuario ya votó en esta *encuesta*)
+  `poll_option_id` INT NOT NULL, -- FK a poll_options.id (el voto específico)
+  `user_id` INT NOT NULL,        -- FK a users.id
+  `voted_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
+  
+  FOREIGN KEY (publication_id) REFERENCES `community_publications`(id) ON DELETE CASCADE,
+  FOREIGN KEY (poll_option_id) REFERENCES `poll_options`(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES `users`(id) ON DELETE CASCADE,
+  
+  -- Un usuario solo puede votar UNA VEZ por CADA ENCUESTA (publication_id)
+  UNIQUE KEY `uk_user_poll` (`user_id`, `publication_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --- ▲▲▲ FIN DE NUEVAS TABLAS PARA ENCUESTAS ▲▲▲ ---

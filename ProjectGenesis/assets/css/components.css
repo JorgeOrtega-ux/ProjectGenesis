@@ -1,3 +1,4 @@
+/* ... (Todo el contenido existente de components.css) ... */
 /* ====================================== */
 /* ============ COMPONENTES (de styles.css) = */
 /* ====================================== */
@@ -626,6 +627,25 @@ select.component-input:invalid {
     color: #000;
 }
 
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadido .component-input-group) ▼▼▼ --- */
+.component-input-group .auth-toggle-password {
+    right: 5px;
+    top: 26px; /* 50% de 52px */
+}
+
+.component-input-group input[type="text"]:focus~label,
+.component-input-group input[type="text"]:not(:placeholder-shown)~label {
+     top: 8px;
+     transform: translateY(0);
+     font-size: 12px;
+}
+
+.component-input-group input[type="text"] {
+    padding: 20px 48px 8px 12px;
+}
+/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
+
+
 .auth-input-group input:focus~label,
 .auth-input-group input:not(:placeholder-shown)~label {
     top: 8px;
@@ -675,6 +695,14 @@ select.component-input:invalid {
 .auth-input-group input:not(:placeholder-shown)~.auth-toggle-password {
     color: #000;
 }
+
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadido .component-input-group) ▼▼▼ --- */
+.component-input-group input:focus~.auth-toggle-password,
+.component-input-group input:not(:placeholder-shown)~.auth-toggle-password {
+    color: #000;
+}
+/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
+
 
 .auth-button {
     display: flex;
@@ -2215,13 +2243,10 @@ select.component-input:invalid {
     object-fit: cover;
     cursor: pointer;
     display: block; 
-    /* --- ▼▼▼ ¡ESTA ES LA LÍNEA MODIFICADA! ▼▼▼ --- */
-    max-height: 50vh; /* Límite para imágenes (50% de la altura de la ventana) */
-    /* --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ --- */
+    max-height: 50vh; 
     border-radius: 12px; 
 }
 
-/* Restaurar la lógica de cuadrícula (grid) para 2 o más imágenes */
 .post-attachments-container[data-count="2"] .post-attachment-item,
 .post-attachments-container[data-count="3"] .post-attachment-item,
 .post-attachments-container[data-count="4"] .post-attachment-item {
@@ -2239,8 +2264,6 @@ select.component-input:invalid {
     border-radius: 12px; 
     max-height: none; /* Quitar el límite de altura en la cuadrícula */
 }
-/* --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ --- */
-
 
 /* Ajuste para la imagen 1 de 3 (para que no sea 1:1) */
 .post-attachments-container[data-count="3"] .post-attachment-item:first-child {
@@ -2253,29 +2276,23 @@ select.component-input:invalid {
 
 .post-actions-container {
     display: flex;
-    /* --- ▼▼▼ MODIFICACIÓN ▼▼▼ --- */
-    justify-content: space-between; /* Distribuir izquierda y derecha */
+    justify-content: space-between; 
     gap: 8px;
     width: 100%;
     margin-top: 0; 
-    padding: 12px 16px; /* Alinear con el padding del contenido */
+    padding: 12px 16px; 
     border-top: none; 
     box-sizing: border-box; 
-    /* --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ --- */
 }
-
-/* --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (NUEVOS ESTILOS) ▼▼▼ --- */
 .post-actions-left,
 .post-actions-right {
     display: flex;
     align-items: center;
-    gap: 16px; /* Espacio entre los íconos de la izquierda */
+    gap: 16px; 
 }
 .post-actions-right {
-    gap: 0; /* Sin espacio si solo hay uno */
+    gap: 0; 
 }
-/* --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ --- */
-
 
 .component-action-button--icon {
     display: flex;
@@ -2299,53 +2316,39 @@ select.component-input:invalid {
 }
 
 .component-action-button--icon:hover {
-    background-color: #f5f5fa; /* Hover sutil */
-    color: #000; /* Color más oscuro al pasar el ratón */
+    background-color: #f5f5fa; 
+    color: #000; 
 }
 
 .component-action-button--icon .material-symbols-rounded {
-    /* --- ▼▼▼ MODIFICACIÓN ▼▼▼ --- */
-    font-size: 24px; /* Iconos más grandes */
-    /* --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ --- */
+    font-size: 24px; 
 }
 
-/* Ocultar texto en móviles si se ve muy apretado */
 @media (max-width: 400px) {
     .component-action-button--icon .action-text {
         display: none;
     }
     .component-action-button--icon {
-        flex: 0 1 auto; /* No crecer, solo ocupar lo necesario */
+        flex: 0 1 auto; 
     }
 }
-
-/* --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (NUEVOS ESTILOS) ▼▼▼ --- */
-
-/* Estilos para la tarjeta de publicación (anula padding) */
 .component-card--post {
     padding: 0;
 }
-
-/* Padding para el encabezado de la publicación */
 .post-card-header {
     padding: 16px;
 }
-/* Quitar borde/padding del contenido del encabezado */
 .post-card-header .component-card__content {
     padding-bottom: 0;
     border-bottom: none;
 }
 
-/* Padding para el contenido de texto (descripción) */
 .post-card-content {
     padding: 12px 16px;
     padding-top: 0;
-    /* --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ --- */
-    /* Si hay texto, y *luego* hay media, añade un borde */
-    & + .post-attachments-container {
-        border-top: 1px solid #00000020;
-    }
-    /* --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ --- */
+}
+.post-card-content + .post-attachments-container {
+    border-top: 1px solid #00000020;
 }
 
 
@@ -2354,7 +2357,7 @@ select.component-input:invalid {
 /* ====================================== */
 
 .post-comment-input-container {
-    display: none; /* Oculto por defecto */
+    display: none; 
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
@@ -2362,7 +2365,7 @@ select.component-input:invalid {
 }
 
 .post-comment-input-container.active {
-    display: flex; /* Se muestra con JS */
+    display: flex; 
 }
 
 .post-comment-avatar {
@@ -2393,4 +2396,163 @@ select.component-input:invalid {
 .post-comment-input:focus {
     background-color: #e9ecef;
 }
-/* --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ --- */
+
+/* ====================================== */
+/* =  ESTILOS DE ENCUESTAS (NUEVO)      = */
+/* ====================================== */
+
+.post-card-content .poll-question {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    width: 100%;
+}
+
+.poll-container {
+    padding: 0 16px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.poll-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.poll-option-vote {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.poll-option-vote:hover {
+    background-color: #f5f5fa;
+}
+
+.poll-option-vote input[type="radio"] {
+    display: none;
+}
+
+.poll-option-radio {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #00000020;
+    border-radius: 50%;
+    margin-right: 12px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.poll-option-radio::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #000;
+    transform: scale(0);
+    transition: transform 0.2s;
+}
+
+.poll-option-vote input[type="radio"]:checked + .poll-option-radio {
+    border-color: #000;
+}
+
+.poll-option-vote input[type="radio"]:checked + .poll-option-radio::before {
+    transform: scale(1);
+}
+
+.poll-option-vote .poll-option-text {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1f2937;
+    line-height: 1.4;
+}
+
+.poll-form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.poll-total-votes {
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+/* --- Resultados de la Encuesta --- */
+.poll-results {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.poll-option-result {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 40px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    padding: 0 12px;
+    overflow: hidden;
+    background-color: #f5f5fa;
+}
+
+.poll-option-result.voted-by-user {
+    border-color: #000;
+    background-color: #f5f5fa;
+    box-shadow: 0 0 0 1px #000 inset;
+}
+
+.poll-option-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background-color: #e0e0e0;
+    border-radius: 7px 0 0 7px;
+    z-index: 1;
+    transition: width 0.5s ease-out;
+}
+
+.poll-option-result.voted-by-user .poll-option-bar {
+    background-color: #00000020;
+}
+
+.poll-option-text {
+    position: relative;
+    z-index: 2;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.poll-option-percent {
+    position: relative;
+    z-index: 2;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.poll-user-vote-icon {
+    font-size: 18px;
+    color: #000;
+}

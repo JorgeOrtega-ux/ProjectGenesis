@@ -32,3 +32,9 @@
 [07-Nov-2025 16:03:30 UTC] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 619
 [07-Nov-2025 16:03:56 UTC] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 619
 [07-Nov-2025 16:48:32 UTC] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 123
+[07-Nov-2025 19:18:04 UTC] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 619
+[07-Nov-2025 23:17:32 UTC] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 123
+[07-Nov-2025 23:18:10 UTC] PHP Warning:  Undefined array key "id" in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\home.php on line 291
+[07-Nov-2025 23:25:49 UTC] PHP Warning:  Undefined array key "id" in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\home.php on line 292
+[07-Nov-2025 23:27:06 UTC] PHP Warning:  Undefined array key "id" in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\home.php on line 292
+[07-Nov-2025 23:27:06 UTC] PHP Warning:  Undefined array key "id" in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\home.php on line 292

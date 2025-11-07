@@ -1,18 +1,16 @@
 // FILE: assets/js/modules/publication-manager.js
-// (VERSIÓN ACTUALIZADA - Usa el trigger-selector en lugar de <select>)
+// (VERSIÓN ACTUALIZADA - Soporta trigger-select y creación de encuestas)
 
 import { callPublicationApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
 import { showAlert } from '../services/alert-manager.js';
-// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
 import { deactivateAllModules } from '../app/main-controller.js';
-// --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 
 const MAX_FILES = 4;
+const MAX_POLL_OPTIONS = 6;
 let selectedFiles = []; // Array para guardar los objetos File
-// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
 let selectedCommunityId = null; // Guardará el ID de la comunidad
-// --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
+let currentPostType = 'post'; // 'post' o 'poll'
 
 /**
  * Muestra/Oculta un spinner en el botón de Publicar.
@@ -31,37 +29,37 @@ function togglePublishSpinner(button, isLoading) {
 }
 
 /**
- * Valida el estado actual (texto O archivos) y habilita/deshabilita el botón de publicar.
+ * Valida el estado actual y habilita/deshabilita el botón de publicar.
  */
 function validatePublicationState() {
-    const textInput = document.getElementById('publication-text');
     const publishButton = document.getElementById('publish-post-btn');
-    
-    if (!textInput || !publishButton) {
-        // Si no existe el select (p.ej. porque no hay comunidades), el botón debe estar deshabilitado
-        if(publishButton) publishButton.disabled = true;
-        return;
-    }
+    if (!publishButton) return;
 
-    const hasText = textInput.value.trim().length > 0;
-    const hasFiles = selectedFiles.length > 0;
-    // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
-    const hasCommunity = selectedCommunityId !== null; // Comprueba que se haya seleccionado un ID
-    // --- ▲▲▲ FIN LÍNEA MODIFICADA ▲▲▲ ---
+    const hasCommunity = selectedCommunityId !== null;
+    let isContentValid = false;
+
+    if (currentPostType === 'post') {
+        const textInput = document.getElementById('publication-text');
+        const hasText = textInput ? textInput.value.trim().length > 0 : false;
+        const hasFiles = selectedFiles.length > 0;
+        isContentValid = hasText || hasFiles;
+    } else { // 'poll'
+        const questionInput = document.getElementById('poll-question');
+        const options = document.querySelectorAll('#poll-options-container .component-input-group');
+        const hasQuestion = questionInput ? questionInput.value.trim().length > 0 : false;
+        const hasMinOptions = options.length >= 2;
+        // Opcional: verificar que las opciones no estén vacías
+        const allOptionsFilled = Array.from(options).every(opt => opt.querySelector('input').value.trim().length > 0);
+        
+        isContentValid = hasQuestion && hasMinOptions && allOptionsFilled;
+    }
     
-    // Habilita el botón si hay (texto O archivos) Y si hay una comunidad seleccionada
-    // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
-    publishButton.disabled = (!hasText && !hasFiles) || !hasCommunity;
-    // --- ▲▲▲ FIN LÍNEA MODIFICADA ▲▲▲ ---
+    // Habilita el botón si el contenido es válido Y hay una comunidad seleccionada
+    publishButton.disabled = !isContentValid || !hasCommunity;
 }
 
-// ... (Las funciones createPreviewElement, removeFilePreview y handleFileSelection permanecen sin cambios) ...
+// --- Gestión de Vistas Previas de Archivos (POST) ---
 
-/**
- * Crea el elemento DOM para la vista previa de una imagen.
- * @param {File} file - El objeto archivo.
- * @param {string} src - La URL de datos (data URL) de la imagen.
- */
 function createPreviewElement(file, src) {
     const container = document.getElementById('publication-preview-container');
     if (!container) return;
@@ -79,7 +77,6 @@ function createPreviewElement(file, src) {
     removeBtn.className = 'preview-remove-btn';
     removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
     
-    // Añadir listener para eliminar este archivo
     removeBtn.addEventListener('click', () => {
         removeFilePreview(previewItem, file);
     });
@@ -88,30 +85,14 @@ function createPreviewElement(file, src) {
     container.appendChild(previewItem);
 }
 
-/**
- * Elimina una imagen de la vista previa y del array de subida.
- * @param {HTMLElement} previewItem - El elemento div.preview-item a eliminar.
- * @param {File} file - El objeto archivo a eliminar.
- */
 function removeFilePreview(previewItem, file) {
-    // Eliminar del array
     selectedFiles = selectedFiles.filter(f => f !== file);
-    
-    // Eliminar del DOM
     previewItem.remove();
-    
-    // Actualizar el input (para permitir volver a seleccionar el mismo archivo)
     const fileInput = document.getElementById('publication-file-input');
-    if (fileInput) fileInput.value = ''; // Resetea el input
-    
-    // Re-validar el botón de publicar
+    if (fileInput) fileInput.value = ''; 
     validatePublicationState();
 }
 
-/**
- * Maneja la selección de archivos del input.
- * @param {Event} event - El evento 'change' del input.
- */
 function handleFileSelection(event) {
     const files = event.target.files;
     const previewContainer = document.getElementById('publication-preview-container');
@@ -126,104 +107,183 @@ function handleFileSelection(event) {
     }
 
     for (const file of files) {
-        // Validar tipo (ya lo hace el input, pero doble chequeo)
         if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
             showAlert(getTranslation('js.publication.errorFileType'), 'error');
             continue;
         }
-
-        // Validar tamaño
         if (file.size > MAX_SIZE_BYTES) {
             showAlert(getTranslation('js.publication.errorFileSize').replace('%size%', MAX_SIZE_MB), 'error');
             continue;
         }
-
-        // Añadir al array
         selectedFiles.push(file);
-
-        // Generar vista previa
         const reader = new FileReader();
         reader.onload = (e) => {
             createPreviewElement(file, e.target.result);
         };
         reader.readAsDataURL(file);
     }
-    
-    // Re-validar el botón de publicar
     validatePublicationState();
 }
 
+// --- Gestión de Opciones de Encuesta (POLL) ---
+
+function addPollOption(focusNew = true) {
+    const container = document.getElementById('poll-options-container');
+    if (!container) return;
+
+    const optionCount = container.querySelectorAll('.component-input-group').length;
+    if (optionCount >= MAX_POLL_OPTIONS) {
+        showAlert(getTranslation('js.publication.errorPollMaxOptions'), 'info'); // Nueva clave i18n
+        return;
+    }
+    
+    const newOptionIndex = optionCount + 1;
+    const optionDiv = document.createElement('div');
+    optionDiv.className = 'component-input-group';
+    optionDiv.innerHTML = `
+        <input type="text" id="poll-option-${newOptionIndex}" class="component-input" placeholder=" " maxlength="100">
+        <label for="poll-option-${newOptionIndex}">${getTranslation('create_publication.pollOptionLabel')} ${newOptionIndex}</label>
+        <button type="button" class="auth-toggle-password" data-action="remove-poll-option" title="${getTranslation('create_publication.pollRemoveOption')}">
+            <span class="material-symbols-rounded">remove_circle</span>
+        </button>
+    `;
+
+    container.appendChild(optionDiv);
+    
+    if (focusNew) {
+        optionDiv.querySelector('input').focus();
+    }
+    
+    // Deshabilitar el botón de añadir si llegamos al límite
+    const addBtn = document.getElementById('add-poll-option-btn');
+    if (addBtn && (optionCount + 1) >= MAX_POLL_OPTIONS) {
+        addBtn.disabled = true;
+    }
+    
+    validatePublicationState();
+}
+
+function removePollOption(button) {
+    const optionDiv = button.closest('.component-input-group');
+    if (!optionDiv) return;
+    
+    optionDiv.remove();
+    
+    // Re-etiquetar las opciones restantes
+    const container = document.getElementById('poll-options-container');
+    container.querySelectorAll('.component-input-group').forEach((opt, index) => {
+        const newIndex = index + 1;
+        const input = opt.querySelector('input');
+        const label = opt.querySelector('label');
+        if (input) input.id = `poll-option-${newIndex}`;
+        if (label) {
+            label.htmlFor = `poll-option-${newIndex}`;
+            label.textContent = `${getTranslation('create_publication.pollOptionLabel')} ${newIndex}`;
+        }
+    });
+    
+    // Habilitar el botón de añadir si bajamos del límite
+    const addBtn = document.getElementById('add-poll-option-btn');
+    if (addBtn) {
+        addBtn.disabled = false;
+    }
+    
+    validatePublicationState();
+}
 
 /**
- * Manejador para el envío de la publicación (con archivos).
+ * Resetea el formulario al estado inicial
+ */
+function resetForm() {
+    // Limpiar post
+    const textInput = document.getElementById('publication-text');
+    if (textInput) textInput.value = '';
+    selectedFiles = [];
+    const previewContainer = document.getElementById('publication-preview-container');
+    if (previewContainer) previewContainer.innerHTML = '';
+    const fileInput = document.getElementById('publication-file-input');
+    if (fileInput) fileInput.value = '';
+    
+    // Limpiar encuesta
+    const pollQuestion = document.getElementById('poll-question');
+    if (pollQuestion) pollQuestion.value = '';
+    const pollOptions = document.getElementById('poll-options-container');
+    if (pollOptions) pollOptions.innerHTML = '';
+    
+    // Limpiar comunidad
+    selectedCommunityId = null; 
+    const triggerText = document.getElementById('publication-community-text');
+    const triggerIcon = document.getElementById('publication-community-icon');
+    if (triggerText) {
+        triggerText.textContent = getTranslation('create_publication.selectCommunity');
+        triggerText.setAttribute('data-i18n', 'create_publication.selectCommunity');
+    }
+    if (triggerIcon) {
+        triggerIcon.textContent = 'public'; 
+    }
+    const popover = document.querySelector('[data-module="moduleCommunitySelect"]');
+    if (popover) {
+        popover.querySelectorAll('.menu-link').forEach(link => link.classList.remove('active'));
+        popover.querySelectorAll('.menu-link-check-icon').forEach(icon => icon.innerHTML = '');
+    }
+    
+    // Resetear estado
+    validatePublicationState();
+}
+
+/**
+ * Manejador para el envío de la publicación (post o encuesta).
  */
 async function handlePublishSubmit() {
     const publishButton = document.getElementById('publish-post-btn');
-    const textInput = document.getElementById('publication-text');
-    const previewContainer = document.getElementById('publication-preview-container');
+    if (!publishButton) return;
 
-    // --- ▼▼▼ LÍNEA MODIFICADA (ya no necesitamos el select) ▼▼▼ ---
-    if (!publishButton || !textInput) return; 
-
-    const textContent = textInput.value.trim();
-    
-    // --- ▼▼▼ LÓGICA DE VALIDACIÓN MODIFICADA ▼▼▼ ---
-    let communityId = selectedCommunityId; // Usar la variable global
-
-    // Esta validación doble es por si acaso, aunque 'validatePublicationState' ya lo hace
-    if (!textContent && selectedFiles.length === 0) {
-        showAlert(getTranslation('js.publication.errorEmpty'), 'error');
-        return;
-    }
-    if (communityId === null) { // Comprobar si es null
+    let communityId = selectedCommunityId;
+    if (communityId === null) {
         showAlert(getTranslation('js.publication.errorNoCommunity'), 'error');
         return;
     }
-    // --- ▲▲▲ FIN LÓGICA DE VALIDACIÓN ▲▲▲ ---
-    
+
     togglePublishSpinner(publishButton, true);
 
     const formData = new FormData();
-    formData.append('action', 'create-post');
-    formData.append('text_content', textContent);
-    formData.append('community_id', communityId); // <--- Ahora se envía el ID guardado
-    
-    for (const file of selectedFiles) {
-        formData.append('attachments[]', file, file.name);
-    }
+    formData.append('action', 'create-post'); // Usamos la misma acción
+    formData.append('community_id', communityId);
+    formData.append('post_type', currentPostType);
 
     try {
+        if (currentPostType === 'post') {
+            const textContent = document.getElementById('publication-text').value.trim();
+            if (!textContent && selectedFiles.length === 0) {
+                throw new Error('js.publication.errorEmpty');
+            }
+            formData.append('text_content', textContent);
+            for (const file of selectedFiles) {
+                formData.append('attachments[]', file, file.name);
+            }
+        } else { // 'poll'
+            const question = document.getElementById('poll-question').value.trim();
+            const options = Array.from(document.querySelectorAll('#poll-options-container input'))
+                                 .map(input => input.value.trim())
+                                 .filter(text => text.length > 0);
+            
+            if (question.length === 0) {
+                throw new Error('js.publication.errorPollQuestion');
+            }
+            if (options.length < 2) {
+                throw new Error('js.publication.errorPollOptions');
+            }
+            
+            formData.append('poll_question', question);
+            formData.append('poll_options', JSON.stringify(options));
+        }
+
         const result = await callPublicationApi(formData);
 
         if (result.success) {
             showAlert(getTranslation(result.message || 'js.publication.success'), 'success');
             
-            // Limpiar todo
-            textInput.value = '';
-            selectedFiles = [];
-            // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO/AÑADIDO ▼▼▼ ---
-            selectedCommunityId = null; 
-            if (previewContainer) previewContainer.innerHTML = '';
-            
-            // Resetear el trigger
-            const triggerText = document.getElementById('publication-community-text');
-            const triggerIcon = document.getElementById('publication-community-icon');
-            if (triggerText) {
-                triggerText.textContent = getTranslation('create_publication.selectCommunity');
-                triggerText.removeAttribute('data-i18n'); // Quitar i18n para que no se traduzca
-            }
-            if (triggerIcon) {
-                triggerIcon.textContent = 'public'; // Icono por defecto
-            }
-            // Resetear el popover
-            const popover = document.querySelector('[data-module="moduleCommunitySelect"]');
-            if (popover) {
-                popover.querySelectorAll('.menu-link').forEach(link => link.classList.remove('active'));
-                popover.querySelectorAll('.menu-link-check-icon').forEach(icon => icon.innerHTML = '');
-            }
-            // --- ▲▲▲ FIN DE BLOQUE MODIFICADO/AÑADIDO ▲▲▲ ---
-            
-            validatePublicationState(); // Deshabilitar el botón
+            resetForm(); 
 
             // Navegar a Home
             const link = document.createElement('a');
@@ -234,12 +294,11 @@ async function handlePublishSubmit() {
             link.remove();
             
         } else {
-            showAlert(getTranslation(result.message || 'js.api.errorServer', result.data), 'error');
-            togglePublishSpinner(publishButton, false);
+            throw new Error(result.message || 'js.api.errorServer');
         }
 
     } catch (error) {
-        showAlert(getTranslation('js.api.errorConnection'), 'error');
+        showAlert(getTranslation(error.message || 'js.api.errorConnection'), 'error');
         togglePublishSpinner(publishButton, false);
     }
 }
@@ -254,10 +313,10 @@ function resetCommunityTrigger() {
     
     if (triggerText) {
         triggerText.textContent = getTranslation('create_publication.selectCommunity');
-        triggerText.setAttribute('data-i18n', 'create_publication.selectCommunity'); // Poner i18n
+        triggerText.setAttribute('data-i18n', 'create_publication.selectCommunity');
     }
     if (triggerIcon) {
-        triggerIcon.textContent = 'public'; // Icono por defecto
+        triggerIcon.textContent = 'public'; 
     }
 
     const popover = document.querySelector('[data-module="moduleCommunitySelect"]');
@@ -273,120 +332,115 @@ function resetCommunityTrigger() {
  */
 export function initPublicationManager() {
     
-    // Resetear archivos al iniciar (por si el usuario navega de vuelta)
-    selectedFiles = [];
-    const previewContainer = document.getElementById('publication-preview-container');
-    if (previewContainer) previewContainer.innerHTML = '';
-    const fileInput = document.getElementById('publication-file-input');
-    if (fileInput) fileInput.value = '';
-    
-    // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
-    resetCommunityTrigger(); // Resetea la variable y el trigger visual
-    // --- ▲▲▲ FIN LÍNEA MODIFICADA ▲▲▲ ---
+    // Resetear todo al iniciar
+    resetForm();
+    currentPostType = document.querySelector('.component-toggle-tab.active')?.dataset.type || 'post';
+
+    // Añadir 2 opciones por defecto si es una encuesta y no hay opciones
+    if (currentPostType === 'poll') {
+        const optionsContainer = document.getElementById('poll-options-container');
+        if (optionsContainer && optionsContainer.children.length === 0) {
+            addPollOption(false);
+            addPollOption(false);
+        }
+    }
 
 
-    // --- LÓGICA DE PESTAÑAS (Sin cambios) ---
+    // --- LÓGICA DE PESTAÑAS (Post / Poll) ---
     document.body.addEventListener('click', (e) => {
-        
         const toggleButton = e.target.closest('#post-type-toggle .component-toggle-tab');
         const section = e.target.closest('[data-section*="create-"]');
-
-        if (!toggleButton || !section) {
-            return;
-        }
-        
+        if (!toggleButton || !section) return;
         e.preventDefault();
-
-        if (toggleButton.classList.contains('active')) {
-            return;
-        }
+        if (toggleButton.classList.contains('active')) return;
         
         const newType = toggleButton.dataset.type;
+        currentPostType = newType; // Actualizar estado global
+        
         const postArea = document.getElementById('post-content-area');
         const pollArea = document.getElementById('poll-content-area');
+        const attachBtn = document.getElementById('attach-files-btn');
+        const attachSpacer = document.getElementById('attach-files-spacer');
         const toggleContainer = document.getElementById('post-type-toggle');
 
         toggleContainer.querySelectorAll('.component-toggle-tab').forEach(btn => {
             btn.classList.remove('active');
         });
-        
         toggleButton.classList.add('active');
 
         if (newType === 'poll') {
-            if (pollArea) {
-                pollArea.classList.add('active');
-                pollArea.classList.remove('disabled');
-                pollArea.style.display = 'flex';
-            }
+            if (postArea) { postArea.style.display = 'none'; postArea.classList.remove('active'); postArea.classList.add('disabled'); }
+            if (pollArea) { pollArea.style.display = 'flex'; pollArea.classList.add('active'); pollArea.classList.remove('disabled'); }
+            if (attachBtn) attachBtn.style.display = 'none';
+            if (attachSpacer) attachSpacer.style.display = 'block';
             history.pushState(null, '', window.projectBasePath + '/create-poll');
+            
+            // Añadir 2 opciones por defecto si no hay
+            const optionsContainer = document.getElementById('poll-options-container');
+            if (optionsContainer && optionsContainer.children.length === 0) {
+                addPollOption(false);
+                addPollOption(false);
+            }
 
         } else { // 'post'
-            if (pollArea) {
-                pollArea.classList.remove('active');
-                pollArea.classList.add('disabled');
-                pollArea.style.display = 'none';
-            }
+            if (postArea) { postArea.style.display = 'flex'; postArea.classList.add('active'); postArea.classList.remove('disabled'); }
+            if (pollArea) { pollArea.style.display = 'none'; pollArea.classList.remove('active'); pollArea.classList.add('disabled'); }
+            if (attachBtn) attachBtn.style.display = 'flex';
+            if (attachSpacer) attachSpacer.style.display = 'none';
             history.pushState(null, '', window.projectBasePath + '/create-publication');
         }
         
         validatePublicationState();
     });
 
-    // --- LÓGICA DE PUBLICACIÓN (MODIFICADA) ---
-
-    // Listener para el textarea
+    // --- LÓGICA DE INPUTS Y CLICKS ---
     document.body.addEventListener('input', (e) => {
         const section = e.target.closest('[data-section*="create-"]');
-        if (e.target.id === 'publication-text' && section) {
+        if (!section) return;
+
+        if (e.target.id === 'publication-text' || e.target.id === 'poll-question' || e.target.closest('#poll-options-container')) {
             validatePublicationState();
         }
     });
     
-    // --- ▼▼▼ LISTENER MODIFICADO (ahora es 'click' en lugar de 'change') ▼▼▼ ---
     document.body.addEventListener('click', (e) => {
         const section = e.target.closest('[data-section*="create-"]');
-        if (!section) return; // Salir si no estamos en la sección de crear
+        if (!section) return; 
 
-        // 1. Manejar clic en el Trigger
+        // 1. Manejar clic en el Trigger de Comunidad
         const trigger = e.target.closest('#publication-community-trigger[data-action="toggleModuleCommunitySelect"]');
         if (trigger) {
             e.preventDefault();
-            e.stopPropagation(); // Detener para que el main-controller no lo cierre
-            
+            e.stopPropagation();
             const module = document.querySelector('[data-module="moduleCommunitySelect"]');
             if (module) {
-                deactivateAllModules(module); // Cerrar otros
+                deactivateAllModules(module); 
                 module.classList.toggle('disabled');
                 module.classList.toggle('active');
             }
             return;
         }
 
-        // 2. Manejar clic en un Link del Popover
+        // 2. Manejar clic en un Link del Popover de Comunidad
         const menuLink = e.target.closest('[data-module="moduleCommunitySelect"] .menu-link[data-value]');
         if (menuLink) {
             e.preventDefault();
-            
-            // Obtener datos del link
             const newId = menuLink.dataset.value;
             const newText = menuLink.dataset.text;
             
-            // Guardar el ID
             selectedCommunityId = newId;
 
-            // Actualizar el Trigger
             const triggerText = document.getElementById('publication-community-text');
             const triggerIcon = document.getElementById('publication-community-icon');
             
             if (triggerText) {
                 triggerText.textContent = newText;
-                triggerText.removeAttribute('data-i18n'); // Es un nombre propio, no una clave
+                triggerText.removeAttribute('data-i18n'); 
             }
             if (triggerIcon) {
-                triggerIcon.textContent = 'group'; // Icono de comunidad
+                triggerIcon.textContent = 'group'; 
             }
 
-            // Actualizar estado 'active' en el popover
             const menuList = menuLink.closest('.menu-list');
             if (menuList) {
                 menuList.querySelectorAll('.menu-link').forEach(link => link.classList.remove('active'));
@@ -397,10 +451,7 @@ export function initPublicationManager() {
             const checkIcon = menuLink.querySelector('.menu-link-check-icon');
             if (checkIcon) checkIcon.innerHTML = '<span class="material-symbols-rounded">check</span>';
 
-            // Cerrar el popover
             deactivateAllModules();
-            
-            // Re-validar el botón de publicar
             validatePublicationState();
             return;
         }
@@ -418,10 +469,24 @@ export function initPublicationManager() {
             document.getElementById('publication-file-input')?.click();
             return;
         }
+        
+        // 5. Manejar clic en Añadir Opción de Encuesta
+        if (e.target.id === 'add-poll-option-btn' || e.target.closest('#add-poll-option-btn')) {
+            e.preventDefault();
+            addPollOption(true);
+            return;
+        }
+        
+        // 6. Manejar clic en Quitar Opción de Encuesta
+        const removeOptionBtn = e.target.closest('[data-action="remove-poll-option"]');
+        if (removeOptionBtn) {
+            e.preventDefault();
+            removePollOption(removeOptionBtn);
+            return;
+        }
     });
-    // --- ▲▲▲ FIN LISTENER MODIFICADO ▲▲▲ ---
     
-    // Listener para el input de archivos (sin cambios)
+    // Listener para el input de archivos
     document.body.addEventListener('change', (e) => {
         const section = e.target.closest('[data-section*="create-"]');
          if (e.target.id === 'publication-file-input' && section) {
@@ -429,7 +494,7 @@ export function initPublicationManager() {
         }
     });
     
-    // Validar estado al cargar la página
+    // Validar estado al cargar
     if (document.querySelector('[data-section*="create-"].active')) {
          validatePublicationState();
     }

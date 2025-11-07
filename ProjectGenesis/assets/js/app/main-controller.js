@@ -110,24 +110,30 @@ function initMainController() {
         
 
         } else if (action.startsWith('toggleSection')) {
+            // Permitir que el router maneje esto
             return;
         }
 
         const isSelectorLink = event.target.closest('[data-module="moduleTriggerSelect"] .menu-link');
         if (isSelectorLink) {
+            // Permitir que el settings-manager maneje esto
             return;
         }
 
         if (action.startsWith('toggle')) {
             
             // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
-            // Añade tu nueva acción a esta lista.
-            // Esto le dice al main-controller "no hagas nada, otro script se encargará".
-            if (action === 'toggleModulePageFilter' || 
-                action === 'toggleModuleAdminRole' || 
-               action === 'toggleModuleAdminStatus' ||
-                action === 'toggleModuleAdminCreateRole' ||
-                action === 'toggleModuleCommunitySelect') { // <-- ¡AÑADE ESTA LÍNEA!
+            // Lista de acciones que otros módulos manejan
+            const managedActions = [
+                'toggleModulePageFilter',
+                'toggleModuleAdminRole',
+                'toggleModuleAdminStatus',
+                'toggleModuleAdminCreateRole',
+                'toggleModuleCommunitySelect', // <-- ¡AÑADIDA!
+                'toggleModuleSelectGroup'      // <-- ¡AÑADIDA! (manejada por community-manager)
+            ];
+
+            if (managedActions.includes(action)) {
                 return; 
             }
             // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
@@ -159,8 +165,10 @@ function initMainController() {
             const clickedOnModule = event.target.closest('[data-module].active');
             const clickedOnButton = event.target.closest('[data-action]');
             
+            // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
             const clickedOnCardItem = event.target.closest('.card-item');
             
+            // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
             if (!clickedOnModule && !clickedOnButton && !clickedOnCardItem) {
                 deactivateAllModules();
             }

@@ -1,16 +1,16 @@
 <?php
 // FILE: includes/sections/main/home.php
-// (CÓDIGO MODIFICADO PARA MOSTRAR PUBLICACIONES CON FOTOS)
+// (CÓDIGO MODIFICADO PARA MOSTRAR PUBLICACIONES Y ENCUESTAS)
 
-// Esta variable viene de config/routing/router.php
 global $pdo; 
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
+$userId = $_SESSION['user_id']; // ID del usuario actual
 
 $publications = [];
 $currentCommunityId = null;
 $currentCommunityNameKey = "home.popover.mainFeed"; // Default
-$communityUuid = $_GET['community_uuid'] ?? null; // Viene de url-manager.js
+$communityUuid = $_GET['community_uuid'] ?? null;
 
 try {
     if ($communityUuid) {
@@ -21,9 +21,9 @@ try {
         
         if ($community) {
             $currentCommunityId = $community['id'];
-            $currentCommunityNameKey = $community['name']; // Usar el nombre real
+            $currentCommunityNameKey = $community['name']; 
             
-            $stmt_posts = $pdo->prepare(
+            $sql_posts = 
                 "SELECT 
                     p.*, 
                     u.username, 
@@ -33,24 +33,26 @@ try {
                      JOIN publication_files pf ON pa.file_id = pf.id
                      WHERE pa.publication_id = p.id
                      ORDER BY pa.sort_order ASC
-                    ) AS attachments
+                    ) AS attachments,
+                    (SELECT COUNT(pv.id) FROM poll_votes pv WHERE pv.publication_id = p.id) AS total_votes,
+                    (SELECT pv.poll_option_id FROM poll_votes pv WHERE pv.publication_id = p.id AND pv.user_id = ?) AS user_voted_option_id
                  FROM community_publications p
                  JOIN users u ON p.user_id = u.id
                  WHERE p.community_id = ?
                  ORDER BY p.created_at DESC
-                 LIMIT 50"
-            );
-            $stmt_posts->execute([$currentCommunityId]);
+                 LIMIT 50";
+            
+            $stmt_posts = $pdo->prepare($sql_posts);
+            $stmt_posts->execute([$userId, $currentCommunityId]);
             $publications = $stmt_posts->fetchAll();
         } else {
-            // UUID no válido, mostrar feed principal.
             $communityUuid = null;
         }
     }
     
     if ($communityUuid === null) {
         // --- VISTA DE FEED PRINCIPAL ---
-        $stmt_posts = $pdo->prepare(
+        $sql_posts = 
             "SELECT 
                 p.*, 
                 u.username, 
@@ -61,16 +63,58 @@ try {
                  JOIN publication_files pf ON pa.file_id = pf.id
                  WHERE pa.publication_id = p.id
                  ORDER BY pa.sort_order ASC
-                ) AS attachments
+                ) AS attachments,
+                (SELECT COUNT(pv.id) FROM poll_votes pv WHERE pv.publication_id = p.id) AS total_votes,
+                (SELECT pv.poll_option_id FROM poll_votes pv WHERE pv.publication_id = p.id AND pv.user_id = ?) AS user_voted_option_id
              FROM community_publications p
              JOIN users u ON p.user_id = u.id
              LEFT JOIN communities c ON p.community_id = c.id
-             WHERE p.community_id IS NULL OR c.privacy = 'public'
+             WHERE p.community_id IS NOT NULL -- Modificado: Solo mostrar posts de comunidades
+             AND c.privacy = 'public' -- Solo de comunidades públicas
              ORDER BY p.created_at DESC
-             LIMIT 50"
-        );
-        $stmt_posts->execute();
+             LIMIT 50";
+        
+        $stmt_posts = $pdo->prepare($sql_posts);
+        $stmt_posts->execute([$userId]);
         $publications = $stmt_posts->fetchAll();
+    }
+    
+    // --- Bucle para cargar opciones de encuestas ---
+    if (!empty($publications)) {
+        $pollIds = [];
+        foreach ($publications as $key => $post) {
+            if ($post['post_type'] === 'poll') {
+                $pollIds[] = $post['id'];
+            }
+        }
+        
+        if (!empty($pollIds)) {
+            $placeholders = implode(',', array_fill(0, count($pollIds), '?'));
+            
+            $stmt_options = $pdo->prepare(
+               "SELECT 
+                    po.id, 
+                    po.publication_id, 
+                    po.option_text, 
+                    COUNT(pv.id) AS vote_count
+                FROM poll_options po
+                LEFT JOIN poll_votes pv ON po.id = pv.poll_option_id
+                WHERE po.publication_id IN ($placeholders)
+                GROUP BY po.id, po.publication_id, po.option_text
+                ORDER BY po.id ASC"
+            );
+            $stmt_options->execute($pollIds);
+            $options = $stmt_options->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
+
+            // Adjuntar opciones a sus publicaciones
+            foreach ($publications as $key => $post) {
+                if (isset($options[$post['id']])) {
+                    $publications[$key]['poll_options'] = $options[$post['id']];
+                } else {
+                    $publications[$key]['poll_options'] = [];
+                }
+            }
+        }
     }
     
 } catch (PDOException $e) {
@@ -178,6 +222,12 @@ try {
                         $attachments = explode(',', $post['attachments']);
                     }
                     $attachmentCount = count($attachments);
+                    
+                    // --- Variables para Encuesta ---
+                    $isPoll = $post['post_type'] === 'poll';
+                    $hasVoted = $post['user_voted_option_id'] !== null;
+                    $totalVotes = (int)($post['total_votes'] ?? 0);
+                    $pollOptions = $post['poll_options'] ?? [];
                 ?>
                     <div class="component-card component-card--post" style="padding: 0; align-items: stretch; flex-direction: column;">
                         
@@ -200,11 +250,61 @@ try {
 
                         <?php if (!empty($post['text_content'])): ?>
                             <div class="post-card-content">
-                                <p style="font-size: 15px; line-height: 1.6; color: #1f2937; white-space: pre-wrap; width: 100%;"><?php echo htmlspecialchars($post['text_content']); ?></p>
+                                <!-- Si es encuesta, el texto es la pregunta (más grande) -->
+                                <?php if ($isPoll): ?>
+                                    <h3 class="poll-question"><?php echo htmlspecialchars($post['text_content']); ?></h3>
+                                <?php else: ?>
+                                    <p style="font-size: 15px; line-height: 1.6; color: #1f2937; white-space: pre-wrap; width: 100%;"><?php echo htmlspecialchars($post['text_content']); ?></p>
+                                <?php endif; ?>
                             </div>
                         <?php endif; ?>
 
-                        <?php if ($attachmentCount > 0): ?>
+                        <!-- --- INICIO DE BLOQUE DE ENCUESTA --- -->
+                        <?php if ($isPoll && !empty($pollOptions)): ?>
+                            <div class="poll-container" id="poll-<?php echo $post['id']; ?>" data-poll-id="<?php echo $post['id']; ?>">
+                                <?php if ($hasVoted): ?>
+                                    <!-- Vista de Resultados -->
+                                    <div class="poll-results">
+                                        <?php foreach ($pollOptions as $option): 
+                                            $voteCount = (int)$option['vote_count'];
+                                            $percentage = ($totalVotes > 0) ? round(($voteCount / $totalVotes) * 100) : 0;
+                                            $isUserVote = ($option['id'] == $post['user_voted_option_id']);
+                                        ?>
+                                            <div class="poll-option-result <?php echo $isUserVote ? 'voted-by-user' : ''; ?>">
+                                                <div class="poll-option-bar" style="width: <?php echo $percentage; ?>%;"></div>
+                                                <div class="poll-option-text">
+                                                    <span><?php echo htmlspecialchars($option['option_text']); ?></span>
+                                                    <?php if ($isUserVote): ?>
+                                                        <span class="material-symbols-rounded poll-user-vote-icon">check_circle</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <div class="poll-option-percent"><?php echo $percentage; ?>%</div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                        <p class="poll-total-votes" data-i18n="home.poll.totalVotes" data-count="<?php echo $totalVotes; ?>"><?php echo $totalVotes; ?> votos</p>
+                                    </div>
+                                <?php else: ?>
+                                    <!-- Vista de Votación (Formulario) -->
+                                    <form class="poll-form" data-action="submit-poll-vote">
+                                        <input type="hidden" name="publication_id" value="<?php echo $post['id']; ?>">
+                                        <?php foreach ($pollOptions as $option): ?>
+                                            <label class="poll-option-vote">
+                                                <input type="radio" name="poll_option_id" value="<?php echo $option['id']; ?>" required>
+                                                <span class="poll-option-radio"></span>
+                                                <span class="poll-option-text"><?php echo htmlspecialchars($option['option_text']); ?></span>
+                                            </label>
+                                        <?php endforeach; ?>
+                                        <div class="poll-form-actions">
+                                            <button type="submit" class="component-action-button component-action-button--primary" data-i18n="home.poll.voteButton">Votar</button>
+                                            <p class="poll-total-votes" data-i18n="home.poll.totalVotes" data-count="<?php echo $totalVotes; ?>"><?php echo $totalVotes; ?> votos</p>
+                                        </div>
+                                    </form>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                        <!-- --- FIN DE BLOQUE DE ENCUESTA --- -->
+                        
+                        <?php if (!$isPoll && $attachmentCount > 0): ?>
                         <div class="post-attachments-container" data-count="<?php echo $attachmentCount; ?>">
                             <?php foreach ($attachments as $imgUrl): ?>
                                 <div class="post-attachment-item">
