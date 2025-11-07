@@ -657,6 +657,11 @@
       "mainFeed": "Feed principal",
       "newPost": "Crear publicación",
       "newPoll": "Crear encuesta"
+    },
+    "actions": {
+      "like": "Me gusta",
+      "comment": "Comentar",
+      "share": "Compartir"
     }
   },
   "join_group": {
