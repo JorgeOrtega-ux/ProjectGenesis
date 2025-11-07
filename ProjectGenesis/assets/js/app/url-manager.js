@@ -6,6 +6,8 @@ import { startResendTimer } from '../modules/auth-manager.js';
 import { applyTranslations, getTranslation } from '../services/i18n-manager.js';
 // --- ▼▼▼ INICIO DE LA CORRECCIÓN (IMPORTAR) ▼▼▼ ---
 import { hideTooltip } from '../services/tooltip-manager.js';
+// --- ▼▼▼ ¡CAMBIO! Importar la función del community-manager ▼▼▼ ---
+import { loadSavedCommunity } from '../modules/community-manager.js';
 // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
 const contentContainer = document.querySelector('.main-sections');
@@ -234,6 +236,14 @@ async function loadPage(page, action, fetchParams = null) {
             });
         }
         
+        // --- ▼▼▼ ¡CAMBIO! INICIO DE LA SOLUCIÓN ▼▼▼ ---
+        // Después de que el HTML esté en la página y traducido...
+        if (page === 'home') {
+            // ...llama a la función que actualiza la UI de la comunidad.
+            loadSavedCommunity();
+        }
+        // --- ▲▲▲ ¡CAMBIO! FIN DE LA SOLUCIÓN ▲▲▲ ---
+
     } catch (error) {
         console.error('Error al cargar la página:', error);
         contentContainer.innerHTML = `<h2>${getTranslation('js.url.errorLoad')}</h2>`;

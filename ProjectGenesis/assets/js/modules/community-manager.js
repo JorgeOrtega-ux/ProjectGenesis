@@ -149,7 +149,7 @@ function selectCommunity(communityId, communityName, communityUuid = null) {
  * Carga la comunidad guardada al iniciar la app
  */
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (FUNCIÓN loadSavedCommunity) ▼▼▼ ---
-function loadSavedCommunity() {
+export function loadSavedCommunity() { // <--- ¡CAMBIO! Se añade "export"
     const mainFeedName = getTranslation('home.popover.mainFeed');
     const basePath = window.projectBasePath || '/ProjectGenesis';
 
@@ -191,7 +191,7 @@ function loadSavedCommunity() {
 export function initCommunityManager() {
     
     // Cargar la comunidad seleccionada al inicio
-    loadSavedCommunity();
+    // loadSavedCommunity(); // <--- ¡CAMBIO! Esta línea se elimina de aquí.
 
     document.body.addEventListener('click', async (e) => {
         const button = e.target.closest('button[data-action], button[data-auth-action]');
