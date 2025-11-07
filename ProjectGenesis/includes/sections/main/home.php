@@ -29,7 +29,13 @@
                     <span class="material-symbols-rounded">group_add</span>
                     </button>
                     
-                </div>
+                    <button type="button"
+                        class="page-toolbar-button"
+                        data-action="toggleModuleCreatePost" 
+                        data-tooltip="home.toolbar.createPost">
+                    <span class="material-symbols-rounded">add</span>
+                    </button>
+                    </div>
                 
                 </div>
 
@@ -40,6 +46,29 @@
                 <div class="menu-header" data-i18n="home.popover.title">Mis Grupos</div>
                 <div class="menu-list" id="my-groups-list">
                     <div class="menu-link" data-i18n="home.popover.loading">Cargando...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="popover-module popover-module--anchor-left body-title disabled" data-module="moduleCreatePost" style="top: calc(100% + 8px); left: 8px; width: 300px;">
+            <div class="menu-content">
+                <div class="menu-list">
+                    <div class="menu-link" data-action="home-create-post">
+                        <div class="menu-link-icon">
+                            <span class="material-symbols-rounded">post_add</span>
+                        </div>
+                        <div class="menu-link-text">
+                            <span data-i18n="home.popover.newPost">Crear publicación</span>
+                        </div>
+                    </div>
+                    <div class="menu-link" data-action="home-create-poll">
+                        <div class="menu-link-icon">
+                            <span class="material-symbols-rounded">poll</span>
+                        </div>
+                        <div class="menu-link-text">
+                            <span data-i18n="home.popover.newPoll">Crear encuesta</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

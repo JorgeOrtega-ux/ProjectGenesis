@@ -603,7 +603,8 @@
   "home": {
     "toolbar": {
       "selectGroup": "Seleccionar grupo",
-      "joinGroup": "Unirme a un grupo"
+      "joinGroup": "Unirme a un grupo",
+      "createPost": "Crear publicación"
     },
     "main": {
       "title": "Página Principal",
@@ -613,7 +614,9 @@
       "title": "Mis Grupos",
       "loading": "Cargando...",
       "noGroups": "No estás en ningún grupo.",
-      "mainFeed": "Feed principal"
+      "mainFeed": "Feed principal",
+      "newPost": "Crear publicación",
+      "newPoll": "Crear encuesta"
     }
   },
   "join_group": {
