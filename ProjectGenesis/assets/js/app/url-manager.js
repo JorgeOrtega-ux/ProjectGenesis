@@ -52,9 +52,7 @@ const routes = {
     'toggleSectionAdminManageLogs': 'admin-manage-logs', 
     'toggleSectionAdminManageGroups': 'admin-manage-groups',
     
-    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
     'toggleSectionAdminEditGroup': 'admin-edit-group',
-    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
 
     'toggleSectionHelpLegalNotice': 'help-legal-notice',
     'toggleSectionHelpPrivacyPolicy': 'help-privacy-policy',
@@ -103,9 +101,7 @@ const paths = {
     '/admin/manage-logs': 'toggleSectionAdminManageLogs', 
     '/admin/manage-groups': 'toggleSectionAdminManageGroups',
 
-    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
     '/admin/edit-group': 'toggleSectionAdminEditGroup',
-    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
 
     '/help/legal-notice': 'toggleSectionHelpLegalNotice',
     '/help/privacy-policy': 'toggleSectionHelpPrivacyPolicy',
@@ -245,6 +241,18 @@ async function loadPage(page, action, fetchParams = null) {
             });
         }
         
+        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (WS JOIN GROUP) ▼▼▼ ---
+        if (page === 'home' && window.wsSend) {
+            const groupUuid = fetchParams ? fetchParams.uuid : null;
+            
+            // Informar al WebSocket de la sala actual
+            window.wsSend({ type: 'join_group', group_uuid: groupUuid });
+            
+            // Almacenar globalmente para reconexiones
+            document.body.dataset.currentGroupUuid = groupUuid || '';
+        }
+        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (WS JOIN GROUP) ▲▲▲ ---
+        
     } catch (error) {
         console.error('Error al cargar la página:', error);
         contentContainer.innerHTML = `<h2>${getTranslation('js.url.errorLoad')}</h2>`;
@@ -278,11 +286,13 @@ export function handleNavigation() {
     let fetchParams = null; 
 
     if (!action) {
+        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Grupo UUID) ▼▼▼ ---
         const groupMatch = path.match(/^\/c\/([a-f0-9\-]{36})$/i);
         if (groupMatch) {
             action = 'toggleSectionHome'; 
             fetchParams = { uuid: groupMatch[1] }; 
         }
+        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (Grupo UUID) ▲▲▲ ---
     }
 
     if (!action) {
@@ -338,11 +348,9 @@ function updateMenuState(currentAction) {
         menuAction = 'toggleSectionAdminManageGroups';
     }
     
-    // --- ▼▼▼ INICIO DE NUEVA LÍNEA ▼▼▼ ---
     if (currentAction === 'toggleSectionAdminEditGroup') {
         menuAction = 'toggleSectionAdminManageGroups'; // Mantener "Gestionar Grupos" activo
     }
-    // --- ▲▲▲ FIN DE NUEVA LÍNEA ▲▲▲ ---
     
     if (currentAction && currentAction.startsWith('toggleSectionHelp')) {
         menuAction = currentAction;
@@ -365,29 +373,38 @@ export function initRouter() {
 
     document.body.addEventListener('click', e => {
       const link = e.target.closest(
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR NUEVA RUTA AL LISTENER) ▼▼▼ ---
-            '.header-button[data-action*="toggleSection"], .menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/help"], a[href*="/my-groups"], .component-button[data-action*="toggleSection"], .component-action-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], a[href*="/admin/manage-groups"], a[href*="/admin/edit-group"]'
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            'a[data-nav-js="true"], .header-button[data-action*="toggleSection"], .menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/help"], a[href*="/my-groups"], .component-button[data-action*="toggleSection"], .component-action-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"]'
         );
 
         if (link) {
             
             hideTooltip();
 
-            if (link.classList.contains('component-action-button') && !link.hasAttribute('data-action') && !link.hasAttribute('data-nav-js')) { 
+            // Evitar que botones de componentes sin data-action lancen la navegación
+            if (link.classList.contains('component-button') && !link.dataset.action) {
+                return;
+            }
+            if (link.classList.contains('component-action-button') && !link.dataset.action) { 
                 return;
             }
 
             e.preventDefault();
+            
+            // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Grupo UUID) ▼▼▼ ---
+            // Manejar clics de grupo desde main-controller
+            const groupItem = e.target.closest('.group-select-item');
+            if (groupItem) {
+                // Dejar que main-controller.js maneje la navegación del grupo
+                return;
+            }
+            // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (Grupo UUID) ▲▲▲ ---
 
-            let action, page, newPath;
+            let action, page, newPath, fetchParams = null;
 
             if (link.hasAttribute('data-action')) {
                 action = link.getAttribute('data-action');
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadido chequeo de grupo) ▼▼▼ ---
                 if (action === 'toggleSectionAdminEditUser' || action === 'toggleSectionAdminEditGroup') {
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     e.stopImmediatePropagation();
                     return; 
                 }
@@ -406,8 +423,17 @@ export function initRouter() {
                     newPath = '/admin/dashboard';
                 }
                 
-                action = paths[newPath];
-                page = routes[action];
+                // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Grupo UUID) ▼▼▼ ---
+                const groupMatch = newPath.match(/^\/c\/([a-f0-9\-]{36})$/i);
+                if (groupMatch) {
+                    action = 'toggleSectionHome';
+                    page = routes[action];
+                    fetchParams = { uuid: groupMatch[1] };
+                } else {
+                    action = paths[newPath];
+                    page = routes[action];
+                }
+                // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (Grupo UUID) ▲▲▲ ---
             }
             
             const url = link.href ? new URL(link.href) : null;
@@ -420,7 +446,7 @@ export function initRouter() {
             }
 
             if (!page) {
-                if(link.tagName === 'A' && !link.TAgName('data-action')) {
+                if(link.tagName === 'A' && !link.dataset.action) {
                     window.location.href = link.href;
                 }
                 return;
@@ -431,7 +457,7 @@ export function initRouter() {
             const currentFullUrl = window.location.pathname + window.location.search;
             if (currentFullUrl !== fullUrlPath) {
                 history.pushState(null, '', fullUrlPath);
-                loadPage(page, action); 
+                loadPage(page, action, fetchParams); // <-- Pasar fetchParams
             }
 
             deactivateAllModules();

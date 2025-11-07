@@ -7,7 +7,8 @@
 // $pdo y $_SESSION['user_id'] están disponibles
 
 $user_groups = []; // Para el Popover
-$current_group_members = []; // <-- ¡NUEVO! Para el panel de miembros
+$current_group_members = []; // Para el panel de miembros
+$group_messages = []; // <-- ¡NUEVO! Para el historial de chat
 
 if (isset($_SESSION['user_id'], $pdo)) {
     
@@ -17,7 +18,7 @@ if (isset($_SESSION['user_id'], $pdo)) {
             "SELECT 
                 g.id,
                 g.name,
-                g.uuid -- ¡IMPORTANTE! Añadir UUID para el JS
+                g.uuid 
              FROM groups g
              JOIN user_groups ug_main ON g.id = ug_main.group_id
              WHERE ug_main.user_id = ?
@@ -30,10 +31,11 @@ if (isset($_SESSION['user_id'], $pdo)) {
         logDatabaseError($e, 'home.php - load user groups for popover');
     }
 
-    // --- ▼▼▼ ¡INICIO DE CORRECCIÓN (SQL)! OBTENER MIEMBROS ▼▼▼ ---
     if (isset($current_group_info) && $current_group_info) {
+        $currentGroupId = $current_group_info['id'];
+        
+        // 2. Obtener Miembros (existente)
         try {
-            // Se elimina ug.role de SELECT y se ordena por u.role (rol global)
             $stmt_members = $pdo->prepare(
                 "SELECT u.id, u.username, u.profile_image_url, u.role as user_role
                  FROM users u
@@ -41,61 +43,75 @@ if (isset($_SESSION['user_id'], $pdo)) {
                  WHERE ug.group_id = ?
                  ORDER BY FIELD(u.role, 'founder', 'administrator', 'moderator', 'user'), u.username ASC"
             );
-            $stmt_members->execute([$current_group_info['id']]);
+            $stmt_members->execute([$currentGroupId]);
             $current_group_members = $stmt_members->fetchAll();
         } catch (PDOException $e) {
             logDatabaseError($e, 'home.php - load group members');
-            // $current_group_members se mantendrá vacío
         }
+
+        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (Cargar historial de chat) ▼▼▼ ---
+        try {
+            $stmt_messages = $pdo->prepare(
+                "SELECT 
+                    m.id, m.user_id, m.message_type, m.content, m.created_at,
+                    u.username, u.profile_image_url
+                 FROM group_messages m
+                 JOIN users u ON m.user_id = u.id
+                 WHERE m.group_id = ?
+                 ORDER BY m.created_at ASC
+                 LIMIT 50" // Cargar los últimos 50 mensajes
+            );
+            $stmt_messages->execute([$currentGroupId]);
+            $group_messages = $stmt_messages->fetchAll();
+        } catch (PDOException $e) {
+            logDatabaseError($e, 'home.php - load chat history');
+        }
+        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
     }
-    // --- ▲▲▲ ¡FIN DE CORRECCIÓN (SQL)! ▲▲▲ ---
-
 }
 
-// 2. Preparar el texto para el H1 (basado en la variable del router)
+// 2. Preparar el texto para el H1
 $homeH1TextKey = 'home.chat.selectGroup';
-$homeH1Text = '';
+$homeH1Text = "Selecciona un grupo para comenzar a chatear"; // (i18n: home.chat.selectGroup)
 if (isset($current_group_info) && $current_group_info) {
-    // Si hay un grupo, preparamos la clave y el texto
+    // Si hay un grupo, el H1 se oculta y se muestra el chat
     $homeH1TextKey = 'home.chat.chattingWith';
-    // (El JS reemplazará %groupName% en el H1, pero lo pre-cargamos por si JS falla)
-    $homeH1Text = "Próximamente aquí estará el chat de <strong>" . htmlspecialchars($current_group_info['name']) . "</strong>";
-} else {
-    // Si no hay grupo, usamos el texto por defecto
-    $homeH1Text = "Selecciona un grupo para comenzar a chatear";
+    $homeH1Text = "Chat de " . htmlspecialchars($current_group_info['name']); // Fallback
 }
 
-// --- ▼▼▼ ¡INICIO DE CORRECCIÓN (Agrupación)! ▼▼▼ ---
-// Agrupar por roles GLOBALES
+// 3. Agrupar miembros (existente)
 $grouped_members = [
-    'founder' => [],
-    'administrator' => [],
-    'moderator' => [],
-    'user' => []
+    'founder' => [], 'administrator' => [], 'moderator' => [], 'user' => []
 ];
-
-// Asignar nombres de roles a claves i18n (usando las claves de admin)
 $member_role_headings = [
     'founder' => 'admin.users.roleFounder',
     'administrator' => 'admin.users.roleAdministrator',
     'moderator' => 'admin.users.roleModerator',
     'user' => 'admin.users.roleUser'
 ];
-
 if (!empty($current_group_members)) {
     foreach ($current_group_members as $member) {
-        // Agrupar por el 'user_role' (rol global)
         $role = $member['user_role'] ?? 'user';
         if (isset($grouped_members[$role])) {
             $grouped_members[$role][] = $member;
         } else {
-            $grouped_members['user'][] = $member; // Fallback a 'user'
+            $grouped_members['user'][] = $member;
         }
     }
 }
-// --- ▲▲▲ ¡FIN DE CORRECCIÓN (Agrupación)! ▲▲▲ ---
 
-// --- ▲▲▲ FIN DE LÓGICA DE CARGA DE GRUPO ▲▲▲ ---
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (Renderizar burbuja de chat en PHP) ▼▼▼ ---
+function formatMessageTimePHP($dateTimeString) {
+    try {
+        $date = new DateTime($dateTimeString, new DateTimeZone('UTC')); // Asumir UTC
+        $date->setTimezone(new DateTimeZone('America/Chicago')); // Convertir a local (¡CAMBIAR A TU ZONA HORARIA!)
+        return $date->format('H:i');
+    } catch (Exception $e) {
+        return "--:--";
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+
 ?>
 
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'home') ? 'active' : 'disabled'; ?>" data-section="home">
@@ -125,7 +141,7 @@ if (!empty($current_group_members)) {
                             </span>
                         <?php endif; ?>
                     </div>
-                    </div>
+                </div>
 
                 <div class="page-toolbar-right">
                     <button type="button"
@@ -152,7 +168,7 @@ if (!empty($current_group_members)) {
                     </button>
                 </div>
                 
-                </div>
+            </div>
         </div>
 
         <div class="popover-module body-title disabled" 
@@ -163,12 +179,8 @@ if (!empty($current_group_members)) {
                     <div class="menu-list">
                         <div class="menu-header" data-i18n="modals.selectGroup.noGroups">No perteneces a ningún grupo.</div>
                         <div class="menu-link" data-action="toggleSectionJoinGroup">
-                            <div class="menu-link-icon">
-                                <span class="material-symbols-rounded">add</span>
-                            </div>
-                            <div class="menu-link-text">
-                                <span data-i18n="modals.selectGroup.joinButton">Unirme a un grupo</span>
-                            </div>
+                            <div class="menu-link-icon"><span class="material-symbols-rounded">add</span></div>
+                            <div class="menu-link-text"><span data-i18n="modals.selectGroup.joinButton">Unirme a un grupo</span></div>
                         </div>
                     </div>
                 <?php else: ?>
@@ -177,13 +189,9 @@ if (!empty($current_group_members)) {
                         
                         <div class="menu-link group-select-item <?php echo (!isset($current_group_info) || !$current_group_info) ? 'active' : ''; ?>"
                              data-group-id="none"
-                             data-i18n-key="toolbar.noGroupSelected">
-                            <div class="menu-link-icon">
-                                <span class="material-symbols-rounded">label_off</span>
-                            </div>
-                            <div class="menu-link-text">
-                                <span data-i18n="toolbar.noGroupSelected">Ningún grupo</span>
-                            </div>
+                             data-i18n-key="toolbar.noGroupSelected"
+                             data-group-uuid=""> <div class="menu-link-icon"><span class="material-symbols-rounded">label_off</span></div>
+                            <div class="menu-link-text"><span data-i18n="toolbar.noGroupSelected">Ningún grupo</span></div>
                             <div class="menu-link-check-icon">
                                 <?php if (!isset($current_group_info) || !$current_group_info): ?>
                                     <span class="material-symbols-rounded">check</span>
@@ -195,12 +203,9 @@ if (!empty($current_group_members)) {
                             <div class="menu-link group-select-item <?php echo $is_active_group ? 'active' : ''; ?>" 
                                  data-group-id="<?php echo $group['id']; ?>" 
                                  data-group-name="<?php echo htmlspecialchars($group['name']); ?>"
-                                 data-group-uuid="<?php echo htmlspecialchars($group['uuid']); ?>"> <div class="menu-link-icon">
-                                    <span class="material-symbols-rounded">label</span>
-                                </div>
-                                <div class="menu-link-text">
-                                    <span><?php echo htmlspecialchars($group['name']); ?></span>
-                                </div>
+                                 data-group-uuid="<?php echo htmlspecialchars($group['uuid']); ?>"> 
+                                <div class="menu-link-icon"><span class="material-symbols-rounded">label</span></div>
+                                <div class="menu-link-text"><span><?php echo htmlspecialchars($group['name']); ?></span></div>
                                 <div class="menu-link-check-icon">
                                     <?php if ($is_active_group): ?>
                                         <span class="material-symbols-rounded">check</span>
@@ -208,53 +213,93 @@ if (!empty($current_group_members)) {
                                 </div>
                             </div>
                         <?php endforeach; ?>
-                        </div>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>
-        </div>
+    </div>
     
     <div class="component-wrapper" style="display: flex; flex-direction: column; height: 100%; padding-bottom: 16px; padding-left: 0; padding-right: 0;"> 
 
         <div class="chat-layout-container">
             
-            <div class="chat-layout__top">
-                <div class="auth-container text-center" style="margin-top: 10vh;"> 
-                    
-                    <h1 class="auth-title" 
-                        id="home-chat-placeholder" 
-                        data-i18n="<?php echo $homeH1TextKey; ?>"
-                        data-i18n-key-default="home.chat.selectGroup"
-                        data-i18n-key-selected="home.chat.chattingWith"
-                        style="font-size: 24px; color: #6b7280; font-weight: 500; line-height: 1.6;">
+            <div class="chat-layout__top" id="chat-history-container">
+                
+                <?php if (!isset($current_group_info) || !$current_group_info): ?>
+                    <div class="auth-container text-center" style="margin-top: 10vh;"> 
+                        <h1 class="auth-title" 
+                            id="home-chat-placeholder" 
+                            data-i18n="home.chat.selectGroup"
+                            style="font-size: 24px; color: #6b7280; font-weight: 500; line-height: 1.6;">
+                            <?php echo $homeH1Text; // "Selecciona un grupo..." ?>
+                        </h1>
+                    </div>
+                <?php else: ?>
+                    <?php
+                    $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+                    foreach($group_messages as $msg):
+                        $isOwnMessage = ($msg['user_id'] == $_SESSION['user_id']);
+                        $avatarUrl = $msg['profile_image_url'] ?? $defaultAvatar;
+                        if(empty($avatarUrl)) $avatarUrl = "https://ui-avatars.com/api/?name=" . urlencode($msg['username']) . "&size=100&background=e0e0e0&color=ffffff";
                         
-                        <?php
-                        // Imprimir el texto HTML inicial
-                        echo $homeH1Text;
-                        ?>
-                    </h1>
-                </div>
+                        $contentHtml = '';
+                        if ($msg['message_type'] === 'text') {
+                            $contentHtml = '<div class="chat-bubble-text">' . htmlspecialchars($msg['content']) . '</div>';
+                        } else if ($msg['message_type'] === 'image') {
+                            $contentHtml = '<div class="chat-bubble-image"><img src="' . htmlspecialchars($msg['content']) . '" alt="Imagen adjunta" loading="lazy"></div>';
+                        }
+                    ?>
+                        <div class="chat-bubble <?php echo $isOwnMessage ? 'is-own' : ''; ?>">
+                            <div class="chat-bubble-avatar">
+                                <img src="<?php echo $avatarUrl; ?>" alt="<?php echo htmlspecialchars($msg['username']); ?>">
+                            </div>
+                            <div class="chat-bubble-content">
+                                <div class="chat-bubble-header">
+                                    <span class="chat-bubble-username"><?php echo htmlspecialchars($msg['username']); ?></span>
+                                </div>
+                                <?php echo $contentHtml; ?>
+                                <div class="chat-bubble-footer">
+                                    <span class="chat-bubble-time"><?php echo formatMessageTimePHP($msg['created_at']); ?></span>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                    
+                    <script>
+                        (function() {
+                            const chatHistory = document.getElementById('chat-history-container');
+                            if (chatHistory) {
+                                chatHistory.scrollTop = chatHistory.scrollHeight;
+                            }
+                        })();
+                    </script>
+                <?php endif; ?>
+                
             </div>
-
             <div class="chat-layout__bottom <?php echo (!isset($current_group_info) || !$current_group_info) ? 'hidden' : ''; ?>">
                 
                 <input type="file" id="chat-file-input" class="visually-hidden" accept="image/png, image/jpeg, image/gif, image/webp" multiple>
 
                 <div class="chat-input-container" id="chat-input-wrapper">
-                    <div class="chat-input__text-area" contenteditable="true" data-placeholder="Placeholder"></div>
+                    
+                    <div class="chat-input__text-area" 
+                         id="chat-input-text-area"
+                         contenteditable="true" 
+                         data-placeholder="Escribe un mensaje..."> </div>
                     
                     <div class="chat-input__buttons-row">
-                        <button class="chat-input__button chat-input__button--attach" id="chat-attach-button" data-tooltip="Adjuntar">
+                        <button type="button" class="chat-input__button chat-input__button--attach" id="chat-attach-button" data-tooltip="Adjuntar">
                             <span class="material-symbols-rounded">add</span>
                         </button>
-                        <button class="chat-input__button chat-input__button--send" data-tooltip="Enviar">
+                        <button type="button" class="chat-input__button chat-input__button--send" id="chat-send-button" data-tooltip="Enviar">
                             <span class="material-symbols-rounded">send</span>
                         </button>
                     </div>
                 </div>
             </div>
-            </div>
         </div>
+    </div>
+    
     <div class="module-content module-members-surface body-title disabled" data-module="moduleGroupMembers">
         <div class="menu-content">
             
@@ -262,35 +307,27 @@ if (!empty($current_group_members)) {
                 <div class="members-title-wrapper">
                     <h3 class="members-title" data-i18n="members.title">Lista de miembros</h3>
                 </div>
-                </div>
+            </div>
             
             <div class="members-list-container">
                 <?php if (!isset($current_group_info) || !$current_group_info): ?>
-                    
                     <div class="members-empty-state">
                         <span class="material-symbols-rounded">group_off</span>
                         <p data-i18n="members.noGroup">Selecciona un grupo para ver sus miembros.</p>
                     </div>
-
                 <?php elseif (empty($current_group_members)): ?>
-
                     <div class="members-empty-state">
                         <span class="material-symbols-rounded">person_off</span>
                         <p data-i18n="members.noMembers">Este grupo aún no tiene miembros.</p>
                     </div>
-
                 <?php else: ?>
-                    
                     <?php 
                     $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
                     
-                    // Iterar sobre los grupos de roles
                     foreach ($grouped_members as $role => $members_in_role):
                         if (!empty($members_in_role)):
                     ?>
-                        <h4 class="member-list-heading" data-i18n="<?php echo $member_role_headings[$role]; ?>">
-                            <?php // El texto se rellenará por i18n ?>
-                        </h4>
+                        <h4 class="member-list-heading" data-i18n="<?php echo $member_role_headings[$role]; ?>"></h4>
                         
                         <div class="member-list">
                             <?php 
@@ -303,8 +340,7 @@ if (!empty($current_group_members)) {
                                 <div class="member-item" data-user-id="<?php echo htmlspecialchars($member['id']); ?>" data-user-role="<?php echo htmlspecialchars($member['user_role']); ?>">
                                     <div class="component-card__avatar member-avatar" 
                                          data-role="<?php echo htmlspecialchars($member['user_role']); ?>"
-                                         data-user-id="<?php echo htmlspecialchars($member['id']); ?>">
-                                <img src="<?php echo htmlspecialchars($avatarUrl); ?>"
+                                         data-user-id="<?php echo htmlspecialchars($member['id']); ?>"> <img src="<?php echo htmlspecialchars($avatarUrl); ?>"
                                              alt="<?php echo htmlspecialchars($member['username']); ?>"
                                              class="component-card__avatar-image">
                                     </div>
@@ -320,4 +356,4 @@ if (!empty($current_group_members)) {
             </div>
         </div>
     </div>
-    </div>
+</div>

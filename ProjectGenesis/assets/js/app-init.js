@@ -10,9 +10,9 @@ import { initAdminEditUserManager } from './modules/admin-edit-user-manager.js';
 import { initAdminServerSettingsManager } from './modules/admin-server-settings-manager.js';
 import { initAdminBackupModule } from './modules/admin-backup-module.js'; 
 import { initGroupsManager } from './modules/groups-manager.js'; 
-// --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
-import { initChatManager } from './modules/chat-manager.js';
-// --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+// --- ▼▼▼ INICIO DE LÍNEA MODIFICADA ▼▼▼ ---
+import { initChatManager, renderIncomingMessage } from './modules/chat-manager.js';
+// --- ▲▲▲ FIN DE LÍNEA MODIFICADA ▲▲▲ ---
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager, getTranslation } from './services/i18n-manager.js'; 
 import { initTooltipManager } from './services/tooltip-manager.js'; 
@@ -21,29 +21,13 @@ const htmlEl = document.documentElement;
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
 window.lastKnownUserCount = null; 
-
-// --- ▼▼▼ INICIO DE NUEVAS FUNCIONES DE PRESENCIA ▼▼▼ ---
-
-/**
- * Almacén global para saber quién está conectado.
- * Se actualiza por WebSocket.
- */
 window.onlineUserIds = new Set();
 
-/**
- * Actualiza la UI para un usuario específico, añadiendo o quitando la clase 'online'.
- * @param {string|number} userId - El ID del usuario a actualizar.
- * @param {string} status - "online" o "offline".
- */
 window.setMemberStatus = (userId, status) => {
-    // Buscar *todos* los avatares de miembros que coincidan con este ID
-    // (Puede estar en el panel de miembros, en listas de chat, etc.)
     const avatars = document.querySelectorAll(`.member-avatar[data-user-id="${userId}"]`);
-    
     if (avatars.length === 0) {
-        return; // El usuario no está visible en la UI
+        return; 
     }
-
     avatars.forEach(avatar => {
         if (status === 'online') {
             avatar.classList.add('online');
@@ -53,27 +37,16 @@ window.setMemberStatus = (userId, status) => {
     });
 };
 
-/**
- * Itera sobre el Set global y aplica el estado 'online' a todos
- * los miembros visibles en la UI.
- * Se llama al cargar una página (ej. home) o al recibir la lista de presencia.
- */
 window.applyOnlineStatusToAllMembers = () => {
-    // 1. Limpiar todos los estados "online" existentes
     document.querySelectorAll('.member-avatar.online').forEach(avatar => {
         avatar.classList.remove('online');
     });
-
-    // 2. Aplicar el estado "online" a los usuarios del Set
     if (window.onlineUserIds && window.onlineUserIds.size > 0) {
         window.onlineUserIds.forEach(userId => {
             window.setMemberStatus(userId, 'online');
         });
     }
 };
-
-// --- ▲▲▲ FIN DE NUEVAS FUNCIONES DE PRESENCIA ▲▲▲ ---
-
 
 function applyTheme(theme) {
     if (theme === 'light') {
@@ -97,7 +70,6 @@ window.applyCurrentTheme = applyTheme;
 
 function initThemeManager() {
     applyTheme(window.userTheme || 'system');
-
     systemThemeQuery.addEventListener('change', (e) => {
         if ((window.userTheme || 'system') === 'system') {
             applyTheme('system');
@@ -109,13 +81,14 @@ function initThemeManager() {
 document.addEventListener('DOMContentLoaded', async function () { 
     
     window.showAlert = showAlert;
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    window.renderIncomingMessage = renderIncomingMessage; // Exponer al WebSocket
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     await initI18nManager();
 
     initThemeManager();
-
     initMainController();
-    
     initAuthManager();
     initSettingsManager();
     initAdminManager();
@@ -123,12 +96,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     initAdminServerSettingsManager();
     initAdminBackupModule();
     initGroupsManager(); 
-    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
     initChatManager(); // Inicializa el nuevo módulo de chat
-    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     initRouter(); 
-    
     initTooltipManager(); 
 
     
@@ -138,6 +108,24 @@ document.addEventListener('DOMContentLoaded', async function () {
         const wsHost = window.wsHost || '127.0.0.1';
         const wsUrl = `ws://${wsHost}:8765`;
         
+        // --- ▼▼▼ INICIO DE FUNCIÓN AÑADIDA ▼▼▼ ---
+        /**
+         * Envía un objeto JSON al WebSocket si está conectado.
+         * @param {object} msgObject El objeto a enviar.
+         */
+        window.wsSend = (msgObject) => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                try {
+                    ws.send(JSON.stringify(msgObject));
+                } catch (e) {
+                    console.error("[WS] Error al enviar mensaje:", e);
+                }
+            } else {
+                console.warn("[WS] Intento de envío mientras WS no está conectado.", msgObject);
+            }
+        };
+        // --- ▲▲▲ FIN DE FUNCIÓN AÑADIDA ▲▲▲ ---
+
         function connectWebSocket() {
             try {
                 ws = new WebSocket(wsUrl);
@@ -151,10 +139,17 @@ document.addEventListener('DOMContentLoaded', async function () {
                         user_id: window.userId || 0,       
                         session_id: window.csrfToken || "" 
                     };
-                    ws.send(JSON.stringify(authMessage));
+                    window.wsSend(authMessage); // Usar la nueva función
+                    
+                    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+                    // Al reconectar, informar al servidor de nuestro grupo actual (si lo hay)
+                    const currentGroupUuid = document.body.dataset.currentGroupUuid || null;
+                    if(currentGroupUuid) {
+                        window.wsSend({ type: 'join_group', group_uuid: currentGroupUuid });
+                    }
+                    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
                 };
 
-                // --- ▼▼▼ INICIO DE MANEJADOR DE MENSAJES MODIFICADO ▼▼▼ ---
                 ws.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
@@ -168,22 +163,17 @@ document.addEventListener('DOMContentLoaded', async function () {
                             }
                         } 
                         
-                        // --- ¡NUEVO! Caso 1: Lista inicial de presencia ---
                         else if (data.type === 'presence_list') {
                             if (data.user_ids && Array.isArray(data.user_ids)) {
-                                window.onlineUserIds.clear(); // Limpiar el Set
+                                window.onlineUserIds.clear(); 
                                 data.user_ids.forEach(id => window.onlineUserIds.add(id));
-                                
                                 console.log(`[WS-PRESENCE] Recibida lista de ${window.onlineUserIds.size} usuarios online.`);
-                                
-                                // Aplicar a la UI (si la lista de miembros está visible)
                                 if (window.applyOnlineStatusToAllMembers) {
                                     window.applyOnlineStatusToAllMembers();
                                 }
                             }
                         }
 
-                        // --- ¡NUEVO! Caso 2: Un usuario cambia de estado ---
                         else if (data.type === 'user_status') {
                             if (data.user_id && data.status) {
                                 console.log(`[WS-STATUS] Usuario ${data.user_id} está ${data.status}`);
@@ -192,38 +182,39 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 } else {
                                     window.onlineUserIds.delete(data.user_id);
                                 }
-                                
-                                // Aplicar a la UI (si el miembro está visible)
                                 if (window.setMemberStatus) {
                                     window.setMemberStatus(data.user_id, data.status);
                                 }
                             }
                         }
 
-                        // --- (Lógica existente) ---
+                        // --- ▼▼▼ INICIO DE NUEVO BLOQUE ▼▼▼ ---
+                        else if (data.type === 'new_chat_message') {
+                            if (data.message && window.renderIncomingMessage) {
+                                // Llamar a la función expuesta para renderizar el chat
+                                window.renderIncomingMessage(data.message);
+                            }
+                        }
+                        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
+
                         else if (data.type === 'force_logout') {
                             console.log("[WS] Recibida orden de desconexión forzada (logout o reactivación).");
-                            
-                            window.showAlert(getTranslation('js.logout.forced') || 'Tu sesión ha caducado o ha sido cerrada desde otro dispositivo. Por favor, inicia sesión de nuevo.', 'info', 5000);
-                            
+                            window.showAlert(getTranslation('js.logout.forced') || 'Tu sesión ha caducado...', 'info', 5000);
                             setTimeout(() => {
                                 window.location.reload();
                             }, 3000); 
                         }
                         else if (data.type === 'account_status_update') {
                             const newStatus = data.status;
-                            
                             if (newStatus === 'suspended' || newStatus === 'deleted') {
                                 const msgKey = (newStatus === 'suspended') ? 'js.auth.errorAccountSuspended' : 'js.auth.errorAccountDeleted';
                                 console.log(`[WS] Recibida orden de estado: ${newStatus}`);
                                 window.showAlert(getTranslation(msgKey), 'error', 5000);
-
                                 setTimeout(() => {
                                     window.location.href = `${window.projectBasePath}/account-status/${newStatus}`;
                                 }, 3000);
                             }
                         }
-                        // --- ▲▲▲ FIN DE MANEJADOR DE MENSAJES MODIFICADO ▲▲▲ ---
                         
                     } catch (e) {
                         console.error("[WS] Error al parsear mensaje:", e);
@@ -231,32 +222,36 @@ document.addEventListener('DOMContentLoaded', async function () {
                 };
                 
                 ws.onclose = (event) => {
-                    console.log("[WS] Desconectado del servidor de conteo.", event.reason);
-                    
+                    console.log("[WS] Desconectado del servidor.", event.reason);
                     const display = document.getElementById('concurrent-users-display');
                     if (display) {
                         display.textContent = '---';
                         display.setAttribute('data-i18n', ''); 
                     }
-                    
-                    // Limpiar todos los indicadores de "online"
                     window.onlineUserIds.clear();
                     if (window.applyOnlineStatusToAllMembers) {
                         window.applyOnlineStatusToAllMembers();
                     }
+                    
+                    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA (Reconexión) ▼▼▼ ---
+                    // Intentar reconectar después de 5 segundos
+                    setTimeout(connectWebSocket, 5000);
+                    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA (Reconexión) ▲▲▲ ---
                 };
 
                 ws.onerror = (error) => {
                     console.error("[WS] Error de WebSocket:", error);
+                    // onclose se llamará automáticamente después de un error,
+                    // lo que activará la lógica de reconexión.
                 };
 
             } catch (e) {
                 console.error("[WS] No se pudo crear la conexión WebSocket:", e);
+                // Reintentar si la creación misma falla
+                setTimeout(connectWebSocket, 5000);
             }
         }
         connectWebSocket();
-        // (El resto de la lógica de 'beforeunload' se omite por brevedad,
-        // pero debe permanecer en tu archivo si ya existía)
         
         window.addEventListener('beforeunload', () => {
             if (ws && ws.readyState === WebSocket.OPEN) {

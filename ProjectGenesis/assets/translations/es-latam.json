@@ -74,7 +74,12 @@
     },
     "chat": {
       "selectGroup": "Selecciona un grupo para comenzar a chatear",
-      "chattingWith": "Próximamente aquí estará el chat de <strong>%groupName%</strong>"
+      "chattingWith": "Próximamente aquí estará el chat de <strong>%groupName%</strong>",
+      "placeholder": "Escribe un mensaje...",
+      "error": {
+        "noGroup": "No hay un grupo seleccionado para enviar el mensaje.",
+        "onlyImages": "Solo se pueden adjuntar imágenes (PNG, JPG, GIF, WebP)."
+      }
     }
   },
   "mygroups": {

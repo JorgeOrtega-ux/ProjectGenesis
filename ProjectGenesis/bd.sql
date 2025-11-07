@@ -154,3 +154,48 @@ INSERT INTO `groups` (`name`, `group_type`, `access_key`, `privacy`) VALUES
 -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 SET FOREIGN_KEY_CHECKS=1;
+
+-- ----------------------------
+-- Table structure for uploaded_files
+-- ----------------------------
+DROP TABLE IF EXISTS `uploaded_files`;
+CREATE TABLE `uploaded_files` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `group_id` int(11) DEFAULT NULL,
+  `file_name_system` varchar(255) NOT NULL,
+  `file_name_original` varchar(255) NOT NULL,
+  `file_path` varchar(512) NOT NULL,
+  `public_url` varchar(512) NOT NULL,
+  `file_type` varchar(100) NOT NULL,
+  `file_size` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `fk_uploaded_files_user` (`user_id`),
+  KEY `fk_uploaded_files_group` (`group_id`),
+  CONSTRAINT `fk_uploaded_files_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_uploaded_files_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ----------------------------
+-- Table structure for group_messages
+-- ----------------------------
+DROP TABLE IF EXISTS `group_messages`;
+CREATE TABLE `group_messages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `group_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `message_type` enum('text','image') NOT NULL DEFAULT 'text',
+  `content` text NOT NULL,
+  `file_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_group_timestamp` (`group_id`,`created_at`),
+  KEY `fk_group_messages_user` (`user_id`),
+  KEY `fk_group_messages_file` (`file_id`),
+  CONSTRAINT `fk_group_messages_file` FOREIGN KEY (`file_id`) REFERENCES `uploaded_files` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_group_messages_group` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_group_messages_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+SET FOREIGN_KEY_CHECKS=1;
