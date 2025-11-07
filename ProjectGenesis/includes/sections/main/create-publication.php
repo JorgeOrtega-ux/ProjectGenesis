@@ -1,5 +1,6 @@
 <?php
 // FILE: includes/sections/main/create-publication.php
+// (VERSIÓN MODIFICADA PARA ACEPTAR ARCHIVOS)
 
 // Determina qué pestaña está activa basada en la sección actual
 $isPollActive = ($CURRENT_SECTION === 'create-poll');
@@ -30,11 +31,12 @@ $isPostActive = !$isPollActive;
         </div>
 
         <?php outputCsrfInput(); ?>
+        
+        <input type="file" id="publication-file-input" class="visually-hidden" 
+               accept="image/png, image/jpeg, image/gif, image/webp" multiple>
 
-        <!-- Contenedor principal para el formulario de creación -->
         <div class="component-card component-card--action" id="create-post-form" style="gap: 16px;">
         
-            <!-- Toggle para Publicación / Encuesta -->
             <div class="component-toggle-tabs" id="post-type-toggle">
                 <button type="button" class="component-toggle-tab <?php echo $isPostActive ? 'active' : ''; ?>" data-type="post">
                     <span class="material-symbols-rounded">post_add</span>
@@ -46,7 +48,6 @@ $isPostActive = !$isPollActive;
                 </button>
             </div>
 
-            <!-- Contenido de la Publicación (Visible para ambos) -->
             <div id="post-content-area" class="active" style="width: 100%;">
                 <div class="component-input-group">
                     <textarea id="publication-text" class="component-input" rows="5" placeholder=" " style="height: 120px; resize: vertical; padding-top: 16px;"></textarea>
@@ -54,16 +55,18 @@ $isPostActive = !$isPollActive;
                 </div>
             </div>
 
-            <!-- Contenido de la Encuesta (Oculto por defecto) -->
+            <div class="publication-preview-container" id="publication-preview-container">
+                </div>
             <div id="poll-content-area" class="<?php echo $isPollActive ? 'active' : 'disabled'; ?>" style="width: 100%; display: <?php echo $isPollActive ? 'flex' : 'none'; ?>; flex-direction: column; gap: 8px;">
                 <p class="component-card__description" style="text-align: center;">(Aquí irán las opciones de la encuesta...)</p>
-                <!-- Aquí irían los inputs para las opciones de la encuesta -->
             </div>
             
 
-            <!-- Acciones (Adjuntar y Publicar) -->
             <div class="component-card__actions" style="width: 100%; justify-content: space-between;">
-                <button type="button" class="component-action-button component-action-button--secondary" id="attach-files-btn" title="Adjuntar archivos (próximamente)" disabled>
+                
+                <button type="button" class="component-action-button component-action-button--secondary" 
+                        id="attach-files-btn" 
+                        data-tooltip="create_publication.attachTooltip">
                     <span class="material-symbols-rounded">attach_file</span>
                 </button>
                 <button type="button" class="component-action-button component-action-button--primary" id="publish-post-btn" data-i18n="create_publication.publish" disabled>

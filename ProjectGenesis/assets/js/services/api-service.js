@@ -4,8 +4,9 @@ const API_ENDPOINTS = {
     AUTH: `${window.projectBasePath}/api/auth_handler.php`,
     SETTINGS: `${window.projectBasePath}/api/settings_handler.php`,
     ADMIN: `${window.projectBasePath}/api/admin_handler.php`,
+    COMMUNITY: `${window.projectBasePath}/api/community_handler.php`,
     // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
-    COMMUNITY: `${window.projectBasePath}/api/community_handler.php`
+    PUBLICATION: `${window.projectBasePath}/api/publication_handler.php`
     // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 };
 
@@ -63,10 +64,17 @@ async function callAdminApi(formData) {
     return _post(API_ENDPOINTS.ADMIN, formData);
 }
 
-// --- ▼▼▼ NUEVA FUNCIÓN AÑADIDA ▼▼▼ ---
 async function callCommunityApi(formData) {
     return _post(API_ENDPOINTS.COMMUNITY, formData);
 }
 
-export { callAuthApi, callSettingsApi, callAdminApi, callCommunityApi }; // <-- AÑADIDO A EXPORT
+// --- ▼▼▼ NUEVA FUNCIÓN AÑADIDA ▼▼▼ ---
+async function callPublicationApi(formData) {
+    return _post(API_ENDPOINTS.PUBLICATION, formData);
+}
+// --- ▲▲▲ FIN DE FUNCIÓN AÑADIDA ▲▲▲ ---
+
+
+// --- ▼▼▼ MODIFICACIÓN EN EXPORT ▼▼▼ ---
+export { callAuthApi, callSettingsApi, callAdminApi, callCommunityApi, callPublicationApi };
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
