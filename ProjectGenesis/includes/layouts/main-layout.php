@@ -39,16 +39,18 @@
                         </div>
 
                     </div>
+                    
+                    <?php if (!$isAuthPage): ?>
+                        <?php include 'includes/modules/module-friend-list.php'; // Incluir el módulo de amigos directamente ?>
+                        <?php endif; ?>
                 </div>
 
                 <div id="alert-container"></div>
             </div>
             
-            <?php if (!$isAuthPage): ?>
-                <div class="friend-list-container" id="friend-list-container">
-                    <?php include 'includes/modules/module-friend-list.php'; // Incluir el nuevo módulo ?>
-                </div>
-            <?php endif; ?>
+            <?php
+                /* --- El div de amigos se movió adentro de general-content-bottom --- */
+            ?>
             </div>
     </div>
 

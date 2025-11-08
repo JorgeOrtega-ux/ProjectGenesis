@@ -218,21 +218,16 @@ try {
 
     <div class="component-wrapper" style="padding-top: 82px;">
 
-        <div class="component-header-card">
-            <h1 class="component-page-title" 
-                data-i18n="<?php echo ($communityUuid === null) ? $currentCommunityNameKey : ''; ?>">
-                <?php echo ($communityUuid !== null) ? htmlspecialchars($currentCommunityNameKey) : ''; ?>
-            </h1>
-            
-            <?php if (empty($publications)): ?>
-                <p class="component-page-description" data-i18n="home.main.noPosts"></p>
-            <?php else: ?>
-                <p class="component-page-description" data-i18n="home.main.welcome"></p>
-            <?php endif; ?>
-        </div>
-
         <div class="card-list-container" style="display: flex; flex-direction: column; gap: 16px;">
-            <?php if (!empty($publications)): ?>
+            <?php if (empty($publications)): ?>
+                <div class="component-card">
+                    <div class="component-card__content" style="padding: 40px 24px; justify-content: center; text-align: center;">
+                        <div class="component-card__text">
+                            <h2 class="component-card__title" style="font-size: 18px;" data-i18n="home.main.noPosts"></h2>
+                        </div>
+                    </div>
+                </div>
+                <?php else: ?>
                 <?php foreach ($publications as $post): ?>
                     <?php
                     // --- ▼▼▼ ¡INICIO DE CÓDIGO PEGADO! ▼▼▼ ---

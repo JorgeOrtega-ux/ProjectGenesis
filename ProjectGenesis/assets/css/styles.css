@@ -129,12 +129,14 @@ body {
 /* ====================================== */
 
 .module-content.module-surface {
+    /* ▼▼▼ CORRECCIÓN: VUELTO A 'absolute' ▼▼▼ */
     position: absolute;
-    top: 0;
-    left: 0;
     height: 100%;
     padding: 8px;
-    z-index: 999;
+    top: 0;
+    left: 0; /* El menú izquierdo se alinea a la izquierda */
+    z-index: 999; /* Asegura que esté sobre el scroll */
+    /* ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ */
 }
 
 .module-surface .menu-content {
@@ -439,18 +441,29 @@ body {
     -webkit-overflow-scrolling: touch;
 }
 
-/* --- ▼▼▼ INICIO DE NUEVO BLOQUE (LISTA DE AMIGOS) ▼▼▼ --- */
-.friend-list-container {
-    flex-shrink: 0; /* No se encogerá */
-    width: 280px; /* Ancho fijo para la lista de amigos */
-    height: 100%;
-    display: flex; 
-    flex-direction: column; 
-    background-color: transparent;
+/* --- ▼▼▼ INICIO DE BLOQUE (LISTA DE AMIGOS) CORREGIDO ▼▼▼ --- */
+#friend-list-container {
+    /* Hereda .module-content.module-surface */
+    /* position: absolute; (heredado) */
+    /* top: 0; (heredado) */
+    /* height: 100%; (heredado) */
+    /* padding: 8px; (heredado) */
+    /* z-index: 999; (heredado) */
+    
+    /* ▼▼▼ ESTO ES LO NUEVO ▼▼▼ */
+    left: auto; /* Anula el 'left: 0' de la regla base */
+    right: 0;   /* Lo posiciona a la derecha */
+    /* ▲▲▲ FIN DE LO NUEVO ▲▲▲ */
 }
 
-.friend-list-container .module-surface {
-    width: 100%;
+/*
+ * El .menu-content dentro del módulo de amigos hereda
+ * todas las propiedades de .module-surface .menu-content
+ * (fondo blanco, sombra, border-radius, etc.)
+*/
+#friend-list-container .menu-content {
+    /* (Hereda los estilos) */
+    background-color: #ffffff; /* ¡ASEGURAMOS QUE SEA BLANCO! */
 }
 
 #friend-list-items .menu-link {
@@ -471,11 +484,11 @@ body {
 
 /* Ocultar en pantallas medianas y pequeñas */
 @media (max-width: 1024px) {
-    .friend-list-container {
+    #friend-list-container {
         display: none;
     }
 }
-/* --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ --- */
+/* --- ▲▲▲ FIN DE BLOQUE ▲▲▲ --- */
 
 
 /* ====================================== */
@@ -573,7 +586,7 @@ body {
     }
 
     /* --- ▼▼▼ NUEVA REGLA (YA DEBERÍA ESTAR CUBIERTA, PERO POR SI ACASO) ▼▼▼ --- */
-    .friend-list-container {
+    #friend-list-container {
         display: none;
     }
     /* --- ▲▲▲ FIN NUEVA REGLA ▲▲▲ --- */
