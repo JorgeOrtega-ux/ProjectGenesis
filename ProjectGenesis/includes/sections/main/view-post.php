@@ -185,9 +185,7 @@ $commentCount = (int)($post['comment_count'] ?? 0);
                     </button>
                 </form>
                 
-                <div class="post-comments-container active" id="comments-for-post-<?php echo $post['id']; ?>">
-                </div>
-                
+              <div class="post-comments-container active" id="comments-for-post-<?php echo $post['id']; ?>" data-post-id="<?php echo $post['id']; ?>">
             </div>
             <?php
             // --- ▲▲▲ FIN DE CÓDIGO PEGADO ▲▲▲ ---
