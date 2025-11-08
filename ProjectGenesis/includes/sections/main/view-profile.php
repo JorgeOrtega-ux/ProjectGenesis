@@ -186,9 +186,14 @@ $isOwnProfile = ($profile['id'] == $userId);
                                 <?php if ($isPoll): ?>
                                     <h3 class="poll-question"><?php echo htmlspecialchars($post['text_content']); ?></h3>
                                 <?php else: ?>
-                                    <p style="font-size: 15px; line-height: 1.6; color: #1f2937; white-space: pre-wrap; width: 100%;"><?php echo htmlspecialchars($post['text_content']); ?></p>
+                                    <div style="font-size: 15px; line-height: 1.6; color: #1f2937; white-space: pre-wrap; width: 100%;">
+                                        <?php 
+                                        // Usamos la nueva función helper
+                                        echo truncatePostText($post['text_content'], $post['id'], $basePath, 500); 
+                                        ?>
+                                    </div>
                                 <?php endif; ?>
-                            </div>
+                                </div>
                         <?php endif; ?>
 
                         <?php if ($isPoll && !empty($pollOptions)): ?>

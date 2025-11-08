@@ -17,6 +17,10 @@ $MAX_FILES = 4;
 $ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 $MAX_SIZE_MB = (int)($GLOBALS['site_settings']['avatar_max_size_mb'] ?? 2);
 $MAX_SIZE_BYTES = $MAX_SIZE_MB * 1024 * 1024;
+// --- ▼▼▼ ¡NUEVA CONSTANTE! ▼▼▼ ---
+define('MAX_POST_LENGTH', (int)($GLOBALS['site_settings']['max_post_length'] ?? 1000));
+// --- ▲▲▲ ¡FIN DE NUEVA CONSTANTE! ▲▲▲ ---
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -60,12 +64,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($pollQuestion)) {
                     throw new Exception('js.publication.errorPollQuestion'); 
                 }
+                // --- ▼▼▼ INICIO DE VALIDACIÓN DE LÍMITE (POLL) ▼▼▼ ---
+                if (mb_strlen($pollQuestion, 'UTF-8') > MAX_POST_LENGTH) {
+                    // (Necesitarás añadir esta clave a tus archivos de traducción)
+                    throw new Exception('js.publication.errorPollTooLong'); 
+                }
+                // --- ▲▲▲ FIN DE VALIDACIÓN ▲▲▲ ---
                 if (empty($pollOptions) || count($pollOptions) < 2) {
                      throw new Exception('js.publication.errorPollOptions'); 
                 }
                 $textContent = $pollQuestion;
 
             } elseif ($postType === 'post') {
+                 // --- ▼▼▼ INICIO DE VALIDACIÓN DE LÍMITE (POST) ▼▼▼ ---
+                 if (mb_strlen($textContent, 'UTF-8') > MAX_POST_LENGTH) {
+                    // (Necesitarás añadir esta clave a tus archivos de traducción)
+                    throw new Exception('js.publication.errorPostTooLong');
+                 }
+                 // --- ▲▲▲ FIN DE VALIDACIÓN ▲▲▲ ---
                  if (empty($textContent) && empty($uploadedFiles['name'][0])) {
                     throw new Exception('js.publication.errorEmpty');
                 }

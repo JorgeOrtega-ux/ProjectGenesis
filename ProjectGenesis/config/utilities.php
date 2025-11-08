@@ -2,6 +2,10 @@
 // FILE: config/utilities.php
 // Contiene funciones de utilidad separadas de la configuración principal.
 
+// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+mb_internal_encoding("UTF-8");
+// --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
+
 // --- ▼▼▼ CONSTANTES DE UTILIDAD (MOVIMIENTO) ▼▼▼ ---
 define('MAX_PREFERENCE_CHANGES', 20); // 20 cambios en 60 mins
 define('PREFERENCE_LOCKOUT_MINUTES', 60);
@@ -165,4 +169,33 @@ function getPreferredLanguage($acceptLanguage) {
 
     return $defaultLanguage;
 }
+
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN ▼▼▼ ---
+/**
+ * Trunca el texto de una publicación si excede el límite y añade un enlace "Mostrar más".
+ *
+ * @param string $text El texto a truncar.
+ * @param int $postId El ID del post para el enlace.
+ * @param string $basePath El path base del proyecto.
+ * @param int $limit El número de caracteres límite (default 500).
+ * @return string El HTML formateado (escapado y con <br>).
+ */
+function truncatePostText($text, $postId, $basePath, $limit = 500) {
+    // Escapar el texto ANTES de medirlo o cortarlo
+    $escapedText = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+
+    if (mb_strlen($escapedText, 'UTF-8') > $limit) {
+        // Cortar el texto escapado
+        $truncated = mb_substr($escapedText, 0, $limit, 'UTF-8');
+        $postUrl = htmlspecialchars($basePath . '/post/' . $postId, ENT_QUOTES, 'UTF-8');
+        
+        // Convertir saltos de línea y añadir el enlace
+        // Usamos un div en lugar de <p> porque el enlace "Mostrar más" no debe estar dentro del <p> truncado
+        return nl2br($truncated) . '... <a href="' . $postUrl . '" class="post-read-more" data-nav-js="true" style="font-weight: 600; color: #000; text-decoration: none;">Mostrar más</a>';
+    } else {
+        // Si no se trunca, solo escapar y convertir saltos de línea
+        return nl2br($escapedText);
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
 ?>

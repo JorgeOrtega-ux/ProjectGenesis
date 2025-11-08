@@ -26,21 +26,17 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
         </div>
     </div>
     
-    <div class="component-wrapper" style="padding-top: 82px;">
-
-        <div class="component-header-card">
+    <div class="component-wrapper" style="padding-top: 82px;"> <div class="component-header-card">
             <h1 class="component-page-title" data-i18n="create_publication.title"></h1>
             <p class="component-page-description" data-i18n="create_publication.description"></p>
         </div>
 
         <?php outputCsrfInput(); ?>
         
-        <!-- Input de archivos para 'post' -->
         <input type="file" id="publication-file-input" class="visually-hidden" 
                accept="image/png, image/jpeg, image/gif, image/webp" multiple>
 
         <?php if (!$hasCommunities): ?>
-            <!-- Vista si el usuario no tiene comunidades -->
             <div class="component-card">
                 <div class="component-card__content">
                     <div class="component-card__icon">
@@ -57,10 +53,8 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
             </div>
 
         <?php else: ?>
-            <!-- Formulario principal de creación -->
             <div class="component-card component-card--action" id="create-post-form" style="gap: 16px;">
             
-                <!-- Pestañas de Post / Encuesta -->
                 <div class="component-toggle-tabs" id="post-type-toggle">
                     <button type="button" class="component-toggle-tab <?php echo $isPostActive ? 'active' : ''; ?>" data-type="post">
                         <span class="material-symbols-rounded">post_add</span>
@@ -72,8 +66,7 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
                     </button>
                 </div>
 
-                <!-- Selector de Comunidad -->
-               <div class="component-card__content" style="width: 100%; padding-bottom: 0;">
+                <div class="component-card__content" style="width: 100%; padding-bottom: 0;">
                     <div class="component-card__text" style="width: 100%;">
                         <h2 class="component-card__title" data-i18n="create_publication.destination" style="margin-bottom: 8px;">Publicar en:</h2>
                         
@@ -99,7 +92,6 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
                                  style="top: calc(100% + 4px);">
                                 <div class="menu-content">
                                     <div class="menu-list">
-                                        <!-- Bucle PHP para rellenar las comunidades -->
                                         <?php foreach ($userCommunitiesForPost as $community): ?>
                                             <div class="menu-link" 
                                                  data-value="<?php echo htmlspecialchars($community['id']); ?>"
@@ -121,38 +113,30 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
                     </div>
                 </div>
                 
-                <!-- ÁREA DE PUBLICACIÓN (POST) -->
                 <div id="post-content-area" class="<?php echo $isPostActive ? 'active' : 'disabled'; ?>" style="width: 100%; display: <?php echo $isPostActive ? 'flex' : 'none'; ?>; flex-direction: column; gap: 8px;">
                     <div class="component-input-group">
-                        <textarea id="publication-text" class="component-input" rows="5" placeholder=" " style="height: 120px; resize: vertical; padding-top: 16px;"></textarea>
+                        <textarea id="publication-text" class="component-input" rows="5" placeholder=" " style="height: 120px; resize: vertical; padding-top: 16px;" maxlength="1000"></textarea>
                         <label for="publication-text" data-i18n="create_publication.placeholder"></label>
                     </div>
-                    <!-- Contenedor para vistas previas de imágenes -->
                     <div class="publication-preview-container" id="publication-preview-container">
                     </div>
                 </div>
 
-                <!-- ÁREA DE ENCUESTA (POLL) -->
                 <div id="poll-content-area" class="<?php echo $isPollActive ? 'active' : 'disabled'; ?>" style="width: 100%; display: <?php echo $isPollActive ? 'flex' : 'none'; ?>; flex-direction: column; gap: 12px;">
-                    <!-- Input para la Pregunta -->
                     <div class="component-input-group">
-                        <input type="text" id="poll-question" class="component-input" placeholder=" " maxlength="255">
+                        <input type="text" id="poll-question" class="component-input" placeholder=" " maxlength="1000">
                         <label for="poll-question" data-i18n="create_publication.pollQuestionLabel">Escribe tu pregunta...</label>
                     </div>
                     
-                    <!-- Contenedor dinámico para opciones -->
                     <div id="poll-options-container" style="display: flex; flex-direction: column; gap: 8px;">
-                        <!-- Las opciones de la encuesta se añadirán aquí con JS -->
-                    </div>
+                        </div>
                     
-                    <!-- Botón para añadir más opciones -->
                     <button type="button" class="component-action-button component-action-button--secondary" id="add-poll-option-btn" style="height: 40px; justify-content: flex-start; gap: 8px;">
                         <span class="material-symbols-rounded">add_circle</span>
                         <span data-i18n="create_publication.pollAddOption">Añadir opción</span>
                     </button>
                 </div>
                 
-                <!-- Acciones (Botones de adjuntar y publicar) -->
                 <div class="component-card__actions" style="width: 100%; justify-content: space-between;">
                     
                     <button type="button" class="component-action-button component-action-button--secondary" 
@@ -162,7 +146,6 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
                         <span class="material-symbols-rounded">attach_file</span>
                     </button>
                     
-                    <!-- Espaciador para alinear el botón de publicar a la derecha cuando "adjuntar" está oculto -->
                     <div id="attach-files-spacer" style="<?php echo $isPollActive ? 'display: block; flex-grow: 1;' : 'display: none;'; ?>"></div>
 
                     <button type="button" class="component-action-button component-action-button--primary" id="publish-post-btn" data-i18n="create_publication.publish" disabled>

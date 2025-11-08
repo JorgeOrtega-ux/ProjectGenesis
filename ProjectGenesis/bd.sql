@@ -99,7 +99,10 @@ INSERT INTO site_settings (setting_key, setting_value) VALUES
 ('max_username_length', '32'),
 ('max_email_length', '255'),
 ('code_resend_cooldown_seconds', '60'),
-('max_concurrent_users', '500');
+('max_concurrent_users', '500'),
+-- --- ▼▼▼ ¡NUEVA LÍNEA! ▼▼▼ ---
+('max_post_length', '1000');
+-- --- ▲▲▲ ¡FIN DE NUEVA LÍNEA! ▲▲▲ ---
 
 DROP TABLE IF EXISTS communities;
 CREATE TABLE communities (

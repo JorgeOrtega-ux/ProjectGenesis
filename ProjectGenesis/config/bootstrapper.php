@@ -73,6 +73,12 @@ try {
     }
     // --- ▲▲▲ FIN DE NUEVA CLAVE ▲▲▲ ---
 
+    // --- ▼▼▼ ¡NUEVA CLAVE DE LÍMITE DE POST! ▼▼▼ ---
+    if (!isset($GLOBALS['site_settings']['max_post_length'])) {
+         $GLOBALS['site_settings']['max_post_length'] = '1000'; // Fallback
+    }
+    // --- ▲▲▲ ¡FIN DE NUEVA CLAVE! ▲▲▲ ---
+
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
 } catch (PDOException $e) {
@@ -101,6 +107,11 @@ try {
     // --- ▼▼▼ NUEVA CLAVE AÑADIDA ▼▼▼ ---
     $GLOBALS['site_settings']['max_concurrent_users'] = '500'; // Fallback seguro
     // --- ▲▲▲ FIN DE NUEVA CLAVE ▲▲▲ ---
+    
+    // --- ▼▼▼ ¡NUEVA CLAVE DE LÍMITE DE POST! ▼▼▼ ---
+    $GLOBALS['site_settings']['max_post_length'] = '1000'; // Fallback seguro
+    // --- ▲▲▲ ¡FIN DE NUEVA CLAVE! ▲▲▲ ---
+
 
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
