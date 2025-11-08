@@ -633,7 +633,12 @@
       "errorPollMaxOptions": "Solo puedes añadir un máximo de 6 opciones.",
       "errorPollQuestion": "La pregunta de la encuesta no puede estar vacía.",
       "errorPollOptions": "Una encuesta debe tener al menos 2 opciones completadas.",
-      "errorAlreadyVoted": "Ya has votado en esta encuesta."
+      "errorAlreadyVoted": "Ya has votado en esta encuesta.",
+      "noComments": "No hay comentarios todavía.",
+      "showReplies": "Mostrar %count% respuestas",
+      "hideReplies": "Ocultar respuestas",
+      "errorCommentEmpty": "El comentario no puede estar vacío.",
+      "errorMaxDepth": "No puedes responder a una respuesta."
     }
   },
   "db": {

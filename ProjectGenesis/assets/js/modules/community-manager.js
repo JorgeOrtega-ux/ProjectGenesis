@@ -205,6 +205,23 @@ function escapeHTML(str) {
 // --- ▼▼▼ INICIO DE NUEVAS FUNCIONES (LIKE Y COMENTARIOS) ▼▼▼ ---
 
 /**
+ * Formatea una fecha a "hace X tiempo".
+ */
+function formatTimeAgo(dateString) {
+    const date = new Date(dateString.includes('Z') ? dateString : dateString + 'Z');
+    const now = new Date();
+    const seconds = Math.round((now - date) / 1000);
+
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.round(seconds / 60);
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.round(minutes / 60);
+    if (hours < 24) return `${hours}h`;
+    const days = Math.round(hours / 24);
+    return `${days}d`;
+}
+
+/**
  * Maneja el clic en el botón "Me Gusta".
  */
 async function handleLikeToggle(button) {
@@ -242,6 +259,91 @@ async function handleLikeToggle(button) {
     }
 }
 
+// --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (LÓGICA DE COMENTARIOS) ▼▼▼ ---
+
+/**
+ * Renderiza la lista de respuestas (Nivel 2) en su contenedor.
+ */
+function renderReplies(container, replies) {
+    container.innerHTML = ''; // Limpiar (por si se vuelve a cargar)
+    if (replies.length === 0) {
+        return; // No hacer nada si no hay respuestas
+    }
+
+    const defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+    
+    replies.forEach(reply => {
+        const replyAvatar = reply.profile_image_url || defaultAvatar;
+        const replyHtml = `
+            <div class="comment-item is-reply" data-comment-id="${reply.id}">
+                <div class="comment-avatar"><img src="${escapeHTML(replyAvatar)}" alt="${escapeHTML(reply.username)}"></div>
+                <div class="comment-content">
+                    <div class="comment-header">
+                        <span class="comment-username">${escapeHTML(reply.username)}</span>
+                        <span class="comment-timestamp">· ${formatTimeAgo(reply.created_at)}</span>
+                    </div>
+                    <div class="comment-body">${escapeHTML(reply.comment_text)}</div>
+                    <div class="comment-actions">
+                        </div>
+                </div>
+            </div>
+        `;
+        container.innerHTML += replyHtml;
+    });
+}
+
+/**
+ * Renderiza la lista de comentarios (Nivel 1) y sus botones de respuesta.
+ */
+function renderComments(container, comments) {
+    container.innerHTML = ''; // Limpiar spinner
+    if (comments.length === 0) {
+        container.innerHTML = `<p class="comment-placeholder" data-i18n="js.publication.noComments">No hay comentarios todavía.</p>`;
+        return;
+    }
+
+    const defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+    
+    comments.forEach(comment => {
+        const replyCount = parseInt(comment.reply_count, 10);
+        
+        let actionsHtml = `
+            <button type="button" class="comment-action-btn" data-action="show-reply-form" data-comment-id="${comment.id}">Responder</button>
+        `;
+        
+        if (replyCount > 0) {
+            const showRepliesText = getTranslation('js.publication.showReplies').replace('%count%', replyCount);
+            actionsHtml += `
+                <button type="button" class="comment-action-btn comment-replies-toggle" data-action="show-replies" data-comment-id="${comment.id}" data-reply-count="${replyCount}">
+                    · ${showRepliesText}
+                </button>
+            `;
+        }
+
+        const commentAvatar = comment.profile_image_url || defaultAvatar;
+        const commentHtml = `
+            <div class="comment-item" data-comment-id="${comment.id}">
+                <div class="comment-avatar"><img src="${escapeHTML(commentAvatar)}" alt="${escapeHTML(comment.username)}"></div>
+                <div class="comment-content">
+                    <div class="comment-header">
+                        <span class="comment-username">${escapeHTML(comment.username)}</span>
+                        <span class="comment-timestamp">· ${formatTimeAgo(comment.created_at)}</span>
+                    </div>
+                    <div class="comment-body">${escapeHTML(comment.comment_text)}</div>
+                    <div class="comment-actions">
+                        ${actionsHtml}
+                    </div>
+                    
+                    <div class="comment-replies-container" id="replies-for-comment-${comment.id}"></div>
+                    
+                    <div class="comment-reply-form-container" id="reply-form-for-${comment.id}"></div>
+                </div>
+            </div>
+        `;
+        container.innerHTML += commentHtml;
+    });
+}
+
 /**
  * Maneja el clic en el botón "Comentar" (para mostrar/ocultar).
  */
@@ -261,13 +363,13 @@ async function handleToggleComments(button) {
         button.disabled = true;
 
         const formData = new FormData();
-        formData.append('action', 'get-comments');
+        formData.append('action', 'get-comments'); // Esta acción ahora solo trae L1
         formData.append('publication_id', postId);
 
         try {
             const result = await callPublicationApi(formData);
             if (result.success && result.comments) {
-                renderComments(commentsContainer, result.comments);
+                renderComments(commentsContainer, result.comments); // <--- USA LA NUEVA FUNCIÓN
             } else {
                 commentsContainer.innerHTML = `<p class="comment-error">${getTranslation(result.message || 'js.api.errorServer')}</p>`;
             }
@@ -276,125 +378,6 @@ async function handleToggleComments(button) {
         } finally {
             button.disabled = false;
         }
-    }
-}
-
-/**
- * Renderiza la lista de comentarios (Nivel 1 y Nivel 2).
- */
-function renderComments(container, comments) {
-    container.innerHTML = ''; // Limpiar spinner
-    if (comments.length === 0) {
-        // (Añadir 'js.publication.noComments' a tus JSON)
-        container.innerHTML = `<p class="comment-placeholder" data-i18n="js.publication.noComments">No hay comentarios todavía.</p>`;
-        return;
-    }
-
-    const defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
-    
-    comments.forEach(comment => {
-        let repliesHtml = '<div class="comment-replies-container">';
-        if (comment.replies && comment.replies.length > 0) {
-            comment.replies.forEach(reply => {
-                const replyAvatar = reply.profile_image_url || defaultAvatar;
-                repliesHtml += `
-                    <div class="comment-item is-reply" data-comment-id="${reply.id}">
-                        <div class="comment-avatar"><img src="${escapeHTML(replyAvatar)}" alt="${escapeHTML(reply.username)}"></div>
-                        <div class="comment-content">
-                            <div class="comment-header">
-                                <span class="comment-username">${escapeHTML(reply.username)}</span>
-                                <span class="comment-timestamp">· ${formatTimeAgo(reply.created_at)}</span>
-                            </div>
-                            <div class="comment-body">${escapeHTML(reply.comment_text)}</div>
-                            <div class="comment-actions">
-                                </div>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-        repliesHtml += '</div>';
-
-        const commentAvatar = comment.profile_image_url || defaultAvatar;
-        const commentHtml = `
-            <div class="comment-item" data-comment-id="${comment.id}">
-                <div class="comment-avatar"><img src="${escapeHTML(commentAvatar)}" alt="${escapeHTML(comment.username)}"></div>
-                <div class="comment-content">
-                    <div class="comment-header">
-                        <span class="comment-username">${escapeHTML(comment.username)}</span>
-                        <span class="comment-timestamp">· ${formatTimeAgo(comment.created_at)}</span>
-                    </div>
-                    <div class="comment-body">${escapeHTML(comment.comment_text)}</div>
-                    <div class="comment-actions">
-                        <button type="button" class="comment-action-btn" data-action="show-reply-form" data-comment-id="${comment.id}">Responder</button>
-                    </div>
-                    ${repliesHtml}
-                    <div class="comment-reply-form-container" id="reply-form-for-${comment.id}"></div>
-                </div>
-            </div>
-        `;
-        container.innerHTML += commentHtml;
-    });
-}
-
-/**
- * Maneja el envío de un formulario de comentario (Nivel 1 o Nivel 2).
- */
-async function handlePostComment(form) {
-    const submitButton = form.querySelector('button[type="submit"]');
-    // --- ▼▼▼ LÍNEA MODIFICADA: Asegurar que seleccionamos el input correcto ▼▼▼ ---
-    const input = form.querySelector('input[name="comment_text"]'); 
-    // --- ▲▲▲ FIN LÍNEA MODIFICADA ▲▲▲ ---
-    const publicationId = form.querySelector('input[name="publication_id"]').value;
-    const parentCommentId = form.querySelector('input[name="parent_comment_id"]').value;
-    
-    if (submitButton.disabled || !input.value.trim()) {
-        // En este punto el backend devuelve el error, pero el frontend no debería permitir llegar aquí.
-        return;
-    }
-
-    togglePrimaryButtonSpinner(submitButton, true);
-    input.disabled = true;
-
-    // --- ▼▼▼ CÓDIGO MODIFICADO: Uso explícito de FormData para asegurar el valor ▼▼▼ ---
-    const formData = new FormData();
-    formData.append('action', 'post-comment');
-    formData.append('publication_id', publicationId);
-    formData.append('parent_comment_id', parentCommentId);
-    formData.append('comment_text', input.value.trim());
-    // --- ▲▲▲ FIN CÓDIGO MODIFICADO ▲▲▲ ---
-
-    try {
-        const result = await callPublicationApi(formData);
-        if (result.success && result.newComment) {
-            if (parentCommentId) {
-                // Es una respuesta (Nivel 2)
-                const repliesContainer = form.closest('.comment-item').querySelector('.comment-replies-container');
-                renderNewComment(result.newComment, repliesContainer, true); // Renderizar como respuesta
-                form.remove(); // Eliminar el formulario de respuesta
-            } else {
-                // Es un comentario (Nivel 1)
-                const commentsContainer = document.getElementById(`comments-for-post-${publicationId}`);
-                renderNewComment(result.newComment, commentsContainer, false); // Renderizar como Nivel 1
-                input.value = ''; // Limpiar input principal
-                input.dispatchEvent(new Event('input')); // Para que el botón de enviar se deshabilite
-            }
-            
-            // Actualizar el contador de comentarios en el botón principal
-            const commentButton = document.querySelector(`.post-action-comment[data-post-id="${publicationId}"] .action-text`);
-            if (commentButton && result.newCommentCount !== undefined) {
-                commentButton.textContent = result.newCommentCount;
-            }
-
-        } else {
-            // Si el backend devuelve error (e.g., js.publication.errorMaxDepth)
-            window.showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
-        }
-    } catch (e) {
-        window.showAlert(getTranslation('js.api.errorConnection'), 'error');
-    } finally {
-        togglePrimaryButtonSpinner(submitButton, false);
-        input.disabled = false;
     }
 }
 
@@ -413,6 +396,13 @@ function renderNewComment(comment, container, isReply) {
     commentEl.className = `comment-item ${isReply ? 'is-reply' : ''}`;
     commentEl.dataset.commentId = comment.id;
     
+    let actionsHtml = '';
+    if (!isReply) {
+        actionsHtml = `
+            <button type="button" class="comment-action-btn" data-action="show-reply-form" data-comment-id="${comment.id}">Responder</button>
+            `;
+    }
+
     commentEl.innerHTML = `
         <div class="comment-avatar"><img src="${escapeHTML(avatar)}" alt="${escapeHTML(comment.username)}"></div>
         <div class="comment-content">
@@ -422,9 +412,9 @@ function renderNewComment(comment, container, isReply) {
             </div>
             <div class="comment-body">${escapeHTML(comment.comment_text)}</div>
             <div class="comment-actions">
-                ${!isReply ? `<button type="button" class="comment-action-btn" data-action="show-reply-form" data-comment-id="${comment.id}">Responder</button>` : ''}
+                ${actionsHtml}
             </div>
-            ${!isReply ? `<div class="comment-replies-container"></div><div class="comment-reply-form-container" id="reply-form-for-${comment.id}"></div>` : ''}
+            ${!isReply ? `<div class="comment-replies-container" id="replies-for-comment-${comment.id}"></div><div class="comment-reply-form-container" id="reply-form-for-${comment.id}"></div>` : ''}
         </div>
     `;
     
@@ -468,31 +458,141 @@ function handleShowReplyForm(button) {
 }
 
 /**
- * Formatea una fecha a "hace X tiempo".
+ * Maneja el envío de un formulario de comentario (Nivel 1 o Nivel 2).
  */
-function formatTimeAgo(dateString) {
-    const date = new Date(dateString.includes('Z') ? dateString : dateString + 'Z');
-    const now = new Date();
-    const seconds = Math.round((now - date) / 1000);
+async function handlePostComment(form) {
+    const submitButton = form.querySelector('button[type="submit"]');
+    const input = form.querySelector('input[name="comment_text"]'); 
+    const publicationId = form.querySelector('input[name="publication_id"]').value;
+    const parentCommentId = form.querySelector('input[name="parent_comment_id"]').value;
+    
+    if (submitButton.disabled || !input.value.trim()) {
+        return;
+    }
 
-    if (seconds < 60) return `${seconds}s`;
-    const minutes = Math.round(seconds / 60);
-    if (minutes < 60) return `${minutes}m`;
-    const hours = Math.round(minutes / 60);
-    if (hours < 24) return `${hours}h`;
-    const days = Math.round(hours / 24);
-    return `${days}d`;
+    togglePrimaryButtonSpinner(submitButton, true);
+    input.disabled = true;
+
+    const formData = new FormData();
+    formData.append('action', 'post-comment');
+    formData.append('publication_id', publicationId);
+    formData.append('parent_comment_id', parentCommentId);
+    formData.append('comment_text', input.value.trim());
+
+    try {
+        const result = await callPublicationApi(formData);
+        if (result.success && result.newComment) {
+            if (parentCommentId) {
+                // Es una respuesta (Nivel 2)
+                const repliesContainer = form.closest('.comment-item').querySelector('.comment-replies-container');
+                renderNewComment(result.newComment, repliesContainer, true); // Renderizar como respuesta
+                
+                // Actualizar el botón "Mostrar respuestas" del padre
+                const parentCommentItem = document.getElementById(`replies-for-comment-${parentCommentId}`).closest('.comment-item');
+                let toggleBtn = parentCommentItem.querySelector('[data-action="show-replies"]');
+                if (!toggleBtn) {
+                    // Si era la primera respuesta, crear el botón
+                    toggleBtn = document.createElement('button');
+                    toggleBtn.type = 'button';
+                    toggleBtn.className = 'comment-action-btn comment-replies-toggle';
+                    toggleBtn.dataset.action = 'show-replies';
+                    toggleBtn.dataset.commentId = parentCommentId;
+                    parentCommentItem.querySelector('.comment-actions').appendChild(toggleBtn);
+                }
+                
+                const newReplyCount = (parseInt(toggleBtn.dataset.replyCount) || 0) + 1;
+                toggleBtn.dataset.replyCount = newReplyCount;
+                const toggleText = repliesContainer.classList.contains('visible') 
+                    ? getTranslation('js.publication.hideReplies') 
+                    : getTranslation('js.publication.showReplies').replace('%count%', newReplyCount);
+                toggleBtn.innerHTML = `· ${toggleText}`;
+
+                form.remove(); // Eliminar el formulario de respuesta
+            } else {
+                // Es un comentario (Nivel 1)
+                const commentsContainer = document.getElementById(`comments-for-post-${publicationId}`);
+                renderNewComment(result.newComment, commentsContainer, false); // Renderizar como Nivel 1
+                input.value = ''; // Limpiar input principal
+                input.dispatchEvent(new Event('input')); // Para que el botón de enviar se deshabilite
+            }
+            
+            // Actualizar el contador de comentarios en el botón principal
+            const commentButton = document.querySelector(`.post-action-comment[data-post-id="${publicationId}"] .action-text`);
+            if (commentButton && result.newCommentCount !== undefined) {
+                commentButton.textContent = result.newCommentCount;
+            }
+
+        } else {
+            window.showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+        }
+    } catch (e) {
+        window.showAlert(getTranslation('js.api.errorConnection'), 'error');
+    } finally {
+        togglePrimaryButtonSpinner(submitButton, false);
+        input.disabled = false;
+    }
 }
 
-// --- ▲▲▲ FIN DE NUEVAS FUNCIONES ▲▲▲ ---
+/**
+ * Maneja el clic en "Mostrar/Ocultar respuestas".
+ */
+async function handleShowReplies(button) {
+    const commentId = button.dataset.commentId;
+    const repliesContainer = document.getElementById(`replies-for-comment-${commentId}`);
+    if (!repliesContainer || button.disabled) return;
+
+    const isLoading = repliesContainer.classList.contains('loading');
+    if (isLoading) return;
+
+    const isVisible = repliesContainer.classList.contains('visible');
+
+    if (isVisible) {
+        // Ocultar respuestas
+        repliesContainer.innerHTML = '';
+        repliesContainer.classList.remove('visible');
+        const replyCount = button.dataset.replyCount || 0;
+        const showRepliesText = getTranslation('js.publication.showReplies').replace('%count%', replyCount);
+        button.innerHTML = `· ${showRepliesText}`;
+    } else {
+        // Mostrar respuestas
+        repliesContainer.classList.add('loading');
+        repliesContainer.innerHTML = `<div class="comment-loader"><span class="logout-spinner"></span></div>`;
+        button.disabled = true;
+
+        const formData = new FormData();
+        formData.append('action', 'get-replies');
+        formData.append('parent_comment_id', commentId);
+
+        try {
+            const result = await callPublicationApi(formData);
+            if (result.success && result.replies) {
+                renderReplies(repliesContainer, result.replies); // Usar la nueva función
+                repliesContainer.classList.add('visible');
+                button.innerHTML = `· ${getTranslation('js.publication.hideReplies')}`;
+                // Guardar el conteo real por si acaso
+                button.dataset.replyCount = result.replies.length; 
+            } else {
+                repliesContainer.innerHTML = `<p class="comment-error" style="text-align: left;">${getTranslation(result.message || 'js.api.errorServer')}</p>`;
+            }
+        } catch (e) {
+            repliesContainer.innerHTML = `<p class="comment-error" style="text-align: left;">${getTranslation('js.api.errorConnection')}</p>`;
+        } finally {
+            repliesContainer.classList.remove('loading');
+            button.disabled = false;
+        }
+    }
+}
+// --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
+
 
 export function initCommunityManager() {
     
     document.body.addEventListener('click', async (e) => {
-        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (AÑADIR LIKES/COMMENTS) ▼▼▼ ---
+        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (AÑADIR LIKES/COMMENTS/REPLIES) ▼▼▼ ---
         const likeButton = e.target.closest('[data-action="like-toggle"]');
         const commentButton = e.target.closest('[data-action="toggle-comments"]');
         const replyButton = e.target.closest('[data-action="show-reply-form"]');
+        const showRepliesButton = e.target.closest('[data-action="show-replies"]'); // <-- ¡NUEVO!
 
         if (likeButton) {
             e.preventDefault();
@@ -507,6 +607,11 @@ export function initCommunityManager() {
         if (replyButton) {
             e.preventDefault();
             handleShowReplyForm(replyButton);
+            return;
+        }
+        if (showRepliesButton) { // <-- ¡NUEVO!
+            e.preventDefault();
+            handleShowReplies(showRepliesButton);
             return;
         }
         // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
@@ -701,10 +806,8 @@ export function initCommunityManager() {
         }
     });
     
-    // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (CORRECCIÓN DEL SELECTOR) ▼▼▼ ---
     document.body.addEventListener('input', (e) => {
         const commentInput = e.target; // Obtener el target directamente
-        // Comprobar si el target es un input de comentario
         if (commentInput && commentInput.classList.contains('post-comment-input')) {
             const form = commentInput.closest('form');
             if (!form) return;
@@ -714,7 +817,6 @@ export function initCommunityManager() {
             }
         }
     });
-    // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
 
     const joinCodeInput = document.getElementById('join-code');
     if (joinCodeInput) {

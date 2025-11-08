@@ -327,44 +327,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.api.invalidAction');
             }
 
-            // Obtener todos los comentarios (Nivel 1 y Nivel 2) para esta publicación
-            $stmt_get_all = $pdo->prepare(
-                "SELECT c.*, u.username, u.profile_image_url 
+            // --- ▼▼▼ MODIFICACIÓN: OBTENER SOLO L1 Y CONTEO DE L2 ▼▼▼ ---
+            $stmt_get_l1 = $pdo->prepare(
+                "SELECT 
+                    c.*, 
+                    u.username, 
+                    u.profile_image_url,
+                    (SELECT COUNT(*) FROM publication_comments r WHERE r.parent_comment_id = c.id) AS reply_count
                  FROM publication_comments c 
                  JOIN users u ON c.user_id = u.id 
                  WHERE c.publication_id = ? 
-                 ORDER BY c.created_at ASC" // Obtener todos, los más antiguos primero
+                 AND c.parent_comment_id IS NULL -- <-- Solo Nivel 1
+                 ORDER BY c.created_at ASC" // Más antiguos primero
             );
-            $stmt_get_all->execute([$publicationId]);
-            $allComments = $stmt_get_all->fetchAll();
-
-            // Anidarlos (convertir lista plana a árbol de 2 niveles)
-            $commentsNested = [];
-            $commentsById = [];
-            
-            // Poner todos los comentarios en un mapa por su ID
-            foreach ($allComments as $comment) {
-                $commentsById[$comment['id']] = $comment;
-                $commentsById[$comment['id']]['replies'] = []; // Preparar array de respuestas
-            }
-
-            // Segunda pasada: anidar las respuestas en sus padres
-            foreach ($commentsById as $id => $comment) {
-                if ($comment['parent_comment_id'] !== null) {
-                    // Es una respuesta (Nivel 2)
-                    if (isset($commentsById[$comment['parent_comment_id']])) {
-                        // Añadir esta respuesta al array 'replies' de su padre
-                        $commentsById[$comment['parent_comment_id']]['replies'][] = $comment;
-                    }
-                } else {
-                    // Es un comentario principal (Nivel 1)
-                    $commentsNested[] = $comment;
-                }
-            }
+            $stmt_get_l1->execute([$publicationId]);
+            $comments = $stmt_get_l1->fetchAll();
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             $response['success'] = true;
-            $response['comments'] = $commentsNested;
+            $response['comments'] = $comments; // Enviar la lista plana de L1
         
+        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN 'get-replies' ▼▼▼ ---
+        } elseif ($action === 'get-replies') {
+            $parentCommentId = (int)($_POST['parent_comment_id'] ?? 0);
+            if (empty($parentCommentId)) {
+                throw new Exception('js.api.invalidAction');
+            }
+
+            // Obtener todas las respuestas (Nivel 2) para este comentario padre
+            $stmt_get_l2 = $pdo->prepare(
+                "SELECT c.*, u.username, u.profile_image_url 
+                 FROM publication_comments c 
+                 JOIN users u ON c.user_id = u.id 
+                 WHERE c.parent_comment_id = ? 
+                 ORDER BY c.created_at ASC"
+            );
+            $stmt_get_l2->execute([$parentCommentId]);
+            $replies = $stmt_get_l2->fetchAll();
+            
+            $response['success'] = true;
+            $response['replies'] = $replies;
+        // --- ▲▲▲ FIN DE NUEVA ACCIÓN 'get-replies' ▲▲▲ ---
+
         // --- ▲▲▲ FIN DE NUEVAS ACCIONES ▲▲▲ ---
         }
 
