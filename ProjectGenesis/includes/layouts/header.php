@@ -35,6 +35,15 @@ $userRole = $_SESSION['role'] ?? 'user';
     <div class="header-right">
         <div class="header-item">
 
+            <div class="header-button header-notification-btn"
+                 data-action="toggleModuleNotifications"
+                 data-tooltip="header.buttons.notifications"
+                 style="position: relative;">
+                
+                <span class="material-symbols-rounded">notifications</span>
+                
+                <span class="notification-badge disabled" id="notification-badge-count">0</span>
+            </div>
             <div class="header-button header-profile"
                 data-action="toggleModuleSelect"
                 data-role="<?php echo htmlspecialchars($userRole); ?>"
@@ -107,4 +116,20 @@ $userRole = $_SESSION['role'] ?? 'user';
             </div>
         </div>
     </div>
-</div>
+
+    <div class="popover-module popover-module--anchor-right popover-module--notifications body-title disabled" data-module="moduleNotifications">
+        <div class="menu-content">
+            <div class="notification-header">
+                <h3 class="notification-title" data-i18n="notifications.title">Notificaciones</h3>
+            </div>
+            
+            <div class="menu-list notification-list" id="notification-list-items">
+                <div class="notification-placeholder" id="notification-placeholder">
+                    <span class="material-symbols-rounded">notifications_off</span>
+                    <span data-i18n="notifications.empty">No tienes notificaciones nuevas.</span>
+                </div>
+                
+                </div>
+        </div>
+    </div>
+    </div>

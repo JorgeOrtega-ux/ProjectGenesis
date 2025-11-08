@@ -1,31 +1,10 @@
 import { getTranslation } from '../services/i18n-manager.js';
 import { showAlert } from '../services/alert-manager.js';
-// --- ▼▼▼ ¡NUEVA IMPORTACIÓN! ▼▼▼ ---
-import { callFriendApi as callApi } from '../services/api-service.js'; // Renombrado para claridad
+// --- ▼▼▼ ¡IMPORTACIÓN MODIFICADA! ▼▼▼ ---
+import { callFriendApi as callApi } from '../services/api-service.js'; 
 
-const API_ENDPOINT_FRIEND = `${window.projectBasePath}/api/friend_handler.php`;
-
-// --- ▼▼▼ MODIFICACIÓN: Usar el servicio importado ▼▼▼ ---
-async function callFriendApi(formData) {
-    // Esta función local ya no es necesaria, usamos la de api-service.js
-    // Mantenemos la función _local_ callFriendApi por si se usa en otro lado,
-    // pero la nueva lógica usará callApi (importada)
-    const csrfToken = window.csrfToken || '';
-    formData.append('csrf_token', csrfToken);
-
-    try {
-        const response = await fetch(API_ENDPOINT_FRIEND, {
-            method: 'POST',
-            body: formData,
-        });
-
-        if (!response.ok) return { success: false, message: getTranslation('js.api.errorServer') };
-        return await response.json();
-    } catch (error) {
-        return { success: false, message: getTranslation('js.api.errorConnection') };
-    }
-}
-// --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+// --- ▼▼▼ ¡FUNCIÓN LOCAL callFriendApi ELIMINADA! ▼▼▼ ---
+// (Ya no es necesaria, usamos la del servicio)
 
 
 // --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (RENDER) ▼▼▼ ---
@@ -191,9 +170,29 @@ export function initFriendManager() {
 
         if (result.success) {
             showAlert(getTranslation(result.message), 'success');
+            
+            // --- ▼▼▼ ¡LÓGICA DE UI MODIFICADA! ▼▼▼ ---
+            
+            // 1. Actualizar botones del perfil (si estamos en uno)
             updateProfileActions(targetUserId, result.newStatus);
-            // --- ▼▼▼ ¡NUEVA LÍNEA! Actualizar la lista de amigos ▼▼▼ ---
+            
+            // 2. Actualizar la lista de amigos (sidebar)
             initFriendList(); 
+            
+            // 3. Si el botón estaba en el panel de notificaciones, eliminar el item
+            const notificationItem = button.closest('.notification-item');
+            if (notificationItem) {
+                notificationItem.remove();
+                
+                // Comprobar si la lista de notificaciones quedó vacía
+                const listContainer = document.getElementById('notification-list-items');
+                if (listContainer && listContainer.querySelectorAll('.notification-item').length === 0) {
+                    const placeholder = document.getElementById('notification-placeholder');
+                    if (placeholder) placeholder.style.display = 'flex';
+                }
+            }
+            // --- ▲▲▲ ¡FIN DE LÓGICA DE UI MODIFICADA! ▲▲▲ ---
+
         } else {
             showAlert(getTranslation(result.message || 'js.friends.errorGeneric'), 'error');
             toggleButtonLoading(button, false);

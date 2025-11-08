@@ -158,7 +158,6 @@ async def http_handler_kick(request):
         logging.error(f"[HTTP-KICK] Error al procesar expulsión: {e}")
         return web.json_response({"status": "error", "message": str(e)}, status=400)
 
-# --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! ▼▼▼ ---
 async def http_handler_kick_bulk(request):
     """
     Recibe una orden de expulsión masiva desde PHP (para mantenimiento).
@@ -201,7 +200,6 @@ async def http_handler_kick_bulk(request):
     except Exception as e:
         logging.error(f"[HTTP-KICK-BULK] Error al procesar expulsión masiva: {e}")
         return web.json_response({"status": "error", "message": str(e)}, status=400)
-# --- ▲▲▲ ¡FIN DE NUEVA FUNCIÓN! ▲▲▲ ---
 
 async def http_handler_update_status(request):
     """
@@ -246,6 +244,45 @@ async def http_handler_update_status(request):
     except Exception as e:
         logging.error(f"[HTTP-STATUS] Error al procesar actualización de estado: {e}")
         return web.json_response({"status": "error", "message": str(e)}, status=400)
+
+# --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! ▼▼▼ ---
+async def http_handler_notify_user(request):
+    """
+    Recibe una notificación genérica (usada para amistad) y la reenvía
+    al target_user_id.
+    Espera JSON: {"target_user_id": 123, "payload": {...}}
+    """
+    if request.method != 'POST':
+        return web.Response(status=405)
+
+    try:
+        data = await request.json()
+        target_user_id = int(data.get("target_user_id"))
+        payload = data.get("payload") # El payload es el JSON completo {type: ..., payload: ...}
+
+        if not target_user_id or not payload:
+            raise ValueError("Faltan target_user_id o payload")
+            
+        logging.info(f"[HTTP-NOTIFY] Recibida notificación para user_id={target_user_id}")
+
+        websockets_to_notify = CLIENTS_BY_USER_ID.get(target_user_id)
+        if not websockets_to_notify:
+            logging.info(f"[HTTP-NOTIFY] No se encontraron conexiones activas para user_id={target_user_id}.")
+            return web.json_response({"status": "ok", "notified": 0})
+        
+        message_json = json.dumps(payload)
+        tasks = [ws.send(message_json) for ws in list(websockets_to_notify)]
+        notified_count = 0
+        
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+            notified_count = len(tasks)
+
+        return web.json_response({"status": "ok", "notified": notified_count})
+
+    except Exception as e:
+        logging.error(f"[HTTP-NOTIFY] Error al procesar notificación: {e}")
+        return web.json_response({"status": "error", "message": str(e)}, status=400)
 # --- ▲▲▲ ¡FIN DE NUEVA FUNCIÓN! ▲▲▲ ---
 
 # --- ▲▲▲ FIN DE MODIFICACIÓN: MANEJADOR DE HTTP ▼▼▼ ---
@@ -265,12 +302,11 @@ async def run_http_server():
     http_app.router.add_get("/count", http_handler_count)
     # Endpoint interno para la expulsión (solo POST)
     http_app.router.add_post("/kick", http_handler_kick) 
-    # --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
     http_app.router.add_post("/update-status", http_handler_update_status) 
-    # --- ▲▲▲ ¡FIN DE NUEVA LÍNEA! ▲▲▲ ---
+    http_app.router.add_post("/kick-bulk", http_handler_kick_bulk)
     
     # --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
-    http_app.router.add_post("/kick-bulk", http_handler_kick_bulk)
+    http_app.router.add_post("/notify-user", http_handler_notify_user)
     # --- ▲▲▲ ¡FIN DE NUEVA LÍNEA! ▲▲▲ ---
     
     http_runner = web.AppRunner(http_app)

@@ -1,4 +1,3 @@
-
 import { getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js'; 
 
@@ -117,14 +116,17 @@ function initMainController() {
 
         if (action.startsWith('toggle')) {
             
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             const managedActions = [
                 'toggleModulePageFilter',
                 'toggleModuleAdminRole',
                 'toggleModuleAdminStatus',
                 'toggleModuleAdminCreateRole',
                 'toggleModuleCommunitySelect', 
-                'toggleModuleSelectGroup'      
+                'toggleModuleSelectGroup',
+                'toggleModuleNotifications' // <-- ¡NUEVA LÍNEA AÑADIDA!
             ];
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             if (managedActions.includes(action)) {
                 return; 
