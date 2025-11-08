@@ -23,6 +23,7 @@ const routes = {
     
     'toggleSectionPostView': 'post-view', 
 
+    'toggleSectionViewProfile': 'view-profile', // <-- NUEVA LÍNEA
 
     'toggleSectionRegisterStep1': 'register-step1',
     'toggleSectionRegisterStep2': 'register-step2',
@@ -67,6 +68,9 @@ const paths = {
     '/create-poll': 'create-poll', 
     
     '/post': 'toggleSectionPostView', 
+
+    '/profile': 'toggleSectionViewProfile', // <-- NUEVA LÍNEA (manejador genérico)
+    '/profile/username-placeholder': 'toggleSectionViewProfile', // <-- NUEVA LÍNEA (placeholder)
 
     '/register': 'toggleSectionRegisterStep1',
     '/register/additional-data': 'toggleSectionRegisterStep2',
@@ -271,6 +275,14 @@ export function handleNavigation() {
         loadPage('post-view', action, { post_id: postId }); 
         return;
 
+    // --- ▼▼▼ ¡NUEVO BLOQUE DE PERFIL AÑADIDO! ▼▼▼ ---
+    } else if (path.startsWith('/profile/')) {
+        action = 'toggleSectionViewProfile';
+        const username = path.substring(path.lastIndexOf('/') + 1);
+        loadPage('view-profile', action, { username: username });
+        return;
+    // --- ▲▲▲ FIN DE BLOQUE DE PERFIL ▲▲▲ ---
+
     } else {
         if (path === '/settings') {
             path = '/settings/your-profile';
@@ -338,7 +350,8 @@ function updateMenuState(currentAction) {
     if (currentAction === 'toggleSectionJoinGroup' || 
         currentAction === 'toggleSectionCreatePublication' || 
         currentAction === 'toggleSectionCreatePoll' ||
-        currentAction === 'toggleSectionPostView') { 
+        currentAction === 'toggleSectionPostView' ||
+        currentAction === 'toggleSectionViewProfile') { // <-- LÍNEA AÑADIDA
         menuAction = 'toggleSectionHome';
     }
 
@@ -364,8 +377,8 @@ export function initRouter() {
       
       // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Selector) ▼▼▼ ---
       const link = e.target.closest(
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"]'
-        );
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], a[href*="/profile/"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"]'
+        ); // <-- Añadido a[href*="/profile/"]
       // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
         if (link) {
@@ -411,6 +424,7 @@ export function initRouter() {
                 
                 const postViewRegex = /^\/post\/(\d+)$/i;
                 const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
+                const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)$/i; // <-- NUEVA LÍNEA
 
                 if (postViewRegex.test(newPath)) {
                     action = 'toggleSectionPostView';
@@ -423,6 +437,14 @@ export function initRouter() {
                     page = 'home';
                     const matches = newPath.match(communityUuidRegex);
                     fetchParams = { community_uuid: matches[1] };
+
+                // --- ▼▼▼ ¡NUEVO BLOQUE DE PERFIL AÑADIDO! ▼▼▼ ---
+                } else if (profileRegex.test(newPath)) {
+                    action = 'toggleSectionViewProfile';
+                    page = 'view-profile';
+                    const matches = newPath.match(profileRegex);
+                    fetchParams = { username: matches[1] };
+                // --- ▲▲▲ FIN DE BLOQUE DE PERFIL ▲▲▲ ---
 
                 } else { 
                     if (newPath === '/settings') newPath = '/settings/your-profile';
@@ -456,7 +478,7 @@ export function initRouter() {
             const queryString = (url && url.search) ? url.search : '';
             let fullUrlPath;
             
-            if (action === 'toggleSectionPostView' && fetchParams) {
+            if ((action === 'toggleSectionPostView' || action === 'toggleSectionViewProfile') && fetchParams) {
                 // Use the newPath we constructed
                 fullUrlPath = `${basePath}${newPath}`;
             } else {

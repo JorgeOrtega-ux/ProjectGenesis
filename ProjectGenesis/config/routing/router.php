@@ -117,6 +117,10 @@ $allowedPages = [
     'post-view' => '../../includes/sections/main/view-post.php', // <-- ¡NUEVA PÁGINA!
     // =================== FIN DE LA MODIFICACIÓN ==================
 
+    // --- ▼▼▼ ¡NUEVA PÁGINA DE PERFIL AÑADIDA! ▼▼▼ ---
+    'view-profile' => '../../includes/sections/main/view-profile.php',
+    // --- ▲▲▲ FIN DE PÁGINA DE PERFIL ▲▲▲ ---
+
     // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     'register-step1' => '../../includes/sections/auth/register.php',
@@ -498,6 +502,68 @@ if (array_key_exists($page, $allowedPages)) {
             }
         }
     // =================== FIN DE LA MODIFICACIÓN ==================
+
+    // --- ▼▼▼ ¡NUEVO BLOQUE DE PERFIL AÑADIDO! ▼▼▼ ---
+    } elseif ($page === 'view-profile') {
+        // --- Lógica de BD (Marcador de posición) ---
+        // En un futuro, aquí buscaríamos el usuario en la BD usando $_GET['username']
+        // y sus publicaciones.
+        
+        // --- Datos Falsos (UI-Only) ---
+        $viewProfileData = [
+            'id' => 99,
+            'username' => $_GET['username'] ?? 'UsuarioDemo',
+            'profile_image_url' => $basePath . '/assets/uploads/avatars_default/user-1.png',
+            'role' => 'administrator',
+            'created_at' => '2025-01-01 12:00:00',
+            'publications' => [] // Dejar vacío por ahora, se llenará en view-profile.php
+        ];
+        
+        // --- Datos Falsos para Publicaciones (UI-Only) ---
+        // Voy a crear un post de texto y un post de encuesta falsos
+        $viewProfileData['publications'] = [
+            [
+                'id' => 101,
+                'user_id' => 99,
+                'username' => $viewProfileData['username'],
+                'profile_image_url' => $viewProfileData['profile_image_url'],
+                'role' => $viewProfileData['role'],
+                'created_at' => '2025-11-05 20:00:00',
+                'community_name' => 'Comunidad Ejemplo',
+                'post_type' => 'post',
+                'text_content' => 'Esta es mi primera publicación en mi nuevo perfil. ¡Solo es una prueba de UI!',
+                'attachments' => null,
+                'like_count' => 15,
+                'user_has_liked' => 1,
+                'comment_count' => 2,
+                'user_voted_option_id' => null,
+                'total_votes' => 0,
+                'poll_options' => []
+            ],
+            [
+                'id' => 102,
+                'user_id' => 99,
+                'username' => $viewProfileData['username'],
+                'profile_image_url' => $viewProfileData['profile_image_url'],
+                'role' => $viewProfileData['role'],
+                'created_at' => '2025-11-04 18:30:00',
+                'community_name' => 'Comunidad de Pruebas',
+                'post_type' => 'poll',
+                'text_content' => '¿Qué debería tener este perfil? (Encuesta de prueba)',
+                'attachments' => null,
+                'like_count' => 3,
+                'user_has_liked' => 0,
+                'comment_count' => 0,
+                'user_voted_option_id' => null,
+                'total_votes' => 5,
+                'poll_options' => [
+                    ['id' => 1, 'publication_id' => 102, 'option_text' => 'Más publicaciones', 'vote_count' => 2],
+                    ['id' => 2, 'publication_id' => 102, 'option_text' => 'Un banner genial', 'vote_count' => 3],
+                ]
+            ]
+        ];
+        // --- Fin de Datos Falsos ---
+    // --- ▲▲▲ FIN DE BLOQUE DE PERFIL ▲▲▲ ---
 
     } elseif ($page === 'admin-manage-users') {
         $adminCurrentPage = (int)($_GET['p'] ?? 1);

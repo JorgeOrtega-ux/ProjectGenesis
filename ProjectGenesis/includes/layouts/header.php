@@ -52,6 +52,15 @@ $userRole = $_SESSION['role'] ?? 'user';
     <div class="menu-content">
             <div class="menu-list">
 
+                <a class="menu-link" 
+                   href="<?php echo $basePath; ?>/profile/<?php echo htmlspecialchars($usernameForAlt); ?>">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">account_circle</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span>Mi Perfil</span>
+                    </div>
+                </a>
                 <?php 
                 // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
                 // Mostrar solo si el rol es administrador o fundador

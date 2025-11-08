@@ -296,7 +296,13 @@ if (preg_match('/^\/c\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
     $postId = $matches[1];
     $_GET['post_id'] = $postId; // Inyectar el ID en $_GET para que router.php lo lea
     $path = '/post/id-placeholder'; // Mapear al placeholder
+// --- ▼▼▼ ¡NUEVA RUTA DE PERFIL AÑADIDA! ▼▼▼ ---
+} elseif (preg_match('/^\/profile\/([a-zA-Z0-9_]+)$/i', $path, $matches)) {
+    $username = $matches[1];
+    $_GET['username'] = $username; // Inyectar el username en $_GET
+    $path = '/profile/username-placeholder'; // Mapear al placeholder
 }
+// --- ▲▲▲ FIN DE RUTA DE PERFIL ▲▲▲ ---
 // =================== FIN DE LA MODIFICACIÓN ==================
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
@@ -311,6 +317,10 @@ $pathsToPages = [
     // ================== INICIO DE LA MODIFICACIÓN ==================
     '/post/id-placeholder' => 'post-view', // NUEVA RUTA
     // =================== FIN DE LA MODIFICACIÓN ==================
+
+    // --- ▼▼▼ ¡NUEVA RUTA DE PERFIL AÑADIDA! ▼▼▼ ---
+    '/profile/username-placeholder' => 'view-profile',
+    // --- ▲▲▲ FIN DE RUTA DE PERFIL ▲▲▲ ---
 
     '/explorer'   => 'explorer',
     '/login'      => 'login',
