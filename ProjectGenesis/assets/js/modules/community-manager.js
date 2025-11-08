@@ -1,5 +1,5 @@
 // FILE: assets/js/modules/community-manager.js
-// (MODIFICADO PARA MANEJAR VOTACIÓN, LIKES Y COMENTARIOS)
+// (VERSIÓN COMPLETA Y CORREGIDA)
 
 import { callCommunityApi, callPublicationApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -28,7 +28,8 @@ function togglePrimaryButtonSpinner(button, isLoading) {
     button.disabled = isLoading;
     if (isLoading) {
         button.dataset.originalText = button.innerHTML;
-        button.innerHTML = `<span class"logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;"></span>`;
+        // --- CORRECCIÓN: Faltaba la "c" en la clase 'logout-spinner' ---
+        button.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;"></span>`;
     } else {
         button.innerHTML = button.dataset.originalText;
     }
@@ -261,6 +262,41 @@ async function handleLikeToggle(button) {
 
 // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (LÓGICA DE COMENTARIOS) ▼▼▼ ---
 
+// ==================================================================
+// --- ▼▼▼ ¡FUNCIÓN NUEVA! (Esta es la que faltaba) ▼▼▼ ---
+/**
+ * Carga los comentarios (Nivel 1) para un post específico al cargar la página.
+ * (Esta es la función que faltaba y que `url-manager.js` necesita)
+ */
+async function loadCommentsForPost(postId) {
+    const commentsContainer = document.getElementById(`comments-for-post-${postId}`);
+    if (!commentsContainer) {
+         console.warn(`[loadCommentsForPost] No se encontró el contenedor para el post ID: ${postId}`);
+         return;
+    }
+
+    // Mostrar spinner
+    commentsContainer.innerHTML = `<div class="comment-loader"><span class="logout-spinner"></span></div>`; 
+
+    const formData = new FormData();
+    formData.append('action', 'get-comments');
+    formData.append('publication_id', postId);
+
+    try {
+        const result = await callPublicationApi(formData);
+        if (result.success && result.comments) {
+            renderComments(commentsContainer, result.comments); 
+        } else {
+            commentsContainer.innerHTML = `<p class="comment-error">${getTranslation(result.message || 'js.api.errorServer')}</p>`;
+        }
+    } catch (e) {
+        commentsContainer.innerHTML = `<p class="comment-error">${getTranslation('js.api.errorConnection')}</p>`;
+    }
+}
+// --- ▲▲▲ ¡FUNCIÓN NUEVA! ▲▲▲ ---
+// ==================================================================
+
+
 /**
  * Renderiza la lista de respuestas (Nivel 2) en su contenedor.
  */
@@ -359,25 +395,12 @@ async function handleToggleComments(button) {
     } else {
         // Si está cerrado, ábrelo y carga los comentarios
         commentsContainer.classList.add('active');
-        commentsContainer.innerHTML = `<div class="comment-loader"><span class="logout-spinner"></span></div>`; // Mostrar spinner
+        
+        // --- MODIFICACIÓN: Usar la nueva función de carga ---
         button.disabled = true;
-
-        const formData = new FormData();
-        formData.append('action', 'get-comments'); // Esta acción ahora solo trae L1
-        formData.append('publication_id', postId);
-
-        try {
-            const result = await callPublicationApi(formData);
-            if (result.success && result.comments) {
-                renderComments(commentsContainer, result.comments); // <--- USA LA NUEVA FUNCIÓN
-            } else {
-                commentsContainer.innerHTML = `<p class="comment-error">${getTranslation(result.message || 'js.api.errorServer')}</p>`;
-            }
-        } catch (e) {
-            commentsContainer.innerHTML = `<p class="comment-error">${getTranslation('js.api.errorConnection')}</p>`;
-        } finally {
-            button.disabled = false;
-        }
+        await loadCommentsForPost(postId);
+        button.disabled = false;
+        // --- FIN DE MODIFICACIÓN ---
     }
 }
 
@@ -437,11 +460,12 @@ function handleShowReplyForm(button) {
     }
     
     const postContainer = button.closest('.component-card--post');
-    const publicationId = postContainer.querySelector('input[name="publication_id"]').value;
+    // --- CORRECCIÓN: El input publication_id está en el form de comentario principal ---
+    const publicationId = postContainer.querySelector('form[data-action="post-comment"] input[name="publication_id"]').value;
     const userAvatar = postContainer.querySelector('.post-comment-avatar img').src;
 
     formContainer.innerHTML = `
-        <form class="post-comment-input-container comment-reply-form" data-action="post-comment">
+        <form class="post-comment-input-container comment-reply-form active" data-action="post-comment">
             <input type="hidden" name="publication_id" value="${publicationId}">
             <input type="hidden" name="parent_comment_id" value="${commentId}">
             <div class="post-comment-avatar">
@@ -823,3 +847,10 @@ export function initCommunityManager() {
         joinCodeInput.addEventListener('input', hideJoinGroupError);
     }
 }
+
+// ==================================================================
+// --- ▼▼▼ ¡LÍNEA DE EXPORTACIÓN CORREGIDA! ▼▼▼ ---
+// Se añaden las nuevas funciones que deben ser accesibles desde otros módulos.
+export {  loadCommentsForPost };
+// --- ▲▲▲ ¡FIN DE LA CORRECCIÓN! ▲▲▲ ---
+// ==================================================================
