@@ -30,7 +30,6 @@ function showInlineError(cardElement, messageKey, data = null) {
     cardElement.parentNode.insertBefore(errorDiv, cardElement.nextSibling);
 }
 
-// --- ▼▼▼ LÓGICA DE CONTEO DE USUARIOS (SIN CAMBIOS) ▼▼▼ ---
 async function fetchAndUpdateUserCount() {
     const display = document.getElementById('concurrent-users-display');
     const refreshBtn = document.getElementById('refresh-concurrent-users');
@@ -62,10 +61,8 @@ async function fetchAndUpdateUserCount() {
         refreshBtn.innerHTML = originalBtnText;
     }
 }
-// --- ▲▲▲ FIN LÓGICA DE CONTEO DE USUARIOS ▲▲▲ ---
 
 async function handleSettingUpdate(element, action, newValue) {
-    // ... [FUNCIÓN handleSettingUpdate (SIN CAMBIOS)] ...
     const formData = new FormData();
     formData.append('action', action);
     formData.append('new_value', newValue);
@@ -146,30 +143,24 @@ export function initAdminServerSettingsManager() {
 
     document.body.addEventListener('click', async (e) => {
         
-        // --- ▼▼▼ INICIO DE LÓGICA DE ACORDEÓN MODIFICADA ▼▼▼ ---
         const accordionHeader = e.target.closest('.component-accordion__header[data-action="toggle-accordion"]');
         if (accordionHeader) {
             e.preventDefault();
             
-            // Prevenir que el clic en un stepper dentro de un cabecero (si existiera) lo cierre
             if (e.target.closest('.component-stepper')) {
                 return;
             }
             
-            // 1. Alternar el estado visual del cabecero (para la flecha)
             accordionHeader.classList.toggle('active');
             const isActive = accordionHeader.classList.contains('active');
 
-            // 2. Iterar sobre los *siguientes hermanos* y ocultar/mostrar
             let nextElement = accordionHeader.nextElementSibling;
             
             while (nextElement) {
-                // Si encontramos otra cabecera, nos detenemos
                 if (nextElement.classList.contains('component-accordion__header')) {
                     break;
                 }
                 
-                // Si es una tarjeta de contenido, la alternamos
                 if (nextElement.classList.contains('component-card')) {
                     if (isActive) {
                         nextElement.classList.add('active');
@@ -180,12 +171,10 @@ export function initAdminServerSettingsManager() {
                     }
                 }
                 
-                // Pasamos al siguiente hermano
                 nextElement = nextElement.nextElementSibling;
             }
-            return; // Detener el procesamiento, fue un clic en el acordeón
+            return; 
         }
-        // --- ▲▲▲ FIN DE LÓGICA DE ACORDEÓN MODIFICADA ▲▲▲ ---
 
         const button = e.target.closest('button[data-step-action], button[data-action]');
         if (!button) return;
@@ -208,7 +197,6 @@ export function initAdminServerSettingsManager() {
         }
         
         if (stepAction) {
-            // ... [LÓGICA DEL STEPPER (SIN CAMBIOS)] ...
             const wrapper = button.closest('.component-stepper');
             if (!wrapper || wrapper.classList.contains('disabled-interactive')) return;
 
@@ -260,7 +248,6 @@ export function initAdminServerSettingsManager() {
         }
 
         if (action) {
-            // ... [LÓGICA DE GESTIÓN DE DOMINIOS (SIN CAMBIOS)] ...
             const domainCard = button.closest('#admin-domain-card');
             if (!domainCard) return;
 
@@ -358,7 +345,6 @@ export function initAdminServerSettingsManager() {
     });
 
     document.body.addEventListener('change', async (e) => {
-        // ... [LÓGICA 'change' PARA TOGGLES (SIN CAMBIOS)] ...
         const input = e.target;
         
         if (input.closest('.component-stepper') || input.closest('#admin-domain-card')) return;
@@ -381,7 +367,6 @@ export function initAdminServerSettingsManager() {
     });
     
     document.body.addEventListener('blur', async (e) => {
-        // ... [LÓGICA 'blur' PARA INPUTS (SIN CAMBIOS)] ...
         const input = e.target;
         
         if (input.id !== 'setting-allowed-email-domains') return;
@@ -399,6 +384,5 @@ export function initAdminServerSettingsManager() {
     }, true); 
 
     if (document.querySelector('.section-content[data-section="admin-server-settings"]')) {
-        // (Lógica de conteo de usuarios sin cambios)
     }
 }

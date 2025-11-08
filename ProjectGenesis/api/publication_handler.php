@@ -1,6 +1,4 @@
 <?php
-// FILE: api/publication_handler.php
-// (VERSÍON CORREGIDA Y AMPLIADA PARA ENCUESTAS, LIKES Y COMENTARIOS)
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -15,7 +13,6 @@ if (!isset($_SESSION['user_id'])) {
 
 $userId = $_SESSION['user_id'];
 
-// Constantes de subida
 $MAX_FILES = 4;
 $ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 $MAX_SIZE_MB = (int)($GLOBALS['site_settings']['avatar_max_size_mb'] ?? 2);
@@ -37,12 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $pdo->beginTransaction();
             
-            // --- 1. Validación de Datos Comunes ---
             $communityId = $_POST['community_id'] ?? null;
-            $postType = $_POST['post_type'] ?? 'post'; // 'post' o 'poll'
-            $textContent = trim($_POST['text_content'] ?? ''); // Para 'post'
-            $pollQuestion = trim($_POST['poll_question'] ?? ''); // Para 'poll'
-            $pollOptionsJSON = $_POST['poll_options'] ?? '[]'; // Para 'poll'
+            $postType = $_POST['post_type'] ?? 'post'; 
+            $textContent = trim($_POST['text_content'] ?? ''); 
+            $pollQuestion = trim($_POST['poll_question'] ?? ''); 
+            $pollOptionsJSON = $_POST['poll_options'] ?? '[]'; 
             
             $uploadedFiles = $_FILES['attachments'] ?? [];
             $fileIds = [];
@@ -51,25 +47,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.publication.errorNoCommunity');
             }
             
-            // --- 2. Validación de Pertenencia a la Comunidad (¡IMPORTANTE!) ---
             $stmt_check_member = $pdo->prepare("SELECT id FROM user_communities WHERE user_id = ? AND community_id = ?");
             $stmt_check_member->execute([$userId, $communityId]);
             if (!$stmt_check_member->fetch()) {
-                 throw new Exception('js.api.errorServer'); // Error genérico, no debería pasar
+                 throw new Exception('js.api.errorServer'); 
             }
             
             $dbCommunityId = (int)$communityId;
 
-            // --- 3. Validación Específica por Tipo ---
             if ($postType === 'poll') {
                 $pollOptions = json_decode($pollOptionsJSON, true);
                 if (empty($pollQuestion)) {
-                    throw new Exception('js.publication.errorPollQuestion'); // Nueva clave i18n
+                    throw new Exception('js.publication.errorPollQuestion'); 
                 }
                 if (empty($pollOptions) || count($pollOptions) < 2) {
-                     throw new Exception('js.publication.errorPollOptions'); // Nueva clave i18n
+                     throw new Exception('js.publication.errorPollOptions'); 
                 }
-                // Para encuestas, el texto principal es la pregunta
                 $textContent = $pollQuestion;
 
             } elseif ($postType === 'post') {
@@ -81,12 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
 
-            // --- 4. Procesar Archivos Adjuntos (si existen) ---
             if ($postType === 'post' && !empty($uploadedFiles['name'][0])) {
                 $uploadDir = dirname(__DIR__) . '/assets/uploads/publications';
                 if (!is_dir($uploadDir)) {
                     if (!@mkdir($uploadDir, 0755, true)) {
-                        throw new Exception('js.api.errorServer'); // Error de permisos
+                        throw new Exception('js.api.errorServer'); 
                     }
                 }
 
@@ -125,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $publicUrl = $basePath . '/assets/uploads/publications/' . $systemName;
 
                     if (!move_uploaded_file($tmpName, $filePath)) {
-                        throw new Exception('js.api.errorServer'); // Error al mover archivo
+                        throw new Exception('js.api.errorServer'); 
                     }
 
                     $stmt_insert_file->execute([
@@ -136,16 +128,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // --- 5. Guardar la Publicación (Post o Encuesta) ---
             $stmt_insert_post = $pdo->prepare(
                 "INSERT INTO community_publications (community_id, user_id, text_content, post_type)
                  VALUES (?, ?, ?, ?)"
             );
-            // $textContent se define arriba (sea el post o la pregunta de la encuesta)
             $stmt_insert_post->execute([$dbCommunityId, $userId, $textContent, $postType]);
             $publicationId = $pdo->lastInsertId();
 
-            // --- 6. Vincular Archivos (si es post) o Guardar Opciones (si es encuesta) ---
             if ($postType === 'post' && !empty($fileIds)) {
                 $stmt_link_files = $pdo->prepare(
                     "INSERT INTO publication_attachments (publication_id, file_id, sort_order)
@@ -165,7 +154,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // --- 7. Confirmar Transacción ---
             $pdo->commit();
             
             $response['success'] = true;
@@ -183,37 +171,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->beginTransaction();
             
             try {
-                // 1. Verificar que la publicación es una encuesta
                 $stmt_check_poll = $pdo->prepare("SELECT post_type FROM community_publications WHERE id = ?");
                 $stmt_check_poll->execute([$publicationId]);
                 $postType = $stmt_check_poll->fetchColumn();
                 
                 if ($postType !== 'poll') {
-                    throw new Exception('js.api.invalidAction'); // No es una encuesta
+                    throw new Exception('js.api.invalidAction'); 
                 }
 
-                // 2. Verificar que la opción pertenece a esa encuesta
                 $stmt_check_option = $pdo->prepare("SELECT id FROM poll_options WHERE id = ? AND publication_id = ?");
                 $stmt_check_option->execute([$optionId, $publicationId]);
                 if (!$stmt_check_option->fetch()) {
-                    throw new Exception('js.api.invalidAction'); // Opción no válida
+                    throw new Exception('js.api.invalidAction'); 
                 }
 
-                // 3. Verificar si el usuario ya votó (usando publication_id)
                 $stmt_check_vote = $pdo->prepare("SELECT id FROM poll_votes WHERE publication_id = ? AND user_id = ?");
                 $stmt_check_vote->execute([$publicationId, $userId]);
                 if ($stmt_check_vote->fetch()) {
-                    throw new Exception('js.publication.errorAlreadyVoted'); // Ya votó
+                    throw new Exception('js.publication.errorAlreadyVoted'); 
                 }
                 
-                // 4. Insertar el voto
                 $stmt_insert_vote = $pdo->prepare("INSERT INTO poll_votes (publication_id, poll_option_id, user_id) VALUES (?, ?, ?)");
                 $stmt_insert_vote->execute([$publicationId, $optionId, $userId]);
                 
-                // 5. Confirmar transacción
                 $pdo->commit();
 
-                // 6. Obtener y devolver los nuevos resultados
                 $stmt_results = $pdo->prepare(
                    "SELECT 
                         po.id, 
@@ -234,15 +216,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             } catch (Exception $e) {
                 $pdo->rollBack();
-                // Manejar error de "ya votó"
                 if ($e->getMessage() === 'js.publication.errorAlreadyVoted') {
                      $response['message'] = $e->getMessage();
                 } else {
-                    throw $e; // Re-lanzar otros errores
+                    throw $e; 
                 }
             }
 
-        // --- ▼▼▼ INICIO DE NUEVAS ACCIONES (LIKE Y COMENTARIOS) ▼▼▼ ---
 
         } elseif ($action === 'like-toggle') {
             $publicationId = (int)($_POST['publication_id'] ?? 0);
@@ -250,24 +230,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.api.invalidAction');
             }
             
-            // Revisar si ya existe el like
             $stmt_check = $pdo->prepare("SELECT id FROM publication_likes WHERE user_id = ? AND publication_id = ?");
             $stmt_check->execute([$userId, $publicationId]);
             $likeExists = $stmt_check->fetch();
             
             if ($likeExists) {
-                // Ya le dio like -> Quitar like
                 $stmt_delete = $pdo->prepare("DELETE FROM publication_likes WHERE id = ?");
                 $stmt_delete->execute([$likeExists['id']]);
                 $response['userHasLiked'] = false;
             } else {
-                // No le ha dado like -> Poner like
                 $stmt_insert = $pdo->prepare("INSERT INTO publication_likes (user_id, publication_id) VALUES (?, ?)");
                 $stmt_insert->execute([$userId, $publicationId]);
                 $response['userHasLiked'] = true;
             }
             
-            // Devolver el nuevo conteo
             $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM publication_likes WHERE publication_id = ?");
             $stmt_count->execute([$publicationId]);
             $response['newLikeCount'] = $stmt_count->fetchColumn();
@@ -279,20 +255,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $commentText = trim($_POST['comment_text'] ?? '');
 
             if (empty($publicationId) || empty($commentText)) {
-                // (Debes añadir 'js.publication.errorCommentEmpty' a tus JSON)
                 throw new Exception('js.publication.errorCommentEmpty');
             }
 
-            // FORZAR LÍMITE DE 2 NIVELES
             if ($parentCommentId) {
-                // Si estamos respondiendo a un comentario, verificar que ese comentario sea de Nivel 1 (parent_comment_id ES NULL)
                 $stmt_check_parent = $pdo->prepare("SELECT parent_comment_id FROM publication_comments WHERE id = ?");
                 $stmt_check_parent->execute([$parentCommentId]);
                 $parentParentId = $stmt_check_parent->fetchColumn();
                 
                 if ($parentParentId !== null) {
-                    // (Debes añadir 'js.publication.errorMaxDepth' a tus JSON)
-                    throw new Exception('js.publication.errorMaxDepth'); // No se puede responder a una respuesta
+                    throw new Exception('js.publication.errorMaxDepth'); 
                 }
             }
             
@@ -303,19 +275,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_insert->execute([$userId, $publicationId, $parentCommentId, $commentText]);
             $newCommentId = $pdo->lastInsertId();
             
-            // Devolver el comentario recién creado para insertarlo en la UI
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR u.role) ▼▼▼ ---
             $stmt_get = $pdo->prepare(
                 "SELECT c.*, u.username, u.profile_image_url, u.role 
                  FROM publication_comments c 
                  JOIN users u ON c.user_id = u.id 
                  WHERE c.id = ?"
             );
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $stmt_get->execute([$newCommentId]);
             $newComment = $stmt_get->fetch();
             
-            // Obtener el nuevo conteo total de comentarios para la publicación
             $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM publication_comments WHERE publication_id = ?");
             $stmt_count->execute([$publicationId]);
             
@@ -329,7 +297,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.api.invalidAction');
             }
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR u.role) ▼▼▼ ---
             $stmt_get_l1 = $pdo->prepare(
                 "SELECT 
                     c.*, 
@@ -340,25 +307,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  FROM publication_comments c 
                  JOIN users u ON c.user_id = u.id 
                  WHERE c.publication_id = ? 
-                 AND c.parent_comment_id IS NULL -- <-- Solo Nivel 1
-                 ORDER BY c.created_at ASC" // Más antiguos primero
+                 AND c.parent_comment_id IS NULL 
+                 ORDER BY c.created_at ASC" 
             );
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $stmt_get_l1->execute([$publicationId]);
             $comments = $stmt_get_l1->fetchAll();
             
             $response['success'] = true;
-            $response['comments'] = $comments; // Enviar la lista plana de L1
+            $response['comments'] = $comments; 
         
-        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN 'get-replies' ▼▼▼ ---
         } elseif ($action === 'get-replies') {
             $parentCommentId = (int)($_POST['parent_comment_id'] ?? 0);
             if (empty($parentCommentId)) {
                 throw new Exception('js.api.invalidAction');
             }
 
-            // Obtener todas las respuestas (Nivel 2) para este comentario padre
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR u.role) ▼▼▼ ---
             $stmt_get_l2 = $pdo->prepare(
                 "SELECT c.*, u.username, u.profile_image_url, u.role 
                  FROM publication_comments c 
@@ -366,19 +329,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  WHERE c.parent_comment_id = ? 
                  ORDER BY c.created_at ASC"
             );
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $stmt_get_l2->execute([$parentCommentId]);
             $replies = $stmt_get_l2->fetchAll();
             
             $response['success'] = true;
             $response['replies'] = $replies;
-        // --- ▲▲▲ FIN DE NUEVA ACCIÓN 'get-replies' ▲▲▲ ---
 
-        // --- ▲▲▲ FIN DE NUEVAS ACCIONES ▲▲▲ ---
         }
 
     } catch (Exception $e) {
-        // Revertir todo si algo falló
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
@@ -389,7 +348,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $response['message'] = $e->getMessage();
             if (!isset($response['data'])) {
-                $response['data'] = null; // Asegurarse de que 'data' exista
+                $response['data'] = null; 
             }
         }
     }

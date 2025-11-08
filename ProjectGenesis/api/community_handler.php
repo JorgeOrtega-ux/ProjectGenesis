@@ -1,5 +1,4 @@
 <?php
-// FILE: api/community_handler.php
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -28,10 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         if ($action === 'get-my-communities') {
             $stmt = $pdo->prepare(
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (SELECT) ▼▼▼ ---
                 "SELECT c.id, c.name, c.uuid 
                  FROM communities c
-                -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                  JOIN user_communities uc ON c.id = uc.community_id
                  WHERE uc.user_id = ?
                  ORDER BY c.name ASC"
@@ -40,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $communities = $stmt->fetchAll();
             
             $response['success'] = true;
-            $response['communities'] = $communities; // El UUID ahora se incluye aquí
+            $response['communities'] = $communities; 
 
         } elseif ($action === 'join-community') {
             $communityId = (int)($_POST['community_id'] ?? 0);
@@ -48,13 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.api.invalidAction');
             }
 
-            // (Opcional) Verificar que sea pública
             $stmt_check = $pdo->prepare("SELECT privacy FROM communities WHERE id = ?");
             $stmt_check->execute([$communityId]);
             $privacy = $stmt_check->fetchColumn();
 
             if ($privacy !== 'public') {
-                 throw new Exception('js.api.errorServer'); // No debería poder unirse a una privada así
+                 throw new Exception('js.api.errorServer'); 
             }
 
             $stmt_insert = $pdo->prepare("INSERT IGNORE INTO user_communities (user_id, community_id) VALUES (?, ?)");
@@ -81,9 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.join_group.invalidCode');
             }
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SELECT) ▼▼▼ ---
             $stmt_find = $pdo->prepare("SELECT id, name, uuid FROM communities WHERE access_code = ? AND privacy = 'private'");
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $stmt_find->execute([$accessCode]);
             $community = $stmt_find->fetch();
 
@@ -104,10 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $response['success'] = true;
             $response['message'] = 'js.join_group.joinSuccess';
-            $response['communityName'] = $community['name'] ?? 'Comunidad'; // Opcional
-            // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
-            $response['communityUuid'] = $community['uuid'] ?? ''; // Devolver también el UUID
-            // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
+            $response['communityName'] = $community['name'] ?? 'Comunidad'; 
+            $response['communityUuid'] = $community['uuid'] ?? ''; 
         }
 
     } catch (Exception $e) {

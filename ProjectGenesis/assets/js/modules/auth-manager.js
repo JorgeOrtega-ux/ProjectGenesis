@@ -151,7 +151,7 @@ function showAuthError(errorDiv, message, data = null, inputElement = null) {
         }
         
         errorDiv.textContent = finalMessage;
-        errorDiv.classList.add('active'); // <-- MODIFICADO
+        errorDiv.classList.add('active'); 
     }
     
     if (inputElement) {
@@ -216,10 +216,8 @@ function initRegisterWizard() {
                 
                 const newUsername = `user${timestamp}${suffix}`;
                 
-                // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                 const maxUserLength = window.maxUsernameLength || 32;
                 input.value = newUsername.substring(0, maxUserLength);
-                // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
                 
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 
@@ -253,10 +251,8 @@ function initRegisterWizard() {
             
             const originalText = linkElement.textContent.replace(/\s*\(\d+s?\)$/, '').trim();
             
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             const cooldown = window.codeResendCooldownSeconds || 60;
             startResendTimer(linkElement, cooldown); 
-            // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
 
             const formData = new FormData();
             formData.append('action', 'register-resend-code');
@@ -317,12 +313,10 @@ function initRegisterWizard() {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorInvalidEmail');
                     showAuthError(errorDiv, clientErrorMessage, null, emailInput);
-                // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                 } else if (emailInput.value.length > (window.maxEmailLength || 255)) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorEmailLength');
                     showAuthError(errorDiv, clientErrorMessage, null, emailInput);
-                // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
                 } else {
                     const minPassLength = window.minPasswordLength || 8;
                     const maxPassLength = window.maxPasswordLength || 72;
@@ -337,22 +331,18 @@ function initRegisterWizard() {
 
             else if (currentStep === 2) {
                 const usernameInput = currentStepEl.querySelector('#register-username');
-                // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                 const minUserLength = window.minUsernameLength || 6;
                 const maxUserLength = window.maxUsernameLength || 32;
-                // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
 
                 if (!usernameInput.value) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorUsernameMissing');
                     showAuthError(errorDiv, clientErrorMessage, null, usernameInput);
-                // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                 } else if (usernameInput.value.length < minUserLength || usernameInput.value.length > maxUserLength) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorUsernameLength');
                     errorData = {min: minUserLength, max: maxUserLength};
                     showAuthError(errorDiv, clientErrorMessage, errorData, usernameInput);
-                // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
                 }
             }
 
@@ -360,7 +350,7 @@ function initRegisterWizard() {
                 return;
             }
 
-            if (errorDiv) errorDiv.classList.remove('active'); // <-- MODIFICADO
+            if (errorDiv) errorDiv.classList.remove('active'); 
 
             setButtonSpinner(button);
 
@@ -443,10 +433,8 @@ function initResetWizard() {
 
             const originalText = linkElement.textContent.replace(/\s*\(\d+s?\)$/, '').trim();
             
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             const cooldown = window.codeResendCooldownSeconds || 60;
             startResendTimer(linkElement, cooldown);
-            // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
 
             const formData = new FormData();
             formData.append('action', 'reset-resend-code');
@@ -492,12 +480,10 @@ function initResetWizard() {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorInvalidEmail');
                     showAuthError(errorDiv, clientErrorMessage, null, emailInput);
-                // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                 } else if (emailInput.value.length > (window.maxEmailLength || 255)) {
                     isValid = false;
                     clientErrorMessage = getTranslation('js.auth.errorEmailLength');
                     showAuthError(errorDiv, clientErrorMessage, null, emailInput);
-                // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
                 }
             }
 
@@ -514,7 +500,7 @@ function initResetWizard() {
                 return;
             }
 
-            if(errorDiv) errorDiv.classList.remove('active'); // <-- MODIFICADO
+            if(errorDiv) errorDiv.classList.remove('active'); 
             
             setButtonSpinner(button);
 
@@ -595,10 +581,8 @@ function initLoginWizard() {
             
             const originalText = linkElement.textContent.replace(/\s*\(\d+s?\)$/, '').trim();
             
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             const cooldown = window.codeResendCooldownSeconds || 60;
             startResendTimer(linkElement, cooldown); 
-            // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
 
             const formData = new FormData();
             formData.append('action', 'login-resend-2fa-code'); 
@@ -637,7 +621,6 @@ function initLoginWizard() {
         if (action === 'prev-step') {
             const prevStepEl = loginForm.querySelector(`[data-step="${currentStep - 1}"]`);
             if (prevStepEl) {
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 currentStepEl.classList.remove('active');
                 currentStepEl.classList.add('disabled');
                 
@@ -645,7 +628,6 @@ function initLoginWizard() {
                 prevStepEl.classList.remove('disabled');
                 
                 if(errorDiv) errorDiv.classList.remove('active');
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
             }
             return;
         }
@@ -658,7 +640,7 @@ function initLoginWizard() {
                 return;
             }
 
-            if(errorDiv) errorDiv.classList.remove('active'); // <-- MODIFICADO
+            if(errorDiv) errorDiv.classList.remove('active'); 
             
             setButtonSpinner(button);
 
@@ -671,13 +653,11 @@ function initLoginWizard() {
                 if (result.is_2fa_required) {
                     const nextStepEl = loginForm.querySelector(`[data-step="${currentStep + 1}"]`);
                     if (nextStepEl) {
-                        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                         currentStepEl.classList.remove('active');
                         currentStepEl.classList.add('disabled');
                         
                         nextStepEl.classList.add('active');
                         nextStepEl.classList.remove('disabled');
-                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
                         
                          const nextInput = nextStepEl.querySelector('input#login-code');
                          if (nextInput) nextInput.focus();
@@ -698,19 +678,14 @@ function initLoginWizard() {
                      }
                     window.location.href = window.projectBasePath + '/';
                 }
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (MANEJAR server_full Y maintenance) ▼▼▼ ---
             } else if (result.redirect_to_status) {
                 if (result.redirect_to_status === 'server_full') {
-                    // Redirigir a la nueva página de servidor lleno
                     window.location.href = window.projectBasePath + '/server-full';
                 } else if (result.redirect_to_status === 'maintenance') {
-                    // Redirigir a la página de mantenimiento
                     window.location.href = window.projectBasePath + '/maintenance';
                 } else {
-                    // Lógica existente para 'deleted' o 'suspended'
                     window.location.href = window.projectBasePath + '/account-status/' + result.redirect_to_status;
                 }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             } else {
                 let errorInput = [emailInput, passwordInput]; 
                 if (result.message === 'js.auth.errorTooManyAttempts') {
@@ -742,11 +717,9 @@ export function initAuthManager() {
             const currentStep = authInput.closest('.auth-step');
             if (currentStep) {
                 const errorDiv = currentStep.querySelector('.auth-error-message');
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 if (errorDiv && errorDiv.classList.contains('active')) {
                     errorDiv.classList.remove('active');
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
             }
         }
 
@@ -756,13 +729,9 @@ export function initAuthManager() {
         
         const isSettingsEmailCode = (e.target.id === 'email-verify-code' && e.target.closest('[data-section="settings-change-email"]'));
         
-        // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
         const isJoinGroupCode = (e.target.id === 'join-code' && e.target.closest('#join-group-form'));
-        // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
-        // --- ▼▼▼ INICIO DE LÍNEA MODIFICADA ▼▼▼ ---
         if (isRegisterCode || isResetCode || isLoginCode || isSettingsEmailCode || isJoinGroupCode) {
-        // --- ▲▲▲ FIN DE LÍNEA MODIFICADA ▲▲▲ ---
             let input = e.target.value.replace(/[^0-9a-zA-Z]/g, '');
             input = input.toUpperCase();
             input = input.substring(0, 12);

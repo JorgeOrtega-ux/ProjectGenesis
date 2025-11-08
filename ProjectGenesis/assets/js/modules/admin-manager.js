@@ -1,5 +1,3 @@
-// FILE: assets/js/modules/admin-manager.js
-// (CÓDIGO MODIFICADO - Sin listener 'submit', ahora usa 'click' para crear usuario)
 
 import { callAdminApi } from '../services/api-service.js';
 import { showAlert } from '../services/alert-manager.js';
@@ -7,13 +5,6 @@ import { getTranslation, applyTranslations } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js';
 
-// --- ▼▼▼ FUNCIÓN ELIMINADA ▼▼▼ ---
-/*
-function generateSecurePassword(length = 16) {
-    // ... (función eliminada)
-}
-*/
-// --- ▲▲▲ FUNCIÓN ELIMINADA ▲▲▲ ---
 
 
 export function initAdminManager() {
@@ -22,9 +13,7 @@ export function initAdminManager() {
     let selectedAdminUserRole = null;
     let selectedAdminUserStatus = null;
     
-    // --- ▼▼▼ INICIO DE NUEVA LÓGICA (LOGS) ▼▼▼ ---
     let selectedAdminLogFile = null;
-    // --- ▲▲▲ FIN DE NUEVA LÓGICA (LOGS) ▲▲▲ ---
     
     let currentPage = 1;
     let currentSearch = '';
@@ -76,11 +65,9 @@ export function initAdminManager() {
         selectedAdminUserRole = null;
         selectedAdminUserStatus = null;
         
-        // Al limpiar la selección, también cerramos cualquier popover (Filtro/Búsqueda)
         closeAllToolbarModes();
     }
     
-    // --- ▼▼▼ INICIO DE NUEVAS FUNCIONES (LOGS) ▼▼▼ ---
     function enableLogSelectionActions() {
         const toolbarContainer = document.getElementById('log-toolbar-container');
         if (!toolbarContainer) return;
@@ -109,7 +96,6 @@ export function initAdminManager() {
         disableLogSelectionActions();
         selectedAdminLogFile = null;
     }
-    // --- ▲▲▲ FIN DE NUEVAS FUNCIONES (LOGS) ▲▲▲ ---
     
     function updateAdminModals() {
         const roleModule = document.querySelector('[data-module="moduleAdminRole"]');
@@ -364,36 +350,25 @@ export function initAdminManager() {
         }
     }
 
-    /**
-     * Cierra todos los "modos" de la toolbar (búsqueda, filtros, etc.)
-     * y desactiva sus botones.
-     */
     function closeAllToolbarModes() {
-        // 1. Ocultar la barra de búsqueda
         const searchBarContainer = document.getElementById('page-search-bar-container');
         if (searchBarContainer) {
             searchBarContainer.classList.remove('active');
             searchBarContainer.classList.add('disabled');
         }
-        // 2. Quitar 'active' del botón de búsqueda
         const searchButton = document.querySelector('[data-action="admin-toggle-search"]');
         if (searchButton) {
             searchButton.classList.remove('active');
         }
 
-        // 3. Ocultar el popover de filtro (usando la función existente de main-controller)
         deactivateAllModules(); 
         
-        // 4. Quitar 'active' del botón de filtro
         const filterButton = document.querySelector('[data-action="toggleModulePageFilter"]');
         if (filterButton) {
             filterButton.classList.remove('active');
         }
     }
 
-    /**
-     * Activa el modo de búsqueda.
-     */
     function openSearchMode() {
         const searchBarContainer = document.getElementById('page-search-bar-container');
         const searchButton = document.querySelector('[data-action="admin-toggle-search"]');
@@ -406,9 +381,6 @@ export function initAdminManager() {
         }
     }
 
-    /**
-     * Activa el modo de filtro.
-     */
     function openFilterMode() {
         const module = document.querySelector(`[data-module="modulePageFilter"]`);
         const filterButton = document.querySelector('[data-action="toggleModulePageFilter"]');
@@ -445,7 +417,6 @@ export function initAdminManager() {
             return;
         }
 
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (SELECCIÓN DE LOGS) ▼▼▼ ---
         const logCard = event.target.closest('.card-item[data-log-filename]');
         if (logCard) {
             event.preventDefault();
@@ -464,7 +435,6 @@ export function initAdminManager() {
             }
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA (SELECCIÓN DE LOGS) ▲▲▲ ---
 
         const createRoleLink = event.target.closest('[data-module="moduleAdminCreateRole"] .menu-link');
         if (createRoleLink) {
@@ -504,16 +474,12 @@ export function initAdminManager() {
 
         const button = event.target.closest('[data-action]');
         if (!button) {
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (CLICK FUERA) ▼▼▼ ---
-            // Limpiar selección de LOGS si se hace clic fuera
             const clickedOnAnyCard = event.target.closest('.card-item');
             const clickedOnModule = event.target.closest('[data-module].active');
 
-            // --- ▼▼▼ ¡ESTA ES LA LÍNEA CORREGIDA! ▼▼▼ ---
             if (!clickedOnModule && !button && !clickedOnAnyCard) {
                 clearLogSelection();
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN (CLICK FUERA) ▲▲▲ ---
             return;
         }
         const action = button.getAttribute('data-action');
@@ -545,20 +511,18 @@ export function initAdminManager() {
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 
                 button.blur();
-                hideCreateUserError(); // Ocultar error al generar
+                hideCreateUserError(); 
             }
             return; 
         }
 
-        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ ---
         if (action === 'admin-generate-password') {
             event.preventDefault();
             const passInput = document.getElementById('admin-create-password');
-            const generateBtn = button; // 'button' es el elemento clickeado
+            const generateBtn = button; 
             
             if (passInput && generateBtn && !generateBtn.disabled) {
                 
-                // 1. Mostrar estado de carga
                 generateBtn.disabled = true;
                 const originalBtnText = generateBtn.innerHTML;
                 generateBtn.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;"></span>`;
@@ -566,24 +530,20 @@ export function initAdminManager() {
                 const formData = new FormData();
                 formData.append('action', 'admin-generate-password');
                 
-                // 2. Llamar a la API
                 const result = await callAdminApi(formData);
 
-                // 3. Manejar resultado
                 if (result.success && result.password) {
                     passInput.value = result.password;
-                    hideCreateUserError(); // Ocultar error al generar
+                    hideCreateUserError(); 
                 } else {
                     showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
                 }
                 
-                // 4. Restaurar botón
                 generateBtn.disabled = false;
                 generateBtn.innerHTML = originalBtnText;
             }
             return;
         }
-        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
         
         if (action === 'admin-copy-password') {
             event.preventDefault();
@@ -615,7 +575,6 @@ export function initAdminManager() {
             return;
         }
         
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Submit de Crear Usuario) ▼▼▼ ---
         if (action === 'admin-create-user-submit') {
             event.preventDefault();
             const button = event.target.closest('#admin-create-user-submit');
@@ -639,7 +598,6 @@ export function initAdminManager() {
             const minUserLength = window.minUsernameLength || 6;
             const maxUserLength = window.maxUsernameLength || 32;
             const maxEmailLen = window.maxEmailLength || 255;
-            // No se necesita min/max pass, ya que es generado
 
             if (!username || !email || !password) { 
                 showCreateUserError('js.auth.errorCompleteAllFields'); return;
@@ -693,7 +651,6 @@ export function initAdminManager() {
             }
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA (Submit de Crear Usuario) ▲▲▲ ---
 
 
         if (action === 'admin-page-next' || action === 'admin-page-prev') {
@@ -756,7 +713,6 @@ export function initAdminManager() {
             return;
         }
 
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (LOGS) ▼▼▼ ---
         if (action === 'admin-log-clear-selection') {
             event.preventDefault();
             clearLogSelection();
@@ -765,14 +721,12 @@ export function initAdminManager() {
         
         if (action === 'admin-log-view') {
             if (!selectedAdminLogFile) {
-                // (Debes añadir esta clave a tus JSON)
                 showAlert(getTranslation('js.admin.logs.errorNoSelection') || "Por favor, selecciona un archivo de log primero.", 'error');
                 event.preventDefault(); 
                 event.stopImmediatePropagation();
                 return;
             }
             
-            // Navegar a la URL con el parámetro 'view'
             const linkUrl = window.projectBasePath + '/admin/manage-logs?view=' + encodeURIComponent(selectedAdminLogFile);
             
             const link = document.createElement('a');
@@ -785,7 +739,6 @@ export function initAdminManager() {
             clearLogSelection(); 
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA (LOGS) ▲▲▲ ---
 
         if (action === 'toggleSectionAdminEditUser') {
             if (!selectedAdminUserId) {
@@ -887,9 +840,6 @@ export function initAdminManager() {
         }
     });
 
-    // --- ▼▼▼ ESTE LISTENER HA SIDO ELIMINADO ▼▼▼ ---
-    // document.body.addEventListener('submit', async function(event) { ... });
-    // --- ▲▲▲ FIN DE LA ELIMINACIÓN ▲▲▲ ---
 
     document.body.addEventListener('input', function(event) {
         const input = event.target.closest('#admin-create-user-form .component-input');
@@ -920,7 +870,7 @@ export function initAdminManager() {
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
             clearAdminUserSelection();
-            clearLogSelection(); // <-- LÍNEA AÑADIDA
+            clearLogSelection(); 
         }
     });
 
@@ -931,10 +881,9 @@ export function initAdminManager() {
         
         const clickedOnAnyCard = event.target.closest('.card-item');
 
-        // Solo limpiar si no se hizo clic en un módulo, un botón, o CUALQUIER tarjeta
         if (!clickedOnModule && !clickedOnButton && !clickedOnAnyCard) {
             clearAdminUserSelection();
-            clearLogSelection(); // <-- LÍNEA AÑADIDA
+            clearLogSelection(); 
         }
     });
 

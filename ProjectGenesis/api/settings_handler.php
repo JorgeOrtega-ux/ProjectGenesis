@@ -1,12 +1,10 @@
 <?php
-// FILE: api/settings_handler.php
 
 include '../config/config.php';
 header('Content-Type: application/json');
 
 $response = ['success' => false, 'message' => 'js.api.invalidAction'];
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (CONSTANTES GLOBALES) ▼▼▼ ---
 $minPasswordLength = (int)($GLOBALS['site_settings']['min_password_length'] ?? 8);
 $maxPasswordLength = (int)($GLOBALS['site_settings']['max_password_length'] ?? 72);
 $minUsernameLength = (int)($GLOBALS['site_settings']['min_username_length'] ?? 6);
@@ -14,13 +12,6 @@ $maxUsernameLength = (int)($GLOBALS['site_settings']['max_username_length'] ?? 3
 $maxEmailLength = (int)($GLOBALS['site_settings']['max_email_length'] ?? 255);
 $codeResendCooldownSeconds = (int)($GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? 60);
 
-// define('MIN_PASSWORD_LENGTH', 8); // <-- ELIMINADO
-// define('MAX_PASSWORD_LENGTH', 72); // <-- ELIMINADO
-// define('MIN_USERNAME_LENGTH', 6); // <-- ELIMINADO
-// define('MAX_USERNAME_LENGTH', 32); // <-- ELIMINADO
-// define('MAX_EMAIL_LENGTH', 255); // <-- ELIMINADO
-// define('CODE_RESEND_COOLDOWN_SECONDS', 60); // <-- ELIMINADO
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 if (!isset($_SESSION['user_id'])) {
     $response['message'] = 'js.settings.errorNoSession';
@@ -44,12 +35,10 @@ function generateVerificationCode()
 function generateDefaultAvatar($pdo, $userId, $username, $basePath)
 {
     try {
-        // --- INICIO DE MODIFICACIÓN (Ruta de Avatares) ---
-        $savePathDir = dirname(__DIR__) . '/assets/uploads/avatars_default'; // Nueva carpeta
+        $savePathDir = dirname(__DIR__) . '/assets/uploads/avatars_default'; 
         $fileName = "user-{$userId}.png";
         $fullSavePath = $savePathDir . '/' . $fileName;
-        $publicUrl = $basePath . '/assets/uploads/avatars_default/' . $fileName; // Nueva carpeta
-        // --- FIN DE MODIFICACIÓN ---
+        $publicUrl = $basePath . '/assets/uploads/avatars_default/' . $fileName; 
 
         if (!is_dir($savePathDir)) {
             mkdir($savePathDir, 0755, true);
@@ -76,22 +65,17 @@ function generateDefaultAvatar($pdo, $userId, $username, $basePath)
 
 function deleteOldAvatar($oldUrl, $basePath, $userId)
 {
-    // --- INICIO DE MODIFICACIÓN (Lógica de Borrado) ---
     
-    // Solo borrar avatares que están en la carpeta 'avatars_uploaded'
     if (strpos($oldUrl, '/assets/uploads/avatars_uploaded/') === false) {
-        // Si no está en esa carpeta, es un avatar por defecto (o de ui-avatars), no lo borramos.
         return;
     }
 
-    // Es un avatar subido, proceder a borrarlo.
     $relativePath = str_replace($basePath, '', $oldUrl);
     $serverPath = dirname(__DIR__) . $relativePath;
 
     if (file_exists($serverPath)) {
         @unlink($serverPath);
     }
-    // --- FIN DE MODIFICACIÓN ---
 }
 
 
@@ -117,14 +101,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $fileSize = $file['size'];
                 $fileTmpName = $file['tmp_name'];
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-                // Usar el valor de la BD, con un fallback de 2MB
                 $maxSizeMB = (int)($GLOBALS['site_settings']['avatar_max_size_mb'] ?? 2);
                 if ($fileSize > $maxSizeMB * 1024 * 1024) {
-                    $response['data'] = ['size' => $maxSizeMB]; // Enviar el límite al JS
+                    $response['data'] = ['size' => $maxSizeMB]; 
                     throw new Exception('js.settings.errorAvatarSize');
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 $finfo = new finfo(FILEINFO_MIME_TYPE);
                 $mimeType = $finfo->file($fileTmpName);
@@ -147,11 +128,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $newFileName = "user-{$userId}-" . time() . "." . $extension;
 
-                // --- INICIO DE MODIFICACIÓN (Ruta de Avatares) ---
-                $saveDir = dirname(__DIR__) . '/assets/uploads/avatars_uploaded/'; // Nueva carpeta
+                $saveDir = dirname(__DIR__) . '/assets/uploads/avatars_uploaded/'; 
                 $newFilePath = $saveDir . $newFileName;
-                $newPublicUrl = $basePath . '/assets/uploads/avatars_uploaded/' . $newFileName; // Nueva carpeta
-                // --- FIN DE MODIFICACIÓN ---
+                $newPublicUrl = $basePath . '/assets/uploads/avatars_uploaded/' . $newFileName; 
 
                 if (!move_uploaded_file($fileTmpName, $newFilePath)) {
                     throw new Exception('js.settings.errorAvatarSave');
@@ -208,10 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'update-username') {
             try {
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-                // Ya no se define la constante, se lee de $GLOBALS
                 $usernameCooldownDays = (int)($GLOBALS['site_settings']['username_cooldown_days'] ?? 30);
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 $stmt_check = $pdo->prepare(
                     "SELECT changed_at FROM user_audit_logs 
@@ -227,7 +203,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $interval = $currentTime->diff($lastChangeTime);
                     $daysPassed = (int)$interval->format('%a');
 
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                     if ($daysPassed < $usernameCooldownDays) {
                         $daysRemaining = $usernameCooldownDays - $daysPassed;
                         $response['message'] = 'js.settings.errorUsernameCooldown';
@@ -235,7 +210,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         echo json_encode($response);
                         exit;
                     }
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 }
 
                 $newUsername = trim($_POST['username'] ?? '');
@@ -244,14 +218,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($newUsername)) {
                     throw new Exception('js.settings.errorUsernameEmpty');
                 }
-                // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                 if (strlen($newUsername) < $minUsernameLength) {
                     throw new Exception('js.auth.errorUsernameMinLength');
                 }
                 if (strlen($newUsername) > $maxUsernameLength) {
                     throw new Exception('js.auth.errorUsernameMaxLength');
                 }
-                // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                 if ($newUsername === $oldUsername) {
                     throw new Exception('js.settings.errorUsernameIsCurrent');
                 }
@@ -267,16 +239,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $oldUrl = $stmt->fetchColumn();
 
 
-                // --- INICIO DE MODIFICACIÓN (Detección de Avatar) ---
                 $isDefaultAvatar = false;
                 if ($oldUrl) {
-                    // Un avatar es "default" si NO está en la carpeta 'avatars_uploaded'
                     $isDefaultAvatar = strpos($oldUrl, '/assets/uploads/avatars_uploaded/') === false;
                 } else {
-                    // Si no hay URL, también se considera default (para que genere uno)
                     $isDefaultAvatar = true;
                 }
-                // --- FIN DE MODIFICACIÓN ---
                 
 
                 $newAvatarUrl = null;
@@ -323,13 +291,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response['message'] = 'js.api.errorDatabase';
                 } else {
                     $response['message'] = $e->getMessage();
-                    // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                     if ($response['message'] === 'js.auth.errorUsernameMinLength') {
                         $response['data'] = ['length' => $minUsernameLength];
                     } elseif ($response['message'] === 'js.auth.errorUsernameMaxLength') {
                          $response['data'] = ['length' => $maxUsernameLength];
                     }
-                    // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                 }
             }
         } elseif ($action === 'request-email-change-code') {
@@ -350,10 +316,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $currentTime = new DateTime('now', new DateTimeZone('UTC'));
                     $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
 
-                    // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                     if ($secondsPassed < $codeResendCooldownSeconds) {
                         $secondsRemaining = $codeResendCooldownSeconds - $secondsPassed;
-                    // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                         throw new Exception('js.auth.errorCodeCooldown');
                     }
                 }
@@ -383,9 +347,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $response['message'] = $e->getMessage();
                     if ($response['message'] === 'js.auth.errorCodeCooldown') {
-                        // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                         $response['data'] = ['seconds' => $secondsRemaining ?? $codeResendCooldownSeconds];
-                        // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                     }
                 }
             }
@@ -397,13 +359,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $ip = getIpAddress();
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (LOCKOUT GLOBAL) ▼▼▼ ---
                 if (checkLockStatus($pdo, $identifier, $ip)) {
                     $response['message'] = 'js.auth.errorTooManyAttempts';
                     $response['data'] = ['minutes' => (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5)];
                     throw new Exception('js.auth.errorTooManyAttempts');
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
                 if (empty($submittedCode)) {
@@ -447,9 +407,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'update-email') {
             try {
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 $emailCooldownDays = (int)($GLOBALS['site_settings']['email_cooldown_days'] ?? 12);
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 $stmt_check_email = $pdo->prepare(
                     "SELECT changed_at FROM user_audit_logs 
@@ -465,7 +423,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $interval = $currentTime->diff($lastChangeTime);
                     $daysPassed = (int)$interval->format('%a');
 
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                     if ($daysPassed < $emailCooldownDays) {
                         $daysRemaining = $emailCooldownDays - $daysPassed;
                         $response['message'] = 'js.settings.errorEmailCooldown';
@@ -473,7 +430,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         echo json_encode($response);
                         exit;
                     }
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 }
 
                 $newEmail = trim($_POST['email'] ?? '');
@@ -482,27 +438,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($newEmail) || !filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
                     throw new Exception('js.auth.errorInvalidEmail');
                 }
-                // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                 if (strlen($newEmail) > $maxEmailLength) {
                     throw new Exception('js.auth.errorEmailLength');
                 }
-                // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                 if ($newEmail === $oldEmail) {
                     throw new Exception('js.settings.errorEmailIsCurrent');
                 }
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---
                 $domainsString = $GLOBALS['site_settings']['allowed_email_domains'] ?? '';
                 $allowedDomains = preg_split('/[\s,]+/', $domainsString, -1, PREG_SPLIT_NO_EMPTY);
-                // $allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com']; // <-- ELIMINADO
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 $emailDomain = substr($newEmail, strrpos($newEmail, '@') + 1);
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---
                 if (!empty($allowedDomains) && !in_array(strtolower($emailDomain), $allowedDomains)) {
                     throw new Exception('js.auth.errorEmailDomain');
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
                 $stmt->execute([$newEmail, $userId]);
@@ -539,13 +488,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $identifier = $userId;
                 $currentPassword = $_POST['current_password'] ?? '';
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (LOCKOUT GLOBAL) ▼▼▼ ---
                 if (checkLockStatus($pdo, $identifier, $ip)) {
                     $response['message'] = 'js.auth.errorTooManyAttempts';
                     $response['data'] = ['minutes' => (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5)];
                     throw new Exception('js.auth.errorTooManyAttempts');
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 if (empty($currentPassword)) {
                     throw new Exception('js.settings.errorEnterCurrentPass');
@@ -605,22 +552,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $newPassword = $_POST['new_password'] ?? '';
                 $confirmPassword = $_POST['confirm_password'] ?? '';
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-                $logoutOthers = $_POST['logout_others'] ?? '1'; // Default '1' (true)
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                $logoutOthers = $_POST['logout_others'] ?? '1'; 
 
                 if (empty($newPassword) || empty($confirmPassword)) {
                     throw new Exception('js.settings.errorNewPasswordEmpty');
                 }
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
                 if (strlen($newPassword) < $minPasswordLength) {
                     throw new Exception('js.auth.errorPasswordMinLength');
                 }
-                // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
                 if (strlen($newPassword) > $maxPasswordLength) {
                     throw new Exception('js.auth.errorPasswordLength');
                 }
-                // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
                 if ($newPassword !== $confirmPassword) {
                     throw new Exception('js.auth.errorPasswordMismatch');
                 }
@@ -634,19 +576,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $newHashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-                // Si $logoutOthers es '1', generamos un nuevo token.
-                // Si no, NO actualizamos el auth_token.
                 if ($logoutOthers === '1') {
                     $newAuthToken = bin2hex(random_bytes(32));
                     $stmt = $pdo->prepare("UPDATE users SET password = ?, auth_token = ? WHERE id = ?");
                     $stmt->execute([$newHashedPassword, $newAuthToken, $userId]);
-                    $_SESSION['auth_token'] = $newAuthToken; // Actualizar la sesión actual
+                    $_SESSION['auth_token'] = $newAuthToken; 
                 } else {
                     $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
                     $stmt->execute([$newHashedPassword, $userId]);
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
                 $stmt_log_pass = $pdo->prepare(
@@ -655,18 +593,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 $stmt_log_pass->execute([$userId, $oldHashedPassword, $newHashedPassword, getIpAddress()]);
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Lógica de Logout copiada) ▼▼▼ ---
                 if ($logoutOthers === '1') {
-                    // Invalidar todas las demás entradas de metadatos
                     $currentMetadataId = $_SESSION['metadata_id'] ?? 0;
                     $stmt_meta_invalidate = $pdo->prepare(
                         "UPDATE user_metadata SET is_active = 0 WHERE user_id = ? AND id != ?"
                     );
                     $stmt_meta_invalidate->execute([$userId, $currentMetadataId]);
                     
-                    // Notificar al servidor WebSocket (Fire and Forget)
                     try {
-                        $sessionIdToExclude = $submittedToken; // Token CSRF de la sesión actual
+                        $sessionIdToExclude = $submittedToken; 
                         
                         $kickPayload = json_encode([
                             'user_id' => (int)$userId,
@@ -691,7 +626,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         logDatabaseError($e, 'settings_handler - update-password (kick_ws_fail)');
                     }
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 $newTimestamp = gmdate('Y-m-d H:i:s'); 
 
@@ -710,13 +644,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 } else {
                     $response['message'] = $e->getMessage();
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
                     if ($response['message'] === 'js.auth.errorPasswordMinLength') {
                         $response['data'] = ['length' => $minPasswordLength];
-                    // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
                     } elseif ($response['message'] === 'js.auth.errorPasswordLength') {
                         $response['data'] = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
-                    // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
                     }
                 }
             }
@@ -822,26 +753,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $_SESSION['auth_token'] = $newAuthToken;
                 
-                // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (Paso 4) ▼▼▼ ---
-                // Invalidar todas las demás entradas de metadatos
                 $currentMetadataId = $_SESSION['metadata_id'] ?? 0;
                 $stmt_meta_invalidate = $pdo->prepare(
                     "UPDATE user_metadata SET is_active = 0 WHERE user_id = ? AND id != ?"
                 );
                 $stmt_meta_invalidate->execute([$userId, $currentMetadataId]);
-                // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
                 
-                // --- ▼▼▼ ¡NUEVO! LLAMAR AL WEBSOCKET PARA EXPULSAR ▼▼▼ ---
                 try {
-                    // Obtener el ID de sesión actual (que NO queremos expulsar)
-                    $sessionIdToExclude = $_POST['csrf_token']; // Usamos el token CSRF que es único por sesión
+                    $sessionIdToExclude = $_POST['csrf_token']; 
                     
                     $kickPayload = json_encode([
-                        'user_id' => (int)$userId, // Asegurarnos que sea un int
+                        'user_id' => (int)$userId, 
                         'exclude_session_id' => $sessionIdToExclude
                     ]);
 
-                    // Usar 127.0.0.1 (localhost) ya que PHP y Python corren en el mismo servidor
                     $ch = curl_init('http://127.0.0.1:8766/kick');
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                     curl_setopt($ch, CURLOPT_POST, true);
@@ -850,19 +775,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'Content-Type: application/json',
                         'Content-Length: ' . strlen($kickPayload)
                     ]);
-                    // ¡Importante! Poner un timeout corto para no hacer esperar al usuario
-                    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); // 500ms para conectar
-                    curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        // 500ms para toda la operación
+                    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); 
+                    curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        
 
-                    curl_exec($ch); // No nos importa la respuesta, solo enviar la señal
+                    curl_exec($ch); 
                     curl_close($ch);
                     
                 } catch (Exception $e) {
-                    // Si el servidor WS falla, no detener el logout.
-                    // Solo registrar el error.
                     logDatabaseError($e, 'settings_handler - logout-all (kick_ws_fail)');
                 }
-                // --- ▲▲▲ FIN DE LO NUEVO ▲▲▲ ---
 
                 $response['success'] = true;
                 $response['message'] = 'js.settings.successLogoutAll';
@@ -880,13 +801,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $identifier = $userId;
                 $currentPassword = $_POST['current_password'] ?? '';
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (LOCKOUT GLOBAL) ▼▼▼ ---
                 if (checkLockStatus($pdo, $identifier, $ip)) {
                     $response['message'] = 'js.auth.errorTooManyAttempts';
                     $response['data'] = ['minutes' => (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5)];
                     throw new Exception('js.auth.errorTooManyAttempts');
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 if (empty($currentPassword)) {
                     throw new Exception('js.settings.errorEnterCurrentPass');
@@ -925,7 +844,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Paso 4 + Paso "En Vivo") ▼▼▼ ---
         elseif ($action === 'logout-individual-session') {
             try {
                 $sessionToCloseId = $_POST['session_id'] ?? 0;
@@ -933,35 +851,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $currentMetadataId = $_SESSION['metadata_id'] ?? 0;
 
                 if (empty($sessionToCloseId) || empty($currentUserId) || empty($currentMetadataId)) {
-                    throw new Exception('js.api.errorServer'); // Error de sincronización
+                    throw new Exception('js.api.errorServer'); 
                 }
                 
-                // 1. Seguridad: No permitas que el usuario cierre su propia sesión actual
                 if ($sessionToCloseId == $currentMetadataId) {
                     throw new Exception('js.settings.errorLogoutSelf');
                 }
 
-                // 2. Seguridad: Cierra la sesión SOLO si el ID de sesión pertenece al usuario actual
                 $stmt = $pdo->prepare(
                     "UPDATE user_metadata SET is_active = 0 WHERE id = ? AND user_id = ?"
                 );
                 $stmt->execute([$sessionToCloseId, $currentUserId]);
 
-                // 3. Comprobar si la fila fue afectada
                 if ($stmt->rowCount() === 0) {
-                    // Esto significa que la sesión no existía o no pertenecía al usuario
                     throw new Exception('js.settings.errorLogoutFail');
                 }
                 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN "EN VIVO" ▼▼▼ ---
-                // 4. Notificar al WebSocket para forzar la recarga del cliente
                 try {
-                    // Llamamos a /kick para forzar a TODAS las sesiones (menos la actual)
-                    // a re-validar. La sesión que acabamos de marcar como inactiva
-                    // será expulsada al recargar.
                     $kickPayload = json_encode([
                         'user_id' => (int)$currentUserId,
-                        'exclude_session_id' => $submittedToken // Token CSRF de la sesión actual
+                        'exclude_session_id' => $submittedToken 
                     ]);
 
                     $ch = curl_init('http://127.0.0.1:8766/kick');
@@ -979,10 +888,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     curl_close($ch);
                     
                 } catch (Exception $e) {
-                    // Si el WS falla, la sesión se cerrará en la próxima recarga
                     logDatabaseError($e, 'settings_handler - logout-individual (kick_ws_fail)');
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN "EN VIVO" ▲▲▲ ---
 
                 $response['success'] = true;
                 $response['message'] = 'js.settings.successLogoutIndividual';
@@ -996,7 +903,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
     }
 }
 

@@ -13,7 +13,7 @@ function showInlineError(cardElement, messageKey, data = null) {
         });
     }
     errorDiv.textContent = message;
-    errorDiv.classList.add('active'); // <-- MODIFICADO
+    errorDiv.classList.add('active'); 
     cardElement.parentNode.insertBefore(errorDiv, cardElement.nextSibling);
 }
 
@@ -105,7 +105,6 @@ export function initAdminEditUserManager() {
                 if (previewImage && originalAvatarSrc) previewImage.src = originalAvatarSrc;
                 document.getElementById('admin-avatar-upload-input').value = ''; 
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 document.getElementById('admin-avatar-actions-preview').classList.remove('active');
                 document.getElementById('admin-avatar-actions-preview').classList.add('disabled');
                 
@@ -115,7 +114,6 @@ export function initAdminEditUserManager() {
                 
                 document.getElementById(originalState).classList.add('active');
                 document.getElementById(originalState).classList.remove('disabled');
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 return;
             }
 
@@ -139,14 +137,12 @@ export function initAdminEditUserManager() {
                     previewImage.src = result.newAvatarUrl; 
                     previewImage.dataset.originalSrc = result.newAvatarUrl;
 
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                     document.getElementById('admin-avatar-actions-preview').classList.remove('active');
                     document.getElementById('admin-avatar-actions-preview').classList.add('disabled');
                     document.getElementById('admin-avatar-actions-custom').classList.remove('active');
                     document.getElementById('admin-avatar-actions-custom').classList.add('disabled');
                     document.getElementById('admin-avatar-actions-default').classList.add('active');
                     document.getElementById('admin-avatar-actions-default').classList.remove('disabled');
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     
                     avatarCard.dataset.originalActions = 'default'; 
                     
@@ -186,14 +182,12 @@ export function initAdminEditUserManager() {
                     
                     document.getElementById('admin-avatar-upload-input').value = ''; 
 
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                     document.getElementById('admin-avatar-actions-preview').classList.remove('active');
                     document.getElementById('admin-avatar-actions-preview').classList.add('disabled');
                     document.getElementById('admin-avatar-actions-default').classList.remove('active');
                     document.getElementById('admin-avatar-actions-default').classList.add('disabled');
                     document.getElementById('admin-avatar-actions-custom').classList.add('active');
                     document.getElementById('admin-avatar-actions-custom').classList.remove('disabled');
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     avatarCard.dataset.originalActions = 'custom'; 
 
                     toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
@@ -210,7 +204,6 @@ export function initAdminEditUserManager() {
             hideInlineError(usernameCard);
             if (target.closest('#admin-username-edit-trigger')) {
                 e.preventDefault();
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 document.getElementById('admin-username-view-state').classList.remove('active');
                 document.getElementById('admin-username-view-state').classList.add('disabled');
                 document.getElementById('admin-username-actions-view').classList.remove('active');
@@ -219,7 +212,6 @@ export function initAdminEditUserManager() {
                 document.getElementById('admin-username-edit-state').classList.remove('disabled');
                 document.getElementById('admin-username-actions-edit').classList.add('active');
                 document.getElementById('admin-username-actions-edit').classList.remove('disabled');
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 focusInputAndMoveCursorToEnd(document.getElementById('admin-username-input'));
                 return;
             }
@@ -228,7 +220,6 @@ export function initAdminEditUserManager() {
                 const displayElement = document.getElementById('admin-username-display-text');
                 const inputElement = document.getElementById('admin-username-input');
                 if (displayElement && inputElement) inputElement.value = displayElement.dataset.originalUsername;
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 document.getElementById('admin-username-edit-state').classList.remove('active');
                 document.getElementById('admin-username-edit-state').classList.add('disabled');
                 document.getElementById('admin-username-actions-edit').classList.remove('active');
@@ -237,21 +228,18 @@ export function initAdminEditUserManager() {
                 document.getElementById('admin-username-view-state').classList.remove('disabled');
                 document.getElementById('admin-username-actions-view').classList.add('active');
                 document.getElementById('admin-username-actions-view').classList.remove('disabled');
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 return;
             }
              if (target.closest('#admin-username-save-trigger-btn')) {
                 e.preventDefault();
                 const saveTrigger = target.closest('#admin-username-save-trigger-btn');
                 const inputElement = document.getElementById('admin-username-input');
-                // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                 const minUserLength = window.minUsernameLength || 6;
                 const maxUserLength = window.maxUsernameLength || 32;
                 if (inputElement.value.length < minUserLength || inputElement.value.length > maxUserLength) {
                     showInlineError(usernameCard, 'js.auth.errorUsernameLength', { min: minUserLength, max: maxUserLength });
                     return;
                 }
-                // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                 toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
                 const formData = new FormData();
                 formData.append('action', 'admin-update-username');
@@ -272,7 +260,6 @@ export function initAdminEditUserManager() {
                     displayElement.dataset.originalUsername = newUsername;
                     inputElement.value = newUsername;
 
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                     document.getElementById('admin-username-edit-state').classList.remove('active');
                     document.getElementById('admin-username-edit-state').classList.add('disabled');
                     document.getElementById('admin-username-actions-edit').classList.remove('active');
@@ -281,7 +268,6 @@ export function initAdminEditUserManager() {
                     document.getElementById('admin-username-view-state').classList.remove('disabled');
                     document.getElementById('admin-username-actions-view').classList.add('active');
                     document.getElementById('admin-username-actions-view').classList.remove('disabled');
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                     if (result.newAvatarUrl) {
                         const previewImage = document.getElementById('admin-avatar-preview-image');
@@ -303,7 +289,6 @@ export function initAdminEditUserManager() {
             hideInlineError(emailCard);
             if (target.closest('#admin-email-edit-trigger')) {
                 e.preventDefault();
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 document.getElementById('admin-email-view-state').classList.remove('active');
                 document.getElementById('admin-email-view-state').classList.add('disabled');
                 document.getElementById('admin-email-actions-view').classList.remove('active');
@@ -312,7 +297,6 @@ export function initAdminEditUserManager() {
                 document.getElementById('admin-email-edit-state').classList.remove('disabled');
                 document.getElementById('admin-email-actions-edit').classList.add('active');
                 document.getElementById('admin-email-actions-edit').classList.remove('disabled');
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 focusInputAndMoveCursorToEnd(document.getElementById('admin-email-input'));
                 return;
             }
@@ -321,7 +305,6 @@ export function initAdminEditUserManager() {
                 const displayElement = document.getElementById('admin-email-display-text');
                 const inputElement = document.getElementById('admin-email-input');
                 if (displayElement && inputElement) inputElement.value = displayElement.dataset.originalEmail;
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 document.getElementById('admin-email-edit-state').classList.remove('active');
                 document.getElementById('admin-email-edit-state').classList.add('disabled');
                 document.getElementById('admin-email-actions-edit').classList.remove('active');
@@ -330,7 +313,6 @@ export function initAdminEditUserManager() {
                 document.getElementById('admin-email-view-state').classList.remove('disabled');
                 document.getElementById('admin-email-actions-view').classList.add('active');
                 document.getElementById('admin-email-actions-view').classList.remove('disabled');
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 return;
             }
              if (target.closest('#admin-email-save-trigger-btn')) {
@@ -343,14 +325,10 @@ export function initAdminEditUserManager() {
                 if (!emailRegex.test(newEmail)) {
                     showInlineError(emailCard, 'js.auth.errorInvalidEmail'); return;
                 }
-                // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                 if (newEmail.length > (window.maxEmailLength || 255)) {
                     showInlineError(emailCard, 'js.auth.errorEmailLength'); return;
                 }
-                // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                 
-                // Nota: El chequeo de dominio permitido se hace en el backend (api/admin_handler.php)
-                // Se podría añadir aquí si window.allowedEmailDomains estuviera disponible.
                 
                 toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
                 const formData = new FormData();
@@ -372,7 +350,6 @@ export function initAdminEditUserManager() {
                     displayElement.dataset.originalEmail = newEmail;
                     inputElement.value = newEmail;
 
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                     document.getElementById('admin-email-edit-state').classList.remove('active');
                     document.getElementById('admin-email-edit-state').classList.add('disabled');
                     document.getElementById('admin-email-actions-edit').classList.remove('active');
@@ -381,7 +358,6 @@ export function initAdminEditUserManager() {
                     document.getElementById('admin-email-view-state').classList.remove('disabled');
                     document.getElementById('admin-email-actions-view').classList.add('active');
                     document.getElementById('admin-email-actions-view').classList.remove('disabled');
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                     toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), false);
                 } else {
@@ -488,7 +464,6 @@ export function initAdminEditUserManager() {
 
             const actionsDefault = document.getElementById('admin-avatar-actions-default');
             const avatarCard = document.getElementById('admin-avatar-section'); 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             avatarCard.dataset.originalActions = (actionsDefault.classList.contains('active')) ? 'default' : 'custom';
 
             document.getElementById('admin-avatar-actions-default').classList.remove('active');
@@ -497,7 +472,6 @@ export function initAdminEditUserManager() {
             document.getElementById('admin-avatar-actions-custom').classList.add('disabled');
             document.getElementById('admin-avatar-actions-preview').classList.add('active');
             document.getElementById('admin-avatar-actions-preview').classList.remove('disabled');
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         }
     }); 
 

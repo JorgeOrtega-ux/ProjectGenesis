@@ -1,5 +1,3 @@
-// FILE: assets/js/app/main-controller.js
-// (Versión Corregida)
 
 import { getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js'; 
@@ -35,7 +33,6 @@ function initMainController() {
         const action = button.getAttribute('data-action');
 
         if (action === 'logout') {
-            // ... (toda la lógica de logout sin cambios) ...
             event.preventDefault();
             const logoutButton = button;
 
@@ -110,33 +107,28 @@ function initMainController() {
         
 
         } else if (action.startsWith('toggleSection')) {
-            // Permitir que el router maneje esto
             return;
         }
 
         const isSelectorLink = event.target.closest('[data-module="moduleTriggerSelect"] .menu-link');
         if (isSelectorLink) {
-            // Permitir que el settings-manager maneje esto
             return;
         }
 
         if (action.startsWith('toggle')) {
             
-            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
-            // Lista de acciones que otros módulos manejan
             const managedActions = [
                 'toggleModulePageFilter',
                 'toggleModuleAdminRole',
                 'toggleModuleAdminStatus',
                 'toggleModuleAdminCreateRole',
-                'toggleModuleCommunitySelect', // <-- ¡AÑADIDA!
-                'toggleModuleSelectGroup'      // <-- ¡AÑADIDA! (manejada por community-manager)
+                'toggleModuleCommunitySelect', 
+                'toggleModuleSelectGroup'      
             ];
 
             if (managedActions.includes(action)) {
                 return; 
             }
-            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
             event.stopPropagation();
 
@@ -160,15 +152,12 @@ function initMainController() {
     });
 
     if (closeOnClickOutside) {
-        // ... (resto de la función sin cambios) ...
         document.addEventListener('click', function (event) {
             const clickedOnModule = event.target.closest('[data-module].active');
             const clickedOnButton = event.target.closest('[data-action]');
             
-            // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
             const clickedOnCardItem = event.target.closest('.card-item');
             
-            // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
             if (!clickedOnModule && !clickedOnButton && !clickedOnCardItem) {
                 deactivateAllModules();
             }
@@ -176,7 +165,6 @@ function initMainController() {
     }
 
     if (closeOnEscape) {
-        // ... (resto de la función sin cambios) ...
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 deactivateAllModules();

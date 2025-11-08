@@ -1,5 +1,3 @@
-// RUTA: assets/js/app/url-manager.js
-// (CÓDIGO CORREGIDO PARA AMBOS BUGS)
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
@@ -17,19 +15,15 @@ const routes = {
     'toggleSectionHome': 'home',
     'toggleSectionExplorer': 'explorer',
     'toggleSectionLogin': 'login',
-    'toggleSectionMaintenance': 'maintenance', // <-- ¡NUEVA LÍNEA!
-    'toggleSectionServerFull': 'server-full', // <--- AÑADE ESTA LÍNEA
+    'toggleSectionMaintenance': 'maintenance', 
+    'toggleSectionServerFull': 'server-full', 
 
-    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
     'toggleSectionJoinGroup': 'join-group',
-    'toggleSectionCreatePublication': 'create-publication', // <-- NUEVA
-    'toggleSectionCreatePoll': 'create-poll', // <-- NUEVA
+    'toggleSectionCreatePublication': 'create-publication', 
+    'toggleSectionCreatePoll': 'create-poll', 
     
-    // ================== INICIO DE LA MODIFICACIÓN ==================
-    'toggleSectionPostView': 'post-view', // <-- ¡NUEVA ACCIÓN!
-    // =================== FIN DE LA MODIFICACIÓN ==================
+    'toggleSectionPostView': 'post-view', 
 
-    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     'toggleSectionRegisterStep1': 'register-step1',
     'toggleSectionRegisterStep2': 'register-step2',
@@ -56,31 +50,24 @@ const routes = {
     'toggleSectionAdminManageUsers': 'admin-manage-users', 
     'toggleSectionAdminCreateUser': 'admin-create-user', 
     'toggleSectionAdminEditUser': 'admin-edit-user', 
-    'toggleSectionAdminServerSettings': 'admin-server-settings', // <-- ¡NUEVA LÍNEA!
+    'toggleSectionAdminServerSettings': 'admin-server-settings', 
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     'toggleSectionAdminManageBackups': 'admin-manage-backups',
-    // 'toggleSectionAdminRestoreBackup': 'admin-restore-backup', // <-- ¡ELIMINADA!
-    'toggleSectionAdminManageLogs': 'admin-manage-logs', // <-- ¡NUEVA LÍNEA!
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+    'toggleSectionAdminManageLogs': 'admin-manage-logs', 
 };
 
 const paths = {
     '/': 'toggleSectionHome',
     '/explorer': 'toggleSectionExplorer',
     '/login': 'toggleSectionLogin',
-    '/maintenance': 'toggleSectionMaintenance', // <-- ¡NUEVA LÍNEA!
-    '/server-full': 'toggleSectionServerFull', // <--- AÑADE ESTA LÍNEA
+    '/maintenance': 'toggleSectionMaintenance', 
+    '/server-full': 'toggleSectionServerFull', 
 
-    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
     '/join-group': 'toggleSectionJoinGroup',
-    '/create-publication': 'toggleSectionCreatePublication', // <-- NUEVA
-    '/create-poll': 'toggleSectionCreatePoll', // <-- NUEVA
-    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+    '/create-publication': 'toggleSectionCreatePublication', 
+    '/create-poll': 'toggleSectionCreatePoll', 
     
-    // ================== INICIO DE LA MODIFICACIÓN ==================
-    '/post': 'toggleSectionPostView', // <-- Ruta base para post
-    // =================== FIN DE LA MODIFICACIÓN ==================
+    '/post': 'toggleSectionPostView', 
 
     '/register': 'toggleSectionRegisterStep1',
     '/register/additional-data': 'toggleSectionRegisterStep2',
@@ -107,13 +94,10 @@ const paths = {
     '/admin/manage-users': 'toggleSectionAdminManageUsers', 
     '/admin/create-user': 'toggleSectionAdminCreateUser', 
     '/admin/edit-user': 'toggleSectionAdminEditUser', 
-    '/admin/server-settings': 'toggleSectionAdminServerSettings', // <-- ¡NUEVA LÍNEA!
+    '/admin/server-settings': 'toggleSectionAdminServerSettings', 
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     '/admin/manage-backups': 'toggleSectionAdminManageBackups',
-    // '/admin/restore-backup': 'admin-restore-backup', // <-- ¡ELIMINADA!
-    '/admin/manage-logs': 'toggleSectionAdminManageLogs', // <-- ¡NUEVA LÍNEA!
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+    '/admin/manage-logs': 'toggleSectionAdminManageLogs', 
 };
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
@@ -394,12 +378,10 @@ export function initRouter() {
             e.preventDefault();
 
             let action, page, newPath;
-            let fetchParams = null; // Variable para guardar IDs dinámicos
+            let fetchParams = null; 
 
-            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
 
             if (link.hasAttribute('data-action')) {
-                // --- Bloque para elementos con data-action (ej. <div>, <button>) ---
                 action = link.getAttribute('data-action');
 
                 if (action === 'toggleSectionAdminEditUser') {
@@ -411,9 +393,7 @@ export function initRouter() {
                 newPath = Object.keys(paths).find(key => paths[key] === action);
 
             } else {
-                // --- Bloque para elementos <a> con href (ej. /post/5, /login) ---
                 
-                // ¡Es seguro construir la URL aquí!
                 const url = new URL(link.href); 
                 
                 newPath = url.pathname.replace(basePath, '') || '/';
@@ -441,9 +421,7 @@ export function initRouter() {
                 }
             }
             
-            // --- Lógica de Query String (movida aquí) ---
             
-            // Re-creamos la 'url' de forma segura, SOLO si link.href existe
             const url = link.href ? new URL(link.href) : null; 
             
             if (link.hasAttribute('data-nav-js') && url && url.search) {
@@ -463,17 +441,14 @@ export function initRouter() {
                 return;
             }
 
-            // Construir la URL completa para el historial (incluyendo el query string si existe)
             const queryString = (url && url.search) ? url.search : '';
             const fullUrlPath = `${basePath}${newPath === '/' ? '/' : newPath}${queryString}`;
             
-            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▼▼▼ ---
             
             const currentFullUrl = window.location.pathname + window.location.search;
             if (currentFullUrl !== fullUrlPath) {
                 history.pushState(null, '', fullUrlPath);
                 
-                // Pasamos los fetchParams (ej. {post_id: 5} o null) a loadPage.
                 loadPage(page, action, fetchParams); 
             }
 

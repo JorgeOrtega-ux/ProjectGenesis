@@ -1,13 +1,10 @@
 <?php
-// FILE: api/admin_handler.php
-// (CÓDIGO MODIFICADO)
 
 include '../config/config.php';
 header('Content-Type: application/json');
 
 $response = ['success' => false, 'message' => 'js.api.invalidAction'];
 
-// 1. Validar Sesión de Administrador
 if (!isset($_SESSION['user_id'])) {
     $response['message'] = 'js.settings.errorNoSession';
     echo json_encode($response);
@@ -18,19 +15,18 @@ $adminUserId = $_SESSION['user_id'];
 $adminRole = $_SESSION['role'] ?? 'user';
 
 if ($adminRole !== 'administrator' && $adminRole !== 'founder') {
-    $response['message'] = 'js.admin.errorAdminTarget'; // Mensaje genérico de "sin permiso"
+    $response['message'] = 'js.admin.errorAdminTarget'; 
     echo json_encode($response);
     exit;
 }
 
-// --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! (Copiada de settings_handler.php) ▼▼▼ ---
 function generateDefaultAvatar($pdo, $userId, $username, $basePath)
 {
     try {
-        $savePathDir = dirname(__DIR__) . '/assets/uploads/avatars_default'; // Nueva carpeta
+        $savePathDir = dirname(__DIR__) . '/assets/uploads/avatars_default'; 
         $fileName = "user-{$userId}.png";
         $fullSavePath = $savePathDir . '/' . $fileName;
-        $publicUrl = $basePath . '/assets/uploads/avatars_default/' . $fileName; // Nueva carpeta
+        $publicUrl = $basePath . '/assets/uploads/avatars_default/' . $fileName; 
 
         if (!is_dir($savePathDir)) {
             mkdir($savePathDir, 0755, true);
@@ -56,12 +52,9 @@ function generateDefaultAvatar($pdo, $userId, $username, $basePath)
     }
 }
 
-// --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! (Copiada de settings_handler.php) ▼▼▼ ---
 function deleteOldAvatar($oldUrl, $basePath)
 {
-    // Solo borrar avatares que están en la carpeta 'avatars_uploaded'
     if (strpos($oldUrl, '/assets/uploads/avatars_uploaded/') === false) {
-        // Si no está en esa carpeta, es un avatar por defecto (o de ui-avatars), no lo borramos.
         return;
     }
     
@@ -73,32 +66,16 @@ function deleteOldAvatar($oldUrl, $basePath)
     }
 }
 
-// --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! (Comprobador de permisos) ▼▼▼ ---
-/**
- * Comprueba si un admin ($adminRole) puede modificar a un usuario ($targetRole).
- * @param string $adminRole Rol del admin (administrator, founder)
- * @param string $targetRole Rol del usuario a modificar (user, moderator, administrator, founder)
- * @return bool True si puede modificar, false si no.
- */
 function canAdminModifyTarget($adminRole, $targetRole) {
     if ($adminRole === 'founder') {
-        // Un fundador puede modificar a todos, excepto a otros fundadores
         return $targetRole !== 'founder';
     }
     if ($adminRole === 'administrator') {
-        // Un admin solo puede modificar a usuarios y moderadores
         return $targetRole === 'user' || $targetRole === 'moderator';
     }
     return false;
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
 
-// --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! (Lógica de JS portada a PHP) ▼▼▼ ---
-/**
- * Genera una contraseña segura aleatoria en PHP.
- * @param {number} length La longitud de la contraseña (default 16)
- * @returns {string} Una contraseña segura.
- */
 function generateSecurePasswordPhp($length = 16) {
     $lower = 'abcdefghijklmnopqrstuvwxyz';
     $upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -107,37 +84,28 @@ function generateSecurePasswordPhp($length = 16) {
     $all = $lower . $upper . $numbers . $special;
 
     $password = '';
-    // Asegurar al menos uno de cada tipo
     $password .= $lower[random_int(0, strlen($lower) - 1)];
     $password .= $upper[random_int(0, strlen($upper) - 1)];
     $password .= $numbers[random_int(0, strlen($numbers) - 1)];
     $password .= $special[random_int(0, strlen($special) - 1)];
 
-    // Rellenar el resto
     for ($i = 4; $i < $length; $i++) {
         $password .= $all[random_int(0, strlen($all) - 1)];
     }
 
-    // Mezclar (barajar)
     return str_shuffle($password);
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
 
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (CONSTANTES GLOBALES) ▼▼▼ ---
-// Cargar valores desde $GLOBALS a variables locales
 $minPasswordLength = (int)($GLOBALS['site_settings']['min_password_length'] ?? 8);
 $maxPasswordLength = (int)($GLOBALS['site_settings']['max_password_length'] ?? 72);
 $minUsernameLength = (int)($GLOBALS['site_settings']['min_username_length'] ?? 6);
 $maxUsernameLength = (int)($GLOBALS['site_settings']['max_username_length'] ?? 32);
 $maxEmailLength = (int)($GLOBALS['site_settings']['max_email_length'] ?? 255);
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
-// --- INICIO DE MODIFICACIÓN: Lógica de POST y GET ---
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    // 2. Validar Token CSRF
     $submittedToken = $_POST['csrf_token'] ?? '';
     if (!validateCsrfToken($submittedToken)) {
         $response['message'] = 'js.api.errorSecurityRefresh';
@@ -147,13 +115,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $action = $_POST['action'] ?? '';
 
-    // --- ▼▼▼ NUEVA ACCIÓN 'get-users' AÑADIDA ▼▼▼ ---
     if ($action === 'get-users') {
         
         try {
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
             
-            // 1. OBTENER PARÁMETROS (AHORA DESDE POST)
             $adminCurrentPage = (int)($_POST['p'] ?? 1);
             if ($adminCurrentPage < 1) $adminCurrentPage = 1;
 
@@ -172,11 +138,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sort_by_sql = ($sort_by_param === '') ? 'created_at' : $sort_by_param;
             $sort_order_sql = ($sort_order_param === '') ? 'DESC' : $sort_order_param;
 
-            $usersPerPage = 1; // 20 usuarios por página (Debería coincidir con manage-users.php)
+            $usersPerPage = 1; 
             $totalUsers = 0;
             $totalPages = 1;
 
-            // 2. Contar el total de usuarios (con filtro si existe)
             $sqlCount = "SELECT COUNT(*) FROM users";
             if ($isSearching) {
                 $sqlCount .= " WHERE (username LIKE :query OR email LIKE :query)";
@@ -197,7 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($adminCurrentPage > $totalPages) $adminCurrentPage = $totalPages;
             $offset = ($adminCurrentPage - 1) * $usersPerPage;
 
-            // 3. Obtener los usuarios para la página actual
             $sqlSelect = "SELECT id, username, email, profile_image_url, role, created_at, account_status 
                           FROM users";
             if ($isSearching) {
@@ -214,7 +178,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute();
             $usersList = $stmt->fetchAll();
             
-            // 4. Formatear datos para el JSON
             $formattedUsers = [];
             foreach ($usersList as $user) {
                 $avatarUrl = $user['profile_image_url'] ?? $defaultAvatar;
@@ -235,7 +198,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ];
             }
 
-            // 5. Devolver la respuesta JSON
             $response['success'] = true;
             $response['users'] = $formattedUsers;
             $response['totalUsers'] = $totalUsers;
@@ -247,29 +209,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = 'js.api.errorDatabase';
         }
         
-    // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN 'create-user'! ▼▼▼ ---
     } elseif ($action === 'create-user') {
         try {
-            // 1. Obtener datos
             $username = trim($_POST['username'] ?? '');
             $email = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
-            // $passwordConfirm = $_POST['password_confirm'] ?? ''; // <-- ELIMINADO
             $role = $_POST['role'] ?? 'user';
-            $is_2fa_enabled = isset($_POST['is_2fa_enabled']) && $_POST['is_2fa_enabled'] === '1' ? 1 : 0; // <-- AÑADIDO
+            $is_2fa_enabled = isset($_POST['is_2fa_enabled']) && $_POST['is_2fa_enabled'] === '1' ? 1 : 0; 
 
-            // 2. Validar Campos Vacíos
-            if (empty($username) || empty($email) || empty($password) || empty($role)) { // <-- CAMPO ELIMINADO
+            if (empty($username) || empty($email) || empty($password) || empty($role)) { 
                 throw new Exception('js.auth.errorCompleteAllFields');
             }
 
-            // 3. Validar Rol
             $allowedRoles = ['user', 'moderator', 'administrator'];
             if (!in_array($role, $allowedRoles)) {
-                throw new Exception('admin.create.errorRole'); // Nueva clave i18n
+                throw new Exception('admin.create.errorRole'); 
             }
 
-            // 4. Validar Email
             $domainsString = $GLOBALS['site_settings']['allowed_email_domains'] ?? '';
             $allowedDomains = preg_split('/[\s,]+/', $domainsString, -1, PREG_SPLIT_NO_EMPTY);
             $emailDomain = substr($email, strrpos($email, '@') + 1);
@@ -289,7 +245,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.auth.errorEmailInUse');
             }
 
-            // 5. Validar Username
             if (strlen($username) < $minUsernameLength) {
                 throw new Exception('js.auth.errorUsernameMinLength');
             }
@@ -302,17 +257,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.auth.errorUsernameInUse');
             }
 
-            // 6. Validar Contraseña (Solo longitud, ya no hay confirmación)
             if (strlen($password) < $minPasswordLength) {
                 throw new Exception('js.auth.errorPasswordMinLength');
             }
             if (strlen($password) > $maxPasswordLength) {
                 throw new Exception('js.auth.errorPasswordLength');
             }
-            // --- ELIMINADA LA VALIDACIÓN DE 'password' y 'passwordConfirm' ---
 
 
-            // 7. Si todo es válido, crear usuario
             $passwordHash = password_hash($password, PASSWORD_BCRYPT);
             $authToken = bin2hex(random_bytes(32));
 
@@ -323,30 +275,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_insert->execute([$email, $username, $passwordHash, $role, $is_2fa_enabled, $authToken]);
             $newUserId = $pdo->lastInsertId();
 
-            // 8. Generar Avatar por defecto
             $localAvatarUrl = generateDefaultAvatar($pdo, $newUserId, $username, $basePath);
             if ($localAvatarUrl) {
                 $stmt_avatar = $pdo->prepare("UPDATE users SET profile_image_url = ? WHERE id = ?");
                 $stmt_avatar->execute([$localAvatarUrl, $newUserId]);
             }
 
-            // 9. Crear Preferencias por defecto
-            $preferredLanguage = $_SESSION['language'] ?? 'es-latam'; // Usar el idioma del admin
+            $preferredLanguage = $_SESSION['language'] ?? 'es-latam'; 
             $stmt_prefs = $pdo->prepare(
                 "INSERT INTO user_preferences (user_id, language, theme, usage_type) 
                  VALUES (?, ?, 'system', 'personal')"
             );
             $stmt_prefs->execute([$newUserId, $preferredLanguage]);
 
-            // 10. Responder con éxito
             $response['success'] = true;
-            $response['message'] = 'admin.create.success'; // Nueva clave i18n
+            $response['message'] = 'admin.create.success'; 
 
         } catch (PDOException $e) {
             logDatabaseError($e, 'admin_handler - create-user');
             $response['message'] = 'js.api.errorDatabase';
         } catch (Exception $e) {
-            // Capturar errores de validación
             $response['message'] = $e->getMessage();
             $data = [];
             if ($response['message'] === 'js.auth.errorPasswordMinLength') $data['length'] = $minPasswordLength;
@@ -355,9 +303,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($response['message'] === 'js.auth.errorUsernameMaxLength') $data['length'] = $maxUsernameLength;
             if (!empty($data)) $response['data'] = $data;
         }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN 'create-user' ▲▲▲ ---
         
-    // --- Lógica existente para 'set-role' y 'set-status' ---
     } elseif ($action === 'set-role') {
 
         $targetUserId = $_POST['target_user_id'] ?? 0;
@@ -387,13 +333,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $targetRole = $targetUser['role'];
 
-            // === ▼▼▼ LÓGICA DE PERMISOS MODIFICADA ▼▼▼ ===
             if (!canAdminModifyTarget($adminRole, $targetRole)) {
                  $response['message'] = ($targetRole === 'founder') ? 'js.admin.errorFounderTarget' : 'js.admin.errorAdminTarget';
                  echo json_encode($response);
                  exit;
             }
-            // === ▲▲▲ FIN LÓGICA DE PERMISOS ▲▲▲ ===
             
             $allowedRoles = ['user', 'moderator', 'administrator', 'founder'];
             if (!in_array($newValue, $allowedRoles)) {
@@ -421,7 +365,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = $e->getMessage();
         }
     
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (set-status) ▼▼▼ ---
     } elseif ($action === 'set-status') {
 
         $targetUserId = $_POST['target_user_id'] ?? 0;
@@ -462,19 +405,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.api.invalidAction');
             }
             
-            // 1. Actualizar la base de datos
             $stmt_update = $pdo->prepare("UPDATE users SET account_status = ? WHERE id = ?");
             $stmt_update->execute([$newValue, $targetUserId]);
 
-            // 2. Notificar al servidor WebSocket (Fire and Forget)
             try {
                 
                 $curl_endpoint = '';
                 $curl_payload = [];
 
                 if ($newValue === 'suspended' || $newValue === 'deleted') {
-                    // --- CASO 1: SUSPENDER O ELIMINAR ---
-                    // Notificar al cliente para que vea la página de estado.
                     $curl_endpoint = 'http://127.0.0.1:8766/update-status';
                     $curl_payload = json_encode([
                         'user_id' => (int)$targetUserId,
@@ -482,23 +421,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ]);
 
                 } else {
-                    // --- CASO 2: REACTIVAR ---
-                    // Forzar un logout de todas las sesiones de ese usuario.
                     
-                    // A. Generar nuevo auth_token en la BD
                     $newAuthToken = bin2hex(random_bytes(32));
                     $stmt_token = $pdo->prepare("UPDATE users SET auth_token = ? WHERE id = ?");
                     $stmt_token->execute([$newAuthToken, $targetUserId]);
                     
-                    // B. Enviar señal de 'kick' a Python
                     $curl_endpoint = 'http://127.0.0.1:8766/kick';
                     $curl_payload = json_encode([
                         'user_id' => (int)$targetUserId,
-                        'exclude_session_id' => 'admin_kick_reactivate' // ID falso para no excluir a nadie
+                        'exclude_session_id' => 'admin_kick_reactivate' 
                     ]);
                 }
 
-                // Enviar la petición a Python
                 $ch = curl_init($curl_endpoint);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 curl_setopt($ch, CURLOPT_POST, true);
@@ -507,18 +441,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'Content-Type: application/json',
                     'Content-Length: ' . strlen($curl_payload)
                 ]);
-                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); // 500ms
-                curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        // 500ms
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); 
+                curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        
 
-                curl_exec($ch); // No nos importa la respuesta, solo enviar
+                curl_exec($ch); 
                 curl_close($ch);
                 
             } catch (Exception $e) {
-                // Si el servidor WS falla, no detener la acción del admin.
                 logDatabaseError($e, 'admin_handler - set-status (ws_notify_fail)');
             }
 
-            // 3. Responder al admin
             $response['success'] = true;
             $response['message'] = 'js.admin.successStatus';
 
@@ -529,25 +461,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = $e->getMessage();
         }
     }
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN (set-status) ▲▲▲ ---
 
-    // --- ▼▼▼ ¡NUEVO BLOQUE DE ACCIÓN AÑADIDO! ▼▼▼ ---
     elseif ($action === 'admin-generate-password') {
         try {
-            // No se necesita $targetUserId, solo el permiso del admin, que ya está validado.
-            $newPassword = generateSecurePasswordPhp(16); // Llama a la nueva función PHP
+            $newPassword = generateSecurePasswordPhp(16); 
             
             $response['success'] = true;
             $response['password'] = $newPassword;
 
         } catch (Exception $e) {
             logDatabaseError($e, 'admin_handler - admin-generate-password');
-            $response['message'] = 'js.api.errorServer'; // Error genérico
+            $response['message'] = 'js.api.errorServer'; 
         }
     }
-    // --- ▲▲▲ FIN DE NUEVO BLOQUE DE ACCIÓN ▲▲▲ ---
     
-    // === ▼▼▼ INICIO DE NUEVAS ACCIONES DE EDICIÓN DE ADMIN ▼▼▼ ===
 
     elseif ($action === 'admin-upload-avatar') {
         try {
@@ -564,13 +491,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $file = $_FILES['avatar'];
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             $maxSizeMB = (int)($GLOBALS['site_settings']['avatar_max_size_mb'] ?? 2);
             if ($file['size'] > $maxSizeMB * 1024 * 1024) {
                 $response['data'] = ['size' => $maxSizeMB];
                 throw new Exception('js.settings.errorAvatarSize');
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
             $finfo = new finfo(FILEINFO_MIME_TYPE);
             $mimeType = $finfo->file($file['tmp_name']);
@@ -643,10 +568,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $oldUsername = $targetUser['username'];
             if (empty($newUsername)) throw new Exception('js.settings.errorUsernameEmpty');
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             if (strlen($newUsername) < $minUsernameLength) throw new Exception('js.auth.errorUsernameMinLength');
             if (strlen($newUsername) > $maxUsernameLength) throw new Exception('js.auth.errorUsernameMaxLength');
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
             if ($newUsername === $oldUsername) throw new Exception('js.settings.errorUsernameIsCurrent');
 
             $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
@@ -662,9 +585,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
             $response['message'] = 'js.settings.successUsernameUpdate';
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             $response['newUsername'] = $newUsername;
-            // Comprobar si el avatar por defecto necesita actualizarse
             $oldUrl = $targetUser['profile_image_url'];
             $isDefaultAvatar = strpos($oldUrl, '/assets/uploads/avatars_uploaded/') === false;
             
@@ -681,16 +602,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
         } catch (Exception $e) {
             if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-update-username');
             $response['message'] = $e->getMessage();
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             if ($response['message'] === 'js.auth.errorUsernameMinLength') $response['data'] = ['length' => $minUsernameLength];
             elseif ($response['message'] === 'js.auth.errorUsernameMaxLength') $response['data'] = ['length' => $maxUsernameLength];
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
         }
     }
     
@@ -707,21 +625,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $oldEmail = $targetUser['email'];
             if (empty($newEmail) || !filter_var($newEmail, FILTER_VALIDATE_EMAIL)) throw new Exception('js.auth.errorInvalidEmail');
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             if (strlen($newEmail) > $maxEmailLength) throw new Exception('js.auth.errorEmailLength');
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
             if ($newEmail === $oldEmail) throw new Exception('js.settings.errorEmailIsCurrent');
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---
             $domainsString = $GLOBALS['site_settings']['allowed_email_domains'] ?? '';
             $allowedDomains = preg_split('/[\s,]+/', $domainsString, -1, PREG_SPLIT_NO_EMPTY);
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $emailDomain = substr($newEmail, strrpos($newEmail, '@') + 1);
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---
             if (!empty($allowedDomains) && !in_array(strtolower($emailDomain), $allowedDomains)) {
                 throw new Exception('js.auth.errorEmailDomain');
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
             $stmt->execute([$newEmail, $targetUserId]);
@@ -735,7 +647,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $response['success'] = true;
             $response['message'] = 'js.settings.successEmailUpdate';
-            $response['newEmail'] = $newEmail; // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            $response['newEmail'] = $newEmail; 
 
         } catch (Exception $e) {
             if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-update-email');
@@ -758,12 +670,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $oldHashedPassword = $targetUser['password'];
 
             if (empty($newPassword) || empty($confirmPassword)) {
-                throw new Exception('admin.edit.errorPassEmpty'); // Nuevo i18n
+                throw new Exception('admin.edit.errorPassEmpty'); 
             }
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
             if (strlen($newPassword) < $minPasswordLength) throw new Exception('js.auth.errorPasswordMinLength');
             if (strlen($newPassword) > $maxPasswordLength) throw new Exception('js.auth.errorPasswordLength');
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             if ($newPassword !== $confirmPassword) throw new Exception('js.auth.errorPasswordMismatch');
 
             $newHashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
@@ -776,25 +686,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $response['success'] = true;
             $response['message'] = 'js.settings.successPassUpdate';
-            $response['newPasswordHash'] = $newHashedPassword; // <-- ¡LÍNEA AÑADIDA!
+            $response['newPasswordHash'] = $newHashedPassword; 
 
         } catch (Exception $e) {
             if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-update-password');
             $response['message'] = $e->getMessage();
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
             if ($response['message'] === 'js.auth.errorPasswordMinLength') $response['data'] = ['length' => $minPasswordLength];
             elseif ($response['message'] === 'js.auth.errorPasswordLength') $response['data'] = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         }
     }
     
-    // === ▲▲▲ FIN DE NUEVAS ACCIONES DE EDICIÓN DE ADMIN ▲▲▲ ===
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
     elseif ($action === 'update-maintenance-mode') {
-        // Solo los 'founder' pueden cambiar esto.
         if ($adminRole !== 'founder') {
-            $response['message'] = 'js.admin.errorAdminTarget'; // Sin permiso
+            $response['message'] = 'js.admin.errorAdminTarget'; 
             echo json_encode($response);
             exit;
         }
@@ -802,7 +707,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $newValue = $_POST['new_value'] ?? '0';
 
-            // Validar que el valor sea solo 0 o 1
             if ($newValue !== '0' && $newValue !== '1') {
                 throw new Exception('js.api.invalidAction');
             }
@@ -813,19 +717,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_maintenance->execute([$newValue]);
             
             $registrationValue = null;
-            $kicked_users_count = 0; // Contador para la nueva lógica
+            $kicked_users_count = 0; 
 
-            // ¡LÓGICA DE VINCULACIÓN!
-            // Si el modo mantenimiento se ACTIVA, forzar el bloqueo de registros Y EXPULSAR USUARIOS.
             if ($newValue === '1') {
-                // 1. Forzar bloqueo de registros
                 $stmt_registration = $pdo->prepare("UPDATE site_settings SET setting_value = '0' WHERE setting_key = 'allow_new_registrations'");
                 $stmt_registration->execute();
                 $registrationValue = '0';
                 
-                // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (LOGOUT EN LUGAR DE KICK) ▼▼▼ ---
                 
-                // 2. Obtener IDs de todos los usuarios (no-staff) activos
                 $stmt_users_to_kick = $pdo->prepare(
                     "SELECT id FROM users WHERE role = 'user' AND account_status = 'active'"
                 );
@@ -835,21 +734,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!empty($userIdsToKick)) {
                     $kicked_users_count = count($userIdsToKick);
                     
-                    // 3. Invalidar los auth_token de todos esos usuarios (forzar logout)
-                    // Preparar la consulta para actualizar el token
                     $stmt_token_invalidate = $pdo->prepare("UPDATE users SET auth_token = ? WHERE id = ?");
                     foreach ($userIdsToKick as $userId) {
-                        $newAuthToken = bin2hex(random_bytes(32)); // Generar un token único
+                        $newAuthToken = bin2hex(random_bytes(32)); 
                         $stmt_token_invalidate->execute([$newAuthToken, $userId]);
                     }
 
-                    // 4. Notificar al servidor WebSocket para que los clientes recarguen (Fire and Forget)
                     try {
                         $kickPayload = json_encode([
-                            'user_ids' => $userIdsToKick // Enviar el array de IDs
+                            'user_ids' => $userIdsToKick 
                         ]);
 
-                        $ch = curl_init('http://127.0.0.1:8766/kick-bulk'); // Usar el mismo endpoint
+                        $ch = curl_init('http://127.0.0.1:8766/kick-bulk'); 
                         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                         curl_setopt($ch, CURLOPT_POST, true);
                         curl_setopt($ch, CURLOPT_POSTFIELDS, $kickPayload);
@@ -857,31 +753,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'Content-Type: application/json',
                             'Content-Length: ' . strlen($kickPayload)
                         ]);
-                        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); // 500ms
-                        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        // 500ms
+                        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); 
+                        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        
 
-                        curl_exec($ch); // No nos importa la respuesta, solo enviar
+                        curl_exec($ch); 
                         curl_close($ch);
                         
                     } catch (Exception $e) {
-                        // Si el servidor WS falla, no detener la acción del admin.
                         logDatabaseError($e, 'admin_handler - maintenance (kick_bulk_ws_fail)');
                     }
                 }
-                // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
             }
             
             $pdo->commit();
 
             $response['success'] = true;
-            $response['message'] = 'js.admin.maintenanceSuccess'; // Nueva clave i18n
+            $response['message'] = 'js.admin.maintenanceSuccess'; 
             $response['newValue'] = $newValue;
             if ($registrationValue !== null) {
-                $response['registrationValue'] = $registrationValue; // Enviar el valor forzado al JS
+                $response['registrationValue'] = $registrationValue; 
             }
             if ($kicked_users_count > 0) {
-                 // (Opcional) Informar al admin cuántos usuarios fueron deslogueados
-                 // $response['message'] .= " (Cerrando sesión a $kicked_users_count usuarios)";
             }
 
         } catch (Exception $e) {
@@ -894,11 +786,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
-    // --- ▼▼▼ INICIO DE NUEVA ACCIÓN (BLOQUEAR REGISTROS) ▼▼▼ ---
     elseif ($action === 'update-registration-mode') {
-        // Solo los 'founder' pueden cambiar esto.
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
             echo json_encode($response);
@@ -911,22 +800,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.api.invalidAction');
             }
 
-            // Comprobar si el modo mantenimiento está activo
             $stmt_check_maintenance = $pdo->prepare("SELECT setting_value FROM site_settings WHERE setting_key = 'maintenance_mode'");
             $stmt_check_maintenance->execute();
             $maintenanceMode = $stmt_check_maintenance->fetchColumn();
 
-            // Si el mantenimiento está activo, NO se puede activar el registro
             if ($maintenanceMode === '1' && $newValue === '1') {
-                throw new Exception('js.admin.errorRegInMaintenance'); // Nueva clave i18n
+                throw new Exception('js.admin.errorRegInMaintenance'); 
             }
             
-            // Si no, proceder con la actualización
             $stmt = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = 'allow_new_registrations'");
             $stmt->execute([$newValue]);
 
             $response['success'] = true;
-            $response['message'] = 'js.admin.registrationSuccess'; // Nueva clave i18n
+            $response['message'] = 'js.admin.registrationSuccess'; 
             $response['newValue'] = $newValue;
 
         } catch (Exception $e) {
@@ -938,9 +824,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-    // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
 
-    // --- ▼▼▼ INICIO DE NUEVAS ACCIONES DE DOMINIO ▼▼▼ ---
     elseif ($action === 'admin-add-domain') {
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
@@ -1000,7 +884,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $domains = preg_split('/[\s,]+/', $domainsString, -1, PREG_SPLIT_NO_EMPTY);
             
-            // Filtrar el array (case-insensitive)
             $newDomains = array_filter($domains, function($domain) use ($domainToRemove) {
                 return strtolower($domain) !== $domainToRemove;
             });
@@ -1018,21 +901,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = 'js.admin.domainRemoveError';
         }
     }
-    // --- ▲▲▲ FIN DE NUEVAS ACCIONES DE DOMINIO ▲▲▲ ---
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (ACCIÓN 'update-allowed-email-domains' ELIMINADA) ▼▼▼ ---
     elseif (
         $action === 'update-username-cooldown' || $action === 'update-email-cooldown' || $action === 'update-avatar-max-size' ||
         $action === 'update-min-password-length' || $action === 'update-max-login-attempts' || $action === 'update-lockout-time-minutes' ||
-        // 'update-allowed-email-domains' se ha quitado de esta lista
         $action === 'update-max-password-length' ||
-        // --- ▼▼▼ MODIFICACIÓN: Claves añadidas ▼▼▼ ---
         $action === 'update-min-username-length' || $action === 'update-max-username-length' ||
         $action === 'update-max-email-length' || $action === 'update-code-resend-cooldown' ||
-        $action === 'update-max-concurrent-users' // <-- ¡LÍNEA AÑADIDA!
-        // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+        $action === 'update-max-concurrent-users' 
     ) {
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
@@ -1043,7 +920,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $newValue = trim($_POST['new_value'] ?? '');
             
-            // Determinar la clave de la BD
             $settingKeyMap = [
                 'update-username-cooldown' => 'username_cooldown_days',
                 'update-email-cooldown' => 'email_cooldown_days',
@@ -1051,15 +927,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'update-min-password-length' => 'min_password_length',
                 'update-max-login-attempts' => 'max_login_attempts',
                 'update-lockout-time-minutes' => 'lockout_time_minutes',
-                // 'allowed_email_domains' se ha quitado de este mapa
                 'update-max-password-length' => 'max_password_length',
-                // --- ▼▼▼ MODIFICACIÓN: Claves añadidas ▼▼▼ ---
                 'update-min-username-length' => 'min_username_length',
                 'update-max-username-length' => 'max_username_length',
                 'update-max-email-length' => 'max_email_length',
                 'update-code-resend-cooldown' => 'code_resend_cooldown_seconds',
-                'update-max-concurrent-users' => 'max_concurrent_users' // <-- ¡LÍNEA AÑADIDA!
-                // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+                'update-max-concurrent-users' => 'max_concurrent_users' 
             ];
             
             if (!isset($settingKeyMap[$action])) {
@@ -1068,29 +941,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $dbKey = $settingKeyMap[$action];
 
-            // Validar que el valor sea un número positivo
-            // --- ▼▼▼ MODIFICACIÓN: Permitir 0 para cooldowns si se desea ---
             if (!is_numeric($newValue) || (int)$newValue < 0) {
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
-                throw new Exception('js.api.invalidAction'); // Error genérico
+                throw new Exception('js.api.invalidAction'); 
             }
             $finalValue = (int)$newValue;
             
-            // --- ▼▼▼ MODIFICACIÓN: Añadir validación de rangos ▼▼▼ ---
             if ($dbKey === 'min_password_length' && ($finalValue < 8 || $finalValue > 72)) {
                  throw new Exception('js.api.invalidAction');
             }
             if ($dbKey === 'max_password_length' && ($finalValue < 8 || $finalValue > 72)) {
                  throw new Exception('js.api.invalidAction');
             }
-            // (Puedes añadir más validaciones de rango aquí si lo deseas)
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
 
             $stmt = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = ?");
             $stmt->execute([$finalValue, $dbKey]);
 
             $response['success'] = true;
-            $response['message'] = 'js.admin.settingUpdateSuccess'; // Mensaje genérico
+            $response['message'] = 'js.admin.settingUpdateSuccess'; 
             $response['newValue'] = $finalValue;
             $response['settingKey'] = $dbKey;
 
@@ -1104,18 +971,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (LÓGICA DE BACKUP) ▼▼▼ ---
     
     elseif ($action === 'create-backup' || $action === 'restore-backup' || $action === 'delete-backup') {
         
-        // ¡¡¡DOBLE COMPROBACIÓN DE SEGURIDAD!!! SOLO FOUNDER PUEDE HACER ESTO.
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
             echo json_encode($response);
             exit;
         }
         
-        $backupDir = dirname(__DIR__) . '/backups'; // Sube 2 niveles (api/ -> projectgenesis/) y luego a /backups
+        $backupDir = dirname(__DIR__) . '/backups'; 
         if (!is_dir($backupDir)) @mkdir($backupDir, 0755, true);
         
         if (!is_writable($backupDir)) {
@@ -1130,7 +995,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $filename = 'backup_' . DB_NAME . '_' . date('Y-m-d_H-i-s') . '.sql';
                 $filepath = $backupDir . '/' . $filename;
                 
-                // Usar las constantes definidas en config.php
                 $command = sprintf(
                     'mysqldump --host=%s --user=%s --password=%s --result-file=%s %s',
                     escapeshellarg(DB_HOST),
@@ -1148,7 +1012,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             } elseif ($action === 'restore-backup') {
                 $filename = $_POST['filename'] ?? '';
-                $safeFilename = basename($filename); // SANITIZACIÓN CRÍTICA
+                $safeFilename = basename($filename); 
                 $filepath = $backupDir . '/' . $safeFilename;
 
                 if (empty($safeFilename) || $safeFilename !== $filename || !file_exists($filepath)) {
@@ -1172,7 +1036,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             } elseif ($action === 'delete-backup') {
                 $filename = $_POST['filename'] ?? '';
-                $safeFilename = basename($filename); // SANITIZACIÓN CRÍTICA
+                $safeFilename = basename($filename); 
                 $filepath = $backupDir . '/' . $safeFilename;
                 
                 if (empty($safeFilename) || $safeFilename !== $filename || !file_exists($filepath)) {
@@ -1191,15 +1055,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ---
     
-    // --- ▼▼▼ EL BLOQUE 'get-concurrent-users' SE HA ELIMINADO ▼▼▼ ---
     
 } else {
-    // Si no es POST, se mantiene el error por defecto
     $response['message'] = 'js.api.invalidAction';
 }
-// --- FIN DE MODIFICACIÓN ---
 
 echo json_encode($response);
 exit;

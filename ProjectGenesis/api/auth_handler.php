@@ -1,14 +1,10 @@
 <?php
-// FILE: api/auth_handler.php
-// (CÓDIGO MODIFICADO PARA PERMITIR ACCESO A STAFF AUNQUE ESTÉ LLENO)
 
 include '../config/config.php';
 header('Content-Type: application/json');
 
 $response = ['success' => false, 'message' => 'js.api.invalidAction'];
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (CONSTANTES GLOBALES) ▼▼▼ ---
-// Cargar todas las constantes desde GLOBALS a variables locales
 $codeResendCooldownSeconds = (int)($GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? 60);
 $minPasswordLength = (int)($GLOBALS['site_settings']['min_password_length'] ?? 8);
 $maxPasswordLength = (int)($GLOBALS['site_settings']['max_password_length'] ?? 72);
@@ -16,13 +12,6 @@ $minUsernameLength = (int)($GLOBALS['site_settings']['min_username_length'] ?? 6
 $maxUsernameLength = (int)($GLOBALS['site_settings']['max_username_length'] ?? 32);
 $maxEmailLength = (int)($GLOBALS['site_settings']['max_email_length'] ?? 255);
 
-// define('CODE_RESEND_COOLDOWN_SECONDS', 60); // <-- ELIMINADO
-// define('MIN_PASSWORD_LENGTH', 8); // <-- ELIMINADO
-// define('MAX_PASSWORD_LENGTH', 72); // <-- ELIMINADO
-// define('MIN_USERNAME_LENGTH', 6); // <-- ELIMINADO
-// define('MAX_USERNAME_LENGTH', 32); // <-- ELIMINADO
-// define('MAX_EMAIL_LENGTH', 255); // <-- ELIMINADO
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
 function generateVerificationCode() {
@@ -36,7 +25,6 @@ function generateVerificationCode() {
 }
 
 
-// --- ▼▼▼ FUNCIÓN MODIFICADA (Paso 2) ▼▼▼ ---
 function logUserMetadata($pdo, $userId) {
     try {
         $ip = getIpAddress(); 
@@ -53,14 +41,13 @@ function logUserMetadata($pdo, $userId) {
         );
         $stmt->execute([$userId, $ip, $deviceType, $browserInfo]);
         
-        return $pdo->lastInsertId(); // <-- ¡LÍNEA AÑADIDA!
+        return $pdo->lastInsertId(); 
 
     } catch (PDOException $e) {
         logDatabaseError($e, 'auth_handler - logUserMetadata');
-        return null; // <-- ¡LÍNEA AÑADIDA!
+        return null; 
     }
 }
-// --- ▲▲▲ FIN FUNCIÓN MODIFICADA ▲▲▲ ---
 
 
 function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $userIdFromVerification) {
@@ -72,12 +59,10 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
 
     $localAvatarUrl = null;
     try {
-        // --- INICIO DE MODIFICACIÓN (Ruta de Avatares) ---
-        $savePathDir = dirname(__DIR__) . '/assets/uploads/avatars_default'; // Nueva carpeta
+        $savePathDir = dirname(__DIR__) . '/assets/uploads/avatars_default'; 
         $fileName = "user-{$userId}.png";
         $fullSavePath = $savePathDir . '/' . $fileName;
-        $publicUrl = $basePath . '/assets/uploads/avatars_default/' . $fileName; // Nueva carpeta
-        // --- FIN DE MODIFICACIÓN ---
+        $publicUrl = $basePath . '/assets/uploads/avatars_default/' . $fileName; 
 
         if (!is_dir($savePathDir)) {
             mkdir($savePathDir, 0755, true);
@@ -118,10 +103,8 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
     }
 
 
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (SESIÓN 90 DÍAS) ▼▼▼ ---
-    $session_lifetime = 60 * 60 * 24 * 90; // 90 días
+    $session_lifetime = 60 * 60 * 24 * 90; 
     session_set_cookie_params($session_lifetime);
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
     
     session_regenerate_id(true);
 
@@ -132,10 +115,8 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
     $_SESSION['role'] = 'user'; 
     $_SESSION['auth_token'] = $authToken; 
     
-    // --- ▼▼▼ BLOQUE MODIFICADO (Paso 2) ▼▼▼ ---
     $metadata_id = logUserMetadata($pdo, $userId); 
-    $_SESSION['metadata_id'] = $metadata_id; // <-- ¡LÍNEA AÑADIDA!
-    // --- ▲▲▲ FIN BLOQUE MODIFICADO ▲▲▲ ---
+    $_SESSION['metadata_id'] = $metadata_id; 
     
 
     $stmt = $pdo->prepare("DELETE FROM verification_codes WHERE id = ?");
@@ -167,45 +148,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === 'register-check-email') {
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (BLOQUEAR REGISTRO) ▼▼▼ ---
             if (!isset($GLOBALS['site_settings']['allow_new_registrations']) || $GLOBALS['site_settings']['allow_new_registrations'] !== '1') {
-                $response['message'] = 'js.auth.errorRegistrationsDisabled'; // Nueva clave i18n
+                $response['message'] = 'js.auth.errorRegistrationsDisabled'; 
                 echo json_encode($response);
                 exit;
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---
             $domainsString = $GLOBALS['site_settings']['allowed_email_domains'] ?? '';
             $allowedDomains = preg_split('/[\s,]+/', $domainsString, -1, PREG_SPLIT_NO_EMPTY);
-            // $allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com']; // <-- ELIMINADO
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $emailDomain = substr($email, strrpos($email, '@') + 1);
 
             if (empty($email) || empty($password)) {
                 $response['message'] = 'js.auth.errorCompleteEmailPass';
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $response['message'] = 'js.auth.errorInvalidEmail';
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             } elseif (strlen($email) > $maxEmailLength) {
                 $response['message'] = 'js.auth.errorEmailLength';
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (DOMINIOS GLOBALES) ▼▼▼ ---
             } elseif (!empty($allowedDomains) && !in_array(strtolower($emailDomain), $allowedDomains)) {
                 $response['message'] = 'js.auth.errorEmailDomain';
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
             } elseif (strlen($password) < $minPasswordLength) {
                 $response['message'] = 'js.auth.errorPasswordMinLength';
                 $response['data'] = ['length' => $minPasswordLength];
-            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
             } elseif (strlen($password) > $maxPasswordLength) {
                 $response['message'] = 'js.auth.errorPasswordLength';
                 $response['data'] = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
-            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
             } else {
                 try {
                     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
@@ -232,21 +201,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (empty($email) || empty($password) || empty($username)) {
                 $response['message'] = 'js.auth.errorMissingSteps';
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
-            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
             } elseif (strlen($password) < $minPasswordLength || strlen($password) > $maxPasswordLength) {
                  $response['message'] = 'js.auth.errorPasswordLength';
                  $response['data'] = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
-            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             } elseif (strlen($username) < $minUsernameLength) {
                 $response['message'] = 'js.auth.errorUsernameMinLength';
                 $response['data'] = ['length' => $minUsernameLength];
             } elseif (strlen($username) > $maxUsernameLength) {
                 $response['message'] = 'js.auth.errorUsernameMaxLength';
                 $response['data'] = ['length' => $maxUsernameLength];
-            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
             } else {
                 try {
                     $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
@@ -285,7 +248,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         elseif ($action === 'register-verify') {
             
-            // Corrección de bug de mantenimiento (Recomendación anterior)
             if (!isset($GLOBALS['site_settings']['allow_new_registrations']) || $GLOBALS['site_settings']['allow_new_registrations'] !== '1') {
                 $response['message'] = 'js.auth.errorRegistrationsDisabled';
                 echo json_encode($response);
@@ -339,15 +301,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } catch (PDOException $e) {
                     logDatabaseError($e, 'auth_handler - register-verify');
                     
-                    // --- ▼▼▼ INICIO DE LA CORRECCIÓN RECOMENDADA (Opción 1 Modificada) ▼▼▼ ---
-                    // El código de error '23000' (o 1062) es para violación de restricción UNIQUE
                     if ($e->errorInfo[1] == 1062 || str_contains($e->getMessage(), 'Duplicate entry')) {
-                        // Mostrar el nuevo mensaje genérico de sincronización
                         $response['message'] = 'js.auth.errorSync'; 
                     } else {
                         $response['message'] = 'js.api.errorDatabase';
                     }
-                    // --- ▲▲▲ FIN DE LA CORRECCIÓN RECOMENDADA (Opción 1 Modificada) ▲▲▲ ---
                 }
             }
         }
@@ -375,10 +333,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $currentTime = new DateTime('now', new DateTimeZone('UTC'));
                     $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
 
-                    // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                     if ($secondsPassed < $codeResendCooldownSeconds) {
                         $secondsRemaining = $codeResendCooldownSeconds - $secondsPassed;
-                    // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                         throw new Exception('js.auth.errorCodeCooldown');
                     }
 
@@ -400,9 +356,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } else {
                         $response['message'] = $e->getMessage();
                         if ($response['message'] === 'js.auth.errorCodeCooldown') {
-                            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                             $response['data'] = ['seconds' => $secondsRemaining ?? $codeResendCooldownSeconds];
-                            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                         }
                     }
                 }
@@ -416,30 +370,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($email)) {
                 $response['message'] = 'js.auth.errorNoEmail';
             } elseif (checkLockStatus($pdo, $email, $ip)) { 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (LOCKOUT GLOBAL) ▼▼▼ ---
                 $response['message'] = 'js.auth.errorTooManyAttempts';
                 $response['data'] = ['minutes' => (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5)];
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             } else {
                 try {
-                    // 1. Validar que el usuario exista y tenga 2FA activado
                     $stmt_check_user = $pdo->prepare("SELECT id, is_2fa_enabled FROM users WHERE email = ?");
                     $stmt_check_user->execute([$email]);
                     $user = $stmt_check_user->fetch();
 
                     if (!$user) {
-                        // No revelar si el usuario existe o no. Simular éxito.
-                        // (Aunque si llegó aquí, es probable que la contraseña fuera correcta)
-                        logFailedAttempt($pdo, $email, $ip, 'login_fail'); // Registrar como intento fallido
-                        throw new Exception('js.auth.errorUserNotFound'); // Error genérico
+                        logFailedAttempt($pdo, $email, $ip, 'login_fail'); 
+                        throw new Exception('js.auth.errorUserNotFound'); 
                     }
                     
                     if ($user['is_2fa_enabled'] != 1) {
-                         // Esto no debería pasar si la lógica de login es correcta, pero por si acaso.
                          throw new Exception('js.auth.errorUnknown');
                     }
                     
-                    // 2. Checar cooldown
                     $stmt_check_code = $pdo->prepare(
                         "SELECT * FROM verification_codes 
                          WHERE identifier = ? AND code_type = '2fa' 
@@ -453,15 +400,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $currentTime = new DateTime('now', new DateTimeZone('UTC'));
                         $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
 
-                        // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                         if ($secondsPassed < $codeResendCooldownSeconds) {
                             $secondsRemaining = $codeResendCooldownSeconds - $secondsPassed;
-                        // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                             throw new Exception('js.auth.errorCodeCooldown');
                         }
                     }
 
-                    // 3. Borrar código viejo y crear uno nuevo
                     $stmt_delete = $pdo->prepare("DELETE FROM verification_codes WHERE identifier = ? AND code_type = '2fa'");
                     $stmt_delete->execute([$email]);
 
@@ -483,9 +427,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } else {
                         $response['message'] = $e->getMessage();
                         if ($response['message'] === 'js.auth.errorCodeCooldown') {
-                            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                             $response['data'] = ['seconds' => $secondsRemaining ?? $codeResendCooldownSeconds];
-                            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                         }
                     }
                 }
@@ -500,10 +442,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ip = getIpAddress(); 
 
                 if (checkLockStatus($pdo, $email, $ip)) {
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (LOCKOUT GLOBAL) ▼▼▼ ---
                     $response['message'] = 'js.auth.errorTooManyAttempts';
                     $response['data'] = ['minutes' => (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5)];
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     echo json_encode($response);
                     exit;
                 }
@@ -529,38 +469,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             exit;
                         }
 
-                        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (REVISAR MANTENIMIENTO) ▼▼▼ ---
                             
-                        // 1. Obtener el rol del usuario y estado de mantenimiento
                         $userRole = $user['role'];
                         $isPrivilegedUser = in_array($userRole, ['moderator', 'administrator', 'founder']);
                         $maintenanceMode = $GLOBALS['site_settings']['maintenance_mode'] ?? '0';
 
-                        // 2. Comprobar si el sitio está en mantenimiento
                         if ($maintenanceMode === '1' && !$isPrivilegedUser) {
-                            // Mantenimiento activado y el usuario no es staff.
-                            // Rechazar el inicio de sesión ANTES de crearlo.
                             $response['success'] = false;
                             $response['redirect_to_status'] = 'maintenance';
-                            $response['message'] = 'page.maintenance.title'; // Reutilizar la clave de i18n
+                            $response['message'] = 'page.maintenance.title'; 
                             echo json_encode($response);
                             exit;
                         }
-                        // --- ▲▲▲ FIN DE LA MODIFICACIÓN (REVISAR MANTENIMIENTO) ▲▲▲ ---
 
 
-                        // 3. Obtener el límite (lógica existente de Límite de Usuarios)
                         $maxUsers = (int)($GLOBALS['site_settings']['max_concurrent_users'] ?? 500); 
 
-                        // 4. Obtener el conteo actual del servidor Python
                         $currentUserCount = 0;
                         try {
                             $context = stream_context_create(['http' => ['timeout' => 2.0]]);
-                            // Usamos file_get_contents, asumiendo que el servidor HTTP se levantará en este puerto
                             $jsonResponse = file_get_contents('http://127.0.0.1:8766/count', false, $context); 
                             
                             if ($jsonResponse === false) {
-                                // Fallar si no se puede verificar el conteo (más seguro)
                                 logDatabaseError(new Exception("No se pudo contactar al servidor de conteo en http://127.0.0.1:8766/count"), 'auth_handler - concurrent_users_check');
                                 throw new Exception('js.api.errorServer'); 
                             }
@@ -570,26 +500,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $currentUserCount = (int)$data['active_users'];
                             }
                         } catch (Exception $e) {
-                            // Captura tanto el error de file_get_contents como el de la BD
                             logDatabaseError($e, 'auth_handler - concurrent_users_check');
                             $response['message'] = 'js.api.errorServer'; 
                             echo json_encode($response);
                             exit;
                         }
 
-                        // 5. Comparar y actuar (Límite de Usuarios)
-                        // Si el servidor está lleno Y el usuario NO es privilegiado, rechazarlo.
                         if ($currentUserCount >= $maxUsers && !$isPrivilegedUser) {
-                            // Servidor lleno. Denegar inicio de sesión.
                             $response['success'] = false;
                             $response['redirect_to_status'] = 'server_full';
                             $response['message'] = 'js.auth.errorServerFull';
                             echo json_encode($response);
                             exit;
                         }
-                        // Si el usuario es privilegiado, se le permite continuar aunque $currentUserCount >= $maxUsers.
                         
-                        // --- ▲▲▲ FIN DE MODIFICACIÓN (LÍMITE DE USUARIOS Y ROLES) ▼▼▼ ---
 
                         clearFailedAttempts($pdo, $email);
 
@@ -609,15 +533,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $response['success'] = true;
                             $response['message'] = 'js.auth.info2faRequired';
                             $response['is_2fa_required'] = true; 
-                            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                             $response['cooldown'] = $codeResendCooldownSeconds; 
-                            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
 
                         } else {
-                            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (SESIÓN 90 DÍAS) ▼▼▼ ---
-                            $session_lifetime = 60 * 60 * 24 * 90; // 90 días
+                            $session_lifetime = 60 * 60 * 24 * 90; 
                             session_set_cookie_params($session_lifetime);
-                            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                             
                             session_regenerate_id(true);
 
@@ -635,10 +555,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $_SESSION['role'] = $user['role']; 
                             $_SESSION['auth_token'] = $authToken; 
                             
-                            // --- ▼▼▼ BLOQUE MODIFICADO (Paso 2) ▼▼▼ ---
                             $metadata_id = logUserMetadata($pdo, $user['id']);
-                            $_SESSION['metadata_id'] = $metadata_id; // <-- ¡LÍNEA AÑADIDA!
-                            // --- ▲▲▲ FIN BLOQUE MODIFICADO ▲▲▲ ---
+                            $_SESSION['metadata_id'] = $metadata_id; 
 
                             generateCsrfToken();
 
@@ -671,10 +589,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 
                 if (checkLockStatus($pdo, $email, $ip)) {
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (LOCKOUT GLOBAL) ▼▼▼ ---
                     $response['message'] = 'js.auth.errorTooManyAttempts';
                     $response['data'] = ['minutes' => (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5)];
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     echo json_encode($response);
                     exit;
                 }
@@ -701,10 +617,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $user = $stmt_user->fetch();
 
                         if ($user) {
-                            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (SESIÓN 90 DÍAS) ▼▼▼ ---
-                            $session_lifetime = 60 * 60 * 24 * 90; // 90 días
+                            $session_lifetime = 60 * 60 * 24 * 90; 
                             session_set_cookie_params($session_lifetime);
-                            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
                             
                             session_regenerate_id(true);
 
@@ -722,10 +636,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $_SESSION['role'] = $user['role']; 
                             $_SESSION['auth_token'] = $authToken; 
                             
-                            // --- ▼▼▼ BLOQUE MODIFICADO (Paso 2) ▼▼▼ ---
                             $metadata_id = logUserMetadata($pdo, $user['id']); 
-                            $_SESSION['metadata_id'] = $metadata_id; // <-- ¡LÍNEA AÑADIDA!
-                            // --- ▲▲▲ FIN BLOQUE MODIFICADO ▲▲▲ ---
+                            $_SESSION['metadata_id'] = $metadata_id; 
                             
                             generateCsrfToken();
 
@@ -809,10 +721,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $currentTime = new DateTime('now', new DateTimeZone('UTC'));
                     $secondsPassed = $currentTime->getTimestamp() - $lastCodeTime->getTimestamp();
 
-                    // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                     if ($secondsPassed < $codeResendCooldownSeconds) {
                         $secondsRemaining = $codeResendCooldownSeconds - $secondsPassed;
-                    // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                         throw new Exception('js.auth.errorCodeCooldown');
                     }
 
@@ -833,9 +743,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } else {
                         $response['message'] = $e->getMessage();
                         if ($response['message'] === 'js.auth.errorCodeCooldown') {
-                            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                             $response['data'] = ['seconds' => $secondsRemaining ?? $codeResendCooldownSeconds];
-                            // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                         }
                     }
                 }
@@ -852,10 +760,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 
                 if (checkLockStatus($pdo, $email, $ip)) {
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (LOCKOUT GLOBAL) ▼▼▼ ---
                     $response['message'] = 'js.auth.errorTooManyAttempts';
                     $response['data'] = ['minutes' => (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5)];
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     echo json_encode($response);
                     exit;
                 }
@@ -896,22 +802,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (empty($email) || empty($submittedCode) || empty($newPassword)) {
                 $response['message'] = 'js.auth.errorMissingDataRestart';
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASS GLOBAL) ▼▼▼ ---
             } elseif (strlen($newPassword) < $minPasswordLength) {
                 $response['message'] = 'js.auth.errorPasswordMinLength';
                 $response['data'] = ['length' => $minPasswordLength];
-            // --- ▼▼▼ ¡INICIO DE MODIFICACIÓN! ▼▼▼ ---
             } elseif (strlen($newPassword) > $maxPasswordLength) {
                 $response['message'] = 'js.auth.errorPasswordLength';
                 $response['data'] = ['min' => $minPasswordLength, 'max' => $maxPasswordLength];
-            // --- ▲▲▲ ¡FIN DE MODIFICACIÓN! ▲▲▲ ---
             } else {
                 
                 if (checkLockStatus($pdo, $email, $ip)) {
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (LOCKOUT GLOBAL) ▼▼▼ ---
                     $response['message'] = 'js.auth.errorTooManyAttempts';
                     $response['data'] = ['minutes' => (int)($GLOBALS['site_settings']['lockout_time_minutes'] ?? 5)];
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     echo json_encode($response);
                     exit;
                 }

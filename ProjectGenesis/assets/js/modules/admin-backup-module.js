@@ -1,17 +1,10 @@
-// FILE: assets/js/modules/admin-backup-module.js
-// (Versión combinada de admin-backups-manager.js y admin-restore-backup-manager.js)
 
 import { showAlert } from '../services/alert-manager.js';
 import { getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js';
 
-// --- INICIO: Lógica de API (Compartida) ---
-// Definimos el endpoint de la API de backups
 const API_ENDPOINT_BACKUP = `${window.projectBasePath}/api/backup_handler.php`;
 
-/**
- * Función _post interna para llamar a la API de backups.
- */
 async function callBackupApi(formData) {
     const csrfToken = window.csrfToken || '';
     formData.append('csrf_token', csrfToken);
@@ -46,14 +39,12 @@ async function callBackupApi(formData) {
         return { success: false, message: getTranslation('js.api.errorConnection') };
     }
 }
-// --- FIN: Lógica de API ---
 
 
 export function initAdminBackupModule() {
 
     let selectedBackupFile = null;
 
-    // --- Funciones de admin-backups-manager ---
 
     function enableSelectionActions() {
         const toolbarContainer = document.getElementById('backup-toolbar-container');
@@ -84,9 +75,6 @@ export function initAdminBackupModule() {
         selectedBackupFile = null;
     }
 
-    /**
-     * Muestra/Oculta un spinner en un botón de la BARRA DE HERRAMIENTAS.
-     */
     function toggleToolbarSpinner(button, isLoading) {
         if (!button) return;
         const iconSpan = button.querySelector('.material-symbols-rounded');
@@ -104,9 +92,6 @@ export function initAdminBackupModule() {
         }
     }
     
-    /**
-     * Muestra/Oculta un spinner en un botón de COMPONENTE (página de restaurar).
-     */
     function toggleComponentButtonSpinner(button, text, isLoading) {
         if (!button) return;
         button.disabled = isLoading;
@@ -125,9 +110,6 @@ export function initAdminBackupModule() {
         }
     }
 
-    /**
-     * Restablece la barra de herramientas a su estado inicial.
-     */
     function resetToolbarState(buttonEl = null) {
         const toolbarContainer = document.getElementById('backup-toolbar-container');
         if (!toolbarContainer) return;
@@ -136,17 +118,11 @@ export function initAdminBackupModule() {
             toggleToolbarSpinner(buttonEl, false);
         }
         
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-        // Volver a habilitar solo los botones de la vista 'default'
         toolbarContainer.querySelectorAll('.toolbar-action-default button').forEach(btn => btn.disabled = false);
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
         
         clearBackupSelection();
     }
     
-    /**
-     * Formatea bytes a un tamaño legible (KB, MB, GB)
-     */
     function formatBackupSize(bytes) {
         if (bytes < 1024) return bytes + ' B';
         const kb = bytes / 1024;
@@ -157,11 +133,7 @@ export function initAdminBackupModule() {
         return gb.toFixed(2) + ' GB';
     }
     
-    /**
-     * Formatea un timestamp de JS a d/m/Y H:i:s
-     */
     function formatBackupDate(timestamp) {
-        // PHP filemtime() devuelve timestamp en segundos, no milisegundos
         const date = new Date(timestamp * 1000); 
         const d = String(date.getDate()).padStart(2, '0');
         const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -172,14 +144,10 @@ export function initAdminBackupModule() {
         return `${d}/${m}/${y} ${h}:${i}:${s}`;
     }
 
-    /**
-     * Añade la tarjeta del nuevo backup a la lista
-     */
     function renderNewBackup(backupData) {
         const listContainer = document.querySelector('.card-list-container');
         if (!listContainer) return;
 
-        // Quitar el mensaje de "no hay copias" si existe
         const noBackupCard = listContainer.querySelector('.component-card');
         if (noBackupCard && !noBackupCard.hasAttribute('data-backup-filename')) {
             noBackupCard.remove();
@@ -188,7 +156,7 @@ export function initAdminBackupModule() {
         const newCard = document.createElement('div');
         newCard.className = 'card-item';
         newCard.dataset.backupFilename = backupData.filename;
-        newCard.style = "gap: 16px; padding: 16px;"; // Estilos inline como en el PHP
+        newCard.style = "gap: 16px; padding: 16px;"; 
 
         newCard.innerHTML = `
             <div class="component-card__icon" style="width: 50px; height: 50px; flex-shrink: 0; background-color: #f5f5fa;">
@@ -218,11 +186,6 @@ export function initAdminBackupModule() {
         if (newLabelSize) newLabelSize.textContent = getTranslation('admin.backups.labelSize');
     }
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-    /**
-     * Lógica simplificada para MANEJAR SOLO LA CREACIÓN de backups.
-     * (La eliminación y restauración ahora tienen su propia lógica de UI).
-     */
     async function handleBackupCreate(action, buttonEl) {
         
         const toolbarContainer = document.getElementById('backup-toolbar-container');
@@ -231,12 +194,11 @@ export function initAdminBackupModule() {
             return;
         }
 
-        // Deshabilitar todos los botones durante la acción
         toolbarContainer.querySelectorAll('button').forEach(btn => btn.disabled = true); 
         if(buttonEl) toggleToolbarSpinner(buttonEl, true);
         
         const formData = new FormData();
-        formData.append('action', action); // 'create-backup'
+        formData.append('action', action); 
 
         try {
             const result = await callBackupApi(formData);
@@ -259,13 +221,10 @@ export function initAdminBackupModule() {
             resetToolbarState(buttonEl);
         }
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
-    // --- Listener de Clics Principal (Fusionado) ---
     document.body.addEventListener('click', async function (event) {
         
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (PÁGINA DE ELIMINACIÓN) ▼▼▼ ---
         const deleteButton = event.target.closest('#admin-delete-confirm-btn');
         if (deleteButton) {
             event.preventDefault();
@@ -276,7 +235,7 @@ export function initAdminBackupModule() {
             const filename = filenameInput ? filenameInput.value : null;
 
             if (!filename) {
-                showAlert(getTranslation('js.admin.restore.errorNoFile'), 'error'); // Reutilizamos clave
+                showAlert(getTranslation('js.admin.restore.errorNoFile'), 'error'); 
                 return;
             }
 
@@ -290,13 +249,11 @@ export function initAdminBackupModule() {
                 const result = await callBackupApi(formData);
 
                 if (result.success) {
-                    // Usar la nueva clave de traducción
                     showAlert(getTranslation('js.admin.backups.successDeleteRedirect'
                          || 'Copia eliminada. Serás redirigido.'), 'success');
                     
                     setTimeout(() => {
                         const link = document.createElement('a');
-                        // Redirigir a la lista de backups
                         link.href = window.projectBasePath + '/admin/manage-backups';
                         link.setAttribute('data-nav-js', 'true');
                         document.body.appendChild(link);
@@ -314,10 +271,8 @@ export function initAdminBackupModule() {
             }
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
 
 
-        // --- INICIO: Lógica de admin-restore-backup-manager ---
         const restoreButton = event.target.closest('#admin-restore-confirm-btn');
         if (restoreButton) {
             event.preventDefault();
@@ -363,10 +318,8 @@ export function initAdminBackupModule() {
             }
             return;
         }
-        // --- FIN: Lógica de admin-restore-backup-manager ---
 
 
-        // --- INICIO: Lógica de admin-backups-manager ---
         
         const backupSection = event.target.closest('[data-section="admin-backups"]');
         
@@ -412,9 +365,7 @@ export function initAdminBackupModule() {
                 if (!confirm(getTranslation('admin.backups.confirmCreate'))) {
                     return;
                 }
-                // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                 await handleBackupCreate('create-backup', button);
-                // --- ▲▲▲ MODIFICACIÓN ▲▲▲ ---
                 break;
 
             case 'admin-backup-restore':
@@ -435,16 +386,13 @@ export function initAdminBackupModule() {
                 clearBackupSelection(); 
                 break;
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (CAMBIAR A NAVEGACIÓN) ▼▼▼ ---
             case 'admin-backup-delete':
                 if (!selectedBackupFile) {
                     showAlert(getTranslation('admin.backups.errorNoSelection'), 'error');
                     return;
                 }
                 
-                // Ya no hay confirm()
                 
-                // Navegar a la nueva página de confirmación
                 const linkUrlDelete = window.projectBasePath + '/admin/manage-backups?delete=' + encodeURIComponent(selectedBackupFile);
                 
                 const linkDelete = document.createElement('a');
@@ -456,9 +404,7 @@ export function initAdminBackupModule() {
 
                 clearBackupSelection();
                 break;
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
-            // --- ▼▼▼ INICIO DE NUEVA LÓGICA ▼▼▼ ---
             case 'admin-backup-download':
                 if (!selectedBackupFile) {
                     showAlert(getTranslation('admin.backups.errorNoSelection'), 'error');
@@ -468,39 +414,33 @@ export function initAdminBackupModule() {
                 try {
                     const csrfToken = window.csrfToken || '';
                     
-                    // Crear un formulario temporal para enviar la solicitud POST
                     const form = document.createElement('form');
                     form.method = 'POST';
-                    form.action = API_ENDPOINT_BACKUP; // Endpoint definido al inicio del archivo
+                    form.action = API_ENDPOINT_BACKUP; 
                     form.style.display = 'none';
 
-                    // Añadir la acción
                     const actionInput = document.createElement('input');
                     actionInput.type = 'hidden';
                     actionInput.name = 'action';
                     actionInput.value = 'download-backup';
                     form.appendChild(actionInput);
 
-                    // Añadir el token CSRF
                     const csrfInput = document.createElement('input');
                     csrfInput.type = 'hidden';
                     csrfInput.name = 'csrf_token';
                     csrfInput.value = csrfToken;
                     form.appendChild(csrfInput);
 
-                    // Añadir el nombre del archivo
                     const fileInput = document.createElement('input');
                     fileInput.type = 'hidden';
                     fileInput.name = 'filename';
                     fileInput.value = selectedBackupFile;
                     form.appendChild(fileInput);
 
-                    // Enviar el formulario
                     document.body.appendChild(form);
                     form.submit();
                     document.body.removeChild(form);
                     
-                    // Deseleccionar después de iniciar la descarga
                     clearBackupSelection();
 
                 } catch (error) {
@@ -508,16 +448,13 @@ export function initAdminBackupModule() {
                     showAlert(getTranslation('admin.backups.errorDownload'), 'error');
                 }
                 break;
-            // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
 
             case 'admin-backup-clear-selection':
                 clearBackupSelection();
                 break;
         }
-        // --- FIN: Lógica de admin-backups-manager ---
     });
 
-    // --- Listeners Globales para deseleccionar (de admin-backups-manager) ---
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
             clearBackupSelection();

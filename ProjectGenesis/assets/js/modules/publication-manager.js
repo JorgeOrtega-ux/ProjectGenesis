@@ -1,5 +1,3 @@
-// FILE: assets/js/modules/publication-manager.js
-// (VERSIÓN ACTUALIZADA - Soporta trigger-select y creación de encuestas)
 
 import { callPublicationApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -8,13 +6,10 @@ import { deactivateAllModules } from '../app/main-controller.js';
 
 const MAX_FILES = 4;
 const MAX_POLL_OPTIONS = 6;
-let selectedFiles = []; // Array para guardar los objetos File
-let selectedCommunityId = null; // Guardará el ID de la comunidad
-let currentPostType = 'post'; // 'post' o 'poll'
+let selectedFiles = []; 
+let selectedCommunityId = null; 
+let currentPostType = 'post'; 
 
-/**
- * Muestra/Oculta un spinner en el botón de Publicar.
- */
 function togglePublishSpinner(button, isLoading) {
     if (!button) return;
     button.disabled = isLoading;
@@ -28,9 +23,6 @@ function togglePublishSpinner(button, isLoading) {
     }
 }
 
-/**
- * Valida el estado actual y habilita/deshabilita el botón de publicar.
- */
 function validatePublicationState() {
     const publishButton = document.getElementById('publish-post-btn');
     if (!publishButton) return;
@@ -43,22 +35,19 @@ function validatePublicationState() {
         const hasText = textInput ? textInput.value.trim().length > 0 : false;
         const hasFiles = selectedFiles.length > 0;
         isContentValid = hasText || hasFiles;
-    } else { // 'poll'
+    } else { 
         const questionInput = document.getElementById('poll-question');
         const options = document.querySelectorAll('#poll-options-container .component-input-group');
         const hasQuestion = questionInput ? questionInput.value.trim().length > 0 : false;
         const hasMinOptions = options.length >= 2;
-        // Opcional: verificar que las opciones no estén vacías
         const allOptionsFilled = Array.from(options).every(opt => opt.querySelector('input').value.trim().length > 0);
         
         isContentValid = hasQuestion && hasMinOptions && allOptionsFilled;
     }
     
-    // Habilita el botón si el contenido es válido Y hay una comunidad seleccionada
     publishButton.disabled = !isContentValid || !hasCommunity;
 }
 
-// --- Gestión de Vistas Previas de Archivos (POST) ---
 
 function createPreviewElement(file, src) {
     const container = document.getElementById('publication-preview-container');
@@ -125,7 +114,6 @@ function handleFileSelection(event) {
     validatePublicationState();
 }
 
-// --- Gestión de Opciones de Encuesta (POLL) ---
 
 function addPollOption(focusNew = true) {
     const container = document.getElementById('poll-options-container');
@@ -133,7 +121,7 @@ function addPollOption(focusNew = true) {
 
     const optionCount = container.querySelectorAll('.component-input-group').length;
     if (optionCount >= MAX_POLL_OPTIONS) {
-        showAlert(getTranslation('js.publication.errorPollMaxOptions'), 'info'); // Nueva clave i18n
+        showAlert(getTranslation('js.publication.errorPollMaxOptions'), 'info'); 
         return;
     }
     
@@ -154,7 +142,6 @@ function addPollOption(focusNew = true) {
         optionDiv.querySelector('input').focus();
     }
     
-    // Deshabilitar el botón de añadir si llegamos al límite
     const addBtn = document.getElementById('add-poll-option-btn');
     if (addBtn && (optionCount + 1) >= MAX_POLL_OPTIONS) {
         addBtn.disabled = true;
@@ -169,7 +156,6 @@ function removePollOption(button) {
     
     optionDiv.remove();
     
-    // Re-etiquetar las opciones restantes
     const container = document.getElementById('poll-options-container');
     container.querySelectorAll('.component-input-group').forEach((opt, index) => {
         const newIndex = index + 1;
@@ -182,7 +168,6 @@ function removePollOption(button) {
         }
     });
     
-    // Habilitar el botón de añadir si bajamos del límite
     const addBtn = document.getElementById('add-poll-option-btn');
     if (addBtn) {
         addBtn.disabled = false;
@@ -191,11 +176,7 @@ function removePollOption(button) {
     validatePublicationState();
 }
 
-/**
- * Resetea el formulario al estado inicial
- */
 function resetForm() {
-    // Limpiar post
     const textInput = document.getElementById('publication-text');
     if (textInput) textInput.value = '';
     selectedFiles = [];
@@ -204,13 +185,11 @@ function resetForm() {
     const fileInput = document.getElementById('publication-file-input');
     if (fileInput) fileInput.value = '';
     
-    // Limpiar encuesta
     const pollQuestion = document.getElementById('poll-question');
     if (pollQuestion) pollQuestion.value = '';
     const pollOptions = document.getElementById('poll-options-container');
     if (pollOptions) pollOptions.innerHTML = '';
     
-    // Limpiar comunidad
     selectedCommunityId = null; 
     const triggerText = document.getElementById('publication-community-text');
     const triggerIcon = document.getElementById('publication-community-icon');
@@ -227,13 +206,9 @@ function resetForm() {
         popover.querySelectorAll('.menu-link-check-icon').forEach(icon => icon.innerHTML = '');
     }
     
-    // Resetear estado
     validatePublicationState();
 }
 
-/**
- * Manejador para el envío de la publicación (post o encuesta).
- */
 async function handlePublishSubmit() {
     const publishButton = document.getElementById('publish-post-btn');
     if (!publishButton) return;
@@ -247,7 +222,7 @@ async function handlePublishSubmit() {
     togglePublishSpinner(publishButton, true);
 
     const formData = new FormData();
-    formData.append('action', 'create-post'); // Usamos la misma acción
+    formData.append('action', 'create-post'); 
     formData.append('community_id', communityId);
     formData.append('post_type', currentPostType);
 
@@ -261,7 +236,7 @@ async function handlePublishSubmit() {
             for (const file of selectedFiles) {
                 formData.append('attachments[]', file, file.name);
             }
-        } else { // 'poll'
+        } else { 
             const question = document.getElementById('poll-question').value.trim();
             const options = Array.from(document.querySelectorAll('#poll-options-container input'))
                                  .map(input => input.value.trim())
@@ -285,7 +260,6 @@ async function handlePublishSubmit() {
             
             resetForm(); 
 
-            // Navegar a Home
             const link = document.createElement('a');
             link.href = window.projectBasePath + '/';
             link.setAttribute('data-nav-js', 'true');
@@ -303,9 +277,6 @@ async function handlePublishSubmit() {
     }
 }
 
-/**
- * Resetea el trigger de comunidad a su estado inicial
- */
 function resetCommunityTrigger() {
     selectedCommunityId = null;
     const triggerText = document.getElementById('publication-community-text');
@@ -327,16 +298,11 @@ function resetCommunityTrigger() {
 }
 
 
-/**
- * Gestiona la lógica de la página de creación de publicaciones.
- */
 export function initPublicationManager() {
     
-    // Resetear todo al iniciar
     resetForm();
     currentPostType = document.querySelector('.component-toggle-tab.active')?.dataset.type || 'post';
 
-    // Añadir 2 opciones por defecto si es una encuesta y no hay opciones
     if (currentPostType === 'poll') {
         const optionsContainer = document.getElementById('poll-options-container');
         if (optionsContainer && optionsContainer.children.length === 0) {
@@ -346,7 +312,6 @@ export function initPublicationManager() {
     }
 
 
-    // --- LÓGICA DE PESTAÑAS (Post / Poll) ---
     document.body.addEventListener('click', (e) => {
         const toggleButton = e.target.closest('#post-type-toggle .component-toggle-tab');
         const section = e.target.closest('[data-section*="create-"]');
@@ -355,7 +320,7 @@ export function initPublicationManager() {
         if (toggleButton.classList.contains('active')) return;
         
         const newType = toggleButton.dataset.type;
-        currentPostType = newType; // Actualizar estado global
+        currentPostType = newType; 
         
         const postArea = document.getElementById('post-content-area');
         const pollArea = document.getElementById('poll-content-area');
@@ -375,14 +340,13 @@ export function initPublicationManager() {
             if (attachSpacer) attachSpacer.style.display = 'block';
             history.pushState(null, '', window.projectBasePath + '/create-poll');
             
-            // Añadir 2 opciones por defecto si no hay
             const optionsContainer = document.getElementById('poll-options-container');
             if (optionsContainer && optionsContainer.children.length === 0) {
                 addPollOption(false);
                 addPollOption(false);
             }
 
-        } else { // 'post'
+        } else { 
             if (postArea) { postArea.style.display = 'flex'; postArea.classList.add('active'); postArea.classList.remove('disabled'); }
             if (pollArea) { pollArea.style.display = 'none'; pollArea.classList.remove('active'); pollArea.classList.add('disabled'); }
             if (attachBtn) attachBtn.style.display = 'flex';
@@ -393,7 +357,6 @@ export function initPublicationManager() {
         validatePublicationState();
     });
 
-    // --- LÓGICA DE INPUTS Y CLICKS ---
     document.body.addEventListener('input', (e) => {
         const section = e.target.closest('[data-section*="create-"]');
         if (!section) return;
@@ -407,7 +370,6 @@ export function initPublicationManager() {
         const section = e.target.closest('[data-section*="create-"]');
         if (!section) return; 
 
-        // 1. Manejar clic en el Trigger de Comunidad
         const trigger = e.target.closest('#publication-community-trigger[data-action="toggleModuleCommunitySelect"]');
         if (trigger) {
             e.preventDefault();
@@ -421,7 +383,6 @@ export function initPublicationManager() {
             return;
         }
 
-        // 2. Manejar clic en un Link del Popover de Comunidad
         const menuLink = e.target.closest('[data-module="moduleCommunitySelect"] .menu-link[data-value]');
         if (menuLink) {
             e.preventDefault();
@@ -456,28 +417,24 @@ export function initPublicationManager() {
             return;
         }
         
-        // 3. Manejar clic en el botón de Publicar
         if (e.target.id === 'publish-post-btn') {
             e.preventDefault();
             handlePublishSubmit();
             return;
         }
         
-        // 4. Manejar clic en el botón de Adjuntar
         if (e.target.id === 'attach-files-btn') {
             e.preventDefault();
             document.getElementById('publication-file-input')?.click();
             return;
         }
         
-        // 5. Manejar clic en Añadir Opción de Encuesta
         if (e.target.id === 'add-poll-option-btn' || e.target.closest('#add-poll-option-btn')) {
             e.preventDefault();
             addPollOption(true);
             return;
         }
         
-        // 6. Manejar clic en Quitar Opción de Encuesta
         const removeOptionBtn = e.target.closest('[data-action="remove-poll-option"]');
         if (removeOptionBtn) {
             e.preventDefault();
@@ -486,7 +443,6 @@ export function initPublicationManager() {
         }
     });
     
-    // Listener para el input de archivos
     document.body.addEventListener('change', (e) => {
         const section = e.target.closest('[data-section*="create-"]');
          if (e.target.id === 'publication-file-input' && section) {
@@ -494,7 +450,6 @@ export function initPublicationManager() {
         }
     });
     
-    // Validar estado al cargar
     if (document.querySelector('[data-section*="create-"].active')) {
          validatePublicationState();
     }

@@ -1,5 +1,3 @@
-// FILE: assets/js/modules/settings-manager.js
-// (CÓDIGO MODIFICADO PARA EVITAR CONFLICTOS CON ADMIN)
 
 import { callSettingsApi }  from '../services/api-service.js';
 import { deactivateAllModules }  from '../app/main-controller.js';
@@ -25,7 +23,7 @@ function showInlineError(cardElement, messageKey, data = null) {
     }
 
     errorDiv.textContent = message;
-    errorDiv.classList.add('active'); // <-- MODIFICADO
+    errorDiv.classList.add('active'); 
 
     cardElement.parentNode.insertBefore(errorDiv, cardElement.nextSibling);
 }
@@ -218,7 +216,6 @@ export function initSettingsManager() {
                 if (previewImage && originalAvatarSrc) previewImage.src = originalAvatarSrc;
                 document.getElementById('avatar-upload-input').value = ''; 
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 document.getElementById('avatar-actions-preview').classList.remove('active');
                 document.getElementById('avatar-actions-preview').classList.add('disabled');
                 
@@ -228,7 +225,6 @@ export function initSettingsManager() {
                 
                 document.getElementById(originalState).classList.add('active');
                 document.getElementById(originalState).classList.remove('disabled');
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
                 return;
             }
 
@@ -292,7 +288,6 @@ export function initSettingsManager() {
 
             if (target.closest('#username-edit-trigger')) {
                 e.preventDefault();
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 document.getElementById('username-view-state').classList.remove('active');
                 document.getElementById('username-view-state').classList.add('disabled');
                 document.getElementById('username-actions-view').classList.remove('active');
@@ -301,7 +296,6 @@ export function initSettingsManager() {
                 document.getElementById('username-edit-state').classList.remove('disabled');
                 document.getElementById('username-actions-edit').classList.add('active');
                 document.getElementById('username-actions-edit').classList.remove('disabled');
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
                 focusInputAndMoveCursorToEnd(document.getElementById('username-input'));
                 return;
             }
@@ -311,7 +305,6 @@ export function initSettingsManager() {
                 const displayElement = document.getElementById('username-display-text');
                 const inputElement = document.getElementById('username-input');
                 if (displayElement && inputElement) inputElement.value = displayElement.dataset.originalUsername;
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 document.getElementById('username-edit-state').classList.remove('active');
                 document.getElementById('username-edit-state').classList.add('disabled');
                 document.getElementById('username-actions-edit').classList.remove('active');
@@ -320,7 +313,6 @@ export function initSettingsManager() {
                 document.getElementById('username-view-state').classList.remove('disabled');
                 document.getElementById('username-actions-view').classList.add('active');
                 document.getElementById('username-actions-view').classList.remove('disabled');
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
                 return;
             }
              if (target.closest('#username-save-trigger-btn')) {
@@ -329,14 +321,12 @@ export function initSettingsManager() {
                 const inputElement = document.getElementById('username-input');
                 const actionInput = usernameCard.querySelector('[name="action"]');
 
-                // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
                 const minUserLength = window.minUsernameLength || 6;
                 const maxUserLength = window.maxUsernameLength || 32;
                 if (inputElement.value.length < minUserLength || inputElement.value.length > maxUserLength) {
                     showInlineError(usernameCard, 'js.auth.errorUsernameLength', { min: minUserLength, max: maxUserLength });
                     return;
                 }
-                // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
 
                 toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
 
@@ -371,10 +361,8 @@ export function initSettingsManager() {
 
             if (resendTrigger.classList.contains('disabled-interactive')) return;
 
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             const cooldown = window.codeResendCooldownSeconds || 60;
             startResendTimer(resendTrigger, cooldown);
-            // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
             hideInlineError(card);
 
             const formData = new FormData();
@@ -421,7 +409,6 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 card.classList.remove('active');
                 card.classList.add('disabled');
                 const step2Card = document.getElementById('email-step-2-update');
@@ -430,7 +417,6 @@ export function initSettingsManager() {
                     step2Card.classList.remove('disabled');
                     focusInputAndMoveCursorToEnd(document.getElementById('email-input-new'));
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
                 window.showAlert(getTranslation(result.message || 'js.settings.successVerification'), 'success');
             } else {
                 showInlineError(card, result.message || 'js.settings.errorVerification');
@@ -454,11 +440,9 @@ export function initSettingsManager() {
             if (!emailRegex.test(newEmail)) {
                 showInlineError(card, 'js.auth.errorInvalidEmail'); return;
             }
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             if (newEmail.length > (window.maxEmailLength || 255)) {
                 showInlineError(card, 'js.auth.errorEmailLength'); return;
             }
-            // --- ▲▲▲ FIN MODIFICACIÓN ▼▼▼ ---
 
             toggleButtonSpinner(saveTrigger, getTranslation('settings.profile.save'), true);
 
@@ -488,7 +472,6 @@ export function initSettingsManager() {
             return;
         }
 
-        // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
         const clickedLink = target.closest('.popover-module .menu-link'); 
         if (clickedLink && card) { 
             e.preventDefault();
@@ -497,15 +480,10 @@ export function initSettingsManager() {
             const menuList = clickedLink.closest('.menu-list');
             const module = clickedLink.closest('.popover-module[data-preference-type]'); 
             
-            // ¡ESTA ES LA LÍNEA CLAVE!
-            // Si el módulo no tiene 'data-preference-type', no es un clic de preferencias.
-            // (Ej. es el dropdown de roles de admin).
-            // Cerramos el popover y dejamos que otro listener (admin-manager.js) lo maneje.
             if (!module) {
                 deactivateAllModules();
                 return;
             }
-            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
             const wrapper = card.querySelector('.trigger-select-wrapper'); 
             const trigger = wrapper?.querySelector('.trigger-selector');
@@ -640,7 +618,6 @@ export function initSettingsManager() {
             const result = await callSettingsApi(formData);
 
             if (result.success) {
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 step1Card.classList.remove('active');
                 step1Card.classList.add('disabled');
                 const step2Card = document.getElementById('password-step-2');
@@ -649,7 +626,6 @@ export function initSettingsManager() {
                     step2Card.classList.remove('disabled');
                     focusInputAndMoveCursorToEnd(document.getElementById('password-update-new'));
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
             } else {
                 showInlineError(step1Card, result.message || 'js.settings.errorVerification', result.data);
             }
@@ -667,9 +643,7 @@ export function initSettingsManager() {
             const newPassInput = document.getElementById('password-update-new'); 
             const confirmPassInput = document.getElementById('password-update-confirm'); 
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             const logoutOthersCheckbox = document.getElementById('password-logout-others');
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
             if (!newPassInput || !confirmPassInput) return;
@@ -695,10 +669,8 @@ export function initSettingsManager() {
             formData.append('confirm_password', confirmPassInput.value);
             formData.append('csrf_token', getCsrfTokenFromPage()); 
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             const logoutOthers = logoutOthersCheckbox ? logoutOthersCheckbox.checked : true;
             formData.append('logout_others', logoutOthers ? '1' : '0');
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
             const result = await callSettingsApi(formData);
@@ -732,14 +704,14 @@ export function initSettingsManager() {
                  if(dangerBtn) {
                       toggleButtonSpinner(dangerBtn, getTranslation('settings.devices.modalConfirm'), false);
                  }
-                modal.classList.add('active'); // <-- MODIFICADO
+                modal.classList.add('active'); 
             }
             return;
         }
          if (target.closest('#logout-all-cancel')) {
             e.preventDefault();
             const modal = document.getElementById('logout-all-modal');
-            if(modal) modal.classList.remove('active'); // <-- MODIFICADO
+            if(modal) modal.classList.remove('active'); 
             return;
         }
         if (target.closest('#logout-all-confirm')) {
@@ -758,14 +730,11 @@ export function initSettingsManager() {
             if (result.success) {
                 window.showAlert(getTranslation('js.settings.infoLogoutAll'), 'success');
 
-                // --- INICIO DE LA CORRECCIÓN ---
                 setTimeout(() => {
                     const token = getCsrfTokenFromPage(); 
                     
-                    // 1. Corregir la ruta
                     const logoutUrl = (window.projectBasePath || '') + '/config/actions/logout.php';
 
-                    // 2. Usar un formulario POST, no un GET
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = logoutUrl;
@@ -780,7 +749,6 @@ export function initSettingsManager() {
                     document.body.appendChild(form);
                     form.submit();
                 }, 1500);
-                // --- FIN DE LA CORRECCIÓN ---
 
             } else {
                 window.showAlert(getTranslation(result.message || 'js.settings.errorLogoutAll'), 'error');
@@ -830,7 +798,6 @@ export function initSettingsManager() {
             return;
         }
 
-        // --- ▼▼▼ INICIO DE NUEVO BLOQUE DE CÓDIGO (Paso 7) ▼▼▼ ---
         if (target.closest('[data-action="logout-individual-session"]')) {
             e.preventDefault();
             const logoutButton = target.closest('[data-action="logout-individual-session"]');
@@ -839,7 +806,6 @@ export function initSettingsManager() {
             
             if (!sessionId || !card) return;
 
-            // (Asegúrate de añadir 'js.settings.confirmLogoutIndividual' a tus JSON)
             if (!confirm(getTranslation('js.settings.confirmLogoutIndividual'))) {
                 return;
             }
@@ -856,7 +822,6 @@ export function initSettingsManager() {
 
             if (result.success) {
                 window.showAlert(getTranslation(result.message || 'js.settings.successLogoutIndividual'), 'success');
-                // Elimina la tarjeta de la sesión cerrada
                 card.remove(); 
             } else {
                 toggleButtonSpinner(logoutButton, getTranslation('settings.devices.logoutButton'), false);
@@ -864,7 +829,6 @@ export function initSettingsManager() {
             }
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVO BLOQUE DE CÓDIGO ▲▲▲ ---
 
     }); 
 
@@ -905,7 +869,6 @@ export function initSettingsManager() {
             const actionsDefault = document.getElementById('avatar-actions-default');
             const avatarCard = document.getElementById('avatar-section'); 
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             avatarCard.dataset.originalActions = (actionsDefault.classList.contains('active')) ? 'default' : 'custom';
 
             document.getElementById('avatar-actions-default').classList.remove('active');
@@ -914,7 +877,6 @@ export function initSettingsManager() {
             document.getElementById('avatar-actions-custom').classList.add('disabled');
             document.getElementById('avatar-actions-preview').classList.add('active');
             document.getElementById('avatar-actions-preview').classList.remove('disabled');
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
         }
 
         else if (target.matches('input[type="checkbox"][data-preference-type="boolean"]') && card) {
@@ -958,13 +920,11 @@ export function initSettingsManager() {
             if (modalContent) {
                  const errorDiv = modalContent.querySelector('.auth-error-message, .component-card__error'); 
                  if (errorDiv) {
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                     if(errorDiv.classList.contains('auth-error-message')) {
                          errorDiv.classList.remove('active');
                     } else {
                          errorDiv.remove(); 
                     }
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                  }
             }
         }

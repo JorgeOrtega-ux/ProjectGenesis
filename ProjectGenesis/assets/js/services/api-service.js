@@ -5,9 +5,7 @@ const API_ENDPOINTS = {
     SETTINGS: `${window.projectBasePath}/api/settings_handler.php`,
     ADMIN: `${window.projectBasePath}/api/admin_handler.php`,
     COMMUNITY: `${window.projectBasePath}/api/community_handler.php`,
-    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
     PUBLICATION: `${window.projectBasePath}/api/publication_handler.php`
-    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 };
 
 async function _post(url, formData) {
@@ -68,13 +66,9 @@ async function callCommunityApi(formData) {
     return _post(API_ENDPOINTS.COMMUNITY, formData);
 }
 
-// --- ▼▼▼ NUEVA FUNCIÓN AÑADIDA ▼▼▼ ---
 async function callPublicationApi(formData) {
     return _post(API_ENDPOINTS.PUBLICATION, formData);
 }
-// --- ▲▲▲ FIN DE FUNCIÓN AÑADIDA ▲▲▲ ---
 
 
-// --- ▼▼▼ MODIFICACIÓN EN EXPORT ▼▼▼ ---
 export { callAuthApi, callSettingsApi, callAdminApi, callCommunityApi, callPublicationApi };
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
