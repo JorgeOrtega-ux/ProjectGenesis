@@ -2351,6 +2351,7 @@ select.component-input:invalid {
 .post-card-content {
     padding: 12px 16px;
     padding-top: 0;
+    word-break: break-all;
 }
 .post-card-content + .post-attachments-container {
     border-top: 1px solid #00000020;
