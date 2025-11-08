@@ -13,7 +13,17 @@ CREATE TABLE users (
     is_2fa_enabled TINYINT(1) NOT NULL DEFAULT 0,
     auth_token VARCHAR(64) NULL DEFAULT NULL,
     account_status ENUM('active', 'suspended', 'deleted') NOT NULL DEFAULT 'active',
+    
+    -- --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    is_online TINYINT(1) NOT NULL DEFAULT 0,
+    last_seen TIMESTAMP NULL DEFAULT NULL,
+    -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    
+    -- --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    , INDEX idx_is_online (is_online)
+    -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 );
 
 DROP TABLE IF EXISTS verification_codes;
@@ -100,9 +110,7 @@ INSERT INTO site_settings (setting_key, setting_value) VALUES
 ('max_email_length', '255'),
 ('code_resend_cooldown_seconds', '60'),
 ('max_concurrent_users', '500'),
--- --- ▼▼▼ ¡NUEVA LÍNEA! ▼▼▼ ---
 ('max_post_length', '1000');
--- --- ▲▲▲ ¡FIN DE NUEVA LÍNEA! ▲▲▲ ---
 
 DROP TABLE IF EXISTS communities;
 CREATE TABLE communities (
@@ -140,10 +148,8 @@ DROP TABLE IF EXISTS `poll_options`;
 DROP TABLE IF EXISTS `community_publications`;
 DROP TABLE IF EXISTS `publication_likes`;
 DROP TABLE IF EXISTS `publication_comments`;
--- --- ▼▼▼ NUEVA LÍNEA AÑADIDA ▼▼▼ ---
 DROP TABLE IF EXISTS `publication_bookmarks`;
--- --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
-DROP TABLE IF EXISTS `friendships`; -- Aseguramos que se borre si existe
+DROP TABLE IF EXISTS `friendships`; 
 
 CREATE TABLE `community_publications` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -211,7 +217,6 @@ CREATE TABLE `publication_likes` (
   UNIQUE KEY `uk_user_publication_like` (`user_id`, `publication_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --- ▼▼▼ NUEVA TABLA AÑADIDA ▼▼▼ ---
 CREATE TABLE `publication_bookmarks` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NOT NULL,
@@ -221,7 +226,6 @@ CREATE TABLE `publication_bookmarks` (
   FOREIGN KEY (publication_id) REFERENCES `community_publications`(id) ON DELETE CASCADE,
   UNIQUE KEY `uk_user_publication_bookmark` (`user_id`, `publication_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
--- --- ▲▲▲ FIN NUEVA TABLA ▲▲▲ ---
 
 CREATE TABLE `publication_comments` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -237,16 +241,12 @@ CREATE TABLE `publication_comments` (
   INDEX `idx_parent_comment_id` (`parent_comment_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- --- ▼▼▼ NUEVA TABLA DE AMIGOS ▼▼▼ ---
--- Almacena la relación de amistad.
--- user_id_1 siempre será el ID menor y user_id_2 el mayor para evitar duplicados (A,B) vs (B,A).
--- action_user_id es quien realizó la última acción (quien envió la solicitud).
 CREATE TABLE `friendships` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id_1` INT NOT NULL,
   `user_id_2` INT NOT NULL,
   `status` ENUM('pending', 'accepted') NOT NULL DEFAULT 'pending',
-  `action_user_id` INT NOT NULL, -- El usuario que inició la solicitud actual
+  `action_user_id` INT NOT NULL, 
   `created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
   `updated_at` TIMESTAMP NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   
@@ -258,9 +258,6 @@ CREATE TABLE `friendships` (
   INDEX `idx_user_1_status` (`user_id_1`, `status`),
   INDEX `idx_user_2_status` (`user_id_2`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
--- --- ▲▲▲ FIN NUEVA TABLA ▲▲▲ ---
-
--- --- ▼▼▼ INICIO DE NUEVA TABLA (NOTIFICACIONES) ▼▼▼ ---
 
 DROP TABLE IF EXISTS `user_notifications`;
 CREATE TABLE `user_notifications` (
@@ -277,5 +274,3 @@ CREATE TABLE `user_notifications` (
   
   INDEX `idx_user_read_time` (`user_id`, `is_read`, `created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --- ▲▲▲ FIN DE NUEVA TABLA ▲▲▲ ---

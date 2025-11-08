@@ -8,6 +8,19 @@ if (!validateCsrfToken($submittedToken)) {
     die('logout.invalidSession: Your session has expired or is invalid.');
 }
 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (ACTUALIZAR ESTADO AL SALIR) ▼▼▼ ---
+if (isset($_SESSION['user_id'])) {
+    try {
+        $stmt = $pdo->prepare(
+            "UPDATE users SET is_online = 0, last_seen = NOW() WHERE id = ?"
+        );
+        $stmt->execute([$_SESSION['user_id']]);
+    } catch (PDOException $e) {
+        logDatabaseError($e, 'logout action');
+    }
+}
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
 $_SESSION = [];
 

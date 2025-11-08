@@ -72,12 +72,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         if ($action === 'get-friends-list') {
             
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (OBTENER ESTADO) ▼▼▼ ---
+            
+            $onlineUserIds = [];
+            try {
+                // 1. Consultar al servidor WebSocket quién está en línea
+                $context = stream_context_create(['http' => ['timeout' => 1.0]]);
+                $jsonResponse = @file_get_contents('http://127.0.0.1:8766/get-online-users', false, $context);
+                if ($jsonResponse !== false) {
+                    $data = json_decode($jsonResponse, true);
+                    if (isset($data['status']) && $data['status'] === 'ok' && isset($data['online_users'])) {
+                        // Crear un array asociativo para búsqueda rápida (ej. [123 => true])
+                        $onlineUserIds = array_flip($data['online_users']);
+                    }
+                }
+            } catch (Exception $e) {
+                logDatabaseError($e, 'friend_handler - (ws_get_online_fail)');
+            }
+            
+            // 2. Modificar SQL para incluir last_seen
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
             $stmt_friends = $pdo->prepare(
                 "SELECT 
                     (CASE WHEN f.user_id_1 = ? THEN f.user_id_2 ELSE f.user_id_1 END) AS friend_id,
-                    u.username, u.profile_image_url, u.role
+                    u.username, u.profile_image_url, u.role, u.last_seen
                 FROM friendships f
                 JOIN users u ON (CASE WHEN f.user_id_1 = ? THEN f.user_id_2 ELSE f.user_id_1 END) = u.id
                 WHERE (f.user_id_1 = ? OR f.user_id_2 = ?) AND f.status = 'accepted'
@@ -86,11 +105,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_friends->execute([$currentUserId, $currentUserId, $currentUserId, $currentUserId]);
             $friends = $stmt_friends->fetchAll();
             
+            // 3. Combinar datos
             foreach ($friends as &$friend) {
                 if (empty($friend['profile_image_url'])) {
                     $friend['profile_image_url'] = "https://ui-avatars.com/api/?name=" . urlencode($friend['username']) . "&size=100&background=e0e0e0&color=ffffff";
                 }
+                
+                // Añadir los nuevos campos al array de respuesta
+                $friend['is_online'] = isset($onlineUserIds[$friend['friend_id']]);
+                $friend['last_seen'] = $friend['last_seen'];
             }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             $response['success'] = true;
             $response['friends'] = $friends;

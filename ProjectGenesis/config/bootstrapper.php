@@ -174,6 +174,18 @@ if (isset($_SESSION['user_id'])) {
             }
             // --- ▲▲▲ FIN DE NUEVO BLOQUE DE VALIDACIÓN ▲▲▲ ---
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (ESTADO Y ÚLTIMA VEZ ACTIVO) ▼▼▼ ---
+            // Actualizar la hora de última actividad y marcar como online en la BD
+            try {
+                $stmt_presence = $pdo->prepare(
+                    "UPDATE users SET last_seen = NOW(), is_online = 1 WHERE id = ?"
+                );
+                $stmt_presence->execute([$_SESSION['user_id']]);
+            } catch (PDOException $e) {
+                logDatabaseError($e, 'bootstrapper - update presence');
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             // Refrescar los datos principales de la sesión
             $_SESSION['username'] = $freshUserData['username'];
             $_SESSION['email'] = $freshUserData['email'];

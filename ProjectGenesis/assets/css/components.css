@@ -3259,3 +3259,55 @@ a.profile-tab.active {
 .notification-action-button--secondary:hover {
     background-color: #f5f5fa;
 }
+
+/* ====================================== */
+/* =  NUEVOS ESTILOS DE ESTADO (PUNTOS) = */
+/* ====================================== */
+
+.friend-status-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #ffffff; /* Borde blanco para separarlo del avatar */
+    background-color: #ccc; /* Color por defecto (offline/desconocido) */
+}
+
+.friend-status-dot.online {
+    background-color: #28a745; /* Verde para online */
+}
+
+.friend-status-dot.offline {
+    background-color: #ccc; /* Gris para offline */
+}
+
+/* Badge de estado en el perfil */
+.profile-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+.profile-status-badge.online {
+    background-color: #e6f4ea;
+    color: #1e7e34;
+}
+
+.profile-status-badge.offline {
+    background-color: #f5f5fa;
+    color: #6b7280;
+}
+
+.profile-status-badge .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: currentColor;
+}

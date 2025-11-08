@@ -433,9 +433,7 @@ if (array_key_exists($page, $allowedPages)) {
     } elseif ($page === 'view-profile') {
         $viewProfileData = null;
         $targetUsername = $_GET['username'] ?? '';
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Capturar tab) ▼▼▼ ---
-        $currentTab = $_GET['tab'] ?? 'posts'; // 'posts', 'likes', 'bookmarks'
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+        $currentTab = $_GET['tab'] ?? 'posts'; 
         $currentUserId = $_SESSION['user_id'];
         $isOwnProfile = false; 
 
@@ -445,7 +443,13 @@ if (array_key_exists($page, $allowedPages)) {
         } else {
              try {
                  // 1. Obtener datos del perfil
-                 $stmt_profile = $pdo->prepare("SELECT id, username, profile_image_url, role, created_at FROM users WHERE username = ?");
+                 // --- ▼▼▼ INICIO DE MODIFICACIÓN (SELECT) ▼▼▼ ---
+                 $stmt_profile = $pdo->prepare(
+                    "SELECT id, username, profile_image_url, role, created_at, is_online, last_seen 
+                     FROM users 
+                     WHERE username = ?"
+                 );
+                 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                  $stmt_profile->execute([$targetUsername]);
                  $userProfile = $stmt_profile->fetch();
 
@@ -457,9 +461,7 @@ if (array_key_exists($page, $allowedPages)) {
                      $targetUserId = $userProfile['id'];
                      $isOwnProfile = ($targetUserId == $currentUserId);
                      
-                     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir tab y status) ▼▼▼ ---
                      $viewProfileData['current_tab'] = $currentTab;
-                     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                      $friendshipStatus = 'not_friends'; 
 
@@ -488,7 +490,6 @@ if (array_key_exists($page, $allowedPages)) {
 
                      // 2. Obtener publicaciones del usuario (LÓGICA MODIFICADA)
                      
-                     // --- ▼▼▼ INICIO DE SQL MODIFICADO (Añadido user_has_bookmarked) ▼▼▼ ---
                      $sql_select_base = 
                         "SELECT 
                             p.*, 
@@ -508,7 +509,6 @@ if (array_key_exists($page, $allowedPages)) {
                             (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
                             (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = ?) AS user_has_bookmarked,
                             (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count";
-                     // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
 
                      $sql_from_base = 
                         " FROM community_publications p
@@ -516,21 +516,17 @@ if (array_key_exists($page, $allowedPages)) {
                          LEFT JOIN communities c ON p.community_id = c.id";
 
                      $sql_join_where_clause = "";
-                     $params = [$currentUserId, $currentUserId, $currentUserId]; // <-- Parámetros base para subqueries
+                     $params = [$currentUserId, $currentUserId, $currentUserId]; 
                      
-                     // --- ▼▼▼ INICIO DE LÓGICA DE PESTAÑAS (TABS) ▼▼▼ ---
                      if ($isOwnProfile && $currentTab === 'likes') {
-                         // Mostrar posts que LE GUSTARON al usuario actual
                          $sql_join_where_clause = " JOIN publication_likes pl ON p.id = pl.publication_id WHERE pl.user_id = ? ";
-                         $params[] = $targetUserId; // (targetUserId es el mismo que currentUserId aquí)
+                         $params[] = $targetUserId; 
                      
                      } elseif ($isOwnProfile && $currentTab === 'bookmarks') {
-                         // Mostrar posts GUARDADOS por el usuario actual
                          $sql_join_where_clause = " JOIN publication_bookmarks pb ON p.id = pb.publication_id WHERE pb.user_id = ? ";
-                         $params[] = $targetUserId; // (targetUserId es el mismo que currentUserId aquí)
+                         $params[] = $targetUserId; 
                      
                      } else {
-                         // Mostrar posts CREADOS por el usuario del perfil
                          $privacyClause = "";
                          if (!$isOwnProfile) { 
                              $privacyClause = "AND c.privacy = 'public'";
@@ -538,7 +534,6 @@ if (array_key_exists($page, $allowedPages)) {
                          $sql_join_where_clause = " WHERE p.user_id = ? $privacyClause ";
                          $params[] = $targetUserId;
                      }
-                     // --- ▲▲▲ FIN DE LÓGICA DE PESTAÑAS (TABS) ▲▲▲ ---
 
                      $sql_order = " ORDER BY p.created_at DESC LIMIT 50";
                      $sql_posts = $sql_select_base . $sql_from_base . $sql_join_where_clause . $sql_order;
@@ -547,7 +542,6 @@ if (array_key_exists($page, $allowedPages)) {
                     $stmt_posts->execute($params);
                     $publications = $stmt_posts->fetchAll();
                     
-                    // --- Cargar opciones de encuestas (igual que home.php) ---
                     if (!empty($publications)) {
                         $pollIds = [];
                         foreach ($publications as $key => $post) {
@@ -577,8 +571,6 @@ if (array_key_exists($page, $allowedPages)) {
                             }
                         }
                     }
-                    // --- Fin carga opciones ---
-
                     $viewProfileData['publications'] = $publications;
                  }
              } catch (PDOException $e) {

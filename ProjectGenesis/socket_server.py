@@ -8,63 +8,78 @@ from aiohttp import web
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] %(message)s')
 
 # --- ▼▼▼ INICIO DE MODIFICACIÓN: ESTRUCTURA DE DATOS ▼▼▼ ---
-# Ya no usamos un 'set' simple.
-# Usamos diccionarios para rastrear conexiones por ID de usuario y por ID de sesión.
-CLIENTS_BY_USER_ID = {}
+# CLIENTS_BY_USER_ID: Mapea user_id -> set(websockets)
+#   Nos dice qué usuarios están conectados y con cuántos dispositivos.
+CLIENTS_BY_USER_ID = {} 
+
+# CLIENTS_BY_SESSION_ID: Mapea session_id -> (websocket, user_id)
+#   Nos permite encontrar y eliminar rápidamente un websocket específico al desconectarse.
 CLIENTS_BY_SESSION_ID = {}
 # --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
 
 # --- ▼▼▼ INICIO DE MODIFICACIÓN: MANEJADOR DE WEBSOCKET ▼▼▼ ---
-async def broadcast_count():
-    # Contar conexiones únicas por ID de sesión
-    count = len(CLIENTS_BY_SESSION_ID) 
-    message = json.dumps({"type": "user_count", "count": count})
+
+async def broadcast_presence_update(user_id, status):
+    """Notifica a TODOS los clientes conectados sobre un cambio de estado."""
+    message = json.dumps({
+        "type": "presence_update", 
+        "user_id": user_id, 
+        "status": status # "online" o "offline"
+    })
     
-    # Enviar a todos los websockets conectados
-    all_websockets = CLIENTS_BY_SESSION_ID.values()
+    all_websockets = [ws for ws, uid in CLIENTS_BY_SESSION_ID.values()]
     if all_websockets:
         tasks = [ws.send(message) for ws in all_websockets]
         await asyncio.gather(*tasks, return_exceptions=True)
 
 async def register_client(websocket, user_id, session_id):
     """Añade un cliente a los diccionarios de seguimiento."""
-    # Guardar por ID de sesión (para búsqueda rápida)
-    CLIENTS_BY_SESSION_ID[session_id] = websocket
     
-    # Guardar por ID de usuario (para expulsiones)
+    # 1. Comprobar si era la primera conexión de este usuario
+    is_first_connection = user_id not in CLIENTS_BY_USER_ID or not CLIENTS_BY_USER_ID[user_id]
+
+    # 2. Guardar por ID de sesión (para búsqueda rápida)
+    CLIENTS_BY_SESSION_ID[session_id] = (websocket, user_id)
+    
+    # 3. Guardar por ID de usuario (para expulsiones y estado)
     if user_id not in CLIENTS_BY_USER_ID:
         CLIENTS_BY_USER_ID[user_id] = set()
     CLIENTS_BY_USER_ID[user_id].add(websocket)
     
-    logging.info(f"[WS] Cliente autenticado: user_id={user_id}, session_id={session_id[:5]}... Total: {len(CLIENTS_BY_SESSION_ID)}")
-    await broadcast_count()
+    logging.info(f"[WS] Cliente autenticado: user_id={user_id}, session_id={session_id[:5]}... Conexiones totales: {len(CLIENTS_BY_SESSION_ID)}")
+    
+    # 4. Si es la primera vez que se conecta, notificar a todos que está "online"
+    if is_first_connection:
+        await broadcast_presence_update(user_id, "online")
 
 async def unregister_client(session_id):
     """Elimina un cliente de los diccionarios."""
-    websocket = CLIENTS_BY_SESSION_ID.pop(session_id, None)
-    if not websocket:
+    
+    # 1. Eliminar por ID de sesión
+    ws_tuple = CLIENTS_BY_SESSION_ID.pop(session_id, None)
+    if not ws_tuple:
         return # Ya fue eliminado
 
-    # Encontrar a qué usuario pertenecía
-    user_id_to_remove = None
-    for user_id, ws_set in CLIENTS_BY_USER_ID.items():
-        if websocket in ws_set:
-            ws_set.remove(websocket)
-            if not ws_set: # Si el set está vacío, eliminar al usuario
-                user_id_to_remove = user_id
-            break
-    
-    if user_id_to_remove:
-        del CLIENTS_BY_USER_ID[user_id_to_remove]
-        
-    logging.info(f"[WS] Cliente desconectado: session_id={session_id[:5]}... Total: {len(CLIENTS_BY_SESSION_ID)}")
-    await broadcast_count()
+    websocket, user_id = ws_tuple
 
+    # 2. Eliminar de la lista de ID de usuario
+    if user_id in CLIENTS_BY_USER_ID:
+        CLIENTS_BY_USER_ID[user_id].remove(websocket)
+        
+        # 3. Comprobar si era la *última* conexión de este usuario
+        if not CLIENTS_BY_USER_ID[user_id]:
+            del CLIENTS_BY_USER_ID[user_id]
+            # 4. Si era la última, notificar a todos que está "offline"
+            logging.info(f"[WS] Cliente user_id={user_id} ahora está offline.")
+            await broadcast_presence_update(user_id, "offline")
+            
+    logging.info(f"[WS] Cliente desconectado: session_id={session_id[:5]}... Conexiones totales: {len(CLIENTS_BY_SESSION_ID)}")
 
 async def ws_handler(websocket):
     """Manejador principal de conexiones WebSocket."""
     session_id = None
+    user_id = 0
     try:
         # --- Esperar mensaje de autenticación ---
         message_json = await websocket.recv()
@@ -91,6 +106,7 @@ async def ws_handler(websocket):
         logging.error(f"[WS] Error en la conexión: {e}")
     finally:
         if session_id:
+            # Usamos el user_id que guardamos al registrar
             await unregister_client(session_id)
 # --- ▲▲▲ FIN DE MODIFICACIÓN: MANEJADOR DE WEBSOCKET ▼▼▼ ---
 
@@ -98,10 +114,24 @@ async def ws_handler(websocket):
 # --- ▼▼▼ INICIO DE MODIFICACIÓN: MANEJADOR DE HTTP ▼▼▼ ---
 async def http_handler_count(request):
     """Devuelve el conteo de usuarios (endpoint público)."""
+    # El conteo se basa en sesiones únicas, no en user_ids
     count = len(CLIENTS_BY_SESSION_ID)
     logging.info(f"[HTTP] Solicitud de conteo recibida. Respondiendo: {count}")
     response_data = {"active_users": count}
     return web.json_response(response_data)
+
+# --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! ▼▼▼ ---
+async def http_handler_get_online_users(request):
+    """Devuelve una lista de IDs de usuarios actualmente conectados."""
+    try:
+        # Las llaves del diccionario CLIENTS_BY_USER_ID son los user_id
+        online_user_ids = list(CLIENTS_BY_USER_ID.keys())
+        logging.info(f"[HTTP-ONLINE] Solicitud de usuarios en línea. Respondiendo: {len(online_user_ids)} usuarios.")
+        return web.json_response({"status": "ok", "online_users": online_user_ids})
+    except Exception as e:
+        logging.error(f"[HTTP-ONLINE] Error al obtener usuarios en línea: {e}")
+        return web.json_response({"status": "error", "message": str(e)}, status=500)
+# --- ▲▲▲ ¡FIN DE NUEVA FUNCIÓN! ▲▲▲ ---
 
 async def http_handler_kick(request):
     """
@@ -136,7 +166,7 @@ async def http_handler_kick(request):
         for ws in list(websockets_to_kick):
             # Encontrar el session_id de este websocket
             current_session_id = None
-            for sid, w in CLIENTS_BY_SESSION_ID.items():
+            for sid, (w, uid) in CLIENTS_BY_SESSION_ID.items(): # <-- MODIFICADO
                 if w == ws:
                     current_session_id = sid
                     break
@@ -245,7 +275,6 @@ async def http_handler_update_status(request):
         logging.error(f"[HTTP-STATUS] Error al procesar actualización de estado: {e}")
         return web.json_response({"status": "error", "message": str(e)}, status=400)
 
-# --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! ▼▼▼ ---
 async def http_handler_notify_user(request):
     """
     Recibe una notificación genérica (usada para amistad) y la reenvía
@@ -283,8 +312,6 @@ async def http_handler_notify_user(request):
     except Exception as e:
         logging.error(f"[HTTP-NOTIFY] Error al procesar notificación: {e}")
         return web.json_response({"status": "error", "message": str(e)}, status=400)
-# --- ▲▲▲ ¡FIN DE NUEVA FUNCIÓN! ▲▲▲ ---
-
 # --- ▲▲▲ FIN DE MODIFICACIÓN: MANEJADOR DE HTTP ▼▼▼ ---
 
 
@@ -298,16 +325,17 @@ async def run_ws_server():
 async def run_http_server():
     """Inicia y mantiene vivo el servidor HTTP."""
     http_app = web.Application()
-    # Endpoint público para el contador
+    
     http_app.router.add_get("/count", http_handler_count)
-    # Endpoint interno para la expulsión (solo POST)
+    
+    # --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
+    http_app.router.add_get("/get-online-users", http_handler_get_online_users) 
+    # --- ▲▲▲ ¡FIN DE NUEVA LÍNEA! ▲▲▲ ---
+    
     http_app.router.add_post("/kick", http_handler_kick) 
     http_app.router.add_post("/update-status", http_handler_update_status) 
     http_app.router.add_post("/kick-bulk", http_handler_kick_bulk)
-    
-    # --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
     http_app.router.add_post("/notify-user", http_handler_notify_user)
-    # --- ▲▲▲ ¡FIN DE NUEVA LÍNEA! ▲▲▲ ---
     
     http_runner = web.AppRunner(http_app)
     await http_runner.setup()

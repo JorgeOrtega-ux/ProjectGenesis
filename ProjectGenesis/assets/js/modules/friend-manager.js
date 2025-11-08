@@ -1,13 +1,10 @@
+// FILE: assets/js/modules/friend-manager.js
+
 import { getTranslation } from '../services/i18n-manager.js';
 import { showAlert } from '../services/alert-manager.js';
-// --- ▼▼▼ ¡IMPORTACIÓN MODIFICADA! ▼▼▼ ---
 import { callFriendApi as callApi } from '../services/api-service.js'; 
 
-// --- ▼▼▼ ¡FUNCIÓN LOCAL callFriendApi ELIMINADA! ▼▼▼ ---
-// (Ya no es necesaria, usamos la del servicio)
-
-
-// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (RENDER) ▼▼▼ ---
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (RENDER) ▼▼▼ ---
 function renderFriendList(friends) {
     const container = document.getElementById('friend-list-items');
     if (!container) return;
@@ -27,14 +24,22 @@ function renderFriendList(friends) {
 
     let html = '';
     friends.forEach(friend => {
+        // Determinar la clase de estado inicial
+        const statusClass = friend.is_online ? 'online' : 'offline';
+        
         html += `
-            <a class="menu-link" 
+            <a class="menu-link friend-item" 
                href="${window.projectBasePath}/profile/${friend.username}"
                data-nav-js="true"
+               data-friend-id="${friend.friend_id}"
                title="${friend.username}">
-                <div class="menu-link-icon">
+               
+                <div class="menu-link-icon" style="position: relative;">
                     <img src="${friend.profile_image_url}" alt="${friend.username}" class="menu-link-avatar">
+                    <!-- Punto de estado -->
+                    <span class="friend-status-dot ${statusClass}"></span>
                 </div>
+                
                 <div class="menu-link-text">
                     <span>${friend.username}</span>
                 </div>
@@ -43,19 +48,17 @@ function renderFriendList(friends) {
     });
     container.innerHTML = html;
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN (RENDER) ▲▲▲ ---
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (RENDER) ▲▲▲ ---
 
 
-// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (INIT) ▼▼▼ ---
 export async function initFriendList() {
     const container = document.getElementById('friend-list-container');
-    if (!container) return; // No estamos en una página con la lista
+    if (!container) return; 
 
     const formData = new FormData();
     formData.append('action', 'get-friends-list');
 
     try {
-        // Usamos la API importada
         const result = await callApi(formData); 
         if (result.success) {
             renderFriendList(result.friends);
@@ -77,7 +80,6 @@ export async function initFriendList() {
         console.error("Error al cargar lista de amigos:", e);
     }
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN (INIT) ▲▲▲ ---
 
 function updateProfileActions(userId, newStatus) {
     const actionsContainer = document.querySelector(`.profile-actions[data-user-id="${userId}"]`);
@@ -139,6 +141,22 @@ function toggleButtonLoading(button, isLoading) {
 }
 
 export function initFriendManager() {
+    
+    // --- ▼▼▼ INICIO DE NUEVO LISTENER (ACTUALIZACIÓN EN TIEMPO REAL) ▼▼▼ ---
+    document.addEventListener('user-presence-changed', (e) => {
+        const { userId, status } = e.detail;
+        // Buscar si este usuario está en la lista de amigos
+        const friendItem = document.querySelector(`.friend-item[data-friend-id="${userId}"]`);
+        if (friendItem) {
+            const dot = friendItem.querySelector('.friend-status-dot');
+            if (dot) {
+                dot.classList.remove('online', 'offline');
+                dot.classList.add(status); // 'online' o 'offline'
+            }
+        }
+    });
+    // --- ▲▲▲ FIN DE NUEVO LISTENER ▲▲▲ ---
+
     document.body.addEventListener('click', async (e) => {
         const button = e.target.closest('[data-action^="friend-"]');
         if (!button) return;
@@ -149,14 +167,12 @@ export function initFriendManager() {
         
         if (!targetUserId) return;
 
-        // Extraer la acción real (e.g., "send-request" de "friend-send-request")
         const apiAction = actionStr.replace('friend-', '');
 
         if (apiAction === 'remove' && !confirm(getTranslation('js.friends.confirmRemove') || '¿Seguro que quieres eliminar a este amigo?')) {
              return;
         }
         
-        // Mapeo especial para 'remove' -> 'remove-friend' en la API si es necesario
         const finalApiAction = (apiAction === 'remove') ? 'remove-friend' : apiAction;
 
         toggleButtonLoading(button, true);
@@ -165,38 +181,26 @@ export function initFriendManager() {
         formData.append('action', finalApiAction);
         formData.append('target_user_id', targetUserId);
 
-        // --- ▼▼▼ MODIFICACIÓN: Usar callApi (importada) ▼▼▼ ---
         const result = await callApi(formData);
 
         if (result.success) {
             showAlert(getTranslation(result.message), 'success');
-            
-            // --- ▼▼▼ ¡LÓGICA DE UI MODIFICADA! ▼▼▼ ---
-            
-            // 1. Actualizar botones del perfil (si estamos en uno)
             updateProfileActions(targetUserId, result.newStatus);
-            
-            // 2. Actualizar la lista de amigos (sidebar)
             initFriendList(); 
             
-            // 3. Si el botón estaba en el panel de notificaciones, eliminar el item
             const notificationItem = button.closest('.notification-item');
             if (notificationItem) {
                 notificationItem.remove();
-                
-                // Comprobar si la lista de notificaciones quedó vacía
                 const listContainer = document.getElementById('notification-list-items');
-                if (listContainer && listContainer.querySelectorAll('.notification-item').length === 0) {
-                    const placeholder = document.getElementById('notification-placeholder');
-                    if (placeholder) placeholder.style.display = 'flex';
+                const placeholder = document.getElementById('notification-placeholder');
+                if (listContainer && placeholder && listContainer.children.length === 0) {
+                    placeholder.style.display = 'flex';
                 }
             }
-            // --- ▲▲▲ ¡FIN DE LÓGICA DE UI MODIFICADA! ▲▲▲ ---
 
         } else {
             showAlert(getTranslation(result.message || 'js.friends.errorGeneric'), 'error');
             toggleButtonLoading(button, false);
         }
-        // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
     });
 }

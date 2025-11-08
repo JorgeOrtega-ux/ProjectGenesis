@@ -14,11 +14,8 @@ if (!isset($viewProfileData) || empty($viewProfileData)) {
 
 $profile = $viewProfileData;
 $publications = $viewProfileData['publications'];
-$friendshipStatus = $viewProfileData['friendship_status'] ?? 'not_friends'; // Cargado en router.php
-
-// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-$currentTab = $viewProfileData['current_tab'] ?? 'posts'; // 'posts', 'likes', 'bookmarks'
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+$friendshipStatus = $viewProfileData['friendship_status'] ?? 'not_friends';
+$currentTab = $viewProfileData['current_tab'] ?? 'posts';
 
 $roleIconMap = [
     'user' => 'person',
@@ -29,6 +26,37 @@ $roleIconMap = [
 $profileRoleIcon = $roleIconMap[$profile['role']] ?? 'person';
 
 $isOwnProfile = ($profile['id'] == $userId);
+
+// --- ▼▼▼ INICIO DE LÓGICA DE ESTADO ▼▼▼ ---
+$statusBadgeHtml = '';
+if ($profile['is_online']) {
+    $statusBadgeHtml = '<div class="profile-status-badge online"><span class="status-dot"></span>Activo ahora</div>';
+} elseif (!empty($profile['last_seen'])) {
+    // Calcular tiempo transcurrido
+    $lastSeenTime = new DateTime($profile['last_seen'], new DateTimeZone('UTC'));
+    $currentTime = new DateTime('now', new DateTimeZone('UTC'));
+    $interval = $currentTime->diff($lastSeenTime);
+
+    $timeAgo = '';
+    if ($interval->y > 0) {
+        $timeAgo = ($interval->y == 1) ? '1 año' : $interval->y . ' años';
+    } elseif ($interval->m > 0) {
+        $timeAgo = ($interval->m == 1) ? '1 mes' : $interval->m . ' meses';
+    } elseif ($interval->d > 0) {
+        $timeAgo = ($interval->d == 1) ? '1 día' : $interval->d . ' días';
+    } elseif ($interval->h > 0) {
+        $timeAgo = ($interval->h == 1) ? '1 h' : $interval->h . ' h';
+    } elseif ($interval->i > 0) {
+        $timeAgo = ($interval->i == 1) ? '1 min' : $interval->i . ' min';
+    } else {
+        $timeAgo = 'unos segundos';
+    }
+    
+    $statusText = ($timeAgo === 'unos segundos') ? 'Activo hace unos momentos' : "Activo hace $timeAgo";
+    $statusBadgeHtml = '<div class="profile-status-badge offline">' . htmlspecialchars($statusText) . '</div>';
+}
+// --- ▲▲▲ FIN DE LÓGICA DE ESTADO ▲▲▲ ---
+
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'view-profile') ? 'active' : 'disabled'; ?>" data-section="view-profile">
 
@@ -101,9 +129,17 @@ $isOwnProfile = ($profile['id'] == $userId);
                 <div class="profile-info">
                     <h1 class="profile-username"><?php echo htmlspecialchars($profile['username']); ?></h1>
                     
-                    <div class="profile-role-badge" data-role="<?php echo htmlspecialchars($profile['role']); ?>">
-                        <span class="material-symbols-rounded"><?php echo $profileRoleIcon; ?></span>
-                        <span><?php echo htmlspecialchars(ucfirst($profile['role'])); ?></span>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div class="profile-role-badge" data-role="<?php echo htmlspecialchars($profile['role']); ?>">
+                            <span class="material-symbols-rounded"><?php echo $profileRoleIcon; ?></span>
+                            <span><?php echo htmlspecialchars(ucfirst($profile['role'])); ?></span>
+                        </div>
+
+                        <?php 
+                        // --- ▼▼▼ INSERCIÓN DEL BADGE DE ESTADO ▼▼▼ ---
+                        echo $statusBadgeHtml; 
+                        // --- ▲▲▲ FIN DE INSERCIÓN ▲▲▲ ---
+                        ?>
                     </div>
 
                     <p class="profile-meta">
@@ -138,7 +174,6 @@ $isOwnProfile = ($profile['id'] == $userId);
             <?php if (!empty($publications)): ?>
                 <?php foreach ($publications as $post): ?>
                     <?php
-                    // --- ▼▼▼ INICIO DEL BLOQUE CORREGIDO ▼▼▼ ---
                     // Lógica de datos (copiada de home.php)
                     $postAvatar = $post['profile_image_url'] ?? $defaultAvatar;
                     if (empty($postAvatar)) $postAvatar = $defaultAvatar;
@@ -160,7 +195,7 @@ $isOwnProfile = ($profile['id'] == $userId);
                     $likeCount = (int)($post['like_count'] ?? 0);
                     $userHasLiked = (int)($post['user_has_liked'] ?? 0) > 0;
                     $commentCount = (int)($post['comment_count'] ?? 0);
-                    $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0; // <-- NUEVA LÍNEA
+                    $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0;
                     ?>
                     <div class="component-card component-card--post" style="padding: 0; align-items: stretch; flex-direction: column;" data-post-id="<?php echo $post['id']; ?>">
                         
@@ -254,8 +289,8 @@ $isOwnProfile = ($profile['id'] == $userId);
                                         data-tooltip="home.actions.like"
                                         data-action="like-toggle"
                                         data-post-id="<?php echo $post['id']; ?>">
-                                    <span class="material-symbols-rounded"><?php echo $userHasLiked ? 'favorite' : 'favorite_border'; ?></span>
-                                    <span class="action-text"><?php echo $likeCount; ?></span>
+                            <span class="material-symbols-rounded"><?php echo $userHasLiked ? 'favorite' : 'favorite_border'; ?></span>
+                            <span class="action-text"><?php echo $likeCount; ?></span>
                                 </button>
                                 
                                 <button type="button"
@@ -282,9 +317,6 @@ $isOwnProfile = ($profile['id'] == $userId);
                         </div>
                         
                     </div>
-                    <?php
-                    // --- ▲▲▲ FIN DEL BLOQUE CORREGIDO ▲▲▲ ---
-                    ?>
                 <?php endforeach; ?>
             <?php else: ?>
                 <div class="component-card">
