@@ -650,7 +650,14 @@
       "requestCanceled": "Solicitud cancelada.",
       "requestAccepted": "¡Ahora son amigos!",
       "friendRemoved": "Amigo eliminado.",
-      "errorGeneric": "Error al procesar la solicitud de amistad."
+      "errorGeneric": "Error al procesar la solicitud de amistad.",
+      "confirmRemove": "¿Seguro que quieres eliminar a este amigo?",
+      "list": {
+        "title": "Amigos",
+        "loading": "Cargando amigos...",
+        "noFriends": "No tienes amigos.",
+        "error": "Error al cargar."
+      }
     }
   },
   "db": {

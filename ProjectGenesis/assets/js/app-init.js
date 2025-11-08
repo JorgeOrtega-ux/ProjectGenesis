@@ -10,9 +10,9 @@ import { initAdminServerSettingsManager } from './modules/admin-server-settings-
 import { initAdminBackupModule } from './modules/admin-backup-module.js'; 
 import { initCommunityManager } from './modules/community-manager.js';
 import { initPublicationManager } from './modules/publication-manager.js';
-// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
-import { initFriendManager } from './modules/friend-manager.js';
-// --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
+// --- ▼▼▼ LÍNEA MODIFICADA/AÑADIDA ▼▼▼ ---
+import { initFriendManager, initFriendList } from './modules/friend-manager.js';
+// --- ▲▲▲ FIN LÍNEA MODIFICADA/AÑADIDA ▲▲▲ ---
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager, getTranslation } from './services/i18n-manager.js';
 import { initTooltipManager } from './services/tooltip-manager.js'; 
@@ -71,15 +71,19 @@ document.addEventListener('DOMContentLoaded', async function () {
     initAdminBackupModule();
     initCommunityManager();
     initPublicationManager();
-    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
-    initFriendManager();
-    // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
+    // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+    initFriendManager(); // Sigue inicializando los listeners de clic
+    // --- ▲▲▲ FIN LÍNEA MODIFICADA ▲▲▲ ---
 
     initRouter(); 
     
     initTooltipManager(); 
 
     if (window.isUserLoggedIn) {
+        // --- ▼▼▼ ¡NUEVA LÍNEA! Cargar la lista de amigos al inicio ▼▼▼ ---
+        initFriendList();
+        // --- ▲▲▲ ¡FIN DE NUEVA LÍNEA! ▲▲▲ ---
+
         let ws;
         
         const wsHost = window.wsHost || '127.0.0.1';

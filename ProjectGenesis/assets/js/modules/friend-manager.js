@@ -1,9 +1,15 @@
 import { getTranslation } from '../services/i18n-manager.js';
 import { showAlert } from '../services/alert-manager.js';
+// --- ▼▼▼ ¡NUEVA IMPORTACIÓN! ▼▼▼ ---
+import { callFriendApi as callApi } from '../services/api-service.js'; // Renombrado para claridad
 
 const API_ENDPOINT_FRIEND = `${window.projectBasePath}/api/friend_handler.php`;
 
+// --- ▼▼▼ MODIFICACIÓN: Usar el servicio importado ▼▼▼ ---
 async function callFriendApi(formData) {
+    // Esta función local ya no es necesaria, usamos la de api-service.js
+    // Mantenemos la función _local_ callFriendApi por si se usa en otro lado,
+    // pero la nueva lógica usará callApi (importada)
     const csrfToken = window.csrfToken || '';
     formData.append('csrf_token', csrfToken);
 
@@ -19,6 +25,80 @@ async function callFriendApi(formData) {
         return { success: false, message: getTranslation('js.api.errorConnection') };
     }
 }
+// --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+
+
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (RENDER) ▼▼▼ ---
+function renderFriendList(friends) {
+    const container = document.getElementById('friend-list-items');
+    if (!container) return;
+
+    if (friends.length === 0) {
+        container.innerHTML = `
+            <div class="menu-link" style="pointer-events: none; opacity: 0.7;">
+                <div class="menu-link-icon">
+                    <span class="material-symbols-rounded">person_off</span>
+                </div>
+                <div class="menu-link-text">
+                    <span data-i18n="friends.list.noFriends">No tienes amigos.</span>
+                </div>
+            </div>`;
+        return;
+    }
+
+    let html = '';
+    friends.forEach(friend => {
+        html += `
+            <a class="menu-link" 
+               href="${window.projectBasePath}/profile/${friend.username}"
+               data-nav-js="true"
+               title="${friend.username}">
+                <div class="menu-link-icon">
+                    <img src="${friend.profile_image_url}" alt="${friend.username}" class="menu-link-avatar">
+                </div>
+                <div class="menu-link-text">
+                    <span>${friend.username}</span>
+                </div>
+            </a>
+        `;
+    });
+    container.innerHTML = html;
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN (RENDER) ▲▲▲ ---
+
+
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (INIT) ▼▼▼ ---
+export async function initFriendList() {
+    const container = document.getElementById('friend-list-container');
+    if (!container) return; // No estamos en una página con la lista
+
+    const formData = new FormData();
+    formData.append('action', 'get-friends-list');
+
+    try {
+        // Usamos la API importada
+        const result = await callApi(formData); 
+        if (result.success) {
+            renderFriendList(result.friends);
+        } else {
+            const listContainer = document.getElementById('friend-list-items');
+            if (listContainer) {
+                 listContainer.innerHTML = `
+                    <div class="menu-link" style="pointer-events: none; opacity: 0.7;">
+                        <div class="menu-link-icon">
+                            <span class="material-symbols-rounded">error</span>
+                        </div>
+                        <div class="menu-link-text">
+                            <span data-i18n="friends.list.error">Error al cargar.</span>
+                        </div>
+                    </div>`;
+            }
+        }
+    } catch (e) {
+        console.error("Error al cargar lista de amigos:", e);
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN (INIT) ▲▲▲ ---
 
 function updateProfileActions(userId, newStatus) {
     const actionsContainer = document.querySelector(`.profile-actions[data-user-id="${userId}"]`);
@@ -106,14 +186,18 @@ export function initFriendManager() {
         formData.append('action', finalApiAction);
         formData.append('target_user_id', targetUserId);
 
-        const result = await callFriendApi(formData);
+        // --- ▼▼▼ MODIFICACIÓN: Usar callApi (importada) ▼▼▼ ---
+        const result = await callApi(formData);
 
         if (result.success) {
             showAlert(getTranslation(result.message), 'success');
             updateProfileActions(targetUserId, result.newStatus);
+            // --- ▼▼▼ ¡NUEVA LÍNEA! Actualizar la lista de amigos ▼▼▼ ---
+            initFriendList(); 
         } else {
             showAlert(getTranslation(result.message || 'js.friends.errorGeneric'), 'error');
             toggleButtonLoading(button, false);
         }
+        // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
     });
 }

@@ -25,18 +25,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $targetUserId = (int)($_POST['target_user_id'] ?? 0);
 
-    if ($targetUserId === 0 || $targetUserId === $currentUserId) {
+    // --- ▼▼▼ MODIFICACIÓN: Mover validación de targetUserId ▼▼▼ ---
+    if ($action !== 'get-friends-list' && ($targetUserId === 0 || $targetUserId === $currentUserId)) {
          $response['message'] = 'js.api.invalidAction';
          echo json_encode($response);
          exit;
     }
+    // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
     
     // Normalizar IDs para asegurar que user_id_1 < user_id_2
     $userId1 = min($currentUserId, $targetUserId);
     $userId2 = max($currentUserId, $targetUserId);
 
     try {
-        if ($action === 'send-request') {
+        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN ▼▼▼ ---
+        if ($action === 'get-friends-list') {
+            
+            $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+
+            $stmt_friends = $pdo->prepare(
+                "SELECT 
+                    (CASE WHEN f.user_id_1 = ? THEN f.user_id_2 ELSE f.user_id_1 END) AS friend_id,
+                    u.username, u.profile_image_url, u.role
+                FROM friendships f
+                JOIN users u ON (CASE WHEN f.user_id_1 = ? THEN f.user_id_2 ELSE f.user_id_1 END) = u.id
+                WHERE (f.user_id_1 = ? OR f.user_id_2 = ?) AND f.status = 'accepted'
+                ORDER BY u.username ASC"
+            );
+            $stmt_friends->execute([$currentUserId, $currentUserId, $currentUserId, $currentUserId]);
+            $friends = $stmt_friends->fetchAll();
+            
+            // Formatear la URL del avatar
+            foreach ($friends as &$friend) {
+                if (empty($friend['profile_image_url'])) {
+                    $friend['profile_image_url'] = "https://ui-avatars.com/api/?name=" . urlencode($friend['username']) . "&size=100&background=e0e0e0&color=ffffff";
+                }
+            }
+
+            $response['success'] = true;
+            $response['friends'] = $friends;
+        
+        } 
+        // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
+        elseif ($action === 'send-request') {
             // Verificar si ya existe una relación
             $stmt_check = $pdo->prepare("SELECT status FROM friendships WHERE user_id_1 = ? AND user_id_2 = ?");
             $stmt_check->execute([$userId1, $userId2]);
