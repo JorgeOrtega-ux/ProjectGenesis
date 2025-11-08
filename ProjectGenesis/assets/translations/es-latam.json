@@ -5,11 +5,13 @@
       "adminPanel": "Panel de Administración",
       "settings": "Configuración",
       "help": "Ayuda y comentarios",
-      "logout": "Cerrar sesión"
+      "logout": "Cerrar sesión",
+      "myProfile": "Mi Perfil"
     },
     "buttons": {
       "menu": "Menú principal",
-      "profile": "Perfil y configuración"
+      "profile": "Perfil y configuración",
+      "notifications": "Notificaciones"
     }
   },
   "sidebar": {
@@ -642,12 +644,14 @@
       "showMore": "Mostrar más",
       "showLess": "Mostrar menos",
       "saved": "Publicación guardada",
-      "unsaved": "Publicación eliminada de guardados"
+      "unsaved": "Publicación eliminada de guardados",
+      "errorPostTooLong": "La publicación no puede exceder los %length% caracteres.",
+      "errorPollTooLong": "La pregunta de la encuesta no puede exceder los %length% caracteres."
     },
     "friends": {
       "sendRequest": "Agregar amigo",
       "cancelRequest": "Cancelar solicitud",
-      "acceptRequest": "Aceptar solicitud",
+      "acceptRequest": "Aceptar",
       "declineRequest": "Rechazar",
       "removeFriend": "Eliminar amigo",
       "requestSent": "Solicitud enviada.",
@@ -734,5 +738,31 @@
     "pollAddOption": "Añadir opción",
     "pollOptionLabel": "Opción",
     "pollRemoveOption": "Eliminar opción"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "No tienes notificaciones nuevas.",
+    "loading": "Cargando notificaciones...",
+    "friendRequestText": "quiere ser tu amigo.",
+    "friendRequestAlert": "te ha enviado una solicitud de amistad."
+  },
+  "profile": {
+    "tabs": {
+      "likes": "Favoritos",
+      "bookmarks": "Guardados"
+    },
+    "noLikes": {
+      "title": "Sin Favoritos",
+      "desc": "Aún no te ha gustado ninguna publicación. ¡Explora y reacciona al contenido!"
+    },
+    "noBookmarks": {
+      "title": "Sin Guardados",
+      "desc": "Aún no has guardado ninguna publicación. Toca el ícono de guardar para verla aquí más tarde."
+    },
+    "noPosts": {
+      "title": "Sin publicaciones",
+      "descSelf": "Aún no has publicado nada. ¡Comparte algo con la comunidad!",
+      "descOther": "Este usuario aún no ha publicado nada."
+    }
   }
 }
