@@ -23,7 +23,7 @@ try {
             $currentCommunityId = $community['id'];
             $currentCommunityNameKey = $community['name']; 
             
-            // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO u.role) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO u.role y user_has_bookmarked) ▼▼▼ ---
             $sql_posts = 
                 "SELECT 
                     p.*, 
@@ -42,6 +42,7 @@ try {
                     /* NUEVOS CAMPOS */
                     (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
                     (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
+                    (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = ?) AS user_has_bookmarked,
                     (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count
 
                  FROM community_publications p
@@ -51,8 +52,8 @@ try {
                  LIMIT 50";
             
             $stmt_posts = $pdo->prepare($sql_posts);
-            // ¡Se añaden 2 IDs de usuario!
-            $stmt_posts->execute([$userId, $userId, $currentCommunityId]);
+            // ¡Se añaden 3 IDs de usuario!
+            $stmt_posts->execute([$userId, $userId, $userId, $currentCommunityId]);
             $publications = $stmt_posts->fetchAll();
             // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
         } else {
@@ -62,7 +63,7 @@ try {
     
     if ($communityUuid === null) {
         // --- VISTA DE FEED PRINCIPAL ---
-        // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO u.role) ▼▼▼ ---
+        // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO u.role y user_has_bookmarked) ▼▼▼ ---
         $sql_posts = 
             "SELECT 
                 p.*, 
@@ -82,6 +83,7 @@ try {
                 /* NUEVOS CAMPOS */
                 (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
                 (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
+                (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = ?) AS user_has_bookmarked,
                 (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count
 
              FROM community_publications p
@@ -93,8 +95,8 @@ try {
              LIMIT 50";
         
         $stmt_posts = $pdo->prepare($sql_posts);
-         // ¡Se añaden 2 IDs de usuario!
-        $stmt_posts->execute([$userId, $userId]);
+         // ¡Se añaden 3 IDs de usuario!
+        $stmt_posts->execute([$userId, $userId, $userId]);
         $publications = $stmt_posts->fetchAll();
         // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
     }
@@ -230,7 +232,7 @@ try {
                 <?php else: ?>
                 <?php foreach ($publications as $post): ?>
                     <?php
-                    // --- ▼▼▼ ¡INICIO DE CÓDIGO PEGADO! ▼▼▼ ---
+                    // --- ▼▼▼ ¡INICIO DE CÓDIGO PEGADO Y MODIFICADO! ▼▼▼ ---
                     
                     // Lógica de datos
                     $postAvatar = $post['profile_image_url'] ?? $defaultAvatar;
@@ -249,10 +251,11 @@ try {
                     $totalVotes = (int)($post['total_votes'] ?? 0);
                     $pollOptions = $post['poll_options'] ?? [];
 
-                    // --- Variables para Like/Comment ---
+                    // --- Variables para Like/Comment/Bookmark ---
                     $likeCount = (int)($post['like_count'] ?? 0);
                     $userHasLiked = (int)($post['user_has_liked'] ?? 0) > 0;
                     $commentCount = (int)($post['comment_count'] ?? 0);
+                    $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0; // <-- NUEVA LÍNEA
                     ?>
                     <div class="component-card component-card--post" style="padding: 0; align-items: stretch; flex-direction: column;" data-post-id="<?php echo $post['id']; ?>">
                         
@@ -358,10 +361,14 @@ try {
                                 </button>
                             </div>
                             <div class="post-actions-right">
-                                <button type="button" class="component-action-button--icon" data-tooltip="home.actions.save">
-                                    <span class="material-symbols-rounded">bookmark</span>
+                                <button type="button" 
+                                        class="component-action-button--icon post-action-bookmark <?php echo $userHasBookmarked ? 'active' : ''; ?>" 
+                                        data-tooltip="home.actions.save"
+                                        data-action="bookmark-toggle"
+                                        data-post-id="<?php echo $post['id']; ?>">
+                                    <span class="material-symbols-rounded"><?php echo $userHasBookmarked ? 'bookmark' : 'bookmark_border'; ?></span>
                                 </button>
-                            </div>
+                                </div>
                         </div>
                         
                         </div>

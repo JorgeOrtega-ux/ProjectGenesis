@@ -137,6 +137,9 @@ DROP TABLE IF EXISTS `poll_options`;
 DROP TABLE IF EXISTS `community_publications`;
 DROP TABLE IF EXISTS `publication_likes`;
 DROP TABLE IF EXISTS `publication_comments`;
+-- --- ▼▼▼ NUEVA LÍNEA AÑADIDA ▼▼▼ ---
+DROP TABLE IF EXISTS `publication_bookmarks`;
+-- --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 DROP TABLE IF EXISTS `friendships`; -- Aseguramos que se borre si existe
 
 CREATE TABLE `community_publications` (
@@ -204,6 +207,18 @@ CREATE TABLE `publication_likes` (
   FOREIGN KEY (publication_id) REFERENCES `community_publications`(id) ON DELETE CASCADE,
   UNIQUE KEY `uk_user_publication_like` (`user_id`, `publication_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --- ▼▼▼ NUEVA TABLA AÑADIDA ▼▼▼ ---
+CREATE TABLE `publication_bookmarks` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `publication_id` INT NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
+  FOREIGN KEY (user_id) REFERENCES `users`(id) ON DELETE CASCADE,
+  FOREIGN KEY (publication_id) REFERENCES `community_publications`(id) ON DELETE CASCADE,
+  UNIQUE KEY `uk_user_publication_bookmark` (`user_id`, `publication_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- --- ▲▲▲ FIN NUEVA TABLA ▲▲▲ ---
 
 CREATE TABLE `publication_comments` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,

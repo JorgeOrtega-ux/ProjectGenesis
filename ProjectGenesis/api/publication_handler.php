@@ -249,6 +249,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['newLikeCount'] = $stmt_count->fetchColumn();
             $response['success'] = true;
 
+        // --- ▼▼▼ INICIO DE NUEVO BLOQUE ▼▼▼ ---
+        } elseif ($action === 'bookmark-toggle') {
+            $publicationId = (int)($_POST['publication_id'] ?? 0);
+            if (empty($publicationId)) {
+                throw new Exception('js.api.invalidAction');
+            }
+            
+            $stmt_check = $pdo->prepare("SELECT id FROM publication_bookmarks WHERE user_id = ? AND publication_id = ?");
+            $stmt_check->execute([$userId, $publicationId]);
+            $bookmarkExists = $stmt_check->fetch();
+            
+            if ($bookmarkExists) {
+                // Ya existe, eliminarlo
+                $stmt_delete = $pdo->prepare("DELETE FROM publication_bookmarks WHERE id = ?");
+                $stmt_delete->execute([$bookmarkExists['id']]);
+                $response['userHasBookmarked'] = false;
+            } else {
+                // No existe, crearlo
+                $stmt_insert = $pdo->prepare("INSERT INTO publication_bookmarks (user_id, publication_id) VALUES (?, ?)");
+                $stmt_insert->execute([$userId, $publicationId]);
+                $response['userHasBookmarked'] = true;
+            }
+            
+            $response['success'] = true;
+        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
+
         } elseif ($action === 'post-comment') {
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             $parentCommentId = !empty($_POST['parent_comment_id']) ? (int)$_POST['parent_comment_id'] : null;

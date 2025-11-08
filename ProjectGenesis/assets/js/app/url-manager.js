@@ -23,7 +23,7 @@ const routes = {
     
     'toggleSectionPostView': 'post-view', 
 
-    'toggleSectionViewProfile': 'view-profile', // <-- NUEVA LÍNEA
+    'toggleSectionViewProfile': 'view-profile', // <-- RUTA DE PERFIL (MODIFICADA)
 
     'toggleSectionRegisterStep1': 'register-step1',
     'toggleSectionRegisterStep2': 'register-step2',
@@ -69,8 +69,12 @@ const paths = {
     
     '/post': 'toggleSectionPostView', 
 
-    '/profile': 'toggleSectionViewProfile', // <-- NUEVA LÍNEA (manejador genérico)
-    '/profile/username-placeholder': 'toggleSectionViewProfile', // <-- NUEVA LÍNEA (placeholder)
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Rutas de Perfil) ▼▼▼ ---
+    '/profile': 'toggleSectionViewProfile', // Genérico (obsoleto, pero por si acaso)
+    '/profile/username-placeholder': 'toggleSectionViewProfile', 
+    '/profile/username-placeholder/likes': 'toggleSectionViewProfile',
+    '/profile/username-placeholder/bookmarks': 'toggleSectionViewProfile',
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     '/register': 'toggleSectionRegisterStep1',
     '/register/additional-data': 'toggleSectionRegisterStep2',
@@ -269,6 +273,9 @@ export function handleNavigation() {
     let action = null;
     const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
     const postViewRegex = /^\/post\/(\d+)$/i; 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Nueva Regex de Perfil) ▼▼▼ ---
+    const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(likes|bookmarks))?$/i;
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
     if (path === '/') {
@@ -286,13 +293,15 @@ export function handleNavigation() {
         loadPage('post-view', action, { post_id: postId }); 
         return;
 
-    // --- ▼▼▼ ¡NUEVO BLOQUE DE PERFIL AÑADIDO! ▼▼▼ ---
-    } else if (path.startsWith('/profile/')) {
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Lógica de Perfil) ▼▼▼ ---
+    } else if (profileRegex.test(path)) {
         action = 'toggleSectionViewProfile';
-        const username = path.substring(path.lastIndexOf('/') + 1);
-        loadPage('view-profile', action, { username: username });
+        const matches = path.match(profileRegex);
+        const username = matches[1];
+        const tab = matches[2] || 'posts'; // 'posts', 'likes', o 'bookmarks'
+        loadPage('view-profile', action, { username: username, tab: tab });
         return;
-    // --- ▲▲▲ FIN DE BLOQUE DE PERFIL ▲▲▲ ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     } else {
         if (path === '/settings') {
@@ -358,13 +367,15 @@ function updateMenuState(currentAction) {
          menuAction = 'toggleSectionAdminDashboard'; 
     }
     
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadido ViewProfile) ▼▼▼ ---
     if (currentAction === 'toggleSectionJoinGroup' || 
         currentAction === 'toggleSectionCreatePublication' || 
         currentAction === 'toggleSectionCreatePoll' ||
         currentAction === 'toggleSectionPostView' ||
-        currentAction === 'toggleSectionViewProfile') { // <-- LÍNEA AÑADIDA
+        currentAction === 'toggleSectionViewProfile') {
         menuAction = 'toggleSectionHome';
     }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
         const linkAction = link.getAttribute('data-action');
@@ -386,11 +397,11 @@ export function initRouter() {
           return;
       }
       
-      // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Selector) ▼▼▼ ---
+      // --- ▼▼▼ INICIO DE MODIFICACIÓN (Selector actualizado) ▼▼▼ ---
       const link = e.target.closest(
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], a[href*="/profile/"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"]'
-        ); // <-- Añadido a[href*="/profile/"]
-      // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], a[href*="/profile/"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], .profile-tab a[data-nav-js="true"]'
+        ); // <-- Añadido .profile-tab a[...]
+      // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         if (link) {
             
@@ -414,15 +425,12 @@ export function initRouter() {
                     return; 
                 }
                 
-                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Lógica data-action) ▼▼▼ ---
                 if (action === 'toggleSectionPostView' && link.dataset.postId) {
-                    // Este es nuestro nuevo botón
                     page = 'post-view';
-                    newPath = '/post/' + link.dataset.postId; // This will be used for history.pushState
+                    newPath = '/post/' + link.dataset.postId;
                     fetchParams = { post_id: link.dataset.postId };
                 } 
-                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
-                else { // Original logic for all other data-actions
+                else { 
                     page = routes[action];
                     newPath = Object.keys(paths).find(key => paths[key] === action);
                 }
@@ -435,7 +443,9 @@ export function initRouter() {
                 
                 const postViewRegex = /^\/post\/(\d+)$/i;
                 const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
-                const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)$/i; // <-- NUEVA LÍNEA
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Regex de Perfil) ▼▼▼ ---
+                const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(likes|bookmarks))?$/i;
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 if (postViewRegex.test(newPath)) {
                     action = 'toggleSectionPostView';
@@ -449,13 +459,13 @@ export function initRouter() {
                     const matches = newPath.match(communityUuidRegex);
                     fetchParams = { community_uuid: matches[1] };
 
-                // --- ▼▼▼ ¡NUEVO BLOQUE DE PERFIL AÑADIDO! ▼▼▼ ---
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Lógica de Perfil) ▼▼▼ ---
                 } else if (profileRegex.test(newPath)) {
                     action = 'toggleSectionViewProfile';
                     page = 'view-profile';
                     const matches = newPath.match(profileRegex);
-                    fetchParams = { username: matches[1] };
-                // --- ▲▲▲ FIN DE BLOQUE DE PERFIL ▲▲▲ ---
+                    fetchParams = { username: matches[1], tab: matches[2] || 'posts' };
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 } else { 
                     if (newPath === '/settings') newPath = '/settings/your-profile';
@@ -485,18 +495,17 @@ export function initRouter() {
                 return;
             }
 
-            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (fullUrlPath) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (fullUrlPath) ▼▼▼ ---
             const queryString = (url && url.search) ? url.search : '';
             let fullUrlPath;
             
-            if ((action === 'toggleSectionPostView' || action === 'toggleSectionViewProfile') && fetchParams) {
-                // Use the newPath we constructed
+            // --- Modificado para usar el newPath construido por la regex ---
+            if ((action === 'toggleSectionPostView' || action === 'toggleSectionViewProfile') && newPath) {
                 fullUrlPath = `${basePath}${newPath}`;
             } else {
-                // Original logic
                 fullUrlPath = `${basePath}${newPath === '/' ? '/' : newPath}${queryString}`;
             }
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             
             const currentFullUrl = window.location.pathname + window.location.search;

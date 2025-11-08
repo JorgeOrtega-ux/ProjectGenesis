@@ -37,6 +37,9 @@ $pollOptions = $post['poll_options'] ?? [];
 $likeCount = (int)($post['like_count'] ?? 0);
 $userHasLiked = (int)($post['user_has_liked'] ?? 0) > 0;
 $commentCount = (int)($post['comment_count'] ?? 0);
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+$userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0;
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'post-view') ? 'active' : 'disabled'; ?>" data-section="post-view">
@@ -167,10 +170,14 @@ $commentCount = (int)($post['comment_count'] ?? 0);
                         </button>
                     </div>
                     <div class="post-actions-right">
-                        <button type="button" class="component-action-button--icon" data-tooltip="home.actions.save">
-                            <span class="material-symbols-rounded">bookmark</span>
+                        <button type="button" 
+                                class="component-action-button--icon post-action-bookmark <?php echo $userHasBookmarked ? 'active' : ''; ?>" 
+                                data-tooltip="home.actions.save"
+                                data-action="bookmark-toggle"
+                                data-post-id="<?php echo $post['id']; ?>">
+                            <span class="material-symbols-rounded"><?php echo $userHasBookmarked ? 'bookmark' : 'bookmark_border'; ?></span>
                         </button>
-                    </div>
+                        </div>
                 </div>
                 
                 <form class="post-comment-input-container active" data-action="post-comment">

@@ -1669,7 +1669,9 @@ select.component-input:invalid {
 .section-content[data-section="admin-backups-delete-confirm"] .component-wrapper,
 .section-content[data-section="admin-backups-restore-confirm"] .component-wrapper,
 /* --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ --- */
-.section-content[data-section="post-view"] .component-wrapper {
+.section-content[data-section="post-view"] .component-wrapper,
+/* --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ --- */
+.section-content[data-section="view-profile"] .component-wrapper {
 /* --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ --- */
     padding-top: 82px; 
 }
@@ -2587,6 +2589,23 @@ select.component-input:invalid {
     background-color: #f8e0e0; /* Hover rojo más oscuro */
 }
 
+/* --- ▼▼▼ INICIO DE NUEVO BLOQUE (BOOKMARK) ▼▼▼ --- */
+.post-action-bookmark:hover {
+    background-color: #f5f5fa;
+}
+.post-action-bookmark.active {
+    color: #206BD3; /* Azul */
+    background-color: #e9f0fa; /* Azul claro */
+}
+.post-action-bookmark.active .material-symbols-rounded {
+    font-variation-settings: 'FILL' 1; /* Icono relleno */
+}
+.post-action-bookmark.active:hover {
+    background-color: #dce7f7; /* Hover azul */
+}
+/* --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ --- */
+
+
 /* Ocultar texto en móviles */
 @media (max-width: 400px) {
     .component-action-button--icon .action-text {
@@ -3038,23 +3057,32 @@ select.component-input:invalid {
     margin-top: 8px;
 }
 
+/* --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (TABS) ▼▼▼ --- */
 .profile-tabs {
     display: flex;
     border-bottom: 1px solid #00000020;
     margin-top: 24px;
-    margin-bottom: -1px; /* Para que se alinee con el card-list-container */
+    width: 100%; /* Ocupa todo el ancho */
 }
 
-.profile-tab {
+a.profile-tab {
     padding: 12px 16px;
     font-size: 15px;
     font-weight: 600;
     color: #6b7280;
     cursor: pointer;
     border-bottom: 2px solid transparent;
+    text-decoration: none;
+    transition: color 0.2s, border-color 0.2s;
+    margin-bottom: -1px; /* Solapa el borde de .profile-tabs */
 }
 
-.profile-tab.active {
+a.profile-tab:hover {
+    color: #000;
+}
+
+a.profile-tab.active {
     color: #000;
     border-bottom-color: #000;
 }
+/* --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- */

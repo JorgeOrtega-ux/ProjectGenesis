@@ -16,6 +16,10 @@ $profile = $viewProfileData;
 $publications = $viewProfileData['publications'];
 $friendshipStatus = $viewProfileData['friendship_status'] ?? 'not_friends'; // Cargado en router.php
 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+$currentTab = $viewProfileData['current_tab'] ?? 'posts'; // 'posts', 'likes', 'bookmarks'
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 $roleIconMap = [
     'user' => 'person',
     'moderator' => 'shield_person',
@@ -108,11 +112,25 @@ $isOwnProfile = ($profile['id'] == $userId);
                 </div>
                 
                 <div class="profile-tabs">
-                    <div class="profile-tab active">
+                    <?php
+                        $postsUrl = $basePath . '/profile/' . htmlspecialchars($profile['username']);
+                        $likesUrl = $postsUrl . '/likes';
+                        $bookmarksUrl = $postsUrl . '/bookmarks';
+                    ?>
+                    <a href="<?php echo $postsUrl; ?>" data-nav-js="true" class="profile-tab <?php echo ($currentTab === 'posts') ? 'active' : ''; ?>">
                         <span data-i18n="create_publication.post">Publicaciones</span>
-                    </div>
+                    </a>
+                    
+                    <?php if ($isOwnProfile): // Mostrar solo en el perfil propio ?>
+                        <a href="<?php echo $likesUrl; ?>" data-nav-js="true" class="profile-tab <?php echo ($currentTab === 'likes') ? 'active' : ''; ?>">
+                            <span data-i18n="profile.tabs.likes">Favoritos</span>
+                        </a>
+                        <a href="<?php echo $bookmarksUrl; ?>" data-nav-js="true" class="profile-tab <?php echo ($currentTab === 'bookmarks') ? 'active' : ''; ?>">
+                            <span data-i18n="profile.tabs.bookmarks">Guardados</span>
+                        </a>
+                    <?php endif; ?>
                 </div>
-            </div>
+                </div>
         </div>
 
         <div class="card-list-container" style="display: flex; flex-direction: column; gap: 16px;">
@@ -142,6 +160,7 @@ $isOwnProfile = ($profile['id'] == $userId);
                     $likeCount = (int)($post['like_count'] ?? 0);
                     $userHasLiked = (int)($post['user_has_liked'] ?? 0) > 0;
                     $commentCount = (int)($post['comment_count'] ?? 0);
+                    $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0; // <-- NUEVA LÍNEA
                     ?>
                     <div class="component-card component-card--post" style="padding: 0; align-items: stretch; flex-direction: column;" data-post-id="<?php echo $post['id']; ?>">
                         
@@ -247,10 +266,14 @@ $isOwnProfile = ($profile['id'] == $userId);
                                 </button>
                             </div>
                             <div class="post-actions-right">
-                                <button type="button" class="component-action-button--icon" data-tooltip="home.actions.save">
-                                    <span class="material-symbols-rounded">bookmark</span>
+                                <button type="button" 
+                                        class="component-action-button--icon post-action-bookmark <?php echo $userHasBookmarked ? 'active' : ''; ?>" 
+                                        data-tooltip="home.actions.save"
+                                        data-action="bookmark-toggle"
+                                        data-post-id="<?php echo $post['id']; ?>">
+                                    <span class="material-symbols-rounded"><?php echo $userHasBookmarked ? 'bookmark' : 'bookmark_border'; ?></span>
                                 </button>
-                            </div>
+                                </div>
                         </div>
                         
                     </div>
@@ -262,19 +285,35 @@ $isOwnProfile = ($profile['id'] == $userId);
                 <div class="component-card">
                     <div class="component-card__content">
                         <div class="component-card__icon">
-                            <span class="material-symbols-rounded">feed</span>
+                            <span class="material-symbols-rounded">
+                                <?php
+                                switch ($currentTab) {
+                                    case 'likes': echo 'favorite'; break;
+                                    case 'bookmarks': echo 'bookmark'; break;
+                                    default: echo 'feed'; break;
+                                }
+                                ?>
+                            </span>
                         </div>
                         <div class="component-card__text">
-                            <h2 class="component-card__title">Sin publicaciones</h2>
-                            <?php if ($isOwnProfile): ?>
-                                <p class="component-card__description">Aún no has publicado nada. ¡Comparte algo con la comunidad!</p>
+                            <?php if ($currentTab === 'likes'): ?>
+                                <h2 class="component-card__title" data-i18n="profile.noLikes.title">Sin Favoritos</h2>
+                                <p class="component-card__description" data-i18n="profile.noLikes.desc">Aún no te ha gustado ninguna publicación. ¡Explora y reacciona al contenido!</p>
+                            <?php elseif ($currentTab === 'bookmarks'): ?>
+                                <h2 class="component-card__title" data-i18n="profile.noBookmarks.title">Sin Guardados</h2>
+                                <p class="component-card__description" data-i18n="profile.noBookmarks.desc">Aún no has guardado ninguna publicación. Toca el ícono de guardar para verla aquí más tarde.</p>
                             <?php else: ?>
-                                <p class="component-card__description"><?php echo htmlspecialchars($profile['username']); ?> aún no ha publicado nada.</p>
+                                <h2 class="component-card__title" data-i18n="profile.noPosts.title">Sin publicaciones</h2>
+                                <?php if ($isOwnProfile): ?>
+                                    <p class="component-card__description" data-i18n="profile.noPosts.descSelf">Aún no has publicado nada. ¡Comparte algo con la comunidad!</p>
+                                <?php else: ?>
+                                    <p class="component-card__description" data-i18n="profile.noPosts.descOther"><?php echo htmlspecialchars($profile['username']); ?> aún no ha publicado nada.</p>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </div>
                 </div>
-            <?php endif; ?>
+                <?php endif; ?>
 
         </div>
     </div>
