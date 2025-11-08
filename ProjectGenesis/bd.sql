@@ -207,3 +207,34 @@ CREATE TABLE `poll_votes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --- ▲▲▲ FIN DE NUEVAS TABLAS PARA ENCUESTAS ▲▲▲ ---
+
+/* ==============================
+NUEVAS TABLAS (AÑADIR A bd.sql)
+==============================
+*/
+
+DROP TABLE IF EXISTS `publication_likes`;
+CREATE TABLE `publication_likes` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `publication_id` INT NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
+  FOREIGN KEY (user_id) REFERENCES `users`(id) ON DELETE CASCADE,
+  FOREIGN KEY (publication_id) REFERENCES `community_publications`(id) ON DELETE CASCADE,
+  UNIQUE KEY `uk_user_publication_like` (`user_id`, `publication_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+DROP TABLE IF EXISTS `publication_comments`;
+CREATE TABLE `publication_comments` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `publication_id` INT NOT NULL,
+  `parent_comment_id` INT NULL DEFAULT NULL, -- NULL si es Nivel 1, ID del comentario padre si es Nivel 2
+  `comment_text` TEXT NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
+  FOREIGN KEY (user_id) REFERENCES `users`(id) ON DELETE CASCADE,
+  FOREIGN KEY (publication_id) REFERENCES `community_publications`(id) ON DELETE CASCADE,
+  FOREIGN KEY (parent_comment_id) REFERENCES `publication_comments`(id) ON DELETE CASCADE, -- Auto-referencia
+  INDEX `idx_publication_id` (`publication_id`),
+  INDEX `idx_parent_comment_id` (`parent_comment_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

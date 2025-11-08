@@ -1917,7 +1917,7 @@ select.component-input:invalid {
     font-size: 14px;
     font-weight: 600;
     color: #000;
-    background-color: #f5f5fa;
+    background-color: transparent;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2555,4 +2555,239 @@ select.component-input:invalid {
 .poll-user-vote-icon {
     font-size: 18px;
     color: #000;
+}/* ====================================== */
+/* =  ESTILOS LIKE Y COMMENT (NUEVO)    = */
+/* ====================================== */
+
+.component-action-button--icon {
+    gap: 8px; /* Espacio entre icono y texto */
+    padding: 0 16px; /* Más padding para el texto */
+    flex: 0 1 auto; /* No crecer, sí encoger */
+}
+
+.component-action-button--icon .action-text {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Estado activo para el botón de Like */
+.post-action-like.active {
+    color: #c62828; /* Color rojo cuando está activo */
+    background-color: #fbebee; /* Fondo rojo claro */
+}
+.post-action-like.active .material-symbols-rounded {
+    font-variation-settings: 'FILL' 1; /* Icono relleno */
+}
+.post-action-like:hover {
+    background-color: #f5f5fa;
+}
+.post-action-like.active:hover {
+    background-color: #f8e0e0; /* Hover rojo más oscuro */
+}
+
+/* Ocultar texto en móviles */
+@media (max-width: 400px) {
+    .component-action-button--icon .action-text {
+        display: none;
+    }
+    .component-action-button--icon {
+        flex: 0 1 auto; 
+    }
+}
+
+/* Formulario de Input de Comentario Principal */
+.post-comment-input-container {
+    display: flex; /* MODIFICADO - AHORA ES FLEX POR DEFECTO */
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-top: 1px solid #00000020;
+}
+
+.post-comment-input-container .post-comment-avatar {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+.post-comment-input-container .post-comment-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.post-comment-input-container .post-comment-input {
+    flex-grow: 1;
+    height: 36px;
+    border: none;
+    background-color: #f5f5fa;
+    border-radius: 18px; /* Pill-shaped */
+    padding: 0 16px;
+    font-size: 14px;
+    outline: none;
+    transition: background-color 0.2s ease;
+}
+.post-comment-input-container .post-comment-input:focus {
+    background-color: #e9ecef;
+}
+
+.post-comment-submit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    color: #000;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    padding: 0;
+}
+.post-comment-submit-btn:disabled {
+    color: #adb5bd;
+    cursor: not-allowed;
+}
+.post-comment-submit-btn:not(:disabled):hover {
+    background-color: #e9ecef;
+}
+
+/* Contenedor de Comentarios (Lista) */
+.post-comments-container {
+    display: none; /* Oculto por defecto */
+    flex-direction: column;
+    padding: 16px;
+    padding-top: 0;
+    gap: 16px;
+}
+.post-comments-container.active {
+    display: flex; /* Se muestra al hacer clic */
+}
+.comment-loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+}
+.comment-loader .logout-spinner {
+    width: 24px;
+    height: 24px;
+    border-width: 3px;
+}
+.comment-placeholder, .comment-error {
+    font-size: 14px;
+    color: #6b7280;
+    text-align: center;
+    padding: 16px 0;
+}
+.comment-error {
+    color: #c62828;
+}
+
+/* Item de Comentario Individual */
+.comment-item {
+    display: flex;
+    gap: 12px;
+}
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+.comment-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.comment-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.comment-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    line-height: 1;
+}
+.comment-username {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+}
+.comment-timestamp {
+    font-size: 12px;
+    color: #6b7280;
+}
+.comment-body {
+    font-size: 14px;
+    color: #1f2937;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    padding: 2px 0;
+}
+
+.comment-actions {
+    margin-top: 4px;
+}
+.comment-action-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+}
+.comment-action-btn:hover {
+    text-decoration: underline;
+}
+
+/* Respuestas (Nivel 2) */
+.comment-replies-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+.comment-item.is-reply .comment-avatar {
+    width: 24px;
+    height: 24px;
+}
+.comment-item.is-reply .comment-username {
+    font-size: 13px;
+}
+.comment-item.is-reply .comment-body {
+    font-size: 13px;
+}
+.comment-item.is-reply .comment-actions {
+    display: none; /* No se puede responder a una respuesta */
+}
+
+/* Formulario de Respuesta (Nivel 2) */
+.comment-reply-form-container {
+    width: 100%;
+}
+.comment-reply-form {
+    padding: 12px 0 0 0; /* Sin padding lateral */
+    border: none;
+}
+.comment-reply-form .post-comment-avatar {
+    width: 24px;
+    height: 24px;
+}
+.comment-reply-form .post-comment-input {
+    height: 32px;
+    font-size: 13px;
+    padding: 0 12px;
+}
+.comment-reply-form .post-comment-submit-btn {
+    width: 32px;
+    height: 32px;
 }

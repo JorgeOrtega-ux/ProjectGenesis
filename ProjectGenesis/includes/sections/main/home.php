@@ -1,6 +1,6 @@
 <?php
 // FILE: includes/sections/main/home.php
-// (CÓDIGO MODIFICADO PARA MOSTRAR PUBLICACIONES Y ENCUESTAS)
+// (CÓDIGO MODIFICADO PARA MOSTRAR PUBLICACIONES, ENCUESTAS, LIKES Y COMENTARIOS)
 
 global $pdo; 
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
@@ -23,6 +23,7 @@ try {
             $currentCommunityId = $community['id'];
             $currentCommunityNameKey = $community['name']; 
             
+            // --- ▼▼▼ INICIO DE SQL MODIFICADO ▼▼▼ ---
             $sql_posts = 
                 "SELECT 
                     p.*, 
@@ -35,7 +36,13 @@ try {
                      ORDER BY pa.sort_order ASC
                     ) AS attachments,
                     (SELECT COUNT(pv.id) FROM poll_votes pv WHERE pv.publication_id = p.id) AS total_votes,
-                    (SELECT pv.poll_option_id FROM poll_votes pv WHERE pv.publication_id = p.id AND pv.user_id = ?) AS user_voted_option_id
+                    (SELECT pv.poll_option_id FROM poll_votes pv WHERE pv.publication_id = p.id AND pv.user_id = ?) AS user_voted_option_id,
+                    
+                    /* NUEVOS CAMPOS */
+                    (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
+                    (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
+                    (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count
+
                  FROM community_publications p
                  JOIN users u ON p.user_id = u.id
                  WHERE p.community_id = ?
@@ -43,8 +50,10 @@ try {
                  LIMIT 50";
             
             $stmt_posts = $pdo->prepare($sql_posts);
-            $stmt_posts->execute([$userId, $currentCommunityId]);
+            // ¡Se añaden 2 IDs de usuario!
+            $stmt_posts->execute([$userId, $userId, $currentCommunityId]);
             $publications = $stmt_posts->fetchAll();
+            // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
         } else {
             $communityUuid = null;
         }
@@ -52,6 +61,7 @@ try {
     
     if ($communityUuid === null) {
         // --- VISTA DE FEED PRINCIPAL ---
+        // --- ▼▼▼ INICIO DE SQL MODIFICADO ▼▼▼ ---
         $sql_posts = 
             "SELECT 
                 p.*, 
@@ -65,18 +75,26 @@ try {
                  ORDER BY pa.sort_order ASC
                 ) AS attachments,
                 (SELECT COUNT(pv.id) FROM poll_votes pv WHERE pv.publication_id = p.id) AS total_votes,
-                (SELECT pv.poll_option_id FROM poll_votes pv WHERE pv.publication_id = p.id AND pv.user_id = ?) AS user_voted_option_id
+                (SELECT pv.poll_option_id FROM poll_votes pv WHERE pv.publication_id = p.id AND pv.user_id = ?) AS user_voted_option_id,
+
+                /* NUEVOS CAMPOS */
+                (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
+                (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
+                (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count
+
              FROM community_publications p
              JOIN users u ON p.user_id = u.id
              LEFT JOIN communities c ON p.community_id = c.id
-             WHERE p.community_id IS NOT NULL -- Modificado: Solo mostrar posts de comunidades
-             AND c.privacy = 'public' -- Solo de comunidades públicas
+             WHERE p.community_id IS NOT NULL 
+             AND c.privacy = 'public' 
              ORDER BY p.created_at DESC
              LIMIT 50";
         
         $stmt_posts = $pdo->prepare($sql_posts);
-        $stmt_posts->execute([$userId]);
+         // ¡Se añaden 2 IDs de usuario!
+        $stmt_posts->execute([$userId, $userId]);
         $publications = $stmt_posts->fetchAll();
+        // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
     }
     
     // --- Bucle para cargar opciones de encuestas ---
@@ -93,14 +111,13 @@ try {
             
         $stmt_options = $pdo->prepare(
                "SELECT 
-                    po.publication_id, /* <--- ESTA DEBE SER LA PRIMERA COLUMNA */
+                    po.publication_id, 
                     po.id, 
                     po.option_text, 
                     COUNT(pv.id) AS vote_count
                 FROM poll_options po
                 LEFT JOIN poll_votes pv ON po.id = pv.poll_option_id
                 WHERE po.publication_id IN ($placeholders)
-                /* Ajustar el GROUP BY para que coincida con el SELECT */
                 GROUP BY po.publication_id, po.id, po.option_text 
                 ORDER BY po.id ASC"
             );
@@ -229,6 +246,12 @@ try {
                     $hasVoted = $post['user_voted_option_id'] !== null;
                     $totalVotes = (int)($post['total_votes'] ?? 0);
                     $pollOptions = $post['poll_options'] ?? [];
+
+                    // --- ▼▼▼ INICIO DE NUEVAS VARIABLES (LIKE/COMMENT) ▼▼▼ ---
+                    $likeCount = (int)($post['like_count'] ?? 0);
+                    $userHasLiked = (int)($post['user_has_liked'] ?? 0) > 0;
+                    $commentCount = (int)($post['comment_count'] ?? 0);
+                    // --- ▲▲▲ FIN DE NUEVAS VARIABLES ▲▲▲ ---
                 ?>
                     <div class="component-card component-card--post" style="padding: 0; align-items: stretch; flex-direction: column;">
                         
@@ -251,7 +274,6 @@ try {
 
                         <?php if (!empty($post['text_content'])): ?>
                             <div class="post-card-content">
-                                <!-- Si es encuesta, el texto es la pregunta (más grande) -->
                                 <?php if ($isPoll): ?>
                                     <h3 class="poll-question"><?php echo htmlspecialchars($post['text_content']); ?></h3>
                                 <?php else: ?>
@@ -260,11 +282,9 @@ try {
                             </div>
                         <?php endif; ?>
 
-                        <!-- --- INICIO DE BLOQUE DE ENCUESTA --- -->
                         <?php if ($isPoll && !empty($pollOptions)): ?>
                             <div class="poll-container" id="poll-<?php echo $post['id']; ?>" data-poll-id="<?php echo $post['id']; ?>">
                                 <?php if ($hasVoted): ?>
-                                    <!-- Vista de Resultados -->
                                     <div class="poll-results">
                                         <?php foreach ($pollOptions as $option): 
                                             $voteCount = (int)$option['vote_count'];
@@ -285,7 +305,6 @@ try {
                                         <p class="poll-total-votes" data-i18n="home.poll.totalVotes" data-count="<?php echo $totalVotes; ?>"><?php echo $totalVotes; ?> votos</p>
                                     </div>
                                 <?php else: ?>
-                                    <!-- Vista de Votación (Formulario) -->
                                     <form class="poll-form" data-action="submit-poll-vote">
                                         <input type="hidden" name="publication_id" value="<?php echo $post['id']; ?>">
                                         <?php foreach ($pollOptions as $option): ?>
@@ -303,7 +322,6 @@ try {
                                 <?php endif; ?>
                             </div>
                         <?php endif; ?>
-                        <!-- --- FIN DE BLOQUE DE ENCUESTA --- -->
                         
                         <?php if (!$isPoll && $attachmentCount > 0): ?>
                         <div class="post-attachments-container" data-count="<?php echo $attachmentCount; ?>">
@@ -317,12 +335,22 @@ try {
                         
                         <div class="post-actions-container">
                             <div class="post-actions-left">
-                                <button type="button" class="component-action-button--icon" data-tooltip="home.actions.like">
-                                    <span class="material-symbols-rounded">favorite</span>
-                                    </button>
-                                <button type="button" class="component-action-button--icon" data-tooltip="home.actions.comment">
-                                    <span class="material-symbols-rounded">chat_bubble</span>
-                                    </button>
+                                <button type="button" 
+                                        class="component-action-button--icon post-action-like <?php echo $userHasLiked ? 'active' : ''; ?>" 
+                                        data-tooltip="home.actions.like"
+                                        data-action="like-toggle"
+                                        data-post-id="<?php echo $post['id']; ?>">
+                                    <span class="material-symbols-rounded"><?php echo $userHasLiked ? 'favorite' : 'favorite_border'; ?></span>
+                                    <span class="action-text"><?php echo $likeCount; ?></span>
+                                </button>
+                                <button type="button" 
+                                        class="component-action-button--icon post-action-comment" 
+                                        data-tooltip="home.actions.comment"
+                                        data-action="toggle-comments"
+                                        data-post-id="<?php echo $post['id']; ?>">
+                                    <span class="material-symbols-rounded">chat_bubble_outline</span>
+                                    <span class="action-text"><?php echo $commentCount; ?></span>
+                                </button>
                                 <button type="button" class="component-action-button--icon" data-tooltip="home.actions.share">
                                     <span class="material-symbols-rounded">send</span>
                                 </button>
@@ -333,15 +361,19 @@ try {
                                 </button>
                             </div>
                         </div>
-                        
-                        <div class="post-comment-input-container">
-                            <div class="post-comment-avatar">
+                        <form class="post-comment-input-container" data-action="post-comment">
+                            <input type="hidden" name="publication_id" value="<?php echo $post['id']; ?>">
+                            <input type="hidden" name="parent_comment_id" value=""> <div class="post-comment-avatar">
                                 <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Tu avatar">
                             </div>
-                            <input type="text" class="post-comment-input" placeholder="Añade un comentario...">
+                            <input type="text" class="post-comment-input" name="comment_text" placeholder="Añade un comentario..." required>
+                            <button type="submit" class="post-comment-submit-btn" disabled>
+                                <span class="material-symbols-rounded">send</span>
+                            </button>
+                        </form>
+                        <div class="post-comments-container" id="comments-for-post-<?php echo $post['id']; ?>">
+                            </div>
                         </div>
-                        
-                    </div>
                     <?php endforeach; ?>
             <?php endif; ?>
         </div>

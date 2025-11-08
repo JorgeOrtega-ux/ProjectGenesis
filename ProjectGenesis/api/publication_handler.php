@@ -1,6 +1,6 @@
 <?php
 // FILE: api/publication_handler.php
-// (VERSÍON CORREGIDA Y AMPLIADA PARA ENCUESTAS)
+// (VERSÍON CORREGIDA Y AMPLIADA PARA ENCUESTAS, LIKES Y COMENTARIOS)
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -174,9 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'vote-poll') {
             
             $publicationId = (int)($_POST['publication_id'] ?? 0);
-            // --- ▼▼▼ ¡ESTA ES LA LÍNEA CORREGIDA! ▼▼▼ ---
             $optionId = (int)($_POST['poll_option_id'] ?? 0);
-            // --- ▲▲▲ ¡FIN DE LA CORRECCIÓN! ▲▲▲ ---
 
             if (empty($publicationId) || empty($optionId)) {
                 throw new Exception('js.api.invalidAction');
@@ -243,6 +241,131 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw $e; // Re-lanzar otros errores
                 }
             }
+
+        // --- ▼▼▼ INICIO DE NUEVAS ACCIONES (LIKE Y COMENTARIOS) ▼▼▼ ---
+
+        } elseif ($action === 'like-toggle') {
+            $publicationId = (int)($_POST['publication_id'] ?? 0);
+            if (empty($publicationId)) {
+                throw new Exception('js.api.invalidAction');
+            }
+            
+            // Revisar si ya existe el like
+            $stmt_check = $pdo->prepare("SELECT id FROM publication_likes WHERE user_id = ? AND publication_id = ?");
+            $stmt_check->execute([$userId, $publicationId]);
+            $likeExists = $stmt_check->fetch();
+            
+            if ($likeExists) {
+                // Ya le dio like -> Quitar like
+                $stmt_delete = $pdo->prepare("DELETE FROM publication_likes WHERE id = ?");
+                $stmt_delete->execute([$likeExists['id']]);
+                $response['userHasLiked'] = false;
+            } else {
+                // No le ha dado like -> Poner like
+                $stmt_insert = $pdo->prepare("INSERT INTO publication_likes (user_id, publication_id) VALUES (?, ?)");
+                $stmt_insert->execute([$userId, $publicationId]);
+                $response['userHasLiked'] = true;
+            }
+            
+            // Devolver el nuevo conteo
+            $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM publication_likes WHERE publication_id = ?");
+            $stmt_count->execute([$publicationId]);
+            $response['newLikeCount'] = $stmt_count->fetchColumn();
+            $response['success'] = true;
+
+        } elseif ($action === 'post-comment') {
+            $publicationId = (int)($_POST['publication_id'] ?? 0);
+            $parentCommentId = !empty($_POST['parent_comment_id']) ? (int)$_POST['parent_comment_id'] : null;
+            $commentText = trim($_POST['comment_text'] ?? '');
+
+            if (empty($publicationId) || empty($commentText)) {
+                // (Debes añadir 'js.publication.errorCommentEmpty' a tus JSON)
+                throw new Exception('js.publication.errorCommentEmpty');
+            }
+
+            // FORZAR LÍMITE DE 2 NIVELES
+            if ($parentCommentId) {
+                // Si estamos respondiendo a un comentario, verificar que ese comentario sea de Nivel 1 (parent_comment_id ES NULL)
+                $stmt_check_parent = $pdo->prepare("SELECT parent_comment_id FROM publication_comments WHERE id = ?");
+                $stmt_check_parent->execute([$parentCommentId]);
+                $parentParentId = $stmt_check_parent->fetchColumn();
+                
+                if ($parentParentId !== null) {
+                    // (Debes añadir 'js.publication.errorMaxDepth' a tus JSON)
+                    throw new Exception('js.publication.errorMaxDepth'); // No se puede responder a una respuesta
+                }
+            }
+            
+            $stmt_insert = $pdo->prepare(
+                "INSERT INTO publication_comments (user_id, publication_id, parent_comment_id, comment_text) 
+                 VALUES (?, ?, ?, ?)"
+            );
+            $stmt_insert->execute([$userId, $publicationId, $parentCommentId, $commentText]);
+            $newCommentId = $pdo->lastInsertId();
+            
+            // Devolver el comentario recién creado para insertarlo en la UI
+            $stmt_get = $pdo->prepare(
+                "SELECT c.*, u.username, u.profile_image_url 
+                 FROM publication_comments c 
+                 JOIN users u ON c.user_id = u.id 
+                 WHERE c.id = ?"
+            );
+            $stmt_get->execute([$newCommentId]);
+            $newComment = $stmt_get->fetch();
+            
+            // Obtener el nuevo conteo total de comentarios para la publicación
+            $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM publication_comments WHERE publication_id = ?");
+            $stmt_count->execute([$publicationId]);
+            
+            $response['success'] = true;
+            $response['newComment'] = $newComment;
+            $response['newCommentCount'] = $stmt_count->fetchColumn();
+
+        } elseif ($action === 'get-comments') {
+            $publicationId = (int)($_POST['publication_id'] ?? 0);
+            if (empty($publicationId)) {
+                throw new Exception('js.api.invalidAction');
+            }
+
+            // Obtener todos los comentarios (Nivel 1 y Nivel 2) para esta publicación
+            $stmt_get_all = $pdo->prepare(
+                "SELECT c.*, u.username, u.profile_image_url 
+                 FROM publication_comments c 
+                 JOIN users u ON c.user_id = u.id 
+                 WHERE c.publication_id = ? 
+                 ORDER BY c.created_at ASC" // Obtener todos, los más antiguos primero
+            );
+            $stmt_get_all->execute([$publicationId]);
+            $allComments = $stmt_get_all->fetchAll();
+
+            // Anidarlos (convertir lista plana a árbol de 2 niveles)
+            $commentsNested = [];
+            $commentsById = [];
+            
+            // Poner todos los comentarios en un mapa por su ID
+            foreach ($allComments as $comment) {
+                $commentsById[$comment['id']] = $comment;
+                $commentsById[$comment['id']]['replies'] = []; // Preparar array de respuestas
+            }
+
+            // Segunda pasada: anidar las respuestas en sus padres
+            foreach ($commentsById as $id => $comment) {
+                if ($comment['parent_comment_id'] !== null) {
+                    // Es una respuesta (Nivel 2)
+                    if (isset($commentsById[$comment['parent_comment_id']])) {
+                        // Añadir esta respuesta al array 'replies' de su padre
+                        $commentsById[$comment['parent_comment_id']]['replies'][] = $comment;
+                    }
+                } else {
+                    // Es un comentario principal (Nivel 1)
+                    $commentsNested[] = $comment;
+                }
+            }
+            
+            $response['success'] = true;
+            $response['comments'] = $commentsNested;
+        
+        // --- ▲▲▲ FIN DE NUEVAS ACCIONES ▲▲▲ ---
         }
 
     } catch (Exception $e) {
