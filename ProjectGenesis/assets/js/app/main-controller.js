@@ -116,17 +116,17 @@ function initMainController() {
 
         if (action.startsWith('toggle')) {
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+            // La acción 'toggleModuleNotifications' fue eliminada de esta lista.
             const managedActions = [
                 'toggleModulePageFilter',
                 'toggleModuleAdminRole',
                 'toggleModuleAdminStatus',
                 'toggleModuleAdminCreateRole',
                 'toggleModuleCommunitySelect', 
-                'toggleModuleSelectGroup',
-                'toggleModuleNotifications' // <-- ¡NUEVA LÍNEA AÑADIDA!
+                'toggleModuleSelectGroup'
             ];
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
             if (managedActions.includes(action)) {
                 return; 

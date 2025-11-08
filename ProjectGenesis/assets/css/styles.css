@@ -135,7 +135,7 @@ body {
     padding: 8px;
     top: 0;
     left: 0; /* El menú izquierdo se alinea a la izquierda */
-    z-index: 999; /* Asegura que esté sobre el scroll */
+    z-index: 998; /* Asegura que esté sobre el scroll */
     /* ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ */
 }
 
