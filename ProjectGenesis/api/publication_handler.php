@@ -304,12 +304,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $newCommentId = $pdo->lastInsertId();
             
             // Devolver el comentario recién creado para insertarlo en la UI
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR u.role) ▼▼▼ ---
             $stmt_get = $pdo->prepare(
-                "SELECT c.*, u.username, u.profile_image_url 
+                "SELECT c.*, u.username, u.profile_image_url, u.role 
                  FROM publication_comments c 
                  JOIN users u ON c.user_id = u.id 
                  WHERE c.id = ?"
             );
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $stmt_get->execute([$newCommentId]);
             $newComment = $stmt_get->fetch();
             
@@ -327,12 +329,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.api.invalidAction');
             }
 
-            // --- ▼▼▼ MODIFICACIÓN: OBTENER SOLO L1 Y CONTEO DE L2 ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR u.role) ▼▼▼ ---
             $stmt_get_l1 = $pdo->prepare(
                 "SELECT 
                     c.*, 
                     u.username, 
                     u.profile_image_url,
+                    u.role,
                     (SELECT COUNT(*) FROM publication_comments r WHERE r.parent_comment_id = c.id) AS reply_count
                  FROM publication_comments c 
                  JOIN users u ON c.user_id = u.id 
@@ -340,9 +343,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  AND c.parent_comment_id IS NULL -- <-- Solo Nivel 1
                  ORDER BY c.created_at ASC" // Más antiguos primero
             );
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $stmt_get_l1->execute([$publicationId]);
             $comments = $stmt_get_l1->fetchAll();
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             $response['success'] = true;
             $response['comments'] = $comments; // Enviar la lista plana de L1
@@ -355,13 +358,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Obtener todas las respuestas (Nivel 2) para este comentario padre
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR u.role) ▼▼▼ ---
             $stmt_get_l2 = $pdo->prepare(
-                "SELECT c.*, u.username, u.profile_image_url 
+                "SELECT c.*, u.username, u.profile_image_url, u.role 
                  FROM publication_comments c 
                  JOIN users u ON c.user_id = u.id 
                  WHERE c.parent_comment_id = ? 
                  ORDER BY c.created_at ASC"
             );
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $stmt_get_l2->execute([$parentCommentId]);
             $replies = $stmt_get_l2->fetchAll();
             

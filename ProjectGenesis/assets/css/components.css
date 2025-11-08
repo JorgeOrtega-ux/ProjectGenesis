@@ -1667,7 +1667,10 @@ select.component-input:invalid {
 .section-content[data-section="admin-dashboard"] .component-wrapper,
 .section-content[data-section="admin-logs"] .component-wrapper,
 .section-content[data-section="admin-backups-delete-confirm"] .component-wrapper,
-.section-content[data-section="admin-backups-restore-confirm"] .component-wrapper {
+.section-content[data-section="admin-backups-restore-confirm"] .component-wrapper,
+/* --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ --- */
+.section-content[data-section="post-view"] .component-wrapper {
+/* --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ --- */
     padding-top: 82px; 
 }
 /* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
@@ -2659,7 +2662,8 @@ select.component-input:invalid {
     display: none; /* Oculto por defecto */
     flex-direction: column;
     padding: 16px;
-    padding-top: 0;
+    /* ▼▼▼ ESTA ES LA DIVISIÓN QUE PEDISTE ▼▼▼ */
+    border-top: 1px solid #00000020; 
     gap: 16px;
 }
 .post-comments-container.active {
@@ -2707,6 +2711,7 @@ select.component-input:invalid {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    gap: 4px; /* AÑADIDO: Espacio entre header, body, actions */
 }
 
 .comment-header {
@@ -2717,19 +2722,20 @@ select.component-input:invalid {
 }
 .comment-username {
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700; /* CAMBIADO: más peso */
     color: #1f2937;
 }
 .comment-timestamp {
     font-size: 12px;
     color: #6b7280;
+    align-self: center; /* AÑADIDO: Alinear con el username */
 }
 .comment-body {
     font-size: 14px;
     color: #1f2937;
     line-height: 1.5;
     white-space: pre-wrap;
-    padding: 2px 0;
+    padding: 2px 0; /* AÑADIDO */
 }
 
 .comment-actions {
@@ -2740,31 +2746,38 @@ select.component-input:invalid {
     border: none;
     padding: 0;
     margin: 0;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 13px; /* AUMENTADO */
+    font-weight: 700; /* CAMBIADO */
     color: #6b7280;
     cursor: pointer;
 }
 .comment-action-btn:hover {
-    text-decoration: underline;
+    color: #000; /* AÑADIDO hover */
+    text-decoration: none;
+}
+.comment-replies-toggle {
+    margin-left: 8px; /* AÑADIDO: Separador */
 }
 
 /* Respuestas (Nivel 2) */
 .comment-replies-container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-top: 12px;
+    gap: 16px; /* AUMENTADO */
+    margin-top: 16px; /* AUMENTADO */
+    /* ▼▼▼ AÑADIDO: Línea de indentación ▼▼▼ */
+    padding-left: 16px;
+    border-left: 2px solid #00000020;
 }
 .comment-item.is-reply .comment-avatar {
     width: 24px;
     height: 24px;
 }
 .comment-item.is-reply .comment-username {
-    font-size: 13px;
+    font-size: 14px; /* AUMENTADO */
 }
 .comment-item.is-reply .comment-body {
-    font-size: 13px;
+    font-size: 14px; /* AUMENTADO */
 }
 .comment-item.is-reply .comment-actions {
     display: none; /* No se puede responder a una respuesta */
@@ -2775,7 +2788,7 @@ select.component-input:invalid {
     width: 100%;
 }
 .comment-reply-form {
-    padding: 12px 0 0 0; /* Sin padding lateral */
+    padding: 16px 0 0 0; /* AUMENTADO padding top */
     border: none;
 }
 .comment-reply-form .post-comment-avatar {
@@ -2790,4 +2803,126 @@ select.component-input:invalid {
 .comment-reply-form .post-comment-submit-btn {
     width: 32px;
     height: 32px;
+}/* ====================================== */
+/* =  BORDES DE ROL PARA COMENTARIOS    = */
+/* ====================================== */
+
+/* Contenedor base para el avatar (en la lista de comentarios) */
+.comment-avatar {
+    position: relative; /* Necesario para el ::before */
+}
+
+/* Contenedor base para el avatar (en la caja de input) */
+.post-comment-avatar {
+    position: relative; /* Necesario para el ::before */
+}
+
+/* Estilo base del borde (copiado de .component-card__avatar::before) */
+.comment-avatar::before,
+.post-comment-avatar::before {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    top: -3px;    /* Ajustado para avatares de 32px */
+    left: -3px;   /* Ajustado para avatares de 32px */
+    right: -3px;  /* Ajustado para avatares de 32px */
+    bottom: -3px; /* Ajustado para avatares de 32px */
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease, border-width 0.2s ease;
+    pointer-events: none;
+    z-index: 2;
+    background-image: none;
+}
+
+/* --- Roles (copiados de .component-card__avatar) --- */
+
+.comment-avatar[data-role="user"]::before,
+.post-comment-avatar[data-role="user"]::before {
+    border-color: #cccccc;
+}
+
+.comment-avatar[data-role="moderator"]::before,
+.post-comment-avatar[data-role="moderator"]::before {
+    border-color: #0000FF;
+}
+
+.comment-avatar[data-role="administrator"]::before,
+.post-comment-avatar[data-role="administrator"]::before {
+    border-color: #FF0000;
+}
+
+.comment-avatar[data-role="founder"]::before,
+.post-comment-avatar[data-role="founder"]::before {
+    border: none;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background-image: conic-gradient(from 300deg,
+            #D32029 0deg 90deg,
+            #206BD3 90deg 210deg,
+            #28A745 210deg 300deg,
+            #FFC107 300deg 360deg);
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff 0);
+}
+
+/* Ajuste para el avatar MÁS PEQUEÑO de las respuestas (Nivel 2) */
+.comment-item.is-reply .comment-avatar::before {
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-width: 1px; /* Borde más fino */
+}
+
+.comment-item.is-reply .comment-avatar[data-role="founder"]::before {
+     top: -2px;
+     left: -2px;
+     right: -2px;
+     bottom: -2px;
+     mask: radial-gradient(farthest-side, transparent calc(100% - 1px), #fff 0);
+     -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 1px), #fff 0);
+}
+
+/* Ajuste para el avatar MÁS PEQUEÑO del input de respuesta (Nivel 2) */
+.comment-reply-form .post-comment-avatar::before {
+     top: -2px;
+     left: -2px;
+     right: -2px;
+     bottom: -2px;
+     border-width: 1px; /* Borde más fino */
+}
+
+.comment-reply-form .post-comment-avatar[data-role="founder"]::before {
+     top: -2px;
+     left: -2px;
+     right: -2px;
+     bottom: -2px;
+     mask: radial-gradient(farthest-side, transparent calc(100% - 1px), #fff 0);
+     -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 1px), #fff 0);
+}/* ============================================== */
+/* =  BORDES DE ROL PARA AVATARES DE 40px (POSTS) = */
+/* ============================================== */
+
+/* Esto se aplica a los avatares de 40px en .post-card-header
+   El .component-card__avatar (60px) y .comment-avatar (32px/24px) 
+   ya tienen sus propios estilos.
+*/
+
+.post-card-header .component-card__avatar::before {
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border-width: 2px; /* Mantenemos 2px, se ve bien en 40px */
+}
+
+/* Ajuste específico para el mask de founder en 40px */
+.post-card-header .component-card__avatar[data-role="founder"]::before {
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    /* (El 'mask' de .component-card__avatar[data-role="founder"]::before se hereda y funciona bien) */
 }

@@ -50,7 +50,9 @@
 
             // --- ▼▼▼ ¡LÍNEA AÑADIDA! ▼▼▼ ---
             window.userId = <?php echo $_SESSION['user_id'] ?? 0; ?>;
-            // --- ▲▲▲ ¡FIN DE LÍNEA AÑADIDA! ▲▲▲ ---
+            // --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
+            window.userRole = '<?php echo $_SESSION['role'] ?? 'user'; ?>';
+            // --- ▲▲▲ ¡FIN DE LA LÍNEA AÑADIDA! ▲▲▲ ---
 
             // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
             // Esta es la IP o dominio (ej. 192.168.1.100) que el navegador usó para cargar la página.

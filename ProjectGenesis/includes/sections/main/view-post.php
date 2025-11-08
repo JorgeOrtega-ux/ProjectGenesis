@@ -20,6 +20,8 @@ $post = $viewPostData;
 // Lógica de datos (copiada de home.php)
 $postAvatar = $post['profile_image_url'] ?? $defaultAvatar;
 if (empty($postAvatar)) $postAvatar = $defaultAvatar;
+// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+$postRole = $post['role'] ?? 'user';
 
 $attachments = [];
 if (!empty($post['attachments'])) {
@@ -62,7 +64,7 @@ $commentCount = (int)($post['comment_count'] ?? 0);
                 
                 <div class="post-card-header">
                     <div class="component-card__content" style="gap: 12px; padding-bottom: 0; border-bottom: none;">
-                        <div class="component-card__avatar" style="width: 40px; height: 40px; flex-shrink: 0;">
+                        <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($postRole); ?>" style="width: 40px; height: 40px; flex-shrink: 0;">
                             <img src="<?php echo htmlspecialchars($postAvatar); ?>" alt="<?php echo htmlspecialchars($post['username']); ?>" class="component-card__avatar-image">
                         </div>
                         <div class="component-card__text">
@@ -170,7 +172,7 @@ $commentCount = (int)($post['comment_count'] ?? 0);
                 <form class="post-comment-input-container active" data-action="post-comment">
                     <input type="hidden" name="publication_id" value="<?php echo $post['id']; ?>">
                     <input type="hidden" name="parent_comment_id" value="">
-                    <div class="post-comment-avatar">
+                    <div class="post-comment-avatar" data-role="<?php echo htmlspecialchars($_SESSION['role'] ?? 'user'); ?>">
                         <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Tu avatar">
                     </div>
                     <input type="text" class="post-comment-input" name="comment_text" placeholder="Añade un comentario..." required>

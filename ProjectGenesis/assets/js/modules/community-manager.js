@@ -310,10 +310,13 @@ function renderReplies(container, replies) {
     
     replies.forEach(reply => {
         const replyAvatar = reply.profile_image_url || defaultAvatar;
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir data-role) ▼▼▼ ---
+        const userRole = reply.role || 'user';
         const replyHtml = `
             <div class="comment-item is-reply" data-comment-id="${reply.id}">
-                <div class="comment-avatar"><img src="${escapeHTML(replyAvatar)}" alt="${escapeHTML(reply.username)}"></div>
+                <div class="comment-avatar" data-role="${escapeHTML(userRole)}"><img src="${escapeHTML(replyAvatar)}" alt="${escapeHTML(reply.username)}"></div>
                 <div class="comment-content">
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     <div class="comment-header">
                         <span class="comment-username">${escapeHTML(reply.username)}</span>
                         <span class="comment-timestamp">· ${formatTimeAgo(reply.created_at)}</span>
@@ -357,10 +360,13 @@ function renderComments(container, comments) {
         }
 
         const commentAvatar = comment.profile_image_url || defaultAvatar;
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir data-role) ▼▼▼ ---
+        const userRole = comment.role || 'user';
         const commentHtml = `
             <div class="comment-item" data-comment-id="${comment.id}">
-                <div class="comment-avatar"><img src="${escapeHTML(commentAvatar)}" alt="${escapeHTML(comment.username)}"></div>
+                <div class="comment-avatar" data-role="${escapeHTML(userRole)}"><img src="${escapeHTML(commentAvatar)}" alt="${escapeHTML(comment.username)}"></div>
                 <div class="comment-content">
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     <div class="comment-header">
                         <span class="comment-username">${escapeHTML(comment.username)}</span>
                         <span class="comment-timestamp">· ${formatTimeAgo(comment.created_at)}</span>
@@ -426,9 +432,12 @@ function renderNewComment(comment, container, isReply) {
             `;
     }
 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir data-role) ▼▼▼ ---
+    const userRole = comment.role || 'user';
     commentEl.innerHTML = `
-        <div class="comment-avatar"><img src="${escapeHTML(avatar)}" alt="${escapeHTML(comment.username)}"></div>
+        <div class="comment-avatar" data-role="${escapeHTML(userRole)}"><img src="${escapeHTML(avatar)}" alt="${escapeHTML(comment.username)}"></div>
         <div class="comment-content">
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             <div class="comment-header">
                 <span class="comment-username">${escapeHTML(comment.username)}</span>
                 <span class="comment-timestamp">· ${formatTimeAgo(comment.created_at)}</span>
@@ -463,14 +472,19 @@ function handleShowReplyForm(button) {
     // --- CORRECCIÓN: El input publication_id está en el form de comentario principal ---
     const publicationId = postContainer.querySelector('form[data-action="post-comment"] input[name="publication_id"]').value;
     const userAvatar = postContainer.querySelector('.post-comment-avatar img').src;
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Obtener window.userRole) ▼▼▼ ---
+    const userRole = window.userRole || 'user';
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir data-role al div) ▼▼▼ ---
     formContainer.innerHTML = `
         <form class="post-comment-input-container comment-reply-form active" data-action="post-comment">
             <input type="hidden" name="publication_id" value="${publicationId}">
             <input type="hidden" name="parent_comment_id" value="${commentId}">
-            <div class="post-comment-avatar">
+            <div class="post-comment-avatar" data-role="${escapeHTML(userRole)}">
                 <img src="${escapeHTML(userAvatar)}" alt="Tu avatar">
             </div>
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             <input type="text" class="post-comment-input" name="comment_text" placeholder="Escribe una respuesta..." required>
             <button type="submit" class="post-comment-submit-btn" disabled>
                 <span class="material-symbols-rounded">send</span>
