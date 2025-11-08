@@ -82,3 +82,4 @@
 [2025-11-07 17:49:37 UTC] [publication_handler - create-post] SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'community_id' cannot be null (Archivo: E:\xampp\htdocs\ProjectGenesis\api\publication_handler.php, Línea: 125)
 [2025-11-07 17:50:02 UTC] [publication_handler - create-post] SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'community_id' cannot be null (Archivo: E:\xampp\htdocs\ProjectGenesis\api\publication_handler.php, Línea: 125)
 [2025-11-07 23:15:47 UTC] [home.php - fetch posts] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'project_genesis.poll_votes' doesn't exist (Archivo: E:\xampp\htdocs\ProjectGenesis\includes\sections\main\home.php, Línea: 77)
+[2025-11-08 01:43:14 UTC] [PDO Connection] SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión (Archivo: E:\xampp\htdocs\ProjectGenesis\config\config.php, Línea: 44)

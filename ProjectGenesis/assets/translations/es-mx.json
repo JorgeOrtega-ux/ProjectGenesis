@@ -629,7 +629,11 @@
       "errorFileSize": "El archivo es demasiado grande (máx %size%MB).",
       "errorEmpty": "No puedes crear una publicación vacía. Escribe algo o adjunta un archivo.",
       "errorNoCommunity": "Debes seleccionar una comunidad para publicar.",
-      "success": "Publicación creada exitosamente."
+      "success": "Publicación creada exitosamente.",
+      "errorPollMaxOptions": "Solo puedes añadir un máximo de 6 opciones.",
+      "errorPollQuestion": "La pregunta de la encuesta no puede estar vacía.",
+      "errorPollOptions": "Una encuesta debe tener al menos 2 opciones completadas.",
+      "errorAlreadyVoted": "Ya has votado en esta encuesta."
     }
   },
   "db": {
@@ -661,7 +665,12 @@
     "actions": {
       "like": "Me gusta",
       "comment": "Comentar",
-      "share": "Compartir"
+      "share": "Compartir",
+      "save": "Guardar"
+    },
+    "poll": {
+      "voteButton": "Votar",
+      "totalVotes": "votos"
     }
   },
   "join_group": {
@@ -692,6 +701,10 @@
     "selectCommunity": "Seleccione una comunidad...",
     "placeholder": "¿En qué estás pensando?",
     "attachTooltip": "Adjuntar archivos (máx 4)",
-    "publish": "Publicar"
+    "publish": "Publicar",
+    "pollQuestionLabel": "Escribe tu pregunta...",
+    "pollAddOption": "Añadir opción",
+    "pollOptionLabel": "Opción",
+    "pollRemoveOption": "Eliminar opción"
   }
 }

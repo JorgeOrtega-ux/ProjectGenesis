@@ -91,16 +91,17 @@ try {
         if (!empty($pollIds)) {
             $placeholders = implode(',', array_fill(0, count($pollIds), '?'));
             
-            $stmt_options = $pdo->prepare(
+        $stmt_options = $pdo->prepare(
                "SELECT 
+                    po.publication_id, /* <--- ESTA DEBE SER LA PRIMERA COLUMNA */
                     po.id, 
-                    po.publication_id, 
                     po.option_text, 
                     COUNT(pv.id) AS vote_count
                 FROM poll_options po
                 LEFT JOIN poll_votes pv ON po.id = pv.poll_option_id
                 WHERE po.publication_id IN ($placeholders)
-                GROUP BY po.id, po.publication_id, po.option_text
+                /* Ajustar el GROUP BY para que coincida con el SELECT */
+                GROUP BY po.publication_id, po.id, po.option_text 
                 ORDER BY po.id ASC"
             );
             $stmt_options->execute($pollIds);

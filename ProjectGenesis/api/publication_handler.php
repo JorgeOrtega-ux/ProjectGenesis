@@ -174,7 +174,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($action === 'vote-poll') {
             
             $publicationId = (int)($_POST['publication_id'] ?? 0);
-            $optionId = (int)($_POST['option_id'] ?? 0);
+            // --- ▼▼▼ ¡ESTA ES LA LÍNEA CORREGIDA! ▼▼▼ ---
+            $optionId = (int)($_POST['poll_option_id'] ?? 0);
+            // --- ▲▲▲ ¡FIN DE LA CORRECCIÓN! ▲▲▲ ---
 
             if (empty($publicationId) || empty($optionId)) {
                 throw new Exception('js.api.invalidAction');
