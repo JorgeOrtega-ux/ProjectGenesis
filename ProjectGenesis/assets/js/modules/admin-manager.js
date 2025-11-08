@@ -509,7 +509,8 @@ export function initAdminManager() {
             const clickedOnAnyCard = event.target.closest('.card-item');
             const clickedOnModule = event.target.closest('[data-module].active');
 
-            if (!clickedOnModule && !clickedOnButton && !clickedOnAnyCard) {
+            // --- ▼▼▼ ¡ESTA ES LA LÍNEA CORREGIDA! ▼▼▼ ---
+            if (!clickedOnModule && !button && !clickedOnAnyCard) {
                 clearLogSelection();
             }
             // --- ▲▲▲ FIN DE MODIFICACIÓN (CLICK FUERA) ▲▲▲ ---
