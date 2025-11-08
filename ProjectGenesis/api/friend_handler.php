@@ -13,18 +13,18 @@ if (!isset($_SESSION['user_id'])) {
 
 $currentUserId = (int)$_SESSION['user_id'];
 
-// --- ▼▼▼ INICIO DE FUNCIÓN HELPER DE NOTIFICACIÓN ▼▼▼ ---
+// --- ▼▼▼ INICIO DE FUNCIÓN HELPER (MODIFICADA) ▼▼▼ ---
 /**
- * Envía una notificación a un usuario a través del servidor WebSocket.
+ * Envía una notificación PING a un usuario a través del servidor WebSocket.
  *
  * @param int $targetUserId El ID del usuario a notificar.
- * @param array $payload El contenido de la notificación.
  */
-function notifyUser($targetUserId, $payload) {
+function notifyUser($targetUserId) {
     try {
+        // --- ¡Payload simplificado! Solo un ping. ---
         $post_data = json_encode([
             'target_user_id' => (int)$targetUserId,
-            'payload'        => $payload
+            'payload'        => ['type' => 'new_notification_ping']
         ]);
 
         $ch = curl_init('http://127.0.0.1:8766/notify-user');
@@ -45,7 +45,7 @@ function notifyUser($targetUserId, $payload) {
         logDatabaseError($e, 'friend_handler - (ws_notify_fail)');
     }
 }
-// --- ▲▲▲ FIN DE FUNCIÓN HELPER ▲▲▲ ---
+// --- ▲▲▲ FIN DE FUNCIÓN HELPER (MODIFICADA) ▲▲▲ ---
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -97,6 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         } elseif ($action === 'get-pending-requests') {
             
+            // Esta acción ahora es manejada por 'notification_handler.php', 
+            // pero la dejamos para no romper JS antiguos si los hubiera.
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
             $stmt_req = $pdo->prepare(
@@ -132,35 +134,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $stmt_insert->execute([$userId1, $userId2, $currentUserId]);
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN: GUARDAR NOTIFICACIÓN ▼▼▼ ---
             try {
-                $sender_username = $_SESSION['username'] ?? 'Usuario';
-                $sender_avatar = $_SESSION['profile_image_url'] ?? '';
-                if (empty($sender_avatar)) {
-                     $sender_avatar = "https://ui-avatars.com/api/?name=" . urlencode($sender_username) . "&size=100&background=e0e0e0&color=ffffff";
-                }
+                // Insertar en la nueva tabla de notificaciones
+                $stmt_notify = $pdo->prepare(
+                    "INSERT INTO user_notifications (user_id, actor_user_id, type, reference_id) 
+                     VALUES (?, ?, 'friend_request', ?)"
+                );
+                // Notificar a $targetUserId, el actor es $currentUserId, la referencia es el ID del actor
+                $stmt_notify->execute([$targetUserId, $currentUserId, $currentUserId]);
 
-                $ws_payload = [
-                    'type' => 'friend_request_received',
-                    'payload' => [
-                        'user_id' => $currentUserId, 
-                        'username' => $sender_username,
-                        'profile_image_url' => $sender_avatar
-                    ]
-                ];
-                
-                // --- ▼▼▼ INVOCACIÓN DE FUNCIÓN HELPER ▼▼▼ ---
-                notifyUser($targetUserId, $ws_payload);
-                // --- ▲▲▲ FIN INVOCACIÓN ▲▲▲ ---
+                // Enviar un PING genérico al WebSocket
+                notifyUser($targetUserId);
                 
             } catch (Exception $e) {
                 logDatabaseError($e, 'friend_handler - send-request (ws_notify_fail)');
             }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             $response['success'] = true;
             $response['message'] = 'js.friends.requestSent';
             $response['newStatus'] = 'pending_sent';
 
         } elseif ($action === 'cancel-request' || $action === 'decline-request' || $action === 'remove-friend') {
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN: ELIMINAR NOTIFICACIÓN ▼▼▼ ---
+            // Si cancelamos o rechazamos, también eliminamos la notificación pendiente
+            if ($action === 'cancel-request' || $action === 'decline-request') {
+                $stmt_delete_notify = $pdo->prepare(
+                    "DELETE FROM user_notifications 
+                     WHERE type = 'friend_request' 
+                     AND ((user_id = ? AND actor_user_id = ?) OR (user_id = ? AND actor_user_id = ?))"
+                );
+                $stmt_delete_notify->execute([$currentUserId, $targetUserId, $targetUserId, $currentUserId]);
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             $stmt_delete = $pdo->prepare("DELETE FROM friendships WHERE user_id_1 = ? AND user_id_2 = ?");
             $stmt_delete->execute([$userId1, $userId2]);
@@ -185,23 +193,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  throw new Exception('js.friends.errorGeneric');
             }
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN: NOTIFICAR ACEPTACIÓN ▼▼▼ ---
             $originalSenderId = (int)$friendship['action_user_id'];
             
             $stmt_update = $pdo->prepare("UPDATE friendships SET status = 'accepted', action_user_id = ? WHERE user_id_1 = ? AND user_id_2 = ?");
             $stmt_update->execute([$currentUserId, $userId1, $userId2]);
             
-            // Notificar al usuario que envió la solicitud original
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN: ACTUALIZAR/INSERTAR NOTIFICACIÓN ▼▼▼ ---
             if ($originalSenderId !== $currentUserId) {
                 try {
-                    $ws_payload = [
-                        'type' => 'friend_request_accepted',
-                        'payload' => [
-                            'user_id'  => $currentUserId, // ID de quien aceptó
-                            'username' => $_SESSION['username'] ?? 'Usuario'
-                        ]
-                    ];
-                    notifyUser($originalSenderId, $ws_payload);
+                    // 1. Borrar la notificación de "friend_request" original
+                    $stmt_delete_notify = $pdo->prepare(
+                        "DELETE FROM user_notifications 
+                         WHERE user_id = ? AND actor_user_id = ? AND type = 'friend_request'"
+                    );
+                    $stmt_delete_notify->execute([$currentUserId, $originalSenderId]);
+                    
+                    // 2. Insertar una nueva notificación de "friend_accept" para el remitente original
+                    $stmt_notify_accept = $pdo->prepare(
+                        "INSERT INTO user_notifications (user_id, actor_user_id, type, reference_id)
+                         VALUES (?, ?, 'friend_accept', ?)"
+                    );
+                    // Notificar a $originalSenderId, el actor es $currentUserId
+                    $stmt_notify_accept->execute([$originalSenderId, $currentUserId, $currentUserId]);
+
+                    // 3. Enviar un PING genérico al WebSocket
+                    notifyUser($originalSenderId);
+
                 } catch (Exception $e) {
                     logDatabaseError($e, 'friend_handler - accept-request (ws_notify_fail)');
                 }

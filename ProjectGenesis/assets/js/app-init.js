@@ -14,7 +14,8 @@ import { initFriendManager, initFriendList } from './modules/friend-manager.js';
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager, getTranslation } from './services/i18n-manager.js';
 import { initTooltipManager } from './services/tooltip-manager.js'; 
-import { callFriendApi } from './services/api-service.js';
+// --- ▼▼▼ ¡IMPORTACIÓN MODIFICADA! ▼▼▼ ---
+import { callFriendApi, callNotificationApi } from './services/api-service.js';
 
 const htmlEl = document.documentElement;
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -76,9 +77,9 @@ function setNotificationCount(count) {
 
 /**
  * Añade una notificación (HTML) al panel de notificaciones.
- * @param {object} request - Objeto con los datos de la solicitud (user_id, username, profile_image_url).
+ * @param {object} notification - Objeto con los datos de la notificación
  */
-function addNotificationToUI(request) {
+function addNotificationToUI(notification) {
     const listContainer = document.getElementById('notification-list-items');
     const placeholder = document.getElementById('notification-placeholder');
     if (!listContainer) return;
@@ -87,44 +88,133 @@ function addNotificationToUI(request) {
         placeholder.style.display = 'none';
     }
     
-    if (document.querySelector(`.notification-item[data-user-id="${request.user_id}"]`)) {
+    // Evitar duplicados si el WS y la carga inicial se cruzan
+    if (document.querySelector(`.notification-item[data-id="${notification.id}"]`)) {
         return;
     }
 
-    const defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
-    const avatar = request.profile_image_url || defaultAvatar;
+    const avatar = notification.actor_avatar || "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+    let notificationHtml = '';
+    let textKey = '';
+    let href = '#'; // Enlace por defecto
 
-    const notificationHtml = `
-        <div class="notification-item" data-user-id="${request.user_id}">
-            <div class="notification-avatar">
-                <img src="${avatar}" alt="${request.username}">
-            </div>
-            <div class="notification-content">
-                <div class="notification-text">
-                    <strong>${request.username}</strong>
-                    <span data-i18n="notifications.friendRequestText">quiere ser tu amigo.</span>
-                </div>
-                <div class="notification-actions">
-                    <button type="button" class="notification-action-button notification-action-button--secondary" 
-                            data-action="friend-decline-request" data-user-id="${request.user_id}">
-                        <span data-i18n="friends.declineRequest">Rechazar</span>
-                    </button>
-                    <button type="button" class="notification-action-button notification-action-button--primary" 
-                            data-action="friend-accept-request" data-user-id="${request.user_id}">
-                        <span data-i18n="friends.acceptRequest">Aceptar</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
+    // --- ▼▼▼ Lógica de renderizado (sin cambios) ▼▼▼ ---
+    switch (notification.type) {
+        case 'friend_request':
+            textKey = 'notifications.friendRequestText';
+            href = `${window.projectBasePath}/profile/${notification.actor_username}`;
+            notificationHtml = `
+                <div class="notification-item" data-id="${notification.id}" data-user-id="${notification.actor_user_id}">
+                    <a href="${href}" data-nav-js="true" class="notification-avatar">
+                        <img src="${avatar}" alt="${notification.actor_username}">
+                    </a>
+                    <div class="notification-content">
+                        <div class="notification-text">
+                            <a href="${href}" data-nav-js="true" style="text-decoration: none; color: inherit;">
+                                <strong>${notification.actor_username}</strong>
+                            </a>
+                            <span data-i18n="${textKey}">quiere ser tu amigo.</span>
+                        </div>
+                        <div class="notification-actions">
+                            <button type="button" class="notification-action-button notification-action-button--secondary" 
+                                    data-action="friend-decline-request" data-user-id="${notification.actor_user_id}">
+                                <span data-i18n="friends.declineRequest">Rechazar</span>
+                            </button>
+                            <button type="button" class="notification-action-button notification-action-button--primary" 
+                                    data-action="friend-accept-request" data-user-id="${notification.actor_user_id}">
+                                <span data-i18n="friends.acceptRequest">Aceptar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            break;
+        
+        case 'friend_accept':
+            textKey = 'js.notifications.friendAccepted'; // "¡{username} aceptó tu solicitud de amistad!"
+            href = `${window.projectBasePath}/profile/${notification.actor_username}`;
+            notificationHtml = `
+                <a href="${href}" data-nav-js="true" class="notification-item" data-id="${notification.id}" data-user-id="${notification.actor_user_id}">
+                    <div class="notification-avatar">
+                        <img src="${avatar}" alt="${notification.actor_username}">
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-text">
+                            <span data-i18n="${textKey}">${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
+                        </div>
+                    </div>
+                </a>`;
+            break;
+
+        case 'like':
+            textKey = 'js.notifications.newLike'; // "A {username} le gustó tu publicación."
+            href = `${window.projectBasePath}/post/${notification.reference_id}`;
+            notificationHtml = `
+                <a href="${href}" data-nav-js="true" class="notification-item" data-id="${notification.id}" data-user-id="${notification.actor_user_id}">
+                    <div class="notification-avatar">
+                        <img src="${avatar}" alt="${notification.actor_username}">
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-text">
+                            <span data-i18n="${textKey}">${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
+                        </div>
+                    </div>
+                </a>`;
+            break;
+            
+        case 'comment':
+            textKey = 'js.notifications.newComment'; // "{username} comentó en tu publicación."
+            href = `${window.projectBasePath}/post/${notification.reference_id}`;
+             notificationHtml = `
+                <a href="${href}" data-nav-js="true" class="notification-item" data-id="${notification.id}" data-user-id="${notification.actor_user_id}">
+                    <div class="notification-avatar">
+                        <img src="${avatar}" alt="${notification.actor_username}">
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-text">
+                            <span data-i18n="${textKey}">${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
+                        </div>
+                    </div>
+                </a>`;
+            break;
+
+        case 'reply':
+            textKey = 'js.notifications.newReply'; // "{username} respondió a tu comentario."
+            href = `${window.projectBasePath}/post/${notification.reference_id}`; // reference_id es el post_id
+             notificationHtml = `
+                <a href="${href}" data-nav-js="true" class="notification-item" data-id="${notification.id}" data-user-id="${notification.actor_user_id}">
+                    <div class="notification-avatar">
+                        <img src="${avatar}" alt="${notification.actor_username}">
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-text">
+                            <span data-i18n="${textKey}">${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
+                        </div>
+                    </div>
+                </a>`;
+            break;
+    }
+    // --- ▲▲▲ FIN DE LÓGICA DE RENDERIZADO ▲▲▲ ---
     
-    listContainer.insertAdjacentHTML('afterbegin', notificationHtml);
+    if (notificationHtml) {
+        // --- ▼▼▼ MODIFICACIÓN PARA 'is_read' ▼▼▼ ---
+        // Si la notificación está leída, le añadimos opacidad
+        if (notification.is_read == 1) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = notificationHtml.trim();
+            const item = tempDiv.firstChild;
+            item.style.opacity = '0.6'; 
+            notificationHtml = item.outerHTML;
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+        listContainer.insertAdjacentHTML('beforeend', notificationHtml); // <-- CAMBIADO A 'beforeend' para orden cronológico
+    }
 }
 
+
 /**
- * Carga las solicitudes de amistad pendientes desde la API la primera vez que se abre el panel.
+ * Carga TODAS las notificaciones (amistad, likes, etc.) desde la BD.
  */
-async function loadPendingNotifications() {
+async function loadAllNotifications() {
     if (hasLoadedNotifications) {
         return; 
     }
@@ -134,30 +224,36 @@ async function loadPendingNotifications() {
     const placeholder = document.getElementById('notification-placeholder');
     if (!listContainer || !placeholder) return;
 
+    // Mostrar spinner
+    placeholder.style.display = 'flex';
     placeholder.querySelector('.material-symbols-rounded').innerHTML = '<span class="logout-spinner" style="width: 32px; height: 32px; border-width: 3px;"></span>';
     placeholder.querySelector('span[data-i18n]').setAttribute('data-i18n', 'notifications.loading');
     placeholder.querySelector('span[data-i18n]').textContent = getTranslation('notifications.loading');
+    listContainer.innerHTML = ''; // Limpiar lista
     
     const formData = new FormData();
-    formData.append('action', 'get-pending-requests'); 
+    formData.append('action', 'get-notifications'); 
 
     try {
-        const result = await callFriendApi(formData);
+        const result = await callNotificationApi(formData); // ¡Llamada a la nueva API!
         
-        if (result.success && result.requests) {
-            setNotificationCount(result.requests.length);
+        if (result.success && result.notifications) {
             
-            if (result.requests.length === 0) {
-                placeholder.style.display = 'flex'; // Asegurarse que se muestre si estaba oculto
+            // --- ▼▼▼ ¡ESTA ES LA LÍNEA MODIFICADA! ▼▼▼ ---
+            // Usamos el nuevo conteo que viene de la API para el badge
+            setNotificationCount(result.unread_count || 0);
+            // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
+            
+            if (result.notifications.length === 0) {
+                placeholder.style.display = 'flex';
                 placeholder.querySelector('.material-symbols-rounded').innerHTML = 'notifications_off';
                 placeholder.querySelector('span[data-i18n]').setAttribute('data-i18n', 'notifications.empty');
                 placeholder.querySelector('span[data-i18n]').textContent = getTranslation('notifications.empty');
             } else {
                 placeholder.style.display = 'none';
-                listContainer.innerHTML = ''; 
                 
-                result.requests.forEach(request => {
-                    addNotificationToUI(request);
+                result.notifications.forEach(notification => {
+                    addNotificationToUI(notification);
                 });
             }
         } else {
@@ -183,9 +279,22 @@ function initNotificationManager() {
     if (notificationButton) {
         notificationButton.addEventListener('click', () => {
             if (!hasLoadedNotifications) {
-                loadPendingNotifications();
+                loadAllNotifications(); // Cargar todas las notificaciones
             }
+            // Marcar como leídas en el backend (no esperamos respuesta)
+            const formData = new FormData();
+            formData.append('action', 'mark-all-read');
+            callNotificationApi(formData);
+            
+            // Limpiar badge visualmente
             setNotificationCount(0);
+
+            // --- ▼▼▼ NUEVA LÓGICA: MARCAR VISUALMENTE COMO LEÍDAS ▼▼▼ ---
+            // Añadimos opacidad a todos los items de la lista
+            document.querySelectorAll('#notification-list-items .notification-item').forEach(item => {
+                item.style.opacity = '0.6';
+            });
+            // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
         }, { once: false });
     }
     
@@ -232,7 +341,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     initCommunityManager();
     initPublicationManager();
     initFriendManager(); 
-    initNotificationManager();
+    initNotificationManager(); // <--- MODIFICADO
 
     initRouter(); 
     
@@ -240,6 +349,19 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     if (window.isUserLoggedIn) {
         initFriendList();
+
+        // --- ▼▼▼ INICIO DE CARGA INICIAL DEL BADGE (NUEVO) ▼▼▼ ---
+        // Hacemos una llamada silenciosa solo por el conteo de no leídas.
+        (async () => {
+            const formData = new FormData();
+            formData.append('action', 'get-notifications'); 
+            const result = await callNotificationApi(formData);
+            if (result.success && result.unread_count !== undefined) {
+                setNotificationCount(result.unread_count);
+            }
+        })();
+        // --- ▲▲▲ FIN DE CARGA INICIAL DEL BADGE ▲▲▲ ---
+
 
         let ws;
         
@@ -289,49 +411,25 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 }, 3000);
                             }
                         }
-                        else if (data.type === 'friend_request_received' && data.payload) {
-                            console.log("[WS] Notificación de amistad recibida");
-                            addNotificationToUI(data.payload);
-                            
-                            if (data.new_count !== undefined) {
-                                setNotificationCount(data.new_count);
-                            } else {
-                                setNotificationCount(currentNotificationCount + 1);
-                            }
-                            showAlert(`🔔 ${data.payload.username} ${getTranslation('notifications.friendRequestAlert')}`, 'info');
-                        }
-                        // --- ▼▼▼ INICIO DE NUEVOS MANEJADORES ▼▼▼ ---
-                        else if (data.type === 'friend_request_accepted' && data.payload) {
-                            // Solicitud aceptada
-                            console.log("[WS] Notificación de amistad aceptada");
-                            setNotificationCount(currentNotificationCount + 1); // Incrementar badge
-                            showAlert(`🎉 ${getTranslation('js.notifications.friendAccepted').replace('{username}', data.payload.username)}`, 'success');
-                            initFriendList(); // Recargar lista de amigos
-                        }
-                        else if (data.type === 'new_like' && data.payload) {
-                            // Nuevo Me Gusta
-                            console.log("[WS] Notificación de nuevo 'Me Gusta'");
-                            setNotificationCount(currentNotificationCount + 1); // Incrementar badge
-                            showAlert(`❤️ ${getTranslation('js.notifications.newLike').replace('{username}', data.payload.username)}`, 'info');
-                        }
-                        else if (data.type === 'new_comment' && data.payload) {
-                            // Nuevo Comentario
-                            console.log("[WS] Notificación de nuevo comentario");
-                            setNotificationCount(currentNotificationCount + 1); // Incrementar badge
-                            showAlert(`💬 ${getTranslation('js.notifications.newComment').replace('{username}', data.payload.username)}`, 'info');
-                        }
-                        else if (data.type === 'new_reply' && data.payload) {
-                            // Nueva Respuesta
-                            console.log("[WS] Notificación de nueva respuesta");
-                            setNotificationCount(currentNotificationCount + 1); // Incrementar badge
-                            showAlert(`💬 ${getTranslation('js.notifications.newReply').replace('{username}', data.payload.username)}`, 'info');
-                        }
+                        
+                        // --- ▼▼▼ INICIO DE MANEJADORES DE WS MODIFICADOS ▼▼▼ ---
+                        
                          else if (data.type === 'new_poll_vote' && data.payload) {
-                            // Nuevo Voto (Solo toast, sin badge para no ser "ruidoso")
+                            // Voto de encuesta (SÍ queremos la alerta, NO la notificación persistente)
                             console.log("[WS] Notificación de nuevo voto");
                             showAlert(`📊 ${getTranslation('js.notifications.newPollVote').replace('{username}', data.payload.username)}`, 'info');
                         }
-                        // --- ▲▲▲ FIN DE NUEVOS MANEJADORES ▲▲▲ ---
+                        
+                        // ¡NUEVO MANEJADOR GENÉRICO!
+                        else if (data.type === 'new_notification_ping') {
+                            console.log("[WS] Ping de nueva notificación recibido");
+                            // Incrementar el contador visual
+                            setNotificationCount(currentNotificationCount + 1);
+                            // Forzar a que la lista se recargue la próxima vez que se abra el panel
+                            hasLoadedNotifications = false;
+                        }
+                        // --- ▲▲▲ FIN DE MANEJADORES DE WS MODIFICADOS ▲▲▲ ---
+                        
                     } catch (e) {
                         console.error("[WS] Error al parsear mensaje:", e);
                     }

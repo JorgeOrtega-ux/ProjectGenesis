@@ -259,3 +259,23 @@ CREATE TABLE `friendships` (
   INDEX `idx_user_2_status` (`user_id_2`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- --- ▲▲▲ FIN NUEVA TABLA ▲▲▲ ---
+
+-- --- ▼▼▼ INICIO DE NUEVA TABLA (NOTIFICACIONES) ▼▼▼ ---
+
+DROP TABLE IF EXISTS `user_notifications`;
+CREATE TABLE `user_notifications` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `actor_user_id` INT NOT NULL,
+  `type` ENUM('friend_request', 'friend_accept', 'like', 'comment', 'reply') NOT NULL,
+  `reference_id` INT NOT NULL COMMENT 'ID del post, comentario o usuario relevante',
+  `is_read` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
+  
+  FOREIGN KEY (user_id) REFERENCES `users`(id) ON DELETE CASCADE,
+  FOREIGN KEY (actor_user_id) REFERENCES `users`(id) ON DELETE CASCADE,
+  
+  INDEX `idx_user_read_time` (`user_id`, `is_read`, `created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --- ▲▲▲ FIN DE NUEVA TABLA ▲▲▲ ---
