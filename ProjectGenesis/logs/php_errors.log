@@ -198,3 +198,10 @@
 [08-Nov-2025 16:09:47 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 615
 [08-Nov-2025 16:09:49 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 615
 [08-Nov-2025 16:09:51 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 615
+[08-Nov-2025 16:10:29 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 615
+[08-Nov-2025 16:10:31 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 615
+[08-Nov-2025 20:56:13 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 615
+[08-Nov-2025 20:56:22 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 615
+[08-Nov-2025 20:56:35 UTC] PHP Warning:  include(E:\xampp\htdocs\ProjectGenesis\includes/components/publication-card.php): Failed to open stream: No such file or directory in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\view-profile.php on line 126
+[08-Nov-2025 20:56:36 UTC] PHP Warning:  include(): Failed opening 'E:\xampp\htdocs\ProjectGenesis\includes/components/publication-card.php' for inclusion (include_path='C:\xampp\php\PEAR') in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\view-profile.php on line 126
+[08-Nov-2025 20:56:47 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 615
