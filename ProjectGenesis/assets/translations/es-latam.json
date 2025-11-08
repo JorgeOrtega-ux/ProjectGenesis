@@ -639,6 +639,18 @@
       "hideReplies": "Ocultar respuestas",
       "errorCommentEmpty": "El comentario no puede estar vacío.",
       "errorMaxDepth": "No puedes responder a una respuesta."
+    },
+    "friends": {
+      "sendRequest": "Agregar amigo",
+      "cancelRequest": "Cancelar solicitud",
+      "acceptRequest": "Aceptar solicitud",
+      "declineRequest": "Rechazar",
+      "removeFriend": "Eliminar amigo",
+      "requestSent": "Solicitud enviada.",
+      "requestCanceled": "Solicitud cancelada.",
+      "requestAccepted": "¡Ahora son amigos!",
+      "friendRemoved": "Amigo eliminado.",
+      "errorGeneric": "Error al procesar la solicitud de amistad."
     }
   },
   "db": {

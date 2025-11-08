@@ -1,13 +1,12 @@
 <?php
 // FILE: includes/sections/main/view-profile.php
 
-// $viewProfileData se carga desde config/routing/router.php con DATOS REALES AHORA.
+// $viewProfileData se carga desde config/routing/router.php con DATOS REALES.
 global $pdo, $basePath;
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 $userId = $_SESSION['user_id'];
 
-// Verificar si los datos del perfil existen (cargados por el router)
 if (!isset($viewProfileData) || empty($viewProfileData)) {
     include dirname(__DIR__, 1) . '/main/404.php';
     return;
@@ -15,8 +14,8 @@ if (!isset($viewProfileData) || empty($viewProfileData)) {
 
 $profile = $viewProfileData;
 $publications = $viewProfileData['publications'];
+$friendshipStatus = $viewProfileData['friendship_status'] ?? 'not_friends'; // Cargado en router.php
 
-// Lógica de íconos de roles
 $roleIconMap = [
     'user' => 'person',
     'moderator' => 'shield_person',
@@ -25,7 +24,6 @@ $roleIconMap = [
 ];
 $profileRoleIcon = $roleIconMap[$profile['role']] ?? 'person';
 
-// Comprobar si es el perfil del propio usuario
 $isOwnProfile = ($profile['id'] == $userId);
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'view-profile') ? 'active' : 'disabled'; ?>" data-section="view-profile">
@@ -42,17 +40,46 @@ $isOwnProfile = ($profile['id'] == $userId);
                     </button>
                 </div>
                 
-                <!-- Botón de editar si es tu propio perfil -->
-                <?php if ($isOwnProfile): ?>
-                <div class="page-toolbar-right">
-                    <button type="button"
-                        class="page-toolbar-button"
-                        data-action="toggleSectionSettingsProfile" 
-                        data-tooltip="header.profile.settings">
-                        <span class="material-symbols-rounded">edit</span>
-                    </button>
+                <!-- --- ▼▼▼ INICIO DE MODIFICACIÓN (Botones de Acción) ▼▼▼ --- -->
+                <div class="page-toolbar-right profile-actions" data-user-id="<?php echo $profile['id']; ?>" style="display: flex; gap: 8px;">
+                    <?php if ($isOwnProfile): ?>
+                        <button type="button"
+                            class="page-toolbar-button"
+                            data-action="toggleSectionSettingsProfile" 
+                            data-tooltip="header.profile.settings">
+                            <span class="material-symbols-rounded">edit</span>
+                        </button>
+                    <?php else: ?>
+                        <!-- Lógica de botones de amistad -->
+                        <?php if ($friendshipStatus === 'not_friends'): ?>
+                            <button type="button" class="component-button component-button--primary" data-action="friend-send-request" data-user-id="<?php echo $profile['id']; ?>" style="height: 36px; padding: 0 12px; gap: 6px; display: flex; align-items: center;">
+                                <span class="material-symbols-rounded" style="font-size: 20px;">person_add</span>
+                                <span data-i18n="friends.sendRequest" style="font-size: 13px;">Agregar</span>
+                            </button>
+                        <?php elseif ($friendshipStatus === 'pending_sent'): ?>
+                            <button type="button" class="component-button" data-action="friend-cancel-request" data-user-id="<?php echo $profile['id']; ?>" style="height: 36px; padding: 0 12px; gap: 6px; display: flex; align-items: center;">
+                                <span class="material-symbols-rounded" style="font-size: 20px;">close</span>
+                                <span data-i18n="friends.cancelRequest" style="font-size: 13px;">Cancelar</span>
+                            </button>
+                        <?php elseif ($friendshipStatus === 'pending_received'): ?>
+                            <button type="button" class="component-button component-button--primary" data-action="friend-accept-request" data-user-id="<?php echo $profile['id']; ?>" style="height: 36px; padding: 0 12px; gap: 6px; display: flex; align-items: center;">
+                                <span class="material-symbols-rounded" style="font-size: 20px;">check</span>
+                                <span data-i18n="friends.acceptRequest" style="font-size: 13px;">Aceptar</span>
+                            </button>
+                            <button type="button" class="component-button" data-action="friend-decline-request" data-user-id="<?php echo $profile['id']; ?>" style="height: 36px; padding: 0 12px; gap: 6px; display: flex; align-items: center;">
+                                <span class="material-symbols-rounded" style="font-size: 20px;">close</span>
+                                <span data-i18n="friends.declineRequest" style="font-size: 13px;">Rechazar</span>
+                            </button>
+                        <?php elseif ($friendshipStatus === 'friends'): ?>
+                            <button type="button" class="component-button" data-action="friend-remove" data-user-id="<?php echo $profile['id']; ?>" style="height: 36px; padding: 0 12px; gap: 6px; display: flex; align-items: center;">
+                                <span class="material-symbols-rounded" style="font-size: 20px;">person_remove</span>
+                                <span data-i18n="friends.removeFriend" style="font-size: 13px;">Eliminar</span>
+                            </button>
+                        <?php endif; ?>
+
+                    <?php endif; ?>
                 </div>
-                <?php endif; ?>
+                <!-- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- -->
             </div>
         </div>
     </div>
@@ -60,9 +87,7 @@ $isOwnProfile = ($profile['id'] == $userId);
     <div class="component-wrapper" style="padding-top: 82px;">
 
         <div class="profile-header-card">
-            <div class="profile-banner">
-                <!-- Banner placeholder por ahora -->
-            </div>
+            <div class="profile-banner"></div>
             <div class="profile-header-content">
                 <div class="profile-avatar-container">
                     <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($profile['role']); ?>" style="width: 100%; height: 100%;">
@@ -89,7 +114,6 @@ $isOwnProfile = ($profile['id'] == $userId);
                     <div class="profile-tab active">
                         <span data-i18n="create_publication.post">Publicaciones</span>
                     </div>
-                    <!-- Aquí se podrían añadir más pestañas en el futuro (e.g. "Media", "About") -->
                 </div>
             </div>
         </div>
@@ -99,8 +123,6 @@ $isOwnProfile = ($profile['id'] == $userId);
             <?php if (!empty($publications)): ?>
                 <?php foreach ($publications as $post): ?>
                     <?php
-                    // Incluimos el componente reutilizable
-                    // Asume que $post, $defaultAvatar, $userId, $userAvatar están definidos
                     include dirname(__DIR__, 2) . '/components/publication-card.php';
                     ?>
                 <?php endforeach; ?>

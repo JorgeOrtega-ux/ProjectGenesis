@@ -1,6 +1,6 @@
 <?php
 // FILE: config/routing/router.php
-// (CÓDIGO MODIFICADO CON LÓGICA REAL DE PERFIL)
+// (CÓDIGO CORREGIDO - Lógica de redirección duplicada eliminada)
 
 include '../config.php'; 
 
@@ -122,151 +122,10 @@ $allowedPages = [
     'admin-manage-logs'        => '../../includes/sections/admin/manage-logs.php',
 ];
 
-$maintenanceMode = $GLOBALS['site_settings']['maintenance_mode'] ?? '0';
-$userRole = $_SESSION['role'] ?? 'user'; 
-$isPrivilegedUser = in_array($userRole, ['moderator', 'administrator', 'founder']);
 
-$requestUri = $_SERVER['REQUEST_URI'];
-$isMaintenancePage = (strpos($requestUri, '/maintenance') !== false);
-$isLoginPage = (strpos($requestUri, '/login') !== false);
-$isApiCall = (strpos($requestUri, '/api/') !== false);
-$isConfigCall = (strpos($requestUri, '/config/') !== false); 
-$isServerFullPage = (strpos($requestUri, '/server-full') !== false);
-
-
-if ($maintenanceMode === '1') {
-    if (!isset($_SESSION['user_id'])) {
-        if (!$isLoginPage && !$isMaintenancePage && !$isApiCall && !$isConfigCall) {
-             header('Location: ' . $basePath . '/login');
-             exit;
-        }
-    } 
-    else {
-        if (!$isPrivilegedUser && !$isMaintenancePage && !$isLoginPage && !$isApiCall && !$isConfigCall && !$isServerFullPage) {
-            header('Location: ' . $basePath . '/maintenance');
-            exit;
-        }
-    }
-}
-
-$requestPath = strtok($requestUri, '?'); 
-
-$path = str_replace($basePath, '', $requestPath);
-if (empty($path) || $path === '/') {
-    $path = '/';
-}
-
-unset($_SESSION['initial_community_id']);
-unset($_SESSION['initial_community_name']);
-unset($_SESSION['initial_community_uuid']);
-
-if (preg_match('/^\/c\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
-    $communityUuid = $matches[1]; 
-    try {
-        $stmt = $pdo->prepare("SELECT id, name FROM communities WHERE uuid = ?");
-        $stmt->execute([$communityUuid]);
-        $community = $stmt->fetch();
-        if ($community) {
-            $_SESSION['initial_community_id'] = $community['id'];
-            $_SESSION['initial_community_name'] = $community['name'];
-            $_SESSION['initial_community_uuid'] = $communityUuid;
-        }
-    } catch (PDOException $e) {
-        logDatabaseError($e, 'bootstrapper - community-uuid-lookup');
-    }
-    $path = '/c/uuid-placeholder';
-
-} elseif (preg_match('/^\/post\/(\d+)$/i', $path, $matches)) {
-    $postId = $matches[1];
-    $_GET['post_id'] = $postId; 
-    $path = '/post/id-placeholder';
-
-} elseif (preg_match('/^\/profile\/([a-zA-Z0-9_]+)$/i', $path, $matches)) {
-    $username = $matches[1];
-    $_GET['username'] = $username; 
-    $path = '/profile/username-placeholder'; 
-}
-
-
-$pathsToPages = [
-    '/'           => 'home',
-    '/c/uuid-placeholder' => 'home',
-    '/post/id-placeholder' => 'post-view',
-    '/profile/username-placeholder' => 'view-profile',
-    '/explorer'   => 'explorer',
-    '/login'      => 'login',
-    '/maintenance' => 'maintenance', 
-    '/server-full' => 'server-full', 
-    '/register'                 => 'register-step1',
-    '/register/additional-data' => 'register-step2',
-    '/register/verification-code' => 'register-step3',
-    '/reset-password'          => 'reset-step1',
-    '/reset-password/verify-code'  => 'reset-step2',
-    '/reset-password/new-password' => 'reset-step3',
-    '/settings'                 => 'settings-profile', 
-    '/settings/your-profile'    => 'settings-profile',
-    '/settings/login-security'  => 'settings-login',
-    '/settings/accessibility'   => 'settings-accessibility',
-    '/settings/device-sessions' => 'settings-devices', 
-    '/settings/change-password' => 'settings-change-password',
-    '/settings/change-email'    => 'settings-change-email',
-    '/settings/toggle-2fa'      => 'settings-toggle-2fa',
-    '/settings/delete-account'  => 'settings-delete-account',
-    '/account-status/deleted'   => 'account-status-deleted',
-    '/account-status/suspended' => 'account-status-suspended',
-    '/admin'                    => 'admin-dashboard',
-    '/admin/dashboard'          => 'admin-dashboard',
-    '/admin/manage-users'       => 'admin-manage-users', 
-    '/admin/create-user'        => 'admin-create-user', 
-    '/admin/edit-user'          => 'admin-edit-user', 
-    '/admin/server-settings'    => 'admin-server-settings', 
-    '/admin/manage-backups'     => 'admin-manage-backups',
-    '/admin/manage-logs'        => 'admin-manage-logs', 
-];
-
-$currentPage = $pathsToPages[$path] ?? '404';
-
-$authPages = ['login', 'maintenance', 'server-full']; 
-$isAuthPage = in_array($currentPage, $authPages) || 
-              strpos($currentPage, 'register-') === 0 ||
-              strpos($currentPage, 'reset-') === 0 ||
-              strpos($currentPage, 'account-status-') === 0; 
-
-$isSettingsPage = strpos($currentPage, 'settings-') === 0;
-$isAdminPage = strpos($currentPage, 'admin-') === 0;
-
-if ($isAdminPage && isset($_SESSION['user_id'])) {
-    $userRole = $_SESSION['role'] ?? 'user';
-    if ($userRole !== 'administrator' && $userRole !== 'founder') {
-        $isAdminPage = false; 
-        $currentPage = '404'; 
-    }
-    
-    if (($currentPage === 'admin-manage-backups' || $currentPage === 'admin-manage-logs') && $userRole !== 'founder') {
-        $isAdminPage = true; 
-        $currentPage = '404'; 
-    }
-}
-
-if (!isset($_SESSION['user_id']) && !$isAuthPage) {
-    header('Location: ' . $basePath . '/login');
-    exit;
-}
-if (isset($_SESSION['user_id']) && $isAuthPage && $currentPage !== 'maintenance' && $currentPage !== 'server-full') { 
-    if ($maintenanceMode !== '1') {
-         header('Location: ' . $basePath . '/');
-         exit;
-    }
-}
-
-if ($path === '/settings') {
-    header('Location: ' . $basePath . '/settings/your-profile');
-    exit;
-}
-if ($path === '/admin') {
-    header('Location: ' . $basePath . '/admin/dashboard');
-    exit;
-}
+// ##########################################################################
+// ## INICIO DE BLOQUE DE LÓGICA DE CARGA DE DATOS (ESTO SE QUEDA)
+// ##########################################################################
 
 if (array_key_exists($page, $allowedPages)) {
 
@@ -720,6 +579,7 @@ if (array_key_exists($page, $allowedPages)) {
         $allowRegistrationStatus = $GLOBALS['site_settings']['allow_new_registrations'] ?? '1';
     }
     elseif ($isAdminPage) {
+        // Bloque vacío intencional para lógica futura de admin
     }
     
     

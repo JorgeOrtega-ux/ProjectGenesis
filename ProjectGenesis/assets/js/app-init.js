@@ -1,5 +1,4 @@
 // FILE: assets/js/app-init.js
-// (CÓDIGO MODIFICADO PARA USAR EL MÓDULO DE BACKUP COMBINADO)
 
 import { initMainController } from './app/main-controller.js';
 import { initRouter } from './app/url-manager.js';
@@ -9,18 +8,19 @@ import { initAdminManager } from './modules/admin-manager.js';
 import { initAdminEditUserManager } from './modules/admin-edit-user-manager.js';
 import { initAdminServerSettingsManager } from './modules/admin-server-settings-manager.js';
 import { initAdminBackupModule } from './modules/admin-backup-module.js'; 
-// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
 import { initCommunityManager } from './modules/community-manager.js';
-import { initPublicationManager } from './modules/publication-manager.js'; // <-- NUEVA
+import { initPublicationManager } from './modules/publication-manager.js';
+// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+import { initFriendManager } from './modules/friend-manager.js';
 // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 import { showAlert } from './services/alert-manager.js'; 
-import { initI18nManager, getTranslation } from './services/i18n-manager.js'; // <-- ¡MODIFICADO! IMPORTAR GETTRANSLATION
+import { initI18nManager, getTranslation } from './services/i18n-manager.js';
 import { initTooltipManager } from './services/tooltip-manager.js'; 
 
 const htmlEl = document.documentElement;
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-window.lastKnownUserCount = null; // Almacén global para el conteo
+window.lastKnownUserCount = null;
 
 function applyTheme(theme) {
     if (theme === 'light') {
@@ -63,20 +63,18 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     initMainController();
     
-    // Los listeners de los módulos deben registrarse ANTES que el router
-    
     initAuthManager();
     initSettingsManager();
     initAdminManager();
     initAdminEditUserManager();
     initAdminServerSettingsManager();
     initAdminBackupModule();
-    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
     initCommunityManager();
-    initPublicationManager(); // <-- NUEVA
+    initPublicationManager();
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    initFriendManager();
     // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 
-    // El Router se inicializa al final
     initRouter(); 
     
     initTooltipManager(); 
@@ -90,15 +88,15 @@ document.addEventListener('DOMContentLoaded', async function () {
         function connectWebSocket() {
             try {
                 ws = new WebSocket(wsUrl);
-                window.ws = ws; // Hacemos 'ws' global por si se necesita
+                window.ws = ws;
 
                 ws.onopen = () => {
                     console.log("[WS] Conectado al servidor en:", wsUrl);
                     
                     const authMessage = {
                         type: "auth",
-                        user_id: window.userId || 0,       // Añadido en main-layout.php
-                        session_id: window.csrfToken || "" // Usamos el token CSRF como ID de sesión
+                        user_id: window.userId || 0,
+                        session_id: window.csrfToken || ""
                     };
                     ws.send(JSON.stringify(authMessage));
                 };
@@ -116,22 +114,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                             }
                         } 
                         else if (data.type === 'force_logout') {
-                            console.log("[WS] Recibida orden de desconexión forzada (logout o reactivación).");
-                            
+                            console.log("[WS] Recibida orden de desconexión forzada.");
                             window.showAlert(getTranslation('js.logout.forced') || 'Tu sesión ha caducado, por favor inicia sesión de nuevo.', 'info', 5000);
-                            
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 3000); // 3 seg para que el usuario lea el aviso
+                            setTimeout(() => { window.location.reload(); }, 3000);
                         }
                         else if (data.type === 'account_status_update') {
                             const newStatus = data.status;
-                            
                             if (newStatus === 'suspended' || newStatus === 'deleted') {
                                 const msgKey = (newStatus === 'suspended') ? 'js.auth.errorAccountSuspended' : 'js.auth.errorAccountDeleted';
-                                console.log(`[WS] Recibida orden de estado: ${newStatus}`);
                                 window.showAlert(getTranslation(msgKey), 'error', 5000);
-
                                 setTimeout(() => {
                                     window.location.href = `${window.projectBasePath}/account-status/${newStatus}`;
                                 }, 3000);
@@ -144,7 +135,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 
                 ws.onclose = (event) => {
                     console.log("[WS] Desconectado del servidor de conteo.", event.reason);
-                    
                     const display = document.getElementById('concurrent-users-display');
                     if (display) {
                         display.textContent = '---';
