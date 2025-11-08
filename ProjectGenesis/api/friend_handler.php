@@ -13,6 +13,41 @@ if (!isset($_SESSION['user_id'])) {
 
 $currentUserId = (int)$_SESSION['user_id'];
 
+// --- ▼▼▼ INICIO DE FUNCIÓN HELPER DE NOTIFICACIÓN ▼▼▼ ---
+/**
+ * Envía una notificación a un usuario a través del servidor WebSocket.
+ *
+ * @param int $targetUserId El ID del usuario a notificar.
+ * @param array $payload El contenido de la notificación.
+ */
+function notifyUser($targetUserId, $payload) {
+    try {
+        $post_data = json_encode([
+            'target_user_id' => (int)$targetUserId,
+            'payload'        => $payload
+        ]);
+
+        $ch = curl_init('http://127.0.0.1:8766/notify-user');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($post_data)
+        ]);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); 
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        
+        curl_exec($ch); 
+        curl_close($ch);
+        
+    } catch (Exception $e) {
+        // Loggear el error de notificación (no detener la ejecución principal)
+        logDatabaseError($e, 'friend_handler - (ws_notify_fail)');
+    }
+}
+// --- ▲▲▲ FIN DE FUNCIÓN HELPER ▲▲▲ ---
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $submittedToken = $_POST['csrf_token'] ?? '';
@@ -25,15 +60,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $targetUserId = (int)($_POST['target_user_id'] ?? 0);
 
-    // --- ▼▼▼ MODIFICACIÓN: Mover validación de targetUserId ▼▼▼ ---
     if ($action !== 'get-friends-list' && $action !== 'get-pending-requests' && ($targetUserId === 0 || $targetUserId === $currentUserId)) {
          $response['message'] = 'js.api.invalidAction';
          echo json_encode($response);
          exit;
     }
-    // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
     
-    // Normalizar IDs para asegurar que user_id_1 < user_id_2
     $userId1 = min($currentUserId, $targetUserId);
     $userId2 = max($currentUserId, $targetUserId);
 
@@ -54,7 +86,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_friends->execute([$currentUserId, $currentUserId, $currentUserId, $currentUserId]);
             $friends = $stmt_friends->fetchAll();
             
-            // Formatear la URL del avatar
             foreach ($friends as &$friend) {
                 if (empty($friend['profile_image_url'])) {
                     $friend['profile_image_url'] = "https://ui-avatars.com/api/?name=" . urlencode($friend['username']) . "&size=100&background=e0e0e0&color=ffffff";
@@ -64,7 +95,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
             $response['friends'] = $friends;
         
-        // --- ▼▼▼ ¡NUEVA ACCIÓN AÑADIDA! ▼▼▼ ---
         } elseif ($action === 'get-pending-requests') {
             
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
@@ -90,14 +120,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
             $response['requests'] = $requests;
         
-        // --- ▲▲▲ ¡FIN DE NUEVA ACCIÓN! ▲▲▲ ---
-        
         } elseif ($action === 'send-request') {
-            // Verificar si ya existe una relación
             $stmt_check = $pdo->prepare("SELECT status FROM friendships WHERE user_id_1 = ? AND user_id_2 = ?");
             $stmt_check->execute([$userId1, $userId2]);
             if ($stmt_check->fetch()) {
-                 throw new Exception('js.friends.errorGeneric'); // Ya existe una relación
+                 throw new Exception('js.friends.errorGeneric'); 
             }
             
             $stmt_insert = $pdo->prepare(
@@ -105,7 +132,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $stmt_insert->execute([$userId1, $userId2, $currentUserId]);
 
-            // --- ▼▼▼ ¡NUEVO BLOQUE DE NOTIFICACIÓN! ▼▼▼ ---
             try {
                 $sender_username = $_SESSION['username'] ?? 'Usuario';
                 $sender_avatar = $_SESSION['profile_image_url'] ?? '';
@@ -113,47 +139,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      $sender_avatar = "https://ui-avatars.com/api/?name=" . urlencode($sender_username) . "&size=100&background=e0e0e0&color=ffffff";
                 }
 
-                // El payload que recibirá el cliente
                 $ws_payload = [
                     'type' => 'friend_request_received',
                     'payload' => [
-                        'user_id' => $currentUserId, // ID de quien envía
+                        'user_id' => $currentUserId, 
                         'username' => $sender_username,
                         'profile_image_url' => $sender_avatar
                     ]
                 ];
                 
-                // El cuerpo del POST a nuestro servidor Python
-                $post_data = json_encode([
-                    'target_user_id' => (int)$targetUserId, // ID de quien recibe
-                    'payload' => $ws_payload
-                ]);
-
-                $ch = curl_init('http://127.0.0.1:8766/notify-user');
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_POST, true);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                    'Content-Type: application/json',
-                    'Content-Length: ' . strlen($post_data)
-                ]);
-                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); 
-                curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        
-                curl_exec($ch); 
-                curl_close($ch);
+                // --- ▼▼▼ INVOCACIÓN DE FUNCIÓN HELPER ▼▼▼ ---
+                notifyUser($targetUserId, $ws_payload);
+                // --- ▲▲▲ FIN INVOCACIÓN ▲▲▲ ---
                 
             } catch (Exception $e) {
                 logDatabaseError($e, 'friend_handler - send-request (ws_notify_fail)');
             }
-            // --- ▲▲▲ ¡FIN DE NUEVO BLOQUE DE NOTIFICACIÓN! ▲▲▲ ---
             
             $response['success'] = true;
             $response['message'] = 'js.friends.requestSent';
             $response['newStatus'] = 'pending_sent';
 
         } elseif ($action === 'cancel-request' || $action === 'decline-request' || $action === 'remove-friend') {
-            // Para cualquiera de estas acciones, simplemente borramos la fila.
-            // La lógica de UI se encarga de mostrar el botón correcto, pero en BD es lo mismo: borrar la relación.
             
             $stmt_delete = $pdo->prepare("DELETE FROM friendships WHERE user_id_1 = ? AND user_id_2 = ?");
             $stmt_delete->execute([$userId1, $userId2]);
@@ -162,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['success'] = true;
                 if ($action === 'cancel-request') $response['message'] = 'js.friends.requestCanceled';
                 elseif ($action === 'remove-friend') $response['message'] = 'js.friends.friendRemoved';
-                else $response['message'] = 'js.friends.requestCanceled'; // Fallback para decline
+                else $response['message'] = 'js.friends.requestCanceled'; 
                 
                 $response['newStatus'] = 'not_friends';
             } else {
@@ -170,7 +177,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
         } elseif ($action === 'accept-request') {
-            // Solo se puede aceptar si está 'pending' Y el currentUserId NO es quien envió la solicitud.
             $stmt_check = $pdo->prepare("SELECT status, action_user_id FROM friendships WHERE user_id_1 = ? AND user_id_2 = ?");
             $stmt_check->execute([$userId1, $userId2]);
             $friendship = $stmt_check->fetch();
@@ -179,9 +185,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  throw new Exception('js.friends.errorGeneric');
             }
             
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN: NOTIFICAR ACEPTACIÓN ▼▼▼ ---
+            $originalSenderId = (int)$friendship['action_user_id'];
+            
             $stmt_update = $pdo->prepare("UPDATE friendships SET status = 'accepted', action_user_id = ? WHERE user_id_1 = ? AND user_id_2 = ?");
             $stmt_update->execute([$currentUserId, $userId1, $userId2]);
             
+            // Notificar al usuario que envió la solicitud original
+            if ($originalSenderId !== $currentUserId) {
+                try {
+                    $ws_payload = [
+                        'type' => 'friend_request_accepted',
+                        'payload' => [
+                            'user_id'  => $currentUserId, // ID de quien aceptó
+                            'username' => $_SESSION['username'] ?? 'Usuario'
+                        ]
+                    ];
+                    notifyUser($originalSenderId, $ws_payload);
+                } catch (Exception $e) {
+                    logDatabaseError($e, 'friend_handler - accept-request (ws_notify_fail)');
+                }
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             $response['success'] = true;
             $response['message'] = 'js.friends.requestAccepted';
             $response['newStatus'] = 'friends';

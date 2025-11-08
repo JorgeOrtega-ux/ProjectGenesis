@@ -666,6 +666,14 @@
         "noFriends": "No tienes amigos.",
         "error": "Error al cargar."
       }
+    },
+    "notifications": {
+      "newLike": "A {username} le gustó tu publicación.",
+      "newComment": "{username} comentó en tu publicación.",
+      "newReply": "{username} respondió a tu comentario.",
+      "friendAccepted": "¡{username} aceptó tu solicitud de amistad!",
+      "newPollVote": "{username} votó en tu encuesta.",
+      "friendRequestAlert": "{username} te ha enviado una solicitud de amistad."
     }
   },
   "db": {
@@ -744,7 +752,7 @@
     "empty": "No tienes notificaciones nuevas.",
     "loading": "Cargando notificaciones...",
     "friendRequestText": "quiere ser tu amigo.",
-    "friendRequestAlert": "te ha enviado una solicitud de amistad."
+    "friendRequestAlert": "{username} te ha enviado una solicitud de amistad."
   },
   "profile": {
     "tabs": {

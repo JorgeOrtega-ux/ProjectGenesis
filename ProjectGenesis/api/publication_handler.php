@@ -11,15 +11,48 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$userId = $_SESSION['user_id'];
+$userId = (int)$_SESSION['user_id']; // <-- Convertido a INT
 
 $MAX_FILES = 4;
 $ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 $MAX_SIZE_MB = (int)($GLOBALS['site_settings']['avatar_max_size_mb'] ?? 2);
 $MAX_SIZE_BYTES = $MAX_SIZE_MB * 1024 * 1024;
-// --- ▼▼▼ ¡NUEVA CONSTANTE! ▼▼▼ ---
 define('MAX_POST_LENGTH', (int)($GLOBALS['site_settings']['max_post_length'] ?? 1000));
-// --- ▲▲▲ ¡FIN DE NUEVA CONSTANTE! ▲▲▲ ---
+
+
+// --- ▼▼▼ INICIO DE FUNCIÓN HELPER DE NOTIFICACIÓN ▼▼▼ ---
+/**
+ * Envía una notificación a un usuario a través del servidor WebSocket.
+ *
+ * @param int $targetUserId El ID del usuario a notificar.
+ * @param array $payload El contenido de la notificación.
+ */
+function notifyUser($targetUserId, $payload) {
+    try {
+        $post_data = json_encode([
+            'target_user_id' => (int)$targetUserId,
+            'payload'        => $payload
+        ]);
+
+        $ch = curl_init('http://127.0.0.1:8766/notify-user');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($post_data)
+        ]);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); 
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        
+        curl_exec($ch); 
+        curl_close($ch);
+        
+    } catch (Exception $e) {
+        // Loggear el error de notificación (no detener la ejecución principal)
+        logDatabaseError($e, 'publication_handler - (ws_notify_fail)');
+    }
+}
+// --- ▲▲▲ FIN DE FUNCIÓN HELPER ▲▲▲ ---
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -64,24 +97,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($pollQuestion)) {
                     throw new Exception('js.publication.errorPollQuestion'); 
                 }
-                // --- ▼▼▼ INICIO DE VALIDACIÓN DE LÍMITE (POLL) ▼▼▼ ---
                 if (mb_strlen($pollQuestion, 'UTF-8') > MAX_POST_LENGTH) {
-                    // (Necesitarás añadir esta clave a tus archivos de traducción)
                     throw new Exception('js.publication.errorPollTooLong'); 
                 }
-                // --- ▲▲▲ FIN DE VALIDACIÓN ▲▲▲ ---
                 if (empty($pollOptions) || count($pollOptions) < 2) {
                      throw new Exception('js.publication.errorPollOptions'); 
                 }
                 $textContent = $pollQuestion;
 
             } elseif ($postType === 'post') {
-                 // --- ▼▼▼ INICIO DE VALIDACIÓN DE LÍMITE (POST) ▼▼▼ ---
                  if (mb_strlen($textContent, 'UTF-8') > MAX_POST_LENGTH) {
-                    // (Necesitarás añadir esta clave a tus archivos de traducción)
                     throw new Exception('js.publication.errorPostTooLong');
                  }
-                 // --- ▲▲▲ FIN DE VALIDACIÓN ▲▲▲ ---
                  if (empty($textContent) && empty($uploadedFiles['name'][0])) {
                     throw new Exception('js.publication.errorEmpty');
                 }
@@ -183,6 +210,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($publicationId) || empty($optionId)) {
                 throw new Exception('js.api.invalidAction');
             }
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN: OBTENER AUTOR DEL POST ▼▼▼ ---
+            $stmt_get_author = $pdo->prepare("SELECT user_id, text_content FROM community_publications WHERE id = ?");
+            $stmt_get_author->execute([$publicationId]);
+            $postData = $stmt_get_author->fetch();
+            $postAuthorId = $postData ? (int)$postData['user_id'] : 0;
+            $pollQuestion = $postData ? $postData['text_content'] : 'tu encuesta';
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             $pdo->beginTransaction();
             
@@ -211,6 +246,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt_insert_vote->execute([$publicationId, $optionId, $userId]);
                 
                 $pdo->commit();
+                
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN: NOTIFICAR VOTO ▼▼▼ ---
+                if ($postAuthorId > 0 && $postAuthorId !== $userId) {
+                    $ws_payload = [
+                        'type' => 'new_poll_vote',
+                        'payload' => [
+                            'username'     => $_SESSION['username'] ?? 'Alguien',
+                            'post_id'      => $publicationId,
+                            'poll_question' => mb_strimwidth($pollQuestion, 0, 50, "...")
+                        ]
+                    ];
+                    notifyUser($postAuthorId, $ws_payload);
+                }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 $stmt_results = $pdo->prepare(
                    "SELECT 
@@ -258,6 +307,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt_insert = $pdo->prepare("INSERT INTO publication_likes (user_id, publication_id) VALUES (?, ?)");
                 $stmt_insert->execute([$userId, $publicationId]);
                 $response['userHasLiked'] = true;
+                
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN: NOTIFICAR LIKE ▼▼▼ ---
+                $stmt_get_author = $pdo->prepare("SELECT user_id FROM community_publications WHERE id = ?");
+                $stmt_get_author->execute([$publicationId]);
+                $postAuthorId = (int)$stmt_get_author->fetchColumn();
+
+                if ($postAuthorId > 0 && $postAuthorId !== $userId) {
+                    $ws_payload = [
+                        'type' => 'new_like',
+                        'payload' => [
+                            'username' => $_SESSION['username'] ?? 'Alguien',
+                            'post_id'  => $publicationId
+                        ]
+                    ];
+                    notifyUser($postAuthorId, $ws_payload);
+                }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
             
             $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM publication_likes WHERE publication_id = ?");
@@ -265,7 +331,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['newLikeCount'] = $stmt_count->fetchColumn();
             $response['success'] = true;
 
-        // --- ▼▼▼ INICIO DE NUEVO BLOQUE ▼▼▼ ---
         } elseif ($action === 'bookmark-toggle') {
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             if (empty($publicationId)) {
@@ -277,39 +342,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $bookmarkExists = $stmt_check->fetch();
             
             if ($bookmarkExists) {
-                // Ya existe, eliminarlo
                 $stmt_delete = $pdo->prepare("DELETE FROM publication_bookmarks WHERE id = ?");
                 $stmt_delete->execute([$bookmarkExists['id']]);
                 $response['userHasBookmarked'] = false;
             } else {
-                // No existe, crearlo
                 $stmt_insert = $pdo->prepare("INSERT INTO publication_bookmarks (user_id, publication_id) VALUES (?, ?)");
                 $stmt_insert->execute([$userId, $publicationId]);
                 $response['userHasBookmarked'] = true;
             }
             
             $response['success'] = true;
-        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 
         } elseif ($action === 'post-comment') {
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             $parentCommentId = !empty($_POST['parent_comment_id']) ? (int)$_POST['parent_comment_id'] : null;
             $commentText = trim($_POST['comment_text'] ?? '');
+            $commentTextShort = mb_strimwidth($commentText, 0, 50, "...");
 
             if (empty($publicationId) || empty($commentText)) {
                 throw new Exception('js.publication.errorCommentEmpty');
             }
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN: OBTENER AUTORES ▼▼▼ ---
+            $targetUserId = 0;
+            $notificationType = 'new_comment';
 
             if ($parentCommentId) {
-                $stmt_check_parent = $pdo->prepare("SELECT parent_comment_id FROM publication_comments WHERE id = ?");
+                // Es una respuesta. Notificar al autor del comentario padre.
+                $stmt_check_parent = $pdo->prepare("SELECT user_id, parent_comment_id FROM publication_comments WHERE id = ?");
                 $stmt_check_parent->execute([$parentCommentId]);
-                $parentParentId = $stmt_check_parent->fetchColumn();
+                $parentComment = $stmt_check_parent->fetch();
                 
-                if ($parentParentId !== null) {
-                    throw new Exception('js.publication.errorMaxDepth'); 
+                if (!$parentComment) {
+                    throw new Exception('js.api.errorServer'); // Comentario padre no existe
                 }
+                if ($parentComment['parent_comment_id'] !== null) {
+                    throw new Exception('js.publication.errorMaxDepth'); // Es una respuesta a una respuesta
+                }
+                $targetUserId = (int)$parentComment['user_id'];
+                $notificationType = 'new_reply';
+
+            } else {
+                // Es un comentario nuevo. Notificar al autor del post.
+                $stmt_get_author = $pdo->prepare("SELECT user_id FROM community_publications WHERE id = ?");
+                $stmt_get_author->execute([$publicationId]);
+                $targetUserId = (int)$stmt_get_author->fetchColumn();
             }
-            
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             $stmt_insert = $pdo->prepare(
                 "INSERT INTO publication_comments (user_id, publication_id, parent_comment_id, comment_text) 
                  VALUES (?, ?, ?, ?)"
@@ -329,6 +409,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM publication_comments WHERE publication_id = ?");
             $stmt_count->execute([$publicationId]);
             
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN: NOTIFICAR COMENTARIO/RESPUESTA ▼▼▼ ---
+            if ($targetUserId > 0 && $targetUserId !== $userId) {
+                $ws_payload = [
+                    'type' => $notificationType,
+                    'payload' => [
+                        'username'     => $_SESSION['username'] ?? 'Alguien',
+                        'post_id'      => $publicationId,
+                        'comment_text' => $commentTextShort
+                    ]
+                ];
+                notifyUser($targetUserId, $ws_payload);
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             $response['success'] = true;
             $response['newComment'] = $newComment;
             $response['newCommentCount'] = $stmt_count->fetchColumn();
