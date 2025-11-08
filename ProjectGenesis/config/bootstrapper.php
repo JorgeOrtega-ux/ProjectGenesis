@@ -290,7 +290,14 @@ if (preg_match('/^\/c\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
     
     // Asignar el placeholder para el array de mapeo
     $path = '/c/uuid-placeholder';
+
+// ================== INICIO DE LA MODIFICACIÓN ==================
+} elseif (preg_match('/^\/post\/(\d+)$/i', $path, $matches)) {
+    $postId = $matches[1];
+    $_GET['post_id'] = $postId; // Inyectar el ID en $_GET para que router.php lo lea
+    $path = '/post/id-placeholder'; // Mapear al placeholder
 }
+// =================== FIN DE LA MODIFICACIÓN ==================
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
@@ -300,6 +307,11 @@ $pathsToPages = [
     // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
     '/c/uuid-placeholder' => 'home', // Ruta placeholder para comunidades
     // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
+    
+    // ================== INICIO DE LA MODIFICACIÓN ==================
+    '/post/id-placeholder' => 'post-view', // NUEVA RUTA
+    // =================== FIN DE LA MODIFICACIÓN ==================
+
     '/explorer'   => 'explorer',
     '/login'      => 'login',
     '/maintenance' => 'maintenance', 

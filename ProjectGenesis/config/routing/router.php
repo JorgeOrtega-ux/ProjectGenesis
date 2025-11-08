@@ -112,6 +112,11 @@ $allowedPages = [
     'join-group' => '../../includes/sections/main/join-group.php',
     'create-publication' => '../../includes/sections/main/create-publication.php', // <-- NUEVA
     'create-poll' => '../../includes/sections/main/create-publication.php', // <-- NUEVA (apunta al mismo archivo)
+    
+    // ================== INICIO DE LA MODIFICACIÓN ==================
+    'post-view' => '../../includes/sections/main/view-post.php', // <-- ¡NUEVA PÁGINA!
+    // =================== FIN DE LA MODIFICACIÓN ==================
+
     // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     'register-step1' => '../../includes/sections/auth/register.php',
@@ -428,6 +433,71 @@ if (array_key_exists($page, $allowedPages)) {
             logDatabaseError($e, 'router - create-post-communities');
         }
     // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
+
+    // ================== INICIO DE LA MODIFICACIÓN ==================
+    } elseif ($page === 'post-view') {
+        $viewPostData = null; // Variable para la vista
+        $postId = (int)($_GET['post_id'] ?? 0);
+        $userId = $_SESSION['user_id']; // ID del usuario actual
+
+        if ($postId === 0) {
+            $page = '404'; // Si no hay ID, es 404
+        } else {
+            try {
+                // Consulta casi idéntica a la de home.php, pero con WHERE p.id = ?
+                $sql_post = 
+                    "SELECT 
+                        p.*, 
+                        u.username, 
+                        u.profile_image_url, 
+                        c.name AS community_name,
+                        (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
+                         FROM publication_attachments pa
+                         JOIN publication_files pf ON pa.file_id = pf.id
+                         WHERE pa.publication_id = p.id
+                         ORDER BY pa.sort_order ASC
+                        ) AS attachments,
+                        (SELECT COUNT(pv.id) FROM poll_votes pv WHERE pv.publication_id = p.id) AS total_votes,
+                        (SELECT pv.poll_option_id FROM poll_votes pv WHERE pv.publication_id = p.id AND pv.user_id = ?) AS user_voted_option_id,
+                        (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
+                        (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
+                        (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count
+                     FROM community_publications p
+                     JOIN users u ON p.user_id = u.id
+                     LEFT JOIN communities c ON p.community_id = c.id
+                     WHERE p.id = ?"; // <-- La gran diferencia
+                
+                $stmt_post = $pdo->prepare($sql_post);
+                $stmt_post->execute([$userId, $userId, $postId]);
+                $viewPostData = $stmt_post->fetch();
+
+                if (!$viewPostData) {
+                    $page = '404'; // Post no encontrado
+                } else {
+                    // Si es una encuesta, cargar las opciones
+                    if ($viewPostData['post_type'] === 'poll') {
+                        $stmt_options = $pdo->prepare(
+                           "SELECT 
+                                po.id, 
+                                po.option_text, 
+                                COUNT(pv.id) AS vote_count
+                            FROM poll_options po
+                            LEFT JOIN poll_votes pv ON po.id = pv.poll_option_id
+                            WHERE po.publication_id = ?
+                            GROUP BY po.id, po.option_text 
+                            ORDER BY po.id ASC"
+                        );
+                        $stmt_options->execute([$postId]);
+                        $options = $stmt_options->fetchAll();
+                        $viewPostData['poll_options'] = $options;
+                    }
+                }
+            } catch (PDOException $e) {
+                logDatabaseError($e, 'router - post-view');
+                $page = '404'; // Error de BD
+            }
+        }
+    // =================== FIN DE LA MODIFICACIÓN ==================
 
     } elseif ($page === 'admin-manage-users') {
         $adminCurrentPage = (int)($_GET['p'] ?? 1);

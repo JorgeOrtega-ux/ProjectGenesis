@@ -2,7 +2,7 @@
 // FILE: includes/sections/main/home.php
 // (CÓDIGO MODIFICADO PARA MOSTRAR PUBLICACIONES, ENCUESTAS, LIKES Y COMENTARIOS)
 
-global $pdo; 
+global $pdo, $basePath; // <-- ¡AÑADIR $basePath!
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 $userId = $_SESSION['user_id']; // ID del usuario actual
@@ -343,14 +343,14 @@ try {
                                     <span class="material-symbols-rounded"><?php echo $userHasLiked ? 'favorite' : 'favorite_border'; ?></span>
                                     <span class="action-text"><?php echo $likeCount; ?></span>
                                 </button>
-                                <button type="button" 
-                                        class="component-action-button--icon post-action-comment" 
-                                        data-tooltip="home.actions.comment"
-                                        data-action="toggle-comments"
-                                        data-post-id="<?php echo $post['id']; ?>">
+                                
+                                <a href="<?php echo $basePath; ?>/post/<?php echo $post['id']; ?>"
+                                   class="component-action-button--icon post-action-comment" 
+                                   data-tooltip="home.actions.comment"
+                                   data-post-id="<?php echo $post['id']; ?>">
                                     <span class="material-symbols-rounded">chat_bubble_outline</span>
                                     <span class="action-text"><?php echo $commentCount; ?></span>
-                                </button>
+                                </a>
                                 <button type="button" class="component-action-button--icon" data-tooltip="home.actions.share">
                                     <span class="material-symbols-rounded">send</span>
                                 </button>
@@ -361,7 +361,8 @@ try {
                                 </button>
                             </div>
                         </div>
-                        <form class="post-comment-input-container" data-action="post-comment">
+                        
+                        <form class="post-comment-input-container" data-action="post-comment" style="display: none;">
                             <input type="hidden" name="publication_id" value="<?php echo $post['id']; ?>">
                             <input type="hidden" name="parent_comment_id" value=""> <div class="post-comment-avatar">
                                 <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Tu avatar">
@@ -371,10 +372,12 @@ try {
                                 <span class="material-symbols-rounded">send</span>
                             </button>
                         </form>
-                        <div class="post-comments-container" id="comments-for-post-<?php echo $post['id']; ?>">
-                            </div>
+                        
+                        <div class="post-comments-container" id="comments-for-post-<?php echo $post['id']; ?>" style="display: none;">
                         </div>
-                    <?php endforeach; ?>
+                        
+                    </div>
+                <?php endforeach; ?>
             <?php endif; ?>
         </div>
 

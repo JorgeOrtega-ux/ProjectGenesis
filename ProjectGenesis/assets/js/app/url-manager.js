@@ -7,7 +7,7 @@ import { applyTranslations, getTranslation } from '../services/i18n-manager.js';
 // --- ▼▼▼ INICIO DE LA CORRECCIÓN (IMPORTAR) ▼▼▼ ---
 import { hideTooltip } from '../services/tooltip-manager.js';
 // --- ▼▼▼ ¡CAMBIO! Importar la función del community-manager ▼▼▼ ---
-import { loadSavedCommunity } from '../modules/community-manager.js';
+import { loadSavedCommunity, loadCommentsForPost } from '../modules/community-manager.js';
 // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
 const contentContainer = document.querySelector('.main-sections');
@@ -27,6 +27,11 @@ const routes = {
     'toggleSectionJoinGroup': 'join-group',
     'toggleSectionCreatePublication': 'create-publication', // <-- NUEVA
     'toggleSectionCreatePoll': 'create-poll', // <-- NUEVA
+    
+    // ================== INICIO DE LA MODIFICACIÓN ==================
+    'toggleSectionPostView': 'post-view', // <-- ¡NUEVA ACCIÓN!
+    // =================== FIN DE LA MODIFICACIÓN ==================
+
     // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     'toggleSectionRegisterStep1': 'register-step1',
@@ -75,6 +80,10 @@ const paths = {
     '/create-publication': 'toggleSectionCreatePublication', // <-- NUEVA
     '/create-poll': 'toggleSectionCreatePoll', // <-- NUEVA
     // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+    
+    // ================== INICIO DE LA MODIFICACIÓN ==================
+    '/post': 'toggleSectionPostView', // <-- Ruta base para post
+    // =================== FIN DE LA MODIFICACIÓN ==================
 
     '/register': 'toggleSectionRegisterStep1',
     '/register/additional-data': 'toggleSectionRegisterStep2',
@@ -246,6 +255,17 @@ async function loadPage(page, action, fetchParams = null) {
             // ...llama a la función que actualiza la UI de la comunidad.
             loadSavedCommunity();
         }
+        
+        // ================== INICIO DE LA MODIFICACIÓN ==================
+        // Si la página es 'post-view', auto-carga los comentarios
+        if (page === 'post-view') {
+            const commentsContainer = contentContainer.querySelector('.post-comments-container[data-post-id]');
+            if (commentsContainer) {
+                // Llama a la función importada de community-manager
+                loadCommentsForPost(commentsContainer.dataset.postId);
+            }
+        }
+        // =================== FIN DE LA MODIFICACIÓN ==================
         // --- ▲▲▲ ¡CAMBIO! FIN DE LA SOLUCIÓN ▲▲▲ ---
 
     } catch (error) {
@@ -270,11 +290,15 @@ export function handleNavigation() {
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (RUTAS DINÁMICAS) ▼▼▼ ---
     let action = null;
     const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
+    
+    // ================== INICIO DE LA MODIFICACIÓN ==================
+    const postViewRegex = /^\/post\/(\d+)$/i; // <-- NUEVO REGEX
+    // =================== FIN DE LA MODIFICACIÓN ==================
+
 
     if (path === '/') {
         action = 'toggleSectionHome';
     } else if (communityUuidRegex.test(path)) {
-        action = 'toggleSectionHome';
         // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ ---
         // ¡CAMBIO! En lugar de solo cargar, pasamos el UUID
         const matches = path.match(communityUuidRegex);
@@ -282,6 +306,16 @@ export function handleNavigation() {
         loadPage('home', action, { community_uuid: uuid });
         return; // Salir de la función para evitar la llamada duplicada a loadPage
         // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
+        
+    // ================== INICIO DE LA MODIFICACIÓN ==================
+    } else if (postViewRegex.test(path)) { // <-- NUEVO BLOQUE
+        action = 'toggleSectionPostView';
+        const matches = path.match(postViewRegex);
+        const postId = matches[1];
+        loadPage('post-view', action, { post_id: postId }); // Pass post_id a router.php
+        return;
+    // =================== FIN DE LA MODIFICACIÓN ==================
+
     } else {
         // Lógica existente para otras rutas
         if (path === '/settings') {
@@ -364,7 +398,8 @@ function updateMenuState(currentAction) {
     // Si la acción es "Unirse a Grupo", "Crear Publicación" o "Crear Encuesta", resalta "Home" en el menú
     if (currentAction === 'toggleSectionJoinGroup' || 
         currentAction === 'toggleSectionCreatePublication' || 
-        currentAction === 'toggleSectionCreatePoll') {
+        currentAction === 'toggleSectionCreatePoll' ||
+        currentAction === 'toggleSectionPostView') { // <-- ¡LÍNEA AÑADIDA!
         menuAction = 'toggleSectionHome';
     }
     // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
@@ -391,12 +426,13 @@ export function initRouter() {
           return;
       }
       // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
+      
+      // ================== INICIO DE LA MODIFICACIÓN ==================
       const link = e.target.closest(
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SE ELIMINA restore-backup Y SE AÑADEN ACCIONES) ▼▼▼ ---
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"]'
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            // Se añade 'a[href*="/post/"]' al selector
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"]'
         );
+      // =================== FIN DE LA MODIFICACIÓN ==================
 
         if (link) {
             
@@ -435,19 +471,29 @@ export function initRouter() {
                 page = routes[action];
                 newPath = Object.keys(paths).find(key => paths[key] === action);
             } else {
+                
+                // ================== INICIO DE LA MODIFICACIÓN ==================
                 const url = new URL(link.href);
                 newPath = url.pathname.replace(basePath, '') || '/';
                 
-                if (newPath === '/settings') {
-                    newPath = '/settings/your-profile';
-                }
+                const postViewRegex = /^\/post\/(\d+)$/i; // <-- Nuevo
                 
-                if (newPath === '/admin') {
-                    newPath = '/admin/dashboard';
+                if (postViewRegex.test(newPath)) { // <-- Nuevo
+                    action = 'toggleSectionPostView';
+                    page = 'post-view';
+                } else { // <-- Lógica existente envuelta
+                    if (newPath === '/settings') {
+                        newPath = '/settings/your-profile';
+                    }
+                    
+                    if (newPath === '/admin') {
+                        newPath = '/admin/dashboard';
+                    }
+                    
+                    action = paths[newPath];
+                    page = routes[action];
                 }
-                
-                action = paths[newPath];
-                page = routes[action];
+                // =================== FIN DE LA MODIFICACIÓN ==================
             }
             
             const url = link.href ? new URL(link.href) : null;
