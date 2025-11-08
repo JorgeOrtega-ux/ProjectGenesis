@@ -1,4 +1,3 @@
-
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
 import { applyTranslations, getTranslation } from '../services/i18n-manager.js';
@@ -64,8 +63,8 @@ const paths = {
     '/server-full': 'toggleSectionServerFull', 
 
     '/join-group': 'toggleSectionJoinGroup',
-    '/create-publication': 'toggleSectionCreatePublication', 
-    '/create-poll': 'toggleSectionCreatePoll', 
+    '/create-publication': 'create-publication', 
+    '/create-poll': 'create-poll', 
     
     '/post': 'toggleSectionPostView', 
 
@@ -363,9 +362,11 @@ export function initRouter() {
           return;
       }
       
+      // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Selector) ▼▼▼ ---
       const link = e.target.closest(
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"]'
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"]'
         );
+      // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
         if (link) {
             
@@ -389,8 +390,18 @@ export function initRouter() {
                     return; 
                 }
                 
-                page = routes[action];
-                newPath = Object.keys(paths).find(key => paths[key] === action);
+                // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Lógica data-action) ▼▼▼ ---
+                if (action === 'toggleSectionPostView' && link.dataset.postId) {
+                    // Este es nuestro nuevo botón
+                    page = 'post-view';
+                    newPath = '/post/' + link.dataset.postId; // This will be used for history.pushState
+                    fetchParams = { post_id: link.dataset.postId };
+                } 
+                // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                else { // Original logic for all other data-actions
+                    page = routes[action];
+                    newPath = Object.keys(paths).find(key => paths[key] === action);
+                }
 
             } else {
                 
@@ -441,8 +452,18 @@ export function initRouter() {
                 return;
             }
 
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (fullUrlPath) ▼▼▼ ---
             const queryString = (url && url.search) ? url.search : '';
-            const fullUrlPath = `${basePath}${newPath === '/' ? '/' : newPath}${queryString}`;
+            let fullUrlPath;
+            
+            if (action === 'toggleSectionPostView' && fetchParams) {
+                // Use the newPath we constructed
+                fullUrlPath = `${basePath}${newPath}`;
+            } else {
+                // Original logic
+                fullUrlPath = `${basePath}${newPath === '/' ? '/' : newPath}${queryString}`;
+            }
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
             
             
             const currentFullUrl = window.location.pathname + window.location.search;

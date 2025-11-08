@@ -348,13 +348,14 @@ try {
                                     <span class="action-text"><?php echo $likeCount; ?></span>
                                 </button>
                                 
-                                <a href="<?php echo $basePath; ?>/post/<?php echo $post['id']; ?>"
+                                <button type="button"
                                    class="component-action-button--icon post-action-comment" 
                                    data-tooltip="home.actions.comment"
+                                   data-action="toggleSectionPostView"
                                    data-post-id="<?php echo $post['id']; ?>">
                                     <span class="material-symbols-rounded">chat_bubble_outline</span>
                                     <span class="action-text"><?php echo $commentCount; ?></span>
-                                </a>
+                                </button>
                                 <button type="button" class="component-action-button--icon" data-tooltip="home.actions.share">
                                     <span class="material-symbols-rounded">send</span>
                                 </button>

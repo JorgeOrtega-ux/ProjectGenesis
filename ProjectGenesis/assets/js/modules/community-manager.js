@@ -1,4 +1,3 @@
-
 import { callCommunityApi, callPublicationApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js';
@@ -393,7 +392,6 @@ function renderNewComment(comment, container, isReply) {
     commentEl.innerHTML = `
         <div class="comment-avatar" data-role="${escapeHTML(userRole)}"><img src="${escapeHTML(avatar)}" alt="${escapeHTML(comment.username)}"></div>
         <div class="comment-content">
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             <div class="comment-header">
                 <span class="comment-username">${escapeHTML(comment.username)}</span>
                 <span class="comment-timestamp">· ${formatTimeAgo(comment.created_at)}</span>
@@ -432,7 +430,6 @@ function handleShowReplyForm(button) {
             <div class="post-comment-avatar" data-role="${escapeHTML(userRole)}">
                 <img src="${escapeHTML(userAvatar)}" alt="Tu avatar">
             </div>
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             <input type="text" class="post-comment-input" name="comment_text" placeholder="Escribe una respuesta..." required>
             <button type="submit" class="post-comment-submit-btn" disabled>
                 <span class="material-symbols-rounded">send</span>
