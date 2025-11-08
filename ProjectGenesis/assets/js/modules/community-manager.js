@@ -589,6 +589,49 @@ async function handleShowReplies(button) {
     }
 }
 
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN ▼▼▼ ---
+/**
+ * Maneja el clic en "Mostrar más" / "Mostrar menos".
+ * @param {HTMLElement} button El botón (enlace <a>) que fue clickeado.
+ */
+function handleTogglePostText(button) {
+    const container = button.closest('.post-text-content');
+    if (!container) return;
+
+    const truncated = container.querySelector('.post-text-truncated');
+    const full = container.querySelector('.post-text-full');
+    
+    if (!truncated || !full) return;
+
+    const isCurrentlyExpanded = full.classList.contains('active');
+
+    if (isCurrentlyExpanded) {
+        // Contraer
+        full.classList.remove('active');
+        full.classList.add('disabled');
+        truncated.classList.add('active');
+        truncated.classList.remove('disabled');
+        container.classList.remove('is-expanded');
+        
+        const moreTextKey = button.dataset.i18nMore || 'js.publication.showMore';
+        button.textContent = getTranslation(moreTextKey);
+        button.setAttribute('data-i18n', moreTextKey);
+        
+    } else {
+        // Expandir
+        truncated.classList.remove('active');
+        truncated.classList.add('disabled');
+        full.classList.add('active');
+        full.classList.remove('disabled');
+        container.classList.add('is-expanded');
+
+        const lessTextKey = button.dataset.i18nLess || 'js.publication.showLess';
+        button.textContent = getTranslation(lessTextKey);
+        button.setAttribute('data-i18n', lessTextKey);
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+
 
 export function initCommunityManager() {
     
@@ -597,7 +640,16 @@ export function initCommunityManager() {
         const commentButton = e.target.closest('[data-action="toggle-comments"]');
         const replyButton = e.target.closest('[data-action="show-reply-form"]');
         const showRepliesButton = e.target.closest('[data-action="show-replies"]'); 
-        const bookmarkButton = e.target.closest('[data-action="bookmark-toggle"]'); // <-- LÍNEA AÑADIDA
+        const bookmarkButton = e.target.closest('[data-action="bookmark-toggle"]'); 
+
+        // --- ▼▼▼ INICIO DE NUEVO BLOQUE ▼▼▼ ---
+        const toggleTextButton = e.target.closest('[data-action="toggle-post-text"]');
+        if (toggleTextButton) {
+            e.preventDefault();
+            handleTogglePostText(toggleTextButton);
+            return;
+        }
+        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 
         if (likeButton) {
             e.preventDefault();
@@ -619,13 +671,11 @@ export function initCommunityManager() {
             handleShowReplies(showRepliesButton);
             return;
         }
-        // --- ▼▼▼ BLOQUE AÑADIDO ▼▼▼ ---
         if (bookmarkButton) {
             e.preventDefault();
             handleBookmarkToggle(bookmarkButton);
             return;
         }
-        // --- ▲▲▲ FIN BLOQUE AÑADIDO ▲▲▲ ---
 
         const button = e.target.closest('button[data-action], button[data-auth-action], button[data-tooltip]');
         

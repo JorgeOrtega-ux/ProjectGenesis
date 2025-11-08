@@ -170,32 +170,51 @@ function getPreferredLanguage($acceptLanguage) {
     return $defaultLanguage;
 }
 
-// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN ▼▼▼ ---
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA ▼▼▼ ---
 /**
  * Trunca el texto de una publicación si excede el límite y añade un enlace "Mostrar más".
  *
  * @param string $text El texto a truncar.
  * @param int $postId El ID del post para el enlace.
  * @param string $basePath El path base del proyecto.
- * @param int $limit El número de caracteres límite (default 500).
+ * @param int $limit El número de caracteres límite (puedes cambiar este 500 por 1000 si lo deseas).
  * @return string El HTML formateado (escapado y con <br>).
  */
 function truncatePostText($text, $postId, $basePath, $limit = 500) {
-    // Escapar el texto ANTES de medirlo o cortarlo
+    // 1. Escapar el texto completo UNA SOLA VEZ
     $escapedText = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+    // 2. Convertir saltos de línea del texto completo escapado
+    $nl2brText = nl2br($escapedText);
 
-    if (mb_strlen($escapedText, 'UTF-8') > $limit) {
-        // Cortar el texto escapado
-        $truncated = mb_substr($escapedText, 0, $limit, 'UTF-8');
-        $postUrl = htmlspecialchars($basePath . '/post/' . $postId, ENT_QUOTES, 'UTF-8');
+    // 3. Comprobar la longitud del texto ORIGINAL (raw)
+    if (mb_strlen($text, 'UTF-8') > $limit) {
         
-        // Convertir saltos de línea y añadir el enlace
-        // Usamos un div en lugar de <p> porque el enlace "Mostrar más" no debe estar dentro del <p> truncado
-        return nl2br($truncated) . '... <a href="' . $postUrl . '" class="post-read-more" data-nav-js="true" style="font-weight: 600; color: #000; text-decoration: none;">Mostrar más</a>';
+        // 4. Cortar el texto ORIGINAL
+        $truncated = mb_substr($text, 0, $limit, 'UTF-8');
+        // 5. Escapar y formatear SÓLO la parte truncada
+        $escapedTruncated = htmlspecialchars($truncated, ENT_QUOTES, 'UTF-8');
+        $nl2brTruncated = nl2br($escapedTruncated);
+
+        // 6. Construir la nueva estructura HTML
+        $html = '<div class="post-text-content" data-post-id="' . $postId . '">';
+        
+        // Contenido truncado (visible por defecto)
+        $html .= '<div class="post-text-truncated active">' . $nl2brTruncated . '...</div>';
+        
+        // Contenido completo (oculto por defecto)
+        $html .= '<div class="post-text-full disabled">' . $nl2brText . '</div>';
+        
+        // Botón para alternar (usamos <a> por estilo, pero 'href' es '#' y la acción es JS)
+        // El JS leerá las claves i18n para saber qué texto poner
+        $html .= '<a href="#" class="post-read-more" data-action="toggle-post-text" data-i18n="js.publication.showMore" data-i18n-more="js.publication.showMore" data-i18n-less="js.publication.showLess">Mostrar más</a>';
+        
+        $html .= '</div>';
+        
+        return $html;
     } else {
-        // Si no se trunca, solo escapar y convertir saltos de línea
-        return nl2br($escapedText);
+        // Si no se trunca, solo envolverlo para mantener una estructura consistente
+        return '<div class="post-text-content">' . $nl2brText . '</div>';
     }
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA ▲▲▲ ---
 ?>

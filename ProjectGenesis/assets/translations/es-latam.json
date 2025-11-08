@@ -638,7 +638,11 @@
       "showReplies": "Mostrar %count% respuestas",
       "hideReplies": "Ocultar respuestas",
       "errorCommentEmpty": "El comentario no puede estar vacío.",
-      "errorMaxDepth": "No puedes responder a una respuesta."
+      "errorMaxDepth": "No puedes responder a una respuesta.",
+      "showMore": "Mostrar más",
+      "showLess": "Mostrar menos",
+      "saved": "Publicación guardada",
+      "unsaved": "Publicación eliminada de guardados"
     },
     "friends": {
       "sendRequest": "Agregar amigo",
