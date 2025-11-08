@@ -5,7 +5,8 @@ const API_ENDPOINTS = {
     SETTINGS: `${window.projectBasePath}/api/settings_handler.php`,
     ADMIN: `${window.projectBasePath}/api/admin_handler.php`,
     COMMUNITY: `${window.projectBasePath}/api/community_handler.php`,
-    PUBLICATION: `${window.projectBasePath}/api/publication_handler.php`
+    PUBLICATION: `${window.projectBasePath}/api/publication_handler.php`,
+    FRIEND: `${window.projectBasePath}/api/friend_handler.php` // <-- AÑADIR ESTA LÍNEA
 };
 
 async function _post(url, formData) {
@@ -70,5 +71,18 @@ async function callPublicationApi(formData) {
     return _post(API_ENDPOINTS.PUBLICATION, formData);
 }
 
+// --- ▼▼▼ AÑADIR ESTA FUNCIÓN ▼▼▼ ---
+async function callFriendApi(formData) {
+    return _post(API_ENDPOINTS.FRIEND, formData);
+}
+// --- ▲▲▲ FIN DE FUNCIÓN AÑADIDA ▲▲▲ ---
 
-export { callAuthApi, callSettingsApi, callAdminApi, callCommunityApi, callPublicationApi };
+
+export { 
+    callAuthApi, 
+    callSettingsApi, 
+    callAdminApi, 
+    callCommunityApi, 
+    callPublicationApi, 
+    callFriendApi // <-- AÑADIR ESTA EXPORTACIÓN
+};
