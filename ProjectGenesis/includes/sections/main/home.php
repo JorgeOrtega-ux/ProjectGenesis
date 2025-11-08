@@ -369,22 +369,7 @@ try {
                             </div>
                         </div>
                         
-                        <form class="post-comment-input-container" data-action="post-comment" style="display: none;">
-                            <input type="hidden" name="publication_id" value="<?php echo $post['id']; ?>">
-                            <input type="hidden" name="parent_comment_id" value=""> 
-                            <div class="post-comment-avatar" data-role="<?php echo htmlspecialchars($_SESSION['role'] ?? 'user'); ?>">
-                                <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Tu avatar">
-                            </div>
-                            <input type="text" class="post-comment-input" name="comment_text" placeholder="Añade un comentario..." required>
-                            <button type="submit" class="post-comment-submit-btn" disabled>
-                                <span class="material-symbols-rounded">send</span>
-                            </button>
-                        </form>
-                        
-                        <div class="post-comments-container" id="comments-for-post-<?php echo $post['id']; ?>" style="display: none;">
                         </div>
-                        
-                    </div>
                     <?php
                     // --- ▲▲▲ FIN DE CÓDIGO PEGADO ▲▲▲ ---
                     ?>
