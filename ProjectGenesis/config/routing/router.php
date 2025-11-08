@@ -1,16 +1,8 @@
 <?php
 // FILE: config/routing/router.php
-// (CÓDIGO MODIFICADO CON RUTAS CORREGIDAS)
+// (CÓDIGO MODIFICADO CON LÓGICA REAL DE PERFIL)
 
-// --- ▼▼▼ CAMBIO DE RUTA (Línea 5) ▼▼▼ ---
 include '../config.php'; 
-// --- ▲▲▲ FIN DE CAMBIO ▲▲▲ ---
-
-// --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-// El bloque que comprobaba si ($pdo === null) se ha eliminado.
-// Si config.php falla, la ejecución se detendrá antes de llegar aquí.
-// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
-
 
 function showRegistrationError($basePath, $messageKey, $detailsKey) {
     if (ob_get_level() > 0) {
@@ -66,10 +58,6 @@ function showResetError($basePath, $messageKey, $detailsKey) {
     echo '</body></html>';
 }
 
-// --- ▼▼▼ INICIO DE FUNCIONES HELPER (COPIADAS DE MANAGE-BACKUPS.PHP) ▼▼▼ ---
-/**
- * Formatea bytes a un tamaño legible (KB, MB, GB)
- */
 function formatBackupSize($bytes) {
     if ($bytes < 1024) return $bytes . ' B';
     $kb = $bytes / 1024;
@@ -79,20 +67,15 @@ function formatBackupSize($bytes) {
     $gb = $mb / 1024;
     return round($gb, 2) . ' GB';
 }
-/**
- * Formatea un timestamp a fecha legible
- */
 function formatBackupDate($timestamp) {
      return date('d/m/Y H:i:s', $timestamp);
 }
-// --- ▲▲▲ FIN DE FUNCIONES HELPER ▲▲▲ ---
 
 
 $page = $_GET['page'] ?? 'home';
 
 $CURRENT_SECTION = $page; 
 
-// --- ▼▼▼ CAMBIO DE RUTA (TODOS LOS ../includes A ../../includes) ▼▼▼ ---
 $allowedPages = [
     'home'     => '../../includes/sections/main/home.php',
     'explorer' => '../../includes/sections/main/explorer.php',
@@ -100,28 +83,17 @@ $allowedPages = [
     '404'      => '../../includes/sections/main/404.php', 
     'db-error' => '../../includes/sections/main/db-error.php', 
     
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-    // Las siguientes 4 rutas ahora apuntan al NUEVO archivo unificado
     'maintenance' => '../../includes/sections/main/status-page.php',
     'server-full' => '../../includes/sections/main/status-page.php',
     'account-status-deleted'   => '../../includes/sections/main/status-page.php',
     'account-status-suspended' => '../../includes/sections/main/status-page.php',
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
-    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
     'join-group' => '../../includes/sections/main/join-group.php',
-    'create-publication' => '../../includes/sections/main/create-publication.php', // <-- NUEVA
-    'create-poll' => '../../includes/sections/main/create-publication.php', // <-- NUEVA (apunta al mismo archivo)
+    'create-publication' => '../../includes/sections/main/create-publication.php',
+    'create-poll' => '../../includes/sections/main/create-publication.php',
     
-    // ================== INICIO DE LA MODIFICACIÓN ==================
-    'post-view' => '../../includes/sections/main/view-post.php', // <-- ¡NUEVA PÁGINA!
-    // =================== FIN DE LA MODIFICACIÓN ==================
-
-    // --- ▼▼▼ ¡NUEVA PÁGINA DE PERFIL AÑADIDA! ▼▼▼ ---
+    'post-view' => '../../includes/sections/main/view-post.php',
     'view-profile' => '../../includes/sections/main/view-profile.php',
-    // --- ▲▲▲ FIN DE PÁGINA DE PERFIL ▲▲▲ ---
-
-    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     'register-step1' => '../../includes/sections/auth/register.php',
     'register-step2' => '../../includes/sections/auth/register.php',
@@ -141,63 +113,160 @@ $allowedPages = [
     'settings-toggle-2fa'      => '../../includes/sections/settings/actions/toggle-2fa.php',
     'settings-delete-account'  => '../../includes/sections/settings/actions/delete-account.php',
     
-    // --- ▼▼▼ PÁGINAS DE ADMIN MODIFICADAS ▼▼▼ ---
     'admin-dashboard'          => '../../includes/sections/admin/dashboard.php',
-    'admin-manage-users'       => '../../includes/sections/admin/manage-users.php', // <--- CLAVE MODIFICADA
-    'admin-create-user'        => '../../includes/sections/admin/create-user.php', // <--- ¡NUEVA LÍNEA!
-    'admin-edit-user'          => '../../includes/sections/admin/admin-edit-user.php', // <--- ¡NUEVA LÍNEA!
-    'admin-server-settings'    => '../../includes/sections/admin/server-settings.php', // <--- ¡NUEVA LÍNEA!
-    
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    'admin-manage-users'       => '../../includes/sections/admin/manage-users.php',
+    'admin-create-user'        => '../../includes/sections/admin/create-user.php',
+    'admin-edit-user'          => '../../includes/sections/admin/admin-edit-user.php',
+    'admin-server-settings'    => '../../includes/sections/admin/server-settings.php',
     'admin-manage-backups'     => '../../includes/sections/admin/manage-backups.php',
-    // 'admin-restore-backup'     => '../../includes/sections/admin/restore-backup.php', // <-- ¡ELIMINADA!
-    'admin-manage-logs'        => '../../includes/sections/admin/manage-logs.php', // <-- ¡NUEVA LÍNEA AÑADIDA!
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
-
-    // --- ▲▲▲ FIN DE PÁGINAS DE ADMIN ▲▲▲ ---
+    'admin-manage-logs'        => '../../includes/sections/admin/manage-logs.php',
 ];
-// --- ▲▲▲ FIN DE CAMBIO DE RUTA ▲▲▲ ---
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (MODO MANTENIMIENTO) ▼▼▼ ---
-$authPages = ['login', 'maintenance', 'server-full']; // 'maintenance' y 'server-full' se tratan como páginas de auth
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+$maintenanceMode = $GLOBALS['site_settings']['maintenance_mode'] ?? '0';
+$userRole = $_SESSION['role'] ?? 'user'; 
+$isPrivilegedUser = in_array($userRole, ['moderator', 'administrator', 'founder']);
 
-$isAuthPage = in_array($page, $authPages) || 
-              strpos($page, 'register-') === 0 ||
-              strpos($page, 'reset-') === 0 ||
-              strpos($page, 'account-status-') === 0; 
+$requestUri = $_SERVER['REQUEST_URI'];
+$isMaintenancePage = (strpos($requestUri, '/maintenance') !== false);
+$isLoginPage = (strpos($requestUri, '/login') !== false);
+$isApiCall = (strpos($requestUri, '/api/') !== false);
+$isConfigCall = (strpos($requestUri, '/config/') !== false); 
+$isServerFullPage = (strpos($requestUri, '/server-full') !== false);
 
-$isSettingsPage = strpos($page, 'settings-') === 0;
-// --- ▼▼▼ NUEVA LÍNEA ▼▼▼ ---
-$isAdminPage = strpos($page, 'admin-') === 0;
 
-// --- ▼▼▼ BLOQUE ELIMINADO ▼▼▼ ---
-// La variable $accountStatusType ya no es necesaria aquí,
-// porque el nuevo 'status-page.php' usa $CURRENT_SECTION.
-// --- ▲▲▲ FIN BLOQUE ELIMINADO ▲▲▲ ---
-
-if (!isset($_SESSION['user_id']) && !$isAuthPage) { // <-- Modificación: NO permitir join-group sin auth
-    http_response_code(403); 
-    $CURRENT_SECTION = '404'; 
-    include $allowedPages['404'];
-    exit; 
+if ($maintenanceMode === '1') {
+    if (!isset($_SESSION['user_id'])) {
+        if (!$isLoginPage && !$isMaintenancePage && !$isApiCall && !$isConfigCall) {
+             header('Location: ' . $basePath . '/login');
+             exit;
+        }
+    } 
+    else {
+        if (!$isPrivilegedUser && !$isMaintenancePage && !$isLoginPage && !$isApiCall && !$isConfigCall && !$isServerFullPage) {
+            header('Location: ' . $basePath . '/maintenance');
+            exit;
+        }
+    }
 }
 
-// --- ▼▼▼ ¡NUEVO BLOQUE DE SEGURIDAD PARA ADMIN! ▼▼▼ ---
-// --- ▼▼▼ ¡NUEVO BLOQUE DE SEGURIDAD PARA ADMIN! ▼▼▼ ---
+$requestPath = strtok($requestUri, '?'); 
+
+$path = str_replace($basePath, '', $requestPath);
+if (empty($path) || $path === '/') {
+    $path = '/';
+}
+
+unset($_SESSION['initial_community_id']);
+unset($_SESSION['initial_community_name']);
+unset($_SESSION['initial_community_uuid']);
+
+if (preg_match('/^\/c\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
+    $communityUuid = $matches[1]; 
+    try {
+        $stmt = $pdo->prepare("SELECT id, name FROM communities WHERE uuid = ?");
+        $stmt->execute([$communityUuid]);
+        $community = $stmt->fetch();
+        if ($community) {
+            $_SESSION['initial_community_id'] = $community['id'];
+            $_SESSION['initial_community_name'] = $community['name'];
+            $_SESSION['initial_community_uuid'] = $communityUuid;
+        }
+    } catch (PDOException $e) {
+        logDatabaseError($e, 'bootstrapper - community-uuid-lookup');
+    }
+    $path = '/c/uuid-placeholder';
+
+} elseif (preg_match('/^\/post\/(\d+)$/i', $path, $matches)) {
+    $postId = $matches[1];
+    $_GET['post_id'] = $postId; 
+    $path = '/post/id-placeholder';
+
+} elseif (preg_match('/^\/profile\/([a-zA-Z0-9_]+)$/i', $path, $matches)) {
+    $username = $matches[1];
+    $_GET['username'] = $username; 
+    $path = '/profile/username-placeholder'; 
+}
+
+
+$pathsToPages = [
+    '/'           => 'home',
+    '/c/uuid-placeholder' => 'home',
+    '/post/id-placeholder' => 'post-view',
+    '/profile/username-placeholder' => 'view-profile',
+    '/explorer'   => 'explorer',
+    '/login'      => 'login',
+    '/maintenance' => 'maintenance', 
+    '/server-full' => 'server-full', 
+    '/register'                 => 'register-step1',
+    '/register/additional-data' => 'register-step2',
+    '/register/verification-code' => 'register-step3',
+    '/reset-password'          => 'reset-step1',
+    '/reset-password/verify-code'  => 'reset-step2',
+    '/reset-password/new-password' => 'reset-step3',
+    '/settings'                 => 'settings-profile', 
+    '/settings/your-profile'    => 'settings-profile',
+    '/settings/login-security'  => 'settings-login',
+    '/settings/accessibility'   => 'settings-accessibility',
+    '/settings/device-sessions' => 'settings-devices', 
+    '/settings/change-password' => 'settings-change-password',
+    '/settings/change-email'    => 'settings-change-email',
+    '/settings/toggle-2fa'      => 'settings-toggle-2fa',
+    '/settings/delete-account'  => 'settings-delete-account',
+    '/account-status/deleted'   => 'account-status-deleted',
+    '/account-status/suspended' => 'account-status-suspended',
+    '/admin'                    => 'admin-dashboard',
+    '/admin/dashboard'          => 'admin-dashboard',
+    '/admin/manage-users'       => 'admin-manage-users', 
+    '/admin/create-user'        => 'admin-create-user', 
+    '/admin/edit-user'          => 'admin-edit-user', 
+    '/admin/server-settings'    => 'admin-server-settings', 
+    '/admin/manage-backups'     => 'admin-manage-backups',
+    '/admin/manage-logs'        => 'admin-manage-logs', 
+];
+
+$currentPage = $pathsToPages[$path] ?? '404';
+
+$authPages = ['login', 'maintenance', 'server-full']; 
+$isAuthPage = in_array($currentPage, $authPages) || 
+              strpos($currentPage, 'register-') === 0 ||
+              strpos($currentPage, 'reset-') === 0 ||
+              strpos($currentPage, 'account-status-') === 0; 
+
+$isSettingsPage = strpos($currentPage, 'settings-') === 0;
+$isAdminPage = strpos($currentPage, 'admin-') === 0;
+
 if ($isAdminPage && isset($_SESSION['user_id'])) {
     $userRole = $_SESSION['role'] ?? 'user';
     if ($userRole !== 'administrator' && $userRole !== 'founder') {
-        // Si no es admin o founder, no se le niega el acceso con 403,
-        // simplemente se le cambia la página a '404'.
-        $page = '404';
-        $CURRENT_SECTION = '404';
-        // ¡Ya no hay http_response_code(403) ni exit!
+        $isAdminPage = false; 
+        $currentPage = '404'; 
+    }
+    
+    if (($currentPage === 'admin-manage-backups' || $currentPage === 'admin-manage-logs') && $userRole !== 'founder') {
+        $isAdminPage = true; 
+        $currentPage = '404'; 
     }
 }
-// --- ▲▲▲ FIN DEL BLOQUE DE SEGURIDAD ▲▲▲ ---
-// --- ▲▲▲ FIN DEL BLOQUE DE SEGURIDAD ▲▲▲ ---
 
+if (!isset($_SESSION['user_id']) && !$isAuthPage) {
+    header('Location: ' . $basePath . '/login');
+    exit;
+}
+if (isset($_SESSION['user_id']) && $isAuthPage && $currentPage !== 'maintenance' && $currentPage !== 'server-full') { 
+    if ($maintenanceMode !== '1') {
+         header('Location: ' . $basePath . '/');
+         exit;
+    }
+}
+
+if ($path === '/settings') {
+    header('Location: ' . $basePath . '/settings/your-profile');
+    exit;
+}
+if ($path === '/admin') {
+    header('Location: ' . $basePath . '/admin/dashboard');
+    exit;
+}
 
 if (array_key_exists($page, $allowedPages)) {
 
@@ -303,7 +372,6 @@ if (array_key_exists($page, $allowedPages)) {
         $usernameForAlt = $_SESSION['username'] ?? 'Usuario';
         $userRole = $_SESSION['role'] ?? 'user';
         $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
-        
         $userLanguage = $_SESSION['language'] ?? 'en-us';
         $userUsageType = $_SESSION['usage_type'] ?? 'personal';
         $openLinksInNewTab = (int)($_SESSION['open_links_in_new_tab'] ?? 1); 
@@ -407,7 +475,6 @@ if (array_key_exists($page, $allowedPages)) {
          $profileImageUrl = $_SESSION['profile_image_url'] ?? $defaultAvatar;
          if (empty($profileImageUrl)) $profileImageUrl = $defaultAvatar;
     
-    // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (join-group) ▼▼▼ ---
     } elseif ($page === 'join-group') {
         try {
             $stmt_public = $pdo->prepare("SELECT id, name FROM communities WHERE privacy = 'public' ORDER BY name ASC");
@@ -423,37 +490,33 @@ if (array_key_exists($page, $allowedPages)) {
             $publicCommunities = [];
             $joinedCommunityIds = [];
         }
-    // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
     
-    // --- ▼▼▼ INICIO DE NUEVO BLOQUE (create-publication) ▼▼▼ ---
     } elseif ($page === 'create-publication' || $page === 'create-poll') {
         $userCommunitiesForPost = [];
         try {
-            // Cargar las comunidades a las que pertenece el usuario para el selector
             $stmt_c = $pdo->prepare("SELECT c.id, c.name FROM communities c JOIN user_communities uc ON c.id = uc.community_id WHERE uc.user_id = ? ORDER BY c.name ASC");
             $stmt_c->execute([$_SESSION['user_id']]);
             $userCommunitiesForPost = $stmt_c->fetchAll();
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - create-post-communities');
         }
-    // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 
-    // ================== INICIO DE LA MODIFICACIÓN ==================
     } elseif ($page === 'post-view') {
-        $viewPostData = null; // Variable para la vista
+        $viewPostData = null; 
         $postId = (int)($_GET['post_id'] ?? 0);
-        $userId = $_SESSION['user_id']; // ID del usuario actual
+        $userId = $_SESSION['user_id']; 
 
         if ($postId === 0) {
-            $page = '404'; // Si no hay ID, es 404
+            $page = '404';
+            $CURRENT_SECTION = '404';
         } else {
             try {
-                // Consulta casi idéntica a la de home.php, pero con WHERE p.id = ?
                 $sql_post = 
                     "SELECT 
                         p.*, 
                         u.username, 
                         u.profile_image_url, 
+                        u.role,
                         c.name AS community_name,
                         (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
                          FROM publication_attachments pa
@@ -469,16 +532,16 @@ if (array_key_exists($page, $allowedPages)) {
                      FROM community_publications p
                      JOIN users u ON p.user_id = u.id
                      LEFT JOIN communities c ON p.community_id = c.id
-                     WHERE p.id = ?"; // <-- La gran diferencia
+                     WHERE p.id = ?"; 
                 
                 $stmt_post = $pdo->prepare($sql_post);
                 $stmt_post->execute([$userId, $userId, $postId]);
                 $viewPostData = $stmt_post->fetch();
 
                 if (!$viewPostData) {
-                    $page = '404'; // Post no encontrado
+                    $page = '404'; 
+                    $CURRENT_SECTION = '404';
                 } else {
-                    // Si es una encuesta, cargar las opciones
                     if ($viewPostData['post_type'] === 'poll') {
                         $stmt_options = $pdo->prepare(
                            "SELECT 
@@ -498,72 +561,118 @@ if (array_key_exists($page, $allowedPages)) {
                 }
             } catch (PDOException $e) {
                 logDatabaseError($e, 'router - post-view');
-                $page = '404'; // Error de BD
+                $page = '404';
+                $CURRENT_SECTION = '404';
             }
         }
-    // =================== FIN DE LA MODIFICACIÓN ==================
 
-    // --- ▼▼▼ ¡NUEVO BLOQUE DE PERFIL AÑADIDO! ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE LÓGICA REAL PARA PERFIL ▼▼▼ ---
     } elseif ($page === 'view-profile') {
-        // --- Lógica de BD (Marcador de posición) ---
-        // En un futuro, aquí buscaríamos el usuario en la BD usando $_GET['username']
-        // y sus publicaciones.
-        
-        // --- Datos Falsos (UI-Only) ---
-        $viewProfileData = [
-            'id' => 99,
-            'username' => $_GET['username'] ?? 'UsuarioDemo',
-            'profile_image_url' => $basePath . '/assets/uploads/avatars_default/user-1.png',
-            'role' => 'administrator',
-            'created_at' => '2025-01-01 12:00:00',
-            'publications' => [] // Dejar vacío por ahora, se llenará en view-profile.php
-        ];
-        
-        // --- Datos Falsos para Publicaciones (UI-Only) ---
-        // Voy a crear un post de texto y un post de encuesta falsos
-        $viewProfileData['publications'] = [
-            [
-                'id' => 101,
-                'user_id' => 99,
-                'username' => $viewProfileData['username'],
-                'profile_image_url' => $viewProfileData['profile_image_url'],
-                'role' => $viewProfileData['role'],
-                'created_at' => '2025-11-05 20:00:00',
-                'community_name' => 'Comunidad Ejemplo',
-                'post_type' => 'post',
-                'text_content' => 'Esta es mi primera publicación en mi nuevo perfil. ¡Solo es una prueba de UI!',
-                'attachments' => null,
-                'like_count' => 15,
-                'user_has_liked' => 1,
-                'comment_count' => 2,
-                'user_voted_option_id' => null,
-                'total_votes' => 0,
-                'poll_options' => []
-            ],
-            [
-                'id' => 102,
-                'user_id' => 99,
-                'username' => $viewProfileData['username'],
-                'profile_image_url' => $viewProfileData['profile_image_url'],
-                'role' => $viewProfileData['role'],
-                'created_at' => '2025-11-04 18:30:00',
-                'community_name' => 'Comunidad de Pruebas',
-                'post_type' => 'poll',
-                'text_content' => '¿Qué debería tener este perfil? (Encuesta de prueba)',
-                'attachments' => null,
-                'like_count' => 3,
-                'user_has_liked' => 0,
-                'comment_count' => 0,
-                'user_voted_option_id' => null,
-                'total_votes' => 5,
-                'poll_options' => [
-                    ['id' => 1, 'publication_id' => 102, 'option_text' => 'Más publicaciones', 'vote_count' => 2],
-                    ['id' => 2, 'publication_id' => 102, 'option_text' => 'Un banner genial', 'vote_count' => 3],
-                ]
-            ]
-        ];
-        // --- Fin de Datos Falsos ---
-    // --- ▲▲▲ FIN DE BLOQUE DE PERFIL ▲▲▲ ---
+        $viewProfileData = null;
+        $targetUsername = $_GET['username'] ?? '';
+        $currentUserId = $_SESSION['user_id'];
+
+        if (empty($targetUsername)) {
+             $page = '404';
+             $CURRENT_SECTION = '404';
+        } else {
+             try {
+                 // 1. Obtener datos del perfil
+                 $stmt_profile = $pdo->prepare("SELECT id, username, profile_image_url, role, created_at FROM users WHERE username = ?");
+                 $stmt_profile->execute([$targetUsername]);
+                 $userProfile = $stmt_profile->fetch();
+
+                 if (!$userProfile) {
+                     $page = '404';
+                     $CURRENT_SECTION = '404';
+                 } else {
+                     $viewProfileData = $userProfile;
+                     $targetUserId = $userProfile['id'];
+
+                     // 2. Obtener publicaciones del usuario (similar a home.php pero filtrado por user_id)
+                     // NOTA DE PRIVACIDAD: Por ahora, solo mostramos posts en comunidades PÚBLICAS si no es tu propio perfil.
+                     // Si es tu propio perfil, mostramos todo.
+                     
+                     $privacyClause = "";
+                     if ($targetUserId != $currentUserId) {
+                         $privacyClause = "AND c.privacy = 'public'";
+                     }
+
+                     $sql_posts = 
+                        "SELECT 
+                            p.*, 
+                            u.username, 
+                            u.profile_image_url,
+                            u.role,
+                            c.name AS community_name,
+                            (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
+                             FROM publication_attachments pa
+                             JOIN publication_files pf ON pa.file_id = pf.id
+                             WHERE pa.publication_id = p.id
+                             ORDER BY pa.sort_order ASC
+                            ) AS attachments,
+                            (SELECT COUNT(pv.id) FROM poll_votes pv WHERE pv.publication_id = p.id) AS total_votes,
+                            (SELECT pv.poll_option_id FROM poll_votes pv WHERE pv.publication_id = p.id AND pv.user_id = ?) AS user_voted_option_id,
+                            (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
+                            (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
+                            (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count
+                         FROM community_publications p
+                         JOIN users u ON p.user_id = u.id
+                         LEFT JOIN communities c ON p.community_id = c.id
+                         WHERE p.user_id = ? 
+                         $privacyClause
+                         ORDER BY p.created_at DESC
+                         LIMIT 50"; // Límite inicial
+
+                    $stmt_posts = $pdo->prepare($sql_posts);
+                    // ¡OJO CON EL ORDEN DE PARÁMETROS!
+                    // 1. user_id (para poll_votes) -> $currentUserId
+                    // 2. user_id (para publication_likes) -> $currentUserId
+                    // 3. p.user_id (filtro principal del perfil) -> $targetUserId
+                    $stmt_posts->execute([$currentUserId, $currentUserId, $targetUserId]);
+                    $publications = $stmt_posts->fetchAll();
+                    
+                    // --- Cargar opciones de encuestas (igual que home.php) ---
+                    if (!empty($publications)) {
+                        $pollIds = [];
+                        foreach ($publications as $key => $post) {
+                            if ($post['post_type'] === 'poll') {
+                                $pollIds[] = $post['id'];
+                            }
+                        }
+                        if (!empty($pollIds)) {
+                            $placeholders = implode(',', array_fill(0, count($pollIds), '?'));
+                            $stmt_options = $pdo->prepare(
+                               "SELECT 
+                                    po.publication_id, po.id, po.option_text, COUNT(pv.id) AS vote_count
+                                FROM poll_options po
+                                LEFT JOIN poll_votes pv ON po.id = pv.poll_option_id
+                                WHERE po.publication_id IN ($placeholders)
+                                GROUP BY po.publication_id, po.id, po.option_text 
+                                ORDER BY po.id ASC"
+                            );
+                            $stmt_options->execute($pollIds);
+                            $options = $stmt_options->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
+                            foreach ($publications as $key => $post) {
+                                if (isset($options[$post['id']])) {
+                                    $publications[$key]['poll_options'] = $options[$post['id']];
+                                } else {
+                                    $publications[$key]['poll_options'] = [];
+                                }
+                            }
+                        }
+                    }
+                    // --- Fin carga opciones ---
+
+                    $viewProfileData['publications'] = $publications;
+                 }
+             } catch (PDOException $e) {
+                 logDatabaseError($e, 'router - view-profile');
+                 $page = '404';
+                 $CURRENT_SECTION = '404';
+             }
+        }
+    // --- ▲▲▲ FIN DE LÓGICA REAL PARA PERFIL ▲▲▲ ---
 
     } elseif ($page === 'admin-manage-users') {
         $adminCurrentPage = (int)($_GET['p'] ?? 1);
