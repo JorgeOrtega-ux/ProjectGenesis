@@ -296,41 +296,7 @@ function resetCommunityTrigger() {
     }
 }
 
-// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (Bookmark Toggle) ▼▼▼ ---
-async function handleBookmarkToggle(button) {
-    const postId = button.dataset.postId;
-    if (!postId || button.disabled) return;
-
-    button.disabled = true;
-    const icon = button.querySelector('.material-symbols-rounded');
-    const wasBookmarked = button.classList.contains('active');
-
-    const formData = new FormData();
-    formData.append('action', 'bookmark-toggle');
-    formData.append('publication_id', postId);
-
-    try {
-        const result = await callPublicationApi(formData);
-        if (result.success) {
-            if (result.userHasBookmarked) {
-                button.classList.add('active');
-                icon.textContent = 'bookmark';
-                showAlert(getTranslation('js.publication.saved'), 'success'); // <-- Necesitarás esta clave i18n
-            } else {
-                button.classList.remove('active');
-                icon.textContent = 'bookmark_border';
-                showAlert(getTranslation('js.publication.unsaved'), 'info'); // <-- Necesitarás esta clave i18n
-            }
-        } else {
-            window.showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
-        }
-    } catch (e) {
-        window.showAlert(getTranslation('js.api.errorConnection'), 'error');
-    } finally {
-        button.disabled = false;
-    }
-}
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+// --- La función handleBookmarkToggle() fue eliminada de este archivo ---
 
 
 export function initPublicationManager() {

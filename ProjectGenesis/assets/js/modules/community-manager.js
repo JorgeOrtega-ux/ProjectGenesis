@@ -2,6 +2,7 @@ import { callCommunityApi, callPublicationApi } from '../services/api-service.js
 import { getTranslation } from '../services/i18n-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js';
 import { loadPage } from '../app/url-manager.js';
+import { showAlert } from '../services/alert-manager.js'; // <-- Importación necesaria
 
 let currentCommunityId = null;
 let currentCommunityName = null;
@@ -210,6 +211,42 @@ function formatTimeAgo(dateString) {
     const days = Math.round(hours / 24);
     return `${days}d`;
 }
+
+// --- ▼▼▼ FUNCIÓN MOVIDA AQUÍ ▼▼▼ ---
+async function handleBookmarkToggle(button) {
+    const postId = button.dataset.postId;
+    if (!postId || button.disabled) return;
+
+    button.disabled = true;
+    const icon = button.querySelector('.material-symbols-rounded');
+    const wasBookmarked = button.classList.contains('active');
+
+    const formData = new FormData();
+    formData.append('action', 'bookmark-toggle');
+    formData.append('publication_id', postId);
+
+    try {
+        const result = await callPublicationApi(formData);
+        if (result.success) {
+            if (result.userHasBookmarked) {
+                button.classList.add('active');
+                icon.textContent = 'bookmark';
+                showAlert(getTranslation('js.publication.saved'), 'success'); // <-- Necesitarás esta clave i18n
+            } else {
+                button.classList.remove('active');
+                icon.textContent = 'bookmark_border';
+                showAlert(getTranslation('js.publication.unsaved'), 'info'); // <-- Necesitarás esta clave i18n
+            }
+        } else {
+            window.showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+        }
+    } catch (e) {
+        window.showAlert(getTranslation('js.api.errorConnection'), 'error');
+    } finally {
+        button.disabled = false;
+    }
+}
+// --- ▲▲▲ FIN DE LA FUNCIÓN MOVIDA ▲▲▲ ---
 
 async function handleLikeToggle(button) {
     const postId = button.dataset.postId;
@@ -560,6 +597,7 @@ export function initCommunityManager() {
         const commentButton = e.target.closest('[data-action="toggle-comments"]');
         const replyButton = e.target.closest('[data-action="show-reply-form"]');
         const showRepliesButton = e.target.closest('[data-action="show-replies"]'); 
+        const bookmarkButton = e.target.closest('[data-action="bookmark-toggle"]'); // <-- LÍNEA AÑADIDA
 
         if (likeButton) {
             e.preventDefault();
@@ -581,6 +619,13 @@ export function initCommunityManager() {
             handleShowReplies(showRepliesButton);
             return;
         }
+        // --- ▼▼▼ BLOQUE AÑADIDO ▼▼▼ ---
+        if (bookmarkButton) {
+            e.preventDefault();
+            handleBookmarkToggle(bookmarkButton);
+            return;
+        }
+        // --- ▲▲▲ FIN BLOQUE AÑADIDO ▲▲▲ ---
 
         const button = e.target.closest('button[data-action], button[data-auth-action], button[data-tooltip]');
         
