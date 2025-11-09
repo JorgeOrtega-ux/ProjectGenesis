@@ -1,20 +1,15 @@
-// FILE: assets/js/modules/notification-manager.js
-
 import { callNotificationApi } from '../services/api-service.js';
 import { getTranslation, applyTranslations } from '../services/i18n-manager.js';
+import { deactivateAllModules } from '../app/main-controller.js'; 
 
 let hasLoadedNotifications = false;
+let isLoading = false;
 let currentNotificationCount = 0;
 
-/**
- * Formatea una fecha UTC a un string relativo (ej. "hace 5m", "Ayer", "7 Nov").
- * @param {string} dateString - El string de fecha UTC (ej. "2025-11-08 20:56:47")
- * @returns {string} - El string de tiempo formateado.
- */
 function formatTimeAgo(dateString) {
     if (!dateString) return '';
     try {
-        const date = new Date(dateString.includes('Z') ? dateString : dateString + 'Z'); // Asegurar que se parsee como UTC
+        const date = new Date(dateString.includes('Z') ? dateString : dateString + 'Z'); 
         const now = new Date();
         const seconds = Math.round((now - date) / 1000);
         
@@ -31,7 +26,6 @@ function formatTimeAgo(dateString) {
         } else if (days === 1) {
             return 'Ayer';
         } else {
-            // Formato para fechas más antiguas (ej. "7 Nov")
             return date.toLocaleDateString(window.userLanguage.split('-')[0] || 'es', {
                 month: 'short',
                 day: 'numeric'
@@ -43,11 +37,6 @@ function formatTimeAgo(dateString) {
     }
 }
 
-/**
- * Devuelve la clave del grupo de fecha (Hoy, Ayer, etc.) para una fecha dada.
- * @param {Date} date - El objeto Date de la notificación.
- * @returns {string} - El string del grupo ("Hoy", "Ayer", "7 de noviembre de 2025").
- */
 function getRelativeDateGroup(date) {
     const today = new Date();
     const yesterday = new Date(today);
@@ -61,7 +50,6 @@ function getRelativeDateGroup(date) {
     if (date.toDateString() === yesterday.toDateString()) {
         return "Ayer";
     }
-    // Formato para grupos más antiguos (ej. "viernes, 7 de noviembre de 2025")
     return date.toLocaleDateString(lang, {
         weekday: 'long',
         year: 'numeric',
@@ -70,11 +58,8 @@ function getRelativeDateGroup(date) {
     });
 }
 
-/**
- * Actualiza el contador visual (badge) de notificaciones.
- * @param {number} count - El número total de notificaciones no leídas.
- */
 export function setNotificationCount(count) {
+    console.log(`[Notify] setNotificationCount: Actualizando contador a ${count}`);
     currentNotificationCount = count;
     const badge = document.getElementById('notification-badge-count');
     if (!badge) return;
@@ -87,23 +72,15 @@ export function setNotificationCount(count) {
     }
 }
 
-/**
- * Genera el HTML para una notificación.
- * @param {object} notification - Objeto con los datos de la notificación
- * @returns {string} - El string HTML del item de notificación.
- */
 function addNotificationToUI(notification) {
     const avatar = notification.actor_avatar || "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
     let notificationHtml = '';
     let textKey = '';
-    let href = '#'; // Enlace por defecto
+    let href = '#'; 
 
-    // 1. Generar el string de tiempo relativo
     const timeAgo = formatTimeAgo(notification.created_at);
-    // 2. Determinar estado (leído/no leído)
     const isUnread = notification.is_read == 0;
     const readClass = isUnread ? 'is-unread' : 'is-read';
-    // 3. Crear el punto azul si no está leído
     const unreadDot = isUnread ? '<span class="notification-unread-dot"></span>' : '';
 
     switch (notification.type) {
@@ -206,55 +183,64 @@ function addNotificationToUI(notification) {
             break;
     }
     
-    // Devolver el HTML
     return notificationHtml;
 }
 
-/**
- * Carga TODAS las notificaciones (amistad, likes, etc.) desde la BD.
- */
 export async function loadAllNotifications() {
-    if (hasLoadedNotifications) {
+    
+    if (isLoading) {
+        console.log("%c[Notify] loadAllNotifications: Carga ya en progreso. Omitiendo fetch duplicado.", "color: #ff8c00;");
         return; 
     }
-    hasLoadedNotifications = true; 
+    isLoading = true; 
+    console.log("%c[Notify] loadAllNotifications: 'isLoading' = true. Iniciando fetch...", "color: #007bff;");
     
     const listContainer = document.getElementById('notification-list-items');
-    const placeholder = document.getElementById('notification-placeholder');
-    const markAllButton = document.getElementById('notification-mark-all-btn');
     
-    if (!listContainer || !placeholder) return;
-
-    placeholder.style.display = 'flex';
-    placeholder.querySelector('.material-symbols-rounded').innerHTML = '<span class="logout-spinner" style="width: 32px; height: 32px; border-width: 3px;"></span>';
-    placeholder.querySelector('span[data-i18n]').setAttribute('data-i18n', 'notifications.loading');
-    placeholder.querySelector('span[data-i18n]').textContent = getTranslation('notifications.loading');
-    listContainer.innerHTML = ''; // Limpiar lista
-    if (markAllButton) markAllButton.style.display = 'none'; // Ocultar botón mientras carga
+    if (!listContainer) {
+         console.error("[Notify] loadAllNotifications: No se encontró el CONTENEDOR DE LISTA (#notification-list-items). Abortando.");
+         isLoading = false;
+         return;
+    }
+    
+    const markAllButton = document.getElementById('notification-mark-all-btn');
+    if (markAllButton) markAllButton.style.display = 'none'; 
+    
+    listContainer.innerHTML = `
+        <div class="notification-placeholder" id="notification-placeholder">
+            <span class="material-symbols-rounded">
+                <span class="logout-spinner" style="width: 32px; height: 32px; border-width: 3px;"></span>
+            </span>
+            <span data-i18n="notifications.loading">${getTranslation('notifications.loading')}</span>
+        </div>
+    `;
 
     const formData = new FormData();
     formData.append('action', 'get-notifications'); 
 
     try {
         const result = await callNotificationApi(formData);
+        console.log("[Notify] loadAllNotifications: API respondió", result);
+        
+        listContainer.innerHTML = ''; 
         
         if (result.success && result.notifications) {
             setNotificationCount(result.unread_count || 0);
             
             if (result.notifications.length === 0) {
-                placeholder.style.display = 'flex';
-                placeholder.querySelector('.material-symbols-rounded').innerHTML = 'notifications_off';
-                placeholder.querySelector('span[data-i18n]').setAttribute('data-i18n', 'notifications.empty');
-                placeholder.querySelector('span[data-i18n]').textContent = getTranslation('notifications.empty');
+                console.log("[Notify] loadAllNotifications: No se encontraron notificaciones (vacío).");
+                listContainer.innerHTML = `
+                    <div class="notification-placeholder" id="notification-placeholder">
+                        <span class="material-symbols-rounded">notifications_off</span>
+                        <span data-i18n="notifications.empty">${getTranslation('notifications.empty')}</span>
+                    </div>
+                `;
                 if (markAllButton) markAllButton.style.display = 'none';
             } else {
-                placeholder.style.display = 'none';
+                console.log(`[Notify] loadAllNotifications: Renderizando ${result.notifications.length} notificaciones.`);
                 
-                // 1. Lógica de agrupación
                 let lastDateGroup = null;
-                
                 result.notifications.forEach(notification => {
-                    // 2. Insertar cabecera de grupo si es nueva
                     const notificationDate = new Date(notification.created_at + 'Z');
                     const currentGroup = getRelativeDateGroup(notificationDate);
                     
@@ -264,177 +250,200 @@ export async function loadAllNotifications() {
                         lastDateGroup = currentGroup;
                     }
 
-                    // 3. Generar e insertar el item
                     const notificationHtml = addNotificationToUI(notification);
                     if (notificationHtml) {
                         listContainer.insertAdjacentHTML('beforeend', notificationHtml);
                     }
                 });
                 
-                // Aplicar traducciones a los items recién insertados
                 applyTranslations(listContainer);
                 
-                // Mostrar el botón "Marcar todas" si hay notificaciones no leídas
                 if (markAllButton && result.unread_count > 0) {
+                    console.log("[Notify] loadAllNotifications: Mostrando botón 'Marcar todas'.");
                     markAllButton.style.display = 'block';
                 }
             }
+            hasLoadedNotifications = true; 
+            console.log("%c[Notify] loadAllNotifications: 'hasLoadedNotifications' = true.", "color: #28a745;");
         } else {
-             placeholder.style.display = 'flex';
-             placeholder.querySelector('.material-symbols-rounded').innerHTML = 'error';
-             placeholder.querySelector('span[data-i18n]').setAttribute('data-i18n', 'js.api.errorServer');
-             placeholder.querySelector('span[data-i18n]').textContent = getTranslation('js.api.errorServer');
+             console.error("[Notify] loadAllNotifications: La API falló (success=false).", result.message);
+             listContainer.innerHTML = `
+                <div class="notification-placeholder" id="notification-placeholder">
+                    <span class="material-symbols-rounded">error</span>
+                    <span data-i18n="js.api.errorServer">${getTranslation('js.api.errorServer')}</span>
+                </div>
+             `;
+             hasLoadedNotifications = false; 
+             console.log("%c[Notify] loadAllNotifications: 'hasLoadedNotifications' = false (API falló).", "color: #c62828;");
         }
     } catch (e) {
-        console.error("Error al cargar notificaciones:", e);
-         placeholder.style.display = 'flex';
-         placeholder.querySelector('.material-symbols-rounded').innerHTML = 'error';
-         placeholder.querySelector('span[data-i18n]').setAttribute('data-i18n', 'js.api.errorConnection');
-         placeholder.querySelector('span[data-i18n]').textContent = getTranslation('js.api.errorConnection');
+        console.error("[Notify] loadAllNotifications: Error de FETCH.", e);
+         listContainer.innerHTML = `
+            <div class="notification-placeholder" id="notification-placeholder">
+                <span class="material-symbols-rounded">error</span>
+                <span data-i18n="js.api.errorConnection">${getTranslation('js.api.errorConnection')}</span>
+            </div>
+         `;
+         hasLoadedNotifications = false; 
+         console.log("%c[Notify] loadAllNotifications: 'hasLoadedNotifications' = false (FETCH falló).", "color: #c62828;");
+    } finally {
+        isLoading = false; 
+        console.log("%c[Notify] loadAllNotifications: 'isLoading' = false (finally).", "color: #007bff;");
     }
 }
 
-/**
- * Obtiene el conteo inicial de notificaciones.
- */
 export async function fetchInitialCount() {
+    console.log("[Notify] fetchInitialCount: Obteniendo conteo inicial...");
     const formData = new FormData();
     formData.append('action', 'get-notifications'); 
     const result = await callNotificationApi(formData);
     if (result.success && result.unread_count !== undefined) {
+        console.log(`[Notify] fetchInitialCount: Conteo inicial es ${result.unread_count}`);
         setNotificationCount(result.unread_count);
+    } else {
+        console.error("[Notify] fetchInitialCount: No se pudo obtener el conteo inicial.");
     }
 }
 
-/**
- * Maneja un ping de notificación del WebSocket.
- */
 export function handleNotificationPing() {
-    // 1. Actualizar el contador del badge
+    console.log("%c[Notify] handleNotificationPing: ¡PING RECIBIDO!", "color: #28a745; font-weight: bold;");
+    
     setNotificationCount(currentNotificationCount + 1);
     
-    // 2. Invalidar la lista actual (para que se recargue si se cierra y se vuelve a abrir)
     hasLoadedNotifications = false;
+    console.log("[Notify] handleNotificationPing: 'hasLoadedNotifications' = false (invalidado).");
 
-    // 3. Comprobar si el panel está abierto
     const notificationPanel = document.querySelector('[data-module="moduleNotifications"]');
     if (notificationPanel && notificationPanel.classList.contains('active')) {
-        console.log("[WS] El panel de notificaciones está abierto. Recargando lista en vivo...");
-        // 4. Si está abierto, forzar la recarga de la lista AHORA
+        console.log("[Notify] handleNotificationPing: El panel está ABIERTO. Llamando a loadAllNotifications() para recarga en vivo...");
         loadAllNotifications(); 
+    } else {
+        console.log("[Notify] handleNotificationPing: El panel está CERRADO. Solo se invalidó la data.");
     }
 }
 
-/**
- * Inicializa los listeners para el panel de notificaciones.
- */
 export function initNotificationManager() {
     
-    // 1. LISTENER PARA ABRIR EL PANEL (CLIC EN LA CAMPANA)
+    console.log("[Notify] initNotificationManager: Inicializando listeners...");
+
     const notificationButton = document.querySelector('[data-action="toggleModuleNotifications"]');
     if (notificationButton) {
-        notificationButton.addEventListener('click', () => {
-            // Carga la lista solo si es la primera vez que se abre.
-            if (!hasLoadedNotifications) {
-                loadAllNotifications();
+        notificationButton.addEventListener('click', (e) => {
+            console.log('[Notify] Clic en el botón de la campana.');
+            e.stopPropagation(); 
+            
+            const module = document.querySelector('[data-module="moduleNotifications"]');
+            if (!module) {
+                console.error('[Notify] No se encontró el popover [data-module="moduleNotifications"]');
+                return;
+            }
+
+            const isOpening = module.classList.contains('disabled');
+
+            if (isOpening) {
+                console.log('[Notify] El panel se está ABRIENDO.');
+                deactivateAllModules(module); 
+                module.classList.remove('disabled');
+                module.classList.add('active');
+                
+                if (!hasLoadedNotifications) { 
+                    console.log("[Notify] 'hasLoadedNotifications' es FALSO. Llamando a loadAllNotifications().");
+                    loadAllNotifications();
+                } else {
+                    console.log("[Notify] 'hasLoadedNotifications' es VERDADERO. Mostrando datos cacheados.");
+                }
+            } else {
+                console.log('[Notify] El panel se está CERRANDO.');
+                deactivateAllModules(); 
             }
         });
     }
     
-    // 2. LISTENER PARA CLIC EN "MARCAR TODAS COMO LEÍDAS"
     const markAllButton = document.getElementById('notification-mark-all-btn');
     if (markAllButton) {
         markAllButton.addEventListener('click', async (e) => {
+            console.log("[Notify] Clic en 'Marcar todas como leídas'.");
             e.preventDefault();
             e.stopPropagation();
             
-            markAllButton.style.display = 'none'; // Ocultarlo inmediatamente
-            setNotificationCount(0); // Poner el badge a 0
+            markAllButton.style.display = 'none'; 
+            setNotificationCount(0); 
 
-            // Actualizar visualmente todos los items
             document.querySelectorAll('#notification-list-items .notification-item.is-unread').forEach(item => {
                 item.classList.remove('is-unread');
                 item.classList.add('is-read');
                 item.querySelector('.notification-unread-dot')?.remove();
             });
 
-            // Llamar a la API en segundo plano
+            console.log("[Notify] Llamando a API 'mark-all-read' en segundo plano...");
             const formData = new FormData();
             formData.append('action', 'mark-all-read');
-            await callNotificationApi(formData); // No necesitamos esperar la respuesta
+            await callNotificationApi(formData); 
         });
     }
 
-    // 3. LISTENER PARA CLIC EN UN ITEM INDIVIDUAL
     const listContainer = document.getElementById('notification-list-items');
     if (listContainer) {
         listContainer.addEventListener('click', (e) => {
             
-            // Ignorar clics en botones de acción (Aceptar/Rechazar amigo)
             if (e.target.closest('.notification-action-button')) {
+                console.log("[Notify] Clic en un botón de acción (Aceptar/Rechazar). Omitiendo lectura.");
                 return;
             }
 
-            // Encontrar el item de notificación que no esté leído
             const item = e.target.closest('.notification-item.is-unread');
             
             if (item) {
-                // SI NO ESTÁ LEÍDO:
-                // No prevenimos el default, dejamos que el router actúe.
-                
+                console.log(`[Notify] Clic en item no leído (ID: ${item.dataset.id}). Marcando como leído.`);
                 const notificationId = item.dataset.id;
                 const markAllButton = document.getElementById('notification-mark-all-btn');
                 if (!notificationId) return; 
 
-                // Marcar visualmente como leído INMEDIATAMENTE
                 item.classList.remove('is-unread');
                 item.classList.add('is-read');
                 item.querySelector('.notification-unread-dot')?.remove();
 
-                // Actualizar el contador visual
                 const newCount = Math.max(0, currentNotificationCount - 1);
                 setNotificationCount(newCount);
                 if (newCount === 0 && markAllButton) {
                     markAllButton.style.display = 'none';
                 }
 
-                // Llamar a la API en segundo plano (SIN 'await')
+                console.log("[Notify] Llamando a API 'mark-one-read' en segundo plano...");
                 const formData = new FormData();
                 formData.append('action', 'mark-one-read');
                 formData.append('notification_id', notificationId);
                 
                 callNotificationApi(formData).then(result => {
                     if (result.success) {
-                        // Re-sincronizar el conteo
-                        setNotificationCount(result.new_unread_count);
+                        console.log(`[Notify] API 'mark-one-read' OK. Nuevo conteo: ${result.new_unread_count}`);
+                        setNotificationCount(result.new_unread_count); 
                         if (result.new_unread_count === 0 && markAllButton) {
                             markAllButton.style.display = 'none';
                         }
                     } else {
-                        console.error("Error al marcar la notificación como leída en el backend.");
+                        console.error("[Notify] Error al sincronizar 'mark-one-read' con el backend.");
                     }
                 });
+            } else {
+                console.log("[Notify] Clic en item ya leído. Dejando que el router navegue.");
             }
-            // Si el item ya estaba leído, no hacemos nada y dejamos que el clic
-            // sea manejado por el url-manager.js para la navegación.
         });
     }
     
-    // 4. LISTENER PARA BOTONES DE AMISTAD (para eliminar el item de la UI)
     document.body.addEventListener('click', (e) => {
         const targetButton = e.target.closest('[data-action="friend-accept-request"], [data-action="friend-decline-request"]');
         
-        // Asegurarse que el clic SÍ fue dentro del popover de notificaciones
         if (targetButton && targetButton.closest('.notification-item')) {
+            console.log("[Notify] Clic en Aceptar/Rechazar Amistad dentro del panel.");
             const item = targetButton.closest('.notification-item');
             if (item) {
-                // Marcar como leído si no lo estaba (la API de amigo se encarga de borrarlo)
                 if (item.classList.contains('is-unread')) {
+                    console.log("[Notify] El item de amistad no estaba leído. Marcando como leído primero.");
                     item.classList.remove('is-unread');
                     item.classList.add('is-read');
                     item.querySelector('.notification-unread-dot')?.remove();
                     
-                    // Llamar a la API para marcarlo
                     const formData = new FormData();
                     formData.append('action', 'mark-one-read');
                     formData.append('notification_id', item.dataset.id);
@@ -443,14 +452,15 @@ export function initNotificationManager() {
                     });
                 }
                 
-                // Esconder la notificación (la lógica de amigo la elimina de la BD)
                 item.style.opacity = '0.5'; 
                 setTimeout(() => {
                     item.remove();
                     const listContainer = document.getElementById('notification-list-items');
-                    const placeholder = document.getElementById('notification-placeholder');
-                    if (listContainer && placeholder && listContainer.children.length === 0) {
-                        placeholder.style.display = 'flex';
+                    const placeholder = listContainer ? listContainer.querySelector('.notification-placeholder') : null;
+                    if (listContainer && listContainer.children.length === 0 && !placeholder) {
+                         console.log("[Notify] Último item de amistad eliminado. Recargando para mostrar placeholder 'vacío'.");
+                         hasLoadedNotifications = false; 
+                         loadAllNotifications(); 
                     }
                 }, 1000);
             }
