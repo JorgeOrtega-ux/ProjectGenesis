@@ -28,9 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         if ($action === 'get-notifications') {
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN: LÓGICA DE DOBLE CONSULTA ▼▼▼ ---
-
-            // Consulta 1: Obtener la LISTA de las 30 notificaciones más recientes (leídas o no)
+            // Esta lógica ya es correcta para tu nuevo diseño.
+            // Obtiene la lista completa de notificaciones (leídas y no leídas)
             $stmt_list = $pdo->prepare(
                 "SELECT 
                     n.id, n.type, n.reference_id, n.created_at, n.is_read,
@@ -46,15 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_list->execute([$userId]);
             $notifications = $stmt_list->fetchAll();
             
-            // Consulta 2: Obtener el CONTEO solo de las NO LEÍDAS (para el badge)
+            // Obtiene el conteo separado de solo las no leídas (para el badge)
             $stmt_count = $pdo->prepare(
                 "SELECT COUNT(*) FROM user_notifications WHERE user_id = ? AND is_read = 0"
             );
             $stmt_count->execute([$userId]);
             $unread_count = $stmt_count->fetchColumn();
 
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-            
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
             foreach ($notifications as &$notification) {
                 if (empty($notification['actor_avatar'])) {
@@ -63,17 +60,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $response['success'] = true;
-            $response['notifications'] = $notifications; // La lista completa
-            $response['unread_count'] = (int)$unread_count; // El conteo separado
+            $response['notifications'] = $notifications;
+            $response['unread_count'] = (int)$unread_count;
 
         } elseif ($action === 'mark-all-read') {
             
-            // Esta acción sigue igual: pone todo en 'is_read = 1'
+            // Esta acción se conserva para el botón "Marcar todas como leídas"
             $stmt = $pdo->prepare("UPDATE user_notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0");
             $stmt->execute([$userId]);
             
             $response['success'] = true;
             $response['message'] = 'Notificaciones marcadas como leídas.';
+        
+        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN ▼▼▼ ---
+        } elseif ($action === 'mark-one-read') {
+            
+            $notificationId = (int)($_POST['notification_id'] ?? 0);
+
+            if (empty($notificationId)) {
+                throw new Exception('js.api.invalidAction');
+            }
+
+            // Marcamos como leída
+            // Es importante comprobar user_id (para seguridad) y is_read = 0 (para saber si realmente se cambió algo)
+            $stmt_mark = $pdo->prepare(
+                "UPDATE user_notifications SET is_read = 1 
+                 WHERE id = ? AND user_id = ? AND is_read = 0"
+            );
+            $stmt_mark->execute([$notificationId, $userId]);
+            
+            // Comprobamos si la fila se actualizó
+            $was_updated = $stmt_mark->rowCount() > 0;
+
+            // Volvemos a contar las no leídas restantes
+            $stmt_count = $pdo->prepare(
+                "SELECT COUNT(*) FROM user_notifications WHERE user_id = ? AND is_read = 0"
+            );
+            $stmt_count->execute([$userId]);
+            $new_unread_count = $stmt_count->fetchColumn();
+
+            $response['success'] = true;
+            $response['was_updated'] = $was_updated; // true si se marcó, false si ya estaba leída
+            $response['new_unread_count'] = (int)$new_unread_count; // El nuevo conteo para el badge
+
+        // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
         
         } else {
             $response['message'] = 'js.api.invalidAction';

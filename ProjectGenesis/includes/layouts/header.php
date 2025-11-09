@@ -147,6 +147,13 @@ $userRole = $_SESSION['role'] ?? 'user';
         <div class="menu-content">
             <div class="notification-header">
                 <h3 class="notification-title" data-i18n="notifications.title">Notificaciones</h3>
+                
+                <div class="notification-header-actions">
+                    <button class="notification-mark-all" id="notification-mark-all-btn" style="display: none;">
+                        Marca todas como leídas
+                    </button>
+                </div>
+                
             </div>
 
             <div class="menu-list notification-list" id="notification-list-items">
@@ -158,4 +165,4 @@ $userRole = $_SESSION['role'] ?? 'user';
             </div>
         </div>
     </div>
-</div>
+    </div>

@@ -3172,11 +3172,17 @@ a.profile-tab.active {
     flex-direction: column;
 }
 
+/* --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (HEADER NOTIFICACIONES) ▼▼▼ --- */
 .notification-header {
     padding: 16px;
     border-bottom: 1px solid #00000020;
     flex-shrink: 0;
+    /* Nuevos estilos de flexbox */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
+/* --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- */
 
 .notification-title {
     font-size: 18px;
@@ -3185,12 +3191,34 @@ a.profile-tab.active {
     margin: 0;
 }
 
+/* --- ▼▼▼ INICIO DE NUEVO ESTILO (BOTÓN MARCAR COMO LEÍDAS) ▼▼▼ --- */
+.notification-header-actions {
+    /* Contenedor para el botón */
+}
+.notification-mark-all {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+.notification-mark-all:hover {
+    color: #000;
+}
+/* --- ▲▲▲ FIN DE NUEVO ESTILO ▲▲▲ --- */
+
+
+/* --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (LISTA DE NOTIFICACIONES) ▼▼▼ --- */
 .notification-list {
     overflow-y: auto;
     overflow-x: hidden;
     flex-grow: 1;
-    gap: 0; /* Sin gap, los items tendrán borde */
+    gap: 12px; /* <-- AÑADIDO: Espacio entre tarjetas */
+    padding: 16px; /* <-- AÑADIDO: Espacio alrededor de las tarjetas */
 }
+/* --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- */
 
 .notification-placeholder {
     display: flex;
@@ -3201,6 +3229,9 @@ a.profile-tab.active {
     text-align: center;
     color: #6b7280;
     gap: 16px;
+    /* --- ▼▼▼ AÑADIDO: Para centrar en el fondo gris --- */
+    height: 100%;
+    box-sizing: border-box;
 }
 
 .notification-placeholder .material-symbols-rounded {
@@ -3213,19 +3244,44 @@ a.profile-tab.active {
     line-height: 1.5;
 }
 
+/* --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (NOTIFICATION ITEM) ▼▼▼ --- */
 .notification-item {
     display: flex;
     gap: 12px;
     padding: 16px;
-    border-bottom: 1px solid #00000015;
-    background-color: #ffffff;
-    transition: background-color 0.2s, opacity 0.2s; /* <-- Opacity añadido */
-    text-decoration: none; /* <-- Añadido para los <a> */
+    background-color: #ffffff; /* <-- AÑADIDO: Fondo de tarjeta blanco */
+    transition: background-color 0.2s, opacity 0.3s ease;
+    text-decoration: none;
+    position: relative;
+    cursor: pointer;
+    /* --- Propiedades de Tarjeta --- */
+    border-radius: 12px; /* <-- AÑADIDO: Borde radius 12px */
+    border: 1px solid #00000015; /* <-- AÑADIDO: Borde sutil */
+    box-shadow: 0 1px 2px #0000000a; /* <-- AÑADIDO: Sombra sutil */
+    /* border-bottom: none; (Se quita el borde inferior anterior) */
 }
 
 .notification-item:hover {
-    background-color: #f5f5fa;
+    background-color: #ffffff; /* Mantenemos blanco en hover */
+    border-color: #00000030; /* Oscurecemos el borde en hover */
 }
+
+/* Estado NO LEÍDO (como en tu imagen) */
+.notification-item.is-unread {
+    /* Ya no necesita fondo gris ni borde azul */
+    /* background-color: #f5f5fa; */
+    /* border-left-color: #206BD3; */
+}
+
+/* Estado LEÍDO (atenuado) */
+.notification-item.is-read {
+    opacity: 0.7;
+}
+.notification-item.is-read:hover {
+    opacity: 1;
+}
+/* --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- */
+
 
 .notification-avatar {
     width: 40px;
@@ -3298,21 +3354,34 @@ a.profile-tab.active {
     background-color: #f5f5fa;
 }
 
-/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (DIVIDER Y TIMESTAMP) ▼▼▼ --- */
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (DIVIDER, TIMESTAMP, DOT) ▼▼▼ --- */
 .notification-timestamp {
     font-size: 12px;
     font-weight: 500;
     color: #6b7280;
     line-height: 1;
+    /* Flexbox para alinear el punto */
+    display: flex;
+    align-items: center;
+}
+
+.notification-unread-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #206BD3; /* Azul */
+    border-radius: 50%;
+    margin-left: 8px;
+    flex-shrink: 0;
 }
 
 .notification-date-divider {
-    padding: 16px 16px 8px 16px;
+    padding: 0; /* <-- MODIFICADO: Sin padding */
     font-size: 12px;
     font-weight: 600;
     color: #6b7280;
     text-transform: uppercase;
-    background-color: #ffffff;
+    background-color: transparent; /* <-- MODIFICADO: Fondo transparente */
+    /* El espaciado ahora lo maneja el 'gap' de .notification-list */
 }
 /* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */
 
