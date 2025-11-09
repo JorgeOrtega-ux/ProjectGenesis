@@ -8,9 +8,7 @@ let currentCommunityId = null;
 let currentCommunityName = null;
 let currentCommunityUuid = null;
 
-// --- ▼▼▼ INICIO DE NUEVA VARIABLE ▼▼▼ ---
 let currentPostOptionsId = null; // Rastrea en qué post se hizo clic en '...'
-// --- ▲▲▲ FIN DE NUEVA VARIABLE ▲▲▲ ---
 
 
 function toggleJoinLeaveSpinner(button, isLoading) {
@@ -216,7 +214,6 @@ function formatTimeAgo(dateString) {
     return `${days}d`;
 }
 
-// --- ▼▼▼ FUNCIÓN MOVIDA AQUÍ ▼▼▼ ---
 async function handleBookmarkToggle(button) {
     const postId = button.dataset.postId;
     if (!postId || button.disabled) return;
@@ -250,7 +247,6 @@ async function handleBookmarkToggle(button) {
         button.disabled = false;
     }
 }
-// --- ▲▲▲ FIN DE LA FUNCIÓN MOVIDA ▲▲▲ ---
 
 async function handleLikeToggle(button) {
     const postId = button.dataset.postId;
@@ -593,11 +589,6 @@ async function handleShowReplies(button) {
     }
 }
 
-// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN ▼▼▼ ---
-/**
- * Maneja el clic en "Mostrar más" / "Mostrar menos".
- * @param {HTMLElement} button El botón (enlace <a>) que fue clickeado.
- */
 function handleTogglePostText(button) {
     const container = button.closest('.post-text-content');
     if (!container) return;
@@ -634,7 +625,6 @@ function handleTogglePostText(button) {
         button.setAttribute('data-i18n', lessTextKey);
     }
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
 
 
 export function initCommunityManager() {
@@ -648,12 +638,10 @@ export function initCommunityManager() {
 
         const toggleTextButton = e.target.closest('[data-action="toggle-post-text"]');
         
-        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (MANEJADORES DE POPOVER) ▼▼▼ ---
         const postOptionsButton = e.target.closest('[data-action="toggle-post-options"]');
         const postPrivacyToggleButton = e.target.closest('[data-action="toggle-post-privacy"]');
         const postDeleteButton = e.target.closest('[data-action="post-delete"]');
         const postSetPrivacyButton = e.target.closest('[data-action="post-set-privacy"]');
-        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 
 
         if (toggleTextButton) {
@@ -688,20 +676,24 @@ export function initCommunityManager() {
             return;
         }
 
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (MANEJADORES DE POPOVER) ▼▼▼ ---
         
         if (postOptionsButton) {
             e.preventDefault();
             e.stopPropagation();
             currentPostOptionsId = postOptionsButton.dataset.postId; // Guardar el ID
             
-            const module = document.querySelector('[data-module="modulePostOptions"]');
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            // const module = document.querySelector('[data-module="modulePostOptions"]'); // <-- LÍNEA ANTIGUA
+            const optionsContainer = postOptionsButton.closest('.post-card-options'); // <-- NUEVO
+            if (!optionsContainer) return; // Seguridad
+            
+            const module = optionsContainer.querySelector('[data-module="modulePostOptions"]'); // <-- SELECTOR LOCAL
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             if (module) {
                 deactivateAllModules(module);
                 module.classList.toggle('disabled');
                 module.classList.toggle('active');
-                
-                // TODO: Usar Popper.js para anclar 'module' a 'postOptionsButton'
             }
             return;
         }
@@ -709,22 +701,26 @@ export function initCommunityManager() {
         if (postPrivacyToggleButton) {
             e.preventDefault();
             e.stopPropagation();
-            const moduleOptions = document.querySelector('[data-module="modulePostOptions"]');
-            const modulePrivacy = document.querySelector('[data-module="modulePostPrivacy"]');
+
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            // const moduleOptions = document.querySelector('[data-module="modulePostOptions"]'); // <-- LÍNEA ANTIGUA
+            // const modulePrivacy = document.querySelector('[data-module="modulePostPrivacy"]'); // <-- LÍNEA ANTIGUA
+
+            const optionsContainer = postPrivacyToggleButton.closest('.post-card-options'); // <-- NUEVO
+            if (!optionsContainer) return; // Seguridad
+
+            const moduleOptions = optionsContainer.querySelector('[data-module="modulePostOptions"]'); // <-- SELECTOR LOCAL
+            const modulePrivacy = optionsContainer.querySelector('[data-module="modulePostPrivacy"]'); // <-- SELECTOR LOCAL
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             if (moduleOptions) moduleOptions.classList.add('disabled');
             
             if (modulePrivacy) {
-                // Pasamos el ID del post al nuevo popover
                 modulePrivacy.dataset.currentPostId = currentPostOptionsId; 
                 
                 deactivateAllModules(modulePrivacy);
                 modulePrivacy.classList.remove('disabled');
                 modulePrivacy.classList.add('active');
-                
-                // TODO: Anclar 'modulePrivacy' al 'postPrivacyToggleButton' o al 'moduleOptions'
-                
-                // (Lógica omitida para marcar la privacidad actual)
             }
             return;
         }
@@ -735,7 +731,6 @@ export function initCommunityManager() {
             
             if (!currentPostOptionsId) return;
 
-            // Usamos una clave de i18n para la confirmación
             if (!confirm(getTranslation('js.publication.confirmDelete') || '¿Estás seguro de que quieres eliminar esta publicación? Esta acción no se puede deshacer.')) {
                 return;
             }
@@ -768,7 +763,14 @@ export function initCommunityManager() {
             e.preventDefault();
             deactivateAllModules();
             
-            const modulePrivacy = postSetPrivacyButton.closest('[data-module="modulePostPrivacy"]');
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            // const modulePrivacy = postSetPrivacyButton.closest('[data-module="modulePostPrivacy"]'); // <-- LÍNEA ANTIGUA
+            const optionsContainer = postSetPrivacyButton.closest('.post-card-options'); // <-- NUEVO
+            if (!optionsContainer) return; // Seguridad
+
+            const modulePrivacy = optionsContainer.querySelector('[data-module="modulePostPrivacy"]'); // <-- SELECTOR LOCAL
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             const postIdToUpdate = modulePrivacy ? modulePrivacy.dataset.currentPostId : null;
             const newPrivacy = postSetPrivacyButton.dataset.value;
 

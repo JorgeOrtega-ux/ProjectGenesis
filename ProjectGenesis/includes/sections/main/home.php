@@ -298,6 +298,10 @@ try {
                         $privacyTooltipKey = 'post.privacy.private';
                     }
                     // --- ▲▲▲ FIN DE NUEVA LÓGICA DE PRIVACIDAD ▲▲▲ ---
+                    
+                    // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE PROPIETARIO ▼▼▼ ---
+                    $isOwner = ($post['user_id'] == $userId);
+                    // --- ▲▲▲ FIN DE NUEVA LÓGICA DE PROPIETARIO ▲▲▲ ---
                     ?>
                     <div class="component-card component-card--post component-card--column" data-post-id="<?php echo $post['id']; ?>">
                         
@@ -321,6 +325,78 @@ try {
                                 </div>
                             </div>
                             
+                            <?php if ($isOwner): ?>
+                            <div class="post-card-options">
+                                <button type="button" 
+                                        class="component-action-button--icon" 
+                                        data-action="toggle-post-options"
+                                        data-post-id="<?php echo $post['id']; ?>"
+                                        data-tooltip="Más opciones">
+                                    <span class="material-symbols-rounded">more_vert</span>
+                                </button>
+                                
+                                <div class="popover-module body-title disabled" data-module="modulePostOptions">
+                                    <div class="menu-content">
+                                        <div class="menu-list">
+                                            <div class="menu-link" data-action="toggle-post-privacy">
+                                                <div class="menu-link-icon">
+                                                    <span class="material-symbols-rounded">visibility</span>
+                                                </div>
+                                                <div class="menu-link-text">
+                                                    <span data-i18n="post.options.changePrivacy"></span>
+                                                </div>
+                                            </div>
+                                            <div class="menu-link" data-action="post-delete">
+                                                <div class="menu-link-icon">
+                                                    <span class="material-symbols-rounded" style="color: #c62828;">delete</span>
+                                                </div>
+                                                <div class="menu-link-text">
+                                                    <span data-i18n="post.options.delete" style="color: #c62828;"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="popover-module body-title disabled" data-module="modulePostPrivacy">
+                                    <div class="menu-content">
+                                        <div class="menu-list">
+                                            <div class="menu-header" data-i18n="post.options.privacyTitle"></div>
+                                            
+                                            <div class="menu-link" data-action="post-set-privacy" data-value="public">
+                                                <div class="menu-link-icon">
+                                                    <span class="material-symbols-rounded">public</span>
+                                                </div>
+                                                <div class="menu-link-text">
+                                                    <span data-i18n="post.options.privacyPublic"></span>
+                                                </div>
+                                                <div class="menu-link-check-icon"></div>
+                                            </div>
+                                            
+                                            <div class="menu-link" data-action="post-set-privacy" data-value="friends">
+                                                <div class="menu-link-icon">
+                                                    <span class="material-symbols-rounded">group</span>
+                                                </div>
+                                                <div class="menu-link-text">
+                                                    <span data-i18n="post.options.privacyFriends"></span>
+                                                </div>
+                                                <div class="menu-link-check-icon"></div>
+                                            </div>
+                                            
+                                            <div class="menu-link" data-action="post-set-privacy" data-value="private">
+                                                <div class="menu-link-icon">
+                                                    <span class="material-symbols-rounded">lock</span>
+                                                </div>
+                                                <div class="menu-link-text">
+                                                    <span data-i18n="post.options.privacyPrivate"></span>
+                                                </div>
+                                                <div class="menu-link-check-icon"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
                             </div>
 
                         <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (TÍTULO) ▼▼▼ --- ?>
