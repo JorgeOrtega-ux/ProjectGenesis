@@ -611,11 +611,26 @@ document.addEventListener('DOMContentLoaded', async function () {
                             showAlert(`📊 ${getTranslation('js.notifications.newPollVote').replace('{username}', data.payload.username)}`, 'info');
                         }
                         
+                        // --- ▼▼▼ INICIO DE MODIFICACIÓN (LÓGICA DE PING) ▼▼▼ ---
                         else if (data.type === 'new_notification_ping') {
                             console.log("[WS] Ping de nueva notificación recibido");
+                            
+                            // 1. Actualizar el contador del badge
                             setNotificationCount(currentNotificationCount + 1);
+                            
+                            // 2. Invalidar la lista actual (para que se recargue si se cierra y se vuelve a abrir)
                             hasLoadedNotifications = false;
+
+                            // 3. ¡NUEVO! Comprobar si el panel está abierto
+                            const notificationPanel = document.querySelector('[data-module="moduleNotifications"]');
+                            if (notificationPanel && notificationPanel.classList.contains('active')) {
+                                console.log("[WS] El panel de notificaciones está abierto. Recargando lista en vivo...");
+                                // 4. Si está abierto, forzar la recarga de la lista AHORA
+                                //    (hasLoadedNotifications se volverá 'true' dentro de esta función)
+                                loadAllNotifications(); 
+                            }
                         }
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                         else if (data.type === 'presence_update') {
                             console.log(`[WS] Actualización de estado: User ${data.user_id} está ${data.status}`);
