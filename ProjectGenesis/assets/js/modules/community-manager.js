@@ -87,7 +87,18 @@ function selectCommunity(communityId, communityName, communityUuid = null) {
         popover.querySelectorAll('.menu-link').forEach(link => {
             link.classList.remove('active');
         });
+        
+        // ==========================================================
+        // ============ INICIO DE LA CORRECCIÓN DEL ERROR ============
+        // ==========================================================
+        // Usamos el parámetro 'communityId' en lugar de la variable
+        // global 'currentCommunityId' para evitar el ReferenceError
+        // causado por la dependencia circular.
         const activeLink = popover.querySelector(`.menu-link[data-community-id="${communityId}"]`);
+        // ==========================================================
+        // ============= FIN DE LA CORRECCIÓN DEL ERROR =============
+        // ==========================================================
+
         if (activeLink) {
             activeLink.classList.add('active');
         }
@@ -682,13 +693,10 @@ export function initCommunityManager() {
             e.stopPropagation();
             currentPostOptionsId = postOptionsButton.dataset.postId; // Guardar el ID
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-            // const module = document.querySelector('[data-module="modulePostOptions"]'); // <-- LÍNEA ANTIGUA
-            const optionsContainer = postOptionsButton.closest('.post-card-options'); // <-- NUEVO
-            if (!optionsContainer) return; // Seguridad
+            const optionsContainer = postOptionsButton.closest('.post-card-options'); 
+            if (!optionsContainer) return; 
             
-            const module = optionsContainer.querySelector('[data-module="modulePostOptions"]'); // <-- SELECTOR LOCAL
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            const module = optionsContainer.querySelector('[data-module="modulePostOptions"]'); 
 
             if (module) {
                 deactivateAllModules(module);
@@ -702,21 +710,37 @@ export function initCommunityManager() {
             e.preventDefault();
             e.stopPropagation();
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-            // const moduleOptions = document.querySelector('[data-module="modulePostOptions"]'); // <-- LÍNEA ANTIGUA
-            // const modulePrivacy = document.querySelector('[data-module="modulePostPrivacy"]'); // <-- LÍNEA ANTIGUA
+            const optionsContainer = postPrivacyToggleButton.closest('.post-card-options'); 
+            if (!optionsContainer) return; 
 
-            const optionsContainer = postPrivacyToggleButton.closest('.post-card-options'); // <-- NUEVO
-            if (!optionsContainer) return; // Seguridad
+            // 1. Encontrar la tarjeta principal
+            const postCard = postPrivacyToggleButton.closest('.component-card--post'); 
+            // 2. Leer el estado actual
+            const currentPrivacy = postCard ? postCard.dataset.privacy : 'public'; 
 
-            const moduleOptions = optionsContainer.querySelector('[data-module="modulePostOptions"]'); // <-- SELECTOR LOCAL
-            const modulePrivacy = optionsContainer.querySelector('[data-module="modulePostPrivacy"]'); // <-- SELECTOR LOCAL
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            const moduleOptions = optionsContainer.querySelector('[data-module="modulePostOptions"]'); 
+            const modulePrivacy = optionsContainer.querySelector('[data-module="modulePostPrivacy"]'); 
 
             if (moduleOptions) moduleOptions.classList.add('disabled');
             
             if (modulePrivacy) {
                 modulePrivacy.dataset.currentPostId = currentPostOptionsId; 
+                
+                // 3. Actualizar la UI del popover ANTES de mostrarlo
+                const menuList = modulePrivacy.querySelector('.menu-list');
+                if (menuList) {
+                    menuList.querySelectorAll('.menu-link').forEach(link => {
+                        link.classList.remove('active');
+                        const icon = link.querySelector('.menu-link-check-icon');
+                        if (icon) icon.innerHTML = ''; // Limpiar todos los checks
+
+                        // 4. Poner el check en el item correcto
+                        if (link.dataset.value === currentPrivacy) {
+                            link.classList.add('active');
+                            if (icon) icon.innerHTML = '<span class="material-symbols-rounded">check</span>';
+                        }
+                    });
+                }
                 
                 deactivateAllModules(modulePrivacy);
                 modulePrivacy.classList.remove('disabled');
@@ -763,13 +787,10 @@ export function initCommunityManager() {
             e.preventDefault();
             deactivateAllModules();
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-            // const modulePrivacy = postSetPrivacyButton.closest('[data-module="modulePostPrivacy"]'); // <-- LÍNEA ANTIGUA
-            const optionsContainer = postSetPrivacyButton.closest('.post-card-options'); // <-- NUEVO
-            if (!optionsContainer) return; // Seguridad
+            const optionsContainer = postSetPrivacyButton.closest('.post-card-options'); 
+            if (!optionsContainer) return; 
 
-            const modulePrivacy = optionsContainer.querySelector('[data-module="modulePostPrivacy"]'); // <-- SELECTOR LOCAL
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            const modulePrivacy = optionsContainer.querySelector('[data-module="modulePostPrivacy"]'); 
 
             const postIdToUpdate = modulePrivacy ? modulePrivacy.dataset.currentPostId : null;
             const newPrivacy = postSetPrivacyButton.dataset.value;
@@ -785,7 +806,38 @@ export function initCommunityManager() {
                 const result = await callPublicationApi(formData);
                 if (result.success) {
                     showAlert(getTranslation(result.message || 'js.publication.privacyUpdated'), 'success');
-                    // (Opcional: actualizar un icono de candado en la UI del post)
+                    
+                    const newPrivacy = result.newPrivacy; // 'public', 'friends', o 'private'
+                    
+                    // 1. Encontrar la tarjeta de la publicación
+                    const postCard = document.querySelector(`.component-card--post[data-post-id="${postIdToUpdate}"]`);
+                    if (postCard) {
+                        
+                        // 2. Actualizar el atributo de datos de la tarjeta
+                        postCard.dataset.privacy = newPrivacy;
+
+                        // 3. Encontrar el icono y el tooltip
+                        const iconContainer = postCard.querySelector('.post-privacy-icon');
+                        const iconEl = iconContainer ? iconContainer.querySelector('.material-symbols-rounded') : null;
+
+                        if (iconContainer && iconEl) {
+                            let newIconName = 'public';
+                            let newTooltipKey = 'post.privacy.public';
+
+                            if (newPrivacy === 'friends') {
+                                newIconName = 'group';
+                                newTooltipKey = 'post.privacy.friends';
+                            } else if (newPrivacy === 'private') {
+                                newIconName = 'lock';
+                                newTooltipKey = 'post.privacy.private';
+                            }
+                            
+                            // 4. Actualizar el icono y el tooltip
+                            iconEl.textContent = newIconName;
+                            iconContainer.dataset.tooltip = newTooltipKey;
+                        }
+                    }
+
                 } else {
                     showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
                 }
@@ -795,7 +847,7 @@ export function initCommunityManager() {
             return;
         }
         
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
+        
 
 
         const button = e.target.closest('button[data-action], button[data-auth-action], button[data-tooltip]');

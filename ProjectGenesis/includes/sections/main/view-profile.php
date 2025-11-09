@@ -227,9 +227,11 @@ if ($is_actually_online) {
                     }
                     // --- ▲▲▲ FIN DE NUEVA LÓGICA DE PRIVACIDAD ▲▲▲ ---
                     ?>
-                    <div class="component-card component-card--post component-card--column" data-post-id="<?php echo $post['id']; ?>">
-                        
-                        <div class="post-card-header">
+                    
+                    <div class="component-card component-card--post component-card--column" 
+                         data-post-id="<?php echo $post['id']; ?>"
+                         data-privacy="<?php echo htmlspecialchars($privacyLevel); ?>">
+                    <div class="post-card-header">
                             <div class="component-card__content">
                                 <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($postRole); ?>">
                                     <img src="<?php echo htmlspecialchars($postAvatar); ?>" alt="<?php echo htmlspecialchars($post['username']); ?>" class="component-card__avatar-image">
