@@ -36,7 +36,6 @@ function renderFriendList(friends) {
                
                 <div class="menu-link-icon" style="position: relative;">
                     <img src="${friend.profile_image_url}" alt="${friend.username}" class="menu-link-avatar">
-                    <!-- Punto de estado -->
                     <span class="friend-status-dot ${statusClass}"></span>
                 </div>
                 
@@ -48,7 +47,7 @@ function renderFriendList(friends) {
     });
     container.innerHTML = html;
 }
-// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (RENDER) ▲▲▲ ---
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (RENDER) ▼▼▼ ---
 
 
 export async function initFriendList() {
@@ -144,14 +143,30 @@ export function initFriendManager() {
     
     // --- ▼▼▼ INICIO DE NUEVO LISTENER (ACTUALIZACIÓN EN TIEMPO REAL) ▼▼▼ ---
     document.addEventListener('user-presence-changed', (e) => {
-        const { userId, status } = e.detail;
-        // Buscar si este usuario está en la lista de amigos
+        const { userId, status } = e.detail; // "online" u "offline"
+        
+        // 1. Actualizar la LISTA DE AMIGOS (el punto verde/gris)
         const friendItem = document.querySelector(`.friend-item[data-friend-id="${userId}"]`);
         if (friendItem) {
             const dot = friendItem.querySelector('.friend-status-dot');
             if (dot) {
                 dot.classList.remove('online', 'offline');
-                dot.classList.add(status); // 'online' o 'offline'
+                dot.classList.add(status); 
+            }
+        }
+
+        // 2. Actualizar la PÁGINA DE PERFIL (si está abierta)
+        const profileBadge = document.querySelector(`.profile-status-badge[data-user-id="${userId}"]`);
+        if (profileBadge) {
+            profileBadge.classList.remove('online', 'offline');
+            profileBadge.classList.add(status);
+            
+            if (status === 'online') {
+                profileBadge.innerHTML = `<span class="status-dot"></span>Activo ahora`;
+            } else {
+                // Actualizamos a un texto genérico "Offline"
+                // Tu lógica de "hace 5 min" se ejecutará la próxima vez que cargues la página.
+                profileBadge.innerHTML = `Activo hace un momento`; 
             }
         }
     });

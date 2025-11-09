@@ -28,8 +28,10 @@ async def broadcast_presence_update(user_id, status):
         "status": status # "online" o "offline"
     })
     
+    # Obtenemos todos los websockets de todas las sesiones
     all_websockets = [ws for ws, uid in CLIENTS_BY_SESSION_ID.values()]
     if all_websockets:
+        # Enviamos el mensaje a todos en paralelo
         tasks = [ws.send(message) for ws in all_websockets]
         await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -51,6 +53,7 @@ async def register_client(websocket, user_id, session_id):
     
     # 4. Si es la primera vez que se conecta, notificar a todos que está "online"
     if is_first_connection:
+        logging.info(f"[WS] user_id={user_id} ahora está ONLINE.")
         await broadcast_presence_update(user_id, "online")
 
 async def unregister_client(session_id):
@@ -71,7 +74,7 @@ async def unregister_client(session_id):
         if not CLIENTS_BY_USER_ID[user_id]:
             del CLIENTS_BY_USER_ID[user_id]
             # 4. Si era la última, notificar a todos que está "offline"
-            logging.info(f"[WS] Cliente user_id={user_id} ahora está offline.")
+            logging.info(f"[WS] user_id={user_id} ahora está OFFLINE.")
             await broadcast_presence_update(user_id, "offline")
             
     logging.info(f"[WS] Cliente desconectado: session_id={session_id[:5]}... Conexiones totales: {len(CLIENTS_BY_SESSION_ID)}")
@@ -116,13 +119,16 @@ async def http_handler_count(request):
     """Devuelve el conteo de usuarios (endpoint público)."""
     # El conteo se basa en sesiones únicas, no en user_ids
     count = len(CLIENTS_BY_SESSION_ID)
-    logging.info(f"[HTTP] Solicitud de conteo recibida. Respondiendo: {count}")
+    logging.info(f"[HTTP-COUNT] Solicitud de conteo recibida. Respondiendo: {count}")
     response_data = {"active_users": count}
     return web.json_response(response_data)
 
 # --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! ▼▼▼ ---
 async def http_handler_get_online_users(request):
-    """Devuelve una lista de IDs de usuarios actualmente conectados."""
+    """
+    Devuelve una lista de IDs de usuarios actualmente conectados.
+    Esto es para que `friend_handler.php` pueda obtener el estado inicial.
+    """
     try:
         # Las llaves del diccionario CLIENTS_BY_USER_ID son los user_id
         online_user_ids = list(CLIENTS_BY_USER_ID.keys())
@@ -166,7 +172,7 @@ async def http_handler_kick(request):
         for ws in list(websockets_to_kick):
             # Encontrar el session_id de este websocket
             current_session_id = None
-            for sid, (w, uid) in CLIENTS_BY_SESSION_ID.items(): # <-- MODIFICADO
+            for sid, (w, uid) in CLIENTS_BY_SESSION_ID.items():
                 if w == ws:
                     current_session_id = sid
                     break
@@ -329,6 +335,7 @@ async def run_http_server():
     http_app.router.add_get("/count", http_handler_count)
     
     # --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
+    # Esta es la ruta que tu friend_handler.php ya intenta consultar
     http_app.router.add_get("/get-online-users", http_handler_get_online_users) 
     # --- ▲▲▲ ¡FIN DE NUEVA LÍNEA! ▲▲▲ ---
     

@@ -285,3 +285,11 @@
 [08-Nov-2025 23:54:33 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 629
 [08-Nov-2025 23:54:44 UTC] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 540
 [08-Nov-2025 23:54:45 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 629
+[09-Nov-2025 00:02:36 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 629
+[09-Nov-2025 00:02:43 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 629
+[09-Nov-2025 00:02:49 UTC] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 540
+[09-Nov-2025 00:02:50 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 629
+[09-Nov-2025 00:03:01 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 629
+[09-Nov-2025 00:03:08 UTC] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 540
+[09-Nov-2025 00:03:09 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 629
+[09-Nov-2025 00:03:11 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 629

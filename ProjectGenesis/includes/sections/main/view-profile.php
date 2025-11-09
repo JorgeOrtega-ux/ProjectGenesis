@@ -136,9 +136,14 @@ if ($profile['is_online']) {
                         </div>
 
                         <?php 
-                        // --- ▼▼▼ INSERCIÓN DEL BADGE DE ESTADO ▼▼▼ ---
-                        echo $statusBadgeHtml; 
-                        // --- ▲▲▲ FIN DE INSERCIÓN ▲▲▲ ---
+                        // --- ▼▼▼ INSERCIÓN DEL BADGE DE ESTADO (MODIFICADO) ▼▼▼ ---
+                        // Añadimos data-user-id para que el JS pueda actualizarlo en tiempo real
+                        echo str_replace(
+                            '<div class="profile-status-badge', 
+                            '<div data-user-id="' . htmlspecialchars($profile['id']) . '" class="profile-status-badge', 
+                            $statusBadgeHtml
+                        ); 
+                        // --- ▲▲▲ FIN DE INSERCIÓN (MODIFICADO) ▲▲▲ ---
                         ?>
                     </div>
 

@@ -428,6 +428,22 @@ document.addEventListener('DOMContentLoaded', async function () {
                             // Forzar a que la lista se recargue la próxima vez que se abra el panel
                             hasLoadedNotifications = false;
                         }
+
+                        // --- ▼▼▼ INICIO DEL BLOQUE AÑADIDO ▼▼▼ ---
+                        else if (data.type === 'presence_update') {
+                            // ¡Aviso de estado! (Online/Offline)
+                            // No mostramos alerta, disparamos un evento global
+                            // para que otros módulos (como friend-manager) reaccionen.
+                            console.log(`[WS] Actualización de estado: User ${data.user_id} está ${data.status}`);
+                            document.dispatchEvent(new CustomEvent('user-presence-changed', {
+                                detail: {
+                                    userId: data.user_id,
+                                    status: data.status // será "online" o "offline"
+                                }
+                            }));
+                        }
+                        // --- ▲▲▲ FIN DEL BLOQUE AÑADIDO ▲▲▲ ---
+                        
                         // --- ▲▲▲ FIN DE MANEJADORES DE WS MODIFICADOS ▲▲▲ ---
                         
                     } catch (e) {
