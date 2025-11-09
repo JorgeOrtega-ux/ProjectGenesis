@@ -7,7 +7,8 @@ const API_ENDPOINTS = {
     COMMUNITY: `${window.projectBasePath}/api/community_handler.php`,
     PUBLICATION: `${window.projectBasePath}/api/publication_handler.php`,
     FRIEND: `${window.projectBasePath}/api/friend_handler.php`,
-    NOTIFICATION: `${window.projectBasePath}/api/notification_handler.php` // <-- LÍNEA AÑADIDA
+    NOTIFICATION: `${window.projectBasePath}/api/notification_handler.php`,
+    SEARCH: `${window.projectBasePath}/api/search_handler.php` // <-- LÍNEA AÑADIDA
 };
 
 async function _post(url, formData) {
@@ -76,9 +77,13 @@ async function callFriendApi(formData) {
     return _post(API_ENDPOINTS.FRIEND, formData);
 }
 
-// --- ▼▼▼ FUNCIÓN AÑADIDA ▼▼▼ ---
 async function callNotificationApi(formData) {
     return _post(API_ENDPOINTS.NOTIFICATION, formData);
+}
+
+// --- ▼▼▼ FUNCIÓN AÑADIDA ▼▼▼ ---
+async function callSearchApi(formData) {
+    return _post(API_ENDPOINTS.SEARCH, formData);
 }
 // --- ▲▲▲ FIN DE FUNCIÓN AÑADIDA ▲▲▲ ---
 
@@ -90,5 +95,6 @@ export {
     callCommunityApi, 
     callPublicationApi, 
     callFriendApi,
-    callNotificationApi // <-- EXPORTACIÓN AÑADIDA
+    callNotificationApi,
+    callSearchApi // <-- EXPORTACIÓN AÑADIDA
 };

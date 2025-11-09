@@ -94,7 +94,9 @@ body {
 .header {
     position: relative;
     display: flex;
-    justify-content: space-between;
+    /* --- ▼▼▼ MODIFICACIÓN ▼▼▼ --- */
+    justify-content: space-between; /* Mantenemos space-between */
+    /* --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ --- */
     align-items: center;
     width: 100%;
     height: auto;
@@ -108,6 +110,16 @@ body {
     display: flex;
     flex: 0 0 auto;
 }
+
+/* --- ▼▼▼ INICIO DE NUEVO BLOQUE ▼▼▼ --- */
+.header-center {
+    display: flex;
+    flex: 1 1 auto; /* Permite que crezca */
+    justify-content: center; /* Centra el contenedor de búsqueda */
+    padding: 0 16px; /* Espacio para que no toque los bordes */
+    min-width: 0; /* Permite que se encoja en móviles */
+}
+/* --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ --- */
 
 .header-right {
     position: relative;
@@ -590,4 +602,14 @@ body {
         display: none;
     }
     /* --- ▲▲▲ FIN NUEVA REGLA ▲▲▲ --- */
+    
+    /* --- ▼▼▼ INICIO DE NUEVO BLOQUE (MÓVIL HEADER) ▼▼▼ --- */
+    .header {
+        gap: 4px;
+        padding: 8px 4px;
+    }
+    .header-center {
+        padding: 0 4px;
+    }
+    /* --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ --- */
 }

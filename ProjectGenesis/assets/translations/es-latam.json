@@ -12,6 +12,13 @@
       "menu": "Menú principal",
       "profile": "Perfil y configuración",
       "notifications": "Notificaciones"
+    },
+    "search": {
+      "placeholder": "Buscar personas, publicaciones...",
+      "people": "Personas",
+      "posts": "Publicaciones",
+      "noResults": "No se encontraron resultados para",
+      "allResults": "Ver todos los resultados"
     }
   },
   "sidebar": {

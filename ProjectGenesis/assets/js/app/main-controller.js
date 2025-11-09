@@ -116,17 +116,17 @@ function initMainController() {
 
         if (action.startsWith('toggle')) {
             
-            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
-            // La acción 'toggleModuleNotifications' fue eliminada de esta lista.
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
             const managedActions = [
                 'toggleModulePageFilter',
                 'toggleModuleAdminRole',
                 'toggleModuleAdminStatus',
                 'toggleModuleAdminCreateRole',
                 'toggleModuleCommunitySelect', 
-                'toggleModuleSelectGroup'
+                'toggleModuleSelectGroup',
+                'toggleModuleSearch' // <-- LÍNEA AÑADIDA
             ];
-            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
             if (managedActions.includes(action)) {
                 return; 
@@ -155,14 +155,16 @@ function initMainController() {
 
     if (closeOnClickOutside) {
         document.addEventListener('click', function (event) {
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (No cerrar al hacer clic en el input) ▼▼▼ ---
             const clickedOnModule = event.target.closest('[data-module].active');
             const clickedOnButton = event.target.closest('[data-action]');
-            
             const clickedOnCardItem = event.target.closest('.card-item');
+            const clickedOnSearchInput = event.target.closest('#header-search-input'); // <-- LÍNEA AÑADIDA
             
-            if (!clickedOnModule && !clickedOnButton && !clickedOnCardItem) {
+            if (!clickedOnModule && !clickedOnButton && !clickedOnCardItem && !clickedOnSearchInput) { // <-- CONDICIÓN AÑADIDA
                 deactivateAllModules();
             }
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
         });
     }
 

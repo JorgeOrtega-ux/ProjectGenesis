@@ -314,36 +314,38 @@ if (preg_match('/^\/c\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
     // Asignar el placeholder para el array de mapeo
     $path = '/c/uuid-placeholder';
 
-// ================== INICIO DE LA MODIFICACIÓN ==================
 } elseif (preg_match('/^\/post\/(\d+)$/i', $path, $matches)) {
     $postId = $matches[1];
-    $_GET['post_id'] = $postId; // Inyectar el ID en $_GET para que router.php lo lea
-    $path = '/post/id-placeholder'; // Mapear al placeholder
-// --- ▼▼▼ ¡NUEVA RUTA DE PERFIL AÑADIDA! ▼▼▼ ---
-} elseif (preg_match('/^\/profile\/([a-zA-Z0-9_]+)$/i', $path, $matches)) {
+    $_GET['post_id'] = $postId; 
+    $path = '/post/id-placeholder'; 
+
+} elseif (preg_match('/^\/profile\/([a-zA-Z0-9_]+)(?:\/(likes|bookmarks))?$/i', $path, $matches)) {
     $username = $matches[1];
-    $_GET['username'] = $username; // Inyectar el username en $_GET
-    $path = '/profile/username-placeholder'; // Mapear al placeholder
+    $tab = $matches[2] ?? 'posts'; // Captura la pestaña (o usa 'posts' por defecto)
+    $_GET['username'] = $username;
+    $_GET['tab'] = $tab; // Pasa la pestaña también
+    
+    // Usamos un placeholder genérico para el mapeo
+    $path = '/profile/username-placeholder';
+
+// --- ▼▼▼ INICIO DE NUEVA RUTA DE BÚSQUEDA ▼▼▼ ---
+} elseif (preg_match('/^\/search$/i', $path, $matches)) {
+    // No necesitamos inyectar nada en $_GET, porque la query
+    // ya estará en la URL (ej. /search?q=hola) y router.php la leerá.
+    $path = '/search';
+// --- ▲▲▲ FIN DE NUEVA RUTA DE BÚSQUEDA ▲▲▲ ---
 }
-// --- ▲▲▲ FIN DE RUTA DE PERFIL ▲▲▲ ---
-// =================== FIN DE LA MODIFICACIÓN ==================
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
 // 2. Mapa de rutas
 $pathsToPages = [
     '/'           => 'home',
-    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
-    '/c/uuid-placeholder' => 'home', // Ruta placeholder para comunidades
-    // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
-    
-    // ================== INICIO DE LA MODIFICACIÓN ==================
-    '/post/id-placeholder' => 'post-view', // NUEVA RUTA
-    // =================== FIN DE LA MODIFICACIÓN ==================
-
-    // --- ▼▼▼ ¡NUEVA RUTA DE PERFIL AÑADIDA! ▼▼▼ ---
+    '/c/uuid-placeholder' => 'home', 
+    '/post/id-placeholder' => 'post-view', 
     '/profile/username-placeholder' => 'view-profile',
-    // --- ▲▲▲ FIN DE RUTA DE PERFIL ▲▲▲ ---
+    
+    '/search' => 'search-results', // <-- LÍNEA AÑADIDA
 
     '/explorer'   => 'explorer',
     '/login'      => 'login',
@@ -387,7 +389,8 @@ $pathsToPages = [
 // 3. Determinar la página actual y los tipos de página
 $currentPage = $pathsToPages[$path] ?? '404';
 
-// --- ▼▼▼ MODIFICACIÓN: Añadir 'server-full' a $authPages ▼▼▼ ---
+// --- ▼▼▼ MODIFICACIÓN: Añadir 'search-results' a $authPages ▼▼▼ ---
+// (Corrección: 'search-results' NO debe estar en authPages, debe REQUERIR autenticación)
 $authPages = ['login', 'maintenance', 'server-full']; 
 $isAuthPage = in_array($currentPage, $authPages) || 
               strpos($currentPage, 'register-') === 0 ||

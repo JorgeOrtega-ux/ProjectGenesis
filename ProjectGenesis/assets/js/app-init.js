@@ -14,8 +14,8 @@ import { initFriendManager, initFriendList } from './modules/friend-manager.js';
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager, getTranslation } from './services/i18n-manager.js';
 import { initTooltipManager } from './services/tooltip-manager.js'; 
-// --- ▼▼▼ ¡IMPORTACIÓN MODIFICADA! ▼▼▼ ---
-import { callFriendApi, callNotificationApi } from './services/api-service.js';
+import { callNotificationApi } from './services/api-service.js';
+import { initSearchManager } from './modules/search-manager.js'; // <-- LÍNEA AÑADIDA
 
 const htmlEl = document.documentElement;
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -341,7 +341,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     initCommunityManager();
     initPublicationManager();
     initFriendManager(); 
-    initNotificationManager(); // <--- MODIFICADO
+    initNotificationManager();
+    initSearchManager(); // <-- LÍNEA AÑADIDA
 
     initRouter(); 
     

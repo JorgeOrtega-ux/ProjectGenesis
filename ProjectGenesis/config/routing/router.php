@@ -94,6 +94,8 @@ $allowedPages = [
     
     'post-view' => '../../includes/sections/main/view-post.php',
     'view-profile' => '../../includes/sections/main/view-profile.php',
+    
+    'search-results' => '../../includes/sections/main/search-results.php', // <-- LÍNEA AÑADIDA
 
     'register-step1' => '../../includes/sections/auth/register.php',
     'register-step2' => '../../includes/sections/auth/register.php',
@@ -429,7 +431,6 @@ if (array_key_exists($page, $allowedPages)) {
             }
         }
 
-    // --- ▼▼▼ INICIO DE LÓGICA REAL PARA PERFIL (MODIFICADA) ▼▼▼ ---
     } elseif ($page === 'view-profile') {
         $viewProfileData = null;
         $targetUsername = $_GET['username'] ?? '';
@@ -579,7 +580,71 @@ if (array_key_exists($page, $allowedPages)) {
                  $CURRENT_SECTION = '404';
              }
         }
-    // --- ▲▲▲ FIN DE LÓGICA REAL PARA PERFIL (MODIFICADA) ▲▲▲ ---
+    
+    // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE BÚSQUEDA ▼▼▼ ---
+    } elseif ($page === 'search-results') {
+        $searchQuery = $_GET['q'] ?? '';
+        $userResults = [];
+        $postResults = [];
+        
+        if (!empty($searchQuery)) {
+            $searchParam = '%' . $searchQuery . '%';
+            $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+            $currentUserId = $_SESSION['user_id'];
+
+            try {
+                // 1. Buscar Usuarios
+                $stmt_users = $pdo->prepare(
+                    "SELECT id, username, profile_image_url, role 
+                     FROM users 
+                     WHERE username LIKE ? 
+                     AND account_status = 'active'
+                     LIMIT 20"
+                );
+                $stmt_users->execute([$searchParam]);
+                $users = $stmt_users->fetchAll();
+
+                foreach ($users as $user) {
+                    $avatar = $user['profile_image_url'] ?? $defaultAvatar;
+                    if (empty($avatar)) {
+                         $avatar = "https://ui-avatars.com/api/?name=" . urlencode($user['username']) . "&size=100&background=e0e0e0&color=ffffff";
+                    }
+                    $userResults[] = [
+                        'username' => htmlspecialchars($user['username']),
+                        'avatarUrl' => htmlspecialchars($avatar),
+                        'role' => htmlspecialchars($user['role'])
+                    ];
+                }
+
+                // 2. Buscar Publicaciones
+                $stmt_posts = $pdo->prepare(
+                   "SELECT 
+                        p.id, 
+                        p.text_content, 
+                        p.created_at,
+                        u.username,
+                        u.profile_image_url,
+                        u.role
+                    FROM community_publications p
+                    JOIN users u ON p.user_id = u.id
+                    LEFT JOIN communities c ON p.community_id = c.id
+                    WHERE 
+                        p.text_content LIKE ?
+                    AND 
+                        (c.privacy = 'public' OR p.community_id IN (
+                            SELECT community_id FROM user_communities WHERE user_id = ?
+                        ))
+                    ORDER BY p.created_at DESC
+                    LIMIT 20"
+                );
+                $stmt_posts->execute([$searchParam, $currentUserId]);
+                $postResults = $stmt_posts->fetchAll();
+
+            } catch (PDOException $e) {
+                logDatabaseError($e, 'router - search-results');
+            }
+        }
+    // --- ▲▲▲ FIN DE NUEVA LÓGICA DE BÚSQUEDA ▲▲▲ ---
 
     } elseif ($page === 'admin-manage-users') {
         $adminCurrentPage = (int)($_GET['p'] ?? 1);
