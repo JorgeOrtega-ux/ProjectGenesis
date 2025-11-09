@@ -73,8 +73,12 @@ const paths = {
     '/server-full': 'toggleSectionServerFull', 
 
     '/join-group': 'toggleSectionJoinGroup',
-    '/create-publication': 'create-publication', 
-    '/create-poll': 'create-poll', 
+    
+    // --- ▼▼▼ INICIO DE LA CORRECCIÓN (BUG .../undefined) ▼▼▼ ---
+    // Los valores aquí deben coincidir con las *claves* del objeto 'routes'
+    '/create-publication': 'toggleSectionCreatePublication', 
+    '/create-poll': 'toggleSectionCreatePoll', 
+    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
     
     '/post': 'toggleSectionPostView', 
 

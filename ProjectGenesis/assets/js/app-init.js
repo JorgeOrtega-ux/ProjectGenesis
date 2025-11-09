@@ -398,10 +398,14 @@ function initNotificationManager() {
         });
     }
 
+    // --- ▼▼▼ INICIO DE LA CORRECCIÓN (BUG NOTIFICACIÓN 404) ▼▼▼ ---
+    
     // 3. LISTENER PARA CLIC EN UN ITEM INDIVIDUAL
     const listContainer = document.getElementById('notification-list-items');
     if (listContainer) {
-        listContainer.addEventListener('click', async (e) => {
+        // 1. Quitar 'async' del listener principal
+        listContainer.addEventListener('click', (e) => {
+            
             // Ignorar clics en botones de acción (Aceptar/Rechazar amigo)
             if (e.target.closest('.notification-action-button')) {
                 return;
@@ -409,62 +413,67 @@ function initNotificationManager() {
 
             // Encontrar el item de notificación que no esté leído
             const item = e.target.closest('.notification-item.is-unread');
-            if (!item) {
-                // Si el item ya está leído, solo deja que el enlace navegue
-                return;
-            }
+            
+            // 2. Comprobar si el item ES NO LEÍDO
+            if (item) {
+                // SI NO ESTÁ LEÍDO:
+                // ¡¡NO LLAMAMOS A e.preventDefault() NI e.stopPropagation()!!
+                // Dejamos que el clic continúe hacia el router (url-manager.js)
 
-            // Si el item NO ESTABA LEÍDO:
-            e.preventDefault(); // Detener la navegación del <a>
-            e.stopPropagation(); // Detener otros listeners
+                const notificationId = item.dataset.id;
+                const markAllButton = document.getElementById('notification-mark-all-btn');
+                if (!notificationId) return; // Salir si no hay ID
 
-            const notificationId = item.dataset.id;
-            const href = item.href; // El enlace al que queremos ir
+                // 3. Marcar visualmente como leído INMEDIATAMENTE
+                item.classList.remove('is-unread');
+                item.classList.add('is-read');
+                item.querySelector('.notification-unread-dot')?.remove();
 
-            if (!notificationId) return;
-
-            // Marcar visualmente como leído INMEDIATAMENTE
-            item.classList.remove('is-unread');
-            item.classList.add('is-read');
-            item.querySelector('.notification-unread-dot')?.remove();
-
-            // Actualizar el contador
-            const newCount = Math.max(0, currentNotificationCount - 1);
-            setNotificationCount(newCount);
-            if (newCount === 0 && markAllButton) {
-                markAllButton.style.display = 'none';
-            }
-
-            // Llamar a la API para marcarlo en la BD
-            const formData = new FormData();
-            formData.append('action', 'mark-one-read');
-            formData.append('notification_id', notificationId);
-            const result = await callNotificationApi(formData);
-
-            if (result.success) {
-                // Actualizar el badge con el conteo real de la BD (más seguro)
-                setNotificationCount(result.new_unread_count);
-                if (result.new_unread_count === 0 && markAllButton) {
+                // 4. Actualizar el contador visual
+                const newCount = Math.max(0, currentNotificationCount - 1);
+                setNotificationCount(newCount);
+                if (newCount === 0 && markAllButton) {
                     markAllButton.style.display = 'none';
                 }
-            } else {
-                // Si la API falla, deshacemos el cambio visual (opcional)
-                item.classList.add('is-unread');
-                item.classList.remove('is-read');
-                setNotificationCount(currentNotificationCount + 1); // Revertir
-            }
 
-            // Finalmente, navegar a la página
-            if (href) {
-                // Usamos la función del router para una navegación SPA
-                const pageAction = 'toggleSectionPostView'; // Asumimos que todas van a un post o perfil
-                loadPage(pageAction, pageAction, { href: href });
-                // Cerramos el popover
-                document.querySelector('[data-module="moduleNotifications"]')?.classList.add('disabled');
-                document.querySelector('[data-module="moduleNotifications"]')?.classList.remove('active');
+                // 5. Llamar a la API en segundo plano (SIN 'await')
+                // para que la navegación no se retrase.
+                const formData = new FormData();
+                formData.append('action', 'mark-one-read');
+                formData.append('notification_id', notificationId);
+                
+                callNotificationApi(formData).then(result => {
+                    if (result.success) {
+                        // Re-sincronizar el conteo por si acaso
+                        setNotificationCount(result.new_unread_count);
+                        if (result.new_unread_count === 0 && markAllButton) {
+                            markAllButton.style.display = 'none';
+                        }
+                    } else {
+                        // Si la API falla, el usuario no se entera, pero lo logueamos
+                        console.error("Error al marcar la notificación como leída en el backend.");
+                        // Opcional: revertir el cambio visual si la API falla
+                        // item.classList.add('is-unread');
+                        // item.classList.remove('is-read');
+                        // setNotificationCount(currentNotificationCount + 1); // Revertir
+                    }
+                });
+
+                // 6. Cerramos el popover
+                // (El router en url-manager.js se encargará de esto)
+                
             }
+            
+            // Si el item era nulo (item !item), significa que YA ESTABA LEÍDO.
+            // No hacemos nada aquí, solo dejamos que el clic continúe.
+            
+            // En AMBOS casos (leído o no leído), el evento de click
+            // NO fue detenido, por lo que el listener de 'initRouter' en
+            // 'url-manager.js' lo recibirá y manejará la navegación correctamente.
         });
     }
+    
+    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
     
     // 4. LISTENER PARA BOTONES DE AMISTAD (ya existente, pero lo movemos aquí)
     document.body.addEventListener('click', (e) => {
