@@ -194,12 +194,17 @@ try {
                         data-tooltip="home.toolbar.selectGroup">
                         <span class="material-symbols-rounded">group</span>
                     </button>
+                    
+                    <?php // --- ▼▼▼ BOTÓN ELIMINADO ▼▼▼ --- ?>
+                    <?php /*
                     <button type="button"
                         class="page-toolbar-button"
                         data-action="toggleSectionJoinGroup" 
                         data-tooltip="home.toolbar.joinGroup">
                     <span class="material-symbols-rounded">group_add</span>
                     </button>
+                    */ ?>
+                    <?php // --- ▲▲▲ FIN BOTÓN ELIMINADO ▲▲▲ --- ?>
                     
                     <button type="button"
                         class="page-toolbar-button"

@@ -90,13 +90,11 @@ try {
         box-shadow: 0 2px 4px #00000020;
         flex-shrink: 0;
     }
-    /* --- ▼▼▼ MODIFICACIÓN: Añadido .community-card__icon img ▼▼▼ --- */
     .community-card__icon img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
-    /* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
     .community-card__info {
         padding-top: 0px; 
         padding-bottom: 16px;
@@ -138,7 +136,6 @@ try {
     .community-card__join-btn:hover {
         background-color: #333; 
     }
-    /* --- ▼▼▼ NUEVA CLASE PARA BOTÓN "ABANDONAR" ▼▼▼ --- */
     .community-card__join-btn.danger {
         background-color: #ffffff;
         color: #c62828;
@@ -148,22 +145,32 @@ try {
         background-color: #fbebee;
         border-color: #c62828;
     }
-    /* --- ▲▲▲ FIN DE NUEVA CLASE ▲▲▲ --- */
+    
+    /* --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ --- */
     .community-card__stats {
         display: flex;
-        gap: 16px;
-        margin: 16px 12px 0 12px; 
-        padding-top: 16px;
-        border-top: 1px solid #00000015;
+        flex-wrap: wrap; /* Añadido para que los badges se ajusten */
+        gap: 8px; /* Reducido el gap */
+        margin: 16px 0 0 0;
+        padding-top: 0; /* Eliminado el padding-top */
+        border-top: none; /* Eliminada la línea divisora */
     }
     .community-card__stat-item {
-        display: flex;
+        display: inline-flex; /* Cambiado a inline-flex */
         align-items: center;
         gap: 6px;
         font-size: 13px;
         font-weight: 500;
         color: #6b7280;
+        
+        /* Estilos de "badge" añadidos */
+        background-color: transparent;
+        border: 1px solid #00000020;
+        border-radius: 50px;
+        padding: 6px 10px; /* Padding ajustado */
     }
+    /* --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- */
+
     .community-card__stat-item .material-symbols-rounded {
         font-size: 16px;
     }
@@ -185,6 +192,16 @@ try {
                     </button>
                 </div>
                 <div class="page-toolbar-right">
+                    
+                    <?php // --- ▼▼▼ BOTÓN AÑADIDO (MODIFICACIÓN ANTERIOR) ▼▼▼ --- ?>
+                    <button type="button"
+                        class="page-toolbar-button"
+                        data-action="toggleSectionJoinGroup" 
+                        data-tooltip="home.toolbar.joinGroup">
+                    <span class="material-symbols-rounded">group_add</span>
+                    </button>
+                    <?php // --- ▲▲▲ FIN BOTÓN AÑADIDO ▲▲▲ --- ?>
+                    
                     <button type="button"
                         class="page-toolbar-button"
                         data-action="explorer-search-dummy" 
