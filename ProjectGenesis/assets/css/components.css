@@ -3128,7 +3128,7 @@ a.profile-tab.active {
 }
 
 .popover-module--notifications {
-    width: 365px; /* Ancho solicitado */
+    width: 425px; /* Ancho solicitado */
 }
 
 .popover-module--notifications .menu-content {

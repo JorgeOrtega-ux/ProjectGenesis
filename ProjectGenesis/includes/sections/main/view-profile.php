@@ -237,7 +237,7 @@ if ($is_actually_online) {
                                 <?php if ($isPoll): ?>
                                     <h3 class="poll-question"><?php echo htmlspecialchars($post['text_content']); ?></h3>
                                 <?php else: ?>
-                                    <div style="font-size: 15px; line-height: 1.6; color: #1f2937; white-space: pre-wrap; width: 100%;">
+                                    <div>
                                         <?php 
                                         // Usamos la nueva función helper
                                         echo truncatePostText($post['text_content'], $post['id'], $basePath, 500); 
