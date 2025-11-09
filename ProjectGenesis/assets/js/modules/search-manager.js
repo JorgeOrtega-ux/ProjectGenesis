@@ -1,3 +1,5 @@
+// FILE: assets/js/modules/search-manager.js
+
 import { callSearchApi } from '../services/api-service.js';
 import { deactivateAllModules } from '../app/main-controller.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -5,6 +7,47 @@ import { getTranslation } from '../services/i18n-manager.js';
 let searchDebounceTimer;
 let currentSearchQuery = '';
 const defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+
+// --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ ---
+let pageFilter = 'all'; // Estado del filtro para la página de resultados
+
+/**
+ * Aplica el filtro de visualización en la página de resultados.
+ */
+function applyPageFilter() {
+    const userCardDiv = document.getElementById('search-results-users');
+    const postCardDiv = document.getElementById('search-results-posts');
+    const noResultsCard = document.getElementById('search-no-results-card');
+
+    // Salir si no estamos en la página de resultados
+    if (!noResultsCard) return; 
+
+    // Comprobar el estado inicial (si PHP los ocultó por estar vacíos)
+    const usersAreEmpty = !userCardDiv || userCardDiv.style.display === 'none';
+    const postsAreEmpty = !postCardDiv || postCardDiv.style.display === 'none';
+
+    let showUsers = (pageFilter === 'all' || pageFilter === 'people');
+    let showPosts = (pageFilter === 'all' || pageFilter === 'posts');
+
+    let usersWillBeVisible = showUsers && !usersAreEmpty;
+    let postsWillBeVisible = showPosts && !postsAreEmpty;
+
+    if (userCardDiv) {
+        userCardDiv.style.display = usersWillBeVisible ? '' : 'none';
+    }
+    if (postCardDiv) {
+        postCardDiv.style.display = postsWillBeVisible ? '' : 'none';
+    }
+
+    // Mostrar "Sin resultados" si ninguna sección va a ser visible
+    if (!usersWillBeVisible && !postsWillBeVisible) {
+        noResultsCard.style.display = '';
+    } else {
+        noResultsCard.style.display = 'none';
+    }
+}
+// --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
+
 
 /**
  * Escapa HTML para prevenir XSS simple.
@@ -148,38 +191,32 @@ export function initSearchManager() {
     const searchInput = document.getElementById('header-search-input');
     if (!searchInput) return;
 
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-    // Comentamos el listener 'focus' para que no se abra el popover
+    // --- Lógica para el POPOVER DEL HEADER ---
+    
+    // (Esta lógica se ha desactivado según tu solicitud anterior, 
+    // pero la mantenemos por si se reactiva)
     /*
-    // Abrir popover al enfocar
     searchInput.addEventListener('focus', () => {
         showSearchPopover();
-        // Si hay texto, re-ejecutar la búsqueda
         if (searchInput.value.trim().length > 0) {
             performSearch();
         }
     });
-    */
 
-    // Comentamos el listener 'input' para que no busque mientras se teclea
-    /*
-    // Buscar al teclear (con debounce)
     searchInput.addEventListener('input', () => {
         clearTimeout(searchDebounceTimer);
-        searchDebounceTimer = setTimeout(performSearch, 300); // 300ms de retraso
+        searchDebounceTimer = setTimeout(performSearch, 300); 
     });
     */
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
     
-    // Manejar "Enter" para ir a la página de resultados (ESTO SE QUEDA)
+    // Manejar "Enter" para ir a la página de resultados
     searchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             const query = searchInput.value.trim();
             if (query.length > 0) {
-                deactivateAllModules(); // Cierra el popover (si es que estuviera abierto)
+                deactivateAllModules(); 
                 
-                // Navegar a la página de resultados
                 const link = document.createElement('a');
                 link.href = `${window.projectBasePath}/search?q=${encodeURIComponent(query)}`;
                 link.setAttribute('data-nav-js', 'true');
@@ -187,8 +224,61 @@ export function initSearchManager() {
                 link.click();
                 link.remove();
                 
-                searchInput.blur(); // Quitar el foco del input
+                searchInput.blur(); 
             }
         }
     });
+
+    // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (Lógica para la PÁGINA DE RESULTADOS) ▼▼▼ ---
+    document.body.addEventListener('click', (e) => {
+        const filterToggleButton = e.target.closest('[data-action="toggleModuleSearchFilter"]');
+        const filterSetButton = e.target.closest('[data-action="search-set-filter"]');
+
+        if (filterToggleButton) {
+            e.stopPropagation();
+            const module = document.querySelector('[data-module="moduleSearchFilter"]');
+            if (module) {
+                deactivateAllModules(module);
+                module.classList.toggle('disabled');
+                module.classList.toggle('active');
+            }
+            return;
+        }
+
+        if (filterSetButton) {
+            e.preventDefault();
+            const newFilter = filterSetButton.dataset.filter;
+            if (newFilter === pageFilter) {
+                deactivateAllModules();
+                return; 
+            }
+            
+            pageFilter = newFilter;
+
+            // Actualizar UI del popover
+            const menuList = filterSetButton.closest('.menu-list');
+            if (menuList) {
+                menuList.querySelectorAll('.menu-link').forEach(link => {
+                    link.classList.remove('active');
+                    const icon = link.querySelector('.menu-link-check-icon');
+                    if (icon) icon.innerHTML = '';
+                });
+                filterSetButton.classList.add('active');
+                const iconContainer = filterSetButton.querySelector('.menu-link-check-icon');
+                if (iconContainer) iconContainer.innerHTML = '<span class="material-symbols-rounded">check</span>';
+            }
+
+            // Aplicar el filtro visual
+            applyPageFilter();
+            
+            deactivateAllModules();
+            return;
+        }
+    });
+    
+    // Aplicar filtro al cargar la página (por si el usuario recarga)
+    if (document.querySelector('[data-section="search-results"]')) {
+        applyPageFilter();
+    }
+    // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
 }
