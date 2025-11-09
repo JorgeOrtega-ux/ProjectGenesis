@@ -3673,4 +3673,18 @@ a.profile-tab.active {
 .popover-module[data-module="modulePostOptions"],
 .popover-module[data-module="modulePostPrivacy"] {
     width: 280px; 
+}/* ====================================== */
+/* =      BADGE DE PRIVACIDAD DE POST     = */
+/* ====================================== */
+
+.post-privacy-icon {
+    display: inline-flex; /* Para alinearse con el texto */
+    align-items: center;
+    vertical-align: middle; /* Alinea el icono con el centro del texto */
+    margin-left: 8px; /* Espacio del separador (·) */
+}
+
+.post-privacy-icon .material-symbols-rounded {
+    font-size: 16px; /* Tamaño pequeño */
+    color: #6b7280; /* Mismo color que el texto de descripción */
 }

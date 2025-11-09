@@ -31,6 +31,7 @@ try {
                     u.profile_image_url,
                     u.role,
                     p.title, 
+                    p.privacy_level, -- <-- ¡AÑADIDO!
                     (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
                      FROM publication_attachments pa
                      JOIN publication_files pf ON pa.file_id = pf.id
@@ -59,13 +60,14 @@ try {
                              (SELECT user_id_1 FROM friendships WHERE user_id_2 = ? AND status = 'accepted')
                          )
                      ))
+                     OR (p.privacy_level = 'private' AND p.user_id = ?) -- <-- ¡AÑADIDO! Ver mis posts privados
                  )
                  ORDER BY p.created_at DESC
                  LIMIT 50";
             
             $stmt_posts = $pdo->prepare($sql_posts);
-            // ¡Ahora se pasan 7 parámetros!
-            $stmt_posts->execute([$userId, $userId, $userId, $currentCommunityId, $userId, $userId, $userId]);
+            // ¡Ahora se pasan 8 parámetros!
+            $stmt_posts->execute([$userId, $userId, $userId, $currentCommunityId, $userId, $userId, $userId, $userId]);
             $publications = $stmt_posts->fetchAll();
             // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
         } else {
@@ -83,6 +85,7 @@ try {
                 u.profile_image_url, 
                 u.role,
                 p.title, 
+                p.privacy_level, -- <-- ¡AÑADIDO!
                 c.name AS community_name,
                 (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
                  FROM publication_attachments pa
@@ -102,7 +105,7 @@ try {
              JOIN users u ON p.user_id = u.id
              LEFT JOIN communities c ON p.community_id = c.id
              WHERE p.community_id IS NOT NULL 
-             AND c.privacy = 'public'
+             AND (c.privacy = 'public' OR p.community_id IN (SELECT community_id FROM user_communities WHERE user_id = ?)) -- <-- ¡MODIFICADO! Ver posts de mis grupos privados
              AND p.post_status = 'active'
              AND (
                  p.privacy_level = 'public' -- Ver posts públicos
@@ -114,13 +117,14 @@ try {
                          (SELECT user_id_1 FROM friendships WHERE user_id_2 = ? AND status = 'accepted')
                      )
                  ))
+                 OR (p.privacy_level = 'private' AND p.user_id = ?) -- <-- ¡AÑADIDO! Ver mis posts privados
              )
              ORDER BY p.created_at DESC
              LIMIT 50";
         
         $stmt_posts = $pdo->prepare($sql_posts);
-         // ¡Ahora se pasan 6 parámetros!
-        $stmt_posts->execute([$userId, $userId, $userId, $userId, $userId, $userId]);
+         // ¡Ahora se pasan 8 parámetros!
+        $stmt_posts->execute([$userId, $userId, $userId, $userId, $userId, $userId, $userId, $userId]);
         $publications = $stmt_posts->fetchAll();
         // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
     }
@@ -279,7 +283,21 @@ try {
                     $likeCount = (int)($post['like_count'] ?? 0);
                     $userHasLiked = (int)($post['user_has_liked'] ?? 0) > 0;
                     $commentCount = (int)($post['comment_count'] ?? 0);
-                    $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0; // <-- NUEVA LÍNEA
+                    $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0; 
+                    
+                    // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE PRIVACIDAD ▼▼▼ ---
+                    $privacyLevel = $post['privacy_level'] ?? 'public';
+                    $privacyIcon = 'public';
+                    $privacyTooltipKey = 'post.privacy.public';
+                    
+                    if ($privacyLevel === 'friends') {
+                        $privacyIcon = 'group';
+                        $privacyTooltipKey = 'post.privacy.friends';
+                    } elseif ($privacyLevel === 'private') {
+                        $privacyIcon = 'lock';
+                        $privacyTooltipKey = 'post.privacy.private';
+                    }
+                    // --- ▲▲▲ FIN DE NUEVA LÓGICA DE PRIVACIDAD ▲▲▲ ---
                     ?>
                     <div class="component-card component-card--post component-card--column" data-post-id="<?php echo $post['id']; ?>">
                         
@@ -295,7 +313,11 @@ try {
                                         <?php if (isset($post['community_name']) && $post['community_name']): ?>
                                             <span> &middot; en <strong><?php echo htmlspecialchars($post['community_name']); ?></strong></span>
                                         <?php endif; ?>
-                                    </p>
+                                        
+                                        <span class="post-privacy-icon" data-tooltip="<?php echo $privacyTooltipKey; ?>">
+                                            <span class="material-symbols-rounded"><?php echo $privacyIcon; ?></span>
+                                        </span>
+                                        </p>
                                 </div>
                             </div>
                             

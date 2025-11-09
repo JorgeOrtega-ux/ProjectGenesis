@@ -59,6 +59,20 @@ $userHasLiked = (int)($post['user_has_liked'] ?? 0) > 0;
 $commentCount = (int)($post['comment_count'] ?? 0);
 $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0;
 
+// --- ▼▼▼ INICIO DE NUEVA LÓGICA DE PRIVACIDAD ▼▼▼ ---
+$privacyLevel = $post['privacy_level'] ?? 'public';
+$privacyIcon = 'public';
+$privacyTooltipKey = 'post.privacy.public';
+
+if ($privacyLevel === 'friends') {
+    $privacyIcon = 'group';
+    $privacyTooltipKey = 'post.privacy.friends';
+} elseif ($privacyLevel === 'private') {
+    $privacyIcon = 'lock';
+    $privacyTooltipKey = 'post.privacy.private';
+}
+// --- ▲▲▲ FIN DE NUEVA LÓGICA DE PRIVACIDAD ▲▲▲ ---
+
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'post-view') ? 'active' : 'disabled'; ?>" data-section="post-view">
 
@@ -98,7 +112,11 @@ $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0;
                                 <?php if (isset($post['community_name']) && $post['community_name']): ?>
                                     <span> &middot; en <strong><?php echo htmlspecialchars($post['community_name']); ?></strong></span>
                                 <?php endif; ?>
-                            </p>
+                                
+                                <span class="post-privacy-icon" data-tooltip="<?php echo $privacyTooltipKey; ?>">
+                                    <span class="material-symbols-rounded"><?php echo $privacyIcon; ?></span>
+                                </span>
+                                </p>
                         </div>
                     </div>
                     
@@ -302,3 +320,4 @@ $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0;
     </div>
     
     </div>
+</div>
