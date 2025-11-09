@@ -155,6 +155,11 @@ CREATE TABLE `community_publications` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `community_id` INT NOT NULL,
   `user_id` INT NOT NULL,
+  
+  -- --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+  `title` VARCHAR(255) NULL DEFAULT NULL,
+  -- --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
+  
   `text_content` TEXT NULL DEFAULT NULL, 
   `post_type` ENUM('post', 'poll') NOT NULL DEFAULT 'post',
   `created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
