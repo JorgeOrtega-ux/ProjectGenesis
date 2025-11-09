@@ -376,9 +376,12 @@ export function initPublicationManager() {
             });
             toggleButton.classList.add('active');
     
+            // ==========================================================
+            // ============ INICIO DE LA CORRECCIÓN DEL ERROR ============
+            // ==========================================================
             if (newType === 'poll') {
-                if (postArea) { postArea.style.display = 'none'; postArea.classList.remove('active'); postArea.classList.add('disabled'); }
-                if (pollArea) { pollArea.style.display = 'flex'; pollArea.classList.add('active'); pollArea.classList.remove('disabled'); }
+                if (postArea) { /* postArea.style.display = 'none'; */ postArea.classList.remove('active'); postArea.classList.add('disabled'); }
+                if (pollArea) { /* pollArea.style.display = 'flex'; */ pollArea.classList.add('active'); pollArea.classList.remove('disabled'); }
                 if (attachBtn) attachBtn.style.display = 'none';
                 if (attachSpacer) attachSpacer.style.display = 'block';
                 history.pushState(null, '', window.projectBasePath + '/create-poll');
@@ -390,12 +393,15 @@ export function initPublicationManager() {
                 }
     
             } else { 
-                if (postArea) { postArea.style.display = 'flex'; postArea.classList.add('active'); postArea.classList.remove('disabled'); }
-                if (pollArea) { pollArea.style.display = 'none'; pollArea.classList.remove('active'); pollArea.classList.add('disabled'); }
+                if (postArea) { /* postArea.style.display = 'flex'; */ postArea.classList.add('active'); postArea.classList.remove('disabled'); }
+                if (pollArea) { /* pollArea.style.display = 'none'; */ pollArea.classList.remove('active'); pollArea.classList.add('disabled'); }
                 if (attachBtn) attachBtn.style.display = 'flex';
                 if (attachSpacer) attachSpacer.style.display = 'none';
                 history.pushState(null, '', window.projectBasePath + '/create-publication');
             }
+            // ==========================================================
+            // ============= FIN DE LA CORRECCIÓN DEL ERROR =============
+            // ==========================================================
             
             validatePublicationState();
             return; // Importante salir después de manejar el toggle
