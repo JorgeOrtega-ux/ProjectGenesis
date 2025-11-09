@@ -74,7 +74,7 @@ $hasResults = !empty($userResults) || !empty($postResults);
             </h1>
         </div>
 
-        <div class="component-card" id="search-no-results-card" <?php if ($hasResults) echo 'class="component-card disabled"'; ?>>
+        <div class="component-card component-card--column" id="search-no-results-card" <?php if ($hasResults) echo 'style="display: none;"'; ?>>
             <div class="component-card__content">
                 <div class="component-card__icon">
                      <span class="material-symbols-rounded">search_off</span>
@@ -84,7 +84,7 @@ $hasResults = !empty($userResults) || !empty($postResults);
                 </div>
             </div>
         </div>
-        <div id="search-results-users" <?php if (empty($userResults)) echo 'class="disabled"'; ?>>
+        <div id="search-results-users" <?php if (empty($userResults)) echo 'style="display: none;"'; ?>>
             <?php if (!empty($userResults)): ?>
                 <div class="component-card component-card--column">
                     <h2 class="component-card__title" data-i18n="header.search.people">Personas</h2>
@@ -115,7 +115,7 @@ $hasResults = !empty($userResults) || !empty($postResults);
                 </div>
             <?php endif; ?>
         </div>
-        <div id="search-results-posts" <?php if (empty($postResults)) echo 'class="disabled"'; ?>>
+        <div id="search-results-posts" <?php if (empty($postResults)) echo 'style="display: none;"'; ?>>
             <?php if (!empty($postResults)): ?>
                 <div class="component-card component-card--column">
                     <h2 class="component-card__title" data-i18n="header.search.posts">Publicaciones</h2>
@@ -129,7 +129,7 @@ $hasResults = !empty($userResults) || !empty($postResults);
                             ?>
                             <a href="<?php echo $basePath . '/post/' . $post['id']; ?>" 
                                data-nav-js="true" 
-                               class="component-card component-card--post" 
+                               class="component-card component-card--post component-card--column" 
                                data-post-id="<?php echo $post['id']; ?>">
                                 
                                 <div class="post-card-header">

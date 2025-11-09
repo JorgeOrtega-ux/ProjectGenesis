@@ -66,7 +66,7 @@ $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0;
             <?php
             // --- ▼▼▼ ¡INICIO DE CÓDIGO PEGADO! ▼▼▼ ---
             ?>
-            <div class="component-card component-card--post" data-post-id="<?php echo $post['id']; ?>">
+            <div class="component-card component-card--post component-card--column" data-post-id="<?php echo $post['id']; ?>">
                 
                 <div class="post-card-header">
                     <div class="component-card__content">

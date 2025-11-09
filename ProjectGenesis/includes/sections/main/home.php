@@ -222,7 +222,7 @@ try {
 
         <div class="card-list-container">
             <?php if (empty($publications)): ?>
-                <div class="component-card">
+                <div class="component-card component-card--column">
                     <div class="component-card__content">
                         <div class="component-card__text">
                             <h2 class="component-card__title" data-i18n="home.main.noPosts"></h2>
@@ -257,7 +257,7 @@ try {
                     $commentCount = (int)($post['comment_count'] ?? 0);
                     $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0; // <-- NUEVA LÍNEA
                     ?>
-                    <div class="component-card component-card--post" data-post-id="<?php echo $post['id']; ?>">
+                    <div class="component-card component-card--post component-card--column" data-post-id="<?php echo $post['id']; ?>">
                         
                         <div class="post-card-header">
                             <div class="component-card__content">
