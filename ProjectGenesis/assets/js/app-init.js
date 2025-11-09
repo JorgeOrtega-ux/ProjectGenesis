@@ -15,7 +15,7 @@ import { showAlert } from './services/alert-manager.js';
 import { initI18nManager, getTranslation } from './services/i18n-manager.js';
 import { initTooltipManager } from './services/tooltip-manager.js'; 
 import { callNotificationApi } from './services/api-service.js';
-import { initSearchManager } from './modules/search-manager.js'; // <-- LÍNEA AÑADIDA
+import { initSearchManager } from './modules/search-manager.js';
 
 const htmlEl = document.documentElement;
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -58,6 +58,74 @@ function initThemeManager() {
 let hasLoadedNotifications = false;
 let currentNotificationCount = 0;
 
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (formatTimeAgo) ▼▼▼ ---
+/**
+ * Formatea una fecha UTC a un string relativo (ej. "hace 5m", "Ayer", "7 Nov").
+ * @param {string} dateString - El string de fecha UTC (ej. "2025-11-08 20:56:47")
+ * @returns {string} - El string de tiempo formateado.
+ */
+function formatTimeAgo(dateString) {
+    if (!dateString) return '';
+    try {
+        const date = new Date(dateString.includes('Z') ? dateString : dateString + 'Z'); // Asegurar que se parsee como UTC
+        const now = new Date();
+        const seconds = Math.round((now - date) / 1000);
+        
+        const minutes = Math.round(seconds / 60);
+        const hours = Math.round(minutes / 60);
+        const days = Math.round(hours / 24);
+
+        if (seconds < 60) {
+            return 'Ahora';
+        } else if (minutes < 60) {
+            return `hace ${minutes}m`;
+        } else if (hours < 24) {
+            return `hace ${hours}h`;
+        } else if (days === 1) {
+            return 'Ayer';
+        } else {
+            // Formato para fechas más antiguas (ej. "7 Nov")
+            return date.toLocaleDateString(window.userLanguage.split('-')[0] || 'es', {
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+    } catch (e) {
+        console.error("Error al formatear fecha:", e);
+        return dateString;
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (getRelativeDateGroup) ▼▼▼ ---
+/**
+ * Devuelve la clave del grupo de fecha (Hoy, Ayer, etc.) para una fecha dada.
+ * @param {Date} date - El objeto Date de la notificación.
+ * @returns {string} - El string del grupo ("Hoy", "Ayer", "7 de noviembre de 2025").
+ */
+function getRelativeDateGroup(date) {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const lang = window.userLanguage.split('-')[0] || 'es';
+
+    if (date.toDateString() === today.toDateString()) {
+        return "Hoy";
+    }
+    if (date.toDateString() === yesterday.toDateString()) {
+        return "Ayer";
+    }
+    // Formato para grupos más antiguos (ej. "viernes, 7 de noviembre de 2025")
+    return date.toLocaleDateString(lang, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+
 /**
  * Actualiza el contador visual (badge) de notificaciones.
  * @param {number} count - El número total de notificaciones no leídas.
@@ -75,30 +143,21 @@ function setNotificationCount(count) {
     }
 }
 
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (addNotificationToUI) ▼▼▼ ---
 /**
- * Añade una notificación (HTML) al panel de notificaciones.
+ * Genera el HTML para una notificación.
  * @param {object} notification - Objeto con los datos de la notificación
+ * @returns {string} - El string HTML del item de notificación.
  */
 function addNotificationToUI(notification) {
-    const listContainer = document.getElementById('notification-list-items');
-    const placeholder = document.getElementById('notification-placeholder');
-    if (!listContainer) return;
-
-    if (placeholder) {
-        placeholder.style.display = 'none';
-    }
-    
-    // Evitar duplicados si el WS y la carga inicial se cruzan
-    if (document.querySelector(`.notification-item[data-id="${notification.id}"]`)) {
-        return;
-    }
-
     const avatar = notification.actor_avatar || "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
     let notificationHtml = '';
     let textKey = '';
     let href = '#'; // Enlace por defecto
 
-    // --- ▼▼▼ Lógica de renderizado (sin cambios) ▼▼▼ ---
+    // --- 1. Generar el string de tiempo relativo ---
+    const timeAgo = formatTimeAgo(notification.created_at);
+
     switch (notification.type) {
         case 'friend_request':
             textKey = 'notifications.friendRequestText';
@@ -115,6 +174,7 @@ function addNotificationToUI(notification) {
                             </a>
                             <span data-i18n="${textKey}">quiere ser tu amigo.</span>
                         </div>
+                        <div class="notification-timestamp">${timeAgo}</div>
                         <div class="notification-actions">
                             <button type="button" class="notification-action-button notification-action-button--secondary" 
                                     data-action="friend-decline-request" data-user-id="${notification.actor_user_id}">
@@ -130,7 +190,7 @@ function addNotificationToUI(notification) {
             break;
         
         case 'friend_accept':
-            textKey = 'js.notifications.friendAccepted'; // "¡{username} aceptó tu solicitud de amistad!"
+            textKey = 'js.notifications.friendAccepted';
             href = `${window.projectBasePath}/profile/${notification.actor_username}`;
             notificationHtml = `
                 <a href="${href}" data-nav-js="true" class="notification-item" data-id="${notification.id}" data-user-id="${notification.actor_user_id}">
@@ -141,12 +201,13 @@ function addNotificationToUI(notification) {
                         <div class="notification-text">
                             <span data-i18n="${textKey}">${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
                         </div>
-                    </div>
+                        <div class="notification-timestamp">${timeAgo}</div>
+                        </div>
                 </a>`;
             break;
 
         case 'like':
-            textKey = 'js.notifications.newLike'; // "A {username} le gustó tu publicación."
+            textKey = 'js.notifications.newLike';
             href = `${window.projectBasePath}/post/${notification.reference_id}`;
             notificationHtml = `
                 <a href="${href}" data-nav-js="true" class="notification-item" data-id="${notification.id}" data-user-id="${notification.actor_user_id}">
@@ -157,12 +218,13 @@ function addNotificationToUI(notification) {
                         <div class="notification-text">
                             <span data-i18n="${textKey}">${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
                         </div>
-                    </div>
+                        <div class="notification-timestamp">${timeAgo}</div>
+                        </div>
                 </a>`;
             break;
             
         case 'comment':
-            textKey = 'js.notifications.newComment'; // "{username} comentó en tu publicación."
+            textKey = 'js.notifications.newComment';
             href = `${window.projectBasePath}/post/${notification.reference_id}`;
              notificationHtml = `
                 <a href="${href}" data-nav-js="true" class="notification-item" data-id="${notification.id}" data-user-id="${notification.actor_user_id}">
@@ -173,13 +235,14 @@ function addNotificationToUI(notification) {
                         <div class="notification-text">
                             <span data-i18n="${textKey}">${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
                         </div>
-                    </div>
+                        <div class="notification-timestamp">${timeAgo}</div>
+                        </div>
                 </a>`;
             break;
 
         case 'reply':
-            textKey = 'js.notifications.newReply'; // "{username} respondió a tu comentario."
-            href = `${window.projectBasePath}/post/${notification.reference_id}`; // reference_id es el post_id
+            textKey = 'js.notifications.newReply';
+            href = `${window.projectBasePath}/post/${notification.reference_id}`;
              notificationHtml = `
                 <a href="${href}" data-nav-js="true" class="notification-item" data-id="${notification.id}" data-user-id="${notification.actor_user_id}">
                     <div class="notification-avatar">
@@ -189,15 +252,13 @@ function addNotificationToUI(notification) {
                         <div class="notification-text">
                             <span data-i18n="${textKey}">${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
                         </div>
-                    </div>
+                        <div class="notification-timestamp">${timeAgo}</div>
+                        </div>
                 </a>`;
             break;
     }
-    // --- ▲▲▲ FIN DE LÓGICA DE RENDERIZADO ▲▲▲ ---
     
     if (notificationHtml) {
-        // --- ▼▼▼ MODIFICACIÓN PARA 'is_read' ▼▼▼ ---
-        // Si la notificación está leída, le añadimos opacidad
         if (notification.is_read == 1) {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = notificationHtml.trim();
@@ -205,12 +266,15 @@ function addNotificationToUI(notification) {
             item.style.opacity = '0.6'; 
             notificationHtml = item.outerHTML;
         }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-        listContainer.insertAdjacentHTML('beforeend', notificationHtml); // <-- CAMBIADO A 'beforeend' para orden cronológico
     }
+    
+    // --- 2. Devolver el HTML (ya no lo inserta aquí) ---
+    return notificationHtml;
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (addNotificationToUI) ▲▲▲ ---
 
 
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (loadAllNotifications) ▼▼▼ ---
 /**
  * Carga TODAS las notificaciones (amistad, likes, etc.) desde la BD.
  */
@@ -224,7 +288,6 @@ async function loadAllNotifications() {
     const placeholder = document.getElementById('notification-placeholder');
     if (!listContainer || !placeholder) return;
 
-    // Mostrar spinner
     placeholder.style.display = 'flex';
     placeholder.querySelector('.material-symbols-rounded').innerHTML = '<span class="logout-spinner" style="width: 32px; height: 32px; border-width: 3px;"></span>';
     placeholder.querySelector('span[data-i18n]').setAttribute('data-i18n', 'notifications.loading');
@@ -235,14 +298,10 @@ async function loadAllNotifications() {
     formData.append('action', 'get-notifications'); 
 
     try {
-        const result = await callNotificationApi(formData); // ¡Llamada a la nueva API!
+        const result = await callNotificationApi(formData);
         
         if (result.success && result.notifications) {
-            
-            // --- ▼▼▼ ¡ESTA ES LA LÍNEA MODIFICADA! ▼▼▼ ---
-            // Usamos el nuevo conteo que viene de la API para el badge
             setNotificationCount(result.unread_count || 0);
-            // --- ▲▲▲ ¡FIN DE LA MODIFICACIÓN! ▲▲▲ ---
             
             if (result.notifications.length === 0) {
                 placeholder.style.display = 'flex';
@@ -252,8 +311,25 @@ async function loadAllNotifications() {
             } else {
                 placeholder.style.display = 'none';
                 
+                // --- 1. Lógica de agrupación ---
+                let lastDateGroup = null;
+                
                 result.notifications.forEach(notification => {
-                    addNotificationToUI(notification);
+                    const notificationDate = new Date(notification.created_at + 'Z');
+                    const currentGroup = getRelativeDateGroup(notificationDate);
+                    
+                    // --- 2. Insertar cabecera de grupo si es nueva ---
+                    if (currentGroup !== lastDateGroup) {
+                        const dividerHtml = `<div class="notification-date-divider">${currentGroup}</div>`;
+                        listContainer.insertAdjacentHTML('beforeend', dividerHtml);
+                        lastDateGroup = currentGroup;
+                    }
+
+                    // --- 3. Generar e insertar el item ---
+                    const notificationHtml = addNotificationToUI(notification);
+                    if (notificationHtml) {
+                        listContainer.insertAdjacentHTML('beforeend', notificationHtml);
+                    }
                 });
             }
         } else {
@@ -270,6 +346,7 @@ async function loadAllNotifications() {
          placeholder.querySelector('span[data-i18n]').textContent = getTranslation('js.api.errorConnection');
     }
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (loadAllNotifications) ▲▲▲ ---
 
 /**
  * Inicializa los listeners para el panel de notificaciones.
@@ -279,22 +356,17 @@ function initNotificationManager() {
     if (notificationButton) {
         notificationButton.addEventListener('click', () => {
             if (!hasLoadedNotifications) {
-                loadAllNotifications(); // Cargar todas las notificaciones
+                loadAllNotifications();
             }
-            // Marcar como leídas en el backend (no esperamos respuesta)
             const formData = new FormData();
             formData.append('action', 'mark-all-read');
             callNotificationApi(formData);
             
-            // Limpiar badge visualmente
             setNotificationCount(0);
 
-            // --- ▼▼▼ NUEVA LÓGICA: MARCAR VISUALMENTE COMO LEÍDAS ▼▼▼ ---
-            // Añadimos opacidad a todos los items de la lista
             document.querySelectorAll('#notification-list-items .notification-item').forEach(item => {
                 item.style.opacity = '0.6';
             });
-            // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
         }, { once: false });
     }
     
@@ -306,7 +378,6 @@ function initNotificationManager() {
                 item.style.opacity = '0.5'; 
                 setTimeout(() => {
                     item.remove();
-                    // Volver a mostrar el placeholder si la lista está vacía
                     const listContainer = document.getElementById('notification-list-items');
                     const placeholder = document.getElementById('notification-placeholder');
                     if (listContainer && placeholder && listContainer.children.length === 0) {
@@ -342,7 +413,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     initPublicationManager();
     initFriendManager(); 
     initNotificationManager();
-    initSearchManager(); // <-- LÍNEA AÑADIDA
+    initSearchManager();
 
     initRouter(); 
     
@@ -351,8 +422,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (window.isUserLoggedIn) {
         initFriendList();
 
-        // --- ▼▼▼ INICIO DE CARGA INICIAL DEL BADGE (NUEVO) ▼▼▼ ---
-        // Hacemos una llamada silenciosa solo por el conteo de no leídas.
         (async () => {
             const formData = new FormData();
             formData.append('action', 'get-notifications'); 
@@ -361,7 +430,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 setNotificationCount(result.unread_count);
             }
         })();
-        // --- ▲▲▲ FIN DE CARGA INICIAL DEL BADGE ▲▲▲ ---
 
 
         let ws;
@@ -413,39 +481,26 @@ document.addEventListener('DOMContentLoaded', async function () {
                             }
                         }
                         
-                        // --- ▼▼▼ INICIO DE MANEJADORES DE WS MODIFICADOS ▼▼▼ ---
-                        
                          else if (data.type === 'new_poll_vote' && data.payload) {
-                            // Voto de encuesta (SÍ queremos la alerta, NO la notificación persistente)
                             console.log("[WS] Notificación de nuevo voto");
                             showAlert(`📊 ${getTranslation('js.notifications.newPollVote').replace('{username}', data.payload.username)}`, 'info');
                         }
                         
-                        // ¡NUEVO MANEJADOR GENÉRICO!
                         else if (data.type === 'new_notification_ping') {
                             console.log("[WS] Ping de nueva notificación recibido");
-                            // Incrementar el contador visual
                             setNotificationCount(currentNotificationCount + 1);
-                            // Forzar a que la lista se recargue la próxima vez que se abra el panel
                             hasLoadedNotifications = false;
                         }
 
-                        // --- ▼▼▼ INICIO DEL BLOQUE AÑADIDO ▼▼▼ ---
                         else if (data.type === 'presence_update') {
-                            // ¡Aviso de estado! (Online/Offline)
-                            // No mostramos alerta, disparamos un evento global
-                            // para que otros módulos (como friend-manager) reaccionen.
                             console.log(`[WS] Actualización de estado: User ${data.user_id} está ${data.status}`);
                             document.dispatchEvent(new CustomEvent('user-presence-changed', {
                                 detail: {
                                     userId: data.user_id,
-                                    status: data.status // será "online" o "offline"
+                                    status: data.status
                                 }
                             }));
                         }
-                        // --- ▲▲▲ FIN DEL BLOQUE AÑADIDO ▲▲▲ ---
-                        
-                        // --- ▲▲▲ FIN DE MANEJADORES DE WS MODIFICADOS ▲▲▲ ---
                         
                     } catch (e) {
                         console.error("[WS] Error al parsear mensaje:", e);

@@ -3186,7 +3186,8 @@ a.profile-tab.active {
     padding: 16px;
     border-bottom: 1px solid #00000015;
     background-color: #ffffff;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, opacity 0.2s; /* <-- Opacity añadido */
+    text-decoration: none; /* <-- Añadido para los <a> */
 }
 
 .notification-item:hover {
@@ -3206,12 +3207,14 @@ a.profile-tab.active {
     object-fit: cover;
 }
 
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN (gap reducido) ▼▼▼ --- */
 .notification-content {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 4px; /* <-- Reducido de 12px a 4px */
 }
+/* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
 
 .notification-text {
     font-size: 14px;
@@ -3261,6 +3264,24 @@ a.profile-tab.active {
 .notification-action-button--secondary:hover {
     background-color: #f5f5fa;
 }
+
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (DIVIDER Y TIMESTAMP) ▼▼▼ --- */
+.notification-timestamp {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    line-height: 1;
+}
+
+.notification-date-divider {
+    padding: 16px 16px 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    background-color: #ffffff;
+}
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */
 
 /* ====================================== */
 /* =  NUEVOS ESTILOS DE ESTADO (PUNTOS) = */
