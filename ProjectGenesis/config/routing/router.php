@@ -122,6 +122,9 @@ $allowedPages = [
     'admin-server-settings'    => '../../includes/sections/admin/server-settings.php',
     'admin-manage-backups'     => '../../includes/sections/admin/manage-backups.php',
     'admin-manage-logs'        => '../../includes/sections/admin/manage-logs.php',
+    // --- ▼▼▼ LÍNEAS AÑADIDAS ▼▼▼ ---
+    'admin-manage-communities' => '../../includes/sections/admin/manage-communities.php',
+    'admin-edit-community'     => '../../includes/sections/admin/edit-community.php',
 ];
 
 
