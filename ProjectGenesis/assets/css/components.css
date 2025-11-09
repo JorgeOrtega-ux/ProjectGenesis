@@ -3688,3 +3688,65 @@ a.profile-tab.active {
     font-size: 16px; /* Tamaño pequeño */
     color: #6b7280; /* Mismo color que el texto de descripción */
 }
+
+
+/* ====================================== */
+/* =  BOTONES DE CREAR PUBLICACIÓN (NUEVO) = */
+/* ====================================== */
+
+#create-post-actions-footer {
+    justify-content: space-between;
+    width: 100%;
+}
+
+.component-action-button--icon-square {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    background-color: transparent;
+    border-radius: 8px;
+    border: 1px solid #00000020;
+    cursor: pointer;
+    outline: none;
+    user-select: none;
+    padding: 0;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    color: #000;
+}
+.component-action-button--icon-square:hover:not(:disabled) {
+    background-color: #f5f5fa;
+}
+.component-action-button--icon-square .material-symbols-rounded {
+    font-size: 22px;
+}
+
+.component-action-button--icon-square.primary {
+    background-color: #000;
+    color: #ffffff;
+    border-color: #000;
+}
+.component-action-button--icon-square.primary:hover:not(:disabled) {
+    background-color: #333;
+    border-color: #333;
+}
+
+/* Estado deshabilitado (copiado de .component-action-button) */
+.component-action-button--icon-square:disabled {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    border-color: #e0e0e0;
+    cursor: not-allowed;
+}
+.component-action-button--icon-square.primary:disabled {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    border-color: #e0e0e0;
+}
+
+/* Ocultar el spacer si el botón de adjuntar está oculto */
+#attach-files-btn.disabled + #attach-files-spacer {
+    display: none;
+}

@@ -164,9 +164,10 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
                     </button>
                 </div>
                 
-                <div class="component-card__actions">
+                <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- ?>
+                <div class="component-card__actions" id="create-post-actions-footer">
                     
-                    <button type="button" class="component-action-button component-action-button--secondary <?php echo $isPollActive ? 'disabled' : 'active'; ?>" 
+                    <button type="button" class="component-action-button--icon-square <?php echo $isPollActive ? 'disabled' : 'active'; ?>" 
                             id="attach-files-btn" 
                             data-tooltip="create_publication.attachTooltip">
                         <span class="material-symbols-rounded">attach_file</span>
@@ -174,10 +175,11 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
                     
                     <div id="attach-files-spacer" class="<?php echo $isPollActive ? 'active' : 'disabled'; ?>"></div>
 
-                    <button type="button" class="component-action-button component-action-button--primary" id="publish-post-btn" data-i18n="create_publication.publish" disabled>
-                        Publicar
+                    <button type="button" class="component-action-button--icon-square primary" id="publish-post-btn" data-tooltip="create_publication.publish" disabled>
+                        <span class="material-symbols-rounded">send</span>
                     </button>
                 </div>
+                <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
 
             </div>
         <?php endif; ?>
