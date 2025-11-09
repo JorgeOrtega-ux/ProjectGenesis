@@ -1,41 +1,55 @@
 <?php
 // FILE: includes/sections/main/explorer.php
-// (Sección actualizada para mostrar comunidades como tarjetas estilo "Behance")
-// (Versión 3: Con Toolbar, sin header, botón negro)
+// (Sección actualizada para mostrar comunidades dinámicas desde la BD)
 
-global $pdo, $basePath; // Aseguramos acceso a $basePath
+global $pdo, $basePath;
 $userId = $_SESSION['user_id'] ?? 0;
+$publicCommunities = [];
 
-/*
- * NOTA: La lógica PHP para obtener comunidades de la BD se ha 
- * deshabilitado temporalmente para mostrar esta maqueta con datos de prueba.
-*/
+try {
+    // Esta consulta obtiene todas las comunidades públicas, cuenta sus miembros,
+    // cuenta las publicaciones de hoy, y verifica si el usuario actual ya es miembro.
+    $stmt = $pdo->prepare(
+       "SELECT 
+            c.id, c.name, c.description, c.icon_url, c.banner_url,
+            COUNT(DISTINCT uc.user_id) AS member_count,
+            (SELECT COUNT(DISTINCT p.id) 
+             FROM community_publications p 
+             WHERE p.community_id = c.id AND p.created_at >= CURDATE()) AS posts_today_count,
+            (EXISTS(SELECT 1 FROM user_communities WHERE user_id = :current_user_id AND community_id = c.id)) AS is_member
+        FROM communities c
+        LEFT JOIN user_communities uc ON c.id = uc.community_id
+        WHERE c.privacy = 'public'
+        GROUP BY c.id, c.name, c.description, c.icon_url, c.banner_url
+        ORDER BY member_count DESC"
+    );
+    $stmt->execute(['current_user_id' => $userId]);
+    $publicCommunities = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// --- INICIO DE CSS DE PRUEBA (CSS EN LÍNEA COMO SE SOLICITÓ) ---
+} catch (PDOException $e) {
+    logDatabaseError($e, 'explorer.php - fetch public communities');
+    // $publicCommunities se quedará como un array vacío y mostrará el mensaje de "No hay comunidades".
+}
+
+// --- INICIO DE CSS (Se mantiene el CSS en línea como en tu archivo original) ---
 ?>
 <style>
     /* * =============================================
-     * ESTILOS DE PRUEBA PARA EXPLORER.PHP (Versión 3)
+     * ESTILOS PARA EXPLORER.PHP
      * =============================================
     */
-
-    /* Contenedor principal para 100% de ancho */
     .explorer-full-width-container {
         width: 100%;
         height: 100%;
-        padding: 82px 24px 24px 24px; /* 82px para el header/toolbar fijo */
+        padding: 82px 24px 24px 24px; 
         box-sizing: border-box;
     }
-
-    /* Grid responsivo para las tarjetas */
     .explorer-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 24px;
         width: 100%;
     }
-
-    /* La tarjeta de comunidad (con padding) */
     .community-card-preview {
         border-radius: 12px;
         background-color: #ffffff;
@@ -44,38 +58,29 @@ $userId = $_SESSION['user_id'] ?? 0;
         box-shadow: 0 2px 4px #00000010;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    
     .community-card-preview:hover {
         transform: translateY(-4px);
         box-shadow: 0 6px 12px #00000015;
     }
-
-    /* El banner superior (con border-radius) */
     .community-card__banner {
         height: 120px;
         background-size: cover;
         background-position: center;
         background-color: #f5f5fa;
-        border-radius: 8px; /* Esquinas redondeadas para el banner */
+        border-radius: 8px; 
     }
-
-    /* Contenedor para todo el contenido debajo del banner */
     .community-card__content {
         padding: 0; 
     }
-
-    /* Contenedor para el ícono (que se superpone) */
     .community-card__header {
         margin-top: -40px; 
         margin-left: 12px; 
         height: 64px; 
     }
-
-    /* El ícono (cuadrado redondeado) */
     .community-card__icon {
         width: 64px;
         height: 64px;
-        border-radius: 16px; /* Cuadrado redondeado */
+        border-radius: 16px; 
         border: 4px solid #ffffff;
         background-color: #f0f0f0;
         display: flex;
@@ -85,20 +90,19 @@ $userId = $_SESSION['user_id'] ?? 0;
         box-shadow: 0 2px 4px #00000020;
         flex-shrink: 0;
     }
-
-    .community-card__icon .material-symbols-rounded {
-        font-size: 32px;
-        color: #6b7280;
+    /* --- ▼▼▼ MODIFICACIÓN: Añadido .community-card__icon img ▼▼▼ --- */
+    .community-card__icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
-    
-    /* Contenedor para nombre y descripción */
+    /* --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- */
     .community-card__info {
         padding-top: 0px; 
         padding-bottom: 16px;
         padding-left: 12px; 
         padding-right: 12px;
     }
-
     .community-card__name {
         font-weight: 700;
         font-size: 18px;
@@ -108,7 +112,6 @@ $userId = $_SESSION['user_id'] ?? 0;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-
     .community-card__description {
         font-size: 14px;
         color: #6b7280;
@@ -118,16 +121,12 @@ $userId = $_SESSION['user_id'] ?? 0;
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
-        min-height: 42px;
+        min-height: 42px; /* 2 líneas de 21px */
     }
-
-    /* --- ▼▼▼ INICIO DE CAMBIOS (BOTÓN NEGRO) ▼▼▼ --- */
-    
-    /* Botón de unirse (Ahora negro) */
     .community-card__join-btn {
         width: 100%;
         height: 40px;
-        background-color: #000; /* CAMBIADO a negro */
+        background-color: #000; 
         color: #ffffff;
         border: none;
         border-radius: 8px;
@@ -136,15 +135,20 @@ $userId = $_SESSION['user_id'] ?? 0;
         cursor: pointer;
         transition: background-color 0.2s ease;
     }
-    
     .community-card__join-btn:hover {
-        background-color: #333; /* CAMBIADO a gris oscuro */
+        background-color: #333; 
     }
-
-    /* --- ▲▲▲ FIN DE CAMBIOS (BOTÓN NEGRO) ▲▲▲ --- */
-
-
-    /* Contenedor de estadísticas (con margen para alinear) */
+    /* --- ▼▼▼ NUEVA CLASE PARA BOTÓN "ABANDONAR" ▼▼▼ --- */
+    .community-card__join-btn.danger {
+        background-color: #ffffff;
+        color: #c62828;
+        border: 1px solid #ef9a9a;
+    }
+    .community-card__join-btn.danger:hover {
+        background-color: #fbebee;
+        border-color: #c62828;
+    }
+    /* --- ▲▲▲ FIN DE NUEVA CLASE ▲▲▲ --- */
     .community-card__stats {
         display: flex;
         gap: 16px;
@@ -152,7 +156,6 @@ $userId = $_SESSION['user_id'] ?? 0;
         padding-top: 16px;
         border-top: 1px solid #00000015;
     }
-
     .community-card__stat-item {
         display: flex;
         align-items: center;
@@ -161,17 +164,15 @@ $userId = $_SESSION['user_id'] ?? 0;
         font-weight: 500;
         color: #6b7280;
     }
-    
     .community-card__stat-item .material-symbols-rounded {
         font-size: 16px;
     }
 </style>
-<?php // --- FIN DE CSS DE PRUEBA --- ?>
+<?php // --- FIN DE CSS --- ?>
 
 
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'explorer') ? 'active' : 'disabled'; ?>" data-section="explorer">
     
-    <?php // --- ▼▼▼ INICIO DE TOOLBAR AÑADIDO ▼▼▼ --- ?>
     <div class="page-toolbar-container" id="explorer-toolbar-container">
         <div class="page-toolbar-floating">
             <div class="toolbar-action-default">
@@ -186,7 +187,7 @@ $userId = $_SESSION['user_id'] ?? 0;
                 <div class="page-toolbar-right">
                     <button type="button"
                         class="page-toolbar-button"
-                        data-action="explorer-search-dummy" <?php // Acción sin función ?>
+                        data-action="explorer-search-dummy" 
                         data-tooltip="admin.users.search">
                         <span class="material-symbols-rounded">search</span>
                     </button>
@@ -194,160 +195,92 @@ $userId = $_SESSION['user_id'] ?? 0;
             </div>
         </div>
     </div>
-    <?php // --- ▲▲▲ FIN DE TOOLBAR AÑADIDO ▲▲▲ --- ?>
 
-    <?php // Contenedor principal de 100% de ancho (alineado al top) ?>
     <div class="explorer-full-width-container">
     
-        <?php // --- ENCABEZADO ELIMINADO --- ?>
-
-        <?php // Grid para las tarjetas ?>
         <div class="explorer-grid">
 
-            <?php // --- INICIO DE TARJETA DE PRUEBA 1 --- ?>
-            <div class="community-card-preview">
-                <div class="community-card__banner" style="background-image: url('https://picsum.photos/400/120?random=1');"></div>
+            <?php if (empty($publicCommunities)): ?>
                 
-                <div class="community-card__content">
-                    <div class="community-card__header">
-                        <div class="community-card__icon" style="background-color: #0057FF;">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd" clip-rule="evenodd" d="M19 12.875H13.875V11.125H19C19 10.159 18.216 9.375 17.25 9.375H13.875V7.625H17.625C17.625 6.659 16.841 5.875 15.875 5.875H12.125V12.875H19ZM17.25 14.625H13.875V18.125H17.25C18.216 18.125 19 17.341 19 16.375C19 15.409 18.216 14.625 17.25 14.625Z" fill="white"/>
-                                <path d="M10.375 12.875H5V11.125H10.375V12.875Z" fill="white"/>
-                            </svg>
+                <div class="component-card" style="grid-column: 1 / -1;">
+                    <div class="component-card__content">
+                        <div class="component-card__icon">
+                            <span class="material-symbols-rounded">search_off</span>
                         </div>
-                    </div>
-                    
-                    <div class="community-card__info">
-                        <h3 class="community-card__name">Diseñadores Behance (Prueba)</h3>
-                        <p class="community-card__description">Una comunidad de artistas que se unen para colaborar, compartir ideas y mostrar su trabajo.</p>
-                    </div>
-
-                    <button class="community-card__join-btn" data-i18n="join_group.join">Unirme</button>
-
-                    <div class="community-card__stats">
-                        <div class="community-card__stat-item">
-                            <span class="material-symbols-rounded">group</span>
-                            <span>124K Miembros</span>
-                        </div>
-                        <div class="community-card__stat-item">
-                            <span class="material-symbols-rounded">shield_person</span>
-                            <span>4 Admins</span>
+                        <div class="component-card__text">
+                            <h2 class="component-card__title" data-i18n="join_group.noPublic">No hay comunidades públicas</h2>
+                            <p class="component-card__description">Parece que aún no hay comunidades públicas. ¿Por qué no creas una?</p>
                         </div>
                     </div>
                 </div>
-            </div>
-            <?php // --- FIN DE TARJETA DE PRUEBA 1 --- ?>
 
-            <?php // --- INICIO DE TARJETA DE PRUEBA 2 --- ?>
-            <div class="community-card-preview">
-                <div class="community-card__banner" style="background-image: url('https://picsum.photos/400/120?random=2');"></div>
-                <div class="community-card__content">
-                    <div class="community-card__header">
-                        <div class="community-card__icon" style="background-color: #FAFAFA;">
-                            <span class="material-symbols-rounded" style="color: #333;">code</span>
+            <?php else: ?>
+                <?php foreach ($publicCommunities as $community): ?>
+                    <?php
+                        // Preparar los datos dinámicos
+                        $name = htmlspecialchars($community['name']);
+                        $description = htmlspecialchars($community['description'] ?? 'Una comunidad para colaborar, compartir ideas y mucho más. ¡Únete y participa!');
+                        
+                        $bannerUrl = !empty($community['banner_url']) 
+                            ? htmlspecialchars($community['banner_url']) 
+                            : 'https://picsum.photos/seed/' . preg_replace("/[^a-zA-Z0-9]/", '', $name) . '/400/120';
+                            
+                        $iconUrl = !empty($community['icon_url']) 
+                            ? htmlspecialchars($community['icon_url']) 
+                            : 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&size=64&background=random&color=ffffff&bold=true';
+                        
+                        $memberCount = (int)$community['member_count'];
+                        $postsTodayCount = (int)$community['posts_today_count'];
+                        $isMember = (bool)$community['is_member'];
+                    ?>
+
+                    <div class="community-card-preview">
+                        <div class="community-card__banner" style="background-image: url('<?php echo $bannerUrl; ?>');"></div>
+                        
+                        <div class="community-card__content">
+                            <div class="community-card__header">
+                                <div class="community-card__icon">
+                                    <img src="<?php echo $iconUrl; ?>" alt="Ícono de <?php echo $name; ?>">
+                                </div>
+                            </div>
+                            
+                            <div class="community-card__info">
+                                <h3 class="community-card__name" title="<?php echo $name; ?>"><?php echo $name; ?></h3>
+                                <p class="community-card__description"><?php echo $description; ?></p>
+                            </div>
+
+                            <?php if ($isMember): ?>
+                                <button class="community-card__join-btn danger" 
+                                        data-action="leave-community" 
+                                        data-community-id="<?php echo $community['id']; ?>"
+                                        data-i18n="join_group.leave">
+                                    Abandonar
+                                </button>
+                            <?php else: ?>
+                                <button class="community-card__join-btn" 
+                                        data-action="join-community" 
+                                        data-community-id="<?php echo $community['id']; ?>"
+                                        data-i18n="join_group.join">
+                                    Unirme
+                                </button>
+                            <?php endif; ?>
+
+                            <div class="community-card__stats">
+                                <div class="community-card__stat-item">
+                                    <span class="material-symbols-rounded">group</span>
+                                    <span><?php echo number_format($memberCount); ?> Miembros</span>
+                                </div>
+                                <div class="community-card__stat-item">
+                                    <span class="material-symbols-rounded">chat_bubble</span>
+                                    <span>+<?php echo number_format($postsTodayCount); ?> publicaciones hoy</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="community-card__info">
-                        <h3 class="community-card__name">Desarrolladores Web</h3>
-                        <p class="community-card__description">Todo sobre HTML, CSS, JavaScript, React, PHP y más. Resuelve dudas y comparte proyectos.</p>
-                    </div>
-
-                    <button class="community-card__join-btn" data-i18n="join_group.join">Unirme</button>
-
-                    <div class="community-card__stats">
-                        <div class="community-card__stat-item">
-                            <span class="material-symbols-rounded">group</span>
-                            <span>88K Miembros</span>
-                        </div>
-                        <div class="community-card__stat-item">
-                            <span class="material-symbols-rounded">map</span>
-                            <span>México</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <?php // --- FIN DE TARJETA DE PRUEBA 2 --- ?>
-
-            <?php // --- INICIO DE TARJETA DE PRUEBA 3 --- ?>
-            <div class="community-card-preview">
-                <div class="community-card__banner" style="background-image: url('https://picsum.photos/400/120?random=3');"></div>
-                <div class="community-card__content">
-                    <div class="community-card__header">
-                        <div class="community-card__icon" style="background-color: #1f2937;">
-                            <span class="material-symbols-rounded" style="color: white;">brush</span>
-                        </div>
-                    </div>
-                    
-                    <div class="community-card__info">
-                        <h3 class="community-card__name">Ilustración Digital</h3>
-                        <p class="community-card__description">Fans de Procreate, Photoshop e Illustrator. Comparte tus últimos trabajos y obtén feedback.</p>
-                    </div>
-
-                    <button class="community-card__join-btn" data-i18n="join_group.join">Unirme</button>
-
-                    <div class="community-card__stats">
-                        <div class="community-card__stat-item">
-                            <span class="material-symbols-rounded">group</span>
-                            <span>45K Miembros</span>
-                        </div>
-                        <div class="community-card__stat-item">
-                            <span class="material-symbols-rounded">public</span>
-                            <span>Latinoamérica</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <?php // --- FIN DE TARJETA DE PRUEBA 3 --- ?>
-            
-            <?php // --- INICIO DE TARJETA DE PRUEBA 4 --- ?>
-            <div class="community-card-preview">
-                <div class="community-card__banner" style="background-image: url('https://picsum.photos/400/120?random=4');"></div>
-                <div class="community-card__content">
-                    <div class="community-card__header">
-                        <div class="community-card__icon" style="background-color: #28a745;">
-                            <span class="material-symbols-rounded" style="color: white;">restaurant</span>
-                        </div>
-                    </div>
-                    
-                    <div class="community-card__info">
-                        <h3 class="community-card__name">Cocina Fácil</h3>
-                        <p class="community-card__description">Recetas rápidas y fáciles para el día a día. ¡No necesitas ser un chef!</p>
-                    </div>
-
-                    <button class="community-card__join-btn" data-i18n="join_group.join">Unirme</button>
-
-                    <div class="community-card__stats">
-                        <div class="community-card__stat-item">
-                            <span class="material-symbols-rounded">group</span>
-                            <span>210K Miembros</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <?php // --- FIN DE TARJETA DE PRUEBA 4 --- ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
 
         </div> <?php // Fin de .explorer-grid ?>
     
     </div> <?php // Fin de .explorer-full-width-container ?>
 </div>
-
-
-<?php
-/*
-// --- INICIO DE LÓGICA ORIGINAL (COMENTADA) ---
-global $pdo, $basePath; 
-$publicCommunities = [];
-$joinedCommunityIds = [];
-$userId = $_SESSION['user_id'] ?? 0; 
-// ... (resto de la lógica PHP original) ...
-?>
-
-<div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'explorer') ? 'active' : 'disabled'; ?>" data-section="explorer">
-    <div class="component-wrapper">
-        // ... (HTML original) ...
-    </div>
-</div>
-*/
-?>

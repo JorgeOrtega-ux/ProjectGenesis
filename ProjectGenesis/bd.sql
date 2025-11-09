@@ -115,6 +115,13 @@ CREATE TABLE communities (
     name VARCHAR(100) NOT NULL,
     privacy ENUM('public', 'private') NOT NULL DEFAULT 'public',
     access_code VARCHAR(50) NULL,
+    
+    -- --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    `description` TEXT NULL DEFAULT NULL COMMENT 'Descripción de la comunidad',
+    icon_url VARCHAR(512) NULL DEFAULT NULL COMMENT 'URL para el icono de la comunidad',
+    banner_url VARCHAR(512) NULL DEFAULT NULL COMMENT 'URL para el banner de la comunidad',
+    -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     INDEX idx_access_code (access_code),
     UNIQUE KEY uk_uuid (uuid)
@@ -131,11 +138,14 @@ CREATE TABLE user_communities (
     UNIQUE KEY uk_user_community (user_id, community_id)
 );
 
-INSERT INTO communities (uuid, name, privacy, access_code) VALUES
-('a1b2c3d4-e5f6-7890-1234-abcdeffedcba', 'Matamoros', 'public', NULL),
-('b2c3d4e5-f6a7-8901-2345-bcdeffedcba1', 'Valle Hermoso', 'public', NULL),
-('c3d4e5f6-a7b8-9012-3456-cdeffedcba12', 'Universidad A', 'private', 'UNIA123'),
-('d4e5f6a7-b8c9-0123-4567-deffedcba123', 'Universidad B', 'private', 'UNIB456');
+-- --- ▼▼▼ INICIO DE MODIFICACIÓN (NUEVOS DATOS) ▼▼▼ ---
+INSERT INTO communities (uuid, name, privacy, access_code, description, icon_url, banner_url) VALUES
+('a1b2c3d4-e5f6-7890-1234-abcdeffedcba', 'Matamoros', 'public', NULL, 'Una comunidad para colaborar, compartir ideas y mucho más. ¡Únete y participa!', 'https://picsum.photos/seed/comm1/128/128', 'https://picsum.photos/seed/banner1/400/120'),
+('b2c3d4e5-f6a7-8901-2345-bcdeffedcba1', 'Valle Hermoso', 'public', NULL, 'Una comunidad para colaborar, compartir ideas y mucho más. ¡Únete y participa!', 'https://picsum.photos/seed/comm2/128/128', 'https://picsum.photos/seed/banner2/400/120'),
+('c3d4e5f6-a7b8-9012-3456-cdeffedcba12', 'Universidad A', 'private', 'UNIA123', 'Una comunidad para colaborar, compartir ideas y mucho más. ¡Únete y participa!', 'https://picsum.photos/seed/comm3/128/128', 'https://picsum.photos/seed/banner3/400/120'),
+('d4e5f6a7-b8c9-0123-4567-deffedcba123', 'Universidad B', 'private', 'UNIB456', 'Una comunidad para colaborar, compartir ideas y mucho más. ¡Únete y participa!', 'https://picsum.photos/seed/comm4/128/128', 'https://picsum.photos/seed/banner4/400/120');
+-- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
 DROP TABLE IF EXISTS `publication_attachments`;
 DROP TABLE IF EXISTS `publication_files`;
@@ -157,20 +167,16 @@ CREATE TABLE `community_publications` (
   `text_content` TEXT NULL DEFAULT NULL, 
   `post_type` ENUM('post', 'poll') NOT NULL DEFAULT 'post',
   
-  -- --- ▼▼▼ INICIO DE NUEVAS COLUMNAS ▼▼▼ ---
   `post_status` ENUM('active', 'deleted') NOT NULL DEFAULT 'active' COMMENT 'Para soft-delete',
   `privacy_level` ENUM('public', 'friends', 'private') NOT NULL DEFAULT 'public' COMMENT 'Nivel de privacidad del post',
-  -- --- ▲▲▲ FIN DE NUEVAS COLUMNAS ▲▲▲ ---
   
   `created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
   FOREIGN KEY (community_id) REFERENCES `communities`(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES `users`(id) ON DELETE CASCADE,
   KEY `idx_community_timestamp` (`community_id`,`created_at`),
   
-  -- --- ▼▼▼ INICIO DE NUEVOS ÍNDICES ▼▼▼ ---
   INDEX `idx_post_status` (`post_status`),
   INDEX `idx_privacy_level` (`privacy_level`)
-  -- --- ▲▲▲ FIN DE NUEVOS ÍNDICES ▲▲▲ ---
   
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
