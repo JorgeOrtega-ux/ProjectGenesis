@@ -43,7 +43,8 @@
       "manageUsers": "Gestionar usuarios",
       "createUsers": "Crear usuario",
       "serverSettings": "Configuracion del servidor",
-      "manageBackups": "Copias de seguridad"
+      "manageBackups": "Copias de seguridad",
+      "manageCommunities": "Gestionar Comunidades"
     }
   },
   "admin": {
@@ -88,6 +89,19 @@
       "noUsersTitle": "No se encontraron usuarios",
       "noResultsDesc": "No hay usuarios que coincidan con tu término de búsqueda.",
       "noUsersDesc": "No hay usuarios registrados en esta página."
+    },
+    "communities": {
+      "title": "Gestionar Comunidades",
+      "description": "Busca, edita, crea o elimina comunidades en el sitio.",
+      "create": "Crear Comunidad",
+      "editTooltip": "Editar comunidad",
+      "noCommunitiesTitle": "No hay comunidades",
+      "noCommunitiesDesc": "Aún no se ha creado ninguna comunidad.",
+      "labelName": "Nombre",
+      "labelPrivacy": "Privacidad",
+      "labelMembers": "Miembros",
+      "privacyPublic": "Pública",
+      "privacyPrivate": "Privada"
     },
     "create": {
       "title": "Crear Nuevo Usuario",

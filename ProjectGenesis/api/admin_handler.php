@@ -97,6 +97,68 @@ function generateSecurePasswordPhp($length = 16) {
 }
 
 
+// --- ▼▼▼ NUEVAS FUNCIONES HELPER PARA COMUNIDADES ▼▼▼ ---
+
+/**
+ * Genera un icono por defecto para una comunidad.
+ */
+function generateDefaultCommunityIcon($pdo, $communityId, $communityName, $basePath) {
+    try {
+        $savePathDir = dirname(__DIR__) . '/assets/uploads/communities_default'; 
+        $fileName = "community-{$communityId}.png";
+        $fullSavePath = $savePathDir . '/' . $fileName;
+        $publicUrl = $basePath . '/assets/uploads/communities_default/' . $fileName; 
+
+        if (!is_dir($savePathDir)) {
+            @mkdir($savePathDir, 0755, true);
+        }
+
+        $avatarColors = ['206BD3', 'D32029', '28A745', 'E91E63', 'F57C00', '673AB7', '009688'];
+        $selectedColor = $avatarColors[array_rand($avatarColors)];
+        $nameParam = urlencode($communityName);
+
+        $apiUrl = "https://ui-avatars.com/api/?name={$nameParam}&size=256&background={$selectedColor}&color=ffffff&bold=true&length=2";
+        $imageData = @file_get_contents($apiUrl);
+
+        if ($imageData === false) return null;
+        file_put_contents($fullSavePath, $imageData);
+        return $publicUrl;
+    } catch (Exception $e) {
+        logDatabaseError($e, 'admin_handler - generateDefaultCommunityIcon');
+        return null;
+    }
+}
+
+/**
+ * Elimina una imagen de comunidad (banner o icono) si no es la de por defecto.
+ */
+function deleteOldCommunityImage($oldUrl, $basePath) {
+    if (strpos($oldUrl, '/assets/uploads/communities_uploaded/') === false) {
+        return; // No eliminar avatares por defecto o de ui-avatars
+    }
+    $relativePath = str_replace($basePath, '', $oldUrl);
+    $serverPath = dirname(__DIR__) . $relativePath;
+    if (file_exists($serverPath)) {
+        @unlink($serverPath);
+    }
+}
+
+/**
+ * Genera un código de acceso aleatorio.
+ */
+function generateAccessCode($length = 8) {
+    $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $code = '';
+    $max = strlen($chars) - 1;
+    for ($i = 0; $i < $length; $i++) {
+        $code .= $chars[random_int(0, $max)];
+    }
+    return $code;
+}
+
+// --- ▲▲▲ FIN NUEVAS FUNCIONES HELPER ▲▲▲ ---
+
+
 $minPasswordLength = (int)($GLOBALS['site_settings']['min_password_length'] ?? 8);
 $maxPasswordLength = (int)($GLOBALS['site_settings']['max_password_length'] ?? 72);
 $minUsernameLength = (int)($GLOBALS['site_settings']['min_username_length'] ?? 6);
@@ -1055,6 +1117,232 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
+    // --- ▼▼▼ INICIO DE NUEVAS ACCIONES DE COMUNIDAD ▼▼▼ ---
+
+    elseif ($action === 'admin-create-community') {
+        try {
+            $name = trim($_POST['name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $privacy = ($_POST['privacy'] === 'private') ? 'private' : 'public';
+            $accessCode = ($_POST['access_code'] ?? '');
+
+            if (empty($name)) {
+                throw new Exception('admin.communities.error.nameRequired');
+            }
+            if ($privacy === 'private' && empty($accessCode)) {
+                $accessCode = generateAccessCode();
+            }
+            if ($privacy === 'public') {
+                $accessCode = null;
+            }
+
+            $uuid = bin2hex(random_bytes(16)); // Generar un UUID simple
+            
+            $pdo->beginTransaction();
+
+            $stmt_insert = $pdo->prepare(
+                "INSERT INTO communities (uuid, name, description, privacy, access_code) 
+                 VALUES (?, ?, ?, ?, ?)"
+            );
+            $stmt_insert->execute([$uuid, $name, $description, $privacy, $accessCode]);
+            $newCommunityId = $pdo->lastInsertId();
+
+            // Generar icono y banner por defecto
+            $defaultIcon = generateDefaultCommunityIcon($pdo, $newCommunityId, $name, $basePath);
+            // (Dejaremos el banner por defecto como null o un color CSS)
+            
+            if ($defaultIcon) {
+                $stmt_icon = $pdo->prepare("UPDATE communities SET icon_url = ? WHERE id = ?");
+                $stmt_icon->execute([$defaultIcon, $newCommunityId]);
+            }
+            
+            $pdo->commit();
+
+            $response['success'] = true;
+            $response['message'] = 'admin.communities.success.created';
+            $response['new_community_id'] = $newCommunityId;
+
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-create-community');
+            $response['message'] = $e->getMessage();
+        }
+    }
+    
+    elseif ($action === 'admin-update-community-details') {
+        try {
+            $communityId = (int)($_POST['community_id'] ?? 0);
+            $name = trim($_POST['name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+
+            if (empty($communityId) || empty($name)) {
+                throw new Exception('admin.communities.error.nameRequired');
+            }
+
+            $stmt = $pdo->prepare("UPDATE communities SET name = ?, description = ? WHERE id = ?");
+            $stmt->execute([$name, $description, $communityId]);
+
+            $response['success'] = true;
+            $response['message'] = 'admin.communities.success.updated';
+            $response['newName'] = $name;
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-update-community-details');
+            $response['message'] = $e->getMessage();
+        }
+    }
+    
+    elseif ($action === 'admin-update-community-privacy') {
+        try {
+            $communityId = (int)($_POST['community_id'] ?? 0);
+            $privacy = ($_POST['privacy'] === 'private') ? 'private' : 'public';
+            $accessCode = trim($_POST['access_code'] ?? '');
+
+            if (empty($communityId)) {
+                throw new Exception('js.api.invalidAction');
+            }
+            
+            if ($privacy === 'private' && empty($accessCode)) {
+                // Si se cambia a privado y no se provee código, generar uno
+                $accessCode = generateAccessCode();
+            } elseif ($privacy === 'public') {
+                // Si es público, forzar el código a NULL
+                $accessCode = null;
+            }
+
+            $stmt = $pdo->prepare("UPDATE communities SET privacy = ?, access_code = ? WHERE id = ?");
+            $stmt->execute([$privacy, $accessCode, $communityId]);
+            
+            $response['success'] = true;
+            $response['message'] = 'admin.communities.success.privacyUpdated';
+            $response['newPrivacy'] = $privacy;
+            $response['newAccessCode'] = $accessCode; // Devolver el código (nuevo o el provisto)
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-update-community-privacy');
+            $response['message'] = $e->getMessage();
+        }
+    }
+    
+    elseif ($action === 'admin-generate-access-code') {
+         if ($adminRole !== 'founder') { // Solo founders pueden hacer esto
+            $response['message'] = 'js.admin.errorAdminTarget';
+            echo json_encode($response);
+            exit;
+         }
+         $response['success'] = true;
+         $response['newAccessCode'] = generateAccessCode();
+    }
+    
+    elseif ($action === 'admin-upload-community-image') {
+        try {
+            $communityId = (int)($_POST['community_id'] ?? 0);
+            $imageType = $_POST['image_type'] ?? ''; // 'icon' o 'banner'
+
+            if (empty($communityId) || ($imageType !== 'icon' && $imageType !== 'banner')) {
+                throw new Exception('js.api.invalidAction');
+            }
+            if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception('js.settings.errorAvatarUpload');
+            }
+
+            $file = $_FILES['image'];
+            $maxSizeMB = (int)($GLOBALS['site_settings']['avatar_max_size_mb'] ?? 2);
+            if ($file['size'] > $maxSizeMB * 1024 * 1024) {
+                $response['data'] = ['size' => $maxSizeMB];
+                throw new Exception('js.settings.errorAvatarSize');
+            }
+
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $mimeType = $finfo->file($file['tmp_name']);
+            $allowedTypes = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/gif' => 'gif', 'image/webp' => 'webp'];
+            if (!array_key_exists($mimeType, $allowedTypes)) throw new Exception('js.settings.errorAvatarFormat');
+            
+            $extension = $allowedTypes[$mimeType];
+            
+            $stmt = $pdo->prepare("SELECT icon_url, banner_url FROM communities WHERE id = ?");
+            $stmt->execute([$communityId]);
+            $urls = $stmt->fetch();
+            if (!$urls) throw new Exception('js.api.errorServer');
+
+            $oldUrl = ($imageType === 'icon') ? $urls['icon_url'] : $urls['banner_url'];
+            
+            $newFileName = "community-{$imageType}-{$communityId}-" . time() . "." . $extension;
+            $saveDir = dirname(__DIR__) . '/assets/uploads/communities_uploaded/';
+            if (!is_dir($saveDir)) @mkdir($saveDir, 0755, true);
+            
+            $newFilePath = $saveDir . $newFileName;
+            $newPublicUrl = $basePath . '/assets/uploads/communities_uploaded/' . $newFileName;
+
+            if (!move_uploaded_file($file['tmp_name'], $newFilePath)) {
+                throw new Exception('js.settings.errorAvatarSave');
+            }
+            
+            $columnToUpdate = ($imageType === 'icon') ? 'icon_url' : 'banner_url';
+            $stmt = $pdo->prepare("UPDATE communities SET $columnToUpdate = ? WHERE id = ?");
+            $stmt->execute([$newPublicUrl, $communityId]);
+            
+            if ($oldUrl) {
+                deleteOldCommunityImage($oldUrl, $basePath);
+            }
+            
+            $response['success'] = true;
+            $response['message'] = 'admin.communities.success.imageUploaded';
+            $response['newImageUrl'] = $newPublicUrl;
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-upload-community-image');
+            $response['message'] = $e->getMessage();
+        }
+    }
+    
+    elseif ($action === 'admin-remove-community-image') {
+        try {
+            $communityId = (int)($_POST['community_id'] ?? 0);
+            $imageType = $_POST['image_type'] ?? ''; // 'icon' o 'banner'
+
+            if (empty($communityId) || ($imageType !== 'icon' && $imageType !== 'banner')) {
+                throw new Exception('js.api.invalidAction');
+            }
+
+            $stmt = $pdo->prepare("SELECT name, icon_url, banner_url FROM communities WHERE id = ?");
+            $stmt->execute([$communityId]);
+            $community = $stmt->fetch();
+            if (!$community) throw new Exception('js.api.errorServer');
+            
+            $newUrl = null;
+            $columnToUpdate = null;
+            $oldUrl = null;
+
+            if ($imageType === 'icon') {
+                $columnToUpdate = 'icon_url';
+                $oldUrl = $community['icon_url'];
+                $newUrl = generateDefaultCommunityIcon($pdo, $communityId, $community['name'], $basePath);
+                if (!$newUrl) throw new Exception('js.settings.errorAvatarApi');
+            } else { // banner
+                $columnToUpdate = 'banner_url';
+                $oldUrl = $community['banner_url'];
+                $newUrl = null; // Los banners por defecto son null
+            }
+            
+            $stmt = $pdo->prepare("UPDATE communities SET $columnToUpdate = ? WHERE id = ?");
+            $stmt->execute([$newUrl, $communityId]);
+            
+            if ($oldUrl) {
+                deleteOldCommunityImage($oldUrl, $basePath);
+            }
+            
+            $response['success'] = true;
+            $response['message'] = 'admin.communities.success.imageRemoved';
+            $response['newImageUrl'] = $newUrl; // Puede ser null para el banner
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-remove-community-image');
+            $response['message'] = $e->getMessage();
+        }
+    }
+
+    // --- ▲▲▲ FIN DE NUEVAS ACCIONES DE COMUNIDAD ▲▲▲ ---
     
     
 } else {

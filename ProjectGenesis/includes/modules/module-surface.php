@@ -77,8 +77,16 @@
                                 <span data-i18n="sidebar.admin.manageUsers"></span>
                             </div>
                         </div>
-                        
-                    <?php 
+
+                        <div class="menu-link" data-action="toggleSectionAdminManageCommunities">
+                            <div class="menu-link-icon">
+                                <span class="material-symbols-rounded">groups</span>
+                            </div>
+                            <div class="menu-link-text">
+                                <span data-i18n="sidebar.admin.manageCommunities">Gestionar Comunidades</span>
+                            </div>
+                        </div>
+                        <?php 
                     else: 
                     ?>
                         <div class="menu-link active" data-action="toggleSectionHome">

@@ -62,7 +62,12 @@ const routes = {
     'toggleSectionAdminServerSettings': 'admin-server-settings', 
 
     'toggleSectionAdminManageBackups': 'admin-manage-backups',
-    'toggleSectionAdminManageLogs': 'admin-manage-logs', 
+    'toggleSectionAdminManageLogs': 'admin-manage-logs',
+    
+    // --- ▼▼▼ LÍNEAS AÑADIDAS ▼▼▼ ---
+    'toggleSectionAdminManageCommunities': 'admin-manage-communities',
+    'toggleSectionAdminEditCommunity': 'admin-edit-community',
+    // --- ▲▲▲ FIN LÍNEAS AÑADIDAS ▲▲▲ ---
 };
 
 const paths = {
@@ -121,7 +126,12 @@ const paths = {
     '/admin/server-settings': 'toggleSectionAdminServerSettings', 
 
     '/admin/manage-backups': 'toggleSectionAdminManageBackups',
-    '/admin/manage-logs': 'toggleSectionAdminManageLogs', 
+    '/admin/manage-logs': 'toggleSectionAdminManageLogs',
+    
+    // --- ▼▼▼ LÍNEAS AÑADIDAS ▼▼▼ ---
+    '/admin/manage-communities': 'toggleSectionAdminManageCommunities',
+    '/admin/edit-community': 'toggleSectionAdminEditCommunity',
+    // --- ▲▲▲ FIN LÍNEAS AÑADIDAS ▲▲▲ ---
 };
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
@@ -430,6 +440,12 @@ function updateMenuState(currentAction) {
          menuAction = 'toggleSectionAdminDashboard'; 
     }
     
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    if (currentAction === 'toggleSectionAdminManageCommunities' || currentAction === 'toggleSectionAdminEditCommunity') {
+        menuAction = 'toggleSectionAdminManageCommunities';
+    }
+    // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
+
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadido ViewProfile y SearchResults) ▼▼▼ ---
     if (currentAction === 'toggleSectionJoinGroup' || 
         currentAction === 'toggleSectionCreatePublication' || 
@@ -464,7 +480,7 @@ export function initRouter() {
       // --- ▼▼▼ INICIO DE MODIFICACIÓN (Selector actualizado) ▼▼▼ ---
       const link = e.target.closest(
             '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], a[href*="/profile/"], a[href*="/search"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], .profile-tab a[data-nav-js="true"]'
-        ); // <-- Añadido a[href*="/search"]
+        ); // <-- Añadido a[href*="/admin"]
       // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         if (link) {
@@ -484,10 +500,12 @@ export function initRouter() {
             if (link.hasAttribute('data-action')) {
                 action = link.getAttribute('data-action');
 
-                if (action === 'toggleSectionAdminEditUser') {
+                // --- ▼▼▼ MODIFICACIÓN: Excluir 'edit-user' y 'edit-community' de aquí ▼▼▼ ---
+                if (action === 'toggleSectionAdminEditUser' || action === 'toggleSectionAdminEditCommunity') {
                     e.stopImmediatePropagation();
                     return; 
                 }
+                // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
                 
                 if (action === 'toggleSectionPostView' && link.dataset.postId) {
                     page = 'post-view';

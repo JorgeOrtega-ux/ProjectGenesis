@@ -383,7 +383,12 @@ $pathsToPages = [
     
     '/admin/manage-backups'     => 'admin-manage-backups',
     '/admin/restore-backup'     => 'admin-restore-backup', 
-    '/admin/manage-logs'        => 'admin-manage-logs', 
+    '/admin/manage-logs'        => 'admin-manage-logs',
+    
+    // --- ▼▼▼ LÍNEAS AÑADIDAS ▼▼▼ ---
+    '/admin/manage-communities' => 'admin-manage-communities',
+    '/admin/edit-community'     => 'admin-edit-community',
+    // --- ▲▲▲ FIN LÍNEAS AÑADIDAS ▲▲▲ ---
 ];
 
 // 3. Determinar la página actual y los tipos de página

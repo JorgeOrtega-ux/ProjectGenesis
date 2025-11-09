@@ -25,6 +25,10 @@ import {
 } from './modules/notification-manager.js';
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
+// --- ▼▼▼ NUEVA LÍNEA AÑADIDA ▼▼▼ ---
+import { initAdminCommunityManager } from './modules/admin-community-manager.js';
+// --- ▲▲▲ FIN NUEVA LÍNEA ▲▲▲ ---
+
 
 const htmlEl = document.documentElement;
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -89,6 +93,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     initFriendManager(); 
     initNotificationManager(); // <-- Se mantiene la inicialización
     initSearchManager();
+    
+    // --- ▼▼▼ NUEVA LÍNEA AÑADIDA ▼▼▼ ---
+    initAdminCommunityManager();
+    // --- ▲▲▲ FIN NUEVA LÍNEA ▲▲▲ ---
 
     initRouter(); 
     
