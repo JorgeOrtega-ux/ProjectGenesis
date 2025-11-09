@@ -117,6 +117,7 @@ function initMainController() {
         if (action.startsWith('toggle')) {
             
             // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+            // Se añaden 'toggleModuleSearch' y 'toggleModuleSearchFilter'
             const managedActions = [
                 'toggleModulePageFilter',
                 'toggleModuleAdminRole',
@@ -124,7 +125,8 @@ function initMainController() {
                 'toggleModuleAdminCreateRole',
                 'toggleModuleCommunitySelect', 
                 'toggleModuleSelectGroup',
-                'toggleModuleSearch' // <-- LÍNEA AÑADIDA
+                'toggleModuleSearch',
+                'toggleModuleSearchFilter' 
             ];
             // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 

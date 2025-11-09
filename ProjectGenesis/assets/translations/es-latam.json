@@ -18,7 +18,12 @@
       "people": "Personas",
       "posts": "Publicaciones",
       "noResults": "No se encontraron resultados para",
-      "allResults": "Ver todos los resultados"
+      "allResults": "Ver todos los resultados",
+      "filter": {
+        "tooltip": "Filtrar resultados",
+        "title": "Filtrar por",
+        "all": "Todos"
+      }
     }
   },
   "sidebar": {
