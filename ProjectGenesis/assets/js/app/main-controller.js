@@ -126,9 +126,8 @@ function initMainController() {
 
         if (action.startsWith('toggle')) {
             
-            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
-            // Le decimos al controlador principal que ignore la campana de notificaciones.
-            // Su propio manager (notification-manager) se encargará de ella.
+            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+            // Añadimos las acciones de community-manager.js a la lista de ignorados
             const managedActions = [
                 'toggleModulePageFilter',
                 'toggleModuleAdminRole',
@@ -138,9 +137,15 @@ function initMainController() {
                 'toggleModuleSelectGroup',
                 'toggleModuleSearch',
                 'toggleModuleSearchFilter',
-                'toggleModuleNotifications' // <-- ¡ESTA LÍNEA ES LA CORRECCIÓN!
+                'toggleModuleNotifications',
+                // --- ¡LÍNEAS AÑADIDAS! ---
+                'toggle-post-options',   // Manejado por community-manager.js
+                'toggle-post-privacy',   // Manejado por community-manager.js
+                'toggle-comments',       // Manejado por community-manager.js
+                'toggle-post-text'       // Manejado por community-manager.js
+                // --- ¡FIN DE LÍNEAS AÑADIDAS! ---
             ];
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
             if (managedActions.includes(action)) {
                 console.log(`[MainController] Acción ${action} es manejada por su propio módulo. Omitiendo.`);
