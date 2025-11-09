@@ -185,7 +185,7 @@ try {
 
             </div>
             
-        <div class="popover-module popover-module--anchor-left body-title disabled" data-module="moduleSelectGroup" style="top: calc(100% + 8px); left: 8px; width: 300px;">
+        <div class="popover-module popover-module--anchor-left body-title disabled" data-module="moduleSelectGroup">
             <div class="menu-content">
                 <div class="menu-header" data-i18n="home.popover.title">Mis Grupos</div>
                 <div class="menu-list" id="my-groups-list">
@@ -194,7 +194,7 @@ try {
             </div>
         </div>
         
-        <div class="popover-module popover-module--anchor-left body-title disabled" data-module="moduleCreatePost" style="top: calc(100% + 8px); left: 8px; width: 300px;">
+        <div class="popover-module popover-module--anchor-left body-title disabled" data-module="moduleCreatePost">
             <div class="menu-content">
                 <div class="menu-list">
                     <div class="menu-link" data-action="toggleSectionCreatePublication">
@@ -218,14 +218,14 @@ try {
         </div>
         </div>
 
-    <div class="component-wrapper" style="padding-top: 82px;">
+    <div class="component-wrapper">
 
-        <div class="card-list-container" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="card-list-container">
             <?php if (empty($publications)): ?>
                 <div class="component-card">
-                    <div class="component-card__content" style="padding: 40px 24px; justify-content: center; text-align: center;">
+                    <div class="component-card__content">
                         <div class="component-card__text">
-                            <h2 class="component-card__title" style="font-size: 18px;" data-i18n="home.main.noPosts"></h2>
+                            <h2 class="component-card__title" data-i18n="home.main.noPosts"></h2>
                         </div>
                     </div>
                 </div>
@@ -257,19 +257,19 @@ try {
                     $commentCount = (int)($post['comment_count'] ?? 0);
                     $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0; // <-- NUEVA LÍNEA
                     ?>
-                    <div class="component-card component-card--post" style="padding: 0; align-items: stretch; flex-direction: column;" data-post-id="<?php echo $post['id']; ?>">
+                    <div class="component-card component-card--post" data-post-id="<?php echo $post['id']; ?>">
                         
                         <div class="post-card-header">
-                            <div class="component-card__content" style="gap: 12px; padding-bottom: 0; border-bottom: none;">
-                                <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($postRole); ?>" style="width: 40px; height: 40px; flex-shrink: 0;">
+                            <div class="component-card__content">
+                                <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($postRole); ?>">
                                     <img src="<?php echo htmlspecialchars($postAvatar); ?>" alt="<?php echo htmlspecialchars($post['username']); ?>" class="component-card__avatar-image">
                                 </div>
                                 <div class="component-card__text">
-                                    <h2 class="component-card__title" style="font-size: 16px;"><?php echo htmlspecialchars($post['username']); ?></h2>
-                                    <p class="component-card__description" style="font-size: 13px;">
+                                    <h2 class="component-card__title"><?php echo htmlspecialchars($post['username']); ?></h2>
+                                    <p class="component-card__description">
                                         <?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?>
                                         <?php if (isset($post['community_name']) && $post['community_name']): ?>
-                                            <span style="color: #6b7280;"> &middot; en <strong><?php echo htmlspecialchars($post['community_name']); ?></strong></span>
+                                            <span> &middot; en <strong><?php echo htmlspecialchars($post['community_name']); ?></strong></span>
                                         <?php endif; ?>
                                     </p>
                                 </div>
@@ -281,7 +281,7 @@ try {
                                 <?php if ($isPoll): ?>
                                     <h3 class="poll-question"><?php echo htmlspecialchars($post['text_content']); ?></h3>
                                 <?php else: ?>
-                                    <div style="">
+                                    <div>
                                         <?php 
                                         // Usamos la nueva función helper
                                         // (Se asume que config/utilities.php donde está la función ya fue cargado por config.php)

@@ -59,26 +59,26 @@ $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0;
         </div>
     </div>
     
-    <div class="component-wrapper" style="padding-top: 82px;">
+    <div class="component-wrapper">
 
-        <div class="card-list-container" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="card-list-container">
             
             <?php
             // --- ▼▼▼ ¡INICIO DE CÓDIGO PEGADO! ▼▼▼ ---
             ?>
-            <div class="component-card component-card--post" style="padding: 0; align-items: stretch; flex-direction: column;" data-post-id="<?php echo $post['id']; ?>">
+            <div class="component-card component-card--post" data-post-id="<?php echo $post['id']; ?>">
                 
                 <div class="post-card-header">
-                    <div class="component-card__content" style="gap: 12px; padding-bottom: 0; border-bottom: none;">
-                        <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($postRole); ?>" style="width: 40px; height: 40px; flex-shrink: 0;">
+                    <div class="component-card__content">
+                        <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($postRole); ?>">
                             <img src="<?php echo htmlspecialchars($postAvatar); ?>" alt="<?php echo htmlspecialchars($post['username']); ?>" class="component-card__avatar-image">
                         </div>
                         <div class="component-card__text">
-                            <h2 class="component-card__title" style="font-size: 16px;"><?php echo htmlspecialchars($post['username']); ?></h2>
-                            <p class="component-card__description" style="font-size: 13px;">
+                            <h2 class="component-card__title"><?php echo htmlspecialchars($post['username']); ?></h2>
+                            <p class="component-card__description">
                                 <?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?>
                                 <?php if (isset($post['community_name']) && $post['community_name']): ?>
-                                    <span style="color: #6b7280;"> &middot; en <strong><?php echo htmlspecialchars($post['community_name']); ?></strong></span>
+                                    <span> &middot; en <strong><?php echo htmlspecialchars($post['community_name']); ?></strong></span>
                                 <?php endif; ?>
                             </p>
                         </div>
@@ -90,7 +90,7 @@ $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0;
                         <?php if ($isPoll): ?>
                             <h3 class="poll-question"><?php echo htmlspecialchars($post['text_content']); ?></h3>
                         <?php else: ?>
-                            <p style="font-size: 15px; line-height: 1.6; color: #1f2937; white-space: pre-wrap; width: 100%;"><?php echo nl2br(htmlspecialchars($post['text_content'])); ?></p>
+                            <p><?php echo nl2br(htmlspecialchars($post['text_content'])); ?></p>
                         <?php endif; ?>
                         </div>
                 <?php endif; ?>

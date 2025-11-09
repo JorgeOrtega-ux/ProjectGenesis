@@ -39,8 +39,8 @@ switch ($CURRENT_SECTION) {
 <div class="section-content overflow-y <?php echo (strpos($CURRENT_SECTION, 'account-status-') === 0 || $CURRENT_SECTION === 'maintenance' || $CURRENT_SECTION === 'server-full') ? 'active' : 'disabled'; ?>" data-section="<?php echo htmlspecialchars($CURRENT_SECTION); ?>">
 <div class="auth-container text-center">
         
-        <div class="component-card__icon" style="background-color: transparent; width: 80px; height: 80px; margin: 0 auto 16px auto; border: none;">
-             <span class="material-symbols-rounded" style="font-size: 80px; color: #6b7280;"><?php echo $icon; ?></span>
+        <div class="component-card__icon">
+             <span class="material-symbols-rounded"><?php echo $icon; ?></span>
         </div>
         
         <h1 class="auth-title" data-i18n="<?php echo htmlspecialchars($titleKey); ?>"></h1>

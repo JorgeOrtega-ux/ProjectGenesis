@@ -39,7 +39,7 @@ $hasResults = !empty($userResults) || !empty($postResults);
                 </div>
         </div>
 
-        <div class="popover-module body-title disabled" data-module="moduleSearchFilter" style="top: calc(100% + 8px); right: 8px; width: 220px;">
+        <div class="popover-module body-title disabled" data-module="moduleSearchFilter">
             <div class="menu-content">
                 <div class="menu-list">
                     <div class="menu-header" data-i18n="header.search.filter.title">Filtrar por</div>
@@ -66,7 +66,7 @@ $hasResults = !empty($userResults) || !empty($postResults);
         </div>
         </div>
     
-    <div class="component-wrapper" style="padding-top: 82px;">
+    <div class="component-wrapper">
 
         <div class="component-header-card">
             <h1 class="component-page-title">
@@ -74,36 +74,35 @@ $hasResults = !empty($userResults) || !empty($postResults);
             </h1>
         </div>
 
-        <div class="component-card" id="search-no-results-card" <?php if ($hasResults) echo 'style="display: none;"'; ?>>
-            <div class="component-card__content" style="padding: 40px 24px; justify-content: center; text-align: center;">
+        <div class="component-card" id="search-no-results-card" <?php if ($hasResults) echo 'class="component-card disabled"'; ?>>
+            <div class="component-card__content">
                 <div class="component-card__icon">
                      <span class="material-symbols-rounded">search_off</span>
                 </div>
                 <div class="component-card__text">
-                    <h2 class="component-card__title" style="font-size: 18px;" data-i18n="header.search.noResults"></h2>
+                    <h2 class="component-card__title" data-i18n="header.search.noResults"></h2>
                 </div>
             </div>
         </div>
-        <div id="search-results-users" <?php if (empty($userResults)) echo 'style="display: none;"'; ?>>
+        <div id="search-results-users" <?php if (empty($userResults)) echo 'class="disabled"'; ?>>
             <?php if (!empty($userResults)): ?>
-                <div class="component-card component-card--column" style="gap: 8px;">
-                    <h2 class="component-card__title" style="font-size: 18px; padding: 8px 8px 0 8px;" data-i18n="header.search.people">Personas</h2>
-                    <div class="card-list-container" style="padding: 0 8px 8px 8px;">
+                <div class="component-card component-card--column">
+                    <h2 class="component-card__title" data-i18n="header.search.people">Personas</h2>
+                    <div class="card-list-container">
                         <?php foreach ($userResults as $user): ?>
                              <a href="<?php echo $basePath . '/profile/' . htmlspecialchars($user['username']); ?>" 
                                data-nav-js="true" 
-                               class="card-item" 
-                               style="gap: 16px; padding: 16px; text-decoration: none; color: inherit;">
+                               class="card-item">
                             
-                                <div class="component-card__avatar" style="width: 50px; height: 50px; flex-shrink: 0;" data-role="<?php echo htmlspecialchars($user['role']); ?>">
+                                <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($user['role']); ?>">
                                     <img src="<?php echo htmlspecialchars($user['avatarUrl']); ?>"
                                         alt="<?php echo htmlspecialchars($user['username']); ?>"
                                         class="component-card__avatar-image">
                                 </div>
 
                                 <div class="card-item-details">
-                                    <div class="card-detail-item card-detail-item--full" style="border: none; padding: 0; background: none;">
-                                        <span class="card-detail-value" style="font-size: 16px; font-weight: 600;"><?php echo htmlspecialchars($user['username']); ?></span>
+                                    <div class="card-detail-item card-detail-item--full">
+                                        <span class="card-detail-value"><?php echo htmlspecialchars($user['username']); ?></span>
                                     </div>
                                     <div class="card-detail-item">
                                         <span class="card-detail-label" data-i18n="admin.users.labelRole"></span>
@@ -116,11 +115,11 @@ $hasResults = !empty($userResults) || !empty($postResults);
                 </div>
             <?php endif; ?>
         </div>
-        <div id="search-results-posts" <?php if (empty($postResults)) echo 'style="display: none;"'; ?>>
+        <div id="search-results-posts" <?php if (empty($postResults)) echo 'class="disabled"'; ?>>
             <?php if (!empty($postResults)): ?>
-                <div class="component-card component-card--column" style="gap: 8px; padding: 16px;">
-                    <h2 class="component-card__title" style="font-size: 18px; padding-bottom: 8px;" data-i18n="header.search.posts">Publicaciones</h2>
-                    <div class="card-list-container" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="component-card component-card--column">
+                    <h2 class="component-card__title" data-i18n="header.search.posts">Publicaciones</h2>
+                    <div class="card-list-container">
                         <?php foreach ($postResults as $post): ?>
                             <?php
                             // Copiamos la lógica de home.php para renderizar el post
@@ -131,25 +130,24 @@ $hasResults = !empty($userResults) || !empty($postResults);
                             <a href="<?php echo $basePath . '/post/' . $post['id']; ?>" 
                                data-nav-js="true" 
                                class="component-card component-card--post" 
-                               style="padding: 16px; align-items: stretch; flex-direction: column; text-decoration: none; color: inherit; border: 1px solid #00000020;" 
                                data-post-id="<?php echo $post['id']; ?>">
                                 
-                                <div class="post-card-header" style="padding: 0 0 12px 0;">
-                                    <div class="component-card__content" style="gap: 12px; padding-bottom: 0; border-bottom: none;">
-                                        <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($postRole); ?>" style="width: 40px; height: 40px; flex-shrink: 0;">
+                                <div class="post-card-header">
+                                    <div class="component-card__content">
+                                        <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($postRole); ?>">
                                             <img src="<?php echo htmlspecialchars($postAvatar); ?>" alt="<?php echo htmlspecialchars($post['username']); ?>" class="component-card__avatar-image">
                                         </div>
                                         <div class="component-card__text">
-                                            <h2 class="component-card__title" style="font-size: 16px;"><?php echo htmlspecialchars($post['username']); ?></h2>
-                                            <p class="component-card__description" style="font-size: 13px;">
+                                            <h2 class="component-card__title"><?php echo htmlspecialchars($post['username']); ?></h2>
+                                            <p class="component-card__description">
                                                 <?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?>
                                             </p>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="post-card-content" style="padding: 0;">
-                                    <p style="font-size: 15px; line-height: 1.6; color: #1f2937; white-space: pre-wrap; width: 100%;">
+                                <div class="post-card-content">
+                                    <p>
                                         <?php echo htmlspecialchars(mb_substr($post['text_content'], 0, 300)); ?>
                                         <?php if (mb_strlen($post['text_content']) > 300): ?>
                                             ...

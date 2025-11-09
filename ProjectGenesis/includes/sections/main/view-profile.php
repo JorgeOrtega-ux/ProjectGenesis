@@ -87,7 +87,7 @@ if ($is_actually_online) {
                     </button>
                 </div>
                 
-                <div class="page-toolbar-right profile-actions" data-user-id="<?php echo $profile['id']; ?>" style="display: flex; gap: 8px;">
+                <div class="page-toolbar-right profile-actions" data-user-id="<?php echo $profile['id']; ?>">
                     <?php if ($isOwnProfile): ?>
                         <button type="button"
                             class="page-toolbar-button"
@@ -97,28 +97,28 @@ if ($is_actually_online) {
                         </button>
                     <?php else: ?>
                         <?php if ($friendshipStatus === 'not_friends'): ?>
-                            <button type="button" class="component-button component-button--primary" data-action="friend-send-request" data-user-id="<?php echo $profile['id']; ?>" style="height: 36px; padding: 0 12px; gap: 6px; display: flex; align-items: center;">
-                                <span class="material-symbols-rounded" style="font-size: 20px;">person_add</span>
-                                <span data-i18n="friends.sendRequest" style="font-size: 13px;">Agregar</span>
+                            <button type="button" class="component-button component-button--primary" data-action="friend-send-request" data-user-id="<?php echo $profile['id']; ?>">
+                                <span class="material-symbols-rounded">person_add</span>
+                                <span data-i18n="friends.sendRequest">Agregar</span>
                             </button>
                         <?php elseif ($friendshipStatus === 'pending_sent'): ?>
-                            <button type="button" class="component-button" data-action="friend-cancel-request" data-user-id="<?php echo $profile['id']; ?>" style="height: 36px; padding: 0 12px; gap: 6px; display: flex; align-items: center;">
-                                <span class="material-symbols-rounded" style="font-size: 20px;">close</span>
-                                <span data-i18n="friends.cancelRequest" style="font-size: 13px;">Cancelar</span>
+                            <button type="button" class="component-button" data-action="friend-cancel-request" data-user-id="<?php echo $profile['id']; ?>">
+                                <span class="material-symbols-rounded">close</span>
+                                <span data-i18n="friends.cancelRequest">Cancelar</span>
                             </button>
                         <?php elseif ($friendshipStatus === 'pending_received'): ?>
-                            <button type="button" class="component-button component-button--primary" data-action="friend-accept-request" data-user-id="<?php echo $profile['id']; ?>" style="height: 36px; padding: 0 12px; gap: 6px; display: flex; align-items: center;">
-                                <span class="material-symbols-rounded" style="font-size: 20px;">check</span>
-                                <span data-i18n="friends.acceptRequest" style="font-size: 13px;">Aceptar</span>
+                            <button type="button" class="component-button component-button--primary" data-action="friend-accept-request" data-user-id="<?php echo $profile['id']; ?>">
+                                <span class="material-symbols-rounded">check</span>
+                                <span data-i18n="friends.acceptRequest">Aceptar</span>
                             </button>
-                            <button type="button" class="component-button" data-action="friend-decline-request" data-user-id="<?php echo $profile['id']; ?>" style="height: 36px; padding: 0 12px; gap: 6px; display: flex; align-items: center;">
-                                <span class="material-symbols-rounded" style="font-size: 20px;">close</span>
-                                <span data-i18n="friends.declineRequest" style="font-size: 13px;">Rechazar</span>
+                            <button type="button" class="component-button" data-action="friend-decline-request" data-user-id="<?php echo $profile['id']; ?>">
+                                <span class="material-symbols-rounded">close</span>
+                                <span data-i18n="friends.declineRequest">Rechazar</span>
                             </button>
                         <?php elseif ($friendshipStatus === 'friends'): ?>
-                            <button type="button" class="component-button" data-action="friend-remove" data-user-id="<?php echo $profile['id']; ?>" style="height: 36px; padding: 0 12px; gap: 6px; display: flex; align-items: center;">
-                                <span class="material-symbols-rounded" style="font-size: 20px;">person_remove</span>
-                                <span data-i18n="friends.removeFriend" style="font-size: 13px;">Eliminar</span>
+                            <button type="button" class="component-button" data-action="friend-remove" data-user-id="<?php echo $profile['id']; ?>">
+                                <span class="material-symbols-rounded">person_remove</span>
+                                <span data-i18n="friends.removeFriend">Eliminar</span>
                             </button>
                         <?php endif; ?>
 
@@ -128,13 +128,13 @@ if ($is_actually_online) {
         </div>
     </div>
     
-    <div class="component-wrapper" style="padding-top: 82px;">
+    <div class="component-wrapper">
 
         <div class="profile-header-card">
             <div class="profile-banner"></div>
             <div class="profile-header-content">
                 <div class="profile-avatar-container">
-                    <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($profile['role']); ?>" style="width: 100%; height: 100%;">
+                    <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($profile['role']); ?>">
                         <img src="<?php echo htmlspecialchars($profile['profile_image_url']); ?>" 
                              alt="<?php echo htmlspecialchars($profile['username']); ?>" 
                              class="component-card__avatar-image">
@@ -144,7 +144,7 @@ if ($is_actually_online) {
                 <div class="profile-info">
                     <h1 class="profile-username"><?php echo htmlspecialchars($profile['username']); ?></h1>
                     
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <div>
                         <div class="profile-role-badge" data-role="<?php echo htmlspecialchars($profile['role']); ?>">
                             <span class="material-symbols-rounded"><?php echo $profileRoleIcon; ?></span>
                             <span><?php echo htmlspecialchars(ucfirst($profile['role'])); ?></span>
@@ -185,7 +185,7 @@ if ($is_actually_online) {
                 </div>
         </div>
 
-        <div class="card-list-container" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="card-list-container">
             
             <?php if (!empty($publications)): ?>
                 <?php foreach ($publications as $post): ?>
@@ -213,19 +213,19 @@ if ($is_actually_online) {
                     $commentCount = (int)($post['comment_count'] ?? 0);
                     $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0;
                     ?>
-                    <div class="component-card component-card--post" style="padding: 0; align-items: stretch; flex-direction: column;" data-post-id="<?php echo $post['id']; ?>">
+                    <div class="component-card component-card--post" data-post-id="<?php echo $post['id']; ?>">
                         
                         <div class="post-card-header">
-                            <div class="component-card__content" style="gap: 12px; padding-bottom: 0; border-bottom: none;">
-                                <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($postRole); ?>" style="width: 40px; height: 40px; flex-shrink: 0;">
+                            <div class="component-card__content">
+                                <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($postRole); ?>">
                                     <img src="<?php echo htmlspecialchars($postAvatar); ?>" alt="<?php echo htmlspecialchars($post['username']); ?>" class="component-card__avatar-image">
                                 </div>
                                 <div class="component-card__text">
-                                    <h2 class="component-card__title" style="font-size: 16px;"><?php echo htmlspecialchars($post['username']); ?></h2>
-                                    <p class="component-card__description" style="font-size: 13px;">
+                                    <h2 class="component-card__title"><?php echo htmlspecialchars($post['username']); ?></h2>
+                                    <p class="component-card__description">
                                         <?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?>
                                         <?php if (isset($post['community_name']) && $post['community_name']): ?>
-                                            <span style="color: #6b7280;"> &middot; en <strong><?php echo htmlspecialchars($post['community_name']); ?></strong></span>
+                                            <span> &middot; en <strong><?php echo htmlspecialchars($post['community_name']); ?></strong></span>
                                         <?php endif; ?>
                                     </p>
                                 </div>
