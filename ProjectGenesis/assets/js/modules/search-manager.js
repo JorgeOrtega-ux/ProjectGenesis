@@ -148,6 +148,9 @@ export function initSearchManager() {
     const searchInput = document.getElementById('header-search-input');
     if (!searchInput) return;
 
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+    // Comentamos el listener 'focus' para que no se abra el popover
+    /*
     // Abrir popover al enfocar
     searchInput.addEventListener('focus', () => {
         showSearchPopover();
@@ -156,20 +159,25 @@ export function initSearchManager() {
             performSearch();
         }
     });
+    */
 
+    // Comentamos el listener 'input' para que no busque mientras se teclea
+    /*
     // Buscar al teclear (con debounce)
     searchInput.addEventListener('input', () => {
         clearTimeout(searchDebounceTimer);
         searchDebounceTimer = setTimeout(performSearch, 300); // 300ms de retraso
     });
+    */
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
     
-    // Manejar "Enter" para ir a la página de resultados
+    // Manejar "Enter" para ir a la página de resultados (ESTO SE QUEDA)
     searchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             const query = searchInput.value.trim();
             if (query.length > 0) {
-                deactivateAllModules(); // Cierra el popover
+                deactivateAllModules(); // Cierra el popover (si es que estuviera abierto)
                 
                 // Navegar a la página de resultados
                 const link = document.createElement('a');

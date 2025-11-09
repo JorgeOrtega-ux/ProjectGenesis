@@ -25,6 +25,10 @@ const routes = {
 
     'toggleSectionViewProfile': 'view-profile', // <-- RUTA DE PERFIL (MODIFICADA)
 
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    'toggleSectionSearchResults': 'search-results',
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
     'toggleSectionRegisterStep1': 'register-step1',
     'toggleSectionRegisterStep2': 'register-step2',
     'toggleSectionRegisterStep3': 'register-step3',
@@ -68,6 +72,10 @@ const paths = {
     '/create-poll': 'create-poll', 
     
     '/post': 'toggleSectionPostView', 
+
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    '/search': 'toggleSectionSearchResults',
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Rutas de Perfil) ▼▼▼ ---
     '/profile': 'toggleSectionViewProfile', // Genérico (obsoleto, pero por si acaso)
@@ -367,12 +375,13 @@ function updateMenuState(currentAction) {
          menuAction = 'toggleSectionAdminDashboard'; 
     }
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadido ViewProfile) ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadido ViewProfile y SearchResults) ▼▼▼ ---
     if (currentAction === 'toggleSectionJoinGroup' || 
         currentAction === 'toggleSectionCreatePublication' || 
         currentAction === 'toggleSectionCreatePoll' ||
         currentAction === 'toggleSectionPostView' ||
-        currentAction === 'toggleSectionViewProfile') {
+        currentAction === 'toggleSectionViewProfile' ||
+        currentAction === 'toggleSectionSearchResults') { // <-- LÍNEA AÑADIDA
         menuAction = 'toggleSectionHome';
     }
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
@@ -399,8 +408,8 @@ export function initRouter() {
       
       // --- ▼▼▼ INICIO DE MODIFICACIÓN (Selector actualizado) ▼▼▼ ---
       const link = e.target.closest(
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], a[href*="/profile/"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], .profile-tab a[data-nav-js="true"]'
-        ); // <-- Añadido .profile-tab a[...]
+            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], a[href*="/profile/"], a[href*="/search"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], .profile-tab a[data-nav-js="true"]'
+        ); // <-- Añadido a[href*="/search"]
       // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         if (link) {
