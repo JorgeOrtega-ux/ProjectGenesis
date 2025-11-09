@@ -54,8 +54,7 @@ body {
     background-color: #ffffff;
     border-radius: 12px;
     box-shadow: 0 4px 12px #00000020;
-    /* --- ▼▼▼ NUEVA REGLA ▼▼▼ --- */
-    min-width: 0; /* Permite que .general-content se encoja */
+    min-width: 0;
 }
 
 .general-content-top {
