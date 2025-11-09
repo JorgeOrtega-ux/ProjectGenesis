@@ -58,17 +58,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
         }
 
+        // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO p.title) ▼▼▼ ---
         // 2. Buscar Publicaciones (solo de comunidades públicas o a las que pertenece)
         $stmt_posts = $pdo->prepare(
            "SELECT 
                 p.id, 
+                p.title, -- <-- LÍNEA AÑADIDA
                 p.text_content, 
                 u.username AS author_username
             FROM community_publications p
             JOIN users u ON p.user_id = u.id
             LEFT JOIN communities c ON p.community_id = c.id
             WHERE 
-                p.text_content LIKE ?
+                (p.text_content LIKE ? OR p.title LIKE ?) -- <-- CONDICIÓN AÑADIDA
             AND 
                 (c.privacy = 'public' OR p.community_id IN (
                     SELECT community_id FROM user_communities WHERE user_id = ?
@@ -76,16 +78,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ORDER BY p.created_at DESC
             LIMIT 5"
         );
-        $stmt_posts->execute([$searchParam, $userId]);
+        $stmt_posts->execute([$searchParam, $searchParam, $userId]); // <-- PARÁMETRO AÑADIDO
         $posts = $stmt_posts->fetchAll();
         
         foreach ($posts as $post) {
              $response['posts'][] = [
                 'id' => $post['id'],
+                'title' => htmlspecialchars($post['title'] ?? ''), // <-- LÍNEA AÑADIDA
                 'text' => htmlspecialchars(mb_substr($post['text_content'], 0, 100)), // Acortar texto
                 'author' => htmlspecialchars($post['author_username'])
             ];
         }
+        // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
 
         $response['success'] = true;
 

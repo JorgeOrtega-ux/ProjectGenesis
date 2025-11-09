@@ -73,6 +73,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $communityId = $_POST['community_id'] ?? null;
             $postType = $_POST['post_type'] ?? 'post'; 
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            $title = trim($_POST['title'] ?? ''); // Obtener el nuevo título
+            if (empty($title)) {
+                $title = null; // Asegurarse de que sea NULL si está vacío
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            
             $textContent = trim($_POST['text_content'] ?? ''); 
             $pollQuestion = trim($_POST['poll_question'] ?? ''); 
             $pollOptionsJSON = $_POST['poll_options'] ?? '[]'; 
@@ -103,13 +111,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($pollOptions) || count($pollOptions) < 2) {
                      throw new Exception('js.publication.errorPollOptions'); 
                 }
-                $textContent = $pollQuestion;
+                $textContent = $pollQuestion; // El contenido principal de un poll es la pregunta
+                $title = null; // Los polls no usan el campo de título separado, usan text_content
 
             } elseif ($postType === 'post') {
                  if (mb_strlen($textContent, 'UTF-8') > MAX_POST_LENGTH) {
                     throw new Exception('js.publication.errorPostTooLong');
                  }
-                 if (empty($textContent) && empty($uploadedFiles['name'][0])) {
+                 if (empty($textContent) && empty($uploadedFiles['name'][0]) && empty($title)) { // Modificado: Título también cuenta
                     throw new Exception('js.publication.errorEmpty');
                 }
             } else {
@@ -171,11 +180,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL INSERT) ▼▼▼ ---
             $stmt_insert_post = $pdo->prepare(
-                "INSERT INTO community_publications (community_id, user_id, text_content, post_type)
-                 VALUES (?, ?, ?, ?)"
+                "INSERT INTO community_publications (community_id, user_id, title, text_content, post_type)
+                 VALUES (?, ?, ?, ?, ?)"
             );
-            $stmt_insert_post->execute([$dbCommunityId, $userId, $textContent, $postType]);
+            $stmt_insert_post->execute([$dbCommunityId, $userId, $title, $textContent, $postType]);
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            
             $publicationId = $pdo->lastInsertId();
 
             if ($postType === 'post' && !empty($fileIds)) {

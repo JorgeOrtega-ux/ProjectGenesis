@@ -85,8 +85,16 @@ $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0;
                     </div>
                 </div>
 
+                <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (TÍTULO) ▼▼▼ --- ?>
+                <?php if (!empty($post['title']) && !$isPoll): ?>
+                    <div class="post-card-content" style="padding-bottom: 0;">
+                        <h3 class="post-title"><?php echo htmlspecialchars($post['title']); ?></h3>
+                    </div>
+                <?php endif; ?>
+                <?php // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- ?>
+
                 <?php if (!empty($post['text_content'])): ?>
-                    <div class="post-card-content">
+                    <div class="post-card-content" <?php if (!empty($post['title'])) echo 'style="padding-top: 8px;"'; ?>>
                         <?php if ($isPoll): ?>
                             <h3 class="poll-question"><?php echo htmlspecialchars($post['text_content']); ?></h3>
                         <?php else: ?>

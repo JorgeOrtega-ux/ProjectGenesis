@@ -146,7 +146,15 @@ $hasResults = !empty($userResults) || !empty($postResults);
                                     </div>
                                 </div>
 
-                                <div class="post-card-content">
+                                <?php // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (TÍTULO) ▼▼▼ --- ?>
+                                <?php if (!empty($post['title'])): ?>
+                                    <div class="post-card-content" style="padding-bottom: 0;">
+                                        <h3 class="post-title"><?php echo htmlspecialchars($post['title']); ?></h3>
+                                    </div>
+                                <?php endif; ?>
+                                <?php // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ --- ?>
+
+                                <div class="post-card-content" <?php if (!empty($post['title'])) echo 'style="padding-top: 8px;"'; ?>>
                                     <p>
                                         <?php echo htmlspecialchars(mb_substr($post['text_content'], 0, 300)); ?>
                                         <?php if (mb_strlen($post['text_content']) > 300): ?>

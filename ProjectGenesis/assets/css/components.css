@@ -3583,7 +3583,28 @@ a.profile-tab.active {
 }
 /* --- ▲▲▲ FIN DE BLOQUE MODIFICADO (HEADER SEARCH) ▲▲▲ --- */
 
+/* ====================================== */
+/* =        ESTILOS DE TÍTULO DE POST      = */
+/* ====================================== */
 
+.post-title {
+    font-size: 18px; /* Un poco más grande que el texto normal */
+    font-weight: 700; /* Asegura que esté en negritas */
+    color: #1f2937;  /* Color de texto oscuro estándar */
+    line-height: 1.5;
+    white-space: pre-wrap; /* Respeta saltos de línea si los hay */
+    word-break: break-word; /* Evita que el texto se desborde */
+}
+
+/* Ajuste para el padding: 
+   El div .post-card-content que contiene el título 
+   ya tiene "padding-bottom: 0" (por el style en el PHP)
+   y el div que contiene la descripción ya tiene 
+   "padding-top: 8px" (por el style en el PHP). 
+   
+   Esta clase .post-title es lo único que falta 
+   para aplicar el estilo de negritas.
+*/
 /* ====================================== */
 /* =   ESTILOS DE TEXTO DE PUBLICACIÓN    = */
 /* ====================================== */

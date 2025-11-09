@@ -106,25 +106,31 @@ function renderResults(data, query) {
         html += '</div>';
     }
 
+    // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (TÍTULO) ▼▼▼ ---
     // Sección de Publicaciones
     if (data.posts.length > 0) {
         html += `<div class="menu-header" data-i18n="header.search.posts">${getTranslation('header.search.posts')}</div>`;
         html += '<div class="menu-list">';
         data.posts.forEach(post => {
-            const postText = post.text.length > 80 ? post.text.substring(0, 80) + '...' : post.text;
+            
+            // Si hay título, lo mostramos. Si no, mostramos el autor.
+            const title = post.title || `Por ${post.author}`;
+            const text = post.text.length > 80 ? post.text.substring(0, 80) + '...' : post.text;
+            
             html += `
                 <a class="menu-link" href="${window.projectBasePath}/post/${post.id}" data-nav-js="true" style="height: auto; padding: 8px 0;">
                     <div class="menu-link-icon">
                         <span class="material-symbols-rounded">chat_bubble_outline</span>
                     </div>
                     <div class="menu-link-text" style="display: flex; flex-direction: column; line-height: 1.4;">
-                        <span style="font-weight: 400; font-size: 13px; color: #6b7280;">${escapeHTML(post.author)}</span>
-                        <span style="font-weight: 500; white-space: normal;">${escapeHTML(postText)}</span>
+                        <span style="font-weight: 700; color: #1f2937; font-size: 14px;">${escapeHTML(title)}</span>
+                        ${text ? `<span style="font-size: 13px; color: #6b7280; font-weight: 400; white-space: normal;">${escapeHTML(text)}</span>` : ''}
                     </div>
                 </a>`;
         });
         html += '</div>';
     }
+    // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
     
     // Enlace "Ver todo"
     html += `<div style="height: 1px; background-color: #00000020; margin: 8px;"></div>`;
@@ -195,7 +201,7 @@ export function initSearchManager() {
     
     // (Esta lógica se ha desactivado según tu solicitud anterior, 
     // pero la mantenemos por si se reactiva)
-    /*
+    
     searchInput.addEventListener('focus', () => {
         showSearchPopover();
         if (searchInput.value.trim().length > 0) {
@@ -204,10 +210,11 @@ export function initSearchManager() {
     });
 
     searchInput.addEventListener('input', () => {
+        showSearchPopover(); // <-- Asegurarse de que se muestre al escribir
         clearTimeout(searchDebounceTimer);
         searchDebounceTimer = setTimeout(performSearch, 300); 
     });
-    */
+    
     
     // Manejar "Enter" para ir a la página de resultados
     searchInput.addEventListener('keydown', (e) => {

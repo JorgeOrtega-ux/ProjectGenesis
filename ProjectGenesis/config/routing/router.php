@@ -372,13 +372,14 @@ if (array_key_exists($page, $allowedPages)) {
             $CURRENT_SECTION = '404';
         } else {
             try {
-                // --- ▼▼▼ INICIO DE SQL MODIFICADO (Añadido user_has_bookmarked) ▼▼▼ ---
+                // --- ▼▼▼ INICIO DE SQL MODIFICADO (Añadido p.title) ▼▼▼ ---
                 $sql_post = 
                     "SELECT 
                         p.*, 
                         u.username, 
                         u.profile_image_url, 
                         u.role,
+                        p.title, -- <-- LÍNEA AÑADIDA
                         c.name AS community_name,
                         (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
                          FROM publication_attachments pa
@@ -398,7 +399,7 @@ if (array_key_exists($page, $allowedPages)) {
                      WHERE p.id = ?"; 
                 
                 $stmt_post = $pdo->prepare($sql_post);
-                $stmt_post->execute([$userId, $userId, $userId, $postId]); // <-- Parámetro $userId añadido
+                $stmt_post->execute([$userId, $userId, $userId, $postId]);
                 // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
                 
                 $viewPostData = $stmt_post->fetch();
@@ -444,13 +445,11 @@ if (array_key_exists($page, $allowedPages)) {
         } else {
              try {
                  // 1. Obtener datos del perfil
-                 // --- ▼▼▼ INICIO DE MODIFICACIÓN (SELECT) ▼▼▼ ---
                  $stmt_profile = $pdo->prepare(
                     "SELECT id, username, profile_image_url, role, created_at, is_online, last_seen 
                      FROM users 
                      WHERE username = ?"
                  );
-                 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                  $stmt_profile->execute([$targetUsername]);
                  $userProfile = $stmt_profile->fetch();
 
@@ -491,12 +490,14 @@ if (array_key_exists($page, $allowedPages)) {
 
                      // 2. Obtener publicaciones del usuario (LÓGICA MODIFICADA)
                      
+                     // --- ▼▼▼ INICIO DE SQL MODIFICADO (Añadido p.title) ▼▼▼ ---
                      $sql_select_base = 
                         "SELECT 
                             p.*, 
                             u.username, 
                             u.profile_image_url,
                             u.role,
+                            p.title, -- <-- LÍNEA AÑADIDA
                             c.name AS community_name,
                             (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
                              FROM publication_attachments pa
@@ -510,6 +511,7 @@ if (array_key_exists($page, $allowedPages)) {
                             (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
                             (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = ?) AS user_has_bookmarked,
                             (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count";
+                    // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
 
                      $sql_from_base = 
                         " FROM community_publications p
@@ -581,7 +583,7 @@ if (array_key_exists($page, $allowedPages)) {
              }
         }
     
-    // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE BÚSQUEDA ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE BÚSQUEDA (MODIFICADA) ▼▼▼ ---
     } elseif ($page === 'search-results') {
         $searchQuery = $_GET['q'] ?? '';
         $userResults = [];
@@ -620,6 +622,7 @@ if (array_key_exists($page, $allowedPages)) {
                 $stmt_posts = $pdo->prepare(
                    "SELECT 
                         p.id, 
+                        p.title, -- <-- LÍNEA AÑADIDA
                         p.text_content, 
                         p.created_at,
                         u.username,
@@ -629,7 +632,7 @@ if (array_key_exists($page, $allowedPages)) {
                     JOIN users u ON p.user_id = u.id
                     LEFT JOIN communities c ON p.community_id = c.id
                     WHERE 
-                        p.text_content LIKE ?
+                        (p.text_content LIKE ? OR p.title LIKE ?) -- <-- CONDICIÓN AÑADIDA
                     AND 
                         (c.privacy = 'public' OR p.community_id IN (
                             SELECT community_id FROM user_communities WHERE user_id = ?
@@ -637,7 +640,7 @@ if (array_key_exists($page, $allowedPages)) {
                     ORDER BY p.created_at DESC
                     LIMIT 20"
                 );
-                $stmt_posts->execute([$searchParam, $currentUserId]);
+                $stmt_posts->execute([$searchParam, $searchParam, $currentUserId]); // <-- PARÁMETRO AÑADIDO
                 $postResults = $stmt_posts->fetchAll();
 
             } catch (PDOException $e) {

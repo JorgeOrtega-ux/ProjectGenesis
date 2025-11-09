@@ -23,13 +23,14 @@ try {
             $currentCommunityId = $community['id'];
             $currentCommunityNameKey = $community['name']; 
             
-            // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO u.role y user_has_bookmarked) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO p.title) ▼▼▼ ---
             $sql_posts = 
                 "SELECT 
                     p.*, 
                     u.username, 
                     u.profile_image_url,
                     u.role,
+                    p.title, -- <-- LÍNEA AÑADIDA
                     (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
                      FROM publication_attachments pa
                      JOIN publication_files pf ON pa.file_id = pf.id
@@ -63,13 +64,14 @@ try {
     
     if ($communityUuid === null) {
         // --- VISTA DE FEED PRINCIPAL ---
-        // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO u.role y user_has_bookmarked) ▼▼▼ ---
+        // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO p.title) ▼▼▼ ---
         $sql_posts = 
             "SELECT 
                 p.*, 
                 u.username, 
                 u.profile_image_url, 
                 u.role,
+                p.title, -- <-- LÍNEA AÑADIDA
                 c.name AS community_name,
                 (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
                  FROM publication_attachments pa
@@ -276,8 +278,17 @@ try {
                             </div>
                         </div>
 
+                        <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (TÍTULO) ▼▼▼ --- ?>
+                        <?php if (!empty($post['title']) && !$isPoll): ?>
+                            <div class="post-card-content" style="padding-bottom: 0;">
+                                <h3 class="post-title"><?php echo htmlspecialchars($post['title']); ?></h3>
+                            </div>
+                        <?php endif; ?>
+                        <?php // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- ?>
+
+
                         <?php if (!empty($post['text_content'])): ?>
-                            <div class="post-card-content">
+                            <div class="post-card-content" <?php if (!empty($post['title'])) echo 'style="padding-top: 8px;"'; ?>>
                                 <?php if ($isPoll): ?>
                                     <h3 class="poll-question"><?php echo htmlspecialchars($post['text_content']); ?></h3>
                                 <?php else: ?>

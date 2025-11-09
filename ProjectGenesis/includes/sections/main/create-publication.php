@@ -112,6 +112,11 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
                 </div>
                 
                 <div id="post-content-area" class="<?php echo $isPostActive ? 'active' : 'disabled'; ?>">
+                    
+                    <div class="component-input-group">
+                        <input type="text" id="publication-title" class="component-input" placeholder=" " maxlength="255">
+                        <label for="publication-title" data-i18n="create_publication.titleLabel">Título (Opcional)</label>
+                    </div>
                     <div class="component-input-group">
                         <textarea id="publication-text" class="component-input" rows="5" placeholder=" " maxlength="1000"></textarea>
                         <label for="publication-text" data-i18n="create_publication.placeholder"></label>

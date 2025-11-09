@@ -30,10 +30,14 @@ function validatePublicationState() {
     let isContentValid = false;
 
     if (currentPostType === 'post') {
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
         const textInput = document.getElementById('publication-text');
+        const titleInput = document.getElementById('publication-title'); // <-- Añadido
         const hasText = textInput ? textInput.value.trim().length > 0 : false;
+        const hasTitle = titleInput ? titleInput.value.trim().length > 0 : false; // <-- Añadido
         const hasFiles = selectedFiles.length > 0;
-        isContentValid = hasText || hasFiles;
+        isContentValid = hasText || hasFiles || hasTitle; // <-- Modificado
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     } else { 
         const questionInput = document.getElementById('poll-question');
         const options = document.querySelectorAll('#poll-options-container .component-input-group');
@@ -176,6 +180,11 @@ function removePollOption(button) {
 }
 
 function resetForm() {
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    const titleInput = document.getElementById('publication-title');
+    if (titleInput) titleInput.value = '';
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
     const textInput = document.getElementById('publication-text');
     if (textInput) textInput.value = '';
     selectedFiles = [];
@@ -227,11 +236,16 @@ async function handlePublishSubmit() {
 
     try {
         if (currentPostType === 'post') {
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            const title = document.getElementById('publication-title').value.trim();
             const textContent = document.getElementById('publication-text').value.trim();
-            if (!textContent && selectedFiles.length === 0) {
+            if (!textContent && selectedFiles.length === 0 && !title) {
                 throw new Error('js.publication.errorEmpty');
             }
+            formData.append('title', title);
             formData.append('text_content', textContent);
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            
             for (const file of selectedFiles) {
                 formData.append('attachments[]', file, file.name);
             }
@@ -250,6 +264,7 @@ async function handlePublishSubmit() {
             
             formData.append('poll_question', question);
             formData.append('poll_options', JSON.stringify(options));
+            // formData.append('title', ''); // Polls no envían título, se manejará en PHP
         }
 
         const result = await callPublicationApi(formData);
@@ -362,7 +377,9 @@ export function initPublicationManager() {
         const section = e.target.closest('[data-section*="create-"]');
         if (!section) return;
 
-        if (e.target.id === 'publication-text' || e.target.id === 'poll-question' || e.target.closest('#poll-options-container')) {
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        if (e.target.id === 'publication-title' || e.target.id === 'publication-text' || e.target.id === 'poll-question' || e.target.closest('#poll-options-container')) {
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             validatePublicationState();
         }
     });
