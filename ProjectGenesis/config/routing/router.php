@@ -531,17 +531,26 @@ if (array_key_exists($page, $allowedPages)) {
                          $params[] = $targetUserId; 
                      
                      } else {
-                         // Lógica de privacidad para la pestaña 'posts'
+                         // --- ▼▼▼ INICIO DE LÓGICA DE PERFIL (CORREGIDA) ▼▼▼ ---
                          $privacyClause = "";
                          if (!$isOwnProfile) { 
-                             // Si no es mi perfil, solo veo posts públicos de comunidades públicas
-                             $privacyClause = "AND c.privacy = 'public' AND p.privacy_level = 'public'";
+                             if ($friendshipStatus === 'friends') {
+                                 // Si somos amigos, veo 'public' y 'friends'
+                                 $privacyClause = "AND (p.privacy_level = 'public' OR p.privacy_level = 'friends')";
+                             } else {
+                                 // Si no somos amigos, solo veo 'public'
+                                 $privacyClause = "AND p.privacy_level = 'public'";
+                             }
+                             
+                             // Adicionalmente, solo mostrar posts de comunidades públicas si no es mi perfil
+                             $privacyClause .= " AND (c.privacy = 'public' OR p.community_id IS NULL)"; 
                          } else {
                              // Si es mi perfil, veo todo (público, amigos, privado)
                              // No se añade cláusula de privacidad
                          }
                          $sql_join_where_clause = " WHERE p.user_id = ? AND p.post_status = 'active' $privacyClause ";
                          $params[] = $targetUserId;
+                         // --- ▲▲▲ FIN DE LÓGICA DE PERFIL (CORREGIDA) ▲▲▲ ---
                      }
                      // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
 
@@ -626,7 +635,7 @@ if (array_key_exists($page, $allowedPages)) {
                 }
 
                 // 2. Buscar Publicaciones
-                // --- ▼▼▼ INICIO DE SQL MODIFICADO (status, privacy) ▼▼▼ ---
+                // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDA LÓGICA DE AMIGOS) ▼▼▼ ---
                 $stmt_posts = $pdo->prepare(
                    "SELECT 
                         p.id, 
@@ -645,12 +654,23 @@ if (array_key_exists($page, $allowedPages)) {
                         (c.privacy = 'public' OR p.community_id IN (
                             SELECT community_id FROM user_communities WHERE user_id = ?
                         ))
-                    AND p.post_status = 'active' -- <-- LÍNEA AÑADIDA
-                    AND p.privacy_level = 'public' -- <-- LÍNEA MODIFICADA (eliminada la excepción para 'private')
+                    AND p.post_status = 'active'
+                    AND (
+                        p.privacy_level = 'public' -- Ver posts públicos
+                        OR (p.privacy_level = 'friends' AND ( -- O ver posts de amigos si:
+                            p.user_id = ? -- 1. Yo soy el autor
+                            OR p.user_id IN ( -- 2. El autor es mi amigo
+                                (SELECT user_id_2 FROM friendships WHERE user_id_1 = ? AND status = 'accepted')
+                                UNION
+                                (SELECT user_id_1 FROM friendships WHERE user_id_2 = ? AND status = 'accepted')
+                            )
+                        ))
+                    )
                     ORDER BY p.created_at DESC
                     LIMIT 20"
                 );
-                $stmt_posts->execute([$searchParam, $searchParam, $currentUserId]); // <-- PARÁMETRO ELIMINADO
+                // ¡Ahora se pasan 6 parámetros!
+                $stmt_posts->execute([$searchParam, $searchParam, $currentUserId, $currentUserId, $currentUserId, $currentUserId]);
                 $postResults = $stmt_posts->fetchAll();
                 // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
 

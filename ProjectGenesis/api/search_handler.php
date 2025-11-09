@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
         }
 
-        // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO status Y privacy) ▼▼▼ ---
+        // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDA LÓGICA DE AMIGOS) ▼▼▼ ---
         // 2. Buscar Publicaciones (solo de comunidades públicas o a las que pertenece)
         $stmt_posts = $pdo->prepare(
            "SELECT 
@@ -75,12 +75,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 (c.privacy = 'public' OR p.community_id IN (
                     SELECT community_id FROM user_communities WHERE user_id = ?
                 ))
-            AND p.post_status = 'active' -- <-- LÍNEA AÑADIDA
-            AND p.privacy_level = 'public' -- <-- LÍNEA MODIFICADA (eliminada la excepción para 'private')
+            AND p.post_status = 'active'
+            AND (
+                p.privacy_level = 'public' -- Ver posts públicos
+                OR (p.privacy_level = 'friends' AND ( -- O ver posts de amigos si:
+                    p.user_id = ? -- 1. Yo soy el autor
+                    OR p.user_id IN ( -- 2. El autor es mi amigo
+                        (SELECT user_id_2 FROM friendships WHERE user_id_1 = ? AND status = 'accepted')
+                        UNION
+                        (SELECT user_id_1 FROM friendships WHERE user_id_2 = ? AND status = 'accepted')
+                    )
+                ))
+            )
             ORDER BY p.created_at DESC
             LIMIT 5"
         );
-        $stmt_posts->execute([$searchParam, $searchParam, $userId]); // <-- PARÁMETRO ELIMINADO
+        // ¡Ahora se pasan 6 parámetros!
+        $stmt_posts->execute([$searchParam, $searchParam, $userId, $userId, $userId, $userId]);
         $posts = $stmt_posts->fetchAll();
         
         foreach ($posts as $post) {

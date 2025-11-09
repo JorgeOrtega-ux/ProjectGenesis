@@ -23,7 +23,7 @@ try {
             $currentCommunityId = $community['id'];
             $currentCommunityNameKey = $community['name']; 
             
-            // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO p.title, status, privacy) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDA LÓGICA DE AMIGOS) ▼▼▼ ---
             $sql_posts = 
                 "SELECT 
                     p.*, 
@@ -40,7 +40,6 @@ try {
                     (SELECT COUNT(pv.id) FROM poll_votes pv WHERE pv.publication_id = p.id) AS total_votes,
                     (SELECT pv.poll_option_id FROM poll_votes pv WHERE pv.publication_id = p.id AND pv.user_id = ?) AS user_voted_option_id,
                     
-                    /* NUEVOS CAMPOS */
                     (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
                     (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
                     (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = ?) AS user_has_bookmarked,
@@ -49,14 +48,24 @@ try {
                  FROM community_publications p
                  JOIN users u ON p.user_id = u.id
                  WHERE p.community_id = ?
-                 AND p.post_status = 'active' -- <-- LÍNEA AÑADIDA
-                 AND (p.privacy_level = 'public' OR (p.privacy_level = 'private' AND p.user_id = ?)) -- <-- LÍNEA AÑADIDA
+                 AND p.post_status = 'active'
+                 AND (
+                     p.privacy_level = 'public' -- Ver posts públicos
+                     OR (p.privacy_level = 'friends' AND ( -- O ver posts de amigos si:
+                         p.user_id = ? -- 1. Yo soy el autor
+                         OR p.user_id IN ( -- 2. El autor es mi amigo
+                             (SELECT user_id_2 FROM friendships WHERE user_id_1 = ? AND status = 'accepted')
+                             UNION
+                             (SELECT user_id_1 FROM friendships WHERE user_id_2 = ? AND status = 'accepted')
+                         )
+                     ))
+                 )
                  ORDER BY p.created_at DESC
                  LIMIT 50";
             
             $stmt_posts = $pdo->prepare($sql_posts);
-            // ¡Se añaden 4 IDs de usuario!
-            $stmt_posts->execute([$userId, $userId, $userId, $currentCommunityId, $userId]);
+            // ¡Ahora se pasan 7 parámetros!
+            $stmt_posts->execute([$userId, $userId, $userId, $currentCommunityId, $userId, $userId, $userId]);
             $publications = $stmt_posts->fetchAll();
             // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
         } else {
@@ -66,7 +75,7 @@ try {
     
     if ($communityUuid === null) {
         // --- VISTA DE FEED PRINCIPAL ---
-        // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO p.title, status, privacy) ▼▼▼ ---
+        // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDA LÓGICA DE AMIGOS) ▼▼▼ ---
         $sql_posts = 
             "SELECT 
                 p.*, 
@@ -84,7 +93,6 @@ try {
                 (SELECT COUNT(pv.id) FROM poll_votes pv WHERE pv.publication_id = p.id) AS total_votes,
                 (SELECT pv.poll_option_id FROM poll_votes pv WHERE pv.publication_id = p.id AND pv.user_id = ?) AS user_voted_option_id,
 
-                /* NUEVOS CAMPOS */
                 (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
                 (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
                 (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = ?) AS user_has_bookmarked,
@@ -95,14 +103,24 @@ try {
              LEFT JOIN communities c ON p.community_id = c.id
              WHERE p.community_id IS NOT NULL 
              AND c.privacy = 'public'
-             AND p.post_status = 'active' -- <-- LÍNEA AÑADIDA
-             AND (p.privacy_level = 'public' OR (p.privacy_level = 'private' AND p.user_id = ?)) -- <-- LÍNEA AÑADIDA
+             AND p.post_status = 'active'
+             AND (
+                 p.privacy_level = 'public' -- Ver posts públicos
+                 OR (p.privacy_level = 'friends' AND ( -- O ver posts de amigos si:
+                     p.user_id = ? -- 1. Yo soy el autor
+                     OR p.user_id IN ( -- 2. El autor es mi amigo
+                         (SELECT user_id_2 FROM friendships WHERE user_id_1 = ? AND status = 'accepted')
+                         UNION
+                         (SELECT user_id_1 FROM friendships WHERE user_id_2 = ? AND status = 'accepted')
+                     )
+                 ))
+             )
              ORDER BY p.created_at DESC
              LIMIT 50";
         
         $stmt_posts = $pdo->prepare($sql_posts);
-         // ¡Se añaden 4 IDs de usuario!
-        $stmt_posts->execute([$userId, $userId, $userId, $userId]);
+         // ¡Ahora se pasan 6 parámetros!
+        $stmt_posts->execute([$userId, $userId, $userId, $userId, $userId, $userId]);
         $publications = $stmt_posts->fetchAll();
         // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
     }
