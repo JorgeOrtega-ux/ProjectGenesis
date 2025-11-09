@@ -20,15 +20,9 @@ $MAX_SIZE_BYTES = $MAX_SIZE_MB * 1024 * 1024;
 define('MAX_POST_LENGTH', (int)($GLOBALS['site_settings']['max_post_length'] ?? 1000));
 
 
-// --- ▼▼▼ INICIO DE FUNCIÓN HELPER (MODIFICADA) ▼▼▼ ---
-/**
- * Envía una notificación PING a un usuario a través del servidor WebSocket.
- *
- * @param int $targetUserId El ID del usuario a notificar.
- */
+// --- (Función notifyUser sin cambios) ---
 function notifyUser($targetUserId) {
     try {
-        // --- ¡Payload simplificado! Solo un ping. ---
         $post_data = json_encode([
             'target_user_id' => (int)$targetUserId,
             'payload'        => ['type' => 'new_notification_ping']
@@ -48,11 +42,9 @@ function notifyUser($targetUserId) {
         curl_close($ch);
         
     } catch (Exception $e) {
-        // Loggear el error de notificación (no detener la ejecución principal)
         logDatabaseError($e, 'publication_handler - (ws_notify_fail)');
     }
 }
-// --- ▲▲▲ FIN DE FUNCIÓN HELPER (MODIFICADA) ▲▲▲ ---
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -73,6 +65,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $communityId = $_POST['community_id'] ?? null;
             $postType = $_POST['post_type'] ?? 'post'; 
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PRIVACIDAD) ▼▼▼ ---
+            $privacyLevel = $_POST['privacy_level'] ?? 'public';
+            
+            $allowedPrivacy = ['public', 'friends', 'private'];
+            if (!in_array($privacyLevel, $allowedPrivacy)) {
+                $privacyLevel = 'public'; // Default a public si el valor es inválido
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN (PRIVACIDAD) ▲▲▲ ---
             
             $title = trim($_POST['title'] ?? '');
             if (empty($title)) {
@@ -109,14 +110,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($pollOptions) || count($pollOptions) < 2) {
                      throw new Exception('js.publication.errorPollOptions'); 
                 }
-                $textContent = $pollQuestion; // El contenido principal de un poll es la pregunta
-                $title = null; // Los polls no usan el campo de título separado, usan text_content
+                $textContent = $pollQuestion; 
+                $title = null; 
 
             } elseif ($postType === 'post') {
                  if (mb_strlen($textContent, 'UTF-8') > MAX_POST_LENGTH) {
                     throw new Exception('js.publication.errorPostTooLong');
                  }
-                 if (empty($textContent) && empty($uploadedFiles['name'][0]) && empty($title)) { // Modificado: Título también cuenta
+                 if (empty($textContent) && empty($uploadedFiles['name'][0]) && empty($title)) { 
                     throw new Exception('js.publication.errorEmpty');
                 }
             } else {
@@ -178,13 +179,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL INSERT CON NUEVAS COLUMNAS) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL INSERT CON PRIVACIDAD) ▼▼▼ ---
             $stmt_insert_post = $pdo->prepare(
                 "INSERT INTO community_publications (community_id, user_id, title, text_content, post_type, post_status, privacy_level)
-                 VALUES (?, ?, ?, ?, ?, 'active', 'public')"
+                 VALUES (?, ?, ?, ?, ?, 'active', ?)"
             );
-            $stmt_insert_post->execute([$dbCommunityId, $userId, $title, $textContent, $postType]);
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            $stmt_insert_post->execute([$dbCommunityId, $userId, $title, $textContent, $postType, $privacyLevel]); // <-- $privacyLevel añadido
+            // --- ▲▲▲ FIN DE MODIFICACIÓN (SQL INSERT) ▲▲▲ ---
             
             $publicationId = $pdo->lastInsertId();
 
@@ -214,6 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         } elseif ($action === 'vote-poll') {
             
+            // ... (código de 'vote-poll' sin cambios) ...
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             $optionId = (int)($_POST['poll_option_id'] ?? 0);
 
@@ -276,8 +278,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-
         } elseif ($action === 'like-toggle') {
+            
+            // ... (código de 'like-toggle' sin cambios) ...
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             if (empty($publicationId)) {
                 throw new Exception('js.api.invalidAction');
@@ -316,6 +319,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
 
         } elseif ($action === 'bookmark-toggle') {
+            
+            // ... (código de 'bookmark-toggle' sin cambios) ...
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             if (empty($publicationId)) {
                 throw new Exception('js.api.invalidAction');
@@ -338,6 +343,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
 
         } elseif ($action === 'post-comment') {
+            
+            // ... (código de 'post-comment' sin cambios) ...
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             $parentCommentId = !empty($_POST['parent_comment_id']) ? (int)$_POST['parent_comment_id'] : null;
             $commentText = trim($_POST['comment_text'] ?? '');
@@ -405,6 +412,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['newCommentCount'] = $stmt_count->fetchColumn();
 
         } elseif ($action === 'get-comments') {
+            
+            // ... (código de 'get-comments' sin cambios) ...
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             if (empty($publicationId)) {
                 throw new Exception('js.api.invalidAction');
@@ -430,6 +439,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['comments'] = $comments; 
         
         } elseif ($action === 'get-replies') {
+            
+            // ... (código de 'get-replies' sin cambios) ...
             $parentCommentId = (int)($_POST['parent_comment_id'] ?? 0);
             if (empty($parentCommentId)) {
                 throw new Exception('js.api.invalidAction');
@@ -448,15 +459,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
             $response['replies'] = $replies;
 
-        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (DELETE) ▼▼▼ ---
         } elseif ($action === 'delete-post') {
+            
+            // ... (código de 'delete-post' sin cambios) ...
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             if (empty($publicationId)) {
                 throw new Exception('js.api.invalidAction');
             }
             
-            // Soft delete: Cambiamos el estado a 'deleted'
-            // IMPORTANTE: Nos aseguramos de que el user_id coincida
             $stmt_delete = $pdo->prepare(
                 "UPDATE community_publications 
                  SET post_status = 'deleted' 
@@ -466,13 +476,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if ($stmt_delete->rowCount() > 0) {
                 $response['success'] = true;
-                $response['message'] = 'js.publication.postDeleted'; // Necesitarás esta clave i18n
+                $response['message'] = 'js.publication.postDeleted'; 
             } else {
-                throw new Exception('js.api.errorServer'); // No se eliminó (no era el propietario o no existía)
+                throw new Exception('js.api.errorServer'); 
             }
         
-        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (PRIVACY) ▼▼▼ ---
         } elseif ($action === 'update-post-privacy') {
+            
+            // ... (código de 'update-post-privacy' sin cambios) ...
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             $newPrivacy = $_POST['new_privacy_level'] ?? '';
             
@@ -480,7 +491,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.api.invalidAction');
             }
 
-            // Validar que el valor de privacidad sea uno de los permitidos
             $allowedPrivacy = ['public', 'friends', 'private'];
             if (!in_array($newPrivacy, $allowedPrivacy)) {
                 throw new Exception('js.api.invalidAction');
@@ -495,13 +505,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if ($stmt_update->rowCount() > 0) {
                 $response['success'] = true;
-                $response['message'] = 'js.publication.privacyUpdated'; // Necesitarás esta clave i18n
+                $response['message'] = 'js.publication.privacyUpdated'; 
                 $response['newPrivacy'] = $newPrivacy;
             } else {
-                throw new Exception('js.api.errorServer'); // No se actualizó (no era el propietario o no existía)
+                throw new Exception('js.api.errorServer'); 
             }
         }
-        // --- ▲▲▲ FIN DE NUEVOS BLOQUES ▲▲▲ ---
 
     } catch (Exception $e) {
         if ($pdo->inTransaction()) {

@@ -7,6 +7,9 @@ const MAX_FILES = 4;
 const MAX_POLL_OPTIONS = 6;
 let selectedFiles = []; 
 let selectedCommunityId = null; 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+let selectedPrivacyLevel = 'public'; // Por defecto es público
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 let currentPostType = 'post'; 
 
 function togglePublishSpinner(button, isLoading) {
@@ -30,14 +33,12 @@ function validatePublicationState() {
     let isContentValid = false;
 
     if (currentPostType === 'post') {
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
         const textInput = document.getElementById('publication-text');
-        const titleInput = document.getElementById('publication-title'); // <-- Añadido
+        const titleInput = document.getElementById('publication-title'); 
         const hasText = textInput ? textInput.value.trim().length > 0 : false;
-        const hasTitle = titleInput ? titleInput.value.trim().length > 0 : false; // <-- Añadido
+        const hasTitle = titleInput ? titleInput.value.trim().length > 0 : false; 
         const hasFiles = selectedFiles.length > 0;
-        isContentValid = hasText || hasFiles || hasTitle; // <-- Modificado
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+        isContentValid = hasText || hasFiles || hasTitle; 
     } else { 
         const questionInput = document.getElementById('poll-question');
         const options = document.querySelectorAll('#poll-options-container .component-input-group');
@@ -48,6 +49,7 @@ function validatePublicationState() {
         isContentValid = hasQuestion && hasMinOptions && allOptionsFilled;
     }
     
+    // (Sin cambios aquí, la privacidad siempre tiene un valor por defecto)
     publishButton.disabled = !isContentValid || !hasCommunity;
 }
 
@@ -180,10 +182,8 @@ function removePollOption(button) {
 }
 
 function resetForm() {
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     const titleInput = document.getElementById('publication-title');
     if (titleInput) titleInput.value = '';
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     const textInput = document.getElementById('publication-text');
     if (textInput) textInput.value = '';
@@ -214,6 +214,30 @@ function resetForm() {
         popover.querySelectorAll('.menu-link-check-icon').forEach(icon => icon.innerHTML = '');
     }
     
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Reset de Privacidad) ▼▼▼ ---
+    selectedPrivacyLevel = 'public';
+    const privacyTriggerText = document.getElementById('publication-privacy-text');
+    const privacyTriggerIcon = document.getElementById('publication-privacy-icon');
+    if (privacyTriggerText) {
+        privacyTriggerText.textContent = getTranslation('post.privacy.public');
+        privacyTriggerText.setAttribute('data-i18n', 'post.privacy.public');
+    }
+    if (privacyTriggerIcon) {
+        privacyTriggerIcon.textContent = 'public'; 
+    }
+    const privacyPopover = document.querySelector('[data-module="modulePrivacySelect"]');
+    if (privacyPopover) {
+        privacyPopover.querySelectorAll('.menu-link').forEach(link => {
+            const isDefault = link.dataset.value === 'public';
+            link.classList.toggle('active', isDefault);
+            const icon = link.querySelector('.menu-link-check-icon');
+            if (icon) {
+                icon.innerHTML = isDefault ? '<span class="material-symbols-rounded">check</span>' : '';
+            }
+        });
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (Reset de Privacidad) ▲▲▲ ---
+    
     validatePublicationState();
 }
 
@@ -233,10 +257,13 @@ async function handlePublishSubmit() {
     formData.append('action', 'create-post'); 
     formData.append('community_id', communityId);
     formData.append('post_type', currentPostType);
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir privacidad) ▼▼▼ ---
+    formData.append('privacy_level', selectedPrivacyLevel);
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (Añadir privacidad) ▲▲▲ ---
 
     try {
         if (currentPostType === 'post') {
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             const title = document.getElementById('publication-title').value.trim();
             const textContent = document.getElementById('publication-text').value.trim();
             if (!textContent && selectedFiles.length === 0 && !title) {
@@ -244,7 +271,6 @@ async function handlePublishSubmit() {
             }
             formData.append('title', title);
             formData.append('text_content', textContent);
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             for (const file of selectedFiles) {
                 formData.append('attachments[]', file, file.name);
@@ -264,7 +290,6 @@ async function handlePublishSubmit() {
             
             formData.append('poll_question', question);
             formData.append('poll_options', JSON.stringify(options));
-            // formData.append('title', ''); // Polls no envían título, se manejará en PHP
         }
 
         const result = await callPublicationApi(formData);
@@ -292,6 +317,7 @@ async function handlePublishSubmit() {
 }
 
 function resetCommunityTrigger() {
+    // ... (función sin cambios)
     selectedCommunityId = null;
     const triggerText = document.getElementById('publication-community-text');
     const triggerIcon = document.getElementById('publication-community-icon');
@@ -311,8 +337,6 @@ function resetCommunityTrigger() {
     }
 }
 
-// --- La función handleBookmarkToggle() fue eliminada de este archivo ---
-
 
 export function initPublicationManager() {
     
@@ -329,57 +353,64 @@ export function initPublicationManager() {
 
 
     document.body.addEventListener('click', (e) => {
+        // ... (código del listener de 'post-type-toggle' sin cambios) ...
         const toggleButton = e.target.closest('#post-type-toggle .component-toggle-tab');
         const section = e.target.closest('[data-section*="create-"]');
-        if (!toggleButton || !section) return;
-        e.preventDefault();
-        if (toggleButton.classList.contains('active')) return;
-        
-        const newType = toggleButton.dataset.type;
-        currentPostType = newType; 
-        
-        const postArea = document.getElementById('post-content-area');
-        const pollArea = document.getElementById('poll-content-area');
-        const attachBtn = document.getElementById('attach-files-btn');
-        const attachSpacer = document.getElementById('attach-files-spacer');
-        const toggleContainer = document.getElementById('post-type-toggle');
-
-        toggleContainer.querySelectorAll('.component-toggle-tab').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        toggleButton.classList.add('active');
-
-        if (newType === 'poll') {
-            if (postArea) { postArea.style.display = 'none'; postArea.classList.remove('active'); postArea.classList.add('disabled'); }
-            if (pollArea) { pollArea.style.display = 'flex'; pollArea.classList.add('active'); pollArea.classList.remove('disabled'); }
-            if (attachBtn) attachBtn.style.display = 'none';
-            if (attachSpacer) attachSpacer.style.display = 'block';
-            history.pushState(null, '', window.projectBasePath + '/create-poll');
+        if (!toggleButton || !section) {
+            // (no es un toggle, continuar más abajo)
+        } else {
+            e.preventDefault();
+            if (toggleButton.classList.contains('active')) return;
             
-            const optionsContainer = document.getElementById('poll-options-container');
-            if (optionsContainer && optionsContainer.children.length === 0) {
-                addPollOption(false);
-                addPollOption(false);
+            const newType = toggleButton.dataset.type;
+            currentPostType = newType; 
+            
+            const postArea = document.getElementById('post-content-area');
+            const pollArea = document.getElementById('poll-content-area');
+            const attachBtn = document.getElementById('attach-files-btn');
+            const attachSpacer = document.getElementById('attach-files-spacer');
+            const toggleContainer = document.getElementById('post-type-toggle');
+    
+            toggleContainer.querySelectorAll('.component-toggle-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            toggleButton.classList.add('active');
+    
+            if (newType === 'poll') {
+                if (postArea) { postArea.style.display = 'none'; postArea.classList.remove('active'); postArea.classList.add('disabled'); }
+                if (pollArea) { pollArea.style.display = 'flex'; pollArea.classList.add('active'); pollArea.classList.remove('disabled'); }
+                if (attachBtn) attachBtn.style.display = 'none';
+                if (attachSpacer) attachSpacer.style.display = 'block';
+                history.pushState(null, '', window.projectBasePath + '/create-poll');
+                
+                const optionsContainer = document.getElementById('poll-options-container');
+                if (optionsContainer && optionsContainer.children.length === 0) {
+                    addPollOption(false);
+                    addPollOption(false);
+                }
+    
+            } else { 
+                if (postArea) { postArea.style.display = 'flex'; postArea.classList.add('active'); postArea.classList.remove('disabled'); }
+                if (pollArea) { pollArea.style.display = 'none'; pollArea.classList.remove('active'); pollArea.classList.add('disabled'); }
+                if (attachBtn) attachBtn.style.display = 'flex';
+                if (attachSpacer) attachSpacer.style.display = 'none';
+                history.pushState(null, '', window.projectBasePath + '/create-publication');
             }
-
-        } else { 
-            if (postArea) { postArea.style.display = 'flex'; postArea.classList.add('active'); postArea.classList.remove('disabled'); }
-            if (pollArea) { pollArea.style.display = 'none'; pollArea.classList.remove('active'); pollArea.classList.add('disabled'); }
-            if (attachBtn) attachBtn.style.display = 'flex';
-            if (attachSpacer) attachSpacer.style.display = 'none';
-            history.pushState(null, '', window.projectBasePath + '/create-publication');
+            
+            validatePublicationState();
+            return; // Importante salir después de manejar el toggle
         }
-        
-        validatePublicationState();
-    });
 
+
+        // --- (Listener de 'input' sin cambios) ---
+        // ...
+    });
+    
     document.body.addEventListener('input', (e) => {
         const section = e.target.closest('[data-section*="create-"]');
         if (!section) return;
 
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
         if (e.target.id === 'publication-title' || e.target.id === 'publication-text' || e.target.id === 'poll-question' || e.target.closest('#poll-options-container')) {
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             validatePublicationState();
         }
     });
@@ -388,6 +419,7 @@ export function initPublicationManager() {
         const section = e.target.closest('[data-section*="create-"]');
         if (!section) return; 
 
+        // --- (Listener de 'moduleCommunitySelect' sin cambios) ---
         const trigger = e.target.closest('#publication-community-trigger[data-action="toggleModuleCommunitySelect"]');
         if (trigger) {
             e.preventDefault();
@@ -435,6 +467,57 @@ export function initPublicationManager() {
             return;
         }
         
+        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (Listener de 'modulePrivacySelect') ▼▼▼ ---
+        const privacyTrigger = e.target.closest('#publication-privacy-trigger[data-action="toggleModulePrivacySelect"]');
+        if (privacyTrigger) {
+            e.preventDefault();
+            e.stopPropagation();
+            const module = document.querySelector('[data-module="modulePrivacySelect"]');
+            if (module) {
+                deactivateAllModules(module); 
+                module.classList.toggle('disabled');
+                module.classList.toggle('active');
+            }
+            return;
+        }
+
+        const privacyMenuLink = e.target.closest('[data-module="modulePrivacySelect"] .menu-link[data-value]');
+        if (privacyMenuLink) {
+            e.preventDefault();
+            
+            selectedPrivacyLevel = privacyMenuLink.dataset.value;
+            const newTextKey = privacyMenuLink.dataset.textKey;
+            const newIcon = privacyMenuLink.dataset.icon;
+
+            const triggerText = document.getElementById('publication-privacy-text');
+            const triggerIcon = document.getElementById('publication-privacy-icon');
+            
+            if (triggerText) {
+                triggerText.textContent = getTranslation(newTextKey);
+                triggerText.setAttribute('data-i18n', newTextKey);
+            }
+            if (triggerIcon) {
+                triggerIcon.textContent = newIcon; 
+            }
+
+            const menuList = privacyMenuLink.closest('.menu-list');
+            if (menuList) {
+                menuList.querySelectorAll('.menu-link').forEach(link => link.classList.remove('active'));
+                menuList.querySelectorAll('.menu-link-check-icon').forEach(icon => icon.innerHTML = '');
+            }
+            
+            privacyMenuLink.classList.add('active');
+            const checkIcon = privacyMenuLink.querySelector('.menu-link-check-icon');
+            if (checkIcon) checkIcon.innerHTML = '<span class="material-symbols-rounded">check</span>';
+
+            deactivateAllModules();
+            // No es necesario llamar a validatePublicationState() aquí, ya que la privacidad siempre tiene un valor.
+            return;
+        }
+        // --- ▲▲▲ FIN DE NUEVO BLOQUE (Listener de 'modulePrivacySelect') ▲▲▲ ---
+        
+        
+        // --- (Listeners de botones de submit, attach, poll, etc. sin cambios) ---
         if (e.target.id === 'publish-post-btn') {
             e.preventDefault();
             handlePublishSubmit();
@@ -461,6 +544,7 @@ export function initPublicationManager() {
         }
     });
     
+    // --- (Listener de 'change' para input de archivos sin cambios) ---
     document.body.addEventListener('change', (e) => {
         const section = e.target.closest('[data-section*="create-"]');
          if (e.target.id === 'publication-file-input' && section) {

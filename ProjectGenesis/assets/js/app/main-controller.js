@@ -127,7 +127,7 @@ function initMainController() {
         if (action.startsWith('toggle')) {
             
             // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
-            // Añadimos las acciones de community-manager.js a la lista de ignorados
+            // Añadimos las acciones de community-manager.js y publication-manager.js a la lista de ignorados
             const managedActions = [
                 'toggleModulePageFilter',
                 'toggleModuleAdminRole',
@@ -138,12 +138,14 @@ function initMainController() {
                 'toggleModuleSearch',
                 'toggleModuleSearchFilter',
                 'toggleModuleNotifications',
-                // --- ¡LÍNEAS AÑADIDAS! ---
-                'toggle-post-options',   // Manejado por community-manager.js
-                'toggle-post-privacy',   // Manejado por community-manager.js
-                'toggle-comments',       // Manejado por community-manager.js
-                'toggle-post-text'       // Manejado por community-manager.js
-                // --- ¡FIN DE LÍNEAS AÑADIDAS! ---
+                // --- Acciones de community-manager.js ---
+                'toggle-post-options',   
+                'toggle-post-privacy',   
+                'toggle-comments',       
+                'toggle-post-text',
+                // --- ¡LÍNEA AÑADIDA! (de publication-manager.js) ---
+                'toggleModulePrivacySelect' 
+                // --- ¡FIN DE LÍNEA AÑADIDA! ---
             ];
             // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 

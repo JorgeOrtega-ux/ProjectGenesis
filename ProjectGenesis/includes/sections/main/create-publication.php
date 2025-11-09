@@ -1,6 +1,6 @@
 <?php
 // FILE: includes/sections/main/create-publication.php
-// (VERSÍON CORREGIDA Y AMPLIADA PARA ENCUESTAS)
+// (VERSÍON CORREGIDA Y AMPLIADA PARA ENCUESTAS Y PRIVACIDAD)
 
 // Determina qué pestaña está activa basada en la sección actual
 $isPollActive = ($CURRENT_SECTION === 'create-poll');
@@ -8,6 +8,22 @@ $isPostActive = !$isPollActive;
 
 // $userCommunitiesForPost es cargada por config/routing/router.php
 $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPost);
+
+// --- ▼▼▼ INICIO DE NUEVO BLOQUE PHP (PRIVACIDAD) ▼▼▼ ---
+$privacyMap = [
+    'public' => 'post.privacy.public',
+    'friends' => 'post.privacy.friends',
+    'private' => 'post.privacy.private'
+];
+$privacyIconMap = [
+    'public' => 'public',
+    'friends' => 'group',
+    'private' => 'lock'
+];
+$defaultPrivacy = 'public';
+$currentPrivacyKey = $privacyMap[$defaultPrivacy];
+$currentPrivacyIcon = $privacyIconMap[$defaultPrivacy];
+// --- ▲▲▲ FIN DE NUEVO BLOQUE PHP (PRIVACIDAD) ▲▲▲ ---
 ?>
 <div class="section-content overflow-y <?php echo (strpos($CURRENT_SECTION, 'create-') === 0) ? 'active' : 'disabled'; ?>" data-section="<?php echo htmlspecialchars($CURRENT_SECTION); ?>">
 
@@ -134,7 +150,58 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
                         </div>
                     </div>
                 </div>
-                
+
+                <div class="component-card__content">
+                    <div class="component-card__text">
+                        <h2 class="component-card__title" data-i18n="post.options.privacyTitle">Quién puede ver esto:</h2>
+                        
+                        <div class="trigger-select-wrapper">
+                            <div class="trigger-selector" 
+                                 id="publication-privacy-trigger" 
+                                 data-action="toggleModulePrivacySelect">
+                                
+                                <div class="trigger-select-icon">
+                                    <span class="material-symbols-rounded" id="publication-privacy-icon"><?php echo $currentPrivacyIcon; ?></span>
+                                </div>
+                                <div class="trigger-select-text">
+                                    <span data-i18n="<?php echo htmlspecialchars($currentPrivacyKey); ?>" id="publication-privacy-text"></span>
+                                </div>
+                                <div class="trigger-select-arrow">
+                                    <span class="material-symbols-rounded">arrow_drop_down</span>
+                                </div>
+                            </div>
+
+                            <div class="popover-module popover-module--anchor-width body-title disabled"
+                                 data-module="modulePrivacySelect">
+                                <div class="menu-content">
+                                    <div class="menu-list">
+                                        <?php foreach ($privacyMap as $key => $textKey): 
+                                            $isActive = ($key === $defaultPrivacy);
+                                            $iconName = $privacyIconMap[$key];
+                                        ?>
+                                            <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                                                 data-value="<?php echo htmlspecialchars($key); ?>"
+                                                 data-text-key="<?php echo htmlspecialchars($textKey); ?>"
+                                                 data-icon="<?php echo htmlspecialchars($iconName); ?>">
+                                                <div class="menu-link-icon">
+                                                    <span class="material-symbols-rounded"><?php echo $iconName; ?></span>
+                                                </div>
+                                                <div class="menu-link-text">
+                                                    <span data-i18n="<?php echo htmlspecialchars($textKey); ?>"></span>
+                                                </div>
+                                                <div class="menu-link-check-icon">
+                                                    <?php if ($isActive): ?>
+                                                        <span class="material-symbols-rounded">check</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div id="post-content-area" class="<?php echo $isPostActive ? 'active' : 'disabled'; ?>">
                     
                     <div class="component-input-group">
@@ -164,7 +231,7 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
                     </button>
                 </div>
                 
-                <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- ?>
+                <?php // --- (Sin cambios en este bloque) --- ?>
                 <div class="component-card__actions" id="create-post-actions-footer">
                     
                     <button type="button" class="component-action-button--icon-square <?php echo $isPollActive ? 'disabled' : 'active'; ?>" 
@@ -179,7 +246,7 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
                         <span class="material-symbols-rounded">send</span>
                     </button>
                 </div>
-                <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
+                <?php // --- (Fin del bloque sin cambios) --- ?>
 
             </div>
         <?php endif; ?>
