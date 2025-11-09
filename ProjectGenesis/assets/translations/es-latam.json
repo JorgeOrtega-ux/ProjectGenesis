@@ -535,7 +535,7 @@
       "success2faEnabled": "Verificación de dos pasos activada.",
       "success2faDisabled": "Verificación de dos pasos desactivada.",
       "successLogoutAll": "Se han invalidado todas las demás sesiones.",
-      "errorNoSession": "Acceso denigado. No has iniciado sesión.",
+      "errorNoSession": "Acceso denegado. No has iniciado sesión.",
       "infoCodeSentCurrent": "Se ha enviado un código a tu correo actual.",
       "errorCodeRequest": "Error al solicitar el código.",
       "sending": "Enviando...",
@@ -658,7 +658,10 @@
       "saved": "Publicación guardada",
       "unsaved": "Publicación eliminada de guardados",
       "errorPostTooLong": "La publicación no puede exceder los %length% caracteres.",
-      "errorPollTooLong": "La pregunta de la encuesta no puede exceder los %length% caracteres."
+      "errorPollTooLong": "La pregunta de la encuesta no puede exceder los %length% caracteres.",
+      "confirmDelete": "¿Eliminar publicación? Esta acción no se puede deshacer.",
+      "postDeleted": "Publicación eliminada.",
+      "privacyUpdated": "Privacidad actualizada."
     },
     "friends": {
       "sendRequest": "Agregar amigo",
@@ -757,7 +760,8 @@
     "pollQuestionLabel": "Escribe tu pregunta...",
     "pollAddOption": "Añadir opción",
     "pollOptionLabel": "Opción",
-    "pollRemoveOption": "Eliminar opción"
+    "pollRemoveOption": "Eliminar opción",
+    "titleLabel": "Título (Opcional)"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -803,5 +807,26 @@
       "noFriends": "No tienes amigos.",
       "error": "Error al cargar."
     }
+  },
+  "post": {
+    "options": {
+      "changePrivacy": "Cambiar privacidad",
+      "delete": "Eliminar publicación",
+      "privacyTitle": "Seleccionar Privacidad",
+      "privacyPublic": "Público",
+      "privacyFriends": "Amigos",
+      "privacyPrivate": "Solo yo"
+    },
+    "privacy": {
+      "public": "Público",
+      "friends": "Amigos",
+      "private": "Solo yo"
+    }
+  },
+  "tooltips": {
+    "volver": "Volver a la lista de logs",
+    "verLog": "Ver Log",
+    "quitarSeleccion": "Quitar selección",
+    "masOpciones": "Más opciones"
   }
 }
