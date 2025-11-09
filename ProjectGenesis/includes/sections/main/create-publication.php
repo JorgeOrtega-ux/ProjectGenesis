@@ -14,6 +14,7 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
     <div class="page-toolbar-container" id="create-post-toolbar-container">
         <div class="page-toolbar-floating">
             <div class="toolbar-action-default">
+                
                 <div class="page-toolbar-left">
                     <button type="button"
                         class="page-toolbar-button"
@@ -22,12 +23,46 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
                         <span class="material-symbols-rounded">arrow_back</span>
                     </button>
                 </div>
+
+                <div class="page-toolbar-right">
+                    <button type="button"
+                        class="page-toolbar-button"
+                        data-action="toggleModuleCreatePost" 
+                        data-tooltip="home.toolbar.createPost">
+                        <span class="material-symbols-rounded">add</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="popover-module popover-module--anchor-right body-title disabled" data-module="moduleCreatePost">
+            <div class="menu-content">
+                <div class="menu-list">
+                    <div class="menu-link" data-action="toggleSectionCreatePublication">
+                        <div class="menu-link-icon">
+                            <span class="material-symbols-rounded">post_add</span>
+                        </div>
+                        <div class="menu-link-text">
+                            <span data-i18n="home.popover.newPost">Crear publicación</span>
+                        </div>
+                    </div>
+                    <div class="menu-link" data-action="toggleSectionCreatePoll">
+                        <div class="menu-link-icon">
+                            <span class="material-symbols-rounded">poll</span>
+                        </div>
+                        <div class="menu-link-text">
+                            <span data-i18n="home.popover.newPoll">Crear encuesta</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     
-    <div class="component-wrapper"> <div class="component-header-card">
-            <h1 class="component-page-title" data-i18n="create_publication.title"></h1>
+    <div class="component-wrapper">
+        <div class="component-header-card">
+            <h1 class="component-page-title" data-i18n="<?php echo $isPollActive ? 'create_publication.poll' : 'create_publication.post'; ?>"></h1>
             <p class="component-page-description" data-i18n="create_publication.description"></p>
         </div>
 
@@ -55,17 +90,6 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
         <?php else: ?>
             <div class="component-card component-card--action" id="create-post-form">
             
-                <div class="component-toggle-tabs" id="post-type-toggle">
-                    <button type="button" class="component-toggle-tab <?php echo $isPostActive ? 'active' : ''; ?>" data-type="post">
-                        <span class="material-symbols-rounded">post_add</span>
-                        <span data-i18n="create_publication.post"></span>
-                    </button>
-                    <button type="button" class="component-toggle-tab <?php echo $isPollActive ? 'active' : ''; ?>" data-type="poll">
-                        <span class="material-symbols-rounded">poll</span>
-                        <span data-i18n="create_publication.poll"></span>
-                    </button>
-                </div>
-
                 <div class="component-card__content">
                     <div class="component-card__text">
                         <h2 class="component-card__title" data-i18n="create_publication.destination">Publicar en:</h2>
@@ -142,10 +166,9 @@ $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPo
                 
                 <div class="component-card__actions">
                     
-                    <button type="button" class="component-action-button component-action-button--secondary" 
+                    <button type="button" class="component-action-button component-action-button--secondary <?php echo $isPollActive ? 'disabled' : 'active'; ?>" 
                             id="attach-files-btn" 
-                            data-tooltip="create_publication.attachTooltip"
-                            class="<?php echo $isPollActive ? 'disabled' : 'active'; ?>">
+                            data-tooltip="create_publication.attachTooltip">
                         <span class="material-symbols-rounded">attach_file</span>
                     </button>
                     
