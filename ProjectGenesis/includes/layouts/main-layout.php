@@ -1,3 +1,6 @@
+<?php
+// FILE: includes/layouts/main-layout.php
+?>
 <!DOCTYPE html>
 <html lang="<?php echo $htmlLang; ?>" class="<?php echo $themeClass; ?>">
 
@@ -40,9 +43,15 @@
 
                     </div>
                     
-                    <?php if (!$isAuthPage): ?>
+                    <?php 
+                    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Mostrar amigos solo en 'home') ▼▼▼ ---
+                    // Usamos $currentPage (definido en bootstrapper.php) para la carga inicial.
+                    // $currentPage es 'home' para / y /c/uuid...
+                    if (!$isAuthPage && $currentPage === 'home'): 
+                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                    ?>
                         <?php include 'includes/modules/module-friend-list.php'; // Incluir el módulo de amigos directamente ?>
-                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
 
                 <div id="alert-container"></div>

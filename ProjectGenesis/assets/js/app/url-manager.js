@@ -1,3 +1,5 @@
+// FILE: assets/js/app/url-manager.js
+
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
 import { applyTranslations, getTranslation } from '../services/i18n-manager.js';
@@ -129,6 +131,18 @@ async function loadPage(page, action, fetchParams = null) {
         headerTop.classList.remove('shadow');
     }
 
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Ocultar/Mostrar Amigos) ▼▼▼ ---
+    const friendListModule = document.getElementById('friend-list-container');
+    if (friendListModule) {
+        if (page === 'home') {
+            // Revertir al control de CSS (se ocultará en móviles)
+            friendListModule.style.display = ''; 
+        } else {
+            // Ocultar en todas las demás páginas
+            friendListModule.style.display = 'none';
+        }
+    }
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     contentContainer.innerHTML = ''; 
     if (loaderTimer) {
