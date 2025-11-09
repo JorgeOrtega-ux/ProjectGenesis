@@ -2,11 +2,15 @@ import { callCommunityApi, callPublicationApi } from '../services/api-service.js
 import { getTranslation } from '../services/i18n-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js';
 import { loadPage } from '../app/url-manager.js';
-import { showAlert } from '../services/alert-manager.js'; // <-- Importación necesaria
+import { showAlert } from '../services/alert-manager.js'; 
 
 let currentCommunityId = null;
 let currentCommunityName = null;
 let currentCommunityUuid = null;
+
+// --- ▼▼▼ INICIO DE NUEVA VARIABLE ▼▼▼ ---
+let currentPostOptionsId = null; // Rastrea en qué post se hizo clic en '...'
+// --- ▲▲▲ FIN DE NUEVA VARIABLE ▲▲▲ ---
 
 
 function toggleJoinLeaveSpinner(button, isLoading) {
@@ -642,14 +646,21 @@ export function initCommunityManager() {
         const showRepliesButton = e.target.closest('[data-action="show-replies"]'); 
         const bookmarkButton = e.target.closest('[data-action="bookmark-toggle"]'); 
 
-        // --- ▼▼▼ INICIO DE NUEVO BLOQUE ▼▼▼ ---
         const toggleTextButton = e.target.closest('[data-action="toggle-post-text"]');
+        
+        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (MANEJADORES DE POPOVER) ▼▼▼ ---
+        const postOptionsButton = e.target.closest('[data-action="toggle-post-options"]');
+        const postPrivacyToggleButton = e.target.closest('[data-action="toggle-post-privacy"]');
+        const postDeleteButton = e.target.closest('[data-action="post-delete"]');
+        const postSetPrivacyButton = e.target.closest('[data-action="post-set-privacy"]');
+        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
+
+
         if (toggleTextButton) {
             e.preventDefault();
             handleTogglePostText(toggleTextButton);
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 
         if (likeButton) {
             e.preventDefault();
@@ -676,6 +687,114 @@ export function initCommunityManager() {
             handleBookmarkToggle(bookmarkButton);
             return;
         }
+
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (MANEJADORES DE POPOVER) ▼▼▼ ---
+        
+        if (postOptionsButton) {
+            e.preventDefault();
+            e.stopPropagation();
+            currentPostOptionsId = postOptionsButton.dataset.postId; // Guardar el ID
+            
+            const module = document.querySelector('[data-module="modulePostOptions"]');
+            if (module) {
+                deactivateAllModules(module);
+                module.classList.toggle('disabled');
+                module.classList.toggle('active');
+                
+                // TODO: Usar Popper.js para anclar 'module' a 'postOptionsButton'
+            }
+            return;
+        }
+
+        if (postPrivacyToggleButton) {
+            e.preventDefault();
+            e.stopPropagation();
+            const moduleOptions = document.querySelector('[data-module="modulePostOptions"]');
+            const modulePrivacy = document.querySelector('[data-module="modulePostPrivacy"]');
+
+            if (moduleOptions) moduleOptions.classList.add('disabled');
+            
+            if (modulePrivacy) {
+                // Pasamos el ID del post al nuevo popover
+                modulePrivacy.dataset.currentPostId = currentPostOptionsId; 
+                
+                deactivateAllModules(modulePrivacy);
+                modulePrivacy.classList.remove('disabled');
+                modulePrivacy.classList.add('active');
+                
+                // TODO: Anclar 'modulePrivacy' al 'postPrivacyToggleButton' o al 'moduleOptions'
+                
+                // (Lógica omitida para marcar la privacidad actual)
+            }
+            return;
+        }
+        
+        if (postDeleteButton) {
+            e.preventDefault();
+            deactivateAllModules();
+            
+            if (!currentPostOptionsId) return;
+
+            // Usamos una clave de i18n para la confirmación
+            if (!confirm(getTranslation('js.publication.confirmDelete') || '¿Estás seguro de que quieres eliminar esta publicación? Esta acción no se puede deshacer.')) {
+                return;
+            }
+
+            const postIdToDelete = currentPostOptionsId;
+            currentPostOptionsId = null;
+
+            const formData = new FormData();
+            formData.append('action', 'delete-post');
+            formData.append('publication_id', postIdToDelete);
+
+            try {
+                const result = await callPublicationApi(formData);
+                if (result.success) {
+                    showAlert(getTranslation(result.message || 'js.publication.postDeleted'), 'success');
+                    const postCard = document.querySelector(`.component-card--post[data-post-id="${postIdToDelete}"]`);
+                    if (postCard) {
+                        postCard.remove();
+                    }
+                } else {
+                    showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+                }
+            } catch (e) {
+                showAlert(getTranslation('js.api.errorConnection'), 'error');
+            }
+            return;
+        }
+
+        if (postSetPrivacyButton) {
+            e.preventDefault();
+            deactivateAllModules();
+            
+            const modulePrivacy = postSetPrivacyButton.closest('[data-module="modulePostPrivacy"]');
+            const postIdToUpdate = modulePrivacy ? modulePrivacy.dataset.currentPostId : null;
+            const newPrivacy = postSetPrivacyButton.dataset.value;
+
+            if (!postIdToUpdate || !newPrivacy) return;
+
+            const formData = new FormData();
+            formData.append('action', 'update-post-privacy');
+            formData.append('publication_id', postIdToUpdate);
+            formData.append('new_privacy_level', newPrivacy);
+            
+            try {
+                const result = await callPublicationApi(formData);
+                if (result.success) {
+                    showAlert(getTranslation(result.message || 'js.publication.privacyUpdated'), 'success');
+                    // (Opcional: actualizar un icono de candado en la UI del post)
+                } else {
+                    showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+                }
+            } catch (e) {
+                showAlert(getTranslation('js.api.errorConnection'), 'error');
+            }
+            return;
+        }
+        
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
+
 
         const button = e.target.closest('button[data-action], button[data-auth-action], button[data-tooltip]');
         

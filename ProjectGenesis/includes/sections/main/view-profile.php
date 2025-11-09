@@ -230,7 +230,19 @@ if ($is_actually_online) {
                                     </p>
                                 </div>
                             </div>
-                        </div>
+                            
+                            <?php if ($isOwnProfile): ?>
+                            <div class="post-card-options">
+                                <button type="button" 
+                                        class="component-action-button--icon" 
+                                        data-action="toggle-post-options"
+                                        data-post-id="<?php echo $post['id']; ?>"
+                                        data-tooltip="Más opciones">
+                                    <span class="material-symbols-rounded">more_vert</span>
+                                </button>
+                            </div>
+                            <?php endif; ?>
+                            </div>
 
                         <?php if (!empty($post['text_content'])): ?>
                             <div class="post-card-content">
@@ -370,4 +382,66 @@ if ($is_actually_online) {
 
         </div>
     </div>
-</div>
+    
+    <div class="popover-module body-title disabled" data-module="modulePostOptions">
+        <div class="menu-content">
+            <div class="menu-list">
+                <div class="menu-link" data-action="toggle-post-privacy">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">visibility</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="post.options.changePrivacy">Cambiar privacidad</span>
+                    </div>
+                </div>
+                <div class="menu-link" data-action="post-delete">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded" style="color: #c62828;">delete</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="post.options.delete" style="color: #c62828;">Eliminar publicación</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="popover-module body-title disabled" data-module="modulePostPrivacy">
+        <div class="menu-content">
+            <div class="menu-list">
+                <div class="menu-header" data-i18n="post.options.privacyTitle">Seleccionar Privacidad</div>
+                
+                <div class="menu-link" data-action="post-set-privacy" data-value="public">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">public</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="post.options.privacyPublic">Público</span>
+                    </div>
+                    <div class="menu-link-check-icon"></div>
+                </div>
+                
+                <div class="menu-link" data-action="post-set-privacy" data-value="friends">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">group</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="post.options.privacyFriends">Solo amigos</span>
+                    </div>
+                    <div class="menu-link-check-icon"></div>
+                </div>
+                
+                <div class="menu-link" data-action="post-set-privacy" data-value="private">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">lock</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="post.options.privacyPrivate">Solo yo</span>
+                    </div>
+                    <div class="menu-link-check-icon"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    </div>

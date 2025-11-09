@@ -17,10 +17,30 @@ if (!isset($viewPostData) || empty($viewPostData)) {
 // Si el post existe, asignar los datos a una variable más corta
 $post = $viewPostData;
 
+// --- ▼▼▼ INICIO DE NUEVA LÓGICA DE VISIBILIDAD ▼▼▼ ---
+// Comprobar si el usuario actual tiene permiso para ver este post
+$isOwner = ($post['user_id'] == $userId);
+
+// 1. Ocultar si está eliminado
+if ($post['post_status'] === 'deleted') {
+    include dirname(__DIR__, 1) . '/main/404.php';
+    return;
+}
+
+// 2. Ocultar si es privado y no es el dueño
+if ($post['privacy_level'] === 'private' && !$isOwner) {
+    include dirname(__DIR__, 1) . '/main/404.php';
+    return;
+}
+
+// 3. Ocultar si es 'solo amigos' y no es el dueño (lógica de amigos no implementada aquí)
+// (Por ahora, se asume que si tienes el enlace y es 'friends' o 'public', puedes verlo)
+// --- ▲▲▲ FIN DE NUEVA LÓGICA DE VISIBILIDAD ▲▲▲ ---
+
+
 // Lógica de datos (copiada de home.php)
 $postAvatar = $post['profile_image_url'] ?? $defaultAvatar;
 if (empty($postAvatar)) $postAvatar = $defaultAvatar;
-// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
 $postRole = $post['role'] ?? 'user';
 
 $attachments = [];
@@ -37,9 +57,7 @@ $pollOptions = $post['poll_options'] ?? [];
 $likeCount = (int)($post['like_count'] ?? 0);
 $userHasLiked = (int)($post['user_has_liked'] ?? 0) > 0;
 $commentCount = (int)($post['comment_count'] ?? 0);
-// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
 $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0;
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'post-view') ? 'active' : 'disabled'; ?>" data-section="post-view">
@@ -83,7 +101,19 @@ $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0;
                             </p>
                         </div>
                     </div>
-                </div>
+                    
+                    <?php if ($isOwner): ?>
+                    <div class="post-card-options">
+                        <button type="button" 
+                                class="component-action-button--icon" 
+                                data-action="toggle-post-options"
+                                data-post-id="<?php echo $post['id']; ?>"
+                                data-tooltip="Más opciones">
+                            <span class="material-symbols-rounded">more_vert</span>
+                        </button>
+                    </div>
+                    <?php endif; ?>
+                    </div>
 
                 <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (TÍTULO) ▼▼▼ --- ?>
                 <?php if (!empty($post['title']) && !$isPoll): ?>
@@ -209,4 +239,66 @@ $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0;
         </div>
 
     </div>
-</div>
+    
+    <div class="popover-module body-title disabled" data-module="modulePostOptions">
+        <div class="menu-content">
+            <div class="menu-list">
+                <div class="menu-link" data-action="toggle-post-privacy">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">visibility</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="post.options.changePrivacy">Cambiar privacidad</span>
+                    </div>
+                </div>
+                <div class="menu-link" data-action="post-delete">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded" style="color: #c62828;">delete</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="post.options.delete" style="color: #c62828;">Eliminar publicación</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="popover-module body-title disabled" data-module="modulePostPrivacy">
+        <div class="menu-content">
+            <div class="menu-list">
+                <div class="menu-header" data-i18n="post.options.privacyTitle">Seleccionar Privacidad</div>
+                
+                <div class="menu-link" data-action="post-set-privacy" data-value="public">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">public</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="post.options.privacyPublic">Público</span>
+                    </div>
+                    <div class="menu-link-check-icon"></div>
+                </div>
+                
+                <div class="menu-link" data-action="post-set-privacy" data-value="friends">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">group</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="post.options.privacyFriends">Solo amigos</span>
+                    </div>
+                    <div class="menu-link-check-icon"></div>
+                </div>
+                
+                <div class="menu-link" data-action="post-set-privacy" data-value="private">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">lock</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="post.options.privacyPrivate">Solo yo</span>
+                    </div>
+                    <div class="menu-link-check-icon"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    </div>

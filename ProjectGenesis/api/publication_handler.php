@@ -74,12 +74,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $communityId = $_POST['community_id'] ?? null;
             $postType = $_POST['post_type'] ?? 'post'; 
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-            $title = trim($_POST['title'] ?? ''); // Obtener el nuevo título
+            $title = trim($_POST['title'] ?? '');
             if (empty($title)) {
-                $title = null; // Asegurarse de que sea NULL si está vacío
+                $title = null;
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             $textContent = trim($_POST['text_content'] ?? ''); 
             $pollQuestion = trim($_POST['poll_question'] ?? ''); 
@@ -180,10 +178,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL INSERT) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL INSERT CON NUEVAS COLUMNAS) ▼▼▼ ---
             $stmt_insert_post = $pdo->prepare(
-                "INSERT INTO community_publications (community_id, user_id, title, text_content, post_type)
-                 VALUES (?, ?, ?, ?, ?)"
+                "INSERT INTO community_publications (community_id, user_id, title, text_content, post_type, post_status, privacy_level)
+                 VALUES (?, ?, ?, ?, ?, 'active', 'public')"
             );
             $stmt_insert_post->execute([$dbCommunityId, $userId, $title, $textContent, $postType]);
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
@@ -226,8 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->beginTransaction();
             
             try {
-                // ... (lógica para validar el voto) ...
-                $stmt_check_poll = $pdo->prepare("SELECT post_type FROM community_publications WHERE id = ?");
+                $stmt_check_poll = $pdo->prepare("SELECT post_type FROM community_publications WHERE id = ? AND post_status = 'active'");
                 $stmt_check_poll->execute([$publicationId]);
                 $postType = $stmt_check_poll->fetchColumn();
                 
@@ -251,10 +248,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt_insert_vote->execute([$publicationId, $optionId, $userId]);
                 
                 $pdo->commit();
-                
-                // --- ▼▼▼ NOTIFICACIÓN DE VOTO ELIMINADA ▼▼▼ ---
-                // (Se elimina el bloque 'notifyUser' para 'new_poll_vote')
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 $stmt_results = $pdo->prepare(
                    "SELECT 
@@ -303,24 +296,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt_insert->execute([$userId, $publicationId]);
                 $response['userHasLiked'] = true;
                 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN: NOTIFICAR Y GUARDAR LIKE ▼▼▼ ---
-                $stmt_get_author = $pdo->prepare("SELECT user_id FROM community_publications WHERE id = ?");
+                $stmt_get_author = $pdo->prepare("SELECT user_id FROM community_publications WHERE id = ? AND post_status = 'active'");
                 $stmt_get_author->execute([$publicationId]);
                 $postAuthorId = (int)$stmt_get_author->fetchColumn();
 
                 if ($postAuthorId > 0 && $postAuthorId !== $userId) {
-                    // 1. Insertar en la nueva tabla
                     $stmt_notify = $pdo->prepare(
                         "INSERT INTO user_notifications (user_id, actor_user_id, type, reference_id)
                          VALUES (?, ?, 'like', ?)"
                     );
-                    // Evitar duplicados rápidos (opcional pero bueno)
                     $stmt_notify->execute([$postAuthorId, $userId, $publicationId]);
-
-                    // 2. Enviar PING genérico
                     notifyUser($postAuthorId);
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
             
             $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM publication_likes WHERE publication_id = ?");
@@ -359,36 +346,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.publication.errorCommentEmpty');
             }
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN: OBTENER AUTORES Y TIPO ▼▼▼ ---
             $targetUserId = 0;
-            $notificationType = 'comment'; // 'comment' o 'reply'
-            $referenceId = $publicationId; // Por defecto, el post
+            $notificationType = 'comment';
+            $referenceId = $publicationId;
 
             if ($parentCommentId) {
-                // Es una respuesta. Notificar al autor del comentario padre.
                 $stmt_check_parent = $pdo->prepare("SELECT user_id, parent_comment_id FROM publication_comments WHERE id = ?");
                 $stmt_check_parent->execute([$parentCommentId]);
                 $parentComment = $stmt_check_parent->fetch();
                 
                 if (!$parentComment) {
-                    throw new Exception('js.api.errorServer'); // Comentario padre no existe
+                    throw new Exception('js.api.errorServer'); 
                 }
                 if ($parentComment['parent_comment_id'] !== null) {
-                    throw new Exception('js.publication.errorMaxDepth'); // Es una respuesta a una respuesta
+                    throw new Exception('js.publication.errorMaxDepth'); 
                 }
                 $targetUserId = (int)$parentComment['user_id'];
                 $notificationType = 'reply';
-                $referenceId = $publicationId; // La referencia SIGUE SIENDO EL POST_ID para el enlace
-
+                $referenceId = $publicationId; 
             } else {
-                // Es un comentario nuevo. Notificar al autor del post.
-                $stmt_get_author = $pdo->prepare("SELECT user_id FROM community_publications WHERE id = ?");
+                $stmt_get_author = $pdo->prepare("SELECT user_id FROM community_publications WHERE id = ? AND post_status = 'active'");
                 $stmt_get_author->execute([$publicationId]);
                 $targetUserId = (int)$stmt_get_author->fetchColumn();
                 $notificationType = 'comment';
-                $referenceId = $publicationId; // La referencia es el post
+                $referenceId = $publicationId;
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             $stmt_insert = $pdo->prepare(
                 "INSERT INTO publication_comments (user_id, publication_id, parent_comment_id, comment_text) 
@@ -409,20 +391,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM publication_comments WHERE publication_id = ?");
             $stmt_count->execute([$publicationId]);
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN: NOTIFICAR COMENTARIO/RESPUESTA ▼▼▼ ---
             if ($targetUserId > 0 && $targetUserId !== $userId) {
-                // 1. Insertar en la nueva tabla
                 $stmt_notify = $pdo->prepare(
                     "INSERT INTO user_notifications (user_id, actor_user_id, type, reference_id)
                      VALUES (?, ?, ?, ?)"
                 );
-                // $referenceId es $publicationId en ambos casos
                 $stmt_notify->execute([$targetUserId, $userId, $notificationType, $referenceId]);
-                
-                // 2. Enviar PING genérico
                 notifyUser($targetUserId);
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             $response['success'] = true;
             $response['newComment'] = $newComment;
@@ -472,7 +448,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
             $response['replies'] = $replies;
 
+        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (DELETE) ▼▼▼ ---
+        } elseif ($action === 'delete-post') {
+            $publicationId = (int)($_POST['publication_id'] ?? 0);
+            if (empty($publicationId)) {
+                throw new Exception('js.api.invalidAction');
+            }
+            
+            // Soft delete: Cambiamos el estado a 'deleted'
+            // IMPORTANTE: Nos aseguramos de que el user_id coincida
+            $stmt_delete = $pdo->prepare(
+                "UPDATE community_publications 
+                 SET post_status = 'deleted' 
+                 WHERE id = ? AND user_id = ?"
+            );
+            $stmt_delete->execute([$publicationId, $userId]);
+            
+            if ($stmt_delete->rowCount() > 0) {
+                $response['success'] = true;
+                $response['message'] = 'js.publication.postDeleted'; // Necesitarás esta clave i18n
+            } else {
+                throw new Exception('js.api.errorServer'); // No se eliminó (no era el propietario o no existía)
+            }
+        
+        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (PRIVACY) ▼▼▼ ---
+        } elseif ($action === 'update-post-privacy') {
+            $publicationId = (int)($_POST['publication_id'] ?? 0);
+            $newPrivacy = $_POST['new_privacy_level'] ?? '';
+            
+            if (empty($publicationId)) {
+                throw new Exception('js.api.invalidAction');
+            }
+
+            // Validar que el valor de privacidad sea uno de los permitidos
+            $allowedPrivacy = ['public', 'friends', 'private'];
+            if (!in_array($newPrivacy, $allowedPrivacy)) {
+                throw new Exception('js.api.invalidAction');
+            }
+
+            $stmt_update = $pdo->prepare(
+                "UPDATE community_publications 
+                 SET privacy_level = ? 
+                 WHERE id = ? AND user_id = ?"
+            );
+            $stmt_update->execute([$newPrivacy, $publicationId, $userId]);
+            
+            if ($stmt_update->rowCount() > 0) {
+                $response['success'] = true;
+                $response['message'] = 'js.publication.privacyUpdated'; // Necesitarás esta clave i18n
+                $response['newPrivacy'] = $newPrivacy;
+            } else {
+                throw new Exception('js.api.errorServer'); // No se actualizó (no era el propietario o no existía)
+            }
         }
+        // --- ▲▲▲ FIN DE NUEVOS BLOQUES ▲▲▲ ---
 
     } catch (Exception $e) {
         if ($pdo->inTransaction()) {

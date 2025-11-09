@@ -14,16 +14,12 @@ CREATE TABLE users (
     auth_token VARCHAR(64) NULL DEFAULT NULL,
     account_status ENUM('active', 'suspended', 'deleted') NOT NULL DEFAULT 'active',
     
-    -- --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     is_online TINYINT(1) NOT NULL DEFAULT 0,
     last_seen TIMESTAMP NULL DEFAULT NULL,
-    -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
     
-    -- --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     , INDEX idx_is_online (is_online)
-    -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 );
 
 DROP TABLE IF EXISTS verification_codes;
@@ -156,16 +152,26 @@ CREATE TABLE `community_publications` (
   `community_id` INT NOT NULL,
   `user_id` INT NOT NULL,
   
-  -- --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
   `title` VARCHAR(255) NULL DEFAULT NULL,
-  -- --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
   
   `text_content` TEXT NULL DEFAULT NULL, 
   `post_type` ENUM('post', 'poll') NOT NULL DEFAULT 'post',
+  
+  -- --- ▼▼▼ INICIO DE NUEVAS COLUMNAS ▼▼▼ ---
+  `post_status` ENUM('active', 'deleted') NOT NULL DEFAULT 'active' COMMENT 'Para soft-delete',
+  `privacy_level` ENUM('public', 'friends', 'private') NOT NULL DEFAULT 'public' COMMENT 'Nivel de privacidad del post',
+  -- --- ▲▲▲ FIN DE NUEVAS COLUMNAS ▲▲▲ ---
+  
   `created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
   FOREIGN KEY (community_id) REFERENCES `communities`(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES `users`(id) ON DELETE CASCADE,
-  KEY `idx_community_timestamp` (`community_id`,`created_at`)
+  KEY `idx_community_timestamp` (`community_id`,`created_at`),
+  
+  -- --- ▼▼▼ INICIO DE NUEVOS ÍNDICES ▼▼▼ ---
+  INDEX `idx_post_status` (`post_status`),
+  INDEX `idx_privacy_level` (`privacy_level`)
+  -- --- ▲▲▲ FIN DE NUEVOS ÍNDICES ▲▲▲ ---
+  
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `publication_files` (

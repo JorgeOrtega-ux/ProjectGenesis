@@ -3639,4 +3639,38 @@ a.profile-tab.active {
 .post-read-more:hover {
     color: #1f2937; /* Color negro al pasar el mouse */
     text-decoration: underline; /* Subrayado en hover */
+}/* ====================================== */
+/* =  ESTILOS DE OPCIONES DE POST (NUEVO) = */
+/* ====================================== */
+
+.post-card-header {
+    position: relative; /* Contenedor para el botón de opciones */
+}
+
+.post-card-options {
+    position: absolute;
+    top: 8px; /* Ajustar padding */
+    right: 8px; /* Ajustar padding */
+}
+
+/* Reutiliza el estilo de botón de icono, pero sin fondo */
+.post-card-options .component-action-button--icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+}
+
+/* Hacer el texto de eliminar rojo */
+[data-module="modulePostOptions"] .menu-link[data-action="post-delete"] .menu-link-text span {
+    color: #c62828;
+}
+[data-module="modulePostOptions"] .menu-link[data-action="post-delete"] .menu-link-icon {
+    color: #c62828;
+}
+
+/* Ancho para los popovers de opciones */
+.popover-module[data-module="modulePostOptions"],
+.popover-module[data-module="modulePostPrivacy"] {
+    width: 280px; 
 }

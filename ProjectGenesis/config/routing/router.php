@@ -372,14 +372,16 @@ if (array_key_exists($page, $allowedPages)) {
             $CURRENT_SECTION = '404';
         } else {
             try {
-                // --- ▼▼▼ INICIO DE SQL MODIFICADO (Añadido p.title) ▼▼▼ ---
+                // --- ▼▼▼ INICIO DE SQL MODIFICADO (Añadido title, status, privacy) ▼▼▼ ---
                 $sql_post = 
                     "SELECT 
                         p.*, 
                         u.username, 
                         u.profile_image_url, 
                         u.role,
-                        p.title, -- <-- LÍNEA AÑADIDA
+                        p.title,
+                        p.post_status, 
+                        p.privacy_level, 
                         c.name AS community_name,
                         (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
                          FROM publication_attachments pa
@@ -490,14 +492,14 @@ if (array_key_exists($page, $allowedPages)) {
 
                      // 2. Obtener publicaciones del usuario (LÓGICA MODIFICADA)
                      
-                     // --- ▼▼▼ INICIO DE SQL MODIFICADO (Añadido p.title) ▼▼▼ ---
+                     // --- ▼▼▼ INICIO DE SQL MODIFICADO (Añadido title, status, privacy) ▼▼▼ ---
                      $sql_select_base = 
                         "SELECT 
                             p.*, 
                             u.username, 
                             u.profile_image_url,
                             u.role,
-                            p.title, -- <-- LÍNEA AÑADIDA
+                            p.title,
                             c.name AS community_name,
                             (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
                              FROM publication_attachments pa
@@ -511,7 +513,6 @@ if (array_key_exists($page, $allowedPages)) {
                             (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
                             (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = ?) AS user_has_bookmarked,
                             (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count";
-                    // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
 
                      $sql_from_base = 
                         " FROM community_publications p
@@ -522,21 +523,27 @@ if (array_key_exists($page, $allowedPages)) {
                      $params = [$currentUserId, $currentUserId, $currentUserId]; 
                      
                      if ($isOwnProfile && $currentTab === 'likes') {
-                         $sql_join_where_clause = " JOIN publication_likes pl ON p.id = pl.publication_id WHERE pl.user_id = ? ";
+                         $sql_join_where_clause = " JOIN publication_likes pl ON p.id = pl.publication_id WHERE pl.user_id = ? AND p.post_status = 'active' ";
                          $params[] = $targetUserId; 
                      
                      } elseif ($isOwnProfile && $currentTab === 'bookmarks') {
-                         $sql_join_where_clause = " JOIN publication_bookmarks pb ON p.id = pb.publication_id WHERE pb.user_id = ? ";
+                         $sql_join_where_clause = " JOIN publication_bookmarks pb ON p.id = pb.publication_id WHERE pb.user_id = ? AND p.post_status = 'active' ";
                          $params[] = $targetUserId; 
                      
                      } else {
+                         // Lógica de privacidad para la pestaña 'posts'
                          $privacyClause = "";
                          if (!$isOwnProfile) { 
-                             $privacyClause = "AND c.privacy = 'public'";
+                             // Si no es mi perfil, solo veo posts públicos de comunidades públicas
+                             $privacyClause = "AND c.privacy = 'public' AND p.privacy_level = 'public'";
+                         } else {
+                             // Si es mi perfil, veo todo (público, amigos, privado)
+                             // No se añade cláusula de privacidad
                          }
-                         $sql_join_where_clause = " WHERE p.user_id = ? $privacyClause ";
+                         $sql_join_where_clause = " WHERE p.user_id = ? AND p.post_status = 'active' $privacyClause ";
                          $params[] = $targetUserId;
                      }
+                     // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
 
                      $sql_order = " ORDER BY p.created_at DESC LIMIT 50";
                      $sql_posts = $sql_select_base . $sql_from_base . $sql_join_where_clause . $sql_order;
@@ -619,10 +626,11 @@ if (array_key_exists($page, $allowedPages)) {
                 }
 
                 // 2. Buscar Publicaciones
+                // --- ▼▼▼ INICIO DE SQL MODIFICADO (status, privacy) ▼▼▼ ---
                 $stmt_posts = $pdo->prepare(
                    "SELECT 
                         p.id, 
-                        p.title, -- <-- LÍNEA AÑADIDA
+                        p.title, 
                         p.text_content, 
                         p.created_at,
                         u.username,
@@ -632,16 +640,19 @@ if (array_key_exists($page, $allowedPages)) {
                     JOIN users u ON p.user_id = u.id
                     LEFT JOIN communities c ON p.community_id = c.id
                     WHERE 
-                        (p.text_content LIKE ? OR p.title LIKE ?) -- <-- CONDICIÓN AÑADIDA
+                        (p.text_content LIKE ? OR p.title LIKE ?) 
                     AND 
                         (c.privacy = 'public' OR p.community_id IN (
                             SELECT community_id FROM user_communities WHERE user_id = ?
                         ))
+                    AND p.post_status = 'active' -- <-- LÍNEA AÑADIDA
+                    AND p.privacy_level = 'public' -- <-- LÍNEA MODIFICADA (eliminada la excepción para 'private')
                     ORDER BY p.created_at DESC
                     LIMIT 20"
                 );
-                $stmt_posts->execute([$searchParam, $searchParam, $currentUserId]); // <-- PARÁMETRO AÑADIDO
+                $stmt_posts->execute([$searchParam, $searchParam, $currentUserId]); // <-- PARÁMETRO ELIMINADO
                 $postResults = $stmt_posts->fetchAll();
+                // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
 
             } catch (PDOException $e) {
                 logDatabaseError($e, 'router - search-results');

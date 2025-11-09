@@ -23,14 +23,14 @@ try {
             $currentCommunityId = $community['id'];
             $currentCommunityNameKey = $community['name']; 
             
-            // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO p.title) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO p.title, status, privacy) ▼▼▼ ---
             $sql_posts = 
                 "SELECT 
                     p.*, 
                     u.username, 
                     u.profile_image_url,
                     u.role,
-                    p.title, -- <-- LÍNEA AÑADIDA
+                    p.title, 
                     (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
                      FROM publication_attachments pa
                      JOIN publication_files pf ON pa.file_id = pf.id
@@ -49,12 +49,14 @@ try {
                  FROM community_publications p
                  JOIN users u ON p.user_id = u.id
                  WHERE p.community_id = ?
+                 AND p.post_status = 'active' -- <-- LÍNEA AÑADIDA
+                 AND (p.privacy_level = 'public' OR (p.privacy_level = 'private' AND p.user_id = ?)) -- <-- LÍNEA AÑADIDA
                  ORDER BY p.created_at DESC
                  LIMIT 50";
             
             $stmt_posts = $pdo->prepare($sql_posts);
-            // ¡Se añaden 3 IDs de usuario!
-            $stmt_posts->execute([$userId, $userId, $userId, $currentCommunityId]);
+            // ¡Se añaden 4 IDs de usuario!
+            $stmt_posts->execute([$userId, $userId, $userId, $currentCommunityId, $userId]);
             $publications = $stmt_posts->fetchAll();
             // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
         } else {
@@ -64,14 +66,14 @@ try {
     
     if ($communityUuid === null) {
         // --- VISTA DE FEED PRINCIPAL ---
-        // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO p.title) ▼▼▼ ---
+        // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDO p.title, status, privacy) ▼▼▼ ---
         $sql_posts = 
             "SELECT 
                 p.*, 
                 u.username, 
                 u.profile_image_url, 
                 u.role,
-                p.title, -- <-- LÍNEA AÑADIDA
+                p.title, 
                 c.name AS community_name,
                 (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
                  FROM publication_attachments pa
@@ -92,13 +94,15 @@ try {
              JOIN users u ON p.user_id = u.id
              LEFT JOIN communities c ON p.community_id = c.id
              WHERE p.community_id IS NOT NULL 
-             AND c.privacy = 'public' 
+             AND c.privacy = 'public'
+             AND p.post_status = 'active' -- <-- LÍNEA AÑADIDA
+             AND (p.privacy_level = 'public' OR (p.privacy_level = 'private' AND p.user_id = ?)) -- <-- LÍNEA AÑADIDA
              ORDER BY p.created_at DESC
              LIMIT 50";
         
         $stmt_posts = $pdo->prepare($sql_posts);
-         // ¡Se añaden 3 IDs de usuario!
-        $stmt_posts->execute([$userId, $userId, $userId]);
+         // ¡Se añaden 4 IDs de usuario!
+        $stmt_posts->execute([$userId, $userId, $userId, $userId]);
         $publications = $stmt_posts->fetchAll();
         // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
     }
@@ -276,7 +280,8 @@ try {
                                     </p>
                                 </div>
                             </div>
-                        </div>
+                            
+                            </div>
 
                         <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (TÍTULO) ▼▼▼ --- ?>
                         <?php if (!empty($post['title']) && !$isPoll): ?>
