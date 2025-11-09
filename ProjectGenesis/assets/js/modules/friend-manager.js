@@ -27,6 +27,10 @@ function renderFriendList(friends) {
         // Determinar la clase de estado inicial
         const statusClass = friend.is_online ? 'online' : 'offline';
         
+        // --- INICIO DE LA CORRECCIÓN ---
+        // Se añade el rol del amigo (friend.role) al atributo data-role
+        // y se usa la clase 'comment-avatar' (que tiene los estilos de 32px + bordes)
+        // en lugar de la clase 'menu-link-avatar'.
         html += `
             <a class="menu-link friend-item" 
                href="${window.projectBasePath}/profile/${friend.username}"
@@ -34,9 +38,11 @@ function renderFriendList(friends) {
                data-friend-id="${friend.friend_id}"
                title="${friend.username}">
                
-                <div class="menu-link-icon" style="position: relative;">
-                    <img src="${friend.profile_image_url}" alt="${friend.username}" class="menu-link-avatar">
-                    <span class="friend-status-dot ${statusClass}"></span>
+                <div class="menu-link-icon">
+                    <div class="comment-avatar" data-role="${friend.role}" style="width: 32px; height: 32px; margin-right: -10px; flex-shrink: 0;">
+                        <img src="${friend.profile_image_url}" alt="${friend.username}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                        <span class="friend-status-dot ${statusClass}"></span>
+                    </div>
                 </div>
                 
                 <div class="menu-link-text">
@@ -44,6 +50,7 @@ function renderFriendList(friends) {
                 </div>
             </a>
         `;
+        // --- FIN DE LA CORRECCIÓN ---
     });
     container.innerHTML = html;
 }
