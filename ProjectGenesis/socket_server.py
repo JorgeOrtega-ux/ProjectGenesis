@@ -3,6 +3,7 @@ import websockets
 import json
 import logging
 from aiohttp import web
+import aiohttp # --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
 
 # Configuración de logging
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] %(message)s')
@@ -16,6 +17,26 @@ CLIENTS_BY_USER_ID = {}
 #   Nos permite encontrar y eliminar rápidamente un websocket específico al desconectarse.
 CLIENTS_BY_SESSION_ID = {}
 # --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
+
+
+# --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! ▼▼▼ ---
+async def notify_backend_of_offline(user_id):
+    """Notifica al backend PHP que un usuario se ha desconectado."""
+    # Asegúrate de que esta URL sea correcta para tu servidor Apache/PHP
+    url = "http://127.0.0.1/ProjectGenesis/api/presence_handler.php" 
+    payload = {"user_id": user_id}
+    try:
+        async with aiohttp.ClientSession() as session:
+            # Hacemos un POST con un timeout corto
+            async with session.post(url, json=payload, timeout=2.0) as response:
+                if response.status == 200:
+                    logging.info(f"[HTTP-NOTIFY] Backend notificado: user_id={user_id} está offline (last_seen actualizado).")
+                else:
+                    logging.warning(f"[HTTP-NOTIFY] Error al notificar al backend (código {response.status}) para user_id={user_id}")
+    except Exception as e:
+        # Esto puede fallar si PHP no está corriendo, es normal en desarrollo
+        logging.error(f"[HTTP-NOTIFY] Excepción al notificar al backend para user_id={user_id}: {e}")
+# --- ▲▲▲ ¡FIN DE NUEVA FUNCIÓN! ▲▲▲ ---
 
 
 # --- ▼▼▼ INICIO DE MODIFICACIÓN: MANEJADOR DE WEBSOCKET ▼▼▼ ---
@@ -76,6 +97,11 @@ async def unregister_client(session_id):
             # 4. Si era la última, notificar a todos que está "offline"
             logging.info(f"[WS] user_id={user_id} ahora está OFFLINE.")
             await broadcast_presence_update(user_id, "offline")
+            
+            # --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
+            # 5. Notificar al backend PHP para que actualice "last_seen"
+            await notify_backend_of_offline(user_id)
+            # --- ▲▲▲ ¡FIN DE NUEVA LÍNEA! ▲▲▲ ---
             
     logging.info(f"[WS] Cliente desconectado: session_id={session_id[:5]}... Conexiones totales: {len(CLIENTS_BY_SESSION_ID)}")
 

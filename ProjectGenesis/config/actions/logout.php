@@ -12,7 +12,7 @@ if (!validateCsrfToken($submittedToken)) {
 if (isset($_SESSION['user_id'])) {
     try {
         $stmt = $pdo->prepare(
-            "UPDATE users SET is_online = 0, last_seen = NOW() WHERE id = ?"
+            "UPDATE users SET last_seen = NOW() WHERE id = ?"
         );
         $stmt->execute([$_SESSION['user_id']]);
     } catch (PDOException $e) {

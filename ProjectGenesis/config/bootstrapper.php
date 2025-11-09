@@ -175,10 +175,10 @@ if (isset($_SESSION['user_id'])) {
             // --- ▲▲▲ FIN DE NUEVO BLOQUE DE VALIDACIÓN ▲▲▲ ---
 
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (ESTADO Y ÚLTIMA VEZ ACTIVO) ▼▼▼ ---
-            // Actualizar la hora de última actividad y marcar como online en la BD
+            // Actualizar la hora de última actividad. (Quitamos is_online = 1)
             try {
                 $stmt_presence = $pdo->prepare(
-                    "UPDATE users SET last_seen = NOW(), is_online = 1 WHERE id = ?"
+                    "UPDATE users SET last_seen = NOW() WHERE id = ?"
                 );
                 $stmt_presence->execute([$_SESSION['user_id']]);
             } catch (PDOException $e) {

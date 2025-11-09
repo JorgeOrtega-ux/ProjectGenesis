@@ -27,35 +27,50 @@ $profileRoleIcon = $roleIconMap[$profile['role']] ?? 'person';
 
 $isOwnProfile = ($profile['id'] == $userId);
 
-// --- ▼▼▼ INICIO DE LÓGICA DE ESTADO ▼▼▼ ---
+// --- ▼▼▼ INICIO DE LÓGICA DE ESTADO (MODIFICADA) ▼▼▼ ---
+
+$is_actually_online = false;
+try {
+    // 1. Consultar al servidor WebSocket quién está en línea
+    // Usamos un timeout corto (0.5s) para no retrasar la carga de la página
+    $context = stream_context_create(['http' => ['timeout' => 0.5]]); 
+    $jsonResponse = @file_get_contents('http://127.0.0.1:8766/get-online-users', false, $context);
+    
+    if ($jsonResponse !== false) {
+        $data = json_decode($jsonResponse, true);
+        if (isset($data['status']) && $data['status'] === 'ok' && isset($data['online_users'])) {
+            // 2. Comprobar si el ID del perfil está en la lista de IDs en línea
+            $is_actually_online = in_array($profile['id'], $data['online_users']);
+        }
+    }
+} catch (Exception $e) {
+    logDatabaseError($e, 'view-profile - (ws_get_online_fail)');
+    // Si el socket falla, $is_actually_online permanece 'false'.
+}
+
+// 3. Preparar el badge de estado
 $statusBadgeHtml = '';
-if ($profile['is_online']) {
-    $statusBadgeHtml = '<div class="profile-status-badge online"><span class="status-dot"></span>Activo ahora</div>';
+if ($is_actually_online) {
+    // El WebSocket dice que está EN LÍNEA
+    $statusBadgeHtml = '<div class="profile-status-badge online" data-user-id="' . htmlspecialchars($profile['id']) . '"><span class="status-dot"></span>Activo ahora</div>';
 } elseif (!empty($profile['last_seen'])) {
-    // Calcular tiempo transcurrido
+    // El WebSocket dice que está OFFLINE, usamos 'last_seen' de la BD
     $lastSeenTime = new DateTime($profile['last_seen'], new DateTimeZone('UTC'));
     $currentTime = new DateTime('now', new DateTimeZone('UTC'));
     $interval = $currentTime->diff($lastSeenTime);
 
     $timeAgo = '';
-    if ($interval->y > 0) {
-        $timeAgo = ($interval->y == 1) ? '1 año' : $interval->y . ' años';
-    } elseif ($interval->m > 0) {
-        $timeAgo = ($interval->m == 1) ? '1 mes' : $interval->m . ' meses';
-    } elseif ($interval->d > 0) {
-        $timeAgo = ($interval->d == 1) ? '1 día' : $interval->d . ' días';
-    } elseif ($interval->h > 0) {
-        $timeAgo = ($interval->h == 1) ? '1 h' : $interval->h . ' h';
-    } elseif ($interval->i > 0) {
-        $timeAgo = ($interval->i == 1) ? '1 min' : $interval->i . ' min';
-    } else {
-        $timeAgo = 'unos segundos';
-    }
+    if ($interval->y > 0) { $timeAgo = ($interval->y == 1) ? '1 año' : $interval->y . ' años'; }
+    elseif ($interval->m > 0) { $timeAgo = ($interval->m == 1) ? '1 mes' : $interval->m . ' meses'; }
+    elseif ($interval->d > 0) { $timeAgo = ($interval->d == 1) ? '1 día' : $interval->d . ' días'; }
+    elseif ($interval->h > 0) { $timeAgo = ($interval->h == 1) ? '1 h' : $interval->h . ' h'; }
+    elseif ($interval->i > 0) { $timeAgo = ($interval->i == 1) ? '1 min' : $interval->i . ' min'; }
+    else { $timeAgo = 'unos segundos'; }
     
     $statusText = ($timeAgo === 'unos segundos') ? 'Activo hace unos momentos' : "Activo hace $timeAgo";
-    $statusBadgeHtml = '<div class="profile-status-badge offline">' . htmlspecialchars($statusText) . '</div>';
+    $statusBadgeHtml = '<div class="profile-status-badge offline" data-user-id="' . htmlspecialchars($profile['id']) . '">' . htmlspecialchars($statusText) . '</div>';
 }
-// --- ▲▲▲ FIN DE LÓGICA DE ESTADO ▲▲▲ ---
+// --- ▲▲▲ FIN DE LÓGICA DE ESTADO (MODIFICADA) ▲▲▲ ---
 
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'view-profile') ? 'active' : 'disabled'; ?>" data-section="view-profile">
@@ -137,12 +152,8 @@ if ($profile['is_online']) {
 
                         <?php 
                         // --- ▼▼▼ INSERCIÓN DEL BADGE DE ESTADO (MODIFICADO) ▼▼▼ ---
-                        // Añadimos data-user-id para que el JS pueda actualizarlo en tiempo real
-                        echo str_replace(
-                            '<div class="profile-status-badge', 
-                            '<div data-user-id="' . htmlspecialchars($profile['id']) . '" class="profile-status-badge', 
-                            $statusBadgeHtml
-                        ); 
+                        // Ya no se usa la lógica de $profile['is_online'], se usa el HTML pre-calculado
+                        echo $statusBadgeHtml; 
                         // --- ▲▲▲ FIN DE INSERCIÓN (MODIFICADO) ▲▲▲ ---
                         ?>
                     </div>
