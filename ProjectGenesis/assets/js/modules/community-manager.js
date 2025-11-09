@@ -49,17 +49,29 @@ function hideJoinGroupError() {
     }
 }
 
+// --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+// Esta es la función modificada para solucionar el bug
 function updateJoinButtonUI(button, newAction) {
+    let newText = ''; // Variable para guardar el nuevo texto
+
     if (newAction === 'leave') {
         button.setAttribute('data-action', 'leave-community');
-        button.innerHTML = getTranslation('join_group.leave');
+        newText = getTranslation('join_group.leave'); // Obtenemos el texto "Abandonar"
         button.classList.add('danger');
     } else {
         button.setAttribute('data-action', 'join-community');
-        button.innerHTML = getTranslation('join_group.join');
+        newText = getTranslation('join_group.join'); // Obtenemos el texto "Unirme"
         button.classList.remove('danger');
     }
+    
+    button.innerHTML = newText; // Establecemos el nuevo texto
+    
+    // ¡ESTA ES LA LÍNEA DE LA SOLUCIÓN!
+    // Actualizamos el "texto original" para que la función del spinner
+    // restaure este nuevo texto, en lugar del antiguo.
+    button.dataset.originalText = newText; 
 }
+// --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
 
 function selectCommunity(communityId, communityName, communityUuid = null) {
