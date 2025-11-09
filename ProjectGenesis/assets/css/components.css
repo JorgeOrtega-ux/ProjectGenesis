@@ -2353,8 +2353,41 @@ select.component-input:invalid {
 .post-card-content {
     padding: 12px 16px;
     padding-top: 0;
-    word-break: break-all;
+    word-break: break-word; /* MODIFICADO (antes break-all) */
 }
+
+/* --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (FONT-SIZE 14px Y BOTÓN "MOSTRAR MÁS") ▼▼▼ --- */
+.post-card-content p,
+.post-card-content .post-text-content {
+    font-size: 14px; /* <-- TAMAÑO DE FUENTE A 14PX */
+    line-height: 1.6;
+    white-space: pre-wrap; /* Respeta los saltos de línea */
+    word-break: break-word;
+}
+
+/* ESTILO DE LINK "MOSTRAR MÁS" (COMO TEXTO, NO BOTÓN) */
+.post-read-more {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 0; /* Sin padding */
+    font-size: 14px;
+    font-weight: 600; /* Texto en negrita */
+    color: #6b7280; /* Color gris */
+    background-color: transparent; /* Sin fondo */
+    border: none; /* Sin borde */
+    border-radius: 0;
+    text-decoration: none; /* Sin subrayado */
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.post-read-more:hover {
+    color: #1f2937; /* Color negro al pasar el mouse */
+    text-decoration: underline; /* Subrayado en hover */
+}
+/* --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- */
+
+
 .post-card-content + .post-attachments-container {
     border-top: 1px solid #00000020;
 }
@@ -3460,3 +3493,40 @@ a.profile-tab.active {
     font-weight: 400;
 }
 /* --- ▲▲▲ FIN DE BLOQUE MODIFICADO (HEADER SEARCH) ▲▲▲ --- */
+
+
+/* ====================================== */
+/* =   ESTILOS DE TEXTO DE PUBLICACIÓN    = */
+/* ====================================== */
+
+.post-card-content p,
+.post-card-content .post-text-content {
+    font-size: 14px; /* <-- TAMAÑO DE FUENTE A 14PX */
+    line-height: 1.6;
+    white-space: pre-wrap; /* Respeta los saltos de línea */
+    word-break: break-word; /* Evita cortes agresivos */
+}
+
+/* ====================================== */
+/* =      BOTÓN "MOSTRAR MÁS"           = */
+/* ====================================== */
+
+.post-read-more {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 0; /* Sin padding */
+    font-size: 14px;
+    font-weight: 600; /* Texto en negrita */
+    color: #6b7280; /* Color gris */
+    background-color: transparent; /* Sin fondo */
+    border: none; /* Sin borde */
+    border-radius: 0;
+    text-decoration: none; /* Sin subrayado */
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.post-read-more:hover {
+    color: #1f2937; /* Color negro al pasar el mouse */
+    text-decoration: underline; /* Subrayado en hover */
+}
