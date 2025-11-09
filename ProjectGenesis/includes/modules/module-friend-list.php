@@ -1,6 +1,7 @@
 <?php
 // FILE: includes/modules/module-friend-list.php
 // (CORREGIDO: Eliminado data-module y la clase "disabled")
+// (NUEVA MODIFICACIÓN: Añadido style="display: none;" para evitar el "flash")
 ?>
 <div class="module-content module-surface body-title" id="friend-list-container">
     <div class="menu-content">

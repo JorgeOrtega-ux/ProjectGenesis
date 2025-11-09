@@ -43,16 +43,25 @@
 
                     </div>
                     
-                    <?php 
-                    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Mostrar amigos solo en 'home') ▼▼▼ ---
-                    // Usamos $currentPage (definido en bootstrapper.php) para la carga inicial.
-                    // $currentPage es 'home' para / y /c/uuid...
-                    if (!$isAuthPage && $currentPage === 'home'): 
-                    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+                    <?php
+                    // Ya no incluimos la lista de amigos aquí.
+                    // En su lugar, creamos un contenedor vacío para que JS lo controle.
+                    if (!$isAuthPage):
                     ?>
-                        <?php include 'includes/modules/module-friend-list.php'; // Incluir el módulo de amigos directamente ?>
+                        <div id="friend-list-wrapper">
+                            <?php
+                            // (MODIFICACIÓN HÍBRIDA)
+                            // Si la página inicial SÍ es 'home', la renderizamos en el servidor
+                            // para evitar un "pop-in" en la carga inicial de home.
+                            // En otras páginas (al recargar), este div estará vacío.
+                            if ($currentPage === 'home'):
+                                include 'includes/modules/module-friend-list.php';
+                            endif;
+                            ?>
+                        </div>
                     <?php endif; ?>
-                </div>
+                    
+                    </div>
 
                 <div id="alert-container"></div>
             </div>

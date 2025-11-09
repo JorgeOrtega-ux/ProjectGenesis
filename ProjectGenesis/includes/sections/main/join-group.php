@@ -57,39 +57,5 @@
 
         </div>
 
-        <div class="component-card component-card--column">
-            <div class="component-card__content">
-                <div class="component-card__icon"><span class="material-symbols-rounded">public</span></div>
-                <div class="component-card__text">
-                    <h2 class="component-card__title" data-i18n="join_group.publicTitle">Comunidades Públicas</h2>
-                    <p class="component-card__description" data-i18n="join_group.publicDesc">Únete a una comunidad abierta.</p>
-                </div>
-            </div>
-            <div class="card-list-container" id="public-community-list">
-                <?php if (empty($publicCommunities)): ?>
-                    <p class="component-card__description" data-i18n="join_group.noPublic">No hay comunidades públicas disponibles.</p>
-                <?php else: ?>
-                    <?php foreach ($publicCommunities as $community): ?>
-                        <?php $isJoined = in_array($community['id'], $joinedCommunityIds); ?>
-                        <div class="component-card">
-                            <div class="component-card__content">
-                                <div class="component-card__text">
-                                    <h2 class="component-card__title"><?php echo htmlspecialchars($community['name']); ?></h2>
-                                </div>
-                            </div>
-                            <div class="component-card__actions">
-                                <button type="button"
-                                    class="component-button <?php echo $isJoined ? 'danger' : ''; ?>"
-                                    data-action="<?php echo $isJoined ? 'leave-community' : 'join-community'; ?>"
-                                    data-community-id="<?php echo $community['id']; ?>"
-                                    data-i18n="join_group.<?php echo $isJoined ? 'leave' : 'join'; ?>">
-                                    <?php echo $isJoined ? 'Abandonar' : 'Unirme'; ?>
-                                </button>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
-        </div>
     </div>
 </div>

@@ -2,9 +2,12 @@
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
 import { applyTranslations, getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js';
 import { loadSavedCommunity, loadCommentsForPost } from '../modules/community-manager.js';
+import { initFriendList } from '../modules/friend-manager.js'; // <-- IMPORTADO
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 const contentContainer = document.querySelector('.main-sections');
 const pageLoader = document.getElementById('page-loader');
@@ -131,15 +134,49 @@ async function loadPage(page, action, fetchParams = null) {
         headerTop.classList.remove('shadow');
     }
 
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Ocultar/Mostrar Amigos) ▼▼▼ ---
-    const friendListModule = document.getElementById('friend-list-container');
-    if (friendListModule) {
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (LÓGICA DE CARGA/ELIMINACIÓN DE AMIGOS) ▼▼▼ ---
+    const friendListWrapper = document.getElementById('friend-list-wrapper');
+    
+    if (friendListWrapper) {
         if (page === 'home') {
-            // Revertir al control de CSS (se ocultará en móviles)
-            friendListModule.style.display = ''; 
+            // Es 'home'. ¿Ya está el módulo en el DOM?
+            if (!friendListWrapper.querySelector('#friend-list-container')) {
+                // No está. Hay que cargarlo (porque recargamos en otra pág y navegamos a home).
+                try {
+                    const friendListUrl = `${basePath}/includes/modules/module-friend-list.php`;
+                    const response = await fetch(friendListUrl);
+                    
+                    if (response.ok) {
+                        friendListWrapper.innerHTML = await response.text();
+                        
+                        // Ahora que el HTML existe, lo poblamos
+                        const newFriendListModule = friendListWrapper.querySelector('#friend-list-container');
+                        if (newFriendListModule) {
+                            applyTranslations(newFriendListModule);
+                            initFriendList(); // Popula los datos
+                        }
+                    } else {
+                        throw new Error('Falló el fetch del módulo de amigos');
+                    }
+                } catch (err) {
+                    console.error("Error al cargar dinámicamente la lista de amigos:", err);
+                    friendListWrapper.innerHTML = ''; // Limpiar en caso de error
+                }
+            } else {
+                // El módulo ya estaba cargado (probablemente por el servidor en la carga inicial de home).
+                // Nos aseguramos de que esté poblado.
+                
+                // Comprobamos si ya tiene items o si solo tiene el placeholder de carga
+                const friendListItems = friendListWrapper.querySelector('#friend-list-items');
+                if (friendListItems && friendListItems.querySelector('.logout-spinner')) {
+                     initFriendList(); // Popula los datos
+                }
+            }
         } else {
-            // Ocultar en todas las demás páginas
-            friendListModule.style.display = 'none';
+            // NO es 'home'. Eliminamos el módulo si existe.
+            if (friendListWrapper.querySelector('#friend-list-container')) {
+                friendListWrapper.innerHTML = ''; // Elimina el módulo del DOM
+            }
         }
     }
     // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---

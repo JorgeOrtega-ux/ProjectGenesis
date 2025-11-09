@@ -420,7 +420,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     initTooltipManager(); 
 
     if (window.isUserLoggedIn) {
-        initFriendList();
+        // --- ▼▼▼ LÍNEA ELIMINADA ▼▼▼ ---
+        // initFriendList(); 
+        // --- ▲▲▲ FIN DE LÍNEA ELIMINADA ▲▲▲ ---
 
         (async () => {
             const formData = new FormData();
