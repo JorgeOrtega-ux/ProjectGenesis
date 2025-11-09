@@ -3335,7 +3335,7 @@ a.profile-tab.active {
     background-color: currentColor;
 }
 
-/* --- ▼▼▼ INICIO DE NUEVO BLOQUE (HEADER SEARCH) ▼▼▼ --- */
+/* --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (HEADER SEARCH) ▼▼▼ --- */
 
 /* ====================================== */
 /* ============ HEADER SEARCH ============ */
@@ -3344,7 +3344,7 @@ a.profile-tab.active {
 .header-search-container {
     position: relative;
     width: 100%;
-    max-width: 450px; /* Ancho máximo del buscador */
+    max-width: 500px; /* <-- MODIFICADO (antes 450px) */
 }
 
 .header-search-icon {
@@ -3369,7 +3369,7 @@ a.profile-tab.active {
     height: 40px;
     border-radius: 8px; /* Coincide con .header-button */
     border: 1px solid #00000020;
-    background-color: #f5f5fa; /* Ligeramente gris */
+    background-color: transparent; /* <-- MODIFICADO (antes #f5f5fa) */
     padding: 0 12px 0 44px; /* Espacio para el icono */
     font-size: 15px;
     font-family: "Roboto Condensed", sans-serif; /* Asegurar fuente */
@@ -3385,7 +3385,7 @@ a.profile-tab.active {
 }
 
 .header-search-input:focus {
-    background-color: #ffffff;
+    background-color: transparent; /* <-- MODIFICADO (antes #ffffff) */
     border-color: #000000;
     /* box-shadow: 0 0 0 2px #0000001a; */ /* Deshabilitado para que coincida con el popover */
 }
@@ -3459,4 +3459,4 @@ a.profile-tab.active {
     color: #6b7280;
     font-weight: 400;
 }
-/* --- ▲▲▲ FIN DE NUEVO BLOQUE (HEADER SEARCH) ▲▲▲ --- */
+/* --- ▲▲▲ FIN DE BLOQUE MODIFICADO (HEADER SEARCH) ▲▲▲ --- */

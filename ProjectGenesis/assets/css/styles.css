@@ -108,24 +108,26 @@ body {
 
 .header-left {
     display: flex;
-    flex: 0 0 auto;
+    flex: 1; /* <-- MODIFICADO */
+    justify-content: flex-start; /* <-- AÑADIDO */
 }
 
-/* --- ▼▼▼ INICIO DE NUEVO BLOQUE ▼▼▼ --- */
+/* --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ --- */
 .header-center {
     display: flex;
-    flex: 1 1 auto; /* Permite que crezca */
+    flex: 1 1 auto; /* <-- MODIFICADO (No crecer, solo encoger si es necesario) */
     justify-content: center; /* Centra el contenedor de búsqueda */
-    padding: 0 16px; /* Espacio para que no toque los bordes */
     min-width: 0; /* Permite que se encoja en móviles */
+    /* padding: 0 16px;  <-- ELIMINADO (los flex: 1 laterales ya dan el espacio) */
 }
-/* --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ --- */
+/* --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- */
 
 .header-right {
     position: relative;
     z-index: 1;
     display: flex;
-    flex: 0 0 auto;
+    flex: 1; /* <-- MODIFICADO */
+    justify-content: flex-end; /* <-- AÑADIDO */
 }
 
 .header-item {
@@ -609,7 +611,7 @@ body {
         padding: 8px 4px;
     }
     .header-center {
-        padding: 0 4px;
+        padding: 0 4px; /* <-- MODIFICADO (antes 0 4px) */
     }
     /* --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ --- */
 }
