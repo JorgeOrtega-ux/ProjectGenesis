@@ -203,8 +203,10 @@ export async function loadAllNotifications() {
          return;
     }
     
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     const markAllButton = document.getElementById('notification-mark-all-btn');
-    if (markAllButton) markAllButton.style.display = 'none'; 
+    if (markAllButton) markAllButton.disabled = true; 
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     listContainer.innerHTML = `
         <div class="notification-placeholder" id="notification-placeholder">
@@ -235,7 +237,9 @@ export async function loadAllNotifications() {
                         <span data-i18n="notifications.empty">${getTranslation('notifications.empty')}</span>
                     </div>
                 `;
-                if (markAllButton) markAllButton.style.display = 'none';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                if (markAllButton) markAllButton.disabled = true;
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             } else {
                 console.log(`[Notify] loadAllNotifications: Renderizando ${result.notifications.length} notificaciones.`);
                 
@@ -258,10 +262,17 @@ export async function loadAllNotifications() {
                 
                 applyTranslations(listContainer);
                 
-                if (markAllButton && result.unread_count > 0) {
-                    console.log("[Notify] loadAllNotifications: Mostrando botón 'Marcar todas'.");
-                    markAllButton.style.display = 'block';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                if (markAllButton) {
+                    if (result.unread_count > 0) {
+                        console.log("[Notify] loadAllNotifications: Activando botón 'Marcar todas'.");
+                        markAllButton.disabled = false;
+                    } else {
+                        console.log("[Notify] loadAllNotifications: Desactivando botón 'Marcar todas' (no hay no leídas).");
+                        markAllButton.disabled = true;
+                    }
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
             hasLoadedNotifications = true; 
             console.log("%c[Notify] loadAllNotifications: 'hasLoadedNotifications' = true.", "color: #28a745;");
@@ -366,7 +377,9 @@ export function initNotificationManager() {
             e.preventDefault();
             e.stopPropagation();
             
-            markAllButton.style.display = 'none'; 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            markAllButton.disabled = true; 
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             setNotificationCount(0); 
 
             document.querySelectorAll('#notification-list-items .notification-item.is-unread').forEach(item => {
@@ -403,11 +416,13 @@ export function initNotificationManager() {
                 item.classList.add('is-read');
                 item.querySelector('.notification-unread-dot')?.remove();
 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 const newCount = Math.max(0, currentNotificationCount - 1);
                 setNotificationCount(newCount);
                 if (newCount === 0 && markAllButton) {
-                    markAllButton.style.display = 'none';
+                    markAllButton.disabled = true;
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 console.log("[Notify] Llamando a API 'mark-one-read' en segundo plano...");
                 const formData = new FormData();
@@ -418,9 +433,11 @@ export function initNotificationManager() {
                     if (result.success) {
                         console.log(`[Notify] API 'mark-one-read' OK. Nuevo conteo: ${result.new_unread_count}`);
                         setNotificationCount(result.new_unread_count); 
+                        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                         if (result.new_unread_count === 0 && markAllButton) {
-                            markAllButton.style.display = 'none';
+                            markAllButton.disabled = true;
                         }
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     } else {
                         console.error("[Notify] Error al sincronizar 'mark-one-read' con el backend.");
                     }

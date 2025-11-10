@@ -45,13 +45,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.api.invalidAction');
             }
 
-            $stmt_check = $pdo->prepare("SELECT privacy FROM communities WHERE id = ?");
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (COMPROBAR LÍMITE) ▼▼▼ ---
+            $stmt_check = $pdo->prepare("SELECT privacy, max_members FROM communities WHERE id = ?");
             $stmt_check->execute([$communityId]);
-            $privacy = $stmt_check->fetchColumn();
+            $community = $stmt_check->fetch();
 
-            if ($privacy !== 'public') {
+            if (!$community) {
+                throw new Exception('js.api.errorServer');
+            }
+            if ($community['privacy'] !== 'public') {
                  throw new Exception('js.api.errorServer'); 
             }
+            
+            $maxMembers = (int)($community['max_members'] ?? 0);
+            if ($maxMembers > 0) {
+                // Hay un límite, contemos los miembros actuales
+                $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM user_communities WHERE community_id = ?");
+                $stmt_count->execute([$communityId]);
+                $currentMembers = (int)$stmt_count->fetchColumn();
+                
+                if ($currentMembers >= $maxMembers) {
+                    // ¡Comunidad llena!
+                    throw new Exception('js.join_group.communityFull');
+                }
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             $stmt_insert = $pdo->prepare("INSERT IGNORE INTO user_communities (user_id, community_id) VALUES (?, ?)");
             $stmt_insert->execute([$userId, $communityId]);
@@ -77,7 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.join_group.invalidCode');
             }
 
-            $stmt_find = $pdo->prepare("SELECT id, name, uuid FROM communities WHERE access_code = ? AND privacy = 'private'");
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (COMPROBAR LÍMITE) ▼▼▼ ---
+            $stmt_find = $pdo->prepare("SELECT id, name, uuid, max_members FROM communities WHERE access_code = ? AND privacy = 'private'");
             $stmt_find->execute([$accessCode]);
             $community = $stmt_find->fetch();
 
@@ -92,6 +111,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($stmt_check_member->fetch()) {
                 throw new Exception('js.join_group.alreadyMember');
             }
+            
+            $maxMembers = (int)($community['max_members'] ?? 0);
+            if ($maxMembers > 0) {
+                // Hay un límite, contemos los miembros actuales
+                $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM user_communities WHERE community_id = ?");
+                $stmt_count->execute([$communityId]);
+                $currentMembers = (int)$stmt_count->fetchColumn();
+                
+                if ($currentMembers >= $maxMembers) {
+                    // ¡Comunidad llena!
+                    throw new Exception('js.join_group.communityFull');
+                }
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             $stmt_insert = $pdo->prepare("INSERT INTO user_communities (user_id, community_id) VALUES (?, ?)");
             $stmt_insert->execute([$userId, $communityId]);

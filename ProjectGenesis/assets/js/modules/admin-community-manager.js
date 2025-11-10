@@ -288,6 +288,55 @@ export function initAdminCommunityManager() {
         const target = e.target;
         const targetCommunityId = document.getElementById('admin-edit-target-community-id').value;
         const isCreating = document.getElementById('admin-edit-is-creating').value === '1';
+        
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (STEPPER CLICK) ▼▼▼ ---
+        const stepperButton = e.target.closest('.component-stepper button[data-step-action]');
+        if (stepperButton) {
+            e.preventDefault();
+            const wrapper = stepperButton.closest('.component-stepper');
+            if (!wrapper || wrapper.classList.contains('disabled-interactive')) return;
+            
+            const stepAction = stepperButton.dataset.stepAction;
+            const valueDisplay = wrapper.querySelector('.stepper-value');
+            const min = parseInt(wrapper.dataset.min, 10);
+            const max = parseInt(wrapper.dataset.max, 10);
+            
+            const step1 = parseInt(wrapper.dataset.step1 || '1', 10);
+            const step10 = parseInt(wrapper.dataset.step10 || '10');
+
+            let currentValue = parseInt(wrapper.dataset.currentValue, 10);
+            let newValue = currentValue;
+            let stepAmount = 0;
+
+            switch (stepAction) {
+                case 'increment-1': stepAmount = step1; break;
+                case 'increment-10': stepAmount = step10; break;
+                case 'decrement-1': stepAmount = -step1; break;
+                case 'decrement-10': stepAmount = -step10; break;
+            }
+            
+            newValue = currentValue + stepAmount;
+            
+            if (!isNaN(min) && newValue < min) newValue = min;
+            if (!isNaN(max) && newValue > max) newValue = max;
+            
+            if (newValue === currentValue) return;
+
+            // Actualizar el valor visual y el de datos
+            if (valueDisplay) valueDisplay.textContent = newValue;
+            wrapper.dataset.currentValue = newValue;
+
+            // Actualizar estado de botones
+            wrapper.querySelector('[data-step-action="decrement-10"]').disabled = newValue < min + step10;
+            wrapper.querySelector('[data-step-action="decrement-1"]').disabled = newValue <= min;
+            wrapper.querySelector('[data-step-action="increment-1"]').disabled = newValue >= max;
+            wrapper.querySelector('[data-step-action="increment-10"]').disabled = newValue > max - step10;
+            
+            // ¡Importante! No llamamos a la API, solo actualizamos el estado para el guardado posterior.
+            return;
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
         // --- Manejadores de Icono ---
         const iconCard = document.getElementById('admin-community-icon-section');
@@ -365,9 +414,11 @@ export function initAdminCommunityManager() {
             const saveBtn = target.closest('#admin-community-details-save-btn');
             const card = saveBtn.closest('.component-card');
             const nameInput = document.getElementById('admin-community-name');
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-            // const descInput = document.getElementById('admin-community-description'); // ELIMINADO
             const communityType = document.querySelector('[data-module="moduleAdminCommunityType"] .menu-link.active')?.dataset.value || 'municipio';
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (LEER STEPPER) ▼▼▼ ---
+            const maxMembersStepper = document.getElementById('admin-community-max-members');
+            const maxMembers = maxMembersStepper ? maxMembersStepper.dataset.currentValue : '0';
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             hideInlineError(card);
@@ -383,9 +434,10 @@ export function initAdminCommunityManager() {
             if (isCreating) {
                 formData.append('action', 'admin-create-community');
                 formData.append('name', nameInput.value);
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-                // formData.append('description', descInput.value); // ELIMINADO
-                formData.append('community_type', communityType); // AÑADIDO
+                formData.append('community_type', communityType);
+                
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (ENVIAR DATO) ▼▼▼ ---
+                formData.append('max_members', maxMembers);
                 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 
                 // La privacidad y código se envían desde el otro formulario al crear
@@ -397,9 +449,10 @@ export function initAdminCommunityManager() {
                 formData.append('action', 'admin-update-community-details');
                 formData.append('community_id', targetCommunityId);
                 formData.append('name', nameInput.value);
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-                // formData.append('description', descInput.value); // ELIMINADO
-                formData.append('community_type', communityType); // AÑADIDO
+                formData.append('community_type', communityType);
+                
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (ENVIAR DATO) ▼▼▼ ---
+                formData.append('max_members', maxMembers);
                 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
             formData.append('csrf_token', getCsrfTokenFromPage());
@@ -465,8 +518,6 @@ export function initAdminCommunityManager() {
             return;
         }
         
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (NUEVOS LISTENERS) ▼▼▼ ---
-        
         // --- Manejador de Popover de TIPO DE COMUNIDAD ---
         if (target.closest('[data-action="toggleModuleAdminCommunityType"]')) {
             e.preventDefault();
@@ -505,9 +556,6 @@ export function initAdminCommunityManager() {
             return;
         }
         
-        // --- ▲▲▲ FIN DE MODIFICACIÓN (NUEVOS LISTENERS) ▲▲▲ ---
-
-
         // --- Manejador de Popover de Privacidad ---
         if (target.closest('[data-action="toggleModuleAdminCommunityPrivacy"]')) {
             e.preventDefault();

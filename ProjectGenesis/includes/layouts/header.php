@@ -149,9 +149,11 @@ $userRole = $_SESSION['role'] ?? 'user';
                 <h3 class="notification-title" data-i18n="notifications.title">Notificaciones</h3>
                 
                 <div class="notification-header-actions">
-                    <button class="notification-mark-all" id="notification-mark-all-btn" style="display: none;">
+                    <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- ?>
+                    <button class="notification-mark-all" id="notification-mark-all-btn" disabled>
                         Marca todas como leídas
                     </button>
+                    <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
                 </div>
                 
             </div>

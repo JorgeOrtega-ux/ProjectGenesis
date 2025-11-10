@@ -1122,11 +1122,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif ($action === 'admin-create-community') {
         try {
             $name = trim($_POST['name'] ?? '');
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             $communityType = ($_POST['community_type'] === 'universidad') ? 'universidad' : 'municipio';
-            // --- ▲▲▲ MODIFICACIÓN ▲▲▲ ---
             $privacy = ($_POST['privacy'] === 'private') ? 'private' : 'public';
             $accessCode = ($_POST['access_code'] ?? '');
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            $maxMembers = (int)($_POST['max_members'] ?? 0);
+            $maxMembersDB = ($maxMembers > 0) ? $maxMembers : null; // Guardar 0 como NULL
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             if (empty($name)) {
                 throw new Exception('admin.communities.error.nameRequired');
@@ -1142,18 +1145,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $pdo->beginTransaction();
 
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             $stmt_insert = $pdo->prepare(
-                "INSERT INTO communities (uuid, name, community_type, privacy, access_code) 
-                 VALUES (?, ?, ?, ?, ?)"
+                "INSERT INTO communities (uuid, name, community_type, privacy, access_code, max_members) 
+                 VALUES (?, ?, ?, ?, ?, ?)"
             );
-            $stmt_insert->execute([$uuid, $name, $communityType, $privacy, $accessCode]);
-            // --- ▲▲▲ MODIFICACIÓN ▲▲▲ ---
+            $stmt_insert->execute([$uuid, $name, $communityType, $privacy, $accessCode, $maxMembersDB]);
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $newCommunityId = $pdo->lastInsertId();
 
             // Generar icono y banner por defecto
             $defaultIcon = generateDefaultCommunityIcon($pdo, $newCommunityId, $name, $basePath);
-            // (Dejaremos el banner por defecto como null o un color CSS)
             
             if ($defaultIcon) {
                 $stmt_icon = $pdo->prepare("UPDATE communities SET icon_url = ? WHERE id = ?");
@@ -1177,18 +1179,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $communityId = (int)($_POST['community_id'] ?? 0);
             $name = trim($_POST['name'] ?? '');
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             $communityType = ($_POST['community_type'] === 'universidad') ? 'universidad' : 'municipio';
-            // --- ▲▲▲ MODIFICACIÓN ▲▲▲ ---
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            $maxMembers = (int)($_POST['max_members'] ?? 0);
+            $maxMembersDB = ($maxMembers > 0) ? $maxMembers : null; // Guardar 0 como NULL
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             if (empty($communityId) || empty($name)) {
                 throw new Exception('admin.communities.error.nameRequired');
             }
 
-            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
-            $stmt = $pdo->prepare("UPDATE communities SET name = ?, community_type = ? WHERE id = ?");
-            $stmt->execute([$name, $communityType, $communityId]);
-            // --- ▲▲▲ MODIFICACIÓN ▲▲▲ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            $stmt = $pdo->prepare("UPDATE communities SET name = ?, community_type = ?, max_members = ? WHERE id = ?");
+            $stmt->execute([$name, $communityType, $maxMembersDB, $communityId]);
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             $response['success'] = true;
             $response['message'] = 'admin.communities.success.updated';

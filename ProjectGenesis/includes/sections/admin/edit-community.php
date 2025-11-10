@@ -39,11 +39,13 @@ if ($communityId > 0) {
 // --- Preparar variables para el formulario ---
 $comm_id = $editCommunity['id'] ?? 0;
 $comm_name = $editCommunity['name'] ?? '';
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (Variables) ▼▼▼ ---
 $comm_type = $editCommunity['community_type'] ?? 'municipio'; 
-// --- ▲▲▲ FIN DE MODIFICACIÓN (Variables) ▲▲▲ ---
 $comm_privacy = $editCommunity['privacy'] ?? 'public';
 $comm_code = $editCommunity['access_code'] ?? '';
+
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (NUEVA VARIABLE) ▼▼▼ ---
+$comm_max_members_display = $editCommunity['max_members'] ?? 0; // 0 = sin límite en la UI
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 $comm_icon_url = $editCommunity['icon_url'] ?? $defaultIcon;
 if(empty($comm_icon_url)) $comm_icon_url = $defaultIcon;
@@ -64,7 +66,6 @@ $privacyIconMap = [
 $currentPrivacyKey = $privacyMap[$comm_privacy];
 $currentPrivacyIcon = $privacyIconMap[$comm_privacy];
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (Nuevos Mapas) ▼▼▼ ---
 // Mapas para el selector de TIPO
 $typeMap = [
     'municipio' => 'admin.communities.type.municipio',
@@ -76,7 +77,6 @@ $typeIconMap = [
 ];
 $currentTypeKey = $typeMap[$comm_type];
 $currentTypeIcon = $typeIconMap[$comm_type];
-// --- ▲▲▲ FIN DE MODIFICACIÓN (Nuevos Mapas) ▲▲▲ ---
 
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-edit-community') ? 'active' : 'disabled'; ?>" data-section="admin-edit-community">
@@ -224,6 +224,39 @@ $currentTypeIcon = $typeIconMap[$comm_type];
                     </div>
                 </div> 
             </div>
+            
+            <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (NUEVO STEPPER) ▼▼▼ --- ?>
+            <div class="component-card__content" style="width: 100%; flex-direction: column; align-items: flex-start; gap: 8px; padding-top: 8px;">
+                <label class="component-card__description" data-i18n="admin.communities.edit.maxMembersLabel">Límite de Miembros (0 = sin límite)</label>
+                
+                <div class="component-stepper component-stepper--multi"
+                    id="admin-community-max-members"
+                    style="width: 100%;"
+                    data-current-value="<?php echo htmlspecialchars($comm_max_members_display); ?>"
+                    data-min="0"
+                    data-max="100000"
+                    data-step-1="10"
+                    data-step-10="100"
+                    <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
+                    <button type="button" class="stepper-button" data-step-action="decrement-10" <?php echo ($_SESSION['role'] !== 'founder' || $comm_max_members_display <= 99) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">keyboard_double_arrow_left</span>
+                    </button>
+                    <button type="button" class="stepper-button" data-step-action="decrement-1" <?php echo ($_SESSION['role'] !== 'founder' || $comm_max_members_display <= 0) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_left</span>
+                    </button>
+                    <div class="stepper-value">
+                        <?php echo htmlspecialchars($comm_max_members_display); ?>
+                    </div>
+                    <button type="button" class="stepper-button" data-step-action="increment-1" <?php echo ($_SESSION['role'] !== 'founder' || $comm_max_members_display >= 100000) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">chevron_right</span>
+                    </button>
+                    <button type="button" class="stepper-button" data-step-action="increment-10" <?php echo ($_SESSION['role'] !== 'founder' || $comm_max_members_display >= 99901) ? 'disabled' : ''; ?>>
+                        <span class="material-symbols-rounded">keyboard_double_arrow_right</span>
+                    </button>
+                </div>
+            </div>
+            <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
+            
             <div class="component-card__actions">
                 <button type="button" class="component-action-button component-action-button--primary" id="admin-community-details-save-btn" data-i18n="settings.profile.save"></button>
             </div>
