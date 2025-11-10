@@ -82,8 +82,12 @@ const paths = {
 
     '/profile': 'toggleSectionViewProfile', 
     '/profile/username-placeholder': 'toggleSectionViewProfile', 
+    '/profile/username-placeholder/posts': 'toggleSectionViewProfile',
     '/profile/username-placeholder/likes': 'toggleSectionViewProfile',
     '/profile/username-placeholder/bookmarks': 'toggleSectionViewProfile',
+    '/profile/username-placeholder/info': 'toggleSectionViewProfile',
+    '/profile/username-placeholder/amigos': 'toggleSectionViewProfile',
+    '/profile/username-placeholder/fotos': 'toggleSectionViewProfile',
 
     '/register': 'toggleSectionRegisterStep1',
     '/register/additional-data': 'toggleSectionRegisterStep2',
@@ -122,11 +126,76 @@ const paths = {
 const basePath = window.projectBasePath || '/ProjectGenesis';
 
 
-async function loadPage(page, action, fetchParams = null) {
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (Función loadPage) ▼▼▼ ---
+// Se añade el parámetro isPartialLoad
+async function loadPage(page, action, fetchParams = null, isPartialLoad = false) {
 
     if (!contentContainer) return;
 
+    // --- Lógica de Carga Parcial (Solo para pestañas de perfil) ---
+    if (isPartialLoad) {
+        const tabContainer = document.querySelector('.profile-content-container');
+        if (!tabContainer) {
+            // Si no encontramos el contenedor, forzamos una recarga completa
+            loadPage(page, action, fetchParams, false);
+            return;
+        }
+
+        // Mostrar un loader simple o atenuar el contenido
+        tabContainer.style.opacity = '0.5';
+        tabContainer.style.pointerEvents = 'none';
+
+        let queryString = '';
+        if (fetchParams) {
+            queryString = new URLSearchParams(fetchParams).toString().replace(/\+/g, '%20');
+        }
+        
+        // Añadir el parámetro 'partial=true' para que el router sepa qué enviar
+        const partialQuery = `partial=true${queryString ? `&${queryString}` : ''}`;
+        const fetchUrl = `${basePath}/config/routing/router.php?page=${page}&${partialQuery}`;
+
+        try {
+            const response = await fetch(fetchUrl);
+            const html = await response.text();
+
+            // Inyectar el nuevo contenido de la pestaña
+            tabContainer.innerHTML = html;
+            applyTranslations(tabContainer);
+
+            // Actualizar la barra de navegación del perfil
+            const navBar = document.querySelector('.profile-nav-bar');
+            const moreMenu = document.querySelector('[data-module="moduleProfileMore"]');
+            
+            if (navBar) {
+                // Actualizar pestañas principales
+                navBar.querySelectorAll('a.profile-nav-button').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.href === window.location.href) {
+                        btn.classList.add('active');
+                    }
+                });
+                // Actualizar pestañas del menú "Más" (likes, bookmarks)
+                if (moreMenu) {
+                    moreMenu.querySelectorAll('a.menu-link').forEach(link => {
+                         link.classList.remove('active');
+                         if (link.href === window.location.href) {
+                            link.classList.add('active');
+                         }
+                    });
+                }
+            }
+
+        } catch (error) {
+            console.error('Error al cargar la pestaña:', error);
+            tabContainer.innerHTML = `<h2>${getTranslation('js.url.errorLoad')}</h2>`;
+        } finally {
+            tabContainer.style.opacity = '1';
+            tabContainer.style.pointerEvents = 'auto';
+        }
+        return; // Fin de la carga parcial
+    }
     
+    // --- Lógica de Carga Completa (la original) ---
     const headerTop = document.querySelector('.general-content-top');
     
     if (headerTop) {
@@ -307,6 +376,7 @@ async function loadPage(page, action, fetchParams = null) {
         }
     }
 }
+// --- ▲▲▲ FIN DE MODIFICACIÓN (Función loadPage) ▲▲▲ ---
 
 export function handleNavigation() {
 
@@ -316,7 +386,10 @@ export function handleNavigation() {
     let action = null;
     const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
     const postViewRegex = /^\/post\/(\d+)$/i; 
-    const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(likes|bookmarks))?$/i;
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (profileRegex) ▼▼▼ ---
+    const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(posts|likes|bookmarks|info|amigos|fotos))?$/i;
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (profileRegex) ▲▲▲ ---
 
 
     if (path === '/') {
@@ -338,7 +411,9 @@ export function handleNavigation() {
         action = 'toggleSectionViewProfile';
         const matches = path.match(profileRegex);
         const username = matches[1];
-        const tab = matches[2] || 'posts'; 
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (tab) ▼▼▼ ---
+        const tab = matches[2] || 'posts'; // Captura 'posts', 'likes', 'info', etc.
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (tab) ▲▲▲ ---
         loadPage('view-profile', action, { username: username, tab: tab });
         return;
 
@@ -446,7 +521,8 @@ export function initRouter() {
             'a[href*="/profile/"], a[href*="/search"], .component-button[data-action*="toggleSection"], ' +
             '.page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], ' +
             '.auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], ' +
-            '[data-module="moduleProfileMore"] a.menu-link[data-nav-js="true"]' // <-- SE AÑADIÓ ESTE SELECTOR
+            '[data-module="moduleProfileMore"] a.menu-link[data-nav-js="true"], ' + 
+            'a.profile-nav-button[data-nav-js="true"]' // <-- Selector de pestaña de perfil
         );
       // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
@@ -462,6 +538,16 @@ export function initRouter() {
 
             let action, page, newPath;
             let fetchParams = null; 
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (isPartialLoad) ▼▼▼ ---
+            let isPartialLoad = false;
+            const currentProfileSection = document.querySelector('[data-section="view-profile"]');
+            
+            // Comprobar si es un clic en una pestaña de perfil *mientras ya estamos en un perfil*
+            if (currentProfileSection && (link.classList.contains('profile-nav-button') || link.closest('[data-module="moduleProfileMore"]'))) {
+                isPartialLoad = true;
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN (isPartialLoad) ▲▲▲ ---
 
 
             if (link.hasAttribute('data-action')) {
@@ -485,7 +571,10 @@ export function initRouter() {
                 
                 const postViewRegex = /^\/post\/(\d+)$/i;
                 const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
-                const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(likes|bookmarks))?$/i;
+                
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (profileRegex) ▼▼▼ ---
+                const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(posts|likes|bookmarks|info|amigos|fotos))?$/i;
+                // --- ▲▲▲ FIN DE MODIFICACIÓN (profileRegex) ▲▲▲ ---
 
                 if (postViewRegex.test(newPath)) {
                     action = 'toggleSectionPostView';
@@ -503,7 +592,9 @@ export function initRouter() {
                     action = 'toggleSectionViewProfile';
                     page = 'view-profile';
                     const matches = newPath.match(profileRegex);
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (tab) ▼▼▼ ---
                     fetchParams = { username: matches[1], tab: matches[2] || 'posts' };
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN (tab) ▲▲▲ ---
 
                 } else { 
                     if (newPath === '/settings') newPath = '/settings/your-profile';
@@ -547,7 +638,9 @@ export function initRouter() {
             if (currentFullUrl !== fullUrlPath) {
                 history.pushState(null, '', fullUrlPath);
                 
-                loadPage(page, action, fetchParams); 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Pasar isPartialLoad) ▼▼▼ ---
+                loadPage(page, action, fetchParams, isPartialLoad); 
+                // --- ▲▲▲ FIN DE MODIFICACIÓN (Pasar isPartialLoad) ▲▲▲ ---
             }
 
             deactivateAllModules();

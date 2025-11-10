@@ -639,7 +639,8 @@ export function initCommunityManager() {
     
     document.body.addEventListener('click', async (e) => {
         
-        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (PESTAÑAS DE INFO DE PERFIL) ▼▼▼ ---
+        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (profile-info-tab-select) ▼▼▼ ---
+        // Se ha movido el listener a los <a> en url-manager.js
         const infoTabButton = e.target.closest('[data-action="profile-info-tab-select"]');
         if (infoTabButton) {
             e.preventDefault();
@@ -667,49 +668,15 @@ export function initCommunityManager() {
             }
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
+        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
 
-        const profileTabButton = e.target.closest('[data-action="profile-tab-select"]');
-        if (profileTabButton) {
-            e.preventDefault();
-            const tab = profileTabButton.dataset.tab;
-            if (!tab || profileTabButton.classList.contains('active')) return;
-
-            const navBar = profileTabButton.closest('.profile-nav-bar');
-            if (!navBar) return;
-            navBar.querySelectorAll('.profile-nav-button').forEach(btn => btn.classList.remove('active'));
-
-            profileTabButton.classList.add('active');
-
-            const contentContainer = document.querySelector('.profile-content-container');
-            if (!contentContainer) return;
-            
-            contentContainer.querySelectorAll('[data-profile-tab-content]').forEach(content => {
-                content.classList.remove('active');
-                content.classList.add('disabled');
-            });
-
-            const newContent = contentContainer.querySelector(`[data-profile-tab-content="${tab}"]`);
-            if (newContent) {
-                newContent.classList.add('active');
-                newContent.classList.remove('disabled');
-            }
-            
-            const profileCard = document.querySelector('.profile-header-card');
-            if (profileCard) { 
-                let newPath;
-                const basePath = window.projectBasePath || '/ProjectGenesis';
-                const username = document.querySelector('.profile-username').textContent.trim();
-                
-                if (tab === 'posts') {
-                    newPath = `${basePath}/profile/${username}`;
-                } else {
-                }
-                
-            }
-            
-            return; 
-        }
+        // --- ▼▼▼ INICIO DE BLOQUE ELIMINADO ▼▼▼ ---
+        // const profileTabButton = e.target.closest('[data-action="profile-tab-select"]');
+        // if (profileTabButton) {
+        //     ... (Lógica eliminada, ahora la maneja url-manager.js) ...
+        //     return; 
+        // }
+        // --- ▲▲▲ FIN DE BLOQUE ELIMINADO ▲▲▲ ---
 
 
         const likeButton = e.target.closest('[data-action="like-toggle"]');
@@ -727,9 +694,7 @@ export function initCommunityManager() {
         const postDeleteButton = e.target.closest('[data-action="post-delete"]');
         const postSetPrivacyButton = e.target.closest('[data-action="post-set-privacy"]');
 
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (OPCIONES DE AMIGO) ▼▼▼ ---
         const friendItemOptionsButton = e.target.closest('[data-action="toggleFriendItemOptions"]');
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA ---
 
         if (toggleTextButton) {
             e.preventDefault();
@@ -780,7 +745,6 @@ export function initCommunityManager() {
             return;
         }
         
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (ABRIR POPOVER DE AMIGO) ▼▼▼ ---
         if (friendItemOptionsButton) {
             e.preventDefault();
             e.stopPropagation();
@@ -797,7 +761,6 @@ export function initCommunityManager() {
             }
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA ---
         
         if (postOptionsButton) {
             e.preventDefault();

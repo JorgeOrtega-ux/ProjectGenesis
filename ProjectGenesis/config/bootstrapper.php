@@ -319,7 +319,8 @@ if (preg_match('/^\/c\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
     $_GET['post_id'] = $postId; 
     $path = '/post/id-placeholder'; 
 
-} elseif (preg_match('/^\/profile\/([a-zA-Z0-9_]+)(?:\/(likes|bookmarks))?$/i', $path, $matches)) {
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (Regex de Perfil) ▼▼▼ ---
+} elseif (preg_match('/^\/profile\/([a-zA-Z0-9_]+)(?:\/(posts|likes|bookmarks|info|amigos|fotos))?$/i', $path, $matches)) {
     $username = $matches[1];
     $tab = $matches[2] ?? 'posts'; // Captura la pestaña (o usa 'posts' por defecto)
     $_GET['username'] = $username;
@@ -327,6 +328,7 @@ if (preg_match('/^\/c\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
     
     // Usamos un placeholder genérico para el mapeo
     $path = '/profile/username-placeholder';
+// --- ▲▲▲ FIN DE MODIFICACIÓN (Regex de Perfil) ▲▲▲ ---
 
 // --- ▼▼▼ INICIO DE NUEVA RUTA DE BÚSQUEDA ▼▼▼ ---
 } elseif (preg_match('/^\/search$/i', $path, $matches)) {
