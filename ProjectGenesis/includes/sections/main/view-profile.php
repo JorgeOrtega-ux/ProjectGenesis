@@ -121,6 +121,102 @@ if ($is_actually_online) {
 }
 // --- Fin Lógica de Estado ---
 
+// --- ▼▼▼ INICIO DE NUEVOS ESTILOS CSS ▼▼▼ ---
+?>
+<style>
+.profile-info-layout {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: 16px;
+    padding: 16px;
+    min-height: 285px;
+    background-color: #ffffff;
+    border: 1px solid #00000020;
+    border-radius: 12px;
+}
+.profile-info-menu {
+    flex: 0 0 240px; /* Base de 240px, no crece, no se encoge */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border-right: 1px solid #00000020;
+}
+.profile-info-menu h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    padding: 8px 12px;
+}
+.profile-info-button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: none;
+    background-color: transparent;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.2s;
+}
+.profile-info-button:hover {
+    background-color: #f5f5fa;
+}
+.profile-info-button.active {
+    background-color: #000;
+    color: #ffffff;
+}
+.profile-info-content {
+    flex: 1 1 auto; /* Crece y se encoge */
+    padding: 16px;
+    min-width: 0; /* Permite que se encoja */
+}
+.profile-info-content [data-info-tab] {
+    display: none;
+}
+.profile-info-content [data-info-tab].active {
+    display: block;
+}
+.info-row {
+    margin-bottom: 16px;
+}
+.info-row-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+.info-row-value {
+    font-size: 15px;
+    color: #1f2937;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .profile-info-layout {
+        flex-direction: column;
+    }
+    .profile-info-menu {
+        flex-basis: auto; /* Resetea la base */
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #00000020;
+        padding: 0 0 8px 0;
+    }
+    .profile-info-content {
+        padding: 8px 0 0 0;
+    }
+}
+</style>
+<?php
+// --- ▲▲▲ FIN DE NUEVOS ESTILOS CSS ▲▲▲ ---
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'view-profile') ? 'active' : 'disabled'; ?>" data-section="view-profile">
 
@@ -222,7 +318,7 @@ if ($is_actually_online) {
                     Publicaciones
                 </button>
                 <button type="button" 
-                        class="profile-nav-button" 
+                        class="profile-nav-button <?php echo ($currentTab === 'info') ? 'active' : ''; ?>" 
                         data-action="profile-tab-select" 
                         data-tab="info">
                     Informacion
@@ -600,6 +696,59 @@ if ($is_actually_online) {
                 </div>
             </div>
             
+            <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Pestaña "info") ▼▼▼ --- ?>
+            <div class="profile-main-content <?php echo ($currentTab === 'info') ? 'active' : 'disabled'; ?>" data-profile-tab-content="info">
+                
+                <div class="profile-info-layout">
+                    <div class="profile-info-menu">
+                        <h3>Información</h3>
+                        <button type="button" class="profile-info-button active" data-action="profile-info-tab-select" data-tab="general">
+                            Informacion general
+                        </button>
+                        <button type="button" class="profile-info-button" data-action="profile-info-tab-select" data-tab="employment">
+                            Empleo y formacion
+                        </button>
+                    </div>
+                    
+                    <div class="profile-info-content">
+                        
+                        <div data-info-tab="general" class="active">
+                            <div class="info-row">
+                                <div class="info-row-label">Nombre de usuario</div>
+                                <div class="info-row-value"><?php echo htmlspecialchars($profile['username']); ?></div>
+                            </div>
+                            
+                            <div class="info-row">
+                                <div class="info-row-label">Correo electrónico</div>
+                                <div class="info-row-value">
+                                    <?php 
+                                    if ($isOwnProfile) {
+                                        echo htmlspecialchars($_SESSION['email']);
+                                    } else {
+                                        echo "Información privada";
+                                    }
+                                    ?>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div data-info-tab="employment">
+                            <div class="info-row">
+                                <div class="info-row-label">Empleo</div>
+                                <div class="info-row-value">Pendiente</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-row-label">Formación</div>
+                                <div class="info-row-value">Pendiente</div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+            </div>
+            <?php // --- ▲▲▲ FIN DE BLOQUE MODIFICADO (Pestaña "info") ▲▲▲ --- ?>
+
             <div class="profile-main-content <?php echo ($currentTab === 'amigos') ? 'active' : 'disabled'; ?>" data-profile-tab-content="amigos">
                 <div class="component-card component-card--column">
                     <div class="profile-content-header">
@@ -659,9 +808,6 @@ if ($is_actually_online) {
                 </div>
             </div>
 
-            <div class="profile-main-content <?php echo ($currentTab === 'info') ? 'active' : 'disabled'; ?>" data-profile-tab-content="info" style="padding: 24px; text-align: center;">
-                Aquí irá la sección de Información.
-            </div>
             <div class="profile-main-content <?php echo ($currentTab === 'fotos') ? 'active' : 'disabled'; ?>" data-profile-tab-content="fotos" style="padding: 24px; text-align: center;">
                 Aquí irá la sección de Fotos.
             </div>

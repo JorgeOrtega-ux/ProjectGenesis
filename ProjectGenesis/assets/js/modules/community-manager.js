@@ -639,6 +639,36 @@ export function initCommunityManager() {
     
     document.body.addEventListener('click', async (e) => {
         
+        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (PESTAÑAS DE INFO DE PERFIL) ▼▼▼ ---
+        const infoTabButton = e.target.closest('[data-action="profile-info-tab-select"]');
+        if (infoTabButton) {
+            e.preventDefault();
+            const tab = infoTabButton.dataset.tab;
+            if (!tab || infoTabButton.classList.contains('active')) return;
+
+            const layout = infoTabButton.closest('.profile-info-layout');
+            if (!layout) return;
+
+            // Cambiar botón activo
+            layout.querySelectorAll('.profile-info-button').forEach(btn => btn.classList.remove('active'));
+            infoTabButton.classList.add('active');
+
+            // Cambiar contenido activo
+            const contentContainer = layout.querySelector('.profile-info-content');
+            if (!contentContainer) return;
+            
+            contentContainer.querySelectorAll('[data-info-tab]').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            const newContent = contentContainer.querySelector(`[data-info-tab="${tab}"]`);
+            if (newContent) {
+                newContent.classList.add('active');
+            }
+            return;
+        }
+        // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
+
         const profileTabButton = e.target.closest('[data-action="profile-tab-select"]');
         if (profileTabButton) {
             e.preventDefault();
