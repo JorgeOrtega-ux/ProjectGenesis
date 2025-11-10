@@ -3529,3 +3529,192 @@ a.profile-tab.active {
         flex: 0 1 auto;
     }
 }
+
+
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS PARA PERFIL ▼▼▼ --- */
+
+/* Contenedor principal de 2 columnas para el perfil */
+.profile-main-content {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    width: 100%;
+    /* Ajusta el max-width del .component-wrapper 
+      para la página de perfil si es necesario.
+      Recomiendo hacerlo en 'view-profile.php' así:
+      <div class="component-wrapper" style="max-width: 1024px;">
+    */
+}
+
+/* Columna Izquierda (Amigos) */
+.profile-left-column {
+    flex: 1 1 340px; /* Crece, se encoge, base de 340px */
+    min-width: 300px;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Columna Derecha (Posts) */
+.profile-right-column {
+    flex: 1 1 600px; /* Crece, se encoge, base de 600px */
+    min-width: 0; /* Permite que se encoja */
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Tarjeta de Creador de Publicación (en perfil) */
+.component-card--post-creator {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.component-card--post-creator:hover {
+    background-color: #f5f5fa;
+}
+
+.component-card--post-creator .post-creator-placeholder {
+    flex-grow: 1;
+    font-size: 16px;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.component-card--post-creator .post-creator-icon {
+    flex-shrink: 0;
+    color: #000;
+}
+
+/* Tarjeta de Vista Previa de Amigos (en perfil) */
+#profile-friends-preview-card {
+    padding: 16px;
+    gap: 12px;
+}
+
+.profile-friends-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    width: 100%;
+    padding: 0 8px; /* Alinear con la cuadrícula */
+}
+
+.profile-friends-header .component-card__title {
+    font-size: 18px; /* Más grande */
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.profile-friends-count {
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.profile-friends-view-all {
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+    text-decoration: none;
+}
+.profile-friends-view-all:hover {
+    text-decoration: underline;
+}
+
+.profile-friends-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+    padding: 0 8px 8px 8px;
+}
+
+.friend-preview-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-decoration: none;
+    border-radius: 8px;
+    padding: 8px;
+    transition: background-color 0.2s;
+}
+
+.friend-preview-item:hover {
+    background-color: #f5f5fa;
+}
+
+.friend-preview-item .comment-avatar {
+    width: 100%;
+    height: auto;
+    padding-top: 100%; /* Truco para aspect-ratio 1:1 */
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.friend-preview-item .comment-avatar::before {
+    /* Sobrescribir bordes de rol para la cuadrícula */
+    border: none;
+    background-image: none;
+    top: 0; left: 0; right: 0; bottom: 0;
+}
+
+.friend-preview-item .comment-avatar img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.friend-preview-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+    line-height: 1.3;
+}
+
+.profile-friends-empty {
+    font-size: 14px;
+    color: #6b7280;
+    text-align: center;
+    padding: 24px 8px;
+}
+
+/* Media Query para el layout del perfil */
+@media (max-width: 900px) {
+    .profile-main-content {
+        flex-direction: column-reverse; /* Pone los posts primero en móvil */
+    }
+    .profile-left-column {
+        max-width: 100%;
+        min-width: 0;
+    }
+    .profile-friends-grid {
+        /* Muestra 4 columnas en móvil */
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 500px) {
+    /* Muestra 3 columnas en móvil pequeño */
+    .profile-friends-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS PARA PERFIL ▲▲▲ --- */
