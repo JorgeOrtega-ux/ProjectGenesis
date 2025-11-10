@@ -15,7 +15,9 @@ $communityId = (int)($_GET['id'] ?? 0);
 
 if ($communityId > 0) {
     try {
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL) ▼▼▼ ---
         $stmt = $pdo->prepare("SELECT * FROM communities WHERE id = ?");
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (SQL) ▲▲▲ ---
         $stmt->execute([$communityId]);
         $editCommunity = $stmt->fetch();
 
@@ -37,7 +39,9 @@ if ($communityId > 0) {
 // --- Preparar variables para el formulario ---
 $comm_id = $editCommunity['id'] ?? 0;
 $comm_name = $editCommunity['name'] ?? '';
-$comm_desc = $editCommunity['description'] ?? '';
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (Variables) ▼▼▼ ---
+$comm_type = $editCommunity['community_type'] ?? 'municipio'; 
+// --- ▲▲▲ FIN DE MODIFICACIÓN (Variables) ▲▲▲ ---
 $comm_privacy = $editCommunity['privacy'] ?? 'public';
 $comm_code = $editCommunity['access_code'] ?? '';
 
@@ -59,6 +63,20 @@ $privacyIconMap = [
 ];
 $currentPrivacyKey = $privacyMap[$comm_privacy];
 $currentPrivacyIcon = $privacyIconMap[$comm_privacy];
+
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (Nuevos Mapas) ▼▼▼ ---
+// Mapas para el selector de TIPO
+$typeMap = [
+    'municipio' => 'admin.communities.type.municipio',
+    'universidad' => 'admin.communities.type.universidad'
+];
+$typeIconMap = [
+    'municipio' => 'account_balance',
+    'universidad' => 'school'
+];
+$currentTypeKey = $typeMap[$comm_type];
+$currentTypeIcon = $typeIconMap[$comm_type];
+// --- ▲▲▲ FIN DE MODIFICACIÓN (Nuevos Mapas) ▲▲▲ ---
 
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-edit-community') ? 'active' : 'disabled'; ?>" data-section="admin-edit-community">
@@ -160,11 +178,52 @@ $currentPrivacyIcon = $privacyIconMap[$comm_privacy];
                 <label for="admin-community-name" data-i18n="admin.communities.edit.nameLabel"></label>
             </div>
             
-            <div class="component-input-group">
-                <textarea id="admin-community-description" class="component-input" rows="3" placeholder=" " maxlength="500"><?php echo htmlspecialchars($comm_desc); ?></textarea>
-                <label for="admin-community-description" data-i18n="admin.communities.edit.descLabel"></label>
+            <div class="component-card__content" style="width: 100%; flex-direction: column; align-items: flex-start; gap: 8px; padding-top: 8px;">
+                <label class="component-card__description" data-i18n="admin.communities.edit.typeTitle">Tipo de Comunidad</label>
+                <div class="trigger-select-wrapper" style="width: 100%;">
+                    <div class="trigger-selector" data-action="toggleModuleAdminCommunityType">
+                        <div class="trigger-select-icon">
+                            <span class="material-symbols-rounded"><?php echo $currentTypeIcon; ?></span>
+                        </div>
+                        <div class="trigger-select-text">
+                            <span data-i18n="<?php echo htmlspecialchars($currentTypeKey); ?>"></span>
+                        </div>
+                        <div class="trigger-select-arrow">
+                            <span class="material-symbols-rounded">arrow_drop_down</span>
+                        </div>
+                    </div>
+
+                    <div class="popover-module popover-module--anchor-width body-title disabled"
+                         data-module="moduleAdminCommunityType">
+                        <div class="menu-content">
+                            <div class="menu-list">
+                                <?php
+                                foreach ($typeMap as $key => $textKey):
+                                    $isActive = ($key === $comm_type);
+                                    $iconName = $typeIconMap[$key];
+                                ?>
+                                    <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>"
+                                         data-value="<?php echo htmlspecialchars($key); ?>"
+                                         data-icon="<?php echo htmlspecialchars($iconName); ?>"
+                                         data-text-key="<?php echo htmlspecialchars($textKey); ?>">
+                                        <div class="menu-link-icon">
+                                            <span class="material-symbols-rounded"><?php echo $iconName; ?></span>
+                                        </div>
+                                        <div class="menu-link-text">
+                                            <span data-i18n="<?php echo htmlspecialchars($textKey); ?>"></span>
+                                        </div>
+                                        <div class="menu-link-check-icon">
+                                            <?php if ($isActive): ?>
+                                                <span class="material-symbols-rounded">check</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
             </div>
-            
             <div class="component-card__actions">
                 <button type="button" class="component-action-button component-action-button--primary" id="admin-community-details-save-btn" data-i18n="settings.profile.save"></button>
             </div>

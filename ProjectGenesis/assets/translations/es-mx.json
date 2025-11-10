@@ -115,13 +115,14 @@
         "bannerDesc": "El banner se muestra en la parte superior de la página de la comunidad.",
         "detailsTitle": "Detalles de la Comunidad",
         "nameLabel": "Nombre de la Comunidad*",
-        "descLabel": "Descripción (Opcional)",
         "privacyTitle": "Privacidad y Acceso",
         "privacyLabel": "Tipo de Comunidad",
         "codeLabel": "Código de Acceso (requerido si es Privada)",
         "dangerTitle": "Zona Peligrosa",
         "dangerDesc": "Eliminar esta comunidad es una acción irreversible.",
-        "deleteButton": "Eliminar Comunidad"
+        "deleteButton": "Eliminar Comunidad",
+        "typeTitle": "Tipo de Comunidad",
+        "typeLabel": "Tipo"
       },
       "success": {
         "created": "Comunidad creada exitosamente. Serás redirigido.",
@@ -133,6 +134,10 @@
       "error": {
         "nameRequired": "El nombre de la comunidad es obligatorio.",
         "saveDetailsFirst": "Guarda los detalles de la comunidad primero antes de cambiar la privacidad."
+      },
+      "type": {
+        "municipio": "Municipio",
+        "universidad": "Universidad"
       }
     },
     "create": {
@@ -874,5 +879,11 @@
     "verLog": "Ver Log",
     "quitarSeleccion": "Quitar selección",
     "masOpciones": "Más opciones"
+  },
+  "explorer": {
+    "desc": {
+      "municipio": "Una comunidad para colaborar, compartir ideas y mucho más sobre tu municipio. ¡Únete y participa!",
+      "universidad": "El espacio oficial para estudiantes y personal de la universidad. Conéctate y comparte."
+    }
   }
 }

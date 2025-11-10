@@ -9,9 +9,11 @@ $publicCommunities = [];
 try {
     // Esta consulta obtiene todas las comunidades públicas, cuenta sus miembros,
     // cuenta las publicaciones de hoy, y verifica si el usuario actual ya es miembro.
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL) ▼▼▼ ---
     $stmt = $pdo->prepare(
        "SELECT 
-            c.id, c.name, c.description, c.icon_url, c.banner_url,
+            c.id, c.name, c.community_type, c.icon_url, c.banner_url,
             COUNT(DISTINCT uc.user_id) AS member_count,
             (SELECT COUNT(DISTINCT p.id) 
              FROM community_publications p 
@@ -20,9 +22,11 @@ try {
         FROM communities c
         LEFT JOIN user_communities uc ON c.id = uc.community_id
         WHERE c.privacy = 'public'
-        GROUP BY c.id, c.name, c.description, c.icon_url, c.banner_url
+        GROUP BY c.id, c.name, c.community_type, c.icon_url, c.banner_url
         ORDER BY member_count DESC"
     );
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (SQL) ▲▲▲ ---
+
     $stmt->execute(['current_user_id' => $userId]);
     $publicCommunities = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -146,30 +150,27 @@ try {
         border-color: #c62828;
     }
     
-    /* --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ --- */
     .community-card__stats {
         display: flex;
-        flex-wrap: wrap; /* Añadido para que los badges se ajusten */
-        gap: 8px; /* Reducido el gap */
+        flex-wrap: wrap; 
+        gap: 8px; 
         margin: 16px 0 0 0;
-        padding-top: 0; /* Eliminado el padding-top */
-        border-top: none; /* Eliminada la línea divisora */
+        padding-top: 0; 
+        border-top: none; 
     }
     .community-card__stat-item {
-        display: inline-flex; /* Cambiado a inline-flex */
+        display: inline-flex; 
         align-items: center;
         gap: 6px;
         font-size: 13px;
         font-weight: 500;
         color: #6b7280;
         
-        /* Estilos de "badge" añadidos */
         background-color: transparent;
         border: 1px solid #00000020;
         border-radius: 50px;
-        padding: 6px 10px; /* Padding ajustado */
+        padding: 6px 10px; 
     }
-    /* --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- */
 
     .community-card__stat-item .material-symbols-rounded {
         font-size: 16px;
@@ -193,14 +194,12 @@ try {
                 </div>
                 <div class="page-toolbar-right">
                     
-                    <?php // --- ▼▼▼ BOTÓN AÑADIDO (MODIFICACIÓN ANTERIOR) ▼▼▼ --- ?>
                     <button type="button"
                         class="page-toolbar-button"
                         data-action="toggleSectionJoinGroup" 
                         data-tooltip="home.toolbar.joinGroup">
                     <span class="material-symbols-rounded">group_add</span>
                     </button>
-                    <?php // --- ▲▲▲ FIN BOTÓN AÑADIDO ▲▲▲ --- ?>
                     
                     <button type="button"
                         class="page-toolbar-button"
@@ -236,7 +235,13 @@ try {
                     <?php
                         // Preparar los datos dinámicos
                         $name = htmlspecialchars($community['name']);
-                        $description = htmlspecialchars($community['description'] ?? 'Una comunidad para colaborar, compartir ideas y mucho más. ¡Únete y participa!');
+                        
+                        // --- ▼▼▼ INICIO DE MODIFICACIÓN (LÓGICA DE i18n) ▼▼▼ ---
+                        $descriptionKey = 'explorer.desc.municipio'; // Default
+                        if ($community['community_type'] === 'universidad') {
+                            $descriptionKey = 'explorer.desc.universidad';
+                        }
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                         
                         $bannerUrl = !empty($community['banner_url']) 
                             ? htmlspecialchars($community['banner_url']) 
@@ -263,7 +268,10 @@ try {
                             
                             <div class="community-card__info">
                                 <h3 class="community-card__name" title="<?php echo $name; ?>"><?php echo $name; ?></h3>
-                                <p class="community-card__description"><?php echo $description; ?></p>
+                                
+                                <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (HTML) ▼▼▼ --- ?>
+                                <p class="community-card__description" data-i18n="<?php echo $descriptionKey; ?>"></p>
+                                <?php // --- ▲▲▲ FIN DE MODIFICACIÓN (HTML) ▲▲▲ --- ?>
                             </div>
 
                             <?php if ($isMember): ?>

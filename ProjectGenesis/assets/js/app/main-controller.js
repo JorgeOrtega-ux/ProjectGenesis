@@ -133,7 +133,8 @@ function initMainController() {
                 'toggleModuleAdminRole',
                 'toggleModuleAdminStatus',
                 'toggleModuleAdminCreateRole',
-                'toggleModuleAdminCommunityPrivacy', // <-- ¡ACCIÓN AÑADIDA!
+                'toggleModuleAdminCommunityPrivacy',
+                'toggleModuleAdminCommunityType', // <-- ¡AQUÍ ESTÁ LA CORRECCIÓN!
                 'toggleModuleCommunitySelect', 
                 'toggleModuleSelectGroup',
                 'toggleModuleSearch',

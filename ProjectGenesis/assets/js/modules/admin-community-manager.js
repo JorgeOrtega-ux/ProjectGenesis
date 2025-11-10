@@ -365,7 +365,10 @@ export function initAdminCommunityManager() {
             const saveBtn = target.closest('#admin-community-details-save-btn');
             const card = saveBtn.closest('.component-card');
             const nameInput = document.getElementById('admin-community-name');
-            const descInput = document.getElementById('admin-community-description');
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            // const descInput = document.getElementById('admin-community-description'); // ELIMINADO
+            const communityType = document.querySelector('[data-module="moduleAdminCommunityType"] .menu-link.active')?.dataset.value || 'municipio';
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             hideInlineError(card);
 
@@ -380,7 +383,11 @@ export function initAdminCommunityManager() {
             if (isCreating) {
                 formData.append('action', 'admin-create-community');
                 formData.append('name', nameInput.value);
-                formData.append('description', descInput.value);
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                // formData.append('description', descInput.value); // ELIMINADO
+                formData.append('community_type', communityType); // AÑADIDO
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                
                 // La privacidad y código se envían desde el otro formulario al crear
                 const privacy = document.querySelector('[data-module="moduleAdminCommunityPrivacy"] .menu-link.active')?.dataset.value || 'public';
                 const accessCode = document.getElementById('admin-community-code').value;
@@ -390,7 +397,10 @@ export function initAdminCommunityManager() {
                 formData.append('action', 'admin-update-community-details');
                 formData.append('community_id', targetCommunityId);
                 formData.append('name', nameInput.value);
-                formData.append('description', descInput.value);
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                // formData.append('description', descInput.value); // ELIMINADO
+                formData.append('community_type', communityType); // AÑADIDO
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
             formData.append('csrf_token', getCsrfTokenFromPage());
 
@@ -455,6 +465,49 @@ export function initAdminCommunityManager() {
             return;
         }
         
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (NUEVOS LISTENERS) ▼▼▼ ---
+        
+        // --- Manejador de Popover de TIPO DE COMUNIDAD ---
+        if (target.closest('[data-action="toggleModuleAdminCommunityType"]')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const module = document.querySelector('[data-module="moduleAdminCommunityType"]');
+            if (module) {
+                deactivateAllModules(module);
+                module.classList.toggle('disabled');
+                module.classList.toggle('active');
+            }
+            return;
+        }
+        
+        const typeLink = target.closest('[data-module="moduleAdminCommunityType"] .menu-link');
+        if (typeLink) {
+            e.preventDefault();
+            const newType = typeLink.dataset.value;
+            const newIcon = typeLink.dataset.icon;
+            const newTextKey = typeLink.dataset.textKey;
+
+            // Actualizar trigger
+            const trigger = document.querySelector('[data-action="toggleModuleAdminCommunityType"]');
+            trigger.querySelector('.trigger-select-icon span').textContent = newIcon;
+            trigger.querySelector('.trigger-select-text span').textContent = getTranslation(newTextKey);
+            trigger.querySelector('.trigger-select-text span').dataset.i18n = newTextKey;
+
+            // Actualizar popover
+            typeLink.closest('.menu-list').querySelectorAll('.menu-link').forEach(link => {
+                link.classList.remove('active');
+                link.querySelector('.menu-link-check-icon').innerHTML = '';
+            });
+            typeLink.classList.add('active');
+            typeLink.querySelector('.menu-link-check-icon').innerHTML = '<span class="material-symbols-rounded">check</span>';
+            
+            deactivateAllModules();
+            return;
+        }
+        
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (NUEVOS LISTENERS) ▲▲▲ ---
+
+
         // --- Manejador de Popover de Privacidad ---
         if (target.closest('[data-action="toggleModuleAdminCommunityPrivacy"]')) {
             e.preventDefault();

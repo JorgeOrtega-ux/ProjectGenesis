@@ -117,7 +117,7 @@ CREATE TABLE communities (
     access_code VARCHAR(50) NULL,
     
     -- --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-    `description` TEXT NULL DEFAULT NULL COMMENT 'Descripción de la comunidad',
+    `community_type` ENUM('municipio', 'universidad') NOT NULL DEFAULT 'municipio' COMMENT 'Tipo de comunidad para descripción i18n',
     icon_url VARCHAR(512) NULL DEFAULT NULL COMMENT 'URL para el icono de la comunidad',
     banner_url VARCHAR(512) NULL DEFAULT NULL COMMENT 'URL para el banner de la comunidad',
     -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
@@ -139,11 +139,11 @@ CREATE TABLE user_communities (
 );
 
 -- --- ▼▼▼ INICIO DE MODIFICACIÓN (NUEVOS DATOS) ▼▼▼ ---
-INSERT INTO communities (uuid, name, privacy, access_code, description, icon_url, banner_url) VALUES
-('a1b2c3d4-e5f6-7890-1234-abcdeffedcba', 'Matamoros', 'public', NULL, 'Una comunidad para colaborar, compartir ideas y mucho más. ¡Únete y participa!', 'https://picsum.photos/seed/comm1/128/128', 'https://picsum.photos/seed/banner1/400/120'),
-('b2c3d4e5-f6a7-8901-2345-bcdeffedcba1', 'Valle Hermoso', 'public', NULL, 'Una comunidad para colaborar, compartir ideas y mucho más. ¡Únete y participa!', 'https://picsum.photos/seed/comm2/128/128', 'https://picsum.photos/seed/banner2/400/120'),
-('c3d4e5f6-a7b8-9012-3456-cdeffedcba12', 'Universidad A', 'private', 'UNIA123', 'Una comunidad para colaborar, compartir ideas y mucho más. ¡Únete y participa!', 'https://picsum.photos/seed/comm3/128/128', 'https://picsum.photos/seed/banner3/400/120'),
-('d4e5f6a7-b8c9-0123-4567-deffedcba123', 'Universidad B', 'private', 'UNIB456', 'Una comunidad para colaborar, compartir ideas y mucho más. ¡Únete y participa!', 'https://picsum.photos/seed/comm4/128/128', 'https://picsum.photos/seed/banner4/400/120');
+INSERT INTO communities (uuid, name, privacy, access_code, community_type, icon_url, banner_url) VALUES
+('a1b2c3d4-e5f6-7890-1234-abcdeffedcba', 'Matamoros', 'public', NULL, 'municipio', 'https://picsum.photos/seed/comm1/128/128', 'https://picsum.photos/seed/banner1/400/120'),
+('b2c3d4e5-f6a7-8901-2345-bcdeffedcba1', 'Valle Hermoso', 'public', NULL, 'municipio', 'https://picsum.photos/seed/comm2/128/128', 'https://picsum.photos/seed/banner2/400/120'),
+('c3d4e5f6-a7b8-9012-3456-cdeffedcba12', 'Universidad A', 'private', 'UNIA123', 'universidad', 'https://picsum.photos/seed/comm3/128/128', 'https://picsum.photos/seed/banner3/400/120'),
+('d4e5f6a7-b8c9-0123-4567-deffedcba123', 'Universidad B', 'private', 'UNIB456', 'universidad', 'https://picsum.photos/seed/comm4/128/128', 'https://picsum.photos/seed/banner4/400/120');
 -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 

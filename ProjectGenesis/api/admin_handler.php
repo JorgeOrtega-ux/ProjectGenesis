@@ -1117,12 +1117,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // --- ▼▼▼ INICIO DE NUEVAS ACCIONES DE COMUNIDAD ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE ACCIONES DE COMUNIDAD (MODIFICADAS) ▼▼▼ ---
 
     elseif ($action === 'admin-create-community') {
         try {
             $name = trim($_POST['name'] ?? '');
-            $description = trim($_POST['description'] ?? '');
+            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
+            $communityType = ($_POST['community_type'] === 'universidad') ? 'universidad' : 'municipio';
+            // --- ▲▲▲ MODIFICACIÓN ▲▲▲ ---
             $privacy = ($_POST['privacy'] === 'private') ? 'private' : 'public';
             $accessCode = ($_POST['access_code'] ?? '');
 
@@ -1140,11 +1142,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $pdo->beginTransaction();
 
+            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
             $stmt_insert = $pdo->prepare(
-                "INSERT INTO communities (uuid, name, description, privacy, access_code) 
+                "INSERT INTO communities (uuid, name, community_type, privacy, access_code) 
                  VALUES (?, ?, ?, ?, ?)"
             );
-            $stmt_insert->execute([$uuid, $name, $description, $privacy, $accessCode]);
+            $stmt_insert->execute([$uuid, $name, $communityType, $privacy, $accessCode]);
+            // --- ▲▲▲ MODIFICACIÓN ▲▲▲ ---
             $newCommunityId = $pdo->lastInsertId();
 
             // Generar icono y banner por defecto
@@ -1173,14 +1177,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $communityId = (int)($_POST['community_id'] ?? 0);
             $name = trim($_POST['name'] ?? '');
-            $description = trim($_POST['description'] ?? '');
+            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
+            $communityType = ($_POST['community_type'] === 'universidad') ? 'universidad' : 'municipio';
+            // --- ▲▲▲ MODIFICACIÓN ▲▲▲ ---
 
             if (empty($communityId) || empty($name)) {
                 throw new Exception('admin.communities.error.nameRequired');
             }
 
-            $stmt = $pdo->prepare("UPDATE communities SET name = ?, description = ? WHERE id = ?");
-            $stmt->execute([$name, $description, $communityId]);
+            // --- ▼▼▼ MODIFICACIÓN ▼▼▼ ---
+            $stmt = $pdo->prepare("UPDATE communities SET name = ?, community_type = ? WHERE id = ?");
+            $stmt->execute([$name, $communityType, $communityId]);
+            // --- ▲▲▲ MODIFICACIÓN ▲▲▲ ---
 
             $response['success'] = true;
             $response['message'] = 'admin.communities.success.updated';
@@ -1342,7 +1350,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // --- ▲▲▲ FIN DE NUEVAS ACCIONES DE COMUNIDAD ▲▲▲ ---
+    // --- ▲▲▲ FIN DE ACCIONES DE COMUNIDAD (MODIFICADAS) ▲▲▲ ---
     
     
 } else {
