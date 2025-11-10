@@ -5,13 +5,14 @@ global $pdo, $basePath;
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 $userId = $_SESSION['user_id'];
 
-// Estas variables ($searchQuery, $userResults, $postResults)
+// Estas variables ($searchQuery, $userResults, $postResults, $communityResults)
 // son cargadas por config/routing/router.php
 if (!isset($searchQuery)) $searchQuery = '';
 if (!isset($userResults)) $userResults = [];
 if (!isset($postResults)) $postResults = [];
+if (!isset($communityResults)) $communityResults = []; // <-- AÑADIDO
 
-$hasResults = !empty($userResults) || !empty($postResults);
+$hasResults = !empty($userResults) || !empty($postResults) || !empty($communityResults); // <-- ACTUALIZADO
 ?>
 
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'search-results') ? 'active' : 'disabled'; ?>" data-section="search-results">
@@ -61,7 +62,13 @@ $hasResults = !empty($userResults) || !empty($postResults);
                         <div class="menu-link-text"><span data-i18n="header.search.posts">Publicaciones</span></div>
                         <div class="menu-link-check-icon"></div>
                     </div>
-                </div>
+                    
+                    <div class="menu-link" data-action="search-set-filter" data-filter="communities">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">groups</span></div>
+                        <div class="menu-link-text"><span data-i18n="header.search.communities">Comunidades</span></div>
+                        <div class="menu-link-check-icon"></div>
+                    </div>
+                    </div>
             </div>
         </div>
         </div>
@@ -84,6 +91,7 @@ $hasResults = !empty($userResults) || !empty($postResults);
                 </div>
             </div>
         </div>
+        
         <div id="search-results-users" <?php if (empty($userResults)) echo 'style="display: none;"'; ?>>
             <?php if (!empty($userResults)): ?>
                 <div class="component-card component-card--column">
@@ -115,6 +123,39 @@ $hasResults = !empty($userResults) || !empty($postResults);
                 </div>
             <?php endif; ?>
         </div>
+
+        <div id="search-results-communities" <?php if (empty($communityResults)) echo 'style="display: none;"'; ?>>
+            <?php if (!empty($communityResults)): ?>
+                <div class="component-card component-card--column">
+                    <h2 class="component-card__title" data-i18n="header.search.communities">Comunidades</h2>
+                    <div class="card-list-container">
+                        <?php foreach ($communityResults as $community): ?>
+                             <a href="<?php echo $basePath . '/c/' . htmlspecialchars($community['uuid']); ?>" 
+                               data-nav-js="true" 
+                               class="card-item">
+                            
+                                <div class="component-card__avatar" style="width: 50px; height: 50px; flex-shrink: 0; border-radius: 8px;">
+                                    <img src="<?php echo htmlspecialchars($community['icon_url']); ?>"
+                                        alt="<?php echo htmlspecialchars($community['name']); ?>"
+                                        class="component-card__avatar-image"
+                                        style="border-radius: 8px;">
+                                </div>
+
+                                <div class="card-item-details">
+                                    <div class="card-detail-item card-detail-item--full">
+                                        <span class="card-detail-value"><?php echo htmlspecialchars($community['name']); ?></span>
+                                    </div>
+                                    <div class="card-detail-item">
+                                        <span class="card-detail-label" data-i18n="admin.communities.labelMembers"></span>
+                                        <span class="card-detail-value"><?php echo htmlspecialchars($community['member_count']); ?></span>
+                                    </div>
+                                </div>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
         <div id="search-results-posts" <?php if (empty($postResults)) echo 'style="display: none;"'; ?>>
             <?php if (!empty($postResults)): ?>
                 <div class="component-card component-card--column">
@@ -122,7 +163,6 @@ $hasResults = !empty($userResults) || !empty($postResults);
                     <div class="card-list-container">
                         <?php foreach ($postResults as $post): ?>
                             <?php
-                            // Copiamos la lógica de home.php para renderizar el post
                             $postAvatar = $post['profile_image_url'] ?? $defaultAvatar;
                             if (empty($postAvatar)) $postAvatar = $defaultAvatar;
                             $postRole = $post['role'] ?? 'user';
@@ -146,13 +186,11 @@ $hasResults = !empty($userResults) || !empty($postResults);
                                     </div>
                                 </div>
 
-                                <?php // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (TÍTULO) ▼▼▼ --- ?>
                                 <?php if (!empty($post['title'])): ?>
                                     <div class="post-card-content" style="padding-bottom: 0;">
                                         <h3 class="post-title"><?php echo htmlspecialchars($post['title']); ?></h3>
                                     </div>
                                 <?php endif; ?>
-                                <?php // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ --- ?>
 
                                 <div class="post-card-content" <?php if (!empty($post['title'])) echo 'style="padding-top: 8px;"'; ?>>
                                     <p>

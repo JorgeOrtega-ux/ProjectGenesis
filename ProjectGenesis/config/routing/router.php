@@ -122,7 +122,7 @@ $allowedPages = [
     'admin-server-settings'    => '../../includes/sections/admin/server-settings.php',
     'admin-manage-backups'     => '../../includes/sections/admin/manage-backups.php',
     'admin-manage-logs'        => '../../includes/sections/admin/manage-logs.php',
-    // --- ▼▼▼ LÍNEAS AÑADIDAS ▼▼▼ ---
+    
     'admin-manage-communities' => '../../includes/sections/admin/manage-communities.php',
     'admin-edit-community'     => '../../includes/sections/admin/edit-community.php',
 ];
@@ -375,7 +375,7 @@ if (array_key_exists($page, $allowedPages)) {
             $CURRENT_SECTION = '404';
         } else {
             try {
-                // --- ▼▼▼ INICIO DE SQL MODIFICADO (Añadido title, status, privacy) ▼▼▼ ---
+                
                 $sql_post = 
                     "SELECT 
                         p.*, 
@@ -405,7 +405,6 @@ if (array_key_exists($page, $allowedPages)) {
                 
                 $stmt_post = $pdo->prepare($sql_post);
                 $stmt_post->execute([$userId, $userId, $userId, $postId]);
-                // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
                 
                 $viewPostData = $stmt_post->fetch();
 
@@ -493,9 +492,8 @@ if (array_key_exists($page, $allowedPages)) {
                      
                      $viewProfileData['friendship_status'] = $friendshipStatus;
 
-                     // 2. Obtener publicaciones del usuario (LÓGICA MODIFICADA)
+                     // 2. Obtener publicaciones del usuario
                      
-                     // --- ▼▼▼ INICIO DE SQL MODIFICADO (Añadido title, status, privacy) ▼▼▼ ---
                      $sql_select_base = 
                         "SELECT 
                             p.*, 
@@ -534,7 +532,7 @@ if (array_key_exists($page, $allowedPages)) {
                          $params[] = $targetUserId; 
                      
                      } else {
-                         // --- ▼▼▼ INICIO DE LÓGICA DE PERFIL (CORREGIDA) ▼▼▼ ---
+                         
                          $privacyClause = "";
                          if (!$isOwnProfile) { 
                              if ($friendshipStatus === 'friends') {
@@ -547,15 +545,10 @@ if (array_key_exists($page, $allowedPages)) {
                              
                              // Adicionalmente, solo mostrar posts de comunidades públicas si no es mi perfil
                              $privacyClause .= " AND (c.privacy = 'public' OR p.community_id IS NULL)"; 
-                         } else {
-                             // Si es mi perfil, veo todo (público, amigos, privado)
-                             // No se añade cláusula de privacidad
                          }
                          $sql_join_where_clause = " WHERE p.user_id = ? AND p.post_status = 'active' $privacyClause ";
                          $params[] = $targetUserId;
-                         // --- ▲▲▲ FIN DE LÓGICA DE PERFIL (CORREGIDA) ▲▲▲ ---
                      }
-                     // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
 
                      $sql_order = " ORDER BY p.created_at DESC LIMIT 50";
                      $sql_posts = $sql_select_base . $sql_from_base . $sql_join_where_clause . $sql_order;
@@ -602,11 +595,12 @@ if (array_key_exists($page, $allowedPages)) {
              }
         }
     
-    // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE BÚSQUEDA (MODIFICADA) ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE NUEVO BLOQUE (SEARCH RESULTS) ▼▼▼ ---
     } elseif ($page === 'search-results') {
         $searchQuery = $_GET['q'] ?? '';
         $userResults = [];
         $postResults = [];
+        $communityResults = []; // <-- AÑADIDO
         
         if (!empty($searchQuery)) {
             $searchParam = '%' . $searchQuery . '%';
@@ -638,7 +632,6 @@ if (array_key_exists($page, $allowedPages)) {
                 }
 
                 // 2. Buscar Publicaciones
-                // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDA LÓGICA DE AMIGOS) ▼▼▼ ---
                 $stmt_posts = $pdo->prepare(
                    "SELECT 
                         p.id, 
@@ -659,10 +652,10 @@ if (array_key_exists($page, $allowedPages)) {
                         ))
                     AND p.post_status = 'active'
                     AND (
-                        p.privacy_level = 'public' -- Ver posts públicos
-                        OR (p.privacy_level = 'friends' AND ( -- O ver posts de amigos si:
-                            p.user_id = ? -- 1. Yo soy el autor
-                            OR p.user_id IN ( -- 2. El autor es mi amigo
+                        p.privacy_level = 'public'
+                        OR (p.privacy_level = 'friends' AND (
+                            p.user_id = ? 
+                            OR p.user_id IN (
                                 (SELECT user_id_2 FROM friendships WHERE user_id_1 = ? AND status = 'accepted')
                                 UNION
                                 (SELECT user_id_1 FROM friendships WHERE user_id_2 = ? AND status = 'accepted')
@@ -672,16 +665,41 @@ if (array_key_exists($page, $allowedPages)) {
                     ORDER BY p.created_at DESC
                     LIMIT 20"
                 );
-                // ¡Ahora se pasan 6 parámetros!
                 $stmt_posts->execute([$searchParam, $searchParam, $currentUserId, $currentUserId, $currentUserId, $currentUserId]);
                 $postResults = $stmt_posts->fetchAll();
-                // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
+                
+                // 3. Buscar Comunidades
+                $stmt_comm = $pdo->prepare(
+                    "SELECT id, uuid, name, icon_url, 
+                     (SELECT COUNT(*) FROM user_communities uc WHERE uc.community_id = c.id) as member_count
+                     FROM communities c
+                     WHERE name LIKE ? 
+                     AND privacy = 'public'
+                     ORDER BY member_count DESC
+                     LIMIT 10"
+                );
+                $stmt_comm->execute([$searchParam]);
+                $communities = $stmt_comm->fetchAll();
+
+                foreach ($communities as $community) {
+                    $icon = $community['icon_url'] ?? $defaultAvatar;
+                    if (empty($icon)) {
+                         $icon = "https://ui-avatars.com/api/?name=" . urlencode($community['name']) . "&size=100&background=e0e0e0&color=ffffff";
+                    }
+                    $communityResults[] = [
+                        'id' => $community['id'],
+                        'uuid' => $community['uuid'],
+                        'name' => htmlspecialchars($community['name']),
+                        'icon_url' => htmlspecialchars($icon),
+                        'member_count' => (int)$community['member_count']
+                    ];
+                }
 
             } catch (PDOException $e) {
                 logDatabaseError($e, 'router - search-results');
             }
         }
-    // --- ▲▲▲ FIN DE NUEVA LÓGICA DE BÚSQUEDA ▲▲▲ ---
+    // --- ▲▲▲ FIN DE NUEVO BLOQUE (SEARCH RESULTS) ▲▲▲ ---
 
     } elseif ($page === 'admin-manage-users') {
         $adminCurrentPage = (int)($_GET['p'] ?? 1);

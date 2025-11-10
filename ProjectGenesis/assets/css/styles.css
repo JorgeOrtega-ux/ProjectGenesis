@@ -587,33 +587,6 @@ body {
         box-shadow: unset;
         border: none;
     }
-
-    /* --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (LAYOUT HEADER MÓVIL) ▼▼▼ --- */
-    .header {
-        flex-wrap: wrap; /* Permite que los items pasen a la siguiente línea */
-        padding: 8px; /* Un poco más de espacio (sobrescribe 8px 4px de 768px) */
-    }
-
-    .header-left {
-        order: 1; /* Fila 1 */
-        flex-grow: 1; /* Ocupa el espacio izquierdo */
-        flex-basis: auto;
-    }
-
-    .header-right {
-        order: 2; /* Fila 1 */
-        flex-grow: 1; /* Ocupa el espacio derecho */
-        flex-basis: auto;
-    }
-
-    .header-center {
-        order: 3; /* Fila 2 */
-        flex-basis: 100%; /* Ocupa todo el ancho, forzando a una nueva línea */
-        min-width: unset;
-        padding: 0; /* Quitar el padding que tenía en 768px */
-        margin-top: 8px; /* Espacio entre la fila de iconos y la barra */
-    }
-    /* --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ --- */
 }
 
 @media (max-width: 768px) {

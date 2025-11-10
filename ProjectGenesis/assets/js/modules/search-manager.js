@@ -8,7 +8,6 @@ let searchDebounceTimer;
 let currentSearchQuery = '';
 const defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
-// --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ ---
 let pageFilter = 'all'; // Estado del filtro para la página de resultados
 
 /**
@@ -17,6 +16,7 @@ let pageFilter = 'all'; // Estado del filtro para la página de resultados
 function applyPageFilter() {
     const userCardDiv = document.getElementById('search-results-users');
     const postCardDiv = document.getElementById('search-results-posts');
+    const communityCardDiv = document.getElementById('search-results-communities'); // <-- AÑADIDO
     const noResultsCard = document.getElementById('search-no-results-card');
 
     // Salir si no estamos en la página de resultados
@@ -25,12 +25,15 @@ function applyPageFilter() {
     // Comprobar el estado inicial (si PHP los ocultó por estar vacíos)
     const usersAreEmpty = !userCardDiv || userCardDiv.style.display === 'none';
     const postsAreEmpty = !postCardDiv || postCardDiv.style.display === 'none';
+    const communitiesAreEmpty = !communityCardDiv || communityCardDiv.style.display === 'none'; // <-- AÑADIDO
 
     let showUsers = (pageFilter === 'all' || pageFilter === 'people');
     let showPosts = (pageFilter === 'all' || pageFilter === 'posts');
+    let showCommunities = (pageFilter === 'all' || pageFilter === 'communities'); // <-- AÑADIDO
 
     let usersWillBeVisible = showUsers && !usersAreEmpty;
     let postsWillBeVisible = showPosts && !postsAreEmpty;
+    let communitiesWillBeVisible = showCommunities && !communitiesAreEmpty; // <-- AÑADIDO
 
     if (userCardDiv) {
         userCardDiv.style.display = usersWillBeVisible ? '' : 'none';
@@ -38,15 +41,17 @@ function applyPageFilter() {
     if (postCardDiv) {
         postCardDiv.style.display = postsWillBeVisible ? '' : 'none';
     }
+    if (communityCardDiv) { // <-- AÑADIDO
+        communityCardDiv.style.display = communitiesWillBeVisible ? '' : 'none';
+    }
 
     // Mostrar "Sin resultados" si ninguna sección va a ser visible
-    if (!usersWillBeVisible && !postsWillBeVisible) {
+    if (!usersWillBeVisible && !postsWillBeVisible && !communitiesWillBeVisible) { // <-- ACTUALIZADO
         noResultsCard.style.display = '';
     } else {
         noResultsCard.style.display = 'none';
     }
 }
-// --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
 
 
 /**
@@ -67,14 +72,14 @@ function escapeHTML(str) {
 
 /**
  * Renderiza los resultados en el popover.
- * @param {object} data - El objeto de respuesta de la API ({users: [], posts: []}).
+ * @param {object} data - El objeto de respuesta de la API ({users: [], posts: [], communities: []}).
  * @param {string} query - La consulta de búsqueda.
  */
 function renderResults(data, query) {
     const content = document.getElementById('search-results-content');
     if (!content) return;
 
-    if (!data.users.length && !data.posts.length) {
+    if (!data.users.length && !data.posts.length && !data.communities.length) { // <-- ACTUALIZADO
         const noResultsText = getTranslation('header.search.noResults');
         content.innerHTML = `
             <div class="search-placeholder">
@@ -106,14 +111,12 @@ function renderResults(data, query) {
         html += '</div>';
     }
 
-    // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (TÍTULO) ▼▼▼ ---
     // Sección de Publicaciones
     if (data.posts.length > 0) {
         html += `<div class="menu-header" data-i18n="header.search.posts">${getTranslation('header.search.posts')}</div>`;
         html += '<div class="menu-list">';
         data.posts.forEach(post => {
             
-            // Si hay título, lo mostramos. Si no, mostramos el autor.
             const title = post.title || `Por ${post.author}`;
             const text = post.text.length > 80 ? post.text.substring(0, 80) + '...' : post.text;
             
@@ -130,7 +133,28 @@ function renderResults(data, query) {
         });
         html += '</div>';
     }
-    // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
+    
+    // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (COMUNIDADES) ▼▼▼ ---
+    // Sección de Comunidades
+    if (data.communities.length > 0) {
+        html += `<div class="menu-header" data-i18n="header.search.communities">${getTranslation('header.search.communities') || 'Comunidades'}</div>`;
+        html += '<div class="menu-list">';
+        data.communities.forEach(community => {
+            html += `
+                <a class="menu-link" href="${window.projectBasePath}/c/${escapeHTML(community.uuid)}" data-nav-js="true">
+                    <div class="menu-link-icon">
+                        <div class="comment-avatar" style="width: 32px; height: 32px; margin-right: -10px; flex-shrink: 0; border-radius: 6px;">
+                            <img src="${escapeHTML(community.icon_url || defaultAvatar)}" alt="${escapeHTML(community.name)}" style="width: 100%; height: 100%; border-radius: 6px; object-fit: cover;">
+                        </div>
+                    </div>
+                    <div class="menu-link-text">
+                        <span>${escapeHTML(community.name)}</span>
+                    </div>
+                </a>`;
+        });
+        html += '</div>';
+    }
+    // --- ▲▲▲ FIN DE BLOQUE AÑADIDO (COMUNIDADES) ▲▲▲ ---
     
     // Enlace "Ver todo"
     html += `<div style="height: 1px; background-color: #00000020; margin: 8px;"></div>`;
@@ -199,9 +223,9 @@ export function initSearchManager() {
 
     // --- Lógica para el POPOVER DEL HEADER ---
     
-    // (Esta lógica se ha desactivado según tu solicitud anterior, 
-    // pero la mantenemos por si se reactiva)
-    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (REQUEST 1) ▼▼▼ ---
+    // (Listeners desactivados según tu solicitud)
+    /*
     searchInput.addEventListener('focus', () => {
         showSearchPopover();
         if (searchInput.value.trim().length > 0) {
@@ -214,6 +238,8 @@ export function initSearchManager() {
         clearTimeout(searchDebounceTimer);
         searchDebounceTimer = setTimeout(performSearch, 300); 
     });
+    */
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (REQUEST 1) ▲▲▲ ---
     
     
     // Manejar "Enter" para ir a la página de resultados
@@ -236,7 +262,7 @@ export function initSearchManager() {
         }
     });
 
-    // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (Lógica para la PÁGINA DE RESULTADOS) ▼▼▼ ---
+    // --- Lógica para la PÁGINA DE RESULTADOS (/search) ---
     document.body.addEventListener('click', (e) => {
         const filterToggleButton = e.target.closest('[data-action="toggleModuleSearchFilter"]');
         const filterSetButton = e.target.closest('[data-action="search-set-filter"]');
@@ -287,5 +313,4 @@ export function initSearchManager() {
     if (document.querySelector('[data-section="search-results"]')) {
         applyPageFilter();
     }
-    // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
 }

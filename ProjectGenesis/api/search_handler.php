@@ -3,7 +3,7 @@
 include '../config/config.php';
 header('Content-Type: application/json');
 
-$response = ['success' => false, 'users' => [], 'posts' => []];
+$response = ['success' => false, 'users' => [], 'posts' => [], 'communities' => []]; // <-- AÑADIDO 'communities'
 
 if (!isset($_SESSION['user_id'])) {
     $response['message'] = 'js.settings.errorNoSession';
@@ -58,8 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
         }
 
-        // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDA LÓGICA DE AMIGOS) ▼▼▼ ---
-        // 2. Buscar Publicaciones (solo de comunidades públicas o a las que pertenece)
+        // 2. Buscar Publicaciones
         $stmt_posts = $pdo->prepare(
            "SELECT 
                 p.id, 
@@ -77,10 +76,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ))
             AND p.post_status = 'active'
             AND (
-                p.privacy_level = 'public' -- Ver posts públicos
-                OR (p.privacy_level = 'friends' AND ( -- O ver posts de amigos si:
-                    p.user_id = ? -- 1. Yo soy el autor
-                    OR p.user_id IN ( -- 2. El autor es mi amigo
+                p.privacy_level = 'public'
+                OR (p.privacy_level = 'friends' AND (
+                    p.user_id = ? 
+                    OR p.user_id IN (
                         (SELECT user_id_2 FROM friendships WHERE user_id_1 = ? AND status = 'accepted')
                         UNION
                         (SELECT user_id_1 FROM friendships WHERE user_id_2 = ? AND status = 'accepted')
@@ -90,7 +89,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ORDER BY p.created_at DESC
             LIMIT 5"
         );
-        // ¡Ahora se pasan 6 parámetros!
         $stmt_posts->execute([$searchParam, $searchParam, $userId, $userId, $userId, $userId]);
         $posts = $stmt_posts->fetchAll();
         
@@ -98,11 +96,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              $response['posts'][] = [
                 'id' => $post['id'],
                 'title' => htmlspecialchars($post['title'] ?? ''), 
-                'text' => htmlspecialchars(mb_substr($post['text_content'], 0, 100)), // Acortar texto
+                'text' => htmlspecialchars(mb_substr($post['text_content'], 0, 100)), 
                 'author' => htmlspecialchars($post['author_username'])
             ];
         }
-        // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
+
+        // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (BUSCAR COMUNIDADES) ▼▼▼ ---
+        // 3. Buscar Comunidades
+        $stmt_comm = $pdo->prepare(
+            "SELECT id, uuid, name, icon_url 
+             FROM communities 
+             WHERE name LIKE ? 
+             AND privacy = 'public'
+             LIMIT 3"
+        );
+        $stmt_comm->execute([$searchParam]);
+        $communities = $stmt_comm->fetchAll();
+
+        foreach ($communities as $community) {
+            $icon = $community['icon_url'] ?? $defaultAvatar;
+            if (empty($icon)) {
+                 $icon = "https://ui-avatars.com/api/?name=" . urlencode($community['name']) . "&size=100&background=e0e0e0&color=ffffff";
+            }
+            $response['communities'][] = [
+                'id' => $community['id'],
+                'uuid' => $community['uuid'],
+                'name' => htmlspecialchars($community['name']),
+                'icon_url' => htmlspecialchars($icon)
+            ];
+        }
+        // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
 
         $response['success'] = true;
 
