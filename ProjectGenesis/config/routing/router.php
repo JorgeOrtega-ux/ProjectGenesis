@@ -629,7 +629,14 @@ if (array_key_exists($page, $allowedPages)) {
         }
 
         if ($isPartialLoad) {
-            $tabBasePath = dirname(__DIR__, 1) . '/sections/main/profile-tabs/';
+            // Carga de pestaña de perfil (AJAX)
+            
+            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+            // La ruta debe ser relativa a este archivo (router.php), que está en /config/routing/
+            // La ruta correcta a las pestañas es subir dos niveles y luego entrar a /includes/
+            $tabBasePath = '../../includes/sections/main/profile-tabs/';
+            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+
             $tabFile = '';
 
             switch ($currentTab) {
@@ -640,24 +647,24 @@ if (array_key_exists($page, $allowedPages)) {
                     $tabFile = $tabBasePath . 'view-profile-friends.php';
                     break;
                 case 'fotos':
+                    $tabFile = $tabBasePath . 'view-profile-photos.php';
+                    break;
                 case 'likes':
                 case 'bookmarks':
                 case 'posts':
                 default:
+                    // 'posts', 'likes', 'bookmarks' usan el mismo layout de 2 columnas
                     $tabFile = $tabBasePath . 'view-profile-posts.php';
                     break;
             }
-
+            
             if (file_exists($tabFile)) {
                 include $tabFile;
             } else {
-                if ($currentTab === 'fotos') {
-                    echo '<div class="profile-main-content active" style="padding: 24px; text-align: center;">Aquí irá la sección de Fotos.</div>';
-                } else {
-                    echo '<div class="component-card"><p>Error: No se pudo cargar el contenido de la pestaña.</p></div>';
-                }
+                // Fallback por si el archivo de la pestaña no existe
+                echo '<div class="component-card"><p>Error: No se pudo cargar el contenido de la pestaña.</p></div>';
             }
-            exit;
+            exit; 
         }
     } 
     
