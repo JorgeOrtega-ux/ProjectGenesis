@@ -1,0 +1,351 @@
+<?php
+// FILE: includes/sections/main/view-profile.php
+// (MODIFICADO PARA SER UNA PLANTILLA DE PESTAÑAS)
+
+global $pdo, $basePath;
+$defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+$userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
+$userId = $_SESSION['user_id'];
+
+// $viewProfileData se carga desde config/routing/router.php
+if (!isset($viewProfileData) || empty($viewProfileData)) {
+    include dirname(__DIR__, 1) . '/main/404.php';
+    return;
+}
+
+$profile = $viewProfileData;
+$friendshipStatus = $viewProfileData['friendship_status'] ?? 'not_friends';
+$currentTab = $viewProfileData['current_tab'] ?? 'posts';
+$friendCount = $viewProfileData['friend_count'] ?? 0;
+
+$roleIconMap = [
+    'user' => 'person',
+    'moderator' => 'shield_person',
+    'administrator' => 'admin_panel_settings',
+    'founder' => 'star'
+];
+$profileRoleIcon = $roleIconMap[$profile['role']] ?? 'person';
+
+$isOwnProfile = ($profile['id'] == $userId);
+$targetUserId = $profile['id'];
+
+// --- Lógica de Estado (Online/Offline) ---
+$is_actually_online = false;
+try {
+    $context = stream_context_create(['http' => ['timeout' => 0.5]]); 
+    $jsonResponse = @file_get_contents('http://127.0.0.1:8766/get-online-users', false, $context);
+    
+    if ($jsonResponse !== false) {
+        $data = json_decode($jsonResponse, true);
+        if (isset($data['status']) && $data['status'] === 'ok' && isset($data['online_users'])) {
+            $is_actually_online = in_array($profile['id'], $data['online_users']);
+        }
+    }
+} catch (Exception $e) {
+    logDatabaseError($e, 'view-profile - (ws_get_online_fail)');
+}
+
+$statusBadgeHtml = '';
+if ($is_actually_online) {
+    $statusBadgeHtml = '<div class="profile-status-badge online" data-user-id="' . htmlspecialchars($profile['id']) . '"><span class="status-dot"></span>Activo ahora</div>';
+} elseif (!empty($profile['last_seen'])) {
+    $lastSeenTime = new DateTime($profile['last_seen'], new DateTimeZone('UTC'));
+    $currentTime = new DateTime('now', new DateTimeZone('UTC'));
+    $interval = $currentTime->diff($lastSeenTime);
+
+    $timeAgo = '';
+    if ($interval->y > 0) { $timeAgo = ($interval->y == 1) ? '1 año' : $interval->y . ' años'; }
+    elseif ($interval->m > 0) { $timeAgo = ($interval->m == 1) ? '1 mes' : $interval->m . ' meses'; }
+    elseif ($interval->d > 0) { $timeAgo = ($interval->d == 1) ? '1 día' : $interval->d . ' días'; }
+    elseif ($interval->h > 0) { $timeAgo = ($interval->h == 1) ? '1 h' : $interval->h . ' h'; }
+    elseif ($interval->i > 0) { $timeAgo = ($interval->i == 1) ? '1 min' : $interval->i . ' min'; }
+    else { $timeAgo = 'unos segundos'; }
+    
+    $statusText = ($timeAgo === 'unos segundos') ? 'Activo hace unos momentos' : "Activo hace $timeAgo";
+    $statusBadgeHtml = '<div class="profile-status-badge offline" data-user-id="' . htmlspecialchars($profile['id']) . '">' . htmlspecialchars($statusText) . '</div>';
+}
+// --- Fin Lógica de Estado ---
+
+?>
+<style>
+.profile-info-layout {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: 16px;
+    padding: 16px;
+    min-height: 285px;
+    background-color: #ffffff;
+    border: 1px solid #00000020;
+    border-radius: 12px;
+}
+.profile-info-menu {
+    flex: 0 0 240px; /* Base de 240px, no crece, no se encoge */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border-right: 1px solid #00000020;
+}
+.profile-info-menu h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    padding: 8px 12px;
+}
+.profile-info-button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: none;
+    background-color: transparent;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.2s;
+    text-decoration: none; /* Añadido para <a> */
+}
+.profile-info-button:hover {
+    background-color: #f5f5fa;
+}
+.profile-info-button.active {
+    background-color: #000;
+    color: #ffffff;
+}
+.profile-info-content {
+    flex: 1 1 auto; /* Crece y se encoge */
+    padding: 16px;
+    min-width: 0; /* Permite que se encoja */
+}
+.profile-info-content [data-info-tab] {
+    display: none;
+}
+.profile-info-content [data-info-tab].active {
+    display: block;
+}
+.info-row {
+    margin-bottom: 16px;
+}
+.info-row-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+.info-row-value {
+    font-size: 15px;
+    color: #1f2937;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .profile-info-layout {
+        flex-direction: column;
+    }
+    .profile-info-menu {
+        flex-basis: auto; /* Resetea la base */
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #00000020;
+        padding: 0 0 8px 0;
+    }
+    .profile-info-content {
+        padding: 8px 0 0 0;
+    }
+}
+</style>
+
+<div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'view-profile') ? 'active' : 'disabled'; ?>" data-section="view-profile">
+
+    <div class="page-toolbar-container" id="view-profile-toolbar-container">
+        <div class="page-toolbar-floating">
+            <div class="toolbar-action-default">
+                <div class="page-toolbar-left">
+                    <button type="button"
+                        class="page-toolbar-button"
+                        data-action="toggleSectionHome" 
+                        data-tooltip="create_publication.backTooltip">
+                        <span class="material-symbols-rounded">arrow_back</span>
+                    </button>
+                </div>
+                
+                <div class="page-toolbar-right profile-actions" data-user-id="<?php echo $profile['id']; ?>">
+                    <?php if ($isOwnProfile): ?>
+                        <button type="button"
+                            class="page-toolbar-button"
+                            data-action="toggleSectionSettingsProfile" 
+                            data-tooltip="header.profile.settings">
+                            <span class="material-symbols-rounded">edit</span>
+                        </button>
+                    <?php else: ?>
+                        <?php if ($friendshipStatus === 'not_friends'): ?>
+                            <button type="button" class="component-button component-button--primary" data-action="friend-send-request" data-user-id="<?php echo $profile['id']; ?>">
+                                <span class="material-symbols-rounded">person_add</span>
+                                <span data-i18n="friends.sendRequest">Agregar</span>
+                            </button>
+                        <?php elseif ($friendshipStatus === 'pending_sent'): ?>
+                            <button type="button" class="component-button" data-action="friend-cancel-request" data-user-id="<?php echo $profile['id']; ?>">
+                                <span class="material-symbols-rounded">close</span>
+                                <span data-i18n="friends.cancelRequest">Cancelar</span>
+                            </button>
+                        <?php elseif ($friendshipStatus === 'pending_received'): ?>
+                            <button type="button" class="component-button component-button--primary" data-action="friend-accept-request" data-user-id="<?php echo $profile['id']; ?>">
+                                <span class="material-symbols-rounded">check</span>
+                                <span data-i18n="friends.acceptRequest">Aceptar</span>
+                            </button>
+                            <button type="button" class="component-button" data-action="friend-decline-request" data-user-id="<?php echo $profile['id']; ?>">
+                                <span class="material-symbols-rounded">close</span>
+                                <span data-i18n="friends.declineRequest">Rechazar</span>
+                            </button>
+                        <?php elseif ($friendshipStatus === 'friends'): ?>
+                            <button type="button" class="component-button" data-action="friend-remove" data-user-id="<?php echo $profile['id']; ?>">
+                                <span class="material-symbols-rounded">person_remove</span>
+                                <span data-i18n="friends.removeFriend">Eliminar</span>
+                            </button>
+                        <?php endif; ?>
+
+                    <?php endif; ?>
+                </div>
+                </div>
+        </div>
+    </div>
+    
+    <div class="component-wrapper">
+
+        <div class="profile-header-card">
+            <div class="profile-banner"></div>
+            <div class="profile-header-content">
+                <div class="profile-avatar-container">
+                    <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($profile['role']); ?>">
+                        <img src="<?php echo htmlspecialchars($profile['profile_image_url']); ?>" 
+                             alt="<?php echo htmlspecialchars($profile['username']); ?>" 
+                             class="component-card__avatar-image">
+                    </div>
+                </div>
+
+                <div class="profile-info">
+                    <h1 class="profile-username"><?php echo htmlspecialchars($profile['username']); ?></h1>
+                    
+                    <div>
+                        <div class="profile-role-badge" data-role="<?php echo htmlspecialchars($profile['role']); ?>">
+                            <span class="material-symbols-rounded"><?php echo $profileRoleIcon; ?></span>
+                            <span><?php echo htmlspecialchars(ucfirst($profile['role'])); ?></span>
+                        </div>
+
+                        <?php 
+                        echo $statusBadgeHtml; 
+                        ?>
+                    </div>
+
+                    <p class="profile-meta">
+                        Se unió el <?php echo date('d/m/Y', strtotime($profile['created_at'])); ?>
+                        &middot; <strong><?php echo $friendCount; ?></strong> Amigos
+                    </p>
+                </div>
+                
+                </div>
+        </div>
+
+        <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (Barra de Navegación) ▼▼▼ --- ?>
+        <div class="profile-nav-bar">
+            <div class="profile-nav-left">
+                <?php
+                    $usernameUrl = $basePath . '/profile/' . htmlspecialchars($profile['username']);
+                    $postsUrl = $usernameUrl; // URL base es "posts"
+                    $infoUrl = $usernameUrl . '/info';
+                    $amigosUrl = $usernameUrl . '/amigos';
+                    $fotosUrl = $usernameUrl . '/fotos';
+                    $likesUrl = $usernameUrl . '/likes';
+                    $bookmarksUrl = $usernameUrl . '/bookmarks';
+                ?>
+                <div data-href="<?php echo $postsUrl; ?>" 
+                   class="profile-nav-button <?php echo ($currentTab === 'posts') ? 'active' : ''; ?>" 
+                   data-nav-js="true">
+                    Publicaciones
+                </div>
+                <div data-href="<?php echo $infoUrl; ?>" 
+                   class="profile-nav-button <?php echo ($currentTab === 'info') ? 'active' : ''; ?>" 
+                   data-nav-js="true">
+                    Informacion
+                </div>
+                <div data-href="<?php echo $amigosUrl; ?>" 
+                   class="profile-nav-button <?php echo ($currentTab === 'amigos') ? 'active' : ''; ?>" 
+                   data-nav-js="true">
+                    Amigos
+                </div>
+                <div data-href="<?php echo $fotosUrl; ?>" 
+                   class="profile-nav-button <?php echo ($currentTab === 'fotos') ? 'active' : ''; ?>" 
+                   data-nav-js="true">
+                    Fotos
+                </div>
+            </div>
+            <div class="profile-nav-right">
+                <button type="button" class="header-button" data-action="toggleModuleProfileMore">
+                    <span class="material-symbols-rounded">more_vert</span>
+                </button>
+                
+                <div class="popover-module popover-module--anchor-right body-title disabled" data-module="moduleProfileMore">
+                    <div class="menu-content">
+                        <div class="menu-list">
+                            <?php if ($isOwnProfile): // Mostrar solo en el perfil propio ?>
+                                <a class="menu-link <?php echo ($currentTab === 'likes') ? 'active' : ''; ?>" href="<?php echo $likesUrl; ?>" data-nav-js="true">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">favorite</span></div>
+                                    <div class="menu-link-text"><span data-i18n="profile.tabs.likes">Favoritos</span></div>
+                                </a>
+                                <a class="menu-link <?php echo ($currentTab === 'bookmarks') ? 'active' : ''; ?>" href="<?php echo $bookmarksUrl; ?>" data-nav-js="true">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">bookmark</span></div>
+                                    <div class="menu-link-text"><span data-i18n="profile.tabs.bookmarks">Guardados</span></div>
+                                </a>
+                            <?php endif; ?>
+                            
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php // --- ▲▲▲ FIN DE MODIFICACIÓN (Barra de Navegación) ▲▲▲ --- ?>
+
+
+        <div class="profile-content-container">
+            <?php
+            // $currentTab es definido en router.php
+            // $viewProfileData (que contiene todo) se pasa a los sub-archivos
+            
+            $tabBasePath = dirname(__FILE__) . '/profile-tabs/';
+
+            switch ($currentTab) {
+                case 'info':
+                    $tabFile = $tabBasePath . 'view-profile-information.php';
+                    break;
+                case 'amigos':
+                    $tabFile = $tabBasePath . 'view-profile-friends.php';
+                    break;
+                case 'fotos':
+                    $tabFile = $tabBasePath . 'view-profile-photos.php';
+                    break;
+                case 'likes':
+                case 'bookmarks':
+                case 'posts':
+                default:
+                    // 'posts', 'likes', 'bookmarks' usan el mismo layout de 2 columnas
+                    $tabFile = $tabBasePath . 'view-profile-posts.php';
+                    break;
+            }
+            
+            if (file_exists($tabFile)) {
+                include $tabFile;
+            } else {
+                // Fallback por si el archivo de la pestaña no existe
+                echo '<div class="component-card"><p>Error: No se pudo cargar el contenido de la pestaña.</p></div>';
+            }
+            ?>
+        </div>
+        
+        </div>
+</div>
