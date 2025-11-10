@@ -139,9 +139,14 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
             return;
         }
 
-        // Mostrar un loader simple o atenuar el contenido
-        tabContainer.style.opacity = '0.5';
-        tabContainer.style.pointerEvents = 'none';
+        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ ---
+        // Mostrar un loader spinner
+        tabContainer.innerHTML = `
+            <div class="page-loader active" style="position: relative; min-height: 285px; background-color: transparent;">
+                <div class="spinner"></div>
+            </div>
+        `;
+        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
 
         let queryString = '';
         if (fetchParams) {
@@ -160,40 +165,15 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
             tabContainer.innerHTML = html;
             applyTranslations(tabContainer);
 
-            // Actualizar la barra de navegación del perfil
-            const navBar = document.querySelector('.profile-nav-bar');
-            const moreMenu = document.querySelector('[data-module="moduleProfileMore"]');
-            
-            if (navBar) {
-                // Actualizar pestañas principales
-                navBar.querySelectorAll('.profile-nav-button').forEach(btn => {
-                    btn.classList.remove('active');
-                    const btnHref = btn.dataset.href || btn.href;
-                    
-                    // --- ▼▼▼ ¡ESTA ES LA LÍNEA CORREGIDA! ▼▼▼ ---
-                    if (btnHref === window.location.pathname) { 
-                    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
-                        btn.classList.add('active');
-                    }
-                });
-                
-                // Actualizar pestañas del menú "Más" (likes, bookmarks)
-                if (moreMenu) {
-                    moreMenu.querySelectorAll('a.menu-link').forEach(link => {
-                         link.classList.remove('active');
-                         if (link.href === window.location.href) { // Esta se mantiene, ya que son <a>
-                            link.classList.add('active');
-                         }
-                    });
-                }
-            }
+            // --- ▼▼▼ INICIO DE BLOQUE ELIMINADO ▼▼▼ ---
+            // La lógica de actualización de pestañas se movió a initRouter
+            // --- ▲▲▲ FIN DE BLOQUE ELIMINADO ▲▲▲ ---
 
         } catch (error) {
             console.error('Error al cargar la pestaña:', error);
             tabContainer.innerHTML = `<h2>${getTranslation('js.url.errorLoad')}</h2>`;
         } finally {
-            tabContainer.style.opacity = '1';
-            tabContainer.style.pointerEvents = 'auto';
+            // Ya no es necesario
         }
         return; // Fin de la carga parcial
     }
@@ -547,6 +527,30 @@ export function initRouter() {
             }
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
+            // --- ▼▼▼ INICIO DE NUEVO BLOQUE (ACTUALIZACIÓN INMEDIATA DE PESTAÑA) ▼▼▼ ---
+            if (isPartialLoad) {
+                const navBar = link.closest('.profile-nav-bar');
+                const moreMenu = link.closest('[data-module="moduleProfileMore"]');
+
+                if (navBar) {
+                    // Si el clic fue en una pestaña principal
+                    navBar.querySelectorAll('.profile-nav-button').forEach(btn => btn.classList.remove('active'));
+                    const moreMenuPopover = navBar.querySelector('[data-module="moduleProfileMore"]');
+                    if (moreMenuPopover) {
+                        moreMenuPopover.querySelectorAll('a.menu-link').forEach(ml => ml.classList.remove('active'));
+                    }
+                    link.classList.add('active');
+                } else if (moreMenu) {
+                    // Si el clic fue en el menú "Más"
+                    const mainNavBar = document.querySelector('.profile-nav-bar');
+                    if (mainNavBar) {
+                         mainNavBar.querySelectorAll('.profile-nav-button').forEach(btn => btn.classList.remove('active'));
+                    }
+                    moreMenu.querySelectorAll('a.menu-link').forEach(ml => ml.classList.remove('active'));
+                    link.classList.add('active');
+                }
+            }
+            // --- ▲▲▲ FIN DE NUEVO BLOQUE (ACTUALIZACIÓN INMEDIATA DE PESTAÑA) ▲▲▲ ---
 
             if (link.hasAttribute('data-action')) {
                 action = link.getAttribute('data-action');
