@@ -60,21 +60,30 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
 
     <div class="profile-right-column">
         
+        <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (Formulario en línea) ▼▼▼ --- ?>
         <?php if ($isOwnProfile && $currentTab === 'posts'): ?>
-            <div class="component-card component-card--post-creator" data-action="toggleSectionCreatePublication">
-                <div class="post-comment-avatar" data-role="<?php echo htmlspecialchars($_SESSION['role'] ?? 'user'); ?>">
+            <form class="component-card post-comment-input-container" data-action="profile-post-submit" style="padding: 16px;">
+                <?php outputCsrfInput(); ?>
+                <input type="hidden" name="action" value="create-post">
+                <input type="hidden" name="community_id" value=""> <input type="hidden" name="privacy_level" value="public"> <div class="post-comment-avatar" data-role="<?php echo htmlspecialchars($_SESSION['role'] ?? 'user'); ?>">
                     <img src="<?php echo htmlspecialchars($userAvatar); ?>" alt="Tu avatar">
                 </div>
-                <div class="post-creator-placeholder">
-                    ¿En qué estás pensando, <?php echo htmlspecialchars($_SESSION['username']); ?>?
-                </div>
-                <div class="post-creator-icon">
-                    <span class="material-symbols-rounded">imagesmode</span>
-                </div>
-            </div>
+                <input type="text" 
+                       class="post-comment-input" 
+                       name="text_content" 
+                       placeholder="¿En qué estás pensando, <?php echo htmlspecialchars($_SESSION['username']); ?>?" 
+                       required 
+                       autocomplete="off"
+                       maxlength="1000"> <?php // Límite de la BD ?>
+                <button type="submit" class="post-comment-submit-btn" disabled>
+                    <span class="material-symbols-rounded">send</span>
+                </button>
+            </form>
         <?php endif; ?>
+        <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
 
-        <div class="card-list-container">
+
+        <div class="card-list-container" id="profile-posts-list"> <?php // <-- ID AÑADIDO ?>
             
             <?php if (empty($publications)): ?>
                 <div class="component-card component-card--column">

@@ -14,6 +14,22 @@ let selectedCommunityId = 'profile'; // Por defecto es el perfil
 let selectedPrivacyLevel = 'public'; // Por defecto es público
 let currentPostType = 'post'; 
 
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (Helper) ▼▼▼ ---
+function togglePrimaryButtonSpinner(button, isLoading) {
+    if (!button) return;
+    button.disabled = isLoading;
+    if (isLoading) {
+        button.dataset.originalText = button.innerHTML;
+        // Estilo para spinner blanco (copiado de otros módulos)
+        button.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;"></span>`;
+    } else {
+        if (button.dataset.originalText) {
+            button.innerHTML = button.dataset.originalText;
+        }
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN (Helper) ▲▲▲ ---
+
 function togglePublishSpinner(button, isLoading) {
     if (!button) return;
     button.disabled = isLoading;
@@ -328,12 +344,10 @@ async function handlePublishSubmit() {
             
             // Si la publicación fue en el perfil, navegar al perfil
             if (communityId === '') {
-                const profileLink = document.querySelector('.header-profile[data-action="toggleModuleSelect"]');
-                if (profileLink) {
-                    const profileHref = profileLink.closest('.header-item').querySelector('a.menu-link[href*="/profile/"]');
-                    if (profileHref) {
-                        returnUrl = profileHref.href;
-                    }
+                // Tomamos la URL del enlace "Mi Perfil" en el header
+                const profileLink = document.querySelector('.popover-module[data-module="moduleSelect"] a[data-i18n="header.profile.myProfile"]');
+                if (profileLink && profileLink.href) {
+                    returnUrl = profileLink.href;
                 }
             }
             
@@ -354,6 +368,52 @@ async function handlePublishSubmit() {
         togglePublishSpinner(publishButton, false);
     }
 }
+
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (Publicar desde Perfil) ▼▼▼ ---
+async function handleProfilePostSubmit(form) {
+    const submitButton = form.querySelector('button[type="submit"]');
+    const input = form.querySelector('input[name="text_content"]'); 
+    if (!submitButton || !input || submitButton.disabled || !input.value.trim()) {
+        return;
+    }
+
+    togglePrimaryButtonSpinner(submitButton, true);
+    input.disabled = true;
+
+    const formData = new FormData(form);
+    // Los campos action, community_id, y privacy_level ya están en el form como hidden inputs.
+    
+    try {
+        const result = await callPublicationApi(formData);
+        if (result.success) {
+            showAlert(getTranslation('js.publication.success'), 'success');
+            input.value = ''; // Limpiar
+            input.dispatchEvent(new Event('input')); // Disparar input para deshabilitar botón
+
+            // Recargar la pestaña de publicaciones
+            // Buscamos el botón de la pestaña que esté activo o el de "Publicaciones"
+            const currentTab = document.querySelector('.profile-nav-button.active[data-nav-js="true"]');
+            const postsTab = document.querySelector('.profile-nav-button[data-nav-js="true"][data-href*="/profile/"]'); // Asume que el primero es "Publicaciones"
+
+            if (currentTab && currentTab.textContent.includes('Publicaciones')) {
+                currentTab.click(); // Recargar pestaña actual
+            } else if (postsTab) {
+                postsTab.click(); // Ir a la pestaña de publicaciones
+            } else {
+                window.location.reload(); // Fallback
+            }
+
+        } else {
+            showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+        }
+    } catch (e) {
+        showAlert(getTranslation('js.api.errorConnection'), 'error');
+    } finally {
+        togglePrimaryButtonSpinner(submitButton, false);
+        input.disabled = false;
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
 
 function resetCommunityTrigger() {
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Reset de Destino) ▼▼▼ ---
@@ -388,14 +448,17 @@ function resetCommunityTrigger() {
 
 export function initPublicationManager() {
     
-    resetForm();
-    currentPostType = document.querySelector('.component-toggle-tab.active')?.dataset.type || 'post';
+    // Resetear el formulario principal solo si existe
+    if (document.getElementById('create-post-form')) {
+        resetForm();
+        currentPostType = document.querySelector('#post-type-toggle .component-toggle-tab.active')?.dataset.type || 'post';
 
-    if (currentPostType === 'poll') {
-        const optionsContainer = document.getElementById('poll-options-container');
-        if (optionsContainer && optionsContainer.children.length === 0) {
-            addPollOption(false);
-            addPollOption(false);
+        if (currentPostType === 'poll') {
+            const optionsContainer = document.getElementById('poll-options-container');
+            if (optionsContainer && optionsContainer.children.length === 0) {
+                addPollOption(false);
+                addPollOption(false);
+            }
         }
     }
 
@@ -454,14 +517,47 @@ export function initPublicationManager() {
         // ...
     });
     
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir listener para formulario de perfil) ▼▼▼ ---
     document.body.addEventListener('input', (e) => {
-        const section = e.target.closest('[data-section*="create-"]');
-        if (!section) return;
+        const createSection = e.target.closest('[data-section*="create-"]');
+        if (createSection) {
+            if (e.target.id === 'publication-title' || e.target.id === 'publication-text' || e.target.id === 'poll-question' || e.target.closest('#poll-options-container')) {
+                validatePublicationState();
+            }
+            return;
+        }
 
-        if (e.target.id === 'publication-title' || e.target.id === 'publication-text' || e.target.id === 'poll-question' || e.target.closest('#poll-options-container')) {
-            validatePublicationState();
+        // Nuevo listener para el formulario del perfil
+        const profilePostInput = e.target.closest('form[data-action="profile-post-submit"] input[name="text_content"]');
+        if (profilePostInput) {
+            const form = profilePostInput.closest('form');
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = profilePostInput.value.trim().length === 0;
+            }
         }
     });
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir listener para formulario de perfil) ▼▼▼ ---
+    document.body.addEventListener('submit', async (e) => {
+        const createPostForm = e.target.closest('form#create-post-form');
+        if (createPostForm) {
+            // (Esta lógica es para la página /create-publication, se mantiene)
+            e.preventDefault();
+            handlePublishSubmit();
+            return;
+        }
+
+        // Nuevo listener para el formulario del perfil
+        const profilePostForm = e.target.closest('form[data-action="profile-post-submit"]');
+        if (profilePostForm) {
+            e.preventDefault();
+            await handleProfilePostSubmit(profilePostForm);
+            return;
+        }
+    });
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     document.body.addEventListener('click', (e) => {
         const section = e.target.closest('[data-section*="create-"]');
