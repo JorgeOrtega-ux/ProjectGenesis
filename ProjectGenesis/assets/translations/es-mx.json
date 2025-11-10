@@ -101,7 +101,39 @@
       "labelPrivacy": "Privacidad",
       "labelMembers": "Miembros",
       "privacyPublic": "Pública",
-      "privacyPrivate": "Privada"
+      "privacyPrivate": "Privada",
+      "create": {
+        "title": "Crear Nueva Comunidad",
+        "description": "Completa los detalles para registrar una nueva comunidad."
+      },
+      "edit": {
+        "title": "Editar Comunidad",
+        "description": "Editando la comunidad:",
+        "iconTitle": "Icono de la Comunidad",
+        "iconDesc": "Este icono representa a tu comunidad en el sitio.",
+        "bannerTitle": "Banner de la Comunidad",
+        "bannerDesc": "El banner se muestra en la parte superior de la página de la comunidad.",
+        "detailsTitle": "Detalles de la Comunidad",
+        "nameLabel": "Nombre de la Comunidad*",
+        "descLabel": "Descripción (Opcional)",
+        "privacyTitle": "Privacidad y Acceso",
+        "privacyLabel": "Tipo de Comunidad",
+        "codeLabel": "Código de Acceso (requerido si es Privada)",
+        "dangerTitle": "Zona Peligrosa",
+        "dangerDesc": "Eliminar esta comunidad es una acción irreversible.",
+        "deleteButton": "Eliminar Comunidad"
+      },
+      "success": {
+        "created": "Comunidad creada exitosamente. Serás redirigido.",
+        "updated": "Detalles de la comunidad actualizados.",
+        "privacyUpdated": "Privacidad de la comunidad actualizada.",
+        "imageUploaded": "Imagen de la comunidad actualizada.",
+        "imageRemoved": "Imagen de la comunidad eliminada."
+      },
+      "error": {
+        "nameRequired": "El nombre de la comunidad es obligatorio.",
+        "saveDetailsFirst": "Guarda los detalles de la comunidad primero antes de cambiar la privacidad."
+      }
     },
     "create": {
       "title": "Crear Nuevo Usuario",
@@ -628,7 +660,7 @@
       "domainRemoveError": "Error al eliminar el dominio.",
       "domainExists": "Este dominio ya existe en la lista.",
       "errorUserCount": "Error al obtener el conteo de usuarios.",
-      "passwordCopied": "Contraseña copiada al portapapeles",
+      "passwordCopied": "Contraseña copiada al portapeles",
       "passwordCopyError": "Error al copiar la contraseña",
       "logs": {
         "errorNoSelection": "Por favor, selecciona un archivo de log primero."
