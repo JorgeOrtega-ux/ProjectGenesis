@@ -512,7 +512,7 @@ export function initRouter() {
           return;
       }
       
-      // --- ▼▼▼ INICIO DE MODIFICACIÓN (SELECTOR DE NAVEGACIÓN) ▼▼▼ ---
+      // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (SELECTOR DE NAVEGACIÓN) ▼▼▼ ---
       const link = e.target.closest(
             '.menu-link[data-action*="toggleSection"], ' +
             'a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], ' +
@@ -520,9 +520,10 @@ export function initRouter() {
             '.page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], ' +
             '.auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], ' +
             '[data-module="moduleProfileMore"] a.menu-link[data-nav-js="true"], ' + 
-            'div.profile-nav-button[data-nav-js="true"]' // <-- ¡MODIFICADO DE 'a.' A 'div.'!
+            'div.profile-nav-button[data-nav-js="true"],' +
+            '[data-module="moduleSelect"] .menu-link[data-nav-js="true"]' // <-- LÍNEA AÑADIDA
         );
-      // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+      // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
         if (link) {
             

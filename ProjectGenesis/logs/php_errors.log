@@ -1094,3 +1094,7 @@
 [10-Nov-2025 16:21:51 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
 [10-Nov-2025 16:29:58 UTC] PHP Warning:  move_uploaded_file(E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1762792198.png): Failed to open stream: No such file or directory in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 152
 [10-Nov-2025 16:29:58 UTC] PHP Warning:  move_uploaded_file(): Unable to move &quot;C:\xampp\tmp\phpA8C7.tmp&quot; to &quot;E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1762792198.png&quot; in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 152
+[10-Nov-2025 16:32:50 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 16:32:50 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 16:34:23 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 16:34:23 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28

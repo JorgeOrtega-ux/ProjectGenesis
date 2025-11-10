@@ -87,15 +87,19 @@ $userRole = $_SESSION['role'] ?? 'user';
         <div class="menu-content">
             <div class="menu-list">
 
-                <a class="menu-link"
-                    href="<?php echo $basePath; ?>/profile/<?php echo htmlspecialchars($usernameForAlt); ?>">
+                <?php // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ --- ?>
+                <div class="menu-link"
+                     data-nav-js="true" 
+                     data-href="<?php echo $basePath; ?>/profile/<?php echo htmlspecialchars($usernameForAlt); ?>">
                     <div class="menu-link-icon">
                         <span class="material-symbols-rounded">account_circle</span>
                     </div>
                     <div class="menu-link-text">
-                        <span>Mi Perfil</span>
+                        <span data-i18n="header.profile.myProfile">Mi Perfil</span>
                     </div>
-                </a>
+                </div>
+                <?php // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ --- ?>
+                
                 <?php
                 // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
                 // Mostrar solo si el rol es administrador o fundador
@@ -153,7 +157,7 @@ $userRole = $_SESSION['role'] ?? 'user';
                     <button class="notification-mark-all" id="notification-mark-all-btn" disabled>
                         Marca todas como leídas
                     </button>
-                    <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
+                    <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ --- ?>
                 </div>
                 
             </div>
