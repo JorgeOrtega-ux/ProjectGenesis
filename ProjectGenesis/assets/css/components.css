@@ -3715,6 +3715,8 @@ a.profile-tab.active {
         grid-template-columns: repeat(3, 1fr);
     }
 }
-
+.section-content[data-section="view-profile"] .component-wrapper {
+    max-width: 1024px;
+}
 
 /* --- ▲▲▲ FIN DE NUEVOS ESTILOS PARA PERFIL ▲▲▲ --- */
