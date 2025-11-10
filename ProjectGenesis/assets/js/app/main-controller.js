@@ -127,26 +127,25 @@ function initMainController() {
         if (action.startsWith('toggle')) {
             
             // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
-            // Añadimos las acciones de community-manager.js y publication-manager.js a la lista de ignorados
             const managedActions = [
                 'toggleModulePageFilter',
                 'toggleModuleAdminRole',
                 'toggleModuleAdminStatus',
                 'toggleModuleAdminCreateRole',
                 'toggleModuleAdminCommunityPrivacy',
-                'toggleModuleAdminCommunityType', // <-- ¡AQUÍ ESTÁ LA CORRECCIÓN!
+                'toggleModuleAdminCommunityType',
                 'toggleModuleCommunitySelect', 
                 'toggleModuleSelectGroup',
                 'toggleModuleSearch',
                 'toggleModuleSearchFilter',
                 'toggleModuleNotifications',
-                // --- Acciones de community-manager.js ---
                 'toggle-post-options',   
                 'toggle-post-privacy',   
                 'toggle-comments',       
                 'toggle-post-text',
-                // --- ¡LÍNEA AÑADIDA! (de publication-manager.js) ---
-                'toggleModulePrivacySelect' 
+                'toggleModulePrivacySelect',
+                'toggleModuleProfileMore', // <-- Ya estaba aquí
+                'toggleFriendItemOptions' // <-- LÍNEA AÑADIDA
             ];
             // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
@@ -156,7 +155,7 @@ function initMainController() {
             }
 
             console.log(`[MainController] Propagación detenida para: ${action}`);
-            event.stopPropagation(); // <-- Este es el causante del bug original
+            event.stopPropagation(); 
 
             let moduleName = action.substring(6);
             moduleName = moduleName.charAt(0).toLowerCase() + moduleName.slice(1);
@@ -188,7 +187,6 @@ function initMainController() {
             const clickedOnSearchInput = event.target.closest('#header-search-input'); 
             
             if (!clickedOnModule && !clickedOnButton && !clickedOnCardItem && !clickedOnSearchInput) { 
-                // console.log('[MainController] Clic fuera de todo. Cerrando popovers.');
                 deactivateAllModules();
             }
         });

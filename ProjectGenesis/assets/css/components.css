@@ -38,6 +38,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    width: 100%;
     justify-content: space-between;
     border: 1px solid #00000020;
     border-radius: 12px;
@@ -3539,11 +3540,6 @@ a.profile-tab.active {
     flex-direction: row;
     gap: 16px;
     width: 100%;
-    /* Ajusta el max-width del .component-wrapper 
-      para la página de perfil si es necesario.
-      Recomiendo hacerlo en 'view-profile.php' así:
-      <div class="component-wrapper" style="max-width: 1024px;">
-    */
 }
 
 /* Columna Izquierda (Amigos) */
@@ -3716,7 +3712,217 @@ a.profile-tab.active {
     }
 }
 .section-content[data-section="view-profile"] .component-wrapper {
-    max-width: 1024px;
+    max-width: 1164px;
 }
 
-/* --- ▲▲▲ FIN DE NUEVOS ESTILOS PARA PERFIL ▲▲▲ --- */
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (BARRA DE NAVEGACIÓN DE PERFIL) ▼▼▼ --- */
+.profile-nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0 16px;
+    background-color: #ffffff;
+    border: 1px solid #00000020;
+    border-radius: 12px;
+    height: 60px;
+    position: relative; /* Para el popover */
+}
+
+.profile-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    -ms-overflow-style: none;  /* IE y Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+.profile-nav-left::-webkit-scrollbar {
+    display: none; /* Chrome, Safari y Opera */
+}
+
+.profile-nav-right {
+    display: flex;
+    flex-shrink: 0;
+    padding-left: 16px;
+    position: relative; /* Añadido para el popover */
+}
+
+.profile-nav-button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background-color: transparent;
+    font-size: 15px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+.profile-nav-button:hover {
+    background-color: #f5f5fa;
+    color: #000;
+}
+
+.profile-nav-button.active {
+    background-color: #000;
+    color: #ffffff;
+}
+
+.profile-nav-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #00000020;
+    background-color: transparent;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.profile-nav-more:hover {
+    background-color: #f5f5fa;
+}
+
+/* Contenedor para el contenido de las pestañas */
+.profile-content-container {
+    width: 100%;
+}
+
+.profile-content-container [data-profile-tab-content].disabled {
+    display: none;
+}
+.profile-content-container [data-profile-tab-content].active {
+    display: flex; /* O 'block' si prefieres */
+}
+
+/* Ajustes para el popover 'more' */
+.profile-nav-right .popover-module[data-module="moduleProfileMore"] {
+    width: 280px;
+    top: calc(100% + 10px); /* Ajustar posición */
+    right: 0;
+    left: auto;
+}
+
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (PESTAÑA "AMIGOS") ▼▼▼ --- */
+.profile-content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 8px 24px 24px 24px; /* Ajuste de padding */
+    border-bottom: 1px solid #00000020;
+}
+
+.profile-content-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.profile-content-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-friends-full-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 24px;
+}
+
+.friend-item-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid #00000020;
+    border-radius: 12px;
+    background-color: #ffffff;
+}
+
+.friend-item-card__avatar {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+.friend-item-card__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px; /* Avatar cuadrado redondeado */
+}
+
+.friend-item-card__info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0; /* Para que el text-overflow funcione */
+}
+
+.friend-item-card__name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1f2937;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.friend-item-card__name:hover {
+    text-decoration: underline;
+}
+
+.friend-item-card__meta {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.friend-item-card__options {
+    flex-shrink: 0;
+    position: relative; /* Para el popover */
+}
+
+.friend-item-card__options .component-action-button--icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+}
+
+.friend-item-card__options .popover-module[data-module="moduleFriendItemOptions"] {
+    width: 240px;
+    top: calc(100% + 4px);
+    right: 0;
+    left: auto;
+}
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS (PESTAÑA "AMIGOS") ▲▲▲ --- */
+
+
+/* Ajustes responsivos para la barra de perfil */
+@media (max-width: 768px) {
+    .profile-nav-bar {
+        padding: 0 8px;
+    }
+    .profile-nav-right {
+        padding-left: 8px;
+    }
+    
+    /* --- ▼▼▼ NUEVA REGLA ▼▼▼ --- */
+    .profile-friends-full-grid {
+        grid-template-columns: 1fr; /* Una columna en móvil */
+        padding: 16px 0 0 0;
+    }
+}
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */

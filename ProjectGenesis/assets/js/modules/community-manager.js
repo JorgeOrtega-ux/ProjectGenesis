@@ -49,29 +49,23 @@ function hideJoinGroupError() {
     }
 }
 
-// --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
-// Esta es la función modificada para solucionar el bug
 function updateJoinButtonUI(button, newAction) {
-    let newText = ''; // Variable para guardar el nuevo texto
+    let newText = ''; 
 
     if (newAction === 'leave') {
         button.setAttribute('data-action', 'leave-community');
-        newText = getTranslation('join_group.leave'); // Obtenemos el texto "Abandonar"
+        newText = getTranslation('join_group.leave'); 
         button.classList.add('danger');
     } else {
         button.setAttribute('data-action', 'join-community');
-        newText = getTranslation('join_group.join'); // Obtenemos el texto "Unirme"
+        newText = getTranslation('join_group.join'); 
         button.classList.remove('danger');
     }
     
-    button.innerHTML = newText; // Establecemos el nuevo texto
+    button.innerHTML = newText; 
     
-    // ¡ESTA ES LA LÍNEA DE LA SOLUCIÓN!
-    // Actualizamos el "texto original" para que la función del spinner
-    // restaure este nuevo texto, en lugar del antiguo.
     button.dataset.originalText = newText; 
 }
-// --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
 
 function selectCommunity(communityId, communityName, communityUuid = null) {
@@ -100,16 +94,7 @@ function selectCommunity(communityId, communityName, communityUuid = null) {
             link.classList.remove('active');
         });
         
-        // ==========================================================
-        // ============ INICIO DE LA CORRECCIÓN DEL ERROR ============
-        // ==========================================================
-        // Usamos el parámetro 'communityId' en lugar de la variable
-        // global 'currentCommunityId' para evitar el ReferenceError
-        // causado por la dependencia circular.
         const activeLink = popover.querySelector(`.menu-link[data-community-id="${communityId}"]`);
-        // ==========================================================
-        // ============= FIN DE LA CORRECCIÓN DEL ERROR =============
-        // ==========================================================
 
         if (activeLink) {
             activeLink.classList.add('active');
@@ -255,11 +240,11 @@ async function handleBookmarkToggle(button) {
             if (result.userHasBookmarked) {
                 button.classList.add('active');
                 icon.textContent = 'bookmark';
-                showAlert(getTranslation('js.publication.saved'), 'success'); // <-- Necesitarás esta clave i18n
+                showAlert(getTranslation('js.publication.saved'), 'success'); 
             } else {
                 button.classList.remove('active');
                 icon.textContent = 'bookmark_border';
-                showAlert(getTranslation('js.publication.unsaved'), 'info'); // <-- Necesitarás esta clave i18n
+                showAlert(getTranslation('js.publication.unsaved'), 'info'); 
             }
         } else {
             window.showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
@@ -653,6 +638,50 @@ function handleTogglePostText(button) {
 export function initCommunityManager() {
     
     document.body.addEventListener('click', async (e) => {
+        
+        const profileTabButton = e.target.closest('[data-action="profile-tab-select"]');
+        if (profileTabButton) {
+            e.preventDefault();
+            const tab = profileTabButton.dataset.tab;
+            if (!tab || profileTabButton.classList.contains('active')) return;
+
+            const navBar = profileTabButton.closest('.profile-nav-bar');
+            if (!navBar) return;
+            navBar.querySelectorAll('.profile-nav-button').forEach(btn => btn.classList.remove('active'));
+
+            profileTabButton.classList.add('active');
+
+            const contentContainer = document.querySelector('.profile-content-container');
+            if (!contentContainer) return;
+            
+            contentContainer.querySelectorAll('[data-profile-tab-content]').forEach(content => {
+                content.classList.remove('active');
+                content.classList.add('disabled');
+            });
+
+            const newContent = contentContainer.querySelector(`[data-profile-tab-content="${tab}"]`);
+            if (newContent) {
+                newContent.classList.add('active');
+                newContent.classList.remove('disabled');
+            }
+            
+            const profileCard = document.querySelector('.profile-header-card');
+            if (profileCard) { 
+                let newPath;
+                const basePath = window.projectBasePath || '/ProjectGenesis';
+                const username = document.querySelector('.profile-username').textContent.trim();
+                
+                if (tab === 'posts') {
+                    newPath = `${basePath}/profile/${username}`;
+                } else {
+                }
+                
+            }
+            
+            return; 
+        }
+
+
         const likeButton = e.target.closest('[data-action="like-toggle"]');
         const commentButton = e.target.closest('[data-action="toggle-comments"]');
         const replyButton = e.target.closest('[data-action="show-reply-form"]');
@@ -661,11 +690,16 @@ export function initCommunityManager() {
 
         const toggleTextButton = e.target.closest('[data-action="toggle-post-text"]');
         
+        const profileMoreButton = e.target.closest('[data-action="toggleModuleProfileMore"]');
+        
         const postOptionsButton = e.target.closest('[data-action="toggle-post-options"]');
         const postPrivacyToggleButton = e.target.closest('[data-action="toggle-post-privacy"]');
         const postDeleteButton = e.target.closest('[data-action="post-delete"]');
         const postSetPrivacyButton = e.target.closest('[data-action="post-set-privacy"]');
 
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (OPCIONES DE AMIGO) ▼▼▼ ---
+        const friendItemOptionsButton = e.target.closest('[data-action="toggleFriendItemOptions"]');
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA ---
 
         if (toggleTextButton) {
             e.preventDefault();
@@ -699,11 +733,46 @@ export function initCommunityManager() {
             return;
         }
 
+        if (profileMoreButton) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const optionsContainer = profileMoreButton.closest('.profile-nav-right'); 
+            if (!optionsContainer) return; 
+            
+            const module = optionsContainer.querySelector('[data-module="moduleProfileMore"]'); 
+
+            if (module) {
+                deactivateAllModules(module);
+                module.classList.toggle('disabled');
+                module.classList.toggle('active');
+            }
+            return;
+        }
+        
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (ABRIR POPOVER DE AMIGO) ▼▼▼ ---
+        if (friendItemOptionsButton) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const optionsContainer = friendItemOptionsButton.closest('.friend-item-card__options'); 
+            if (!optionsContainer) return; 
+            
+            const module = optionsContainer.querySelector('[data-module="moduleFriendItemOptions"]'); 
+
+            if (module) {
+                deactivateAllModules(module);
+                module.classList.toggle('disabled');
+                module.classList.toggle('active');
+            }
+            return;
+        }
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA ---
         
         if (postOptionsButton) {
             e.preventDefault();
             e.stopPropagation();
-            currentPostOptionsId = postOptionsButton.dataset.postId; // Guardar el ID
+            currentPostOptionsId = postOptionsButton.dataset.postId;
             
             const optionsContainer = postOptionsButton.closest('.post-card-options'); 
             if (!optionsContainer) return; 
@@ -725,9 +794,7 @@ export function initCommunityManager() {
             const optionsContainer = postPrivacyToggleButton.closest('.post-card-options'); 
             if (!optionsContainer) return; 
 
-            // 1. Encontrar la tarjeta principal
             const postCard = postPrivacyToggleButton.closest('.component-card--post'); 
-            // 2. Leer el estado actual
             const currentPrivacy = postCard ? postCard.dataset.privacy : 'public'; 
 
             const moduleOptions = optionsContainer.querySelector('[data-module="modulePostOptions"]'); 
@@ -738,15 +805,13 @@ export function initCommunityManager() {
             if (modulePrivacy) {
                 modulePrivacy.dataset.currentPostId = currentPostOptionsId; 
                 
-                // 3. Actualizar la UI del popover ANTES de mostrarlo
                 const menuList = modulePrivacy.querySelector('.menu-list');
                 if (menuList) {
                     menuList.querySelectorAll('.menu-link').forEach(link => {
                         link.classList.remove('active');
                         const icon = link.querySelector('.menu-link-check-icon');
-                        if (icon) icon.innerHTML = ''; // Limpiar todos los checks
+                        if (icon) icon.innerHTML = ''; 
 
-                        // 4. Poner el check en el item correcto
                         if (link.dataset.value === currentPrivacy) {
                             link.classList.add('active');
                             if (icon) icon.innerHTML = '<span class="material-symbols-rounded">check</span>';
@@ -819,16 +884,13 @@ export function initCommunityManager() {
                 if (result.success) {
                     showAlert(getTranslation(result.message || 'js.publication.privacyUpdated'), 'success');
                     
-                    const newPrivacy = result.newPrivacy; // 'public', 'friends', o 'private'
+                    const newPrivacy = result.newPrivacy; 
                     
-                    // 1. Encontrar la tarjeta de la publicación
                     const postCard = document.querySelector(`.component-card--post[data-post-id="${postIdToUpdate}"]`);
                     if (postCard) {
                         
-                        // 2. Actualizar el atributo de datos de la tarjeta
                         postCard.dataset.privacy = newPrivacy;
 
-                        // 3. Encontrar el icono y el tooltip
                         const iconContainer = postCard.querySelector('.post-privacy-icon');
                         const iconEl = iconContainer ? iconContainer.querySelector('.material-symbols-rounded') : null;
 
@@ -844,7 +906,6 @@ export function initCommunityManager() {
                                 newTooltipKey = 'post.privacy.private';
                             }
                             
-                            // 4. Actualizar el icono y el tooltip
                             iconEl.textContent = newIconName;
                             iconContainer.dataset.tooltip = newTooltipKey;
                         }

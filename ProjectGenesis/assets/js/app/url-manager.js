@@ -2,12 +2,10 @@
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
-// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
 import { applyTranslations, getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js';
 import { loadSavedCommunity, loadCommentsForPost } from '../modules/community-manager.js';
-import { initFriendList } from '../modules/friend-manager.js'; // <-- IMPORTADO
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+import { initFriendList } from '../modules/friend-manager.js'; 
 
 const contentContainer = document.querySelector('.main-sections');
 const pageLoader = document.getElementById('page-loader');
@@ -28,11 +26,9 @@ const routes = {
     
     'toggleSectionPostView': 'post-view', 
 
-    'toggleSectionViewProfile': 'view-profile', // <-- RUTA DE PERFIL (MODIFICADA)
+    'toggleSectionViewProfile': 'view-profile', 
 
-    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
     'toggleSectionSearchResults': 'search-results',
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     'toggleSectionRegisterStep1': 'register-step1',
     'toggleSectionRegisterStep2': 'register-step2',
@@ -64,10 +60,8 @@ const routes = {
     'toggleSectionAdminManageBackups': 'admin-manage-backups',
     'toggleSectionAdminManageLogs': 'admin-manage-logs',
     
-    // --- ▼▼▼ LÍNEAS AÑADIDAS ▼▼▼ ---
     'toggleSectionAdminManageCommunities': 'admin-manage-communities',
     'toggleSectionAdminEditCommunity': 'admin-edit-community',
-    // --- ▲▲▲ FIN LÍNEAS AÑADIDAS ▲▲▲ ---
 };
 
 const paths = {
@@ -79,24 +73,17 @@ const paths = {
 
     '/join-group': 'toggleSectionJoinGroup',
     
-    // --- ▼▼▼ INICIO DE LA CORRECCIÓN (BUG .../undefined) ▼▼▼ ---
-    // Los valores aquí deben coincidir con las *claves* del objeto 'routes'
     '/create-publication': 'toggleSectionCreatePublication', 
     '/create-poll': 'toggleSectionCreatePoll', 
-    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
     
     '/post': 'toggleSectionPostView', 
 
-    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
     '/search': 'toggleSectionSearchResults',
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Rutas de Perfil) ▼▼▼ ---
-    '/profile': 'toggleSectionViewProfile', // Genérico (obsoleto, pero por si acaso)
+    '/profile': 'toggleSectionViewProfile', 
     '/profile/username-placeholder': 'toggleSectionViewProfile', 
     '/profile/username-placeholder/likes': 'toggleSectionViewProfile',
     '/profile/username-placeholder/bookmarks': 'toggleSectionViewProfile',
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     '/register': 'toggleSectionRegisterStep1',
     '/register/additional-data': 'toggleSectionRegisterStep2',
@@ -128,10 +115,8 @@ const paths = {
     '/admin/manage-backups': 'toggleSectionAdminManageBackups',
     '/admin/manage-logs': 'toggleSectionAdminManageLogs',
     
-    // --- ▼▼▼ LÍNEAS AÑADIDAS ▼▼▼ ---
     '/admin/manage-communities': 'toggleSectionAdminManageCommunities',
     '/admin/edit-community': 'toggleSectionAdminEditCommunity',
-    // --- ▲▲▲ FIN LÍNEAS AÑADIDAS ▲▲▲ ---
 };
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
@@ -148,14 +133,11 @@ async function loadPage(page, action, fetchParams = null) {
         headerTop.classList.remove('shadow');
     }
 
-    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (LÓGICA DE CARGA/ELIMINACIÓN DE AMIGOS) ▼▼▼ ---
     const friendListWrapper = document.getElementById('friend-list-wrapper');
     
     if (friendListWrapper) {
         if (page === 'home') {
-            // Es 'home'. ¿Ya está el módulo en el DOM?
             if (!friendListWrapper.querySelector('#friend-list-container')) {
-                // No está. Hay que cargarlo (porque recargamos en otra pág y navegamos a home).
                 try {
                     const friendListUrl = `${basePath}/includes/modules/module-friend-list.php`;
                     const response = await fetch(friendListUrl);
@@ -163,37 +145,30 @@ async function loadPage(page, action, fetchParams = null) {
                     if (response.ok) {
                         friendListWrapper.innerHTML = await response.text();
                         
-                        // Ahora que el HTML existe, lo poblamos
                         const newFriendListModule = friendListWrapper.querySelector('#friend-list-container');
                         if (newFriendListModule) {
                             applyTranslations(newFriendListModule);
-                            initFriendList(); // Popula los datos
+                            initFriendList(); 
                         }
                     } else {
                         throw new Error('Falló el fetch del módulo de amigos');
                     }
                 } catch (err) {
                     console.error("Error al cargar dinámicamente la lista de amigos:", err);
-                    friendListWrapper.innerHTML = ''; // Limpiar en caso de error
+                    friendListWrapper.innerHTML = ''; 
                 }
             } else {
-                // El módulo ya estaba cargado (probablemente por el servidor en la carga inicial de home).
-                // Nos aseguramos de que esté poblado.
-                
-                // Comprobamos si ya tiene items o si solo tiene el placeholder de carga
                 const friendListItems = friendListWrapper.querySelector('#friend-list-items');
                 if (friendListItems && friendListItems.querySelector('.logout-spinner')) {
-                     initFriendList(); // Popula los datos
+                     initFriendList(); 
                 }
             }
         } else {
-            // NO es 'home'. Eliminamos el módulo si existe.
             if (friendListWrapper.querySelector('#friend-list-container')) {
-                friendListWrapper.innerHTML = ''; // Elimina el módulo del DOM
+                friendListWrapper.innerHTML = ''; 
             }
         }
     }
-    // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
     contentContainer.innerHTML = ''; 
     if (loaderTimer) {
@@ -307,21 +282,16 @@ async function loadPage(page, action, fetchParams = null) {
         }
         
         if (page === 'post-view') {
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Mostrar comentarios en vista de post) ▼▼▼ ---
             
-            // Encontrar ambos contenedores
             const commentsContainer = contentContainer.querySelector('.post-comments-container[data-post-id]');
             const commentInputContainer = contentContainer.querySelector('.post-comment-input-container[data-action="post-comment"]');
             
             if (commentsContainer && commentInputContainer) {
-                // 1. Mostrarlos añadiendo la clase 'active'
                 commentsContainer.classList.add('active');
                 commentInputContainer.classList.add('active');
                 
-                // 2. Cargar los comentarios
                 loadCommentsForPost(commentsContainer.dataset.postId);
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         }
 
     } catch (error) {
@@ -346,9 +316,7 @@ export function handleNavigation() {
     let action = null;
     const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
     const postViewRegex = /^\/post\/(\d+)$/i; 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Nueva Regex de Perfil) ▼▼▼ ---
     const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(likes|bookmarks))?$/i;
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
     if (path === '/') {
@@ -366,15 +334,13 @@ export function handleNavigation() {
         loadPage('post-view', action, { post_id: postId }); 
         return;
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Lógica de Perfil) ▼▼▼ ---
     } else if (profileRegex.test(path)) {
         action = 'toggleSectionViewProfile';
         const matches = path.match(profileRegex);
         const username = matches[1];
-        const tab = matches[2] || 'posts'; // 'posts', 'likes', o 'bookmarks'
+        const tab = matches[2] || 'posts'; 
         loadPage('view-profile', action, { username: username, tab: tab });
         return;
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     } else {
         if (path === '/settings') {
@@ -440,22 +406,18 @@ function updateMenuState(currentAction) {
          menuAction = 'toggleSectionAdminDashboard'; 
     }
     
-    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
     if (currentAction === 'toggleSectionAdminManageCommunities' || currentAction === 'toggleSectionAdminEditCommunity') {
         menuAction = 'toggleSectionAdminManageCommunities';
     }
-    // --- ▲▲▲ FIN LÍNEA AÑADIDA ▲▲▲ ---
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadido ViewProfile y SearchResults) ▼▼▼ ---
     if (currentAction === 'toggleSectionJoinGroup' || 
         currentAction === 'toggleSectionCreatePublication' || 
         currentAction === 'toggleSectionCreatePoll' ||
         currentAction === 'toggleSectionPostView' ||
         currentAction === 'toggleSectionViewProfile' ||
-        currentAction === 'toggleSectionSearchResults') { // <-- LÍNEA AÑADIDA
+        currentAction === 'toggleSectionSearchResults') { 
         menuAction = 'toggleSectionHome';
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
         const linkAction = link.getAttribute('data-action');
@@ -477,10 +439,15 @@ export function initRouter() {
           return;
       }
       
-      // --- ▼▼▼ INICIO DE MODIFICACIÓN (Selector actualizado) ▼▼▼ ---
+      // --- ▼▼▼ INICIO DE MODIFICACIÓN (SELECTOR DE NAVEGACIÓN) ▼▼▼ ---
       const link = e.target.closest(
-            '.menu-link[data-action*="toggleSection"], a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], a[href*="/profile/"], a[href*="/search"], .component-button[data-action*="toggleSection"], .page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], .auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], .profile-tab a[data-nav-js="true"]'
-        ); // <-- Añadido a[href*="/admin"]
+            '.menu-link[data-action*="toggleSection"], ' +
+            'a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], ' +
+            'a[href*="/profile/"], a[href*="/search"], .component-button[data-action*="toggleSection"], ' +
+            '.page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], ' +
+            '.auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], ' +
+            '[data-module="moduleProfileMore"] a.menu-link[data-nav-js="true"]' // <-- SE AÑADIÓ ESTE SELECTOR
+        );
       // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         if (link) {
@@ -499,16 +466,6 @@ export function initRouter() {
 
             if (link.hasAttribute('data-action')) {
                 action = link.getAttribute('data-action');
-
-                // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
-                // Se elimina el bloque que detenía la propagación
-                /*
-                if (action === 'toggleSectionAdminEditUser' || action === 'toggleSectionAdminEditCommunity') {
-                    e.stopImmediatePropagation();
-                    return; 
-                }
-                */
-                // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
                 
                 if (action === 'toggleSectionPostView' && link.dataset.postId) {
                     page = 'post-view';
@@ -528,9 +485,7 @@ export function initRouter() {
                 
                 const postViewRegex = /^\/post\/(\d+)$/i;
                 const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Regex de Perfil) ▼▼▼ ---
                 const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(likes|bookmarks))?$/i;
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 if (postViewRegex.test(newPath)) {
                     action = 'toggleSectionPostView';
@@ -544,13 +499,11 @@ export function initRouter() {
                     const matches = newPath.match(communityUuidRegex);
                     fetchParams = { community_uuid: matches[1] };
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Lógica de Perfil) ▼▼▼ ---
                 } else if (profileRegex.test(newPath)) {
                     action = 'toggleSectionViewProfile';
                     page = 'view-profile';
                     const matches = newPath.match(profileRegex);
                     fetchParams = { username: matches[1], tab: matches[2] || 'posts' };
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 } else { 
                     if (newPath === '/settings') newPath = '/settings/your-profile';
@@ -580,17 +533,14 @@ export function initRouter() {
                 return;
             }
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (fullUrlPath) ▼▼▼ ---
             const queryString = (url && url.search) ? url.search : '';
             let fullUrlPath;
             
-            // --- Modificado para usar el newPath construido por la regex ---
             if ((action === 'toggleSectionPostView' || action === 'toggleSectionViewProfile') && newPath) {
-                fullUrlPath = `${basePath}${newPath}`;
+                fullUrlPath = `${basePath}${newPath}${queryString}`; 
             } else {
                 fullUrlPath = `${basePath}${newPath === '/' ? '/' : newPath}${queryString}`;
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             
             const currentFullUrl = window.location.pathname + window.location.search;
