@@ -63,17 +63,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $pdo->beginTransaction();
             
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (community_id opcional) ▼▼▼ ---
             $communityId = $_POST['community_id'] ?? null;
+            $dbCommunityId = null; // Por defecto es NULL (publicación de perfil)
+
+            // Si se proporciona un ID de comunidad, validarlo
+            if (!empty($communityId) && is_numeric($communityId)) {
+                $dbCommunityId = (int)$communityId;
+                
+                // Comprobar que el usuario es miembro de esa comunidad
+                $stmt_check_member = $pdo->prepare("SELECT id FROM user_communities WHERE user_id = ? AND community_id = ?");
+                $stmt_check_member->execute([$userId, $dbCommunityId]);
+                if (!$stmt_check_member->fetch()) {
+                     throw new Exception('js.api.errorServer'); // Error: Intento de publicar en un grupo al que no pertenece
+                }
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            
             $postType = $_POST['post_type'] ?? 'post'; 
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (PRIVACIDAD) ▼▼▼ ---
             $privacyLevel = $_POST['privacy_level'] ?? 'public';
-            
             $allowedPrivacy = ['public', 'friends', 'private'];
             if (!in_array($privacyLevel, $allowedPrivacy)) {
-                $privacyLevel = 'public'; // Default a public si el valor es inválido
+                $privacyLevel = 'public'; 
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN (PRIVACIDAD) ▲▲▲ ---
             
             $title = trim($_POST['title'] ?? '');
             if (empty($title)) {
@@ -87,17 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $uploadedFiles = $_FILES['attachments'] ?? [];
             $fileIds = [];
 
-            if (empty($communityId)) {
-                throw new Exception('js.publication.errorNoCommunity');
-            }
-            
-            $stmt_check_member = $pdo->prepare("SELECT id FROM user_communities WHERE user_id = ? AND community_id = ?");
-            $stmt_check_member->execute([$userId, $communityId]);
-            if (!$stmt_check_member->fetch()) {
-                 throw new Exception('js.api.errorServer'); 
-            }
-            
-            $dbCommunityId = (int)$communityId;
+            // --- ELIMINADA LA COMPROBACIÓN DE communityId OBLIGATORIA ---
+            // if (empty($communityId)) { ... }
 
             if ($postType === 'poll') {
                 $pollOptions = json_decode($pollOptionsJSON, true);
@@ -171,20 +175,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception('js.api.errorServer'); 
                     }
 
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Pasa $dbCommunityId (que puede ser NULL)) ▼▼▼ ---
                     $stmt_insert_file->execute([
                         $userId, $dbCommunityId, $systemName, $originalName, $publicUrl, $mimeType, $fileSize
                     ]);
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     
                     $fileIds[] = $pdo->lastInsertId();
                 }
             }
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL INSERT CON PRIVACIDAD) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL INSERT CON $dbCommunityId (que puede ser NULL)) ▼▼▼ ---
             $stmt_insert_post = $pdo->prepare(
                 "INSERT INTO community_publications (community_id, user_id, title, text_content, post_type, post_status, privacy_level)
                  VALUES (?, ?, ?, ?, ?, 'active', ?)"
             );
-            $stmt_insert_post->execute([$dbCommunityId, $userId, $title, $textContent, $postType, $privacyLevel]); // <-- $privacyLevel añadido
+            $stmt_insert_post->execute([$dbCommunityId, $userId, $title, $textContent, $postType, $privacyLevel]);
             // --- ▲▲▲ FIN DE MODIFICACIÓN (SQL INSERT) ▲▲▲ ---
             
             $publicationId = $pdo->lastInsertId();

@@ -14,7 +14,7 @@ $communityUuid = $_GET['community_uuid'] ?? null;
 
 try {
     if ($communityUuid) {
-        // --- VISTA DE COMUNIDAD FILTRADA ---
+        // --- VISTA DE COMUNIDAD FILTRADA (Esta lógica se mantiene igual) ---
         $stmt_comm = $pdo->prepare("SELECT id, name FROM communities WHERE uuid = ?");
         $stmt_comm->execute([$communityUuid]);
         $community = $stmt_comm->fetch();
@@ -23,7 +23,7 @@ try {
             $currentCommunityId = $community['id'];
             $currentCommunityNameKey = $community['name']; 
             
-            // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDA LÓGICA DE AMIGOS) ▼▼▼ ---
+            // (Consulta sin cambios, ya que está filtrando para un grupo específico)
             $sql_posts = 
                 "SELECT 
                     p.*, 
@@ -31,7 +31,7 @@ try {
                     u.profile_image_url,
                     u.role,
                     p.title, 
-                    p.privacy_level, -- <-- ¡AÑADIDO!
+                    p.privacy_level,
                     (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
                      FROM publication_attachments pa
                      JOIN publication_files pf ON pa.file_id = pf.id
@@ -51,25 +51,23 @@ try {
                  WHERE p.community_id = ?
                  AND p.post_status = 'active'
                  AND (
-                     p.privacy_level = 'public' -- Ver posts públicos
-                     OR (p.privacy_level = 'friends' AND ( -- O ver posts de amigos si:
-                         p.user_id = ? -- 1. Yo soy el autor
-                         OR p.user_id IN ( -- 2. El autor es mi amigo
+                     p.privacy_level = 'public'
+                     OR (p.privacy_level = 'friends' AND (
+                         p.user_id = ? 
+                         OR p.user_id IN (
                              (SELECT user_id_2 FROM friendships WHERE user_id_1 = ? AND status = 'accepted')
                              UNION
                              (SELECT user_id_1 FROM friendships WHERE user_id_2 = ? AND status = 'accepted')
                          )
                      ))
-                     OR (p.privacy_level = 'private' AND p.user_id = ?) -- <-- ¡AÑADIDO! Ver mis posts privados
+                     OR (p.privacy_level = 'private' AND p.user_id = ?)
                  )
                  ORDER BY p.created_at DESC
                  LIMIT 50";
             
             $stmt_posts = $pdo->prepare($sql_posts);
-            // ¡Ahora se pasan 8 parámetros!
             $stmt_posts->execute([$userId, $userId, $userId, $currentCommunityId, $userId, $userId, $userId, $userId]);
             $publications = $stmt_posts->fetchAll();
-            // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
         } else {
             $communityUuid = null;
         }
@@ -77,7 +75,7 @@ try {
     
     if ($communityUuid === null) {
         // --- VISTA DE FEED PRINCIPAL ---
-        // --- ▼▼▼ INICIO DE SQL MODIFICADO (AÑADIDA LÓGICA DE AMIGOS) ▼▼▼ ---
+        // --- ▼▼▼ INICIO DE SQL MODIFICADO (LÓGICA DE FEED COMBINADO) ▼▼▼ ---
         $sql_posts = 
             "SELECT 
                 p.*, 
@@ -85,8 +83,8 @@ try {
                 u.profile_image_url, 
                 u.role,
                 p.title, 
-                p.privacy_level, -- <-- ¡AÑADIDO!
-                c.name AS community_name,
+                p.privacy_level,
+                c.name AS community_name, -- Será NULL si es un post de perfil
                 (SELECT GROUP_CONCAT(pf.public_url SEPARATOR ',') 
                  FROM publication_attachments pa
                  JOIN publication_files pf ON pa.file_id = pf.id
@@ -94,42 +92,58 @@ try {
                  ORDER BY pa.sort_order ASC
                 ) AS attachments,
                 (SELECT COUNT(pv.id) FROM poll_votes pv WHERE pv.publication_id = p.id) AS total_votes,
-                (SELECT pv.poll_option_id FROM poll_votes pv WHERE pv.publication_id = p.id AND pv.user_id = ?) AS user_voted_option_id,
+                (SELECT pv.poll_option_id FROM poll_votes pv WHERE pv.publication_id = p.id AND pv.user_id = :current_user_id) AS user_voted_option_id,
 
                 (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
-                (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
-                (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = ?) AS user_has_bookmarked,
+                (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = :current_user_id) AS user_has_liked,
+                (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = :current_user_id) AS user_has_bookmarked,
                 (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count
 
              FROM community_publications p
              JOIN users u ON p.user_id = u.id
              LEFT JOIN communities c ON p.community_id = c.id
-             WHERE p.community_id IS NOT NULL 
-             AND (c.privacy = 'public' OR p.community_id IN (SELECT community_id FROM user_communities WHERE user_id = ?)) -- <-- ¡MODIFICADO! Ver posts de mis grupos privados
-             AND p.post_status = 'active'
+             WHERE 
+             p.post_status = 'active'
              AND (
+                -- Condición 1: Posts de Perfil (community_id es NULL)
+                p.community_id IS NULL
+                
+                -- O
+                OR
+                
+                -- Condición 2: Posts de Grupos (community_id NO es NULL)
+                (
+                    p.community_id IS NOT NULL 
+                    AND (
+                        c.privacy = 'public' -- El grupo es público
+                        OR p.community_id IN (SELECT community_id FROM user_communities WHERE user_id = :current_user_id) -- Soy miembro
+                    )
+                )
+             )
+             AND (
+                 -- Lógica de Privacidad (se aplica a AMBOS tipos de posts)
                  p.privacy_level = 'public' -- Ver posts públicos
                  OR (p.privacy_level = 'friends' AND ( -- O ver posts de amigos si:
-                     p.user_id = ? -- 1. Yo soy el autor
+                     p.user_id = :current_user_id -- 1. Yo soy el autor
                      OR p.user_id IN ( -- 2. El autor es mi amigo
-                         (SELECT user_id_2 FROM friendships WHERE user_id_1 = ? AND status = 'accepted')
+                         (SELECT user_id_2 FROM friendships WHERE user_id_1 = :current_user_id AND status = 'accepted')
                          UNION
-                         (SELECT user_id_1 FROM friendships WHERE user_id_2 = ? AND status = 'accepted')
+                         (SELECT user_id_1 FROM friendships WHERE user_id_2 = :current_user_id AND status = 'accepted')
                      )
                  ))
-                 OR (p.privacy_level = 'private' AND p.user_id = ?) -- <-- ¡AÑADIDO! Ver mis posts privados
+                 OR (p.privacy_level = 'private' AND p.user_id = :current_user_id) -- Ver mis posts privados
              )
              ORDER BY p.created_at DESC
              LIMIT 50";
         
         $stmt_posts = $pdo->prepare($sql_posts);
-         // ¡Ahora se pasan 8 parámetros!
-        $stmt_posts->execute([$userId, $userId, $userId, $userId, $userId, $userId, $userId, $userId]);
+        // Solo necesitamos :current_user_id
+        $stmt_posts->execute([':current_user_id' => $userId]);
         $publications = $stmt_posts->fetchAll();
         // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
     }
     
-    // --- Bucle para cargar opciones de encuestas ---
+    // --- Bucle para cargar opciones de encuestas (SIN CAMBIOS) ---
     if (!empty($publications)) {
         $pollIds = [];
         foreach ($publications as $key => $post) {
@@ -195,16 +209,7 @@ try {
                         <span class="material-symbols-rounded">group</span>
                     </button>
                     
-                    <?php // --- ▼▼▼ BOTÓN ELIMINADO ▼▼▼ --- ?>
-                    <?php /*
-                    <button type="button"
-                        class="page-toolbar-button"
-                        data-action="toggleSectionJoinGroup" 
-                        data-tooltip="home.toolbar.joinGroup">
-                    <span class="material-symbols-rounded">group_add</span>
-                    </button>
-                    */ ?>
-                    <?php // --- ▲▲▲ FIN BOTÓN ELIMINADO ▲▲▲ --- ?>
+                    <?php // (Botón 'unirse a grupo' eliminado - sin cambios) ?>
                     
                     <button type="button"
                         class="page-toolbar-button"
@@ -265,7 +270,7 @@ try {
                 <?php else: ?>
                 <?php foreach ($publications as $post): ?>
                     <?php
-                    // --- ▼▼▼ ¡INICIO DE CÓDIGO PEGADO Y MODIFICADO! ▼▼▼ ---
+                    // --- (Lógica de renderizado de post - sin cambios) ---
                     
                     // Lógica de datos
                     $postAvatar = $post['profile_image_url'] ?? $defaultAvatar;
@@ -290,7 +295,6 @@ try {
                     $commentCount = (int)($post['comment_count'] ?? 0);
                     $userHasBookmarked = (int)($post['user_has_bookmarked'] ?? 0) > 0; 
                     
-                    // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE PRIVACIDAD ▼▼▼ ---
                     $privacyLevel = $post['privacy_level'] ?? 'public';
                     $privacyIcon = 'public';
                     $privacyTooltipKey = 'post.privacy.public';
@@ -302,11 +306,8 @@ try {
                         $privacyIcon = 'lock';
                         $privacyTooltipKey = 'post.privacy.private';
                     }
-                    // --- ▲▲▲ FIN DE NUEVA LÓGICA DE PRIVACIDAD ▲▲▲ ---
                     
-                    // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE PROPIETARIO ▼▼▼ ---
                     $isOwner = ($post['user_id'] == $userId);
-                    // --- ▲▲▲ FIN DE NUEVA LÓGICA DE PROPIETARIO ▲▲▲ ---
                     ?>
                     
                     <div class="component-card component-card--post component-card--column" 
@@ -321,9 +322,12 @@ try {
                                     <h2 class="component-card__title"><?php echo htmlspecialchars($post['username']); ?></h2>
                                     <p class="component-card__description">
                                         <?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?>
+                                        
+                                        <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (Mostrar 'en [Grupo]' o no) ▼▼▼ --- ?>
                                         <?php if (isset($post['community_name']) && $post['community_name']): ?>
                                             <span> &middot; en <strong><?php echo htmlspecialchars($post['community_name']); ?></strong></span>
                                         <?php endif; ?>
+                                        <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
                                         
                                         <span class="post-privacy-icon" data-tooltip="<?php echo $privacyTooltipKey; ?>">
                                             <span class="material-symbols-rounded"><?php echo $privacyIcon; ?></span>
@@ -406,14 +410,11 @@ try {
                             <?php endif; ?>
                             </div>
 
-                        <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (TÍTULO) ▼▼▼ --- ?>
                         <?php if (!empty($post['title']) && !$isPoll): ?>
                             <div class="post-card-content" style="padding-bottom: 0;">
                                 <h3 class="post-title"><?php echo htmlspecialchars($post['title']); ?></h3>
                             </div>
                         <?php endif; ?>
-                        <?php // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- ?>
-
 
                         <?php if (!empty($post['text_content'])): ?>
                             <div class="post-card-content" <?php if (!empty($post['title'])) echo 'style="padding-top: 8px;"'; ?>>
@@ -422,8 +423,6 @@ try {
                                 <?php else: ?>
                                     <div>
                                         <?php 
-                                        // Usamos la nueva función helper
-                                        // (Se asume que config/utilities.php donde está la función ya fue cargado por config.php)
                                         echo truncatePostText($post['text_content'], $post['id'], $basePath, 500); 
                                         ?>
                                     </div>
@@ -518,7 +517,7 @@ try {
                         
                         </div>
                     <?php
-                    // --- ▲▲▲ FIN DE CÓDIGO PEGADO ▲▲▲ ---
+                    // --- (Fin de renderizado de post) ---
                     ?>
                 <?php endforeach; ?>
             <?php endif; ?>

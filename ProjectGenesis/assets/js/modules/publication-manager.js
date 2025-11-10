@@ -6,10 +6,12 @@ import { deactivateAllModules } from '../app/main-controller.js';
 const MAX_FILES = 4;
 const MAX_POLL_OPTIONS = 6;
 let selectedFiles = []; 
-let selectedCommunityId = null; 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-let selectedPrivacyLevel = 'public'; // Por defecto es público
+
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (Default a 'profile') ▼▼▼ ---
+let selectedCommunityId = 'profile'; // Por defecto es el perfil
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+let selectedPrivacyLevel = 'public'; // Por defecto es público
 let currentPostType = 'post'; 
 
 function togglePublishSpinner(button, isLoading) {
@@ -29,7 +31,11 @@ function validatePublicationState() {
     const publishButton = document.getElementById('publish-post-btn');
     if (!publishButton) return;
 
-    const hasCommunity = selectedCommunityId !== null;
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Validación de destino) ▼▼▼ ---
+    // Ahora es válido si no es null (es 'profile' o un ID numérico)
+    const hasDestination = selectedCommunityId !== null && selectedCommunityId !== '';
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    
     let isContentValid = false;
 
     if (currentPostType === 'post') {
@@ -49,8 +55,9 @@ function validatePublicationState() {
         isContentValid = hasQuestion && hasMinOptions && allOptionsFilled;
     }
     
-    // (Sin cambios aquí, la privacidad siempre tiene un valor por defecto)
-    publishButton.disabled = !isContentValid || !hasCommunity;
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Validación de botón) ▼▼▼ ---
+    publishButton.disabled = !isContentValid || !hasDestination;
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
 
 
@@ -198,23 +205,36 @@ function resetForm() {
     const pollOptions = document.getElementById('poll-options-container');
     if (pollOptions) pollOptions.innerHTML = '';
     
-    selectedCommunityId = null; 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Reset de Destino) ▼▼▼ ---
+    selectedCommunityId = 'profile'; // Default a 'profile'
     const triggerText = document.getElementById('publication-community-text');
     const triggerIcon = document.getElementById('publication-community-icon');
+    
+    // (Asumiendo que has añadido 'create_publication.myProfile' a tus JSON de idiomas)
+    const myProfileText = getTranslation('create_publication.myProfile') || 'Mi Perfil';
+    
     if (triggerText) {
-        triggerText.textContent = getTranslation('create_publication.selectCommunity');
-        triggerText.setAttribute('data-i18n', 'create_publication.selectCommunity');
+        triggerText.textContent = myProfileText;
+        triggerText.setAttribute('data-i18n', 'create_publication.myProfile');
     }
     if (triggerIcon) {
-        triggerIcon.textContent = 'public'; 
-    }
-    const popover = document.querySelector('[data-module="moduleCommunitySelect"]');
-    if (popover) {
-        popover.querySelectorAll('.menu-link').forEach(link => link.classList.remove('active'));
-        popover.querySelectorAll('.menu-link-check-icon').forEach(icon => icon.innerHTML = '');
+        triggerIcon.textContent = 'person'; // Icono de perfil
     }
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Reset de Privacidad) ▼▼▼ ---
+    const popover = document.querySelector('[data-module="moduleCommunitySelect"]');
+    if (popover) {
+        popover.querySelectorAll('.menu-link').forEach(link => {
+            const isDefault = link.dataset.value === 'profile';
+            link.classList.toggle('active', isDefault);
+            const icon = link.querySelector('.menu-link-check-icon');
+            if (icon) {
+                icon.innerHTML = isDefault ? '<span class="material-symbols-rounded">check</span>' : '';
+            }
+        });
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (Reset de Destino) ▲▲▲ ---
+    
+    // --- (Reset de Privacidad sin cambios) ---
     selectedPrivacyLevel = 'public';
     const privacyTriggerText = document.getElementById('publication-privacy-text');
     const privacyTriggerIcon = document.getElementById('publication-privacy-icon');
@@ -236,7 +256,6 @@ function resetForm() {
             }
         });
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN (Reset de Privacidad) ▲▲▲ ---
     
     validatePublicationState();
 }
@@ -245,22 +264,27 @@ async function handlePublishSubmit() {
     const publishButton = document.getElementById('publish-post-btn');
     if (!publishButton) return;
 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Manejar 'profile') ▼▼▼ ---
     let communityId = selectedCommunityId;
-    if (communityId === null) {
-        showAlert(getTranslation('js.publication.errorNoCommunity'), 'error');
+    
+    // Si el destino es 'profile', enviar un string vacío. 
+    // El backend (api/publication_handler.php) lo interpretará como NULL.
+    if (communityId === 'profile') {
+        communityId = '';
+    } else if (communityId === null || communityId === undefined) {
+        // Esto ya no debería pasar si 'profile' es el default, pero es una salvaguarda.
+        showAlert(getTranslation('js.publication.errorNoCommunity'), 'error'); 
         return;
     }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     togglePublishSpinner(publishButton, true);
 
     const formData = new FormData();
     formData.append('action', 'create-post'); 
-    formData.append('community_id', communityId);
+    formData.append('community_id', communityId); // Enviará '' para perfil, o '123' para un grupo
     formData.append('post_type', currentPostType);
-    
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir privacidad) ▼▼▼ ---
     formData.append('privacy_level', selectedPrivacyLevel);
-    // --- ▲▲▲ FIN DE MODIFICACIÓN (Añadir privacidad) ▲▲▲ ---
 
     try {
         if (currentPostType === 'post') {
@@ -299,12 +323,27 @@ async function handlePublishSubmit() {
             
             resetForm(); 
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Navegar a perfil o home) ▼▼▼ ---
+            let returnUrl = window.projectBasePath + '/'; // Default a home
+            
+            // Si la publicación fue en el perfil, navegar al perfil
+            if (communityId === '') {
+                const profileLink = document.querySelector('.header-profile[data-action="toggleModuleSelect"]');
+                if (profileLink) {
+                    const profileHref = profileLink.closest('.header-item').querySelector('a.menu-link[href*="/profile/"]');
+                    if (profileHref) {
+                        returnUrl = profileHref.href;
+                    }
+                }
+            }
+            
             const link = document.createElement('a');
-            link.href = window.projectBasePath + '/';
+            link.href = returnUrl;
             link.setAttribute('data-nav-js', 'true');
             document.body.appendChild(link);
             link.click();
             link.remove();
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
         } else {
             throw new Error(result.message || 'js.api.errorServer');
@@ -317,24 +356,33 @@ async function handlePublishSubmit() {
 }
 
 function resetCommunityTrigger() {
-    // ... (función sin cambios)
-    selectedCommunityId = null;
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Reset de Destino) ▼▼▼ ---
+    selectedCommunityId = 'profile';
     const triggerText = document.getElementById('publication-community-text');
     const triggerIcon = document.getElementById('publication-community-icon');
     
+    const myProfileText = getTranslation('create_publication.myProfile') || 'Mi Perfil';
+
     if (triggerText) {
-        triggerText.textContent = getTranslation('create_publication.selectCommunity');
-        triggerText.setAttribute('data-i18n', 'create_publication.selectCommunity');
+        triggerText.textContent = myProfileText;
+        triggerText.setAttribute('data-i18n', 'create_publication.myProfile');
     }
     if (triggerIcon) {
-        triggerIcon.textContent = 'public'; 
+        triggerIcon.textContent = 'person'; 
     }
 
     const popover = document.querySelector('[data-module="moduleCommunitySelect"]');
     if (popover) {
-        popover.querySelectorAll('.menu-link').forEach(link => link.classList.remove('active'));
-        popover.querySelectorAll('.menu-link-check-icon').forEach(icon => icon.innerHTML = '');
+        popover.querySelectorAll('.menu-link').forEach(link => {
+            const isDefault = link.dataset.value === 'profile';
+            link.classList.toggle('active', isDefault);
+            const icon = link.querySelector('.menu-link-check-icon');
+            if (icon) {
+                icon.innerHTML = isDefault ? '<span class="material-symbols-rounded">check</span>' : '';
+            }
+        });
     }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
 
 
@@ -376,12 +424,9 @@ export function initPublicationManager() {
             });
             toggleButton.classList.add('active');
     
-            // ==========================================================
-            // ============ INICIO DE LA CORRECCIÓN DEL ERROR ============
-            // ==========================================================
             if (newType === 'poll') {
-                if (postArea) { /* postArea.style.display = 'none'; */ postArea.classList.remove('active'); postArea.classList.add('disabled'); }
-                if (pollArea) { /* pollArea.style.display = 'flex'; */ pollArea.classList.add('active'); pollArea.classList.remove('disabled'); }
+                if (postArea) { postArea.classList.remove('active'); postArea.classList.add('disabled'); }
+                if (pollArea) { pollArea.classList.add('active'); pollArea.classList.remove('disabled'); }
                 if (attachBtn) attachBtn.style.display = 'none';
                 if (attachSpacer) attachSpacer.style.display = 'block';
                 history.pushState(null, '', window.projectBasePath + '/create-poll');
@@ -393,15 +438,12 @@ export function initPublicationManager() {
                 }
     
             } else { 
-                if (postArea) { /* postArea.style.display = 'flex'; */ postArea.classList.add('active'); postArea.classList.remove('disabled'); }
-                if (pollArea) { /* pollArea.style.display = 'none'; */ pollArea.classList.remove('active'); pollArea.classList.add('disabled'); }
+                if (postArea) { postArea.classList.add('active'); postArea.classList.remove('disabled'); }
+                if (pollArea) { pollArea.classList.remove('active'); pollArea.classList.add('disabled'); }
                 if (attachBtn) attachBtn.style.display = 'flex';
                 if (attachSpacer) attachSpacer.style.display = 'none';
                 history.pushState(null, '', window.projectBasePath + '/create-publication');
             }
-            // ==========================================================
-            // ============= FIN DE LA CORRECCIÓN DEL ERROR =============
-            // ==========================================================
             
             validatePublicationState();
             return; // Importante salir después de manejar el toggle
@@ -425,7 +467,7 @@ export function initPublicationManager() {
         const section = e.target.closest('[data-section*="create-"]');
         if (!section) return; 
 
-        // --- (Listener de 'moduleCommunitySelect' sin cambios) ---
+        // --- (Listener de 'moduleCommunitySelect') ---
         const trigger = e.target.closest('#publication-community-trigger[data-action="toggleModuleCommunitySelect"]');
         if (trigger) {
             e.preventDefault();
@@ -439,11 +481,14 @@ export function initPublicationManager() {
             return;
         }
 
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Listener de 'moduleCommunitySelect' link) ▼▼▼ ---
         const menuLink = e.target.closest('[data-module="moduleCommunitySelect"] .menu-link[data-value]');
         if (menuLink) {
             e.preventDefault();
-            const newId = menuLink.dataset.value;
-            const newText = menuLink.dataset.text;
+            
+            const newId = menuLink.dataset.value; // Puede ser 'profile' o un ID numérico
+            const newTextKey = menuLink.dataset.textKey;
+            const newIcon = menuLink.dataset.icon;
             
             selectedCommunityId = newId;
 
@@ -451,11 +496,17 @@ export function initPublicationManager() {
             const triggerIcon = document.getElementById('publication-community-icon');
             
             if (triggerText) {
-                triggerText.textContent = newText;
-                triggerText.removeAttribute('data-i18n'); 
+                // Usar la clave de traducción o el texto directo (para nombres de grupos)
+                if (newTextKey.includes('.')) {
+                    triggerText.textContent = getTranslation(newTextKey);
+                    triggerText.setAttribute('data-i18n', newTextKey);
+                } else {
+                    triggerText.textContent = newTextKey; // Es un nombre de grupo
+                    triggerText.removeAttribute('data-i18n');
+                }
             }
             if (triggerIcon) {
-                triggerIcon.textContent = 'group'; 
+                triggerIcon.textContent = newIcon; 
             }
 
             const menuList = menuLink.closest('.menu-list');
@@ -472,8 +523,9 @@ export function initPublicationManager() {
             validatePublicationState();
             return;
         }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         
-        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (Listener de 'modulePrivacySelect') ▼▼▼ ---
+        // --- (Listener de 'modulePrivacySelect' sin cambios) ---
         const privacyTrigger = e.target.closest('#publication-privacy-trigger[data-action="toggleModulePrivacySelect"]');
         if (privacyTrigger) {
             e.preventDefault();
@@ -517,11 +569,8 @@ export function initPublicationManager() {
             if (checkIcon) checkIcon.innerHTML = '<span class="material-symbols-rounded">check</span>';
 
             deactivateAllModules();
-            // No es necesario llamar a validatePublicationState() aquí, ya que la privacidad siempre tiene un valor.
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVO BLOQUE (Listener de 'modulePrivacySelect') ▲▲▲ ---
-        
         
         // --- (Listeners de botones de submit, attach, poll, etc. sin cambios) ---
         if (e.target.id === 'publish-post-btn') {

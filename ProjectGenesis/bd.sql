@@ -120,9 +120,7 @@ CREATE TABLE communities (
     icon_url VARCHAR(512) NULL DEFAULT NULL COMMENT 'URL para el icono de la comunidad',
     banner_url VARCHAR(512) NULL DEFAULT NULL COMMENT 'URL para el banner de la comunidad',
     
-    -- --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     max_members INT NULL DEFAULT NULL COMMENT 'Límite de miembros (null o 0 = sin límite)',
-    -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     INDEX idx_access_code (access_code),
@@ -159,7 +157,11 @@ DROP TABLE IF EXISTS `friendships`;
 
 CREATE TABLE `community_publications` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `community_id` INT NOT NULL,
+  
+  -- --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+  `community_id` INT NULL DEFAULT NULL, 
+  -- --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+  
   `user_id` INT NOT NULL,
   
   `title` VARCHAR(255) NULL DEFAULT NULL,
@@ -171,7 +173,10 @@ CREATE TABLE `community_publications` (
   `privacy_level` ENUM('public', 'friends', 'private') NOT NULL DEFAULT 'public' COMMENT 'Nivel de privacidad del post',
   
   `created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
+  
+  -- La clave foránea se mantiene, pero solo se aplica si community_id no es NULL
   FOREIGN KEY (community_id) REFERENCES `communities`(id) ON DELETE CASCADE,
+  
   FOREIGN KEY (user_id) REFERENCES `users`(id) ON DELETE CASCADE,
   KEY `idx_community_timestamp` (`community_id`,`created_at`),
   
@@ -183,7 +188,7 @@ CREATE TABLE `community_publications` (
 CREATE TABLE `publication_files` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NOT NULL,
-  `community_id` INT NULL DEFAULT NULL,
+  `community_id` INT NULL DEFAULT NULL, -- <-- TAMBIÉN SE MODIFICA AQUÍ
   `file_name_system` VARCHAR(255) NOT NULL,
   `file_name_original` VARCHAR(255) NOT NULL,
   `public_url` VARCHAR(512) NOT NULL,

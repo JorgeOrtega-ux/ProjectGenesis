@@ -9,7 +9,7 @@ $isPostActive = !$isPollActive;
 // $userCommunitiesForPost es cargada por config/routing/router.php
 $hasCommunities = isset($userCommunitiesForPost) && !empty($userCommunitiesForPost);
 
-// --- ▼▼▼ INICIO DE NUEVO BLOQUE PHP (PRIVACIDAD) ▼▼▼ ---
+// --- (Bloque de privacidad sin cambios) ---
 $privacyMap = [
     'public' => 'post.privacy.public',
     'friends' => 'post.privacy.friends',
@@ -23,7 +23,6 @@ $privacyIconMap = [
 $defaultPrivacy = 'public';
 $currentPrivacyKey = $privacyMap[$defaultPrivacy];
 $currentPrivacyIcon = $privacyIconMap[$defaultPrivacy];
-// --- ▲▲▲ FIN DE NUEVO BLOQUE PHP (PRIVACIDAD) ▲▲▲ ---
 ?>
 <div class="section-content overflow-y <?php echo (strpos($CURRENT_SECTION, 'create-') === 0) ? 'active' : 'disabled'; ?>" data-section="<?php echo htmlspecialchars($CURRENT_SECTION); ?>">
 
@@ -87,53 +86,70 @@ $currentPrivacyIcon = $privacyIconMap[$defaultPrivacy];
         <input type="file" id="publication-file-input" class="visually-hidden" 
                accept="image/png, image/jpeg, image/gif, image/webp" multiple>
 
-        <?php if (!$hasCommunities): ?>
+        <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (Lógica $hasCommunities) ▼▼▼ --- ?>
+        <?php if (false): // Esta lógica se mueve adentro del formulario para no bloquearlo ?>
             <div class="component-card">
-                <div class="component-card__content">
-                    <div class="component-card__icon">
-                        <span class="material-symbols-rounded">group_off</span>
-                    </div>
-                    <div class="component-card__text">
-                        <h2 class="component-card__title" data-i18n="create_publication.noCommunitiesTitle">No estás en ninguna comunidad</h2>
-                        <p class="component-card__description" data-i18n="create_publication.noCommunitiesDesc">Debes unirte a una comunidad antes de poder publicar.</p>
-                    </div>
-                </div>
-                <div class="component-card__actions">
-                    <button type="button" class="component-button" data-action="toggleSectionJoinGroup" data-i18n="home.toolbar.joinGroup"></button>
-                </div>
+                ... (Este bloque ya no se usa aquí) ...
             </div>
-
-        <?php else: ?>
-            <div class="component-card component-card--action" id="create-post-form">
+        <?php endif; ?>
             
-                <div class="component-card__content">
-                    <div class="component-card__text">
-                        <h2 class="component-card__title" data-i18n="create_publication.destination">Publicar en:</h2>
-                        
-                        <div class="trigger-select-wrapper">
-                            <div class="trigger-selector" 
-                                 id="publication-community-trigger" 
-                                 data-action="toggleModuleCommunitySelect">
-                                
-                                <div class="trigger-select-icon">
-                                    <span class="material-symbols-rounded" id="publication-community-icon">public</span>
-                                </div>
-                                <div class="trigger-select-text">
-                                    <span data-i18n="create_publication.selectCommunity" id="publication-community-text">Seleccione una comunidad...</span>
-                                </div>
-                                <div class="trigger-select-arrow">
-                                    <span class="material-symbols-rounded">arrow_drop_down</span>
-                                </div>
+        <div class="component-card component-card--action" id="create-post-form">
+        
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="create_publication.destination">Publicar en:</h2>
+                    
+                    <div class="trigger-select-wrapper">
+                        <div class="trigger-selector" 
+                             id="publication-community-trigger" 
+                             data-action="toggleModuleCommunitySelect">
+                            
+                            <div class="trigger-select-icon">
+                                <span class="material-symbols-rounded" id="publication-community-icon">person</span>
                             </div>
+                            <div class="trigger-select-text">
+                                <span data-i18n="create_publication.myProfile" id="publication-community-text">Mi Perfil</span>
+                            </div>
+                            <div class="trigger-select-arrow">
+                                <span class="material-symbols-rounded">arrow_drop_down</span>
+                            </div>
+                        </div>
 
-                            <div class="popover-module popover-module--anchor-width body-title disabled"
-                                 data-module="moduleCommunitySelect">
-                                <div class="menu-content">
-                                    <div class="menu-list">
+                        <div class="popover-module popover-module--anchor-width body-title disabled"
+                             data-module="moduleCommunitySelect">
+                            <div class="menu-content">
+                                <div class="menu-list">
+                                    
+                                    <div class="menu-link active" 
+                                         data-value="profile"
+                                         data-text-key="create_publication.myProfile"
+                                         data-icon="person">
+                                        <div class="menu-link-icon">
+                                            <span class="material-symbols-rounded">person</span>
+                                        </div>
+                                        <div class="menu-link-text">
+                                            <span data-i18n="create_publication.myProfile">Mi Perfil</span>
+                                        </div>
+                                        <div class="menu-link-check-icon">
+                                            <span class="material-symbols-rounded">check</span>
+                                        </div>
+                                    </div>
+
+                                    <?php if (!$hasCommunities): ?>
+                                        <div class="menu-link" style="opacity: 0.6; pointer-events: none;">
+                                            <div class="menu-link-icon">
+                                                <span class="material-symbols-rounded">group_off</span>
+                                            </div>
+                                            <div class="menu-link-text">
+                                                <span data-i18n="create_publication.noCommunitiesJoin">Únete a un grupo...</span>
+                                            </div>
+                                        </div>
+                                    <?php else: ?>
                                         <?php foreach ($userCommunitiesForPost as $community): ?>
                                             <div class="menu-link" 
                                                  data-value="<?php echo htmlspecialchars($community['id']); ?>"
-                                                 data-text="<?php echo htmlspecialchars($community['name']); ?>">
+                                                 data-text-key="<?php echo htmlspecialchars($community['name']); ?>"
+                                                 data-icon="group">
                                                 <div class="menu-link-icon">
                                                     <span class="material-symbols-rounded">group</span>
                                                 </div>
@@ -144,111 +160,112 @@ $currentPrivacyIcon = $privacyIconMap[$defaultPrivacy];
                                                 </div>
                                             </div>
                                         <?php endforeach; ?>
-                                    </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+            <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
 
-                <div class="component-card__content">
-                    <div class="component-card__text">
-                        <h2 class="component-card__title" data-i18n="post.options.privacyTitle">Quién puede ver esto:</h2>
-                        
-                        <div class="trigger-select-wrapper">
-                            <div class="trigger-selector" 
-                                 id="publication-privacy-trigger" 
-                                 data-action="toggleModulePrivacySelect">
-                                
-                                <div class="trigger-select-icon">
-                                    <span class="material-symbols-rounded" id="publication-privacy-icon"><?php echo $currentPrivacyIcon; ?></span>
-                                </div>
-                                <div class="trigger-select-text">
-                                    <span data-i18n="<?php echo htmlspecialchars($currentPrivacyKey); ?>" id="publication-privacy-text"></span>
-                                </div>
-                                <div class="trigger-select-arrow">
-                                    <span class="material-symbols-rounded">arrow_drop_down</span>
-                                </div>
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="post.options.privacyTitle">Quién puede ver esto:</h2>
+                    
+                    <div class="trigger-select-wrapper">
+                        <div class="trigger-selector" 
+                             id="publication-privacy-trigger" 
+                             data-action="toggleModulePrivacySelect">
+                            
+                            <div class="trigger-select-icon">
+                                <span class="material-symbols-rounded" id="publication-privacy-icon"><?php echo $currentPrivacyIcon; ?></span>
                             </div>
+                            <div class="trigger-select-text">
+                                <span data-i18n="<?php echo htmlspecialchars($currentPrivacyKey); ?>" id="publication-privacy-text"></span>
+                            </div>
+                            <div class="trigger-select-arrow">
+                                <span class="material-symbols-rounded">arrow_drop_down</span>
+                            </div>
+                        </div>
 
-                            <div class="popover-module popover-module--anchor-width body-title disabled"
-                                 data-module="modulePrivacySelect">
-                                <div class="menu-content">
-                                    <div class="menu-list">
-                                        <?php foreach ($privacyMap as $key => $textKey): 
-                                            $isActive = ($key === $defaultPrivacy);
-                                            $iconName = $privacyIconMap[$key];
-                                        ?>
-                                            <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
-                                                 data-value="<?php echo htmlspecialchars($key); ?>"
-                                                 data-text-key="<?php echo htmlspecialchars($textKey); ?>"
-                                                 data-icon="<?php echo htmlspecialchars($iconName); ?>">
-                                                <div class="menu-link-icon">
-                                                    <span class="material-symbols-rounded"><?php echo $iconName; ?></span>
-                                                </div>
-                                                <div class="menu-link-text">
-                                                    <span data-i18n="<?php echo htmlspecialchars($textKey); ?>"></span>
-                                                </div>
-                                                <div class="menu-link-check-icon">
-                                                    <?php if ($isActive): ?>
-                                                        <span class="material-symbols-rounded">check</span>
-                                                    <?php endif; ?>
-                                                </div>
+                        <div class="popover-module popover-module--anchor-width body-title disabled"
+                             data-module="modulePrivacySelect">
+                            <div class="menu-content">
+                                <div class="menu-list">
+                                    <?php foreach ($privacyMap as $key => $textKey): 
+                                        $isActive = ($key === $defaultPrivacy);
+                                        $iconName = $privacyIconMap[$key];
+                                    ?>
+                                        <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                                             data-value="<?php echo htmlspecialchars($key); ?>"
+                                             data-text-key="<?php echo htmlspecialchars($textKey); ?>"
+                                             data-icon="<?php echo htmlspecialchars($iconName); ?>">
+                                            <div class="menu-link-icon">
+                                                <span class="material-symbols-rounded"><?php echo $iconName; ?></span>
                                             </div>
-                                        <?php endforeach; ?>
-                                    </div>
+                                            <div class="menu-link-text">
+                                                <span data-i18n="<?php echo htmlspecialchars($textKey); ?>"></span>
+                                            </div>
+                                            <div class="menu-link-check-icon">
+                                                <?php if ($isActive): ?>
+                                                    <span class="material-symbols-rounded">check</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div id="post-content-area" class="<?php echo $isPostActive ? 'active' : 'disabled'; ?>">
-                    
-                    <div class="component-input-group">
-                        <input type="text" id="publication-title" class="component-input" placeholder=" " maxlength="255">
-                        <label for="publication-title" data-i18n="create_publication.titleLabel">Título (Opcional)</label>
-                    </div>
-                    <div class="component-input-group">
-                        <textarea id="publication-text" class="component-input" rows="5" placeholder=" " maxlength="1000"></textarea>
-                        <label for="publication-text" data-i18n="create_publication.placeholder"></label>
-                    </div>
-                    <div class="publication-preview-container" id="publication-preview-container">
-                    </div>
+            </div>
+            
+            <div id="post-content-area" class="<?php echo $isPostActive ? 'active' : 'disabled'; ?>">
+                
+                <div class="component-input-group">
+                    <input type="text" id="publication-title" class="component-input" placeholder=" " maxlength="255">
+                    <label for="publication-title" data-i18n="create_publication.titleLabel">Título (Opcional)</label>
                 </div>
+                <div class="component-input-group">
+                    <textarea id="publication-text" class="component-input" rows="5" placeholder=" " maxlength="1000"></textarea>
+                    <label for="publication-text" data-i18n="create_publication.placeholder"></label>
+                </div>
+                <div class="publication-preview-container" id="publication-preview-container">
+                </div>
+            </div>
 
-                <div id="poll-content-area" class="<?php echo $isPollActive ? 'active' : 'disabled'; ?>">
-                    <div class="component-input-group">
-                        <input type="text" id="poll-question" class="component-input" placeholder=" " maxlength="1000">
-                        <label for="poll-question" data-i18n="create_publication.pollQuestionLabel">Escribe tu pregunta...</label>
-                    </div>
-                    
-                    <div id="poll-options-container">
-                        </div>
-                    
-                    <button type="button" class="component-action-button component-action-button--secondary" id="add-poll-option-btn">
-                        <span class="material-symbols-rounded">add_circle</span>
-                        <span data-i18n="create_publication.pollAddOption">Añadir opción</span>
-                    </button>
+            <div id="poll-content-area" class="<?php echo $isPollActive ? 'active' : 'disabled'; ?>">
+                <div class="component-input-group">
+                    <input type="text" id="poll-question" class="component-input" placeholder=" " maxlength="1000">
+                    <label for="poll-question" data-i18n="create_publication.pollQuestionLabel">Escribe tu pregunta...</label>
                 </div>
                 
-                <?php // --- (Sin cambios en este bloque) --- ?>
-                <div class="component-card__actions" id="create-post-actions-footer">
-                    
-                    <button type="button" class="component-action-button--icon-square <?php echo $isPollActive ? 'disabled' : 'active'; ?>" 
-                            id="attach-files-btn" 
-                            data-tooltip="create_publication.attachTooltip">
-                        <span class="material-symbols-rounded">attach_file</span>
-                    </button>
-                    
-                    <div id="attach-files-spacer" class="<?php echo $isPollActive ? 'active' : 'disabled'; ?>"></div>
-
-                    <button type="button" class="component-action-button--icon-square primary" id="publish-post-btn" data-tooltip="create_publication.publish" disabled>
-                        <span class="material-symbols-rounded">send</span>
-                    </button>
-                </div>
-                <?php // --- (Fin del bloque sin cambios) --- ?>
-
+                <div id="poll-options-container">
+                    </div>
+                
+                <button type="button" class="component-action-button component-action-button--secondary" id="add-poll-option-btn">
+                    <span class="material-symbols-rounded">add_circle</span>
+                    <span data-i18n="create_publication.pollAddOption">Añadir opción</span>
+                </button>
             </div>
-        <?php endif; ?>
-        </div>
+            
+            <div class="component-card__actions" id="create-post-actions-footer">
+                
+                <button type="button" class="component-action-button--icon-square <?php echo $isPollActive ? 'disabled' : 'active'; ?>" 
+                        id="attach-files-btn" 
+                        data-tooltip="create_publication.attachTooltip">
+                    <span class="material-symbols-rounded">attach_file</span>
+                </button>
+                
+                <div id="attach-files-spacer" class="<?php echo $isPollActive ? 'active' : 'disabled'; ?>"></div>
+
+                <button type="button" class="component-action-button--icon-square primary" id="publish-post-btn" data-tooltip="create_publication.publish" disabled>
+                    <span class="material-symbols-rounded">send</span>
+                </button>
+            </div>
+
+        </div> <?php // Cierre de component-card-action ?>
+        
+    </div>
 </div>
