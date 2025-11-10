@@ -378,9 +378,10 @@ async function handleProfilePostSubmit(form) {
     }
 
     togglePrimaryButtonSpinner(submitButton, true);
+        const formData = new FormData(form);
     input.disabled = true;
 
-    const formData = new FormData(form);
+
     // Los campos action, community_id, y privacy_level ya están en el form como hidden inputs.
     
     try {
