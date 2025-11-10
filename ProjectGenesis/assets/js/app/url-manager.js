@@ -82,7 +82,7 @@ const paths = {
 
     '/profile': 'toggleSectionViewProfile', 
     '/profile/username-placeholder': 'toggleSectionViewProfile', 
-    '/profile/username-placeholder/posts': 'toggleSectionViewProfile',
+    // '/profile/username-placeholder/posts': 'toggleSectionViewProfile', // <-- LÍNEA ELIMINADA
     '/profile/username-placeholder/likes': 'toggleSectionViewProfile',
     '/profile/username-placeholder/bookmarks': 'toggleSectionViewProfile',
     '/profile/username-placeholder/info': 'toggleSectionViewProfile',
@@ -117,7 +117,7 @@ const paths = {
     '/admin/server-settings': 'toggleSectionAdminServerSettings', 
 
     '/admin/manage-backups': 'toggleSectionAdminManageBackups',
-    '/admin/manage-logs': 'toggleSectionAdminManageLogs',
+    '/admin/manage-logs': 'admin-manage-logs',
     
     '/admin/manage-communities': 'toggleSectionAdminManageCommunities',
     '/admin/edit-community': 'toggleSectionAdminEditCommunity',
@@ -126,8 +126,6 @@ const paths = {
 const basePath = window.projectBasePath || '/ProjectGenesis';
 
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (Función loadPage) ▼▼▼ ---
-// Se añade el parámetro isPartialLoad
 async function loadPage(page, action, fetchParams = null, isPartialLoad = false) {
 
     if (!contentContainer) return;
@@ -168,17 +166,22 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
             
             if (navBar) {
                 // Actualizar pestañas principales
-                navBar.querySelectorAll('a.profile-nav-button').forEach(btn => {
+                navBar.querySelectorAll('.profile-nav-button').forEach(btn => {
                     btn.classList.remove('active');
-                    if (btn.href === window.location.href) {
+                    const btnHref = btn.dataset.href || btn.href;
+                    
+                    // --- ▼▼▼ ¡ESTA ES LA LÍNEA CORREGIDA! ▼▼▼ ---
+                    if (btnHref === window.location.pathname) { 
+                    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
                         btn.classList.add('active');
                     }
                 });
+                
                 // Actualizar pestañas del menú "Más" (likes, bookmarks)
                 if (moreMenu) {
                     moreMenu.querySelectorAll('a.menu-link').forEach(link => {
                          link.classList.remove('active');
-                         if (link.href === window.location.href) {
+                         if (link.href === window.location.href) { // Esta se mantiene, ya que son <a>
                             link.classList.add('active');
                          }
                     });
@@ -376,7 +379,6 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
         }
     }
 }
-// --- ▲▲▲ FIN DE MODIFICACIÓN (Función loadPage) ▲▲▲ ---
 
 export function handleNavigation() {
 
@@ -387,9 +389,7 @@ export function handleNavigation() {
     const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
     const postViewRegex = /^\/post\/(\d+)$/i; 
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (profileRegex) ▼▼▼ ---
     const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(posts|likes|bookmarks|info|amigos|fotos))?$/i;
-    // --- ▲▲▲ FIN DE MODIFICACIÓN (profileRegex) ▲▲▲ ---
 
 
     if (path === '/') {
@@ -411,9 +411,7 @@ export function handleNavigation() {
         action = 'toggleSectionViewProfile';
         const matches = path.match(profileRegex);
         const username = matches[1];
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (tab) ▼▼▼ ---
-        const tab = matches[2] || 'posts'; // Captura 'posts', 'likes', 'info', etc.
-        // --- ▲▲▲ FIN DE MODIFICACIÓN (tab) ▲▲▲ ---
+        const tab = matches[2] || 'posts'; 
         loadPage('view-profile', action, { username: username, tab: tab });
         return;
 
@@ -522,7 +520,7 @@ export function initRouter() {
             '.page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], ' +
             '.auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], ' +
             '[data-module="moduleProfileMore"] a.menu-link[data-nav-js="true"], ' + 
-            'a.profile-nav-button[data-nav-js="true"]' // <-- Selector de pestaña de perfil
+            'div.profile-nav-button[data-nav-js="true"]' // <-- ¡MODIFICADO DE 'a.' A 'div.'!
         );
       // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
@@ -539,15 +537,14 @@ export function initRouter() {
             let action, page, newPath;
             let fetchParams = null; 
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (isPartialLoad) ▼▼▼ ---
             let isPartialLoad = false;
             const currentProfileSection = document.querySelector('[data-section="view-profile"]');
             
-            // Comprobar si es un clic en una pestaña de perfil *mientras ya estamos en un perfil*
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Detectar clic en div.profile-nav-button) ▼▼▼ ---
             if (currentProfileSection && (link.classList.contains('profile-nav-button') || link.closest('[data-module="moduleProfileMore"]'))) {
                 isPartialLoad = true;
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN (isPartialLoad) ▲▲▲ ---
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
             if (link.hasAttribute('data-action')) {
@@ -565,16 +562,18 @@ export function initRouter() {
 
             } else {
                 
-                const url = new URL(link.href); 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Leer 'href' o 'data-href') ▼▼▼ ---
+                const href = link.href || link.dataset.href;
+                if (!href) return; // No es un enlace válido, salir
+                const url = new URL(href, window.location.origin); // Usar window.location.origin como base
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 
                 newPath = url.pathname.replace(basePath, '') || '/';
                 
                 const postViewRegex = /^\/post\/(\d+)$/i;
                 const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
                 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (profileRegex) ▼▼▼ ---
                 const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(posts|likes|bookmarks|info|amigos|fotos))?$/i;
-                // --- ▲▲▲ FIN DE MODIFICACIÓN (profileRegex) ▲▲▲ ---
 
                 if (postViewRegex.test(newPath)) {
                     action = 'toggleSectionPostView';
@@ -592,9 +591,7 @@ export function initRouter() {
                     action = 'toggleSectionViewProfile';
                     page = 'view-profile';
                     const matches = newPath.match(profileRegex);
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (tab) ▼▼▼ ---
                     fetchParams = { username: matches[1], tab: matches[2] || 'posts' };
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN (tab) ▲▲▲ ---
 
                 } else { 
                     if (newPath === '/settings') newPath = '/settings/your-profile';
@@ -605,7 +602,10 @@ export function initRouter() {
             }
             
             
-            const url = link.href ? new URL(link.href) : null; 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Leer 'href' o 'data-href') ▼▼▼ ---
+            const href = link.href || link.dataset.href;
+            const url = href ? new URL(href, window.location.origin) : null; 
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             if (link.hasAttribute('data-nav-js') && url && url.search) {
                  if (!fetchParams) fetchParams = {};
@@ -638,9 +638,7 @@ export function initRouter() {
             if (currentFullUrl !== fullUrlPath) {
                 history.pushState(null, '', fullUrlPath);
                 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Pasar isPartialLoad) ▼▼▼ ---
                 loadPage(page, action, fetchParams, isPartialLoad); 
-                // --- ▲▲▲ FIN DE MODIFICACIÓN (Pasar isPartialLoad) ▲▲▲ ---
             }
 
             deactivateAllModules();

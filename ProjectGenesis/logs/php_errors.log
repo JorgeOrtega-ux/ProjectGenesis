@@ -988,3 +988,50 @@
 [10-Nov-2025 04:29:02 UTC] PHP Warning:  Undefined variable $userAvatar in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 61
 [10-Nov-2025 04:29:36 UTC] PHP Warning:  Undefined variable $userAvatar in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 61
 [10-Nov-2025 04:29:39 UTC] PHP Warning:  Undefined variable $userAvatar in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 61
+[10-Nov-2025 04:39:31 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 04:39:36 UTC] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 544
+[10-Nov-2025 04:39:38 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 04:41:56 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 04:41:58 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 04:42:02 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 04:42:12 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:42:13 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:42:14 UTC] PHP Warning:  Undefined variable $userAvatar in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 61
+[10-Nov-2025 04:42:15 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:42:15 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:42:17 UTC] PHP Warning:  Undefined variable $userAvatar in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 61
+[10-Nov-2025 04:42:26 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:42:28 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:42:29 UTC] PHP Warning:  Undefined variable $userAvatar in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 61
+[10-Nov-2025 04:43:22 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:43:22 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:43:24 UTC] PHP Warning:  Undefined variable $userAvatar in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 61
+[10-Nov-2025 04:43:34 UTC] PHP Warning:  Undefined variable $userAvatar in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 61
+[10-Nov-2025 04:44:56 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:44:57 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:44:57 UTC] PHP Warning:  Undefined variable $userAvatar in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 61
+[10-Nov-2025 04:45:36 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:45:36 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:45:37 UTC] PHP Warning:  Undefined variable $userAvatar in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 61
+[10-Nov-2025 04:47:06 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:47:09 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:47:10 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:47:10 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:47:10 UTC] PHP Warning:  Undefined variable $userAvatar in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 61
+[10-Nov-2025 04:47:17 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:47:17 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:47:46 UTC] PHP Warning:  Undefined variable $userAvatar in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 61
+[10-Nov-2025 04:50:12 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:50:12 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:50:18 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:50:19 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:50:19 UTC] PHP Warning:  Undefined variable $userAvatar in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 61
+[10-Nov-2025 04:51:47 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 04:51:56 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 04:52:16 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 04:53:07 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 04:53:10 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:53:10 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:53:12 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:53:12 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 04:53:26 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812

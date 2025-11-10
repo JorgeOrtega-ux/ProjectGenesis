@@ -1,15 +1,20 @@
 <?php
 // FILE: includes/sections/main/profile-tabs/view-profile-posts.php
-// (NUEVO ARCHIVO)
+// (CORREGIDO - Añadidas variables faltantes para carga parcial)
 
-// --- Estas variables vienen del 'view-profile.php' principal ---
+// --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ ---
+// --- Definir variables globales y de sesión ---
+global $pdo, $basePath;
+$defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+$userId = $_SESSION['user_id'] ?? 0;
+$userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
+// --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
+
+
+// --- Estas variables vienen del 'view-profile.php' principal (en carga completa) O de router.php (en carga parcial) ---
 // $profile (datos del perfil)
 // $isOwnProfile (booleano)
 // $currentTab ('posts', 'likes', 'bookmarks')
-// $userId (ID del usuario logueado)
-// $userAvatar (URL del avatar del usuario logueado)
-// $basePath
-// $defaultAvatar
 
 // --- Estos datos fueron cargados por router.php específicamente para esta pestaña ---
 $publications = $viewProfileData['publications'] ?? [];

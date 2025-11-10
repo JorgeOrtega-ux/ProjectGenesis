@@ -257,33 +257,33 @@ if ($is_actually_online) {
             <div class="profile-nav-left">
                 <?php
                     $usernameUrl = $basePath . '/profile/' . htmlspecialchars($profile['username']);
-                    $postsUrl = $usernameUrl . '/posts';
+                    $postsUrl = $usernameUrl; // URL base es "posts"
                     $infoUrl = $usernameUrl . '/info';
                     $amigosUrl = $usernameUrl . '/amigos';
                     $fotosUrl = $usernameUrl . '/fotos';
                     $likesUrl = $usernameUrl . '/likes';
                     $bookmarksUrl = $usernameUrl . '/bookmarks';
                 ?>
-                <a href="<?php echo $postsUrl; ?>" 
+                <div data-href="<?php echo $postsUrl; ?>" 
                    class="profile-nav-button <?php echo ($currentTab === 'posts') ? 'active' : ''; ?>" 
                    data-nav-js="true">
                     Publicaciones
-                </a>
-                <a href="<?php echo $infoUrl; ?>" 
+                </div>
+                <div data-href="<?php echo $infoUrl; ?>" 
                    class="profile-nav-button <?php echo ($currentTab === 'info') ? 'active' : ''; ?>" 
                    data-nav-js="true">
                     Informacion
-                </a>
-                <a href="<?php echo $amigosUrl; ?>" 
+                </div>
+                <div data-href="<?php echo $amigosUrl; ?>" 
                    class="profile-nav-button <?php echo ($currentTab === 'amigos') ? 'active' : ''; ?>" 
                    data-nav-js="true">
                     Amigos
-                </a>
-                <a href="<?php echo $fotosUrl; ?>" 
+                </div>
+                <div data-href="<?php echo $fotosUrl; ?>" 
                    class="profile-nav-button <?php echo ($currentTab === 'fotos') ? 'active' : ''; ?>" 
                    data-nav-js="true">
                     Fotos
-                </a>
+                </div>
             </div>
             <div class="profile-nav-right">
                 <button type="button" class="header-button" data-action="toggleModuleProfileMore">
@@ -312,7 +312,6 @@ if ($is_actually_online) {
         <?php // --- ▲▲▲ FIN DE MODIFICACIÓN (Barra de Navegación) ▲▲▲ --- ?>
 
 
-        <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (Carga de Pestaña) ▼▼▼ --- ?>
         <div class="profile-content-container">
             <?php
             // $currentTab es definido en router.php
@@ -347,7 +346,6 @@ if ($is_actually_online) {
             }
             ?>
         </div>
-        <?php // --- ▲▲▲ FIN DE MODIFICACIÓN (Carga de Pestaña) ▲▲▲ --- ?>
         
         </div>
 </div>
