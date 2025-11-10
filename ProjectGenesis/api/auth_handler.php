@@ -127,6 +127,10 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
     unset($_SESSION['registration_step']);
     unset($_SESSION['registration_email']); 
 
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    $_SESSION['show_welcome_modal'] = true; 
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+
     return true;
 }
 
@@ -865,3 +869,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 echo json_encode($response);
 exit;
+?>
