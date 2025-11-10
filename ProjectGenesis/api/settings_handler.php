@@ -78,6 +78,23 @@ function deleteOldAvatar($oldUrl, $basePath, $userId)
     }
 }
 
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (deleteOldBanner) ▼▼▼ ---
+function deleteOldBanner($oldUrl, $basePath)
+{
+    // Solo eliminar si es un banner subido
+    if (strpos($oldUrl, '/assets/uploads/banners_uploaded/') === false) {
+        return;
+    }
+
+    $relativePath = str_replace($basePath, '', $oldUrl);
+    $serverPath = dirname(__DIR__) . $relativePath;
+
+    if (file_exists($serverPath)) {
+        @unlink($serverPath);
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -184,6 +201,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response['message'] = $e->getMessage();
                 }
             }
+        // --- ▼▼▼ INICIO DE NUEVAS ACCIONES (BANNER) ▼▼▼ ---
+        } elseif ($action === 'upload-banner') {
+            try {
+                if (!isset($_FILES['banner']) || $_FILES['banner']['error'] !== UPLOAD_ERR_OK) {
+                    throw new Exception('js.settings.errorAvatarUpload'); // Reutilizar clave de traducción
+                }
+
+                $file = $_FILES['banner'];
+                $maxSizeMB = (int)($GLOBALS['site_settings']['avatar_max_size_mb'] ?? 2); // Usar mismo límite de tamaño
+                if ($file['size'] > $maxSizeMB * 1024 * 1024) {
+                    $response['data'] = ['size' => $maxSizeMB]; 
+                    throw new Exception('js.settings.errorAvatarSize'); // Reutilizar clave
+                }
+
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $mimeType = $finfo->file($file['tmp_name']);
+                $allowedTypes = ['image/png'  => 'png', 'image/jpeg' => 'jpg', 'image/gif'  => 'gif', 'image/webp' => 'webp'];
+                if (!array_key_exists($mimeType, $allowedTypes)) {
+                    throw new Exception('js.settings.errorAvatarFormat'); // Reutilizar clave
+                }
+                $extension = $allowedTypes[$mimeType];
+
+                $stmt = $pdo->prepare("SELECT banner_url FROM users WHERE id = ?");
+                $stmt->execute([$userId]);
+                $oldUrl = $stmt->fetchColumn();
+
+                $newFileName = "user-banner-{$userId}-" . time() . "." . $extension;
+                $saveDir = dirname(__DIR__) . '/assets/uploads/banners_uploaded/'; // Directorio separado
+                if (!is_dir($saveDir)) {
+                    mkdir($saveDir, 0755, true);
+                }
+                
+                $newFilePath = $saveDir . $newFileName;
+                $newPublicUrl = $basePath . '/assets/uploads/banners_uploaded/' . $newFileName; 
+
+                if (!move_uploaded_file($file['tmp_name'], $newFilePath)) {
+                    throw new Exception('js.settings.errorAvatarSave'); // Reutilizar clave
+                }
+
+                $stmt = $pdo->prepare("UPDATE users SET banner_url = ? WHERE id = ?");
+                $stmt->execute([$newPublicUrl, $userId]);
+
+                if ($oldUrl) {
+                    deleteOldBanner($oldUrl, $basePath); // Usar nueva función helper
+                }
+
+                $_SESSION['banner_url'] = $newPublicUrl; // Actualizar sesión
+                $response['success'] = true;
+                $response['message'] = 'js.settings.successAvatarUpdate'; // Reutilizar clave
+                $response['newBannerUrl'] = $newPublicUrl;
+
+            } catch (Exception $e) {
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - upload-banner');
+                    $response['message'] = 'js.api.errorDatabase';
+                } else {
+                    $response['message'] = $e->getMessage();
+                }
+            }
+        } elseif ($action === 'remove-banner') {
+            try {
+                $stmt = $pdo->prepare("SELECT banner_url FROM users WHERE id = ?");
+                $stmt->execute([$userId]);
+                $oldUrl = $stmt->fetchColumn();
+
+                $stmt = $pdo->prepare("UPDATE users SET banner_url = NULL WHERE id = ?");
+                $stmt->execute([$userId]);
+
+                if ($oldUrl) {
+                    deleteOldBanner($oldUrl, $basePath); // Usar nueva función helper
+                }
+
+                $_SESSION['banner_url'] = null; // Actualizar sesión
+                $response['success'] = true;
+                $response['message'] = 'js.settings.successAvatarRemoved'; // Reutilizar clave
+                $response['newBannerUrl'] = null; // Devolver null (o el path al default si lo tienes)
+
+            } catch (Exception $e) {
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - remove-banner');
+                    $response['message'] = 'js.api.errorDatabase';
+                } else {
+                    $response['message'] = $e->getMessage();
+                }
+            }
+        // --- ▲▲▲ FIN DE NUEVAS ACCIONES ▲▲▲ ---
         } elseif ($action === 'update-username') {
             try {
 

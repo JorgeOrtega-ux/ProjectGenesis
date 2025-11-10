@@ -121,7 +121,9 @@ try {
 // Refresca los datos del usuario desde la BD en cada carga de página
 if (isset($_SESSION['user_id'])) {
     try {
-        $stmt = $pdo->prepare("SELECT username, email, profile_image_url, role, auth_token, account_status FROM users WHERE id = ?");
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR banner_url) ▼▼▼ ---
+        $stmt = $pdo->prepare("SELECT username, email, profile_image_url, banner_url, role, auth_token, account_status FROM users WHERE id = ?");
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         
         $stmt->execute([$_SESSION['user_id']]);
         $freshUserData = $stmt->fetch();
@@ -190,6 +192,9 @@ if (isset($_SESSION['user_id'])) {
             $_SESSION['username'] = $freshUserData['username'];
             $_SESSION['email'] = $freshUserData['email'];
             $_SESSION['profile_image_url'] = $freshUserData['profile_image_url'];
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR banner_url a la sesión) ▼▼▼ ---
+            $_SESSION['banner_url'] = $freshUserData['banner_url'];
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $_SESSION['role'] = $freshUserData['role']; 
             
             

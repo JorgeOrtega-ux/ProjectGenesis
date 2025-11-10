@@ -1066,3 +1066,31 @@
 [10-Nov-2025 05:09:12 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
 [10-Nov-2025 05:09:39 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
 [10-Nov-2025 05:09:47 UTC] PHP Warning:  file_get_contents(http://127.0.0.1:8766/count): Failed to open stream: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 495
+[10-Nov-2025 05:11:16 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 15:53:01 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 15:53:12 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 15:53:13 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[10-Nov-2025 15:53:50 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 15:53:53 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 15:54:31 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 15:54:48 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 15:55:02 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 15:55:07 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 15:55:23 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 15:55:28 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 15:55:30 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 16:03:19 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 16:16:14 UTC] PHP Warning:  move_uploaded_file(E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1762791374.png): Failed to open stream: No such file or directory in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 135
+[10-Nov-2025 16:16:14 UTC] PHP Warning:  move_uploaded_file(): Unable to move &quot;C:\xampp\tmp\php1354.tmp&quot; to &quot;E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1762791374.png&quot; in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 135
+[10-Nov-2025 16:16:17 UTC] PHP Warning:  move_uploaded_file(E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1762791377.png): Failed to open stream: No such file or directory in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 135
+[10-Nov-2025 16:16:17 UTC] PHP Warning:  move_uploaded_file(): Unable to move &quot;C:\xampp\tmp\php1F3C.tmp&quot; to &quot;E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1762791377.png&quot; in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 135
+[10-Nov-2025 16:16:47 UTC] PHP Warning:  move_uploaded_file(E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1762791407.png): Failed to open stream: No such file or directory in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 135
+[10-Nov-2025 16:16:47 UTC] PHP Warning:  move_uploaded_file(): Unable to move &quot;C:\xampp\tmp\php96DE.tmp&quot; to &quot;E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1762791407.png&quot; in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 135
+[10-Nov-2025 16:21:33 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 16:21:34 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 16:21:41 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 16:21:43 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 16:21:51 UTC] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 107
+[10-Nov-2025 16:21:51 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 812
+[10-Nov-2025 16:29:58 UTC] PHP Warning:  move_uploaded_file(E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1762792198.png): Failed to open stream: No such file or directory in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 152
+[10-Nov-2025 16:29:58 UTC] PHP Warning:  move_uploaded_file(): Unable to move &quot;C:\xampp\tmp\phpA8C7.tmp&quot; to &quot;E:\xampp\htdocs\ProjectGenesis/assets/uploads/avatars_uploaded/user-1-1762792198.png&quot; in E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php on line 152

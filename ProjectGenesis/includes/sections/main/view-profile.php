@@ -29,6 +29,14 @@ $profileRoleIcon = $roleIconMap[$profile['role']] ?? 'person';
 $isOwnProfile = ($profile['id'] == $userId);
 $targetUserId = $profile['id'];
 
+// --- ▼▼▼ INICIO DE NUEVO BLOQUE (BANNER) ▼▼▼ ---
+$defaultBanner = $basePath . '/assets/images/default_banner.png'; // Asumiendo que tienes un banner por defecto
+$profileBannerUrl = $profile['banner_url'] ?? $defaultBanner;
+if (empty($profileBannerUrl)) $profileBannerUrl = $defaultBanner;
+$isDefaultBanner = ($profileBannerUrl === $defaultBanner);
+// --- ▲▲▲ FIN DE NUEVO BLOQUE (BANNER) ▲▲▲ ---
+
+
 // --- Lógica de Estado (Online/Offline) ---
 $is_actually_online = false;
 try {
@@ -68,6 +76,54 @@ if ($is_actually_online) {
 
 ?>
 <style>
+/* --- ESTILOS TEMPORALES (SOLO PARA ESTA DEMO, MOVER A CSS) --- */
+.profile-banner {
+    position: relative; /* Necesario para los botones */
+}
+.profile-banner-actions {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 2;
+    display: flex;
+    gap: 8px;
+}
+.profile-banner-actions .component-button {
+    background-color: #ffffff;
+    border-color: #00000020;
+    color: #000000;
+    display: flex; /* Para mostrar icono y texto */
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px; /* Ajuste para botones con icono */
+}
+.profile-banner-actions .component-button .material-symbols-rounded {
+    font-size: 20px;
+}
+.profile-banner-actions .component-button.danger {
+    background-color: #fbebee;
+    border-color: #ef9a9a;
+    color: #c62828;
+}
+.profile-banner-actions .component-button.danger:hover {
+    background-color: #f8e0e0;
+}
+.profile-banner-actions .component-button:hover {
+    background-color: #f5f5fa;
+}
+.profile-banner-actions > div {
+    display: flex;
+    gap: 8px;
+}
+.profile-banner-actions > div.disabled {
+    display: none;
+}
+.profile-banner-actions > div.active {
+    display: flex;
+}
+/* --- FIN ESTILOS TEMPORALES --- */
+
+
 .profile-info-layout {
     display: flex;
     flex-direction: row;
@@ -218,10 +274,47 @@ if ($is_actually_online) {
     
     <div class="component-wrapper">
 
-        <div class="profile-header-card">
-            <div class="profile-banner"></div>
+        <div class="profile-header-card" id="profile-banner-section">
+            
+            <div class="profile-banner" id="profile-banner-preview" style="background-image: url('<?php echo htmlspecialchars($profileBannerUrl); ?>');">
+                <?php if ($isOwnProfile): ?>
+                    <input type="file" class="visually-hidden" id="profile-banner-upload-input" name="banner" accept="image/png, image/jpeg, image/gif, image/webp">
+                    
+                    <div class="profile-banner-actions">
+                        
+                        <div id="banner-actions-default" class="<?php echo $isDefaultBanner ? 'active' : 'disabled'; ?>">
+                            <button type="button" class="component-button" id="profile-banner-upload-trigger">
+                                <span class="material-symbols-rounded">photo_camera</span>
+                                <span>Subir banner</span>
+                            </button>
+                        </div>
+                        
+                        <div id="banner-actions-custom" class="<?php echo !$isDefaultBanner ? 'active' : 'disabled'; ?>">
+                            <button type="button" class="component-button danger" id="profile-banner-remove-trigger">
+                                <span class="material-symbols-rounded">delete</span>
+                                <span>Eliminar</span>
+                            </button>
+                            <button type="button" class="component-button" id="profile-banner-change-trigger">
+                                <span class="material-symbols-rounded">edit</span>
+                                <span>Cambiar</span>
+                            </button>
+                        </div>
+                        
+                        <div id="banner-actions-preview" class="disabled">
+                            <button type="button" class="component-button" id="profile-banner-cancel-trigger">
+                                <span>Cancelar</span>
+                            </button>
+                            <button type="button" class="component-button" id="profile-banner-save-trigger-btn">
+                                <span>Guardar</span>
+                            </button>
+                        </div>
+                        
+                    </div>
+                <?php endif; ?>
+            </div>
+
             <div class="profile-header-content">
-                <div class="profile-avatar-container">
+        <div class="profile-avatar-container">
                     <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($profile['role']); ?>">
                         <img src="<?php echo htmlspecialchars($profile['profile_image_url']); ?>" 
                              alt="<?php echo htmlspecialchars($profile['username']); ?>" 

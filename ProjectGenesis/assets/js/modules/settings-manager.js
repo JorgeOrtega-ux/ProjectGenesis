@@ -1,4 +1,3 @@
-
 import { callSettingsApi }  from '../services/api-service.js';
 import { deactivateAllModules }  from '../app/main-controller.js';
 import { getTranslation, loadTranslations, applyTranslations } from '../services/i18n-manager.js';
@@ -281,6 +280,121 @@ export function initSettingsManager() {
                 return;
             }
         }
+        
+        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (BANNER) ▼▼▼ ---
+        const bannerCard = document.getElementById('profile-banner-section');
+        if (bannerCard) {
+            if (target.closest('#profile-banner-upload-trigger') || target.closest('#profile-banner-change-trigger')) {
+                e.preventDefault();
+                // No necesitamos 'hideInlineError' aquí porque no hay dónde mostrarlo.
+                document.getElementById('profile-banner-upload-input')?.click();
+                return;
+            }
+            
+            if (target.closest('#profile-banner-cancel-trigger')) {
+                e.preventDefault();
+                const previewBanner = document.getElementById('profile-banner-preview');
+                const originalBannerBg = previewBanner.dataset.originalBg;
+                
+                if (previewBanner && originalBannerBg) {
+                    previewBanner.style.backgroundImage = originalBannerBg;
+                }
+                document.getElementById('profile-banner-upload-input').value = ''; 
+
+                document.getElementById('banner-actions-preview').classList.remove('active');
+                document.getElementById('banner-actions-preview').classList.add('disabled');
+                
+                const originalState = bannerCard.dataset.originalActions === 'default'
+                    ? 'banner-actions-default'
+                    : 'banner-actions-custom';
+                
+                document.getElementById(originalState).classList.add('active');
+                document.getElementById(originalState).classList.remove('disabled');
+                return;
+            }
+            
+            if (target.closest('#profile-banner-remove-trigger')) {
+                e.preventDefault();
+                const removeTrigger = target.closest('#profile-banner-remove-trigger');
+                toggleButtonSpinner(removeTrigger, 'Eliminar', true);
+
+                const formData = new FormData();
+                formData.append('action', 'remove-banner');
+                formData.append('csrf_token', getCsrfTokenFromPage()); 
+
+                const result = await callSettingsApi(formData);
+
+                if (result.success) {
+                    window.showAlert(getTranslation(result.message || 'js.settings.successAvatarRemoved'), 'success');
+                    
+                    const previewBanner = document.getElementById('profile-banner-preview');
+                    const defaultBannerUrl = `${window.projectBasePath}/assets/images/default_banner.png`;
+                    const newBg = `url('${defaultBannerUrl}')`;
+
+                    previewBanner.style.backgroundImage = newBg;
+                    previewBanner.dataset.originalBg = newBg;
+
+                    document.getElementById('banner-actions-preview').classList.remove('active');
+                    document.getElementById('banner-actions-preview').classList.add('disabled');
+                    document.getElementById('banner-actions-custom').classList.remove('active');
+                    document.getElementById('banner-actions-custom').classList.add('disabled');
+                    document.getElementById('banner-actions-default').classList.add('active');
+                    document.getElementById('banner-actions-default').classList.remove('disabled');
+                    
+                    bannerCard.dataset.originalActions = 'default';
+                } else {
+                    window.showAlert(getTranslation(result.message || 'js.settings.errorAvatarRemove'), 'error');
+                }
+                toggleButtonSpinner(removeTrigger, 'Eliminar', false);
+                return;
+            }
+            
+            if (target.closest('#profile-banner-save-trigger-btn')) {
+                 e.preventDefault();
+                const fileInput = document.getElementById('profile-banner-upload-input');
+                const saveTrigger = target.closest('#profile-banner-save-trigger-btn');
+
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                    window.showAlert(getTranslation('js.settings.errorAvatarSelect'), 'error');
+                    return;
+                }
+
+                toggleButtonSpinner(saveTrigger, 'Guardar', true);
+
+                const formData = new FormData();
+                formData.append('action', 'upload-banner');
+                formData.append('banner', fileInput.files[0]);
+                formData.append('csrf_token', getCsrfTokenFromPage()); 
+
+                const result = await callSettingsApi(formData);
+
+                if (result.success) {
+                    window.showAlert(getTranslation(result.message || 'js.settings.successAvatarUpdate'), 'success');
+                    
+                    const previewBanner = document.getElementById('profile-banner-preview');
+                    const newBg = `url('${result.newBannerUrl}')`;
+                    
+                    previewBanner.style.backgroundImage = newBg;
+                    previewBanner.dataset.originalBg = newBg;
+                    fileInput.value = ''; 
+
+                    document.getElementById('banner-actions-preview').classList.remove('active');
+                    document.getElementById('banner-actions-preview').classList.add('disabled');
+                    document.getElementById('banner-actions-default').classList.remove('active');
+                    document.getElementById('banner-actions-default').classList.add('disabled');
+                    document.getElementById('banner-actions-custom').classList.add('active');
+                    document.getElementById('banner-actions-custom').classList.remove('disabled');
+                    
+                    bannerCard.dataset.originalActions = 'custom';
+                } else {
+                    window.showAlert(getTranslation(result.message || 'js.settings.errorSaveUnknown'), 'error');
+                }
+                toggleButtonSpinner(saveTrigger, 'Guardar', false);
+                return;
+            }
+        }
+        // --- ▲▲▲ FIN DE NUEVO BLOQUE (BANNER) ▲▲▲ ---
+
 
         const usernameCard = document.getElementById('username-section');
         if (usernameCard) {
@@ -878,6 +992,51 @@ export function initSettingsManager() {
             document.getElementById('avatar-actions-preview').classList.add('active');
             document.getElementById('avatar-actions-preview').classList.remove('disabled');
         }
+        
+        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (BANNER) ▼▼▼ ---
+        const bannerCard = target.closest('#profile-banner-section');
+        if (target.id === 'profile-banner-upload-input' && bannerCard) {
+            const fileInput = target;
+            const previewBanner = document.getElementById('profile-banner-preview');
+            const file = fileInput.files[0];
+
+            if (!file) return;
+
+            // Reutilizar las claves de traducción del avatar
+            if (!['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(file.type)) {
+                window.showAlert(getTranslation('js.settings.errorAvatarFormat'), 'error');
+                fileInput.value = ''; 
+                return;
+            }
+            
+            const maxSizeInMB = window.avatarMaxSizeMB || 2;
+            if (file.size > maxSizeInMB * 1024 * 1024) { 
+                window.showAlert(getTranslation('js.settings.errorAvatarSize', { size: maxSizeInMB }), 'error');
+                fileInput.value = ''; 
+                return;
+            }
+
+            if (!previewBanner.dataset.originalBg) {
+                previewBanner.dataset.originalBg = previewBanner.style.backgroundImage;
+            }
+            const reader = new FileReader();
+            reader.onload = (event) => { 
+                previewBanner.style.backgroundImage = `url('${event.target.result}')`;
+            };
+            reader.readAsDataURL(file);
+
+            const actionsDefault = document.getElementById('banner-actions-default');
+            bannerCard.dataset.originalActions = (actionsDefault.classList.contains('active')) ? 'default' : 'custom';
+
+            document.getElementById('banner-actions-default').classList.remove('active');
+            document.getElementById('banner-actions-default').classList.add('disabled');
+            document.getElementById('banner-actions-custom').classList.remove('active');
+            document.getElementById('banner-actions-custom').classList.add('disabled');
+            document.getElementById('banner-actions-preview').classList.add('active');
+            document.getElementById('banner-actions-preview').classList.remove('disabled');
+        }
+        // --- ▲▲▲ FIN DE NUEVO BLOQUE (BANNER) ▲▲▲ ---
+
 
         else if (target.matches('input[type="checkbox"][data-preference-type="boolean"]') && card) {
              hideInlineError(card);
@@ -935,6 +1094,13 @@ export function initSettingsManager() {
         if (previewImage && !previewImage.dataset.originalSrc) {
             previewImage.dataset.originalSrc = previewImage.src;
         }
+        
+        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (BANNER) ▼▼▼ ---
+        const previewBanner = document.getElementById('profile-banner-preview');
+        if (previewBanner && !previewBanner.dataset.originalBg) {
+            previewBanner.dataset.originalBg = previewBanner.style.backgroundImage;
+        }
+        // --- ▲▲▲ FIN DE NUEVO BLOQUE (BANNER) ▲▲▲ ---
     }, 100);
 
 }

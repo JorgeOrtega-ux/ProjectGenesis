@@ -441,11 +441,13 @@ if (array_key_exists($page, $allowedPages)) {
             $CURRENT_SECTION = '404';
         } else {
             try {
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR banner_url) ▼▼▼ ---
                 $stmt_profile = $pdo->prepare(
-                    "SELECT id, username, profile_image_url, role, created_at, is_online, last_seen 
+                    "SELECT id, username, profile_image_url, banner_url, role, created_at, is_online, last_seen 
                        FROM users 
                        WHERE username = ? AND account_status = 'active'"
                 );
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 $stmt_profile->execute([$targetUsername]);
                 $userProfile = $stmt_profile->fetch();
 
