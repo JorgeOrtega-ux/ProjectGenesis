@@ -500,12 +500,15 @@ export function initRouter() {
             if (link.hasAttribute('data-action')) {
                 action = link.getAttribute('data-action');
 
-                // --- ▼▼▼ MODIFICACIÓN: Excluir 'edit-user' y 'edit-community' de aquí ▼▼▼ ---
+                // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+                // Se elimina el bloque que detenía la propagación
+                /*
                 if (action === 'toggleSectionAdminEditUser' || action === 'toggleSectionAdminEditCommunity') {
                     e.stopImmediatePropagation();
                     return; 
                 }
-                // --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ ---
+                */
+                // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
                 
                 if (action === 'toggleSectionPostView' && link.dataset.postId) {
                     page = 'post-view';

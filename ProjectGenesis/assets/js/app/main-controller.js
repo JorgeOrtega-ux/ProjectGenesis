@@ -133,6 +133,7 @@ function initMainController() {
                 'toggleModuleAdminRole',
                 'toggleModuleAdminStatus',
                 'toggleModuleAdminCreateRole',
+                'toggleModuleAdminCommunityPrivacy', // <-- ¡ACCIÓN AÑADIDA!
                 'toggleModuleCommunitySelect', 
                 'toggleModuleSelectGroup',
                 'toggleModuleSearch',
@@ -145,7 +146,6 @@ function initMainController() {
                 'toggle-post-text',
                 // --- ¡LÍNEA AÑADIDA! (de publication-manager.js) ---
                 'toggleModulePrivacySelect' 
-                // --- ¡FIN DE LÍNEA AÑADIDA! ---
             ];
             // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
