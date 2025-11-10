@@ -215,6 +215,43 @@ if ($is_actually_online) {
         padding: 8px 0 0 0;
     }
 }
+
+/* --- ▼▼▼ INICIO DE CORRECCIONES CSS ▼▼▼ --- */
+            
+/* 1. Unificar altura de badges de rol y estado */
+.profile-role-badge,
+.profile-status-badge {
+    min-height: 27px; /* Altura mínima (padding 4*2 + font ~16px + border 1*2) */
+    box-sizing: border-box; /* Incluir padding y borde en la altura */
+    gap: 6px; /* Estandarizar el 'gap' */
+    margin-top: 8px; /* Asegurar que ambos tengan el mismo margen */
+    padding: 4px 8px; /* Asegurar padding uniforme */
+}
+
+/* 2. Crear badges transparentes para meta-datos */
+.profile-meta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500; /* Un poco menos que 'bold' para diferenciar */
+    padding: 4px 8px;
+    border-radius: 50px;
+    margin-top: 8px;
+    background-color: transparent;
+    color: #6b7280; /* Usar el color del texto meta */
+    border: 1px solid #00000020;
+    min-height: 27px; /* Misma altura que los otros badges */
+    box-sizing: border-box;
+}
+.profile-meta-badge .material-symbols-rounded {
+    font-size: 16px;
+}
+.profile-meta-badge strong {
+    font-weight: 700; /* Hacer el número de amigos más grueso */
+    color: #1f2937;
+}
+/* --- ▲▲▲ FIN DE CORRECCIONES CSS ▲▲▲ --- */
 </style>
 
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'view-profile') ? 'active' : 'disabled'; ?>" data-section="view-profile">
@@ -336,11 +373,17 @@ if ($is_actually_online) {
                         ?>
                     </div>
 
-                    <p class="profile-meta">
-                        Se unió el <?php echo date('d/m/Y', strtotime($profile['created_at'])); ?>
-                        &middot; <strong><?php echo $friendCount; ?></strong> Amigos
-                    </p>
-                </div>
+                    <div class="profile-meta" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 0;">
+                        <div class="profile-meta-badge">
+                            <span class="material-symbols-rounded">calendar_today</span>
+                            <span>Se unió el <?php echo date('d/m/Y', strtotime($profile['created_at'])); ?></span>
+                        </div>
+                        <div class="profile-meta-badge">
+                            <span class="material-symbols-rounded">group</span>
+                            <span><strong><?php echo $friendCount; ?></strong> Amigos</span>
+                        </div>
+                    </div>
+                    </div>
                 
                 </div>
         </div>
