@@ -3639,6 +3639,7 @@ a.profile-tab.active {
     text-decoration: none;
     border-radius: 8px;
     padding: 8px;
+    min-width: 0;
     transition: background-color 0.2s;
 }
 
