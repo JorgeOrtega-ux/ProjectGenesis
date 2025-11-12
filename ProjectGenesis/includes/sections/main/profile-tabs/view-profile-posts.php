@@ -41,6 +41,17 @@ $employmentMap = [
     'admin' => 'Administración / Oficina',
     'other' => 'Otro'
 ];
+$employmentIconMap = [
+    'none' => 'work_off',
+    'student' => 'school',
+    'tech' => 'computer',
+    'health' => 'medical_services',
+    'education' => 'history_edu',
+    'industry' => 'factory',
+    'commerce' => 'storefront',
+    'admin' => 'business_center',
+    'other' => 'work'
+];
 $educationMap = [
     'none' => 'Sin formación',
     'icn_valle_hermoso' => 'Universidad de Ingenierías y Ciencias del Noreste (ICN) – Campus Valle Hermoso',
@@ -268,7 +279,8 @@ $educationDisplay = $hasEducation ? $educationText : 'Sin formación establecida
             </div>
             
             <div class="profile-bio-placeholder" style="padding: 12px 8px 0 8px; margin-top: 0;">
-                <span class="material-symbols-rounded"><?php echo $hasEducation ? 'school' : 'school_off'; ?></span>
+                
+<span class="material-symbols-rounded"><?php echo $hasEducation ? 'school' : 'work_off'; ?></span>
                 <span><?php echo htmlspecialchars($educationDisplay); ?></span>
             </div>
             <?php // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- ?>

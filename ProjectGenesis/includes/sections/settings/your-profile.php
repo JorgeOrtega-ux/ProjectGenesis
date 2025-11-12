@@ -109,7 +109,9 @@ foreach ($educationGroups as $groupOptions) {
         $educationMap[$key] = $text; // Añadir al mapa plano
     }
 }
-$educationIconMap['none'] = 'school_off';
+// --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+$educationIconMap['none'] = 'work_off'; // Cambiado de 'school_off' a 'work_off'
+// --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
 $educationIconMap['other'] = 'domain';
 
 // --- Obtener claves actuales ---
