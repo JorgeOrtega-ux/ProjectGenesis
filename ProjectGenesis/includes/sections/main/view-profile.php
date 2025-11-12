@@ -252,6 +252,26 @@ if ($is_actually_online) {
     color: #1f2937;
 }
 /* --- ▲▲▲ FIN DE CORRECCIONES CSS ▲▲▲ --- */
+
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (BOTONES DE AMISTAD) ▼▼▼ --- */
+.profile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px; /* Espacio superior */
+}
+.profile-actions .component-button {
+    flex: 1 1 auto; /* Permite que los botones crezcan y se envuelvan */
+    display: flex; /* Para centrar icono y texto */
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Espacio entre icono y texto */
+}
+.profile-actions .component-button .material-symbols-rounded {
+    font-size: 20px; /* Tamaño de icono */
+}
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */
+
 </style>
 
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'view-profile') ? 'active' : 'disabled'; ?>" data-section="view-profile">
@@ -332,6 +352,46 @@ if ($is_actually_online) {
                             <span><strong><?php echo $friendCount; ?></strong> Amigos</span>
                         </div>
                     </div>
+                    
+                    <?php // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (BOTONES DE AMISTAD) ▼▼▼ --- ?>
+                    <?php if (!$isOwnProfile): ?>
+                        <div class="profile-actions" data-user-id="<?php echo htmlspecialchars($targetUserId); ?>">
+                            <?php
+                            switch ($friendshipStatus) {
+                                case 'not_friends':
+                                    echo '<button type="button" class="component-button component-button--primary" data-action="friend-send-request" data-user-id="' . $targetUserId . '">
+                                            <span class="material-symbols-rounded">person_add</span>
+                                            <span data-i18n="friends.sendRequest">Agregar amigo</span>
+                                          </button>';
+                                    break;
+                                case 'pending_sent':
+                                    echo '<button type="button" class="component-button" data-action="friend-cancel-request" data-user-id="' . $targetUserId . '">
+                                            <span class="material-symbols-rounded">close</span>
+                                            <span data-i18n="friends.cancelRequest">Cancelar solicitud</span>
+                                          </button>';
+                                    break;
+                                case 'pending_received':
+                                    echo '<button type="button" class="component-button component-button--primary" data-action="friend-accept-request" data-user-id="' . $targetUserId . '">
+                                            <span class="material-symbols-rounded">check</span>
+                                            <span data-i18n="friends.acceptRequest">Aceptar</span>
+                                          </button>';
+                                    echo '<button type="button" class="component-button" data-action="friend-decline-request" data-user-id="' . $targetUserId . '">
+                                            <span class="material-symbols-rounded">close</span>
+                                            <span data-i18n="friends.declineRequest">Rechazar</span>
+                                          </button>';
+                                    break;
+                                case 'friends':
+                                    echo '<button type="button" class="component-button" data-action="friend-remove" data-user-id="' . $targetUserId . '">
+                                            <span class="material-symbols-rounded">person_remove</span>
+                                            <span data-i18n="friends.removeFriend">Eliminar amigo</span>
+                                          </button>';
+                                    break;
+                            }
+                            ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ --- ?>
+                    
                     </div>
                 
                 </div>
