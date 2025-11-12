@@ -16,6 +16,7 @@ let currentMenuType = null;
 const routes = {
     'toggleSectionHome': 'home',
     'toggleSectionExplorer': 'explorer',
+    'toggleSectionTrends': 'trends', // --- [HASTAGS] --- Nueva ruta
     'toggleSectionLogin': 'login',
     'toggleSectionMaintenance': 'maintenance', 
     'toggleSectionServerFull': 'server-full', 
@@ -67,6 +68,7 @@ const routes = {
 const paths = {
     '/': 'toggleSectionHome',
     '/explorer': 'toggleSectionExplorer',
+    '/trends': 'toggleSectionTrends', // --- [HASTAGS] --- Nueva ruta
     '/login': 'toggleSectionLogin',
     '/maintenance': 'toggleSectionMaintenance', 
     '/server-full': 'toggleSectionServerFull', 
@@ -188,7 +190,7 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
     const friendListWrapper = document.getElementById('friend-list-wrapper');
     
     if (friendListWrapper) {
-        if (page === 'home') {
+        if (page === 'home' || page === 'trends') { // --- [HASTAGS] --- Mostrar amigos también en 'trends'
             if (!friendListWrapper.querySelector('#friend-list-container')) {
                 try {
                     const friendListUrl = `${basePath}/includes/modules/module-friend-list.php`;
@@ -496,12 +498,14 @@ export function initRouter() {
       const link = e.target.closest(
             '.menu-link[data-action*="toggleSection"], ' +
             'a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], ' +
-            'a[href*="/profile/"], a[href*="/search"], .component-button[data-action*="toggleSection"], ' +
+            'a[href*="/profile/"], a[href*="/search"], a[href*="/trends"], ' + // --- [HASTAGS] --- Añadido /trends
+            '.component-button[data-action*="toggleSection"], ' +
             '.page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], ' +
             '.auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], ' +
             '[data-module="moduleProfileMore"] a.menu-link[data-nav-js="true"], ' + 
             'div.profile-nav-button[data-nav-js="true"],' +
-            '[data-module="moduleSelect"] .menu-link[data-nav-js="true"]' // <-- LÍNEA AÑADIDA
+            '[data-module="moduleSelect"] .menu-link[data-nav-js="true"],' +
+            'a.post-hashtag-link[data-nav-js="true"]' // --- [HASTAGS] --- Añadido el selector de link de hashtag
         );
       // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 

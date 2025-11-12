@@ -148,3 +148,5 @@
 [2025-11-12 17:51:55 UTC] [settings_handler - update-preference] Fila de preferencias faltante para user_id: 3 (Archivo: E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php, Línea: 861)
 [2025-11-12 17:51:55 UTC] [settings_handler - update-preference] Fila de preferencias faltante para user_id: 3 (Archivo: E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php, Línea: 861)
 [2025-11-12 17:51:55 UTC] [settings_handler - update-preference] Fila de preferencias faltante para user_id: 3 (Archivo: E:\xampp\htdocs\ProjectGenesis\api\settings_handler.php, Línea: 861)
+[2025-11-12 18:49:17 UTC] [home.php - fetch posts] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'project_genesis.publication_hashtags' doesn't exist (Archivo: E:\xampp\htdocs\ProjectGenesis\includes\sections\main\home.php, Línea: 158)
+[2025-11-12 18:49:41 UTC] [publication_handler - create-post] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'project_genesis.hashtags' doesn't exist (Archivo: E:\xampp\htdocs\ProjectGenesis\api\publication_handler.php, Línea: 258)

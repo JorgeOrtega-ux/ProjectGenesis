@@ -106,7 +106,16 @@
                                 <span data-i18n="sidebar.main.explore"></span>
                             </div>
                         </div>
-                    <?php 
+                        
+                        <div class="menu-link" data-action="toggleSectionTrends">
+                            <div class="menu-link-icon">
+                                <span class="material-symbols-rounded">trending_up</span>
+                            </div>
+                            <div class="menu-link-text">
+                                <span data-i18n="sidebar.main.trends">Descubrir Tendencias</span>
+                            </div>
+                        </div>
+                        <?php 
                     endif; 
                     ?>
                 </div>

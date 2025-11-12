@@ -209,6 +209,7 @@ if (isset($_SESSION['user_id'])) {
                 $_SESSION['usage_type'] = $prefs['usage_type'];
                 $_SESSION['open_links_in_new_tab'] = (int)$prefs['open_links_in_new_tab'];
                 $_SESSION['increase_message_duration'] = (int)$prefs['increase_message_duration'];
+                // --- [HASTAGS] --- (Aquí iría la carga de preferencias de hashtags si las hubiera)
             } else {
                 // Valores por defecto si no hay preferencias
                 $_SESSION['language'] = 'en-us';
@@ -355,6 +356,8 @@ $pathsToPages = [
     '/profile/username-placeholder' => 'view-profile',
     
     '/search' => 'search-results', // <-- LÍNEA AÑADIDA
+    
+    '/trends' => 'trends', // --- [HASTAGS] --- Nueva ruta
 
     '/explorer'   => 'explorer',
     '/login'      => 'login',

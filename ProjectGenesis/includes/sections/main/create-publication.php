@@ -231,6 +231,14 @@ $currentPrivacyIcon = $privacyIconMap[$defaultPrivacy];
                     <textarea id="publication-text" class="component-input" rows="5" placeholder=" " maxlength="1000"></textarea>
                     <label for="publication-text" data-i18n="create_publication.placeholder"></label>
                 </div>
+                
+                <div class="component-input-group">
+                    <input type="text" id="publication-hashtags" class="component-input" placeholder=" " maxlength="255">
+                    <label for="publication-hashtags" data-i18n="create_publication.hashtagsLabel">Hashtags (ej: #tag1 #tag2)</label>
+                </div>
+                <p class="component-card__description" data-i18n="create_publication.hashtagsDesc" style="font-size: 13px; margin-top: -12px; margin-bottom: 12px; padding-left: 4px;">
+                    Añade hasta 5 hashtags separados por espacios.
+                </p>
                 <div class="publication-preview-container" id="publication-preview-container">
                 </div>
             </div>
@@ -241,6 +249,13 @@ $currentPrivacyIcon = $privacyIconMap[$defaultPrivacy];
                     <label for="poll-question" data-i18n="create_publication.pollQuestionLabel">Escribe tu pregunta...</label>
                 </div>
                 
+                <div class="component-input-group">
+                    <input type="text" id="poll-hashtags" class="component-input" placeholder=" " maxlength="255">
+                    <label for="poll-hashtags" data-i18n="create_publication.hashtagsLabel">Hashtags (ej: #tag1 #tag2)</label>
+                </div>
+                <p class="component-card__description" data-i18n="create_publication.hashtagsDesc" style="font-size: 13px; margin-top: -12px; margin-bottom: 12px; padding-left: 4px;">
+                    Añade hasta 5 hashtags separados por espacios.
+                </p>
                 <div id="poll-options-container">
                     </div>
                 
@@ -249,7 +264,8 @@ $currentPrivacyIcon = $privacyIconMap[$defaultPrivacy];
                     <span data-i18n="create_publication.pollAddOption">Añadir opción</span>
                 </button>
             </div>
-            
+
+            <div class="component-card__error" id="create-post-error-div" style="display: none; width: 100%; margin-bottom: 16px;"></div>
             <div class="component-card__actions" id="create-post-actions-footer">
                 
                 <button type="button" class="component-action-button--icon-square <?php echo $isPollActive ? 'disabled' : 'active'; ?>" 

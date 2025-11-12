@@ -22,6 +22,29 @@ $profileFriends = $viewProfileData['profile_friends_preview'] ?? [];
 $friendCount = $viewProfileData['friend_count'] ?? 0;
 ?>
 
+<style>
+    .post-hashtag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    .post-hashtag-link {
+        display: inline-block;
+        padding: 4px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #0056b3; /* Color de enlace */
+        background-color: #f0f5fa; /* Fondo azul claro */
+        border-radius: 50px;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+    .post-hashtag-link:hover {
+        background-color: #e0eafc;
+        text-decoration: underline;
+    }
+</style>
 <div class="profile-main-content active" data-profile-tab-content="posts">
                 
     <div class="profile-left-column">
@@ -146,6 +169,13 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
                         $privacyIcon = 'lock';
                         $privacyTooltipKey = 'post.privacy.private';
                     }
+
+                    /* --- [HASTAGS] --- INICIO DE LÓGICA DE HASHTAGS --- */
+                    $hashtags = [];
+                    if (!empty($post['hashtags'])) {
+                        $hashtags = explode(',', $post['hashtags']);
+                    }
+                    /* --- [HASTAGS] --- FIN DE LÓGICA DE HASHTAGS --- */
                     ?>
                     
                     <div class="component-card component-card--post component-card--column" 
@@ -264,7 +294,20 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
                                 <?php endif; ?>
                                 </div>
                         <?php endif; ?>
-
+                        
+                        <?php if (!empty($hashtags)): ?>
+                            <div class="post-card-content" style="padding-top: 0; <?php if(empty($post['text_content'])) echo 'padding-top: 12px;'; ?>">
+                                <div class="post-hashtag-list">
+                                    <?php foreach ($hashtags as $tag): ?>
+                                        <a href="<?php echo $basePath . '/search?q=' . urlencode('#' . htmlspecialchars($tag)); ?>" 
+                                           class="post-hashtag-link" 
+                                           data-nav-js="true">
+                                            #<?php echo htmlspecialchars($tag); ?>
+                                        </a>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                         <?php if ($isPoll && !empty($pollOptions)): ?>
                             <div class="poll-container" id="poll-<?php echo $post['id']; ?>" data-poll-id="<?php echo $post['id']; ?>">
                                 <?php if ($hasVoted): ?>

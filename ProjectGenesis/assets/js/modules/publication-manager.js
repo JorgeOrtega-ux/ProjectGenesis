@@ -5,6 +5,7 @@ import { deactivateAllModules } from '../app/main-controller.js';
 
 const MAX_FILES = 4;
 const MAX_POLL_OPTIONS = 6;
+const MAX_HASHTAGS = 5; // --- [HASTAGS] --- Nueva constante
 let selectedFiles = []; 
 
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (Default a 'profile') ▼▼▼ ---
@@ -43,9 +44,68 @@ function togglePublishSpinner(button, isLoading) {
     }
 }
 
+// --- [HASTAGS] --- INICIO DE NUEVAS FUNCIONES DE VALIDACIÓN ---
+function showValidationError(messageKey) {
+    const errorDiv = document.getElementById('create-post-error-div');
+    if (errorDiv) {
+        errorDiv.textContent = getTranslation(messageKey);
+        errorDiv.style.display = 'block';
+    }
+}
+
+function hideValidationError() {
+     const errorDiv = document.getElementById('create-post-error-div');
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+    }
+}
+
+function getHashtags() {
+    const postHashtagInput = document.getElementById('publication-hashtags');
+    const pollHashtagInput = document.getElementById('poll-hashtags');
+    let hashtagInput = null;
+
+    if (currentPostType === 'post' && postHashtagInput) {
+        hashtagInput = postHashtagInput;
+    } else if (currentPostType === 'poll' && pollHashtagInput) {
+        hashtagInput = pollHashtagInput;
+    }
+
+    if (!hashtagInput) return { valid: true, tags: [] }; // No hay campo de hashtag, así que es válido
+
+    const rawValue = hashtagInput.value.trim();
+    if (rawValue.length === 0) {
+        return { valid: true, tags: [] }; // Vacío es válido
+    }
+
+    const tags = rawValue.split(/[\s,]+/) // Separar por espacio o coma
+                         .map(tag => tag.startsWith('#') ? tag.substring(1) : tag) // Quitar #
+                         .map(tag => tag.trim())
+                         .filter(tag => tag.length > 0) // Quitar vacíos
+                         .filter((value, index, self) => self.indexOf(value) === index); // Únicos
+
+    if (tags.length > MAX_HASHTAGS) {
+        return { valid: false, tags: [], error: 'js.publication.errorHashtagLimit' }; // TODO: Añadir clave i18n
+    }
+    
+    // Validar longitud de cada tag (opcional, pero buena idea)
+    const MAX_TAG_LENGTH = 50;
+    for (const tag of tags) {
+        if (tag.length > MAX_TAG_LENGTH) {
+            return { valid: false, tags: [], error: 'js.publication.errorHashtagLength' }; // TODO: Añadir clave i18n
+        }
+    }
+
+    return { valid: true, tags: tags };
+}
+// --- [HASTAGS] --- FIN DE NUEVAS FUNCIONES DE VALIDACIÓN ---
+
+
 function validatePublicationState() {
     const publishButton = document.getElementById('publish-post-btn');
     if (!publishButton) return;
+    
+    hideValidationError(); // --- [HASTAGS] --- Ocultar error al re-validar
 
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Validación de destino) ▼▼▼ ---
     // Ahora es válido si no es null (es 'profile' o un ID numérico)
@@ -53,6 +113,7 @@ function validatePublicationState() {
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     let isContentValid = false;
+    const hashtagValidation = getHashtags(); // --- [HASTAGS] --- Validar hashtags
 
     if (currentPostType === 'post') {
         const textInput = document.getElementById('publication-text');
@@ -60,7 +121,8 @@ function validatePublicationState() {
         const hasText = textInput ? textInput.value.trim().length > 0 : false;
         const hasTitle = titleInput ? titleInput.value.trim().length > 0 : false; 
         const hasFiles = selectedFiles.length > 0;
-        isContentValid = hasText || hasFiles || hasTitle; 
+        // --- [HASTAGS] --- Un post es válido si tiene texto, título, archivos O hashtags
+        isContentValid = hasText || hasFiles || hasTitle || (hashtagValidation.tags.length > 0); 
     } else { 
         const questionInput = document.getElementById('poll-question');
         const options = document.querySelectorAll('#poll-options-container .component-input-group');
@@ -69,6 +131,13 @@ function validatePublicationState() {
         const allOptionsFilled = Array.from(options).every(opt => opt.querySelector('input').value.trim().length > 0);
         
         isContentValid = hasQuestion && hasMinOptions && allOptionsFilled;
+    }
+    
+    // --- [HASTAGS] --- Comprobar si los hashtags son válidos
+    if (!hashtagValidation.valid) {
+        showValidationError(hashtagValidation.error);
+        publishButton.disabled = true;
+        return;
     }
     
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Validación de botón) ▼▼▼ ---
@@ -220,6 +289,14 @@ function resetForm() {
     if (pollQuestion) pollQuestion.value = '';
     const pollOptions = document.getElementById('poll-options-container');
     if (pollOptions) pollOptions.innerHTML = '';
+
+    // --- [HASTAGS] --- INICIO DE RESET ---
+    const postHashtags = document.getElementById('publication-hashtags');
+    if (postHashtags) postHashtags.value = '';
+    const pollHashtags = document.getElementById('poll-hashtags');
+    if (pollHashtags) pollHashtags.value = '';
+    hideValidationError();
+    // --- [HASTAGS] --- FIN DE RESET ---
     
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Reset de Destino) ▼▼▼ ---
     selectedCommunityId = 'profile'; // Default a 'profile'
@@ -280,6 +357,14 @@ async function handlePublishSubmit() {
     const publishButton = document.getElementById('publish-post-btn');
     if (!publishButton) return;
 
+    // --- [HASTAGS] --- Re-validar antes de enviar
+    const hashtagValidation = getHashtags();
+    if (!hashtagValidation.valid) {
+        showValidationError(hashtagValidation.error);
+        return;
+    }
+    // --- [HASTAGS] --- Fin
+
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Manejar 'profile') ▼▼▼ ---
     let communityId = selectedCommunityId;
     
@@ -301,14 +386,22 @@ async function handlePublishSubmit() {
     formData.append('community_id', communityId); // Enviará '' para perfil, o '123' para un grupo
     formData.append('post_type', currentPostType);
     formData.append('privacy_level', selectedPrivacyLevel);
+    
+    // --- [HASTAGS] --- Añadir hashtags al formulario
+    formData.append('hashtags', JSON.stringify(hashtagValidation.tags));
+    // --- [HASTAGS] --- Fin
 
     try {
         if (currentPostType === 'post') {
             const title = document.getElementById('publication-title').value.trim();
             const textContent = document.getElementById('publication-text').value.trim();
-            if (!textContent && selectedFiles.length === 0 && !title) {
+            
+            // --- [HASTAGS] --- Modificación de validación de vacío
+            if (!textContent && selectedFiles.length === 0 && !title && hashtagValidation.tags.length === 0) {
                 throw new Error('js.publication.errorEmpty');
             }
+            // --- [HASTAGS] --- Fin
+            
             formData.append('title', title);
             formData.append('text_content', textContent);
             
@@ -364,7 +457,13 @@ async function handlePublishSubmit() {
         }
 
     } catch (error) {
-        showAlert(getTranslation(error.message || 'js.api.errorConnection'), 'error');
+        // --- [HASTAGS] --- Mostrar error de hashtag
+        if (error.message === 'js.publication.errorHashtagLimit' || error.message === 'js.publication.errorHashtagLength') {
+            showValidationError(error.message);
+        } else {
+            showAlert(getTranslation(error.message || 'js.api.errorConnection'), 'error');
+        }
+        // --- [HASTAGS] --- Fin
         togglePublishSpinner(publishButton, false);
     }
 }
@@ -384,6 +483,10 @@ async function handleProfilePostSubmit(form) {
 
     // Los campos action, community_id, y privacy_level ya están en el form como hidden inputs.
     
+    // --- [HASTAGS] --- Añadir hashtags (asumiendo que NO hay campo de hashtags en el perfil)
+    formData.append('hashtags', JSON.stringify([])); 
+    // --- [HASTAGS] --- Fin
+
     try {
         const result = await callPublicationApi(formData);
         if (result.success) {
@@ -396,7 +499,7 @@ async function handleProfilePostSubmit(form) {
             const currentTab = document.querySelector('.profile-nav-button.active[data-nav-js="true"]');
             const postsTab = document.querySelector('.profile-nav-button[data-nav-js="true"][data-href*="/profile/"]'); // Asume que el primero es "Publicaciones"
 
-            if (currentTab && currentTab.textContent.includes('Publicaciones')) {
+            if (currentTab && (currentTab.href.endsWith('/profile/' + window.location.pathname.split('/')[2]) || currentTab.href.endsWith('/posts'))) {
                 currentTab.click(); // Recargar pestaña actual
             } else if (postsTab) {
                 postsTab.click(); // Ir a la pestaña de publicaciones
@@ -522,7 +625,8 @@ export function initPublicationManager() {
     document.body.addEventListener('input', (e) => {
         const createSection = e.target.closest('[data-section*="create-"]');
         if (createSection) {
-            if (e.target.id === 'publication-title' || e.target.id === 'publication-text' || e.target.id === 'poll-question' || e.target.closest('#poll-options-container')) {
+            // --- [HASTAGS] --- Añadido listener para inputs de hashtag
+            if (e.target.id === 'publication-title' || e.target.id === 'publication-text' || e.target.id === 'poll-question' || e.target.closest('#poll-options-container') || e.target.id === 'publication-hashtags' || e.target.id === 'poll-hashtags') {
                 validatePublicationState();
             }
             return;

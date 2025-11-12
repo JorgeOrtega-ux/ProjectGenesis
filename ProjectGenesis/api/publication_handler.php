@@ -19,6 +19,11 @@ $MAX_SIZE_MB = (int)($GLOBALS['site_settings']['avatar_max_size_mb'] ?? 2);
 $MAX_SIZE_BYTES = $MAX_SIZE_MB * 1024 * 1024;
 define('MAX_POST_LENGTH', (int)($GLOBALS['site_settings']['max_post_length'] ?? 1000));
 
+// --- [HASTAGS] --- INICIO DE NUEVAS CONSTANTES ---
+define('MAX_HASHTAGS_PER_POST', 5);
+define('MAX_HASHTAG_LENGTH', 50);
+// --- [HASTAGS] --- FIN DE NUEVAS CONSTANTES ---
+
 
 // --- (Función notifyUser sin cambios) ---
 function notifyUser($targetUserId) {
@@ -97,6 +102,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pollQuestion = trim($_POST['poll_question'] ?? ''); 
             $pollOptionsJSON = $_POST['poll_options'] ?? '[]'; 
             
+            // --- [HASTAGS] --- INICIO DE RECEPCIÓN Y VALIDACIÓN ---
+            $hashtagsJSON = $_POST['hashtags'] ?? '[]';
+            $hashtags = json_decode($hashtagsJSON, true);
+            $processedHashtags = [];
+
+            if (is_array($hashtags) && !empty($hashtags)) {
+                if (count($hashtags) > MAX_HASHTAGS_PER_POST) {
+                    throw new Exception('js.publication.errorHashtagLimit'); // Error: Demasiados hashtags
+                }
+                foreach ($hashtags as $tag) {
+                    // Sanitizar: quitar todo excepto letras, números y guiones bajos (o lo que prefieras)
+                    // Convertir a minúsculas y asegurarse de que no esté vacío.
+                    $sanitizedTag = mb_strtolower(trim($tag, '# '));
+                    $sanitizedTag = preg_replace('/[^a-z0-9áéíóúñ_-]/u', '', $sanitizedTag); 
+
+                    if (mb_strlen($sanitizedTag, 'UTF-8') > MAX_HASHTAG_LENGTH) {
+                         throw new Exception('js.publication.errorHashtagLength'); // Error: Hashtag muy largo
+                    }
+                    if (!empty($sanitizedTag) && !in_array($sanitizedTag, $processedHashtags)) {
+                        $processedHashtags[] = $sanitizedTag;
+                    }
+                }
+            }
+            // --- [HASTAGS] --- FIN DE RECEPCIÓN Y VALIDACIÓN ---
+
             $uploadedFiles = $_FILES['attachments'] ?? [];
             $fileIds = [];
 
@@ -121,9 +151,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  if (mb_strlen($textContent, 'UTF-8') > MAX_POST_LENGTH) {
                     throw new Exception('js.publication.errorPostTooLong');
                  }
-                 if (empty($textContent) && empty($uploadedFiles['name'][0]) && empty($title)) { 
+                 // --- [HASTAGS] --- MODIFICACIÓN DE VALIDACIÓN DE VACÍO ---
+                 if (empty($textContent) && empty($uploadedFiles['name'][0]) && empty($title) && empty($processedHashtags)) { 
                     throw new Exception('js.publication.errorEmpty');
                 }
+                // --- [HASTAGS] --- FIN ---
             } else {
                 throw new Exception('js.api.invalidAction');
             }
@@ -213,6 +245,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             }
+
+            // --- [HASTAGS] --- INICIO DE LÓGICA DE INSERCIÓN ---
+            if (!empty($processedHashtags)) {
+                // Preparar consultas
+                $stmt_find_tag = $pdo->prepare("SELECT id FROM hashtags WHERE tag = ?");
+                $stmt_insert_tag = $pdo->prepare("INSERT INTO hashtags (tag, use_count) VALUES (?, 1) ON DUPLICATE KEY UPDATE use_count = use_count + 1");
+                $stmt_link_tag = $pdo->prepare("INSERT IGNORE INTO publication_hashtags (publication_id, hashtag_id) VALUES (?, ?)");
+                
+                foreach ($processedHashtags as $tag) {
+                    // Insertar o actualizar el hashtag
+                    $stmt_insert_tag->execute([$tag]);
+                    
+                    // Obtener el ID del hashtag
+                    $stmt_find_tag->execute([$tag]);
+                    $hashtagRow = $stmt_find_tag->fetch();
+                    $hashtagId = $hashtagRow['id'];
+                    
+                    // Vincular el post con el hashtag
+                    if ($hashtagId) {
+                        $stmt_link_tag->execute([$publicationId, $hashtagId]);
+                    }
+                }
+            }
+            // --- [HASTAGS] --- FIN DE LÓGICA DE INSERCIÓN ---
 
             $pdo->commit();
             
@@ -534,6 +590,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($response['message'] === 'js.publication.errorPostTooLong' || $response['message'] === 'js.publication.errorPollTooLong') {
                 $response['data'] = ['length' => MAX_POST_LENGTH];
             }
+            // --- [HASTAGS] --- Añadir propagación de errores de hashtag
+            if ($response['message'] === 'js.publication.errorHashtagLimit') {
+                $response['data'] = ['limit' => MAX_HASHTAGS_PER_POST];
+            }
+            if ($response['message'] === 'js.publication.errorHashtagLength') {
+                $response['data'] = ['length' => MAX_HASHTAG_LENGTH];
+            }
+            // --- [HASTAGS] --- Fin
         }
     }
 }

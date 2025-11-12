@@ -23,7 +23,7 @@ try {
             $currentCommunityId = $community['id'];
             $currentCommunityNameKey = $community['name']; 
             
-            // (Consulta sin cambios, ya que está filtrando para un grupo específico)
+            // --- [HASTAGS] --- INICIO DE SQL MODIFICADO (Añadido JOINs para hashtags) ---
             $sql_posts = 
                 "SELECT 
                     p.*, 
@@ -44,7 +44,15 @@ try {
                     (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
                     (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
                     (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = ?) AS user_has_bookmarked,
-                    (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count
+                    (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count,
+
+                    /* --- [HASTAGS] --- INICIO DE NUEVA LÍNEA --- */
+                    (SELECT GROUP_CONCAT(h.tag SEPARATOR ',') 
+                     FROM publication_hashtags ph
+                     JOIN hashtags h ON ph.hashtag_id = h.id
+                     WHERE ph.publication_id = p.id
+                    ) AS hashtags
+                    /* --- [HASTAGS] --- FIN DE NUEVA LÍNEA --- */
 
                  FROM community_publications p
                  JOIN users u ON p.user_id = u.id
@@ -64,6 +72,7 @@ try {
                  )
                  ORDER BY p.created_at DESC
                  LIMIT 50";
+            // --- [HASTAGS] --- FIN DE SQL MODIFICADO ---
             
             $stmt_posts = $pdo->prepare($sql_posts);
             $stmt_posts->execute([$userId, $userId, $userId, $currentCommunityId, $userId, $userId, $userId, $userId]);
@@ -97,7 +106,15 @@ try {
                 (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
                 (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = :current_user_id) AS user_has_liked,
                 (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = :current_user_id) AS user_has_bookmarked,
-                (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count
+                (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count,
+
+                /* --- [HASTAGS] --- INICIO DE NUEVA LÍNEA --- */
+                (SELECT GROUP_CONCAT(h.tag SEPARATOR ',') 
+                 FROM publication_hashtags ph
+                 JOIN hashtags h ON ph.hashtag_id = h.id
+                 WHERE ph.publication_id = p.id
+                ) AS hashtags
+                /* --- [HASTAGS] --- FIN DE NUEVA LÍNEA --- */
 
              FROM community_publications p
              JOIN users u ON p.user_id = u.id
@@ -187,6 +204,29 @@ try {
 }
 
 ?>
+<style>
+    .post-hashtag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    .post-hashtag-link {
+        display: inline-block;
+        padding: 4px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #0056b3; /* Color de enlace */
+        background-color: #f0f5fa; /* Fondo azul claro */
+        border-radius: 50px;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+    .post-hashtag-link:hover {
+        background-color: #e0eafc;
+        text-decoration: underline;
+    }
+</style>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'home') ? 'active' : 'disabled'; ?>" data-section="home">
     
     <div class="page-toolbar-container" id="home-toolbar-container">
@@ -308,6 +348,13 @@ try {
                     }
                     
                     $isOwner = ($post['user_id'] == $userId);
+
+                    /* --- [HASTAGS] --- INICIO DE LÓGICA DE HASHTAGS --- */
+                    $hashtags = [];
+                    if (!empty($post['hashtags'])) {
+                        $hashtags = explode(',', $post['hashtags']);
+                    }
+                    /* --- [HASTAGS] --- FIN DE LÓGICA DE HASHTAGS --- */
                     ?>
                     
                     <div class="component-card component-card--post component-card--column" 
@@ -429,7 +476,20 @@ try {
                                 <?php endif; ?>
                                 </div>
                         <?php endif; ?>
-
+                        
+                        <?php if (!empty($hashtags)): ?>
+                            <div class="post-card-content" style="padding-top: 0; <?php if(empty($post['text_content'])) echo 'padding-top: 12px;'; ?>">
+                                <div class="post-hashtag-list">
+                                    <?php foreach ($hashtags as $tag): ?>
+                                        <a href="<?php echo $basePath . '/search?q=' . urlencode('#' . htmlspecialchars($tag)); ?>" 
+                                           class="post-hashtag-link" 
+                                           data-nav-js="true">
+                                            #<?php echo htmlspecialchars($tag); ?>
+                                        </a>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                         <?php if ($isPoll && !empty($pollOptions)): ?>
                             <div class="poll-container" id="poll-<?php echo $post['id']; ?>" data-poll-id="<?php echo $post['id']; ?>">
                                 <?php if ($hasVoted): ?>
