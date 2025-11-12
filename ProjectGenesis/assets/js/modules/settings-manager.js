@@ -192,6 +192,16 @@ function getCsrfTokenFromPage() {
     return csrfInput ? csrfInput.value : (window.csrfToken || ''); 
 }
 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (Función Helper de Bio) ▼▼▼ ---
+function getOriginalBio(bioCard) {
+    const viewState = bioCard.querySelector('#profile-bio-view-state');
+    if (!viewState) return '';
+    // Usamos el textContent del div de contenido, o un string vacío si es el placeholder
+    const contentDiv = viewState.querySelector('.profile-bio-content');
+    return contentDiv ? contentDiv.textContent.trim() : '';
+}
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 export function initSettingsManager() {
 
     document.body.addEventListener('click', async (e) => {
@@ -281,12 +291,10 @@ export function initSettingsManager() {
             }
         }
         
-        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (BANNER) ▼▼▼ ---
         const bannerCard = document.getElementById('profile-banner-section');
         if (bannerCard) {
             if (target.closest('#profile-banner-upload-trigger') || target.closest('#profile-banner-change-trigger')) {
                 e.preventDefault();
-                // No necesitamos 'hideInlineError' aquí porque no hay dónde mostrarlo.
                 document.getElementById('profile-banner-upload-input')?.click();
                 return;
             }
@@ -393,7 +401,121 @@ export function initSettingsManager() {
                 return;
             }
         }
-        // --- ▲▲▲ FIN DE NUEVO BLOQUE (BANNER) ▲▲▲ ---
+
+        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (BIO/DETALLES) ▼▼▼ ---
+        const bioCard = document.getElementById('profile-bio-card');
+        if (bioCard) {
+            
+            const viewState = bioCard.querySelector('#profile-bio-view-state');
+            const editForm = bioCard.querySelector('#profile-bio-edit-form');
+            const editTrigger = bioCard.querySelector('#profile-bio-edit-trigger');
+            const addTrigger = bioCard.querySelector('#profile-bio-add-trigger');
+            const cancelBtn = bioCard.querySelector('#profile-bio-cancel-btn');
+            const saveBtn = bioCard.querySelector('#profile-bio-save-btn');
+            const textarea = bioCard.querySelector('#profile-bio-textarea');
+            
+            // Clic en "Editar" o "Agregar presentación"
+            if (target === editTrigger || (addTrigger && target.closest('#profile-bio-add-trigger'))) {
+                e.preventDefault();
+                hideInlineError(bioCard);
+                if (viewState) viewState.style.display = 'none';
+                if (editTrigger) editTrigger.style.display = 'none';
+                if (editForm) editForm.style.display = 'flex';
+                if (textarea) {
+                    textarea.value = getOriginalBio(bioCard); // Asegurarse de que tiene el valor actual
+                    textarea.focus();
+                }
+                return;
+            }
+            
+            // Clic en "Cancelar"
+            if (target === cancelBtn) {
+                e.preventDefault();
+                hideInlineError(bioCard);
+                if (editForm) editForm.style.display = 'none';
+                if (viewState) viewState.style.display = 'block';
+                if (editTrigger) editTrigger.style.display = ''; // Mostrar botón de editar
+                
+                // Resetear el textarea al valor original
+                if (textarea) textarea.value = getOriginalBio(bioCard);
+                return;
+            }
+
+            // Clic en "Guardar"
+            if (target === saveBtn) {
+                e.preventDefault();
+                hideInlineError(bioCard);
+                
+                const newBio = textarea.value.trim();
+                const originalBio = getOriginalBio(bioCard);
+                const MAX_BIO_LENGTH = 500; // Sincronizar con el backend
+
+                if (newBio.length > MAX_BIO_LENGTH) {
+                    showInlineError(bioCard, 'js.settings.errorBioTooLong', { length: MAX_BIO_LENGTH }); // TODO: i18n
+                    return;
+                }
+                
+                if (newBio === originalBio) {
+                    // No hay cambios, actuar como "Cancelar"
+                    if (editForm) editForm.style.display = 'none';
+                    if (viewState) viewState.style.display = 'block';
+                    if (editTrigger) editTrigger.style.display = '';
+                    return;
+                }
+
+                toggleButtonSpinner(saveBtn, getTranslation('settings.profile.save'), true);
+
+                const formData = new FormData();
+                formData.append('action', 'update-bio');
+                formData.append('bio', newBio);
+                formData.append('csrf_token', getCsrfTokenFromPage());
+
+                try {
+                    const result = await callSettingsApi(formData);
+                    if (result.success) {
+                        window.showAlert(getTranslation(result.message || 'js.settings.successBioUpdate'), 'success'); // TODO: i18n
+                        
+                        // Actualizar la vista
+                        let contentView = viewState.querySelector('.profile-bio-content');
+                        if (!contentView) {
+                            // Estábamos en el estado "Agregar presentación", así que creamos el div
+                            viewState.innerHTML = ''; // Limpiar el placeholder
+                            contentView = document.createElement('div');
+                            contentView.className = 'profile-bio-content';
+                            viewState.appendChild(contentView);
+                        }
+                        
+                        contentView.textContent = result.newBio; // El backend ya lo ha escapado
+                        
+                        // Ocultar placeholder si la bio ahora está vacía
+                        if (result.newBio.length === 0) {
+                            viewState.innerHTML = `
+                                <div class="profile-bio-placeholder" style="cursor: pointer;" id="profile-bio-add-trigger">
+                                    <button type="button" class="profile-bio-add-btn">
+                                        Agregar presentación
+                                    </button>
+                                </div>`;
+                            if (editTrigger) editTrigger.style.display = 'none';
+                        } else {
+                            if (editTrigger) editTrigger.style.display = ''; // Asegurarse de que "Editar" se muestre
+                        }
+                        
+                        // Volver al modo vista
+                        if (editForm) editForm.style.display = 'none';
+                        if (viewState) viewState.style.display = 'block';
+
+                    } else {
+                        showInlineError(bioCard, result.message || 'js.settings.errorSaveUnknown');
+                    }
+                } catch (error) {
+                    showInlineError(bioCard, 'js.api.errorConnection');
+                } finally {
+                    toggleButtonSpinner(saveBtn, getTranslation('settings.profile.save'), false);
+                }
+                return;
+            }
+        }
+        // --- ▲▲▲ FIN DE NUEVO BLOQUE (BIO/DETALLES) ▲▲▲ ---
 
 
         const usernameCard = document.getElementById('username-section');
@@ -1069,6 +1191,14 @@ export function initSettingsManager() {
             }
         }
 
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Ocultar error en bio) ▼▼▼ ---
+        if (target.id === 'profile-bio-textarea') {
+            const bioCard = target.closest('#profile-bio-card');
+            if (bioCard) {
+                hideInlineError(bioCard);
+            }
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         if (target.matches('.component-text-input') || target.closest('.auth-input-group') || target.closest('.modal__input-group') || target.closest('.component-input-group')) { 
             const card = target.closest('.component-card'); 
@@ -1095,12 +1225,10 @@ export function initSettingsManager() {
             previewImage.dataset.originalSrc = previewImage.src;
         }
         
-        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (BANNER) ▼▼▼ ---
         const previewBanner = document.getElementById('profile-banner-preview');
         if (previewBanner && !previewBanner.dataset.originalBg) {
             previewBanner.style.backgroundImage = previewBanner.style.backgroundImage;
         }
-        // --- ▲▲▲ FIN DE NUEVO BLOQUE (BANNER) ▲▲▲ ---
     }, 100);
 
 }

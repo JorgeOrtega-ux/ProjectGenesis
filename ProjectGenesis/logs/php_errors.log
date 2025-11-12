@@ -1394,3 +1394,16 @@
 [12-Nov-2025 19:24:50 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 982
 [12-Nov-2025 19:25:06 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 982
 [12-Nov-2025 19:25:20 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 982
+[12-Nov-2025 19:46:53 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 982
+[12-Nov-2025 19:47:02 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 982
+[12-Nov-2025 19:54:17 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[12-Nov-2025 19:54:17 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[12-Nov-2025 19:54:36 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 982
+[12-Nov-2025 20:45:40 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 982
+[12-Nov-2025 20:45:41 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 982
+[12-Nov-2025 20:45:46 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 982
+[12-Nov-2025 20:45:49 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 982
+[12-Nov-2025 20:45:56 UTC] PHP Warning:  session_set_cookie_params(): Session cookie parameters cannot be changed when a session is active in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 107
+[12-Nov-2025 20:45:57 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 982
+[12-Nov-2025 20:46:32 UTC] PHP Warning:  Undefined variable $profile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28
+[12-Nov-2025 20:46:32 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 28

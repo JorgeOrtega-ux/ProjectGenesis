@@ -454,10 +454,10 @@ if (array_key_exists($page, $allowedPages)) {
             $CURRENT_SECTION = '404';
         } else {
             try {
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL CON JOIN) ▼▼▼ ---
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL CON JOIN Y NUEVA COLUMNA bio) ▼▼▼ ---
                 $stmt_profile = $pdo->prepare(
                     "SELECT u.id, u.username, u.profile_image_url, u.banner_url, u.role, u.created_at, u.is_online, u.last_seen,
-                            u.email,
+                            u.email, u.bio,
                             COALESCE(p.is_friend_list_private, 1) AS is_friend_list_private, 
                             COALESCE(p.is_email_public, 0) AS is_email_public
                        FROM users u 

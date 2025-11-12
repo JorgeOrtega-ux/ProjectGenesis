@@ -20,9 +20,15 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 $publications = $viewProfileData['publications'] ?? [];
 $profileFriends = $viewProfileData['profile_friends_preview'] ?? [];
 $friendCount = $viewProfileData['friend_count'] ?? 0;
+
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (Obtener Bio) ▼▼▼ ---
+$profileBio = $profile['bio'] ?? null;
+$hasBio = !empty($profileBio);
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 ?>
 
 <style>
+    /* ... (Estilos de .post-hashtag-list y .post-hashtag-link se mantienen aquí) ... */
     .post-hashtag-list {
         display: flex;
         flex-wrap: wrap;
@@ -44,19 +50,166 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
         background-color: #e0eafc;
         text-decoration: underline;
     }
+    
+    /* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (BIO/DETALLES) ▼▼▼ --- */
+    #profile-bio-card {
+        padding: 16px;
+        gap: 12px;
+    }
+    .profile-bio-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center; /* Alinea verticalmente el título y el botón */
+        width: 100%;
+        padding: 0 8px; 
+    }
+    .profile-bio-header .component-card__title {
+        font-size: 18px; 
+        font-weight: 700;
+        color: #1f2937;
+    }
+    .profile-bio-add-btn {
+        height: 32px; /* Botón más pequeño */
+        padding: 0 12px;
+        font-size: 14px;
+        font-weight: 600;
+        border: 1px solid #00000020;
+        background-color: #f5f5fa;
+        color: #1f2937;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .profile-bio-add-btn:hover {
+        background-color: #e0e0e0;
+    }
+    
+    /* Contenido (Vista) */
+    .profile-bio-content {
+        font-size: 14px;
+        color: #1f2937;
+        line-height: 1.5;
+        padding: 0 8px;
+        white-space: pre-wrap; /* Respeta saltos de línea */
+        word-break: break-word; /* Evita desbordamiento */
+    }
+    
+    /* Placeholder (Vista) */
+    .profile-bio-placeholder {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #6b7280;
+        padding: 0 8px;
+    }
+    .profile-bio-placeholder .material-symbols-rounded {
+        font-size: 20px;
+    }
+    
+    /* Formulario (Edición) */
+    #profile-bio-edit-form {
+        display: none; /* Oculto por defecto */
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        padding: 0 8px 8px 8px;
+    }
+    #profile-bio-edit-form textarea {
+        width: 100%;
+        min-height: 100px; /* Altura mínima */
+        border: 1px solid #00000020;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 14px;
+        line-height: 1.5;
+        resize: vertical; /* Permite al usuario ajustar la altura */
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    #profile-bio-edit-form textarea:focus {
+        border-color: #000;
+    }
+    
+    #profile-bio-edit-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    #profile-bio-edit-actions .component-button {
+        height: 36px; /* Botones más pequeños */
+        padding: 0 12px;
+        font-size: 14px;
+    }
+    /* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */
+
 </style>
 <div class="profile-main-content active" data-profile-tab-content="posts">
                 
     <div class="profile-left-column">
+    
+        <div class="component-card component-card--column" id="profile-bio-card">
+            <?php outputCsrfInput(); // CSRF para el formulario de bio ?>
+            
+            <div class="profile-bio-header">
+                <h2 class="component-card__title">Detalles</h2>
+                <?php if ($isOwnProfile): // Solo mostrar botón de editar/agregar si es mi perfil ?>
+                    <button type="button" 
+                            class="profile-bio-add-btn" 
+                            id="profile-bio-edit-trigger"
+                            style="<?php echo $hasBio ? '' : 'display: none;'; // Ocultar si no hay bio (se muestra el de abajo) ?>">
+                        Editar
+                    </button>
+                <?php endif; ?>
+            </div>
+
+            <div id="profile-bio-view-state">
+                <?php if ($hasBio): ?>
+                    <div class="profile-bio-content">
+                        <?php echo htmlspecialchars($profileBio); ?>
+                    </div>
+                <?php elseif ($isOwnProfile): ?>
+                    <div class="profile-bio-placeholder" style="cursor: pointer;" id="profile-bio-add-trigger">
+                        <button type="button" class="profile-bio-add-btn">
+                            Agregar presentación
+                        </button>
+                    </div>
+                <?php else: ?>
+                    <div class="profile-bio-placeholder">
+                        <span class="material-symbols-rounded">person</span>
+                        <span>Sin información académica (esto va asi por el momento)</span>
+                    </div>
+                <?php endif; ?>
+            </div>
+            
+            <?php if ($isOwnProfile): ?>
+            <form id="profile-bio-edit-form">
+                <textarea id="profile-bio-textarea" 
+                          placeholder="Describe tu perfil" 
+                          maxlength="500"><?php echo htmlspecialchars($profileBio); ?></textarea>
+                <div id="profile-bio-edit-actions">
+                    <button type="button" class="component-button" id="profile-bio-cancel-btn">
+                        Cancelar
+                    </button>
+                    <button type="button" class="component-button component-button--primary" id="profile-bio-save-btn">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+            <?php endif; ?>
+            
+            <div class="profile-bio-placeholder" style="padding-top: 12px; border-top: 1px solid #00000015; margin-top: 12px;">
+                <span class="material-symbols-rounded">school</span>
+                <span>Sin informacion academica (esto va asi por el momento)</span>
+            </div>
+        </div>
         <div class="component-card component-card--column" id="profile-friends-preview-card">
             
-            <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ --- ?>
+            <?php // --- (Bloque de Amigos sin cambios) --- ?>
             <div class="profile-friends-header">
                 <h2 class="component-card__title" data-i18n="friends.list.title">Amigos</h2>
                 <?php
-                // Solo mostrar el contador si:
-                // 1. Es mi propio perfil.
-                // 2. NO es mi perfil, pero la lista NO es privada.
                 if ($isOwnProfile || (int)($profile['is_friend_list_private'] ?? 1) === 0): 
                 ?>
                     <span class="profile-friends-count"><?php echo $friendCount; ?></span>
@@ -66,7 +219,6 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
             <?php if (empty($profileFriends)): ?>
                 
                 <?php
-                // Comprobar POR QUÉ está vacío
                 if (!$isOwnProfile && (int)($profile['is_friend_list_private'] ?? 1) === 1):
                 ?>
                     <p class="profile-friends-empty" data-i18n="profile.friends.private">Esta lista de amigos es privada.</p>
@@ -96,13 +248,13 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
-            <?php // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- ?>
+            <?php // --- (Fin Bloque de Amigos) --- ?>
         </div>
     </div>
 
     <div class="profile-right-column">
         
-        <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (Formulario en línea) ▼▼▼ --- ?>
+        <?php // --- (Formulario de Post en Perfil sin cambios) --- ?>
         <?php if ($isOwnProfile && $currentTab === 'posts'): ?>
             <form class="component-card post-comment-input-container" data-action="profile-post-submit" style="padding: 16px;">
                 <?php outputCsrfInput(); ?>
@@ -122,7 +274,7 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
                 </button>
             </form>
         <?php endif; ?>
-        <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
+        <?php // --- (Fin Formulario de Post) --- ?>
 
 
         <div class="card-list-container" id="profile-posts-list"> <?php // <-- ID AÑADIDO ?>
@@ -162,6 +314,7 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
             <?php else: ?>
                 <?php foreach ($publications as $post): ?>
                     <?php
+                    // --- (Lógica de renderizado de post sin cambios) ---
                     $postAvatar = $post['profile_image_url'] ?? $defaultAvatar;
                     if (empty($postAvatar)) $postAvatar = $defaultAvatar;
                     $postRole = $post['role'] ?? 'user';
@@ -188,15 +341,11 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
                         $privacyIcon = 'lock';
                         $privacyTooltipKey = 'post.privacy.private';
                     }
-                    // $isOwner se hereda de la variable $profile
                     $isOwner = ($post['user_id'] == $userId);
-
-                    /* --- [HASTAGS] --- INICIO DE LÓGICA DE HASHTAGS --- */
                     $hashtags = [];
                     if (!empty($post['hashtags'])) {
                         $hashtags = explode(',', $post['hashtags']);
                     }
-                    /* --- [HASTAGS] --- FIN DE LÓGICA DE HASHTAGS --- */
                     ?>
                     
                     <div class="component-card component-card--post component-card--column" 
@@ -210,7 +359,6 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
                                 <div class="component-card__text">
                                     <h2 class="component-card__title"><?php echo htmlspecialchars($post['username']); ?></h2>
                                     
-                                    <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGES SIN ICONOS) ▼▼▼ --- ?>
                                     <div class="profile-meta" style="padding: 0; margin-top: 4px; gap: 8px;">
                                         <div class="profile-meta-badge">
                                             <span><?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?></span>
@@ -227,8 +375,7 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
                                             </div>
                                         <?php endif; ?>
                                     </div>
-                                    <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
-
+                                    
                                 </div>
                             </div>
                             

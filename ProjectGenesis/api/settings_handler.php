@@ -12,6 +12,10 @@ $maxUsernameLength = (int)($GLOBALS['site_settings']['max_username_length'] ?? 3
 $maxEmailLength = (int)($GLOBALS['site_settings']['max_email_length'] ?? 255);
 $codeResendCooldownSeconds = (int)($GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? 60);
 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+define('MAX_BIO_LENGTH', 500); // Límite de caracteres para la biografía
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
 if (!isset($_SESSION['user_id'])) {
     $response['message'] = 'js.settings.errorNoSession';
@@ -83,7 +87,7 @@ function deleteOldBanner($oldUrl, $basePath)
 {
     // Solo eliminar si es un banner subido
     if (strpos($oldUrl, '/assets/uploads/banners_uploaded/') === false) {
-        return;
+        return; // No eliminar avatares por defecto o de ui-avatars
     }
 
     $relativePath = str_replace($basePath, '', $oldUrl);
@@ -1031,6 +1035,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response['message'] = $e->getMessage();
                 }
             }
+        
+        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN (update-bio) ▼▼▼ ---
+        } elseif ($action === 'update-bio') {
+            
+            $ip = getIpAddress();
+            try {
+                // Comprobación de SPAM
+                $stmt_check_spam = $pdo->prepare(
+                    "SELECT COUNT(*) FROM security_logs 
+                     WHERE user_identifier = ? 
+                     AND action_type = 'preference_spam' 
+                     AND created_at > (NOW() - INTERVAL ? MINUTE)"
+                );
+                $stmt_check_spam->execute([$userId, PREFERENCE_LOCKOUT_MINUTES]);
+                $attempts = $stmt_check_spam->fetchColumn();
+
+                if ($attempts >= MAX_PREFERENCE_CHANGES) {
+                    http_response_code(429); 
+                    $response['message'] = 'js.auth.errorTooManyAttempts'; 
+                    $response['data'] = ['minutes' => PREFERENCE_LOCKOUT_MINUTES];
+                    echo json_encode($response);
+                    exit;
+                }
+            } catch (PDOException $e) {
+                logDatabaseError($e, 'settings_handler - check bio spam');
+            }
+
+            try {
+                $newBio = trim($_POST['bio'] ?? '');
+
+                if (mb_strlen($newBio, 'UTF-8') > MAX_BIO_LENGTH) {
+                    $response['message'] = 'js.settings.errorBioTooLong'; // Necesitarás añadir esta clave i18n
+                    $response['data'] = ['length' => MAX_BIO_LENGTH];
+                    throw new Exception($response['message']);
+                }
+                
+                // Si la biografía está vacía, la guardamos como NULL
+                $finalBio = (empty($newBio)) ? null : $newBio;
+
+                $stmt = $pdo->prepare("UPDATE users SET bio = ? WHERE id = ?");
+                $stmt->execute([$finalBio, $userId]);
+                
+                // Registrar el intento (para spam)
+                logFailedAttempt($pdo, $userId, $ip, 'preference_spam');
+
+                $response['success'] = true;
+                $response['message'] = 'js.settings.successBioUpdate'; // Necesitarás añadir esta clave i18n
+                $response['newBio'] = htmlspecialchars($newBio); // Devolver el texto sanitizado para mostrar
+
+            } catch (Exception $e) {
+                if ($e instanceof PDOException) {
+                    logDatabaseError($e, 'settings_handler - update-bio');
+                    $response['message'] = 'js.api.errorDatabase';
+                } else {
+                    // El mensaje ya fue establecido (error de spam o longitud)
+                    if (empty($response['message'])) {
+                         $response['message'] = $e->getMessage();
+                    }
+                }
+            }
+        // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
+        
         }
     }
 }
