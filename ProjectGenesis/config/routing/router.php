@@ -487,6 +487,7 @@ if (array_key_exists($page, $allowedPages)) {
                     $viewProfileData['profile_friends_preview'] = [];
                     $viewProfileData['full_friend_list'] = [];
                     $viewProfileData['friend_count'] = 0;
+                    $viewProfileData['photos'] = []; // <-- Inicializar array de fotos
 
                     switch ($currentTab) {
                         case 'posts':
@@ -554,7 +555,7 @@ if (array_key_exists($page, $allowedPages)) {
                                     } else {
                                         $privacyClause = "AND p.privacy_level = 'public'";
                                     }
-                                    $privacyClause .= " AND (c.privacy = 'public' OR c.id IN (SELECT community_id FROM user_communities WHERE user_id = :current_user_id))";
+                                    $privacyClause .= " AND (p.community_id IS NULL OR c.privacy = 'public' OR c.id IN (SELECT community_id FROM user_communities WHERE user_id = :current_user_id))";
                                 }
                                 $sql_join_where_clause = " WHERE p.user_id = :target_user_id AND p.post_status = 'active' $privacyClause ";
                                 $params[':target_user_id'] = $targetUserId;
@@ -619,7 +620,55 @@ if (array_key_exists($page, $allowedPages)) {
                             break;
 
                         case 'info':
+                            // 'info' no necesita datos extra por ahora
+                            break;
+                            
                         case 'fotos':
+                            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR LÓGICA DE FOTOS) ▼▼▼ ---
+                            $sql_photos = "
+                                SELECT 
+                                    pf.public_url,
+                                    p.id AS publication_id
+                                FROM publication_files pf
+                                JOIN publication_attachments pa ON pf.id = pa.file_id
+                                JOIN community_publications p ON pa.publication_id = p.id
+                                LEFT JOIN communities c ON p.community_id = c.id
+                                WHERE
+                                    p.user_id = :target_user_id
+                                    AND p.post_status = 'active'
+                                    AND pf.file_type LIKE 'image/%'
+                                    AND (
+                                        :is_own_profile = 1 
+                                        OR 
+                                        (
+                                            :is_own_profile = 0 AND (
+                                                p.privacy_level = 'public'
+                                                OR
+                                                (p.privacy_level = 'friends' AND :friendship_status = 'friends')
+                                            )
+                                            AND (
+                                                p.community_id IS NULL 
+                                                OR 
+                                                c.privacy = 'public' 
+                                                OR 
+                                                c.id IN (SELECT community_id FROM user_communities WHERE user_id = :current_user_id)
+                                            )
+                                        )
+                                    )
+                                ORDER BY p.created_at DESC
+                                LIMIT 100";
+                            
+                            $params_photos = [
+                                ':target_user_id' => $targetUserId,
+                                ':is_own_profile' => (int)$isOwnProfile,
+                                ':friendship_status' => $friendshipStatus,
+                                ':current_user_id' => $currentUserId
+                            ];
+
+                            $stmt_photos = $pdo->prepare($sql_photos);
+                            $stmt_photos->execute($params_photos);
+                            $viewProfileData['photos'] = $stmt_photos->fetchAll();
+                            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                             break;
                     }
                 }
@@ -720,9 +769,13 @@ if (array_key_exists($page, $allowedPages)) {
                        WHERE 
                            (p.text_content LIKE ? OR p.title LIKE ?) 
                        AND 
-                           (c.privacy = 'public' OR p.community_id IN (
-                               SELECT community_id FROM user_communities WHERE user_id = ?
-                           ))
+                           (
+                               p.community_id IS NULL -- Posts de perfil
+                               OR 
+                               c.privacy = 'public' -- O grupos públicos
+                               OR 
+                               p.community_id IN (SELECT community_id FROM user_communities WHERE user_id = ?) -- O grupos de los que soy miembro
+                           )
                        AND p.post_status = 'active'
                        AND (
                            p.privacy_level = 'public'
