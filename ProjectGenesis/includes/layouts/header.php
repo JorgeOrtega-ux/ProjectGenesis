@@ -61,6 +61,14 @@ $userRole = $_SESSION['role'] ?? 'user';
     <div class="header-right">
         <div class="header-item">
 
+            <?php // --- ▼▼▼ INICIO DE BOTÓN MOVIDO ▼▼▼ --- ?>
+            <div class="header-button"
+                data-action="toggleModuleCreatePost" 
+                data-tooltip="home.toolbar.createPost">
+                <span class="material-symbols-rounded">add</span>
+            </div>
+            <?php // --- ▲▲▲ FIN DE BOTÓN MOVIDO ▲▲▲ --- ?>
+
             <div class="header-button header-notification-btn"
                 data-action="toggleModuleNotifications"
                 data-tooltip="header.buttons.notifications"
@@ -171,4 +179,29 @@ $userRole = $_SESSION['role'] ?? 'user';
             </div>
         </div>
     </div>
+
+    <?php // --- ▼▼▼ INICIO DE POPOVER MOVIDO ▼▼▼ --- ?>
+    <div class="popover-module popover-module--anchor-right body-title disabled" data-module="moduleCreatePost">
+        <div class="menu-content">
+            <div class="menu-list">
+                <div class="menu-link" data-action="toggleSectionCreatePublication">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">post_add</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="home.popover.newPost">Crear publicación</span>
+                    </div>
+                </div>
+                <div class="menu-link" data-action="toggleSectionCreatePoll">
+                    <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">poll</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span data-i18n="home.popover.newPoll">Crear encuesta</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    <?php // --- ▲▲▲ FIN DE POPOVER MOVIDO ▲▲▲ --- ?>
+</div>

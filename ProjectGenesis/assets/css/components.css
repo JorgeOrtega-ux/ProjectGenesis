@@ -3397,7 +3397,6 @@ a.profile-tab.active {
 .section-content[data-section="admin-backups-delete-confirm"] .component-wrapper,
 .section-content[data-section="admin-backups-restore-confirm"] .component-wrapper,
 .section-content[data-section="post-view"] .component-wrapper,
-.section-content[data-section="view-profile"] .component-wrapper,
 .section-content[data-section="search-results"] .component-wrapper {
     padding-top: 82px;
 }

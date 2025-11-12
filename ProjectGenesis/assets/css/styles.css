@@ -607,10 +607,6 @@ body {
     /* --- ▼▼▼ INICIO DE NUEVO BLOQUE (MÓVIL HEADER) ▼▼▼ --- */
     .header {
         gap: 4px;
-        padding: 8px 4px;
-    }
-    .header-center {
-        padding: 0 4px; /* <-- MODIFICADO (antes 0 4px) */
     }
     /* --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ --- */
 }

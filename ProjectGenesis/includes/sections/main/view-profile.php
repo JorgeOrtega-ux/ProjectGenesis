@@ -256,58 +256,7 @@ if ($is_actually_online) {
 
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'view-profile') ? 'active' : 'disabled'; ?>" data-section="view-profile">
 
-    <div class="page-toolbar-container" id="view-profile-toolbar-container">
-        <div class="page-toolbar-floating">
-            <div class="toolbar-action-default">
-                <div class="page-toolbar-left">
-                    <button type="button"
-                        class="page-toolbar-button"
-                        data-action="toggleSectionHome" 
-                        data-tooltip="create_publication.backTooltip">
-                        <span class="material-symbols-rounded">arrow_back</span>
-                    </button>
-                </div>
-                
-                <div class="page-toolbar-right profile-actions" data-user-id="<?php echo $profile['id']; ?>">
-                    <?php if ($isOwnProfile): ?>
-                        <button type="button"
-                            class="page-toolbar-button"
-                            data-action="toggleSectionSettingsProfile" 
-                            data-tooltip="header.profile.settings">
-                            <span class="material-symbols-rounded">edit</span>
-                        </button>
-                    <?php else: ?>
-                        <?php if ($friendshipStatus === 'not_friends'): ?>
-                            <button type="button" class="component-button component-button--primary" data-action="friend-send-request" data-user-id="<?php echo $profile['id']; ?>">
-                                <span class="material-symbols-rounded">person_add</span>
-                                <span data-i18n="friends.sendRequest">Agregar</span>
-                            </button>
-                        <?php elseif ($friendshipStatus === 'pending_sent'): ?>
-                            <button type="button" class="component-button" data-action="friend-cancel-request" data-user-id="<?php echo $profile['id']; ?>">
-                                <span class="material-symbols-rounded">close</span>
-                                <span data-i18n="friends.cancelRequest">Cancelar</span>
-                            </button>
-                        <?php elseif ($friendshipStatus === 'pending_received'): ?>
-                            <button type="button" class="component-button component-button--primary" data-action="friend-accept-request" data-user-id="<?php echo $profile['id']; ?>">
-                                <span class="material-symbols-rounded">check</span>
-                                <span data-i18n="friends.acceptRequest">Aceptar</span>
-                            </button>
-                            <button type="button" class="component-button" data-action="friend-decline-request" data-user-id="<?php echo $profile['id']; ?>">
-                                <span class="material-symbols-rounded">close</span>
-                                <span data-i18n="friends.declineRequest">Rechazar</span>
-                            </button>
-                        <?php elseif ($friendshipStatus === 'friends'): ?>
-                            <button type="button" class="component-button" data-action="friend-remove" data-user-id="<?php echo $profile['id']; ?>">
-                                <span class="material-symbols-rounded">person_remove</span>
-                                <span data-i18n="friends.removeFriend">Eliminar</span>
-                            </button>
-                        <?php endif; ?>
-
-                    <?php endif; ?>
-                </div>
-                </div>
-        </div>
-    </div>
+    <?php // --- BLOQUE DEL TOOLBAR ELIMINADO --- ?>
     
     <div class="component-wrapper">
 

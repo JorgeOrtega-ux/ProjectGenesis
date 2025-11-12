@@ -249,14 +249,8 @@ try {
                         <span class="material-symbols-rounded">group</span>
                     </button>
                     
-                    <?php // (Botón 'unirse a grupo' eliminado - sin cambios) ?>
+                    <?php // --- ▼▼▼ BOTÓN "CREAR PUBLICACIÓN" ELIMINADO DE AQUÍ ▼▼▼ --- ?>
                     
-                    <button type="button"
-                        class="page-toolbar-button"
-                        data-action="toggleModuleCreatePost" 
-                        data-tooltip="home.toolbar.createPost">
-                    <span class="material-symbols-rounded">add</span>
-                    </button>
                     </div>
                 
                 </div>
@@ -272,29 +266,9 @@ try {
             </div>
         </div>
         
-        <div class="popover-module popover-module--anchor-left body-title disabled" data-module="moduleCreatePost">
-            <div class="menu-content">
-                <div class="menu-list">
-                    <div class="menu-link" data-action="toggleSectionCreatePublication">
-                        <div class="menu-link-icon">
-                            <span class="material-symbols-rounded">post_add</span>
-                        </div>
-                        <div class="menu-link-text">
-                            <span data-i18n="home.popover.newPost">Crear publicación</span>
-                        </div>
-                    </div>
-                    <div class="menu-link" data-action="toggleSectionCreatePoll">
-                        <div class="menu-link-icon">
-                            <span class="material-symbols-rounded">poll</span>
-                        </div>
-                        <div class="menu-link-text">
-                            <span data-i18n="home.popover.newPoll">Crear encuesta</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        </div>
+        <?php // --- ▼▼▼ POPOVER "moduleCreatePost" ELIMINADO DE AQUÍ ▼▼▼ --- ?>
+
+    </div>
 
     <div class="component-wrapper">
 
