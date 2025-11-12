@@ -2,6 +2,10 @@
 // FILE: includes/sections/main/profile-tabs/view-profile-posts.php
 // (CORREGIDO - Añadidas variables faltantes para carga parcial)
 
+// --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
+$profile = $viewProfileData; 
+// --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
+
 // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ ---
 // --- Definir variables globales y de sesión ---
 global $pdo, $basePath;
@@ -406,6 +410,7 @@ $educationDisplay = $hasEducation ? $educationText : 'Sin formación establecida
                         $privacyIcon = 'lock';
                         $privacyTooltipKey = 'post.privacy.private';
                     }
+                    // $isOwner se hereda de la variable $profile
                     $isOwner = ($post['user_id'] == $userId);
                     $hashtags = [];
                     if (!empty($post['hashtags'])) {
@@ -429,9 +434,9 @@ $educationDisplay = $hasEducation ? $educationText : 'Sin formación establecida
                                             <span><?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?></span>
                                         </div>
                                         
-                                        <div class="profile-meta-badge" data-tooltip="<?php echo $privacyTooltipKey; ?>">
-                                            <span data-i18n="<?php echo $privacyTooltipKey; ?>"></span>
-                                        </div>
+                                        <span class="post-privacy-icon" data-tooltip="<?php echo $privacyTooltipKey; ?>">
+                                            <span class="material-symbols-rounded" style="font-size: 16px;"><?php echo $privacyIcon; ?></span>
+                                        </span>
                                         
                                         <?php if (isset($post['community_name']) && $post['community_name']): ?>
                                             <div class="profile-meta-badge">
@@ -551,6 +556,7 @@ $educationDisplay = $hasEducation ? $educationText : 'Sin formación establecida
                                 </div>
                             </div>
                         <?php endif; ?>
+
                         <?php if ($isPoll && !empty($pollOptions)): ?>
                             <div class="poll-container" id="poll-<?php echo $post['id']; ?>" data-poll-id="<?php echo $post['id']; ?>">
                                 <?php if ($hasVoted): ?>

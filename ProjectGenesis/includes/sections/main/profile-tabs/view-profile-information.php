@@ -2,6 +2,10 @@
 // FILE: includes/sections/main/profile-tabs/view-profile-information.php
 // (NUEVO ARCHIVO)
 
+// --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
+$profile = $viewProfileData;
+// --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
+
 // --- Estas variables vienen del 'view-profile.php' principal ---
 // $profile (datos del perfil)
 // $isOwnProfile (booleano)
