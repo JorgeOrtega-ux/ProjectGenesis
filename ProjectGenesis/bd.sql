@@ -9,6 +9,7 @@ CREATE TABLE users (
     username VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     profile_image_url VARCHAR(255) NULL,
+    banner_url VARCHAR(512) DEFAULT NULL COMMENT 'URL para el banner del perfil',
     role ENUM('user', 'moderator', 'administrator', 'founder') NOT NULL DEFAULT 'user',
     is_2fa_enabled TINYINT(1) NOT NULL DEFAULT 0,
     auth_token VARCHAR(64) NULL DEFAULT NULL,

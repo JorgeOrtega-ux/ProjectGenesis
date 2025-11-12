@@ -285,10 +285,12 @@ if ($maintenanceMode === '1') {
 // 1. Analizar la URL
 $requestPath = strtok($requestUri, '?'); 
 
-$path = str_replace($basePath, '', $requestPath);
-if (empty($path) || $path === '/') {
-    $path = '/';
+// --- ▼▼▼ INICIO DE CORRECCIÓN (BUG DE TRAILING SLASH) ▼▼▼ ---
+$path = rtrim(str_replace($basePath, '', $requestPath), '/'); // Elimina el slash final
+if (empty($path)) {
+    $path = '/'; // Asegura que la raíz sea '/' y no un string vacío
 }
+// --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
 
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (RUTAS DINÁMICAS) ▼▼▼ ---
 // Limpiar las variables de sesión de carga inicial

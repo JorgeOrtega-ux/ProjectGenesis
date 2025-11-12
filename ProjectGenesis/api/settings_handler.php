@@ -778,10 +778,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response['message'] = $e->getMessage();
                 }
             }
+        
+        // --- ▼▼▼ INICIO DEL BLOQUE CORREGIDO ▼▼▼ ---
         } elseif ($action === 'update-preference') {
             
             $ip = getIpAddress();
             try {
+                // (Comprobación de SPAM se mantiene igual)
                 $stmt_check_spam = $pdo->prepare(
                     "SELECT COUNT(*) FROM security_logs 
                      WHERE user_identifier = ? 
@@ -813,10 +816,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'usage_type' => ['personal', 'student', 'teacher', 'small_business', 'large_company'],
                     'open_links_in_new_tab' => ['0', '1'],
                     'increase_message_duration' => ['0', '1'],
-                    // --- AÑADIR ESTAS LÍNEAS ---
                     'is_friend_list_private' => ['0', '1'],
                     'is_email_public' => ['0', '1']
-                    // --- FIN DE LÍNEAS AÑADIDAS ---
                 ];
 
                 if (!array_key_exists($field, $allowedFields)) {
@@ -830,9 +831,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception('js.settings.errorPreferenceInvalid');
                 }
 
-                $sql = "UPDATE user_preferences SET $field = ? WHERE user_id = ?";
-                $stmt = $pdo->prepare($sql);
-
                 $finalValue = (
                     $field === 'open_links_in_new_tab' || 
                     $field === 'increase_message_duration' || 
@@ -840,12 +838,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $field === 'is_email_public'
                 ) ? (int)$value : $value;
 
-                $stmt->execute([$finalValue, $userId]);
-                
-                logFailedAttempt($pdo, $userId, $ip, 'preference_spam');
+                // --- ▼▼▼ INICIO DE LA CORRECCIÓN (Lógica SELECT + UPDATE) ▼▼▼ ---
 
-                $response['success'] = true;
-                $response['message'] = 'js.settings.successPreference';
+                // 1. Comprobar si la fila de preferencias existe
+                $stmt_check = $pdo->prepare("SELECT user_id FROM user_preferences WHERE user_id = ?");
+                $stmt_check->execute([$userId]);
+                
+                if ($stmt_check->fetch()) {
+                    // 2. Si existe, actualizarla
+                    $sql = "UPDATE user_preferences SET $field = ? WHERE user_id = ?";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute([$finalValue, $userId]);
+
+                    // Registrar el intento (esto es para el spam)
+                    logFailedAttempt($pdo, $userId, $ip, 'preference_spam');
+
+                    $response['success'] = true;
+                    $response['message'] = 'js.settings.successPreference';
+                } else {
+                    // 3. Si NO existe, lanzar el error que esperas
+                    // (Esto asume que los usuarios siempre deben tener una fila de preferencias)
+                    logDatabaseError(new Exception("Fila de preferencias faltante para user_id: $userId"), 'settings_handler - update-preference');
+                    throw new Exception('js.settings.errorPreference'); // El JS mostrará este error
+                }
+                // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+
             } catch (Exception $e) {
                 if ($e instanceof PDOException) {
                     logDatabaseError($e, 'settings_handler - update-preference');
@@ -854,6 +871,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response['message'] = $e->getMessage();
                 }
             }
+        // --- ▲▲▲ FIN DEL BLOQUE CORREGIDO ▲▲▲ ---
+            
         } elseif ($action === 'logout-all-devices') {
             try {
                 $newAuthToken = bin2hex(random_bytes(32));

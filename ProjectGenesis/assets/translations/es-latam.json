@@ -565,7 +565,7 @@
     "settings": {
       "successPreference": "Preferencia actualizada.",
       "successLang": "Idioma actualizado. La página se recargará.",
-      "errorPreference": "Error al guardar la preferencia.",
+      "errorPreference": "Error al actualizar la preferencia, intenta más tarde o contacta con soporte técnico.",
       "errorPreferenceInvalid": "Configuración o valor de preferencia no válido.",
       "errorPreferenceToggle": "El valor para un interruptor debe ser 0 o 1.",
       "successAvatarRemoved": "Avatar eliminado. Se ha restaurado el avatar por defecto.",
