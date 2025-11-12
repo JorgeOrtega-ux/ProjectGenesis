@@ -1387,12 +1387,14 @@ select.component-input:invalid {
     right: 8px;
 }
 
-.post-card-options .component-action-button--icon {
+/* --- ▼▼▼ BLOQUE ELIMINADO ▼▼▼ --- */
+/* .post-card-options .component-action-button--icon {
     width: 36px;
     height: 36px;
     padding: 0;
     border-radius: 50%;
-}
+} */
+/* --- ▲▲▲ FIN BLOQUE ELIMINADO ▲▲▲ --- */
 
 [data-module="modulePostOptions"] .menu-link[data-action="post-delete"] .menu-link-text span {
     color: #c62828;
@@ -3926,4 +3928,20 @@ a.profile-tab.active {
         padding: 16px 0 0 0;
     }
 }
-/* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */.profile-meta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px; /* Espacio para el icono (si existe, como en 'comunidad') */
+    font-size: 13px; /* Como en .post-hashtag-link */
+    font-weight: 600; /* Como en .post-hashtag-link */
+    padding: 4px 12px; /* Como en .post-hashtag-link */
+    border-radius: 50px; /* Como en .post-hashtag-link */
+    background-color: transparent; /* Petición del usuario */
+    color: #6b7280; /* Color de texto meta */
+    border: 1px solid #00000020; /* Petición del usuario */
+    min-height: 27px;
+    box-sizing: border-box;
+}
+.profile-meta-badge span {
+    line-height: normal;
+}

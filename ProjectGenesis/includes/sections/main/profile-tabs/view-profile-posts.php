@@ -49,13 +49,31 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
                 
     <div class="profile-left-column">
         <div class="component-card component-card--column" id="profile-friends-preview-card">
+            
+            <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ --- ?>
             <div class="profile-friends-header">
                 <h2 class="component-card__title" data-i18n="friends.list.title">Amigos</h2>
-                <span class="profile-friends-count"><?php echo $friendCount; ?></span>
+                <?php
+                // Solo mostrar el contador si:
+                // 1. Es mi propio perfil.
+                // 2. NO es mi perfil, pero la lista NO es privada.
+                if ($isOwnProfile || (int)($profile['is_friend_list_private'] ?? 1) === 0): 
+                ?>
+                    <span class="profile-friends-count"><?php echo $friendCount; ?></span>
+                <?php endif; ?>
             </div>
             
             <?php if (empty($profileFriends)): ?>
-                <p class="profile-friends-empty" data-i18n="friends.list.noFriends">No tiene amigos.</p>
+                
+                <?php
+                // Comprobar POR QUÉ está vacío
+                if (!$isOwnProfile && (int)($profile['is_friend_list_private'] ?? 1) === 1):
+                ?>
+                    <p class="profile-friends-empty" data-i18n="profile.friends.private">Esta lista de amigos es privada.</p>
+                <?php else: ?>
+                    <p class="profile-friends-empty" data-i18n="friends.list.noFriends">No tiene amigos.</p>
+                <?php endif; ?>
+
             <?php else: ?>
                 <div class="profile-friends-grid">
                     <?php foreach ($profileFriends as $friend): ?>
@@ -78,6 +96,7 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
+            <?php // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- ?>
         </div>
     </div>
 
@@ -169,6 +188,8 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
                         $privacyIcon = 'lock';
                         $privacyTooltipKey = 'post.privacy.private';
                     }
+                    // $isOwner se hereda de la variable $profile
+                    $isOwner = ($post['user_id'] == $userId);
 
                     /* --- [HASTAGS] --- INICIO DE LÓGICA DE HASHTAGS --- */
                     $hashtags = [];
@@ -188,20 +209,30 @@ $friendCount = $viewProfileData['friend_count'] ?? 0;
                                 </div>
                                 <div class="component-card__text">
                                     <h2 class="component-card__title"><?php echo htmlspecialchars($post['username']); ?></h2>
-                                    <p class="component-card__description">
-                                        <?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?>
-                                        <?php if (isset($post['community_name']) && $post['community_name']): ?>
-                                            <span> &middot; en <strong><?php echo htmlspecialchars($post['community_name']); ?></strong></span>
-                                        <?php endif; ?>
+                                    
+                                    <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGES SIN ICONOS) ▼▼▼ --- ?>
+                                    <div class="profile-meta" style="padding: 0; margin-top: 4px; gap: 8px;">
+                                        <div class="profile-meta-badge">
+                                            <span><?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?></span>
+                                        </div>
                                         
-                                        <span class="post-privacy-icon" data-tooltip="<?php echo $privacyTooltipKey; ?>">
-                                            <span class="material-symbols-rounded"><?php echo $privacyIcon; ?></span>
-                                        </span>
-                                        </p>
+                                        <div class="profile-meta-badge" data-tooltip="<?php echo $privacyTooltipKey; ?>">
+                                            <span data-i18n="<?php echo $privacyTooltipKey; ?>"></span>
+                                        </div>
+                                        
+                                        <?php if (isset($post['community_name']) && $post['community_name']): ?>
+                                            <div class="profile-meta-badge">
+                                                <span class="material-symbols-rounded">group</span>
+                                                <span style="font-weight: 600;"><?php echo htmlspecialchars($post['community_name']); ?></span>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
+
                                 </div>
                             </div>
                             
-                            <?php if ($isOwnProfile): ?>
+                            <?php if ($isOwner): ?>
                             <div class="post-card-options">
                                 <button type="button" 
                                         class="component-action-button--icon" 

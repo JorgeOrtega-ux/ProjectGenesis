@@ -152,6 +152,8 @@ DROP TABLE IF EXISTS `publication_attachments`;
 DROP TABLE IF EXISTS `publication_files`;
 DROP TABLE IF EXISTS `poll_votes`;
 DROP TABLE IF EXISTS `poll_options`;
+DROP TABLE IF EXISTS `publication_hashtags`; /* --- [HASTAGS] --- */
+DROP TABLE IF EXISTS `hashtags`; /* --- [HASTAGS] --- */
 DROP TABLE IF EXISTS `community_publications`;
 DROP TABLE IF EXISTS `publication_likes`;
 DROP TABLE IF EXISTS `publication_comments`;
@@ -299,3 +301,28 @@ CREATE TABLE `user_notifications` (
   
   INDEX `idx_user_read_time` (`user_id`, `is_read`, `created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+/* --- [HASTAGS] --- INICIO DE NUEVAS TABLAS --- */
+
+DROP TABLE IF EXISTS `hashtags`;
+CREATE TABLE `hashtags` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `tag` VARCHAR(100) NOT NULL UNIQUE COMMENT 'El texto del hashtag, sin # y en minúsculas',
+  `use_count` BIGINT NOT NULL DEFAULT 1 COMMENT 'Contador de cuántas veces se ha usado',
+  `created_at` TIMESTAMP NOT NULL DEFAULT current_timestamp(),
+  INDEX `idx_tag` (`tag`),
+  INDEX `idx_use_count` (`use_count`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+DROP TABLE IF EXISTS `publication_hashtags`;
+CREATE TABLE `publication_hashtags` (
+  `publication_id` INT NOT NULL,
+  `hashtag_id` INT NOT NULL,
+  PRIMARY KEY (`publication_id`, `hashtag_id`),
+  FOREIGN KEY (publication_id) REFERENCES `community_publications`(id) ON DELETE CASCADE,
+  FOREIGN KEY (hashtag_id) REFERENCES `hashtags`(id) ON DELETE CASCADE,
+  INDEX `idx_hashtag_id` (`hashtag_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/* --- [HASTAGS] --- FIN DE NUEVAS TABLAS --- */

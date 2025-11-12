@@ -156,6 +156,7 @@ $hasResults = !empty($userResults) || !empty($postResults) || !empty($communityR
                 </div>
             <?php endif; ?>
         </div>
+        
         <div id="search-results-posts" <?php if (empty($postResults)) echo 'style="display: none;"'; ?>>
             <?php if (!empty($postResults)): ?>
                 <div class="component-card component-card--column">
@@ -179,9 +180,15 @@ $hasResults = !empty($userResults) || !empty($postResults) || !empty($communityR
                                         </div>
                                         <div class="component-card__text">
                                             <h2 class="component-card__title"><?php echo htmlspecialchars($post['username']); ?></h2>
-                                            <p class="component-card__description">
-                                                <?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?>
-                                            </p>
+                                            
+                                            <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGES SIN ICONOS) ▼▼▼ --- ?>
+                                            <div class="profile-meta" style="padding: 0; margin-top: 4px; gap: 8px;">
+                                                <div class="profile-meta-badge">
+                                                    <span><?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?></span>
+                                                </div>
+                                            </div>
+                                            <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
+                                            
                                         </div>
                                     </div>
                                 </div>

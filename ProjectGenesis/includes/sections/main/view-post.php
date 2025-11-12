@@ -139,16 +139,26 @@ if (!empty($post['hashtags'])) {
                         </div>
                         <div class="component-card__text">
                             <h2 class="component-card__title"><?php echo htmlspecialchars($post['username']); ?></h2>
-                            <p class="component-card__description">
-                                <?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?>
-                                <?php if (isset($post['community_name']) && $post['community_name']): ?>
-                                    <span> &middot; en <strong><?php echo htmlspecialchars($post['community_name']); ?></strong></span>
-                                <?php endif; ?>
+                            
+                            <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGES SIN ICONOS) ▼▼▼ --- ?>
+                            <div class="profile-meta" style="padding: 0; margin-top: 4px; gap: 8px;">
+                                <div class="profile-meta-badge">
+                                    <span><?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?></span>
+                                </div>
                                 
-                                <span class="post-privacy-icon" data-tooltip="<?php echo $privacyTooltipKey; ?>">
-                                    <span class="material-symbols-rounded"><?php echo $privacyIcon; ?></span>
-                                </span>
-                                </p>
+                                <div class="profile-meta-badge" data-tooltip="<?php echo $privacyTooltipKey; ?>">
+                                    <span data-i18n="<?php echo $privacyTooltipKey; ?>"></span>
+                                </div>
+                                
+                                <?php if (isset($post['community_name']) && $post['community_name']): ?>
+                                    <div class="profile-meta-badge">
+                                        <span class="material-symbols-rounded">group</span>
+                                        <span style="font-weight: 600;"><?php echo htmlspecialchars($post['community_name']); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
+
                         </div>
                     </div>
                     
