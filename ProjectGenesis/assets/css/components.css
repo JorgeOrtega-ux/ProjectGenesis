@@ -1937,23 +1937,23 @@ select.component-input:invalid {
 }
 
 .profile-role-badge[data-role="user"] {
-    background-color: #f5f5fa;
+    background-color: transparent;
     color: #1f2937;
     border: 1px solid #00000020;
 }
 
 .profile-role-badge[data-role="moderator"] {
-    background-color: #e0e7ff;
+    background-color: transparent;
     color: #0000FF;
 }
 
 .profile-role-badge[data-role="administrator"] {
-    background-color: #ffe0e0;
+    background-color: transparent;
     color: #FF0000;
 }
 
 .profile-role-badge[data-role="founder"] {
-    background-color: #fff8e1;
+    background-color: transparent;
     color: #FFC107;
 }
 
@@ -2030,12 +2030,14 @@ a.profile-tab.active {
 }
 
 .profile-status-badge.online {
-    background-color: #e6f4ea;
+    background-color: transparent;
+    border: 1px solid #1e7e34;
     color: #1e7e34;
 }
 
 .profile-status-badge.offline {
-    background-color: #f5f5fa;
+    background-color: transparent;
+    border: 1px solid #00000020;
     color: #6b7280;
 }
 
@@ -3508,7 +3510,7 @@ a.profile-tab.active {
         width: 100%;
         gap: 12px;
     }
-    
+
     #admin-avatar-actions-default,
     #admin-avatar-actions-custom,
     #admin-avatar-actions-preview {
@@ -3546,7 +3548,8 @@ a.profile-tab.active {
 
 /* Columna Izquierda (Amigos) */
 .profile-left-column {
-    flex: 1 1 340px; /* Crece, se encoge, base de 340px */
+    flex: 1 1 340px;
+    /* Crece, se encoge, base de 340px */
     min-width: 300px;
     max-width: 340px;
     display: flex;
@@ -3556,8 +3559,10 @@ a.profile-tab.active {
 
 /* Columna Derecha (Posts) */
 .profile-right-column {
-    flex: 1 1 600px; /* Crece, se encoge, base de 600px */
-    min-width: 0; /* Permite que se encoja */
+    flex: 1 1 600px;
+    /* Crece, se encoge, base de 600px */
+    min-width: 0;
+    /* Permite que se encoja */
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -3601,11 +3606,13 @@ a.profile-tab.active {
     justify-content: space-between;
     align-items: baseline;
     width: 100%;
-    padding: 0 8px; /* Alinear con la cuadrícula */
+    padding: 0 8px;
+    /* Alinear con la cuadrícula */
 }
 
 .profile-friends-header .component-card__title {
-    font-size: 18px; /* Más grande */
+    font-size: 18px;
+    /* Más grande */
     font-weight: 700;
     color: #1f2937;
 }
@@ -3622,6 +3629,7 @@ a.profile-tab.active {
     color: #000;
     text-decoration: none;
 }
+
 .profile-friends-view-all:hover {
     text-decoration: underline;
 }
@@ -3652,7 +3660,8 @@ a.profile-tab.active {
 .friend-preview-item .comment-avatar {
     width: 100%;
     height: auto;
-    padding-top: 100%; /* Truco para aspect-ratio 1:1 */
+    padding-top: 100%;
+    /* Truco para aspect-ratio 1:1 */
     position: relative;
     border-radius: 8px;
     overflow: hidden;
@@ -3662,7 +3671,10 @@ a.profile-tab.active {
     /* Sobrescribir bordes de rol para la cuadrícula */
     border: none;
     background-image: none;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .friend-preview-item .comment-avatar img {
@@ -3696,12 +3708,15 @@ a.profile-tab.active {
 /* Media Query para el layout del perfil */
 @media (max-width: 900px) {
     .profile-main-content {
-        flex-direction: column-reverse; /* Pone los posts primero en móvil */
+        flex-direction: column-reverse;
+        /* Pone los posts primero en móvil */
     }
+
     .profile-left-column {
         max-width: 100%;
         min-width: 0;
     }
+
     .profile-friends-grid {
         /* Muestra 4 columnas en móvil */
         grid-template-columns: repeat(4, 1fr);
@@ -3709,11 +3724,13 @@ a.profile-tab.active {
 }
 
 @media (max-width: 500px) {
+
     /* Muestra 3 columnas en móvil pequeño */
     .profile-friends-grid {
         grid-template-columns: repeat(3, 1fr);
     }
 }
+
 .section-content[data-section="view-profile"] .component-wrapper {
     max-width: 1164px;
 }
@@ -3729,7 +3746,8 @@ a.profile-tab.active {
     border: 1px solid #00000020;
     border-radius: 12px;
     height: 60px;
-    position: relative; /* Para el popover */
+    position: relative;
+    /* Para el popover */
 }
 
 .profile-nav-left {
@@ -3737,18 +3755,23 @@ a.profile-tab.active {
     align-items: center;
     gap: 8px;
     overflow-x: auto;
-    -ms-overflow-style: none;  /* IE y Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    /* IE y Edge */
+    scrollbar-width: none;
+    /* Firefox */
 }
+
 .profile-nav-left::-webkit-scrollbar {
-    display: none; /* Chrome, Safari y Opera */
+    display: none;
+    /* Chrome, Safari y Opera */
 }
 
 .profile-nav-right {
     display: flex;
     flex-shrink: 0;
     padding-left: 16px;
-    position: relative; /* Añadido para el popover */
+    position: relative;
+    /* Añadido para el popover */
 }
 
 .profile-nav-button {
@@ -3799,14 +3822,17 @@ a.profile-tab.active {
 .profile-content-container [data-profile-tab-content].disabled {
     display: none;
 }
+
 .profile-content-container [data-profile-tab-content].active {
-    display: flex; /* O 'block' si prefieres */
+    display: flex;
+    /* O 'block' si prefieres */
 }
 
 /* Ajustes para el popover 'more' */
 .profile-nav-right .popover-module[data-module="moduleProfileMore"] {
     width: 280px;
-    top: calc(100% + 10px); /* Ajustar posición */
+    top: calc(100% + 10px);
+    /* Ajustar posición */
     right: 0;
     left: auto;
 }
@@ -3817,7 +3843,8 @@ a.profile-tab.active {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    padding: 8px 24px 24px 24px; /* Ajuste de padding */
+    padding: 8px 24px 24px 24px;
+    /* Ajuste de padding */
     border-bottom: 1px solid #00000020;
 }
 
@@ -3862,7 +3889,8 @@ a.profile-tab.active {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 8px; /* Avatar cuadrado redondeado */
+    border-radius: 8px;
+    /* Avatar cuadrado redondeado */
 }
 
 .friend-item-card__info {
@@ -3870,7 +3898,8 @@ a.profile-tab.active {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    min-width: 0; /* Para que el text-overflow funcione */
+    min-width: 0;
+    /* Para que el text-overflow funcione */
 }
 
 .friend-item-card__name {
@@ -3882,6 +3911,7 @@ a.profile-tab.active {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 .friend-item-card__name:hover {
     text-decoration: underline;
 }
@@ -3894,7 +3924,8 @@ a.profile-tab.active {
 
 .friend-item-card__options {
     flex-shrink: 0;
-    position: relative; /* Para el popover */
+    position: relative;
+    /* Para el popover */
 }
 
 .friend-item-card__options .component-action-button--icon {
@@ -3910,6 +3941,7 @@ a.profile-tab.active {
     right: 0;
     left: auto;
 }
+
 /* --- ▲▲▲ FIN DE NUEVOS ESTILOS (PESTAÑA "AMIGOS") ▲▲▲ --- */
 
 
@@ -3918,67 +3950,89 @@ a.profile-tab.active {
     .profile-nav-bar {
         padding: 0 8px;
     }
+
     .profile-nav-right {
         padding-left: 8px;
     }
-    
+
     /* --- ▼▼▼ NUEVA REGLA ▼▼▼ --- */
     .profile-friends-full-grid {
-        grid-template-columns: 1fr; /* Una columna en móvil */
+        grid-template-columns: 1fr;
+        /* Una columna en móvil */
         padding: 16px 0 0 0;
     }
 }
-/* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */.profile-meta-badge {
+
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */
+.profile-meta-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px; /* Espacio para el icono (si existe, como en 'comunidad') */
-    font-size: 13px; /* Como en .post-hashtag-link */
-    font-weight: 600; /* Como en .post-hashtag-link */
-    padding: 4px 12px; /* Como en .post-hashtag-link */
-    border-radius: 50px; /* Como en .post-hashtag-link */
-    background-color: transparent; /* Petición del usuario */
-    color: #6b7280; /* Color de texto meta */
-    border: 1px solid #00000020; /* Petición del usuario */
+    gap: 6px;
+    /* Espacio para el icono (si existe, como en 'comunidad') */
+    font-size: 13px;
+    /* Como en .post-hashtag-link */
+    font-weight: 600;
+    /* Como en .post-hashtag-link */
+    padding: 4px 12px;
+    /* Como en .post-hashtag-link */
+    border-radius: 50px;
+    /* Como en .post-hashtag-link */
+    background-color: transparent;
+    /* Petición del usuario */
+    color: #6b7280;
+    /* Color de texto meta */
+    border: 1px solid #00000020;
+    /* Petición del usuario */
     min-height: 27px;
     box-sizing: border-box;
 }
+
 .profile-meta-badge span {
     line-height: normal;
 }
 
 #post-content-area {
     flex-direction: column;
-}/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (PERFIL BIO/DETALLES) ▼▼▼ --- */
+}
+
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (PERFIL BIO/DETALLES) ▼▼▼ --- */
 
 /* Estilo base de la tarjeta de biografía */
 #profile-bio-card {
-    padding: 16px; /* Coincide con la tarjeta de amigos */
-    gap: 12px; /* Espaciado interno */
+    padding: 16px;
+    /* Coincide con la tarjeta de amigos */
+    gap: 12px;
+    /* Espaciado interno */
 }
 
 /* Contenedor del título "Detalles" y el botón "Editar" */
 .profile-bio-header {
     display: flex;
     justify-content: space-between;
-    align-items: center; /* Alinea el título y el botón */
+    align-items: center;
+    /* Alinea el título y el botón */
     width: 100%;
-    padding: 0 8px; /* Pequeño padding horizontal como en la tarjeta de amigos */
+    padding: 0 8px;
+    /* Pequeño padding horizontal como en la tarjeta de amigos */
 }
 
 .profile-bio-header .component-card__title {
-    font-size: 18px; /* Coincide con el título de amigos */
+    font-size: 18px;
+    /* Coincide con el título de amigos */
     font-weight: 700;
     color: #1f2937;
 }
 
 /* Botón "Agregar presentación" o "Editar" */
 .profile-bio-add-btn {
-    height: 32px; /* Botón pequeño */
+    height: 32px;
+    /* Botón pequeño */
     padding: 0 12px;
     font-size: 14px;
     font-weight: 600;
     border: 1px solid #00000020;
-    background-color: #f5f5fa; /* Fondo gris claro */
+    background-color: #f5f5fa;
+    /* Fondo gris claro */
     color: #1f2937;
     border-radius: 6px;
     cursor: pointer;
@@ -3986,7 +4040,8 @@ a.profile-tab.active {
 }
 
 .profile-bio-add-btn:hover {
-    background-color: #e0e0e0; /* Un poco más oscuro al pasar el ratón */
+    background-color: #e0e0e0;
+    /* Un poco más oscuro al pasar el ratón */
 }
 
 /* Contenido del texto de la biografía (modo vista) */
@@ -3995,8 +4050,10 @@ a.profile-tab.active {
     color: #1f2937;
     line-height: 1.5;
     padding: 0 8px;
-    white-space: pre-wrap; /* Respeta los saltos de línea */
-    word-break: break-word; /* Evita que el texto largo rompa el layout */
+    white-space: pre-wrap;
+    /* Respeta los saltos de línea */
+    word-break: break-word;
+    /* Evita que el texto largo rompa el layout */
 }
 
 /* Placeholder "Sin información" o "Agregar presentación" (modo vista) */
@@ -4016,16 +4073,21 @@ a.profile-tab.active {
 
 /* El placeholder que es un botón (para "Agregar presentación") */
 .profile-bio-placeholder#profile-bio-add-trigger {
-    padding: 0; /* Quitar padding para que el botón ocupe todo */
+    padding: 0;
+    /* Quitar padding para que el botón ocupe todo */
     cursor: pointer;
 }
+
 /* El botón dentro del placeholder */
 .profile-bio-placeholder#profile-bio-add-trigger .profile-bio-add-btn {
-    width: 100%; /* El botón ocupa todo el ancho */
-    height: 40px; /* Un poco más alto para ser un "call to action" */
+    width: 100%;
+    /* El botón ocupa todo el ancho */
+    height: 35px;
+    /* Un poco más alto para ser un "call to action" */
     background-color: #f5f5fa;
     border: none;
 }
+
 .profile-bio-placeholder#profile-bio-add-trigger .profile-bio-add-btn:hover {
     background-color: #e9ecef;
 }
@@ -4033,11 +4095,13 @@ a.profile-tab.active {
 
 /* Formulario de edición (oculto por defecto) */
 #profile-bio-edit-form {
-    display: none; /* Oculto por defecto, JS lo mostrará */
+    display: none;
+    /* Oculto por defecto, JS lo mostrará */
     flex-direction: column;
     gap: 12px;
     width: 100%;
-    padding: 0 8px 8px 8px; /* Padding para alinearlo */
+    padding: 0 8px 8px 8px;
+    /* Padding para alinearlo */
 }
 
 #profile-bio-edit-form textarea {
@@ -4051,7 +4115,8 @@ a.profile-tab.active {
     resize: vertical;
     outline: none;
     transition: border-color 0.2s;
-    font-family: "Roboto Condensed", sans-serif; /* Asegurar la fuente */
+    font-family: "Roboto Condensed", sans-serif;
+    /* Asegurar la fuente */
 }
 
 #profile-bio-edit-form textarea:focus {
@@ -4070,7 +4135,8 @@ a.profile-tab.active {
     height: 36px;
     padding: 0 12px;
     font-size: 14px;
-    flex: none; /* No estirar los botones */
+    flex: none;
+    /* No estirar los botones */
 }
 
 /* El "placeholder" académico estático */
@@ -4081,9 +4147,12 @@ a.profile-tab.active {
     font-size: 14px;
     font-weight: 500;
     color: #6b7280;
-    padding: 12px 8px 0 8px; /* Padding superior para separarlo */
-    border-top: 1px solid #00000015; /* Línea divisoria */
-    margin-top: 12px; /* Margen superior */
+    padding: 12px 8px 0 8px;
+    /* Padding superior para separarlo */
+    border-top: 1px solid #00000015;
+    /* Línea divisoria */
+    margin-top: 12px;
+    /* Margen superior */
 }
 
 .profile-bio-academic-placeholder .material-symbols-rounded {

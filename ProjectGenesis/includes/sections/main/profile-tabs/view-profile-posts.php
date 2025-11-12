@@ -134,14 +134,14 @@ $educationDisplay = $hasEducation ? $educationText : 'Sin formación establecida
         font-size: 14px;
         font-weight: 600;
         border: 1px solid #00000020;
-        background-color: #f5f5fa;
+        background-color: transparent;
         color: #1f2937;
         border-radius: 6px;
         cursor: pointer;
         transition: background-color 0.2s;
     }
     .profile-bio-add-btn:hover {
-        background-color: #e0e0e0;
+        background-color: #f5f5fa;
     }
     
     /* Contenido (Vista) */
