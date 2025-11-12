@@ -167,6 +167,20 @@ $hasResults = !empty($userResults) || !empty($postResults) || !empty($communityR
                             $postAvatar = $post['profile_image_url'] ?? $defaultAvatar;
                             if (empty($postAvatar)) $postAvatar = $defaultAvatar;
                             $postRole = $post['role'] ?? 'user';
+                            
+                            // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (Lógica de Privacidad) ▼▼▼ ---
+                            $privacyLevel = $post['privacy_level'] ?? 'public';
+                            $privacyIcon = 'public';
+                            $privacyTooltipKey = 'post.privacy.public';
+                            
+                            if ($privacyLevel === 'friends') {
+                                $privacyIcon = 'group';
+                                $privacyTooltipKey = 'post.privacy.friends';
+                            } elseif ($privacyLevel === 'private') {
+                                $privacyIcon = 'lock';
+                                $privacyTooltipKey = 'post.privacy.private';
+                            }
+                            // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
                             ?>
                             <a href="<?php echo $basePath . '/post/' . $post['id']; ?>" 
                                data-nav-js="true" 
@@ -178,18 +192,31 @@ $hasResults = !empty($userResults) || !empty($postResults) || !empty($communityR
                                         <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($postRole); ?>">
                                             <img src="<?php echo htmlspecialchars($postAvatar); ?>" alt="<?php echo htmlspecialchars($post['username']); ?>" class="component-card__avatar-image">
                                         </div>
+                                        
+                                        <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Badges) ▼▼▼ --- ?>
                                         <div class="component-card__text">
                                             <h2 class="component-card__title"><?php echo htmlspecialchars($post['username']); ?></h2>
                                             
-                                            <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGES SIN ICONOS) ▼▼▼ --- ?>
                                             <div class="profile-meta" style="padding: 0; margin-top: 4px; gap: 8px;">
                                                 <div class="profile-meta-badge">
                                                     <span><?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?></span>
                                                 </div>
+                                                
+                                                <div class="profile-meta-badge" data-tooltip="<?php echo $privacyTooltipKey; ?>">
+                                                    <span data-i18n="<?php echo $privacyTooltipKey; ?>"></span>
+                                                </div>
+                                                
+                                                <?php if (isset($post['community_name']) && $post['community_name']): ?>
+                                                    <div class="profile-meta-badge">
+                                                        <span class="material-symbols-rounded">group</span>
+                                                        <span style="font-weight: 600;"><?php echo htmlspecialchars($post['community_name']); ?></span>
+                                                    </div>
+                                                <?php endif; ?>
                                             </div>
-                                            <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
                                             
                                         </div>
+                                        <?php // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- ?>
+
                                     </div>
                                 </div>
 

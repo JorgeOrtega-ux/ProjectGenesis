@@ -438,6 +438,8 @@ $educationDisplay = $hasEducation ? $educationText : 'Sin formación establecida
                                 <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($postRole); ?>">
                                     <img src="<?php echo htmlspecialchars($postAvatar); ?>" alt="<?php echo htmlspecialchars($post['username']); ?>" class="component-card__avatar-image">
                                 </div>
+                                
+                                <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ --- ?>
                                 <div class="component-card__text">
                                     <h2 class="component-card__title"><?php echo htmlspecialchars($post['username']); ?></h2>
                                     
@@ -446,9 +448,9 @@ $educationDisplay = $hasEducation ? $educationText : 'Sin formación establecida
                                             <span><?php echo date('d/m/Y H:i', strtotime($post['created_at'])); ?></span>
                                         </div>
                                         
-                                        <span class="post-privacy-icon" data-tooltip="<?php echo $privacyTooltipKey; ?>">
-                                            <span class="material-symbols-rounded" style="font-size: 16px;"><?php echo $privacyIcon; ?></span>
-                                        </span>
+                                        <div class="profile-meta-badge" data-tooltip="<?php echo $privacyTooltipKey; ?>">
+                                            <span data-i18n="<?php echo $privacyTooltipKey; ?>"></span>
+                                        </div>
                                         
                                         <?php if (isset($post['community_name']) && $post['community_name']): ?>
                                             <div class="profile-meta-badge">
@@ -459,6 +461,8 @@ $educationDisplay = $hasEducation ? $educationText : 'Sin formación establecida
                                     </div>
                                     
                                 </div>
+                                <?php // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- ?>
+
                             </div>
                             
                             <?php if ($isOwner): ?>

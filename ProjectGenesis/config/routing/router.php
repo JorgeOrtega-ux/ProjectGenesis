@@ -735,6 +735,7 @@ if (array_key_exists($page, $allowedPages)) {
                 case 'bookmarks':
                 case 'posts':
                 default:
+                    // 'posts', 'likes', 'bookmarks' usan el mismo layout de 2 columnas
                     $tabFile = $tabBasePath . 'view-profile-posts.php';
                     break;
             }
@@ -830,6 +831,7 @@ if (array_key_exists($page, $allowedPages)) {
                         ];
                     }
 
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL CON NUEVAS COLUMNAS) ▼▼▼ ---
                     $stmt_posts = $pdo->prepare(
                         "SELECT 
                                p.id, 
@@ -838,7 +840,9 @@ if (array_key_exists($page, $allowedPages)) {
                                p.created_at,
                                u.username,
                                u.profile_image_url,
-                               u.role
+                               u.role,
+                               p.privacy_level,
+                               c.name AS community_name
                            FROM community_publications p
                            JOIN users u ON p.user_id = u.id
                            LEFT JOIN communities c ON p.community_id = c.id
@@ -867,6 +871,7 @@ if (array_key_exists($page, $allowedPages)) {
                            ORDER BY p.created_at DESC
                            LIMIT 20"
                     );
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     $stmt_posts->execute([$searchParam, $searchParam, $currentUserId, $currentUserId, $currentUserId, $currentUserId]);
                     $postResults = $stmt_posts->fetchAll();
 
