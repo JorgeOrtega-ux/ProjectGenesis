@@ -17,6 +17,7 @@
       "placeholder": "Buscar personas, publicaciones...",
       "people": "Personas",
       "posts": "Publicaciones",
+      "communities": "Comunidades",
       "noResults": "No se encontraron resultados para",
       "allResults": "Ver todos los resultados",
       "filter": {
@@ -35,7 +36,8 @@
     },
     "main": {
       "home": "Página principal",
-      "explore": "Explorar comunidades"
+      "explore": "Explorar comunidades",
+      "trends": "Descubrir Tendencias"
     },
     "admin": {
       "backToHome": "Volver a inicio",
@@ -122,7 +124,8 @@
         "dangerDesc": "Eliminar esta comunidad es una acción irreversible.",
         "deleteButton": "Eliminar Comunidad",
         "typeTitle": "Tipo de Comunidad",
-        "typeLabel": "Tipo"
+        "typeLabel": "Tipo",
+        "maxMembersLabel": "Límite de Miembros (0 = sin límite)"
       },
       "success": {
         "created": "Comunidad creada exitosamente. Serás redirigido.",
@@ -303,7 +306,11 @@
       "langEnUs": "English (United States)",
       "langFrFr": "Français (France)",
       "newTabTitle": "Abrir los enlaces en una pestaña nueva",
-      "newTabDesc": "En el navegador web, los enlaces siempre se abrirán en una pestaña nueva."
+      "newTabDesc": "En el navegador web, los enlaces siempre se abrirán en una pestaña nueva.",
+      "employmentTitle": "Empleo",
+      "employmentDesc": "Selecciona tu sector laboral actual.",
+      "educationTitle": "Formación",
+      "educationDesc": "Selecciona tu institución educativa."
     },
     "login": {
       "title": "Inicio de Sesión y Seguridad",
@@ -620,7 +627,9 @@
       "errorLogoutSelf": "No puedes cerrar tu propia sesión actual desde esta lista.",
       "errorLogoutFail": "No se pudo cerrar la sesión. Es posible que ya no exista o no te pertenezca.",
       "successLogoutIndividual": "Sesión cerrada exitosamente.",
-      "confirmLogoutIndividual": "¿Estás seguro de que deseas cerrar esta sesión? El dispositivo deberá volver a iniciar sesión."
+      "confirmLogoutIndividual": "¿Estás seguro de que deseas cerrar esta sesión? El dispositivo deberá volver a iniciar sesión.",
+      "successBioUpdate": "Biografía actualizada.",
+      "errorBioTooLong": "La biografía no puede exceder los %length% caracteres."
     },
     "api": {
       "errorServer": "No se pudo completar la solicitud. Por favor, inténtalo más tarde.",
@@ -686,7 +695,8 @@
       "alreadyMember": "Ya eres miembro de esta comunidad.",
       "joinSuccess": "Te has unido a la comunidad.",
       "leaveSuccess": "Has abandonado la comunidad.",
-      "apiError": "Error al procesar la solicitud."
+      "apiError": "Error al procesar la solicitud.",
+      "communityFull": "Lo sentimos, esta comunidad ha alcanzado su límite de miembros."
     },
     "publication": {
       "errorFileCount": "No puedes subir más de 4 archivos.",
@@ -712,7 +722,9 @@
       "errorPollTooLong": "La pregunta de la encuesta no puede exceder los %length% caracteres.",
       "confirmDelete": "¿Eliminar publicación? Esta acción no se puede deshacer.",
       "postDeleted": "Publicación eliminada.",
-      "privacyUpdated": "Privacidad actualizada."
+      "privacyUpdated": "Privacidad actualizada.",
+      "errorHashtagLimit": "No puedes añadir más de 5 hashtags.",
+      "errorHashtagLength": "Un hashtag no puede tener más de 50 caracteres."
     },
     "friends": {
       "sendRequest": "Agregar amigo",
@@ -812,7 +824,12 @@
     "pollAddOption": "Añadir opción",
     "pollOptionLabel": "Opción",
     "pollRemoveOption": "Eliminar opción",
-    "titleLabel": "Título (Opcional)"
+    "titleLabel": "Título (Opcional)",
+    "myProfile": "Mi Perfil",
+    "noCommunities": "Sin comunidades",
+    "noCommunitiesJoin": "Únete a un grupo...",
+    "hashtagsLabel": "Hashtags (ej: #tag1 #tag2)",
+    "hashtagsDesc": "Añade hasta 5 hashtags separados por espacios."
   },
   "notifications": {
     "title": "Notificaciones",
@@ -843,25 +860,6 @@
       "descOther": "Este usuario aún no ha publicado nada."
     }
   },
-  "friends": {
-    "sendRequest": "Agregar amigo",
-    "cancelRequest": "Cancelar solicitud",
-    "acceptRequest": "Aceptar",
-    "declineRequest": "Rechazar",
-    "removeFriend": "Eliminar amigo",
-    "requestSent": "Solicitud enviada.",
-    "requestCanceled": "Solicitud cancelada.",
-    "requestAccepted": "¡Ahora son amigos!",
-    "friendRemoved": "Amigo eliminado.",
-    "errorGeneric": "Error al procesar la solicitud de amistad.",
-    "confirmRemove": "¿Seguro que quieres eliminar a este amigo?",
-    "list": {
-      "title": "Amigos",
-      "loading": "Cargando amigos...",
-      "noFriends": "No tienes amigos.",
-      "error": "Error al cargar."
-    }
-  },
   "post": {
     "options": {
       "changePrivacy": "Cambiar privacidad",
@@ -888,5 +886,14 @@
       "municipio": "Una comunidad para colaborar, compartir ideas y mucho más sobre tu municipio. ¡Únete y participa!",
       "universidad": "El espacio oficial para estudiantes y personal de la universidad. Conéctate y comparte."
     }
+  },
+  "trends": {
+    "title": "Tendencias",
+    "description": "Descubre los hashtags más populares del momento.",
+    "noTrends": {
+      "title": "No hay tendencias",
+      "desc": "Aún no hay suficientes publicaciones con hashtags para mostrar tendencias."
+    },
+    "postCount": "%count% publicaciones"
   }
 }

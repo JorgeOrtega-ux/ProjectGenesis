@@ -59,9 +59,9 @@ $educationKey = $profile['education'] ?? 'none';
 $employmentText = $employmentMap[$employmentKey] ?? $employmentMap['none'];
 $educationText = $educationMap[$educationKey] ?? $educationMap['none'];
 
-// Si el valor es 'none', mostramos 'No especificado'
-$employmentDisplay = ($employmentKey === 'none') ? 'No especificado' : $employmentText;
-$educationDisplay = ($educationKey === 'none') ? 'No especificado' : $educationText;
+// Si el valor es 'none', mostramos el placeholder solicitado
+$employmentDisplay = ($employmentKey === 'none') ? 'Sin empleo establecido' : $employmentText;
+$educationDisplay = ($educationKey === 'none') ? 'Sin formación establecida' : $educationText;
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 ?>

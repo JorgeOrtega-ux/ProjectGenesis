@@ -21,9 +21,65 @@ $publications = $viewProfileData['publications'] ?? [];
 $profileFriends = $viewProfileData['profile_friends_preview'] ?? [];
 $friendCount = $viewProfileData['friend_count'] ?? 0;
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (Obtener Bio) ▼▼▼ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (Obtener Bio y Lógica de Empleo/Formación) ▼▼▼ ---
 $profileBio = $profile['bio'] ?? null;
 $hasBio = !empty($profileBio);
+
+// (Usamos los mismos mapas definidos en your-profile.php para mostrar el texto amigable)
+$employmentMap = [
+    'none' => 'Sin empleo',
+    'student' => 'Estudiante',
+    'tech' => 'Tecnología / Desarrollo de Software',
+    'health' => 'Salud / Medicina',
+    'education' => 'Educación / Docencia',
+    'industry' => 'Industria / Manufactura',
+    'commerce' => 'Comercio / Ventas',
+    'admin' => 'Administración / Oficina',
+    'other' => 'Otro'
+];
+$educationMap = [
+    'none' => 'Sin formación',
+    'icn_valle_hermoso' => 'Universidad de Ingenierías y Ciencias del Noreste (ICN) – Campus Valle Hermoso',
+    'uda_zaragoza_vh' => 'Universidad del Atlántico – Campus Valle Hermoso (Zaragoza)',
+    'uda_juarez_vh' => 'Universidad del Atlántico – Campus Valle Hermoso (Juárez)',
+    'unm_valle_hermoso' => 'Universidad del Noreste de México – Unidad Valle Hermoso',
+    'uat_valle_hermoso' => 'Universidad Autónoma de Tamaulipas (UAT) – Unidad Académica Multidisciplinaria Valle Hermoso',
+    'icn_matamoros' => 'Universidad de Ingenierías y Ciencias del Noreste (ICN)',
+    'uih_matamoros' => 'Universidad de Integración Humanista',
+    'fmisc_matamoros' => 'Facultad de Medicina e Ingeniería en Sistemas Computacionales Matamoros',
+    'cin_matamoros' => 'Centro Universitario del Noreste (CIN)',
+    'iom_matamoros' => 'Instituto Odontológico de Matamoros (IOM)',
+    'uamm_matamoros' => 'Unidad Académica Multidisciplinaria Matamoros (UAMM)',
+    'uane_americana_matamoros' => 'Universidad Americana del Noreste, Campus Matamoros',
+    'uane_americanista_matamoros' => 'Universidad Americanista del Noreste (UANE), Campus Matamoros',
+    'ut_matamoros' => 'Universidad Tamaulipeca, Campus Matamoros',
+    'itm_matamoros' => 'Instituto Tecnológico de Matamoros',
+    'upn_matamoros' => 'Universidad Pedagógica Nacional (UPN)',
+    'uda_cardenas_matamoros' => 'Universidad del Atlántico, Campus Pedro Cárdenas',
+    'uda_villar_matamoros' => 'Universidad del Atlántico, Campus Lauro Villar',
+    'uda_logrono_matamoros' => 'Universidad del Atlántico, Campus Logroño',
+    'unm_matamoros' => 'Universidad del Noreste de México, Unidad Matamoros',
+    'normal_mainero_matamoros' => 'Escuela Normal Lic. J. Guadalupe Mainero',
+    'lpca_matamoros' => 'Liceo Profesional de Comercio y Administración',
+    'utm_matamoros' => 'Universidad Tecnológica de Matamoros (UTM)',
+    'other' => 'Otra'
+];
+
+// Obtener los valores guardados
+$employmentKey = $profile['employment'] ?? 'none';
+$educationKey = $profile['education'] ?? 'none';
+
+// Buscar el texto legible. Si no se encuentra, usar el default 'none'.
+$employmentText = $employmentMap[$employmentKey] ?? $employmentMap['none'];
+$educationText = $educationMap[$educationKey] ?? $educationMap['none'];
+
+// Variables para la lógica de "mostrar o placeholder"
+$hasEmployment = ($employmentKey !== 'none');
+$hasEducation = ($educationKey !== 'none');
+
+// Texto para mostrar (el valor real o el placeholder)
+$employmentDisplay = $hasEmployment ? $employmentText : 'Sin empleo establecido';
+$educationDisplay = $hasEducation ? $educationText : 'Sin formación establecida';
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 ?>
 
@@ -178,7 +234,7 @@ $hasBio = !empty($profileBio);
                 <?php else: ?>
                     <div class="profile-bio-placeholder">
                         <span class="material-symbols-rounded">person</span>
-                        <span>Sin información académica (esto va asi por el momento)</span>
+                        <span>Sin presentación.</span>
                     </div>
                 <?php endif; ?>
             </div>
@@ -199,10 +255,19 @@ $hasBio = !empty($profileBio);
             </form>
             <?php endif; ?>
             
-            <div class="profile-bio-placeholder" style="padding-top: 12px; border-top: 1px solid #00000015; margin-top: 12px;">
-                <span class="material-symbols-rounded">school</span>
-                <span>Sin informacion academica (esto va asi por el momento)</span>
+            <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Placeholder Académico) ▼▼▼ --- ?>
+            <div style="border-top: 1px solid #00000015; margin: 12px 8px 0 8px;"></div>
+            
+            <div class="profile-bio-placeholder" style="padding: 12px 8px 0 8px; margin-top: 0;">
+                <span class="material-symbols-rounded"><?php echo $hasEmployment ? 'work' : 'work_off'; ?></span>
+                <span><?php echo htmlspecialchars($employmentDisplay); ?></span>
             </div>
+            
+            <div class="profile-bio-placeholder" style="padding: 12px 8px 0 8px; margin-top: 0;">
+                <span class="material-symbols-rounded"><?php echo $hasEducation ? 'school' : 'school_off'; ?></span>
+                <span><?php echo htmlspecialchars($educationDisplay); ?></span>
+            </div>
+            <?php // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- ?>
         </div>
         <div class="component-card component-card--column" id="profile-friends-preview-card">
             
