@@ -822,6 +822,9 @@
     "friendRequestAlert": "{username} te ha enviado una solicitud de amistad."
   },
   "profile": {
+    "friends": {
+      "private": "Esta lista de amigos es privada."
+    },
     "tabs": {
       "likes": "Favoritos",
       "bookmarks": "Guardados"

@@ -9,6 +9,11 @@
 
 // --- Estos datos fueron cargados por router.php específicamente para esta pestaña ---
 $fullFriendList = $viewProfileData['full_friend_list'] ?? [];
+
+// --- ▼▼▼ AÑADIR VARIABLES DE CONTEXTO FALTANTES ▼▼▼ ---
+$profile = $viewProfileData;
+$isOwnProfile = ($viewProfileData['friendship_status'] === 'self');
+// --- ▲▲▲ FIN DE VARIABLES AÑADIDAS ▲▲▲ ---
 ?>
 
 <div class="profile-main-content active" data-profile-tab-content="amigos">
@@ -27,7 +32,15 @@ $fullFriendList = $viewProfileData['full_friend_list'] ?? [];
 
         <div class="profile-friends-full-grid">
             <?php if (empty($fullFriendList)): ?>
-                <p class="profile-friends-empty" data-i18n="friends.list.noFriends" style="grid-column: 1 / -1; padding: 32px 0;">No tiene amigos.</p>
+                
+                <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- ?>
+                <?php if (!$isOwnProfile && (int)($profile['is_friend_list_private'] ?? 1) === 1): ?>
+                    <p class="profile-friends-empty" data-i18n="profile.friends.private" style="grid-column: 1 / -1; padding: 32px 0;">Esta lista de amigos es privada.</p>
+                <?php else: ?>
+                    <p class="profile-friends-empty" data-i18n="friends.list.noFriends" style="grid-column: 1 / -1; padding: 32px 0;">No tiene amigos.</p>
+                <?php endif; ?>
+                <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
+
             <?php else: ?>
                 <?php foreach ($fullFriendList as $friend): ?>
                     <?php
