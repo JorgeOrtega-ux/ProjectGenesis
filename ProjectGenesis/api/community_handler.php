@@ -95,9 +95,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.join_group.invalidCode');
             }
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (COMPROBAR LÍMITE) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Quitar guiones) ▼▼▼ ---
+            $accessCodeDB = str_replace('-', '', $accessCode);
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (COMPROBAR LÍMITE Y USAR accessCodeDB) ▼▼▼ ---
             $stmt_find = $pdo->prepare("SELECT id, name, uuid, max_members FROM communities WHERE access_code = ? AND privacy = 'private'");
-            $stmt_find->execute([$accessCode]);
+            $stmt_find->execute([$accessCodeDB]); // Usar la variable sin guiones
             $community = $stmt_find->fetch();
 
             if (!$community) {

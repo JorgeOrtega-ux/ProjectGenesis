@@ -677,6 +677,23 @@ export function initAdminCommunityManager() {
                 hideInlineError(card);
             }
         }
+        
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Formateo de código) ▼▼▼ ---
+        if (e.target.id === 'admin-community-code') {
+            let input = e.target.value.replace(/[^0-9a-zA-Z]/g, '');
+            input = input.toUpperCase();
+            input = input.substring(0, 12);
+
+            let formatted = '';
+            for (let i = 0; i < input.length; i++) {
+                if (i > 0 && i % 4 === 0) {
+                    formatted += '-';
+                }
+                formatted += input[i];
+            }
+            e.target.value = formatted;
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     });
 
     // --- Guardar src original de imágenes al cargar la página de edición ---
@@ -690,7 +707,8 @@ export function initAdminCommunityManager() {
         }
         const bannerPreview = document.getElementById('admin-banner-preview-image');
         if (bannerPreview && !bannerPreview.dataset.originalSrc) {
-            bannerPreview.dataset.originalSrc = bannerPreview.src;
+            bannerPreview.style.backgroundImage = bannerPreview.style.backgroundImage || 'none';
+            bannerPreview.dataset.originalBg = bannerPreview.style.backgroundImage;
         }
     }, 100);
 

@@ -146,15 +146,18 @@ function deleteOldCommunityImage($oldUrl, $basePath) {
 /**
  * Genera un código de acceso aleatorio.
  */
-function generateAccessCode($length = 8) {
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+function generateAccessCode($length = 12) { // Cambiado a 12
     $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $code = '';
     $max = strlen($chars) - 1;
     for ($i = 0; $i < $length; $i++) {
         $code .= $chars[random_int(0, $max)];
     }
-    return $code;
+    // Formatear el código
+    return substr($code, 0, 4) . '-' . substr($code, 4, 4) . '-' . substr($code, 8, 4);
 }
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 // --- ▲▲▲ FIN NUEVAS FUNCIONES HELPER ▲▲▲ ---
 
@@ -1124,37 +1127,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $name = trim($_POST['name'] ?? '');
             $communityType = ($_POST['community_type'] === 'universidad') ? 'universidad' : 'municipio';
             $privacy = ($_POST['privacy'] === 'private') ? 'private' : 'public';
-            $accessCode = ($_POST['access_code'] ?? '');
             
             // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-            $maxMembers = (int)($_POST['max_members'] ?? 0);
-            $maxMembersDB = ($maxMembers > 0) ? $maxMembers : null; // Guardar 0 como NULL
+            // El código se recibe formateado (XXXX-XXXX-XXXX) o vacío
+            $accessCode = ($_POST['access_code'] ?? '');
+            
+            // Quitar guiones para almacenar en la BD
+            $accessCodeDB = str_replace('-', '', $accessCode);
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+            $maxMembers = (int)($_POST['max_members'] ?? 0);
+            $maxMembersDB = ($maxMembers > 0) ? $maxMembers : null; 
 
             if (empty($name)) {
                 throw new Exception('admin.communities.error.nameRequired');
             }
-            if ($privacy === 'private' && empty($accessCode)) {
-                $accessCode = generateAccessCode();
+            if ($privacy === 'private' && empty($accessCodeDB)) {
+                // Generar uno nuevo si está vacío y es privado
+                $accessCode = generateAccessCode(); // Ya viene formateado
+                $accessCodeDB = str_replace('-', '', $accessCode);
             }
             if ($privacy === 'public') {
-                $accessCode = null;
+                $accessCodeDB = null;
             }
 
-            $uuid = bin2hex(random_bytes(16)); // Generar un UUID simple
+            $uuid = bin2hex(random_bytes(16)); 
             
             $pdo->beginTransaction();
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             $stmt_insert = $pdo->prepare(
                 "INSERT INTO communities (uuid, name, community_type, privacy, access_code, max_members) 
                  VALUES (?, ?, ?, ?, ?, ?)"
             );
-            $stmt_insert->execute([$uuid, $name, $communityType, $privacy, $accessCode, $maxMembersDB]);
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            $stmt_insert->execute([$uuid, $name, $communityType, $privacy, $accessCodeDB, $maxMembersDB]);
             $newCommunityId = $pdo->lastInsertId();
 
-            // Generar icono y banner por defecto
             $defaultIcon = generateDefaultCommunityIcon($pdo, $newCommunityId, $name, $basePath);
             
             if ($defaultIcon) {
@@ -1181,19 +1188,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $name = trim($_POST['name'] ?? '');
             $communityType = ($_POST['community_type'] === 'universidad') ? 'universidad' : 'municipio';
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             $maxMembers = (int)($_POST['max_members'] ?? 0);
-            $maxMembersDB = ($maxMembers > 0) ? $maxMembers : null; // Guardar 0 como NULL
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            $maxMembersDB = ($maxMembers > 0) ? $maxMembers : null; 
 
             if (empty($communityId) || empty($name)) {
                 throw new Exception('admin.communities.error.nameRequired');
             }
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             $stmt = $pdo->prepare("UPDATE communities SET name = ?, community_type = ?, max_members = ? WHERE id = ?");
             $stmt->execute([$name, $communityType, $maxMembersDB, $communityId]);
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             $response['success'] = true;
             $response['message'] = 'admin.communities.success.updated';
@@ -1209,27 +1212,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $communityId = (int)($_POST['community_id'] ?? 0);
             $privacy = ($_POST['privacy'] === 'private') ? 'private' : 'public';
-            $accessCode = trim($_POST['access_code'] ?? '');
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            $accessCode = trim($_POST['access_code'] ?? ''); // Recibe XXXX-XXXX-XXXX
+            $accessCodeDB = str_replace('-', '', $accessCode); // Almacena XXXXXXXXXXXX
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             if (empty($communityId)) {
                 throw new Exception('js.api.invalidAction');
             }
             
-            if ($privacy === 'private' && empty($accessCode)) {
-                // Si se cambia a privado y no se provee código, generar uno
-                $accessCode = generateAccessCode();
+            if ($privacy === 'private' && empty($accessCodeDB)) {
+                // Generar uno nuevo si está vacío y es privado
+                $accessCode = generateAccessCode(); // Ya viene formateado
+                $accessCodeDB = str_replace('-', '', $accessCode);
             } elseif ($privacy === 'public') {
-                // Si es público, forzar el código a NULL
-                $accessCode = null;
+                $accessCodeDB = null;
+                $accessCode = ''; // Limpiar para la respuesta JSON
             }
 
             $stmt = $pdo->prepare("UPDATE communities SET privacy = ?, access_code = ? WHERE id = ?");
-            $stmt->execute([$privacy, $accessCode, $communityId]);
+            $stmt->execute([$privacy, $accessCodeDB, $communityId]);
             
             $response['success'] = true;
             $response['message'] = 'admin.communities.success.privacyUpdated';
             $response['newPrivacy'] = $privacy;
-            $response['newAccessCode'] = $accessCode; // Devolver el código (nuevo o el provisto)
+            $response['newAccessCode'] = $accessCode; // Devolver el código formateado
 
         } catch (Exception $e) {
             if ($e instanceof PDOException) logDatabaseError($e, 'admin_handler - admin-update-community-privacy');
@@ -1238,13 +1246,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     elseif ($action === 'admin-generate-access-code') {
-         if ($adminRole !== 'founder') { // Solo founders pueden hacer esto
+         if ($adminRole !== 'founder') { 
             $response['message'] = 'js.admin.errorAdminTarget';
             echo json_encode($response);
             exit;
          }
          $response['success'] = true;
-         $response['newAccessCode'] = generateAccessCode();
+         $response['newAccessCode'] = generateAccessCode(); // Ya devuelve el código formateado
     }
     
     elseif ($action === 'admin-upload-community-image') {
