@@ -2,13 +2,9 @@
 // FILE: includes/sections/settings/your-profile.php
 ?>
 <?php
-// --- ▼▼▼ INICIO DE NUEVO BLOQUE PHP ▼▼▼ ---
+// --- ▼▼▼ INICIO DE BLOQUE PHP MODIFICADO ▼▼▼ ---
 
-// Estas variables ($userLanguage, $userUsageType, $openLinksInNewTab)
-// son cargadas por config/router.php
-// ($initialEmailCooldown fue movido a router -> settings-change-email)
-
-// 1. Definir los mapas de valores de BD a *CLAVES DE TRADUCCIÓN*
+// Estas variables son cargadas por config/router.php
 $usageMap = [
     'personal' => 'settings.profile.usagePersonal',
     'student' => 'settings.profile.usageStudent',
@@ -17,7 +13,6 @@ $usageMap = [
     'large_company' => 'settings.profile.usageLargeCompany'
 ];
 
-// --- ¡NUEVO MAPA DE ICONOS AÑADIDO! ---
 $usageIconMap = [
     'personal' => 'person',
     'student' => 'school',
@@ -33,16 +28,99 @@ $languageMap = [
     'fr-fr' => 'settings.profile.langFrFr'
 ];
 
-// 2. Obtener la *CLAVE* actual para mostrar en el botón
 $currentUsageKey = $usageMap[$userUsageType] ?? 'settings.profile.usagePersonal';
 $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs';
 
-// --- Cargar nuevas variables de sesión ---
 $isFriendListPrivate = (int) ($_SESSION['is_friend_list_private'] ?? 1);
 $isEmailPublic = (int) ($_SESSION['is_email_public'] ?? 0);
-// --- Fin ---
 
-// --- ▲▲▲ FIN DE NUEVO BLOQUE PHP ▲▲▲ ---
+// --- [INICIO] Lógica de Empleo y Formación ---
+$userEmployment = $_SESSION['employment'] ?? 'none';
+$userEducation = $_SESSION['education'] ?? 'none';
+
+// Opciones de Empleo
+$employmentMap = [
+    'none' => 'Sin empleo',
+    'student' => 'Estudiante',
+    'tech' => 'Tecnología / Desarrollo de Software',
+    'health' => 'Salud / Medicina',
+    'education' => 'Educación / Docencia',
+    'industry' => 'Industria / Manufactura',
+    'commerce' => 'Comercio / Ventas',
+    'admin' => 'Administración / Oficina',
+    'other' => 'Otro'
+];
+$employmentIconMap = [
+    'none' => 'work_off',
+    'student' => 'school',
+    'tech' => 'computer',
+    'health' => 'medical_services',
+    'education' => 'history_edu',
+    'industry' => 'factory',
+    'commerce' => 'storefront',
+    'admin' => 'business_center',
+    'other' => 'work'
+];
+
+// --- [NUEVO] Opciones de Formación Agrupadas ---
+$educationGroups = [
+    'General' => [
+        'none' => 'Sin formación',
+    ],
+    'Valle Hermoso' => [
+        'icn_valle_hermoso' => 'Universidad de Ingenierías y Ciencias del Noreste (ICN) - Valle Hermoso',
+        'uda_zaragoza_vh' => 'Universidad del Atlántico - Campus Valle Hermoso (Zaragoza)',
+        'uda_juarez_vh' => 'Universidad del Atlántico - Campus Valle Hermoso (Juárez)',
+        'unm_valle_hermoso' => 'Universidad del Noreste de México - Unidad Valle Hermoso',
+        'uat_valle_hermoso' => 'Universidad Autónoma de Tamaulipas (UAT) - Unidad Valle Hermoso',
+    ],
+    'Matamoros' => [
+        'icn_matamoros' => 'Universidad de Ingenierías y Ciencias del Noreste (ICN) - Matamoros',
+        'uih_matamoros' => 'Universidad de Integración Humanista - Matamoros',
+        'fmisc_matamoros' => 'Facultad de Medicina e Ingeniería en Sistemas Computacionales - Matamoros',
+        'cin_matamoros' => 'Centro Universitario del Noreste (CIN) - Matamoros',
+        'iom_matamoros' => 'Instituto Odontológico de Matamoros (IOM)',
+        'uamm_matamoros' => 'Unidad Académica Multidisciplinaria Matamoros (UAMM)',
+        'uane_matamoros' => 'Universidad Americana del Noreste - Campus Matamoros',
+        'ut_matamoros' => 'Universidad Tamaulipeca - Campus Matamoros',
+        'itm_matamoros' => 'Instituto Tecnológico de Matamoros',
+        'upn_matamoros' => 'Universidad Pedagógica Nacional (UPN) - Matamoros',
+        'uda_cardenas_matamoros' => 'Universidad del Atlántico - Campus Pedro Cárdenas',
+        'icest_matamoros' => 'Inst. de Ciencias y Est. Sup. de Tamps. (ICEST) - Matamoros',
+        'uane_constituyentes_matamoros' => 'Universidad Americanista del Noreste (UANE) - Campus Matamoros',
+        'uda_villar_matamoros' => 'Universidad del Atlántico - Campus Lauro Villar',
+        'uda_laguneta_matamoros' => 'Universidad del Atlántico - Campus Laguneta',
+        'unm_matamoros' => 'Universidad del Noreste de México - Unidad Matamoros',
+        'normal_mainero_matamoros' => 'Escuela Normal Lic. J. Guadalupe Mainero - Matamoros',
+        'lpca_matamoros' => 'Liceo Profesional de Comercio y Administración - Matamoros',
+        'utm_matamoros' => 'Universidad Tecnológica de Matamoros (UTM)',
+    ],
+    'Otros' => [
+        'other' => 'Otra',
+    ]
+];
+
+// --- [NUEVO] Crear mapas planos para iconos y texto actual ---
+$educationIconMap = [];
+$educationMap = []; // Mapa plano para buscar el texto de la opción seleccionada
+foreach ($educationGroups as $groupOptions) {
+    foreach ($groupOptions as $key => $text) {
+        $educationIconMap[$key] = 'school'; // Icono por defecto
+        $educationMap[$key] = $text; // Añadir al mapa plano
+    }
+}
+$educationIconMap['none'] = 'school_off';
+$educationIconMap['other'] = 'domain';
+
+// --- Obtener claves actuales ---
+$currentEmploymentKey = $employmentMap[$userEmployment] ?? $employmentMap['none'];
+$currentEmploymentIcon = $employmentIconMap[$userEmployment] ?? $employmentIconMap['none'];
+
+$currentEducationKey = $educationMap[$userEducation] ?? $educationMap['none']; // Usa el nuevo mapa plano
+$currentEducationIcon = $educationIconMap[$userEducation] ?? $educationIconMap['none'];
+// --- [FIN] Lógica de Empleo y Formación ---
+
+// --- ▲▲▲ FIN DE BLOQUE PHP MODIFICADO ▲▲▲ ---
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'settings-profile') ? 'active' : 'disabled'; ?>" data-section="settings-profile">
     <div class="component-wrapper">
@@ -149,6 +227,134 @@ $isEmailPublic = (int) ($_SESSION['is_email_public'] ?? 0);
 
             </div>
 
+        <div class="component-card component-card--column">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="settings.profile.employmentTitle">Empleo</h2>
+                    <p class="component-card__description" data-i18n="settings.profile.employmentDesc">Selecciona tu sector laboral actual.</p>
+                </div>
+            </div>
+            <div class="component-card__actions">
+                <div class="trigger-select-wrapper">
+                    <div class="trigger-selector" data-action="toggleModuleEmploymentSelect">
+                        <div class="trigger-select-icon">
+                             <span class="material-symbols-rounded"><?php echo $currentEmploymentIcon; ?></span>
+                        </div>
+                        <div class="trigger-select-text">
+                            <span>
+                                <?php echo htmlspecialchars($currentEmploymentKey); ?>
+                            </span>
+                        </div>
+                        <div class="trigger-select-arrow">
+                            <span class="material-symbols-rounded">arrow_drop_down</span>
+                        </div>
+                    </div>
+                    
+                    <div class="popover-module popover-module--anchor-width body-title disabled" 
+                         data-module="moduleEmploymentSelect"
+                         data-preference-type="employment">
+                        <div class="menu-content">
+                            <div class="menu-list">
+                                <?php 
+                                foreach ($employmentMap as $key => $text): 
+                                    $isActive = ($key === $userEmployment); 
+                                    $iconName = $employmentIconMap[$key];
+                                ?>
+                                    <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                                         data-value="<?php echo htmlspecialchars($key); ?>">
+                                        <div class="menu-link-icon">
+                                            <span class="material-symbols-rounded"><?php echo $iconName; ?></span>
+                                        </div>
+                                        <div class="menu-link-text">
+                                            <span><?php echo htmlspecialchars($text); ?></span>
+                                        </div>
+                                        <div class="menu-link-check-icon">
+                                            <?php if ($isActive): ?>
+                                                <span class="material-symbols-rounded">check</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="component-card component-card--column">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="settings.profile.educationTitle">Formación</h2>
+                    <p class="component-card__description" data-i18n="settings.profile.educationDesc">Selecciona tu institución educativa.</p>
+                </div>
+            </div>
+            <div class="component-card__actions">
+                <div class="trigger-select-wrapper">
+                    <div class="trigger-selector" data-action="toggleModuleEducationSelect">
+                        <div class="trigger-select-icon">
+                             <span class="material-symbols-rounded"><?php echo $currentEducationIcon; ?></span>
+                        </div>
+                        <div class="trigger-select-text">
+                            <span>
+                                <?php echo htmlspecialchars($currentEducationKey); ?>
+                            </span>
+                        </div>
+                        <div class="trigger-select-arrow">
+                            <span class="material-symbols-rounded">arrow_drop_down</span>
+                        </div>
+                    </div>
+                    
+                    <div class="popover-module popover-module--anchor-width body-title disabled" 
+                         data-module="moduleEducationSelect"
+                         data-preference-type="education">
+                        <div class="menu-content" style="max-height: 300px; overflow-y: auto;"> <div class="menu-list">
+                                <?php 
+                                // --- [NUEVO] Bucle anidado para grupos ---
+                                foreach ($educationGroups as $groupName => $groupOptions):
+                                ?>
+                                    
+                                    <?php 
+                                    // No mostrar encabezado para el grupo "General" (que solo tiene 'Sin formación')
+                                    if ($groupName !== 'General'): 
+                                    ?>
+                                        <div class="menu-header">
+                                            <div class="menu-header-title"><?php echo htmlspecialchars($groupName); ?></div>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <?php 
+                                    foreach ($groupOptions as $key => $text):
+                                        $isActive = ($key === $userEducation); 
+                                        $iconName = $educationIconMap[$key];
+                                    ?>
+                                        <div class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                                             data-value="<?php echo htmlspecialchars($key); ?>">
+                                            <div class="menu-link-icon">
+                                                <span class="material-symbols-rounded"><?php echo $iconName; ?></span>
+                                            </div>
+                                            <div class="menu-link-text">
+                                                <span><?php echo htmlspecialchars($text); ?></span>
+                                            </div>
+                                            <div class="menu-link-check-icon">
+                                                <?php if ($isActive): ?>
+                                                    <span class="material-symbols-rounded">check</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    <?php 
+                                    endforeach; // Fin del bucle de opciones
+                                    ?>
+                                <?php 
+                                endforeach; // Fin del bucle de grupos
+                                // --- [FIN] Bucle anidado ---
+                                ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="component-card component-card--column">
             <div class="component-card__content">
                 <div class="component-card__text">

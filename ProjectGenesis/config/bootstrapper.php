@@ -121,8 +121,8 @@ try {
 // Refresca los datos del usuario desde la BD en cada carga de página
 if (isset($_SESSION['user_id'])) {
     try {
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR banner_url) ▼▼▼ ---
-        $stmt = $pdo->prepare("SELECT username, email, profile_image_url, banner_url, role, auth_token, account_status FROM users WHERE id = ?");
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR banner_url y bio) ▼▼▼ ---
+        $stmt = $pdo->prepare("SELECT username, email, profile_image_url, banner_url, role, auth_token, account_status, bio FROM users WHERE id = ?");
         // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         
         $stmt->execute([$_SESSION['user_id']]);
@@ -192,8 +192,9 @@ if (isset($_SESSION['user_id'])) {
             $_SESSION['username'] = $freshUserData['username'];
             $_SESSION['email'] = $freshUserData['email'];
             $_SESSION['profile_image_url'] = $freshUserData['profile_image_url'];
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR banner_url a la sesión) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR banner_url y bio a la sesión) ▼▼▼ ---
             $_SESSION['banner_url'] = $freshUserData['banner_url'];
+            $_SESSION['bio'] = $freshUserData['bio'];
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $_SESSION['role'] = $freshUserData['role']; 
             
@@ -210,6 +211,12 @@ if (isset($_SESSION['user_id'])) {
                 $_SESSION['open_links_in_new_tab'] = (int)$prefs['open_links_in_new_tab'];
                 $_SESSION['increase_message_duration'] = (int)$prefs['increase_message_duration'];
                 // --- [HASTAGS] --- (Aquí iría la carga de preferencias de hashtags si las hubiera)
+
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (CARGAR employment/education) ▼▼▼ ---
+                $_SESSION['employment'] = $prefs['employment'] ?? null;
+                $_SESSION['education'] = $prefs['education'] ?? null;
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             } else {
                 // Valores por defecto si no hay preferencias
                 $_SESSION['language'] = 'en-us';
@@ -217,6 +224,11 @@ if (isset($_SESSION['user_id'])) {
                 $_SESSION['usage_type'] = 'personal';
                 $_SESSION['open_links_in_new_tab'] = 1;
                 $_SESSION['increase_message_duration'] = 0;
+                
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (FALLBACK employment/education) ▼▼▼ ---
+                $_SESSION['employment'] = null;
+                $_SESSION['education'] = null;
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
 
         } else {

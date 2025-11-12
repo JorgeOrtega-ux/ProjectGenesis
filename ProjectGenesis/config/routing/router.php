@@ -238,10 +238,14 @@ if (array_key_exists($page, $allowedPages)) {
         $userLanguage = $_SESSION['language'] ?? 'en-us';
         $userUsageType = $_SESSION['usage_type'] ?? 'personal';
         $openLinksInNewTab = (int) ($_SESSION['open_links_in_new_tab'] ?? 1);
-        // --- Cargar nuevas variables de sesión ---
         $isFriendListPrivate = (int) ($_SESSION['is_friend_list_private'] ?? 1);
         $isEmailPublic = (int) ($_SESSION['is_email_public'] ?? 0);
-        // --- Fin ---
+
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR employment/education) ▼▼▼ ---
+        $userEmployment = $_SESSION['employment'] ?? 'none'; // 'none' como default
+        $userEducation = $_SESSION['education'] ?? 'none'; // 'none' como default
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
     } elseif ($page === 'settings-login') {
         try {
             $stmt_user = $pdo->prepare("SELECT is_2fa_enabled, created_at FROM users WHERE id = ?");
@@ -454,12 +458,14 @@ if (array_key_exists($page, $allowedPages)) {
             $CURRENT_SECTION = '404';
         } else {
             try {
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL CON JOIN Y NUEVA COLUMNA bio) ▼▼▼ ---
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL CON JOIN Y NUEVAS COLUMNAS) ▼▼▼ ---
                 $stmt_profile = $pdo->prepare(
                     "SELECT u.id, u.username, u.profile_image_url, u.banner_url, u.role, u.created_at, u.is_online, u.last_seen,
                             u.email, u.bio,
                             COALESCE(p.is_friend_list_private, 1) AS is_friend_list_private, 
-                            COALESCE(p.is_email_public, 0) AS is_email_public
+                            COALESCE(p.is_email_public, 0) AS is_email_public,
+                            p.employment, 
+                            p.education
                        FROM users u 
                        LEFT JOIN user_preferences p ON u.id = p.user_id
                        WHERE u.username = ? AND u.account_status = 'active'"
@@ -506,16 +512,13 @@ if (array_key_exists($page, $allowedPages)) {
                     $viewProfileData['friend_count'] = 0;
                     $viewProfileData['photos'] = []; // <-- Inicializar array de fotos
 
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Lógica de privacidad de amigos) ▼▼▼ ---
                     $isFriendListPrivate = (int)($viewProfileData['is_friend_list_private'] ?? 1);
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                     switch ($currentTab) {
                         case 'posts':
                         case 'likes':
                         case 'bookmarks':
                             
-                            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Enforcar privacidad) ▼▼▼ ---
                             if (!$isFriendListPrivate || $isOwnProfile) {
                                 $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM friendships WHERE (user_id_1 = ? OR user_id_2 = ?) AND status = 'accepted'");
                                 $stmt_count->execute([$targetUserId, $targetUserId]);
@@ -535,13 +538,10 @@ if (array_key_exists($page, $allowedPages)) {
                                 $viewProfileData['friend_count'] = 0;
                                 $viewProfileData['profile_friends_preview'] = [];
                             }
-                            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
 
                             $sql_select_base = "SELECT ...";
                             $sql_from_base = " FROM community_publications p ...";
 
-                            // --- [HASTAGS] --- INICIO DE SQL MODIFICADO ---
                             $sql_select_base =
                                 "SELECT 
                                      p.*, 
@@ -568,7 +568,6 @@ if (array_key_exists($page, $allowedPages)) {
                                       JOIN hashtags h ON ph.hashtag_id = h.id
                                       WHERE ph.publication_id = p.id
                                      ) AS hashtags";
-                            // --- [HASTAGS] --- FIN DE SQL MODIFICADO ---
 
                             $sql_from_base =
                                 " FROM community_publications p
@@ -634,7 +633,6 @@ if (array_key_exists($page, $allowedPages)) {
                             break;
 
                         case 'amigos':
-                            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Enforcar privacidad) ▼▼▼ ---
                             if (!$isFriendListPrivate || $isOwnProfile) {
                                 $stmt_full_friends = $pdo->prepare(
                                     "SELECT 
@@ -659,15 +657,13 @@ if (array_key_exists($page, $allowedPages)) {
                             } else {
                                 $viewProfileData['full_friend_list'] = [];
                             }
-                            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                             break;
 
                         case 'info':
-                            // 'info' no necesita datos extra por ahora
+                            // No se necesitan datos extra, ya que se cargaron en la consulta de $stmt_profile
                             break;
                             
                         case 'fotos':
-                            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR LÓGICA DE FOTOS) ▼▼▼ ---
                             $sql_photos = "
                                 SELECT 
                                     pf.public_url,
@@ -711,7 +707,6 @@ if (array_key_exists($page, $allowedPages)) {
                             $stmt_photos = $pdo->prepare($sql_photos);
                             $stmt_photos->execute($params_photos);
                             $viewProfileData['photos'] = $stmt_photos->fetchAll();
-                            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                             break;
                     }
                 }
@@ -723,14 +718,7 @@ if (array_key_exists($page, $allowedPages)) {
         }
 
         if ($isPartialLoad) {
-            // Carga de pestaña de perfil (AJAX)
-            
-            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
-            // La ruta debe ser relativa a este archivo (router.php), que está en /config/routing/
-            // La ruta correcta a las pestañas es subir dos niveles y luego entrar a /includes/
             $tabBasePath = '../../includes/sections/main/profile-tabs/';
-            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
-
             $tabFile = '';
 
             switch ($currentTab) {
@@ -747,7 +735,6 @@ if (array_key_exists($page, $allowedPages)) {
                 case 'bookmarks':
                 case 'posts':
                 default:
-                    // 'posts', 'likes', 'bookmarks' usan el mismo layout de 2 columnas
                     $tabFile = $tabBasePath . 'view-profile-posts.php';
                     break;
             }
@@ -755,14 +742,12 @@ if (array_key_exists($page, $allowedPages)) {
             if (file_exists($tabFile)) {
                 include $tabFile;
             } else {
-                // Fallback por si el archivo de la pestaña no existe
                 echo '<div class="component-card"><p>Error: No se pudo cargar el contenido de la pestaña.</p></div>';
             }
             exit; 
         }
     } 
     
-    // --- [HASTAGS] --- INICIO DE MODIFICACIÓN (search-results) ---
     elseif ($page === 'search-results') {
         $searchQuery = $_GET['q'] ?? '';
         $userResults = [];
@@ -778,7 +763,6 @@ if (array_key_exists($page, $allowedPages)) {
 
             try {
                 if ($isHashtagSearch) {
-                    // --- BÚSQUEDA POR HASHTAG ---
                     $searchTag = mb_strtolower(trim($searchQuery, '# '));
                     $searchTag = preg_replace('/[^a-z0-9áéíóúñ_-]/u', '', $searchTag);
 
@@ -822,7 +806,6 @@ if (array_key_exists($page, $allowedPages)) {
                     }
                     
                 } else {
-                    // --- BÚSQUEDA NORMAL (POR TÉRMINO) ---
                     $searchParam = '%' . $searchQuery . '%';
                     
                     $stmt_users = $pdo->prepare(
@@ -917,13 +900,9 @@ if (array_key_exists($page, $allowedPages)) {
                 logDatabaseError($e, 'router - search-results');
             }
         }
-    // --- [HASTAGS] --- FIN DE MODIFICACIÓN ---
-    
-    // --- [HASTAGS] --- INICIO DE NUEVA PÁGINA 'trends' ---
     } elseif ($page === 'trends') {
         $trendingHashtags = [];
         try {
-            // Obtener el Top 10 de hashtags más usados
             $stmt_trends = $pdo->prepare(
                 "SELECT tag, use_count 
                  FROM hashtags 
@@ -937,7 +916,6 @@ if (array_key_exists($page, $allowedPages)) {
             logDatabaseError($e, 'router - trends');
             $trendingHashtags = [];
         }
-    // --- [HASTAGS] --- FIN DE NUEVA PÁGINA ---
     } elseif ($page === 'admin-manage-users') {
         $adminCurrentPage = (int) ($_GET['p'] ?? 1);
         if ($adminCurrentPage < 1) $adminCurrentPage = 1;

@@ -122,11 +122,15 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue, cardEleme
 
     hideInlineError(cardElement);
 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR employment/education) ▼▼▼ ---
     const fieldMap = {
         'language': 'language',
         'theme': 'theme',
-        'usage': 'usage_type'
+        'usage': 'usage_type',
+        'employment': 'employment',
+        'education': 'education'
     };
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     const fieldName = fieldMap[preferenceTypeOrField] || preferenceTypeOrField;
 
@@ -192,15 +196,12 @@ function getCsrfTokenFromPage() {
     return csrfInput ? csrfInput.value : (window.csrfToken || ''); 
 }
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (Función Helper de Bio) ▼▼▼ ---
 function getOriginalBio(bioCard) {
     const viewState = bioCard.querySelector('#profile-bio-view-state');
     if (!viewState) return '';
-    // Usamos el textContent del div de contenido, o un string vacío si es el placeholder
     const contentDiv = viewState.querySelector('.profile-bio-content');
     return contentDiv ? contentDiv.textContent.trim() : '';
 }
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 export function initSettingsManager() {
 
@@ -402,7 +403,6 @@ export function initSettingsManager() {
             }
         }
 
-        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (BIO/DETALLES) ▼▼▼ ---
         const bioCard = document.getElementById('profile-bio-card');
         if (bioCard) {
             
@@ -414,7 +414,6 @@ export function initSettingsManager() {
             const saveBtn = bioCard.querySelector('#profile-bio-save-btn');
             const textarea = bioCard.querySelector('#profile-bio-textarea');
             
-            // Clic en "Editar" o "Agregar presentación"
             if (target === editTrigger || (addTrigger && target.closest('#profile-bio-add-trigger'))) {
                 e.preventDefault();
                 hideInlineError(bioCard);
@@ -422,41 +421,37 @@ export function initSettingsManager() {
                 if (editTrigger) editTrigger.style.display = 'none';
                 if (editForm) editForm.style.display = 'flex';
                 if (textarea) {
-                    textarea.value = getOriginalBio(bioCard); // Asegurarse de que tiene el valor actual
+                    textarea.value = getOriginalBio(bioCard); 
                     textarea.focus();
                 }
                 return;
             }
             
-            // Clic en "Cancelar"
             if (target === cancelBtn) {
                 e.preventDefault();
                 hideInlineError(bioCard);
                 if (editForm) editForm.style.display = 'none';
                 if (viewState) viewState.style.display = 'block';
-                if (editTrigger) editTrigger.style.display = ''; // Mostrar botón de editar
+                if (editTrigger) editTrigger.style.display = ''; 
                 
-                // Resetear el textarea al valor original
                 if (textarea) textarea.value = getOriginalBio(bioCard);
                 return;
             }
 
-            // Clic en "Guardar"
             if (target === saveBtn) {
                 e.preventDefault();
                 hideInlineError(bioCard);
                 
                 const newBio = textarea.value.trim();
                 const originalBio = getOriginalBio(bioCard);
-                const MAX_BIO_LENGTH = 500; // Sincronizar con el backend
+                const MAX_BIO_LENGTH = 500; 
 
                 if (newBio.length > MAX_BIO_LENGTH) {
-                    showInlineError(bioCard, 'js.settings.errorBioTooLong', { length: MAX_BIO_LENGTH }); // TODO: i18n
+                    showInlineError(bioCard, 'js.settings.errorBioTooLong', { length: MAX_BIO_LENGTH }); 
                     return;
                 }
                 
                 if (newBio === originalBio) {
-                    // No hay cambios, actuar como "Cancelar"
                     if (editForm) editForm.style.display = 'none';
                     if (viewState) viewState.style.display = 'block';
                     if (editTrigger) editTrigger.style.display = '';
@@ -473,21 +468,18 @@ export function initSettingsManager() {
                 try {
                     const result = await callSettingsApi(formData);
                     if (result.success) {
-                        window.showAlert(getTranslation(result.message || 'js.settings.successBioUpdate'), 'success'); // TODO: i18n
+                        window.showAlert(getTranslation(result.message || 'js.settings.successBioUpdate'), 'success'); 
                         
-                        // Actualizar la vista
                         let contentView = viewState.querySelector('.profile-bio-content');
                         if (!contentView) {
-                            // Estábamos en el estado "Agregar presentación", así que creamos el div
-                            viewState.innerHTML = ''; // Limpiar el placeholder
+                            viewState.innerHTML = ''; 
                             contentView = document.createElement('div');
                             contentView.className = 'profile-bio-content';
                             viewState.appendChild(contentView);
                         }
                         
-                        contentView.textContent = result.newBio; // El backend ya lo ha escapado
+                        contentView.textContent = result.newBio; 
                         
-                        // Ocultar placeholder si la bio ahora está vacía
                         if (result.newBio.length === 0) {
                             viewState.innerHTML = `
                                 <div class="profile-bio-placeholder" style="cursor: pointer;" id="profile-bio-add-trigger">
@@ -497,10 +489,9 @@ export function initSettingsManager() {
                                 </div>`;
                             if (editTrigger) editTrigger.style.display = 'none';
                         } else {
-                            if (editTrigger) editTrigger.style.display = ''; // Asegurarse de que "Editar" se muestre
+                            if (editTrigger) editTrigger.style.display = ''; 
                         }
                         
-                        // Volver al modo vista
                         if (editForm) editForm.style.display = 'none';
                         if (viewState) viewState.style.display = 'block';
 
@@ -515,7 +506,6 @@ export function initSettingsManager() {
                 return;
             }
         }
-        // --- ▲▲▲ FIN DE NUEVO BLOQUE (BIO/DETALLES) ▲▲▲ ---
 
 
         const usernameCard = document.getElementById('username-section');
@@ -708,6 +698,7 @@ export function initSettingsManager() {
             return;
         }
 
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Listener de Popover) ▼▼▼ ---
         const clickedLink = target.closest('.popover-module .menu-link'); 
         if (clickedLink && card) { 
             e.preventDefault();
@@ -726,13 +717,23 @@ export function initSettingsManager() {
             const triggerTextEl = trigger?.querySelector('.trigger-select-text span');
             const triggerIconEl = trigger?.querySelector('.trigger-select-icon span');
 
-            const newTextKey = clickedLink.querySelector('.menu-link-text span')?.getAttribute('data-i18n');
+            // --- Inicio de corrección ---
+            const newTextSpan = clickedLink.querySelector('.menu-link-text span');
+            if (!newTextSpan) {
+                console.error("Error: No se encontró el span de texto en el menu-link.");
+                deactivateAllModules();
+                return;
+            }
+            const newTextKey = newTextSpan.getAttribute('data-i18n'); // Puede ser null
+            const newTextContent = newTextSpan.textContent; // Texto visible
+            // --- Fin de corrección ---
+            
             const newValue = clickedLink.dataset.value;
             const prefType = module?.dataset.preferenceType;
             const newIconName = clickedLink.querySelector('.menu-link-icon span')?.textContent;
 
 
-            if (!menuList || !wrapper || !trigger || !triggerTextEl || !newTextKey || !newValue || !prefType || !triggerIconEl) { 
+            if (!menuList || !wrapper || !trigger || !triggerTextEl || !newValue || !prefType || !triggerIconEl || !newTextContent) { 
                  console.error("Error finding elements for preference change", {menuList, module, wrapper, trigger, triggerTextEl, newTextKey, newValue, prefType, triggerIconEl});
                  deactivateAllModules();
                 return;
@@ -743,9 +744,19 @@ export function initSettingsManager() {
                 return;
             }
 
-             triggerTextEl.setAttribute('data-i18n', newTextKey);
-             triggerTextEl.textContent = getTranslation(newTextKey);
-             triggerIconEl.textContent = newIconName;
+            // --- Inicio de corrección ---
+            if (newTextKey) {
+                // Si es una clave i18n (Idioma, Uso)
+                triggerTextEl.setAttribute('data-i18n', newTextKey);
+                triggerTextEl.textContent = getTranslation(newTextKey);
+            } else {
+                // Si es texto directo (Empleo, Formación)
+                triggerTextEl.removeAttribute('data-i18n');
+                triggerTextEl.textContent = newTextContent;
+            }
+            // --- Fin de corrección ---
+             
+            triggerIconEl.textContent = newIconName;
 
 
             menuList.querySelectorAll('.menu-link').forEach(link => {
@@ -761,7 +772,9 @@ export function initSettingsManager() {
 
             trigger.classList.add('disabled-interactive'); 
             try {
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Pasar newValue (el 'key'), no el texto) ▼▼▼ ---
                 await handlePreferenceChange(prefType, newValue, card);
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             } catch (error) {
                 console.error("Error during preference change:", error);
             } finally {
@@ -770,6 +783,7 @@ export function initSettingsManager() {
 
             return; 
         }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (Listener de Popover) ▲▲▲ ---
 
 
          if (target.closest('#tfa-verify-continue')) {
@@ -1115,7 +1129,6 @@ export function initSettingsManager() {
             document.getElementById('avatar-actions-preview').classList.remove('disabled');
         }
         
-        // --- ▼▼▼ INICIO DE NUEVO BLOQUE (BANNER) ▼▼▼ ---
         const bannerCard = target.closest('#profile-banner-section');
         if (target.id === 'profile-banner-upload-input' && bannerCard) {
             const fileInput = target;
@@ -1124,7 +1137,6 @@ export function initSettingsManager() {
 
             if (!file) return;
 
-            // Reutilizar las claves de traducción del avatar
             if (!['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(file.type)) {
                 window.showAlert(getTranslation('js.settings.errorAvatarFormat'), 'error');
                 fileInput.value = ''; 
@@ -1157,7 +1169,6 @@ export function initSettingsManager() {
             document.getElementById('banner-actions-preview').classList.add('active');
             document.getElementById('banner-actions-preview').classList.remove('disabled');
         }
-        // --- ▲▲▲ FIN DE NUEVO BLOQUE (BANNER) ▲▲▲ ---
 
 
         else if (target.matches('input[type="checkbox"][data-preference-type="boolean"]') && card) {
@@ -1191,14 +1202,12 @@ export function initSettingsManager() {
             }
         }
 
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Ocultar error en bio) ▼▼▼ ---
         if (target.id === 'profile-bio-textarea') {
             const bioCard = target.closest('#profile-bio-card');
             if (bioCard) {
                 hideInlineError(bioCard);
             }
         }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         if (target.matches('.component-text-input') || target.closest('.auth-input-group') || target.closest('.modal__input-group') || target.closest('.component-input-group')) { 
             const card = target.closest('.component-card'); 

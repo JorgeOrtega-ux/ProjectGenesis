@@ -12,7 +12,7 @@ $maxUsernameLength = (int)($GLOBALS['site_settings']['max_username_length'] ?? 3
 $maxEmailLength = (int)($GLOBALS['site_settings']['max_email_length'] ?? 255);
 $codeResendCooldownSeconds = (int)($GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? 60);
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (CONSTANTE BIO) ▼▼▼ ---
 define('MAX_BIO_LENGTH', 500); // Límite de caracteres para la biografía
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
@@ -783,7 +783,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         
-        // --- ▼▼▼ INICIO DEL BLOQUE CORREGIDO ▼▼▼ ---
+        // --- ▼▼▼ INICIO DEL BLOQUE MODIFICADO ▼▼▼ ---
         } elseif ($action === 'update-preference') {
             
             $ip = getIpAddress();
@@ -821,19 +821,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'open_links_in_new_tab' => ['0', '1'],
                     'increase_message_duration' => ['0', '1'],
                     'is_friend_list_private' => ['0', '1'],
-                    'is_email_public' => ['0', '1']
+                    'is_email_public' => ['0', '1'],
+                    // --- ▼▼▼ NUEVOS CAMPOS AÑADIDOS ▼▼▼ ---
+                    'employment' => [], // Array vacío significa que cualquier string es válido
+                    'education' => []   // Array vacío significa que cualquier string es válido
+                    // --- ▲▲▲ FIN DE NUEVOS CAMPOS ▲▲▲ ---
                 ];
 
                 if (!array_key_exists($field, $allowedFields)) {
                     throw new Exception('js.settings.errorPreferenceInvalid');
                 }
 
-                if (!in_array($value, $allowedFields[$field])) {
-                    if ($field === 'open_links_in_new_tab' || $field === 'increase_message_duration' || $field === 'is_friend_list_private' || $field === 'is_email_public') {
-                        throw new Exception('js.settings.errorPreferenceToggle');
+                // --- ▼▼▼ LÓGICA DE VALIDACIÓN MODIFICADA ▼▼▼ ---
+                // Solo validamos el valor si el array de valores permitidos NO está vacío
+                if (!empty($allowedFields[$field])) {
+                    if (!in_array($value, $allowedFields[$field])) {
+                        if ($field === 'open_links_in_new_tab' || $field === 'increase_message_duration' || $field === 'is_friend_list_private' || $field === 'is_email_public') {
+                            throw new Exception('js.settings.errorPreferenceToggle');
+                        }
+                        throw new Exception('js.settings.errorPreferenceInvalid');
                     }
-                    throw new Exception('js.settings.errorPreferenceInvalid');
                 }
+                // --- ▲▲▲ FIN DE LÓGICA DE VALIDACIÓN ▲▲▲ ---
 
                 $finalValue = (
                     $field === 'open_links_in_new_tab' || 
@@ -875,7 +884,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $response['message'] = $e->getMessage();
                 }
             }
-        // --- ▲▲▲ FIN DEL BLOQUE CORREGIDO ▲▲▲ ---
+        // --- ▲▲▲ FIN DEL BLOQUE MODIFICADO ▲▲▲ ---
             
         } elseif ($action === 'logout-all-devices') {
             try {
