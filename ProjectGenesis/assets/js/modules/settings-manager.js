@@ -1098,7 +1098,7 @@ export function initSettingsManager() {
         // --- ▼▼▼ INICIO DE NUEVO BLOQUE (BANNER) ▼▼▼ ---
         const previewBanner = document.getElementById('profile-banner-preview');
         if (previewBanner && !previewBanner.dataset.originalBg) {
-            previewBanner.dataset.originalBg = previewBanner.style.backgroundImage;
+            previewBanner.style.backgroundImage = previewBanner.style.backgroundImage;
         }
         // --- ▲▲▲ FIN DE NUEVO BLOQUE (BANNER) ▲▲▲ ---
     }, 100);

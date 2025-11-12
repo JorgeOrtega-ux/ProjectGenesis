@@ -37,6 +37,11 @@ $languageMap = [
 $currentUsageKey = $usageMap[$userUsageType] ?? 'settings.profile.usagePersonal';
 $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs';
 
+// --- Cargar nuevas variables de sesión ---
+$isFriendListPrivate = (int) ($_SESSION['is_friend_list_private'] ?? 1);
+$isEmailPublic = (int) ($_SESSION['is_email_public'] ?? 0);
+// --- Fin ---
+
 // --- ▲▲▲ FIN DE NUEVO BLOQUE PHP ▲▲▲ ---
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'settings-profile') ? 'active' : 'disabled'; ?>" data-section="settings-profile">
@@ -265,5 +270,44 @@ $currentLanguageKey = $languageMap[$userLanguage] ?? 'settings.profile.langEnUs'
                 </label>
             </div>
         </div>
+        
+        <div class="component-card component-card--edit-mode">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title">Lista de amigos privada</h2>
+                    <p class="component-card__description">Si está activado, solo tú podrás ver tu lista de amigos en tu perfil.</p>
+                </div>
+            </div>
+            <div class="component-card__actions">
+                <label class="component-toggle-switch">
+                    <input type="checkbox"
+                           id="toggle-friend-list-private"
+                           data-preference-type="boolean"
+                           data-field-name="is_friend_list_private"
+                           <?php echo ($isFriendListPrivate == 1) ? 'checked' : ''; ?>>
+                    <span class="component-toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="component-card component-card--edit-mode">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title">Correo electrónico público</h2>
+                    <p class="component-card__description">Si está activado, otros usuarios podrán ver tu correo en tu perfil.</p>
+                </div>
+            </div>
+            <div class="component-card__actions">
+                <label class="component-toggle-switch">
+                    <input type="checkbox"
+                           id="toggle-email-public"
+                           data-preference-type="boolean"
+                           data-field-name="is_email_public"
+                           <?php echo ($isEmailPublic == 1) ? 'checked' : ''; ?>>
+                    <span class="component-toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        
         </div>
 </div>

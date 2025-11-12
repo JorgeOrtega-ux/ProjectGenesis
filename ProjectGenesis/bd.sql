@@ -80,6 +80,8 @@ CREATE TABLE user_preferences (
     usage_type VARCHAR(50) NOT NULL DEFAULT 'personal',
     open_links_in_new_tab TINYINT(1) NOT NULL DEFAULT 1,
     increase_message_duration TINYINT(1) NOT NULL DEFAULT 0,
+    is_friend_list_private TINYINT(1) NOT NULL DEFAULT 1,
+    is_email_public TINYINT(1) NOT NULL DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 

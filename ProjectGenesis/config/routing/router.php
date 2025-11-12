@@ -236,6 +236,10 @@ if (array_key_exists($page, $allowedPages)) {
         $userLanguage = $_SESSION['language'] ?? 'en-us';
         $userUsageType = $_SESSION['usage_type'] ?? 'personal';
         $openLinksInNewTab = (int) ($_SESSION['open_links_in_new_tab'] ?? 1);
+        // --- Cargar nuevas variables de sesión ---
+        $isFriendListPrivate = (int) ($_SESSION['is_friend_list_private'] ?? 1);
+        $isEmailPublic = (int) ($_SESSION['is_email_public'] ?? 0);
+        // --- Fin ---
     } elseif ($page === 'settings-login') {
         try {
             $stmt_user = $pdo->prepare("SELECT is_2fa_enabled, created_at FROM users WHERE id = ?");
@@ -441,11 +445,15 @@ if (array_key_exists($page, $allowedPages)) {
             $CURRENT_SECTION = '404';
         } else {
             try {
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR banner_url) ▼▼▼ ---
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL CON JOIN) ▼▼▼ ---
                 $stmt_profile = $pdo->prepare(
-                    "SELECT id, username, profile_image_url, banner_url, role, created_at, is_online, last_seen 
-                       FROM users 
-                       WHERE username = ? AND account_status = 'active'"
+                    "SELECT u.id, u.username, u.profile_image_url, u.banner_url, u.role, u.created_at, u.is_online, u.last_seen,
+                            u.email,
+                            COALESCE(p.is_friend_list_private, 1) AS is_friend_list_private, 
+                            COALESCE(p.is_email_public, 0) AS is_email_public
+                       FROM users u 
+                       LEFT JOIN user_preferences p ON u.id = p.user_id
+                       WHERE u.username = ? AND u.account_status = 'active'"
                 );
                 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 $stmt_profile->execute([$targetUsername]);
@@ -489,24 +497,37 @@ if (array_key_exists($page, $allowedPages)) {
                     $viewProfileData['friend_count'] = 0;
                     $viewProfileData['photos'] = []; // <-- Inicializar array de fotos
 
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Lógica de privacidad de amigos) ▼▼▼ ---
+                    $isFriendListPrivate = (int)($viewProfileData['is_friend_list_private'] ?? 1);
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
                     switch ($currentTab) {
                         case 'posts':
                         case 'likes':
                         case 'bookmarks':
-                            $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM friendships WHERE (user_id_1 = ? OR user_id_2 = ?) AND status = 'accepted'");
-                            $stmt_count->execute([$targetUserId, $targetUserId]);
-                            $viewProfileData['friend_count'] = (int) $stmt_count->fetchColumn();
+                            
+                            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Enforcar privacidad) ▼▼▼ ---
+                            if (!$isFriendListPrivate || $isOwnProfile) {
+                                $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM friendships WHERE (user_id_1 = ? OR user_id_2 = ?) AND status = 'accepted'");
+                                $stmt_count->execute([$targetUserId, $targetUserId]);
+                                $viewProfileData['friend_count'] = (int) $stmt_count->fetchColumn();
 
-                            $stmt_friends = $pdo->prepare(
-                                "SELECT u.username, u.profile_image_url, u.role 
-                                   FROM friendships f
-                                   JOIN users u ON (CASE WHEN f.user_id_1 = ? THEN f.user_id_2 ELSE f.user_id_1 END) = u.id
-                                   WHERE (f.user_id_1 = ? OR f.user_id_2 = ?) AND f.status = 'accepted'
-                                   ORDER BY RAND()
-                                   LIMIT 9"
-                            );
-                            $stmt_friends->execute([$targetUserId, $targetUserId, $targetUserId]);
-                            $viewProfileData['profile_friends_preview'] = $stmt_friends->fetchAll();
+                                $stmt_friends = $pdo->prepare(
+                                    "SELECT u.username, u.profile_image_url, u.role 
+                                       FROM friendships f
+                                       JOIN users u ON (CASE WHEN f.user_id_1 = ? THEN f.user_id_2 ELSE f.user_id_1 END) = u.id
+                                       WHERE (f.user_id_1 = ? OR f.user_id_2 = ?) AND f.status = 'accepted'
+                                       ORDER BY RAND()
+                                       LIMIT 9"
+                                );
+                                $stmt_friends->execute([$targetUserId, $targetUserId, $targetUserId]);
+                                $viewProfileData['profile_friends_preview'] = $stmt_friends->fetchAll();
+                            } else {
+                                $viewProfileData['friend_count'] = 0;
+                                $viewProfileData['profile_friends_preview'] = [];
+                            }
+                            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
                             $sql_select_base = "SELECT ...";
                             $sql_from_base = " FROM community_publications p ...";
@@ -597,26 +618,32 @@ if (array_key_exists($page, $allowedPages)) {
                             break;
 
                         case 'amigos':
-                            $stmt_full_friends = $pdo->prepare(
-                                "SELECT 
-                                     u.id, u.username, u.profile_image_url, u.role,
-                                     (SELECT COUNT(*) 
-                                      FROM friendships f_common
-                                      WHERE 
-                                        (f_common.user_id_1 = u.id OR f_common.user_id_2 = u.id) 
-                                        AND f_common.status = 'accepted' 
-                                        AND (f_common.user_id_1 IN (SELECT user_id_2 FROM friendships WHERE user_id_1 = :current_user_id AND status = 'accepted' UNION SELECT user_id_1 FROM friendships WHERE user_id_2 = :current_user_id AND status = 'accepted') OR f_common.user_id_2 IN (SELECT user_id_2 FROM friendships WHERE user_id_1 = :current_user_id AND status = 'accepted' UNION SELECT user_id_1 FROM friendships WHERE user_id_2 = :current_user_id AND status = 'accepted'))
-                                     ) AS mutual_friends_count
-                                   FROM friendships f
-                                   JOIN users u ON (CASE WHEN f.user_id_1 = :target_user_id THEN f.user_id_2 ELSE f.user_id_1 END) = u.id
-                                   WHERE (f.user_id_1 = :target_user_id OR f.user_id_2 = :target_user_id) AND f.status = 'accepted'
-                                   ORDER BY u.username ASC"
-                            );
-                            $stmt_full_friends->execute([
-                                ':current_user_id' => $currentUserId,
-                                ':target_user_id' => $targetUserId
-                            ]);
-                            $viewProfileData['full_friend_list'] = $stmt_full_friends->fetchAll();
+                            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Enforcar privacidad) ▼▼▼ ---
+                            if (!$isFriendListPrivate || $isOwnProfile) {
+                                $stmt_full_friends = $pdo->prepare(
+                                    "SELECT 
+                                         u.id, u.username, u.profile_image_url, u.role,
+                                         (SELECT COUNT(*) 
+                                          FROM friendships f_common
+                                          WHERE 
+                                            (f_common.user_id_1 = u.id OR f_common.user_id_2 = u.id) 
+                                            AND f_common.status = 'accepted' 
+                                            AND (f_common.user_id_1 IN (SELECT user_id_2 FROM friendships WHERE user_id_1 = :current_user_id AND status = 'accepted' UNION SELECT user_id_1 FROM friendships WHERE user_id_2 = :current_user_id AND status = 'accepted') OR f_common.user_id_2 IN (SELECT user_id_2 FROM friendships WHERE user_id_1 = :current_user_id AND status = 'accepted' UNION SELECT user_id_1 FROM friendships WHERE user_id_2 = :current_user_id AND status = 'accepted'))
+                                         ) AS mutual_friends_count
+                                       FROM friendships f
+                                       JOIN users u ON (CASE WHEN f.user_id_1 = :target_user_id THEN f.user_id_2 ELSE f.user_id_1 END) = u.id
+                                       WHERE (f.user_id_1 = :target_user_id OR f.user_id_2 = :target_user_id) AND f.status = 'accepted'
+                                       ORDER BY u.username ASC"
+                                );
+                                $stmt_full_friends->execute([
+                                    ':current_user_id' => $currentUserId,
+                                    ':target_user_id' => $targetUserId
+                                ]);
+                                $viewProfileData['full_friend_list'] = $stmt_full_friends->fetchAll();
+                            } else {
+                                $viewProfileData['full_friend_list'] = [];
+                            }
+                            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                             break;
 
                         case 'info':

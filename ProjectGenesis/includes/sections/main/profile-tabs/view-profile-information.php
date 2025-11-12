@@ -32,11 +32,18 @@
                     <div class="info-row-label">Correo electrónico</div>
                     <div class="info-row-value">
                         <?php 
+                        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                        // $profile['is_email_public'] y $profile['email'] vienen de router.php
+                        $isEmailPublic = (int)($profile['is_email_public'] ?? 0);
+                        
                         if ($isOwnProfile) {
                             echo htmlspecialchars($_SESSION['email']);
+                        } elseif ($isEmailPublic) {
+                            echo htmlspecialchars($profile['email']);
                         } else {
                             echo "Información privada";
                         }
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                         ?>
                     </div>
                 </div>

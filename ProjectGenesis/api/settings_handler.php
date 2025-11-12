@@ -812,7 +812,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'theme' => ['system', 'light', 'dark'],
                     'usage_type' => ['personal', 'student', 'teacher', 'small_business', 'large_company'],
                     'open_links_in_new_tab' => ['0', '1'],
-                    'increase_message_duration' => ['0', '1']
+                    'increase_message_duration' => ['0', '1'],
+                    // --- AÑADIR ESTAS LÍNEAS ---
+                    'is_friend_list_private' => ['0', '1'],
+                    'is_email_public' => ['0', '1']
+                    // --- FIN DE LÍNEAS AÑADIDAS ---
                 ];
 
                 if (!array_key_exists($field, $allowedFields)) {
@@ -820,7 +824,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if (!in_array($value, $allowedFields[$field])) {
-                    if ($field === 'open_links_in_new_tab' || $field === 'increase_message_duration') {
+                    if ($field === 'open_links_in_new_tab' || $field === 'increase_message_duration' || $field === 'is_friend_list_private' || $field === 'is_email_public') {
                         throw new Exception('js.settings.errorPreferenceToggle');
                     }
                     throw new Exception('js.settings.errorPreferenceInvalid');
@@ -829,9 +833,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $sql = "UPDATE user_preferences SET $field = ? WHERE user_id = ?";
                 $stmt = $pdo->prepare($sql);
 
-                $finalValue = ($field === 'open_links_in_new_tab' || $field === 'increase_message_duration')
-                    ? (int)$value
-                    : $value;
+                $finalValue = (
+                    $field === 'open_links_in_new_tab' || 
+                    $field === 'increase_message_duration' || 
+                    $field === 'is_friend_list_private' || 
+                    $field === 'is_email_public'
+                ) ? (int)$value : $value;
 
                 $stmt->execute([$finalValue, $userId]);
                 
