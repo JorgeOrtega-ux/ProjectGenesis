@@ -405,19 +405,26 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 <?php
 // FILE: includes/sections/main/messages.php
 // (MODIFICADO - Ahora acepta un usuario pre-cargado desde el router)
+// (MODIFICADO OTRA VEZ - Para manejar $chatErrorType)
 global $basePath;
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 
-// --- ▼▼▼ INICIO DE NUEVA LÓGICA DE PRE-CARGA ▼▼▼ ---
+// --- ▼▼▼ INICIO DE NUEVA LÓGICA DE PRE-CARGA Y ERROR ▼▼▼ ---
 
-// $preloadedChatUser es inyectado por router.php si la URL es /messages/username
+// $preloadedChatUser es inyectado por router.php si la URL es /messages/uuid
+// $chatErrorType es inyectado por router.php si la privacidad lo bloquea
 $hasPreloadedUser = isset($preloadedChatUser) && $preloadedChatUser;
+$hasChatError = isset($chatErrorType) && $chatErrorType; // <-- NUEVO
 
-$chatSidebarClass = $hasPreloadedUser ? 'disabled' : 'active';
-$chatContentPlaceholderClass = $hasPreloadedUser ? 'disabled' : 'active';
+// Ocultar la barra lateral y mostrar el panel derecho si hay un chat O un error
+$chatSidebarClass = ($hasPreloadedUser || $hasChatError) ? 'disabled' : 'active'; // <-- MODIFICADO
+// Ocultar el placeholder por defecto si hay un chat O un error
+$chatContentPlaceholderClass = ($hasPreloadedUser || $hasChatError) ? 'disabled' : 'active'; // <-- MODIFICADO
+// Mostrar el chat principal solo si hay un usuario pre-cargado (sin error)
 $chatContentMainClass = $hasPreloadedUser ? 'active' : 'disabled';
-$chatLayoutClass = $hasPreloadedUser ? 'show-chat' : ''; // Para móvil
+// Forzar la vista de chat en móvil si hay un chat O un error
+$chatLayoutClass = ($hasPreloadedUser || $hasChatError) ? 'show-chat' : ''; // <-- MODIFICADO
 
 $preloadedReceiverId = '';
 $preloadedAvatar = $defaultAvatar;
@@ -425,6 +432,7 @@ $preloadedUsername = '...';
 $preloadedStatusText = 'Offline';
 $preloadedStatusClass = 'offline';
 
+// Esta lógica solo se ejecuta si el chat se cargó con éxito
 if ($hasPreloadedUser) {
     $preloadedReceiverId = htmlspecialchars($preloadedChatUser['id']);
     $preloadedAvatar = htmlspecialchars($preloadedChatUser['profile_image_url'] ?? $defaultAvatar);
@@ -452,7 +460,7 @@ if ($hasPreloadedUser) {
         $preloadedStatusClass = 'active'; // 'active' (visible), pero sin clase 'online'
     }
 }
-// --- ▲▲▲ FIN DE NUEVA LÓGICA DE PRE-CARGA ▲▲▲ ---
+// --- ▲▲▲ FIN DE NUEVA LÓGICA DE PRE-CARGA Y ERROR ▲▲▲ ---
 ?>
 
 <div class="section-content <?php echo ($CURRENT_SECTION === 'messages') ? 'active' : 'disabled'; ?>" data-section="messages" style="overflow-y: hidden;">
@@ -493,6 +501,16 @@ if ($hasPreloadedUser) {
                 <span data-i18n="chat.selectConversation">Selecciona una conversación para empezar</span>
             </div>
 
+            <?php if ($hasChatError): ?>
+                <div class="chat-content-placeholder active" id="chat-content-error-placeholder">
+                    <span class="material-symbols-rounded">lock</span>
+                    <?php if ($chatErrorType === 'friends_only'): ?>
+                        <span data-i18n="chat.error.friendsOnly">Este usuario solo acepta mensajes de amigos.</span>
+                    <?php elseif ($chatErrorType === 'none'): ?>
+                        <span data-i18n="chat.error.none">Este usuario no acepta mensajes privados.</span>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
             <div class="chat-content-main <?php echo $chatContentMainClass; ?>" 
                  id="chat-content-main" 
                  data-autoload-chat="<?php echo $hasPreloadedUser ? 'true' : 'false'; ?>">

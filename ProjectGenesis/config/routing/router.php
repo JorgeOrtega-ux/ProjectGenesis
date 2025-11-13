@@ -2,6 +2,7 @@
 // FILE: config/routing/router.php
 // (MODIFICADO - Añadida lógica para pre-cargar chat y corrección de error de log)
 // (MODIFICADO OTRA VEZ - Cambiado /messages/username a /messages/uuid)
+// (MODIFICADO DE NUEVO - Para mostrar error de privacidad en lugar de 404)
 
 include '../config.php';
 
@@ -675,19 +676,21 @@ if (array_key_exists($page, $allowedPages)) {
     } elseif ($page === 'messages') {
         
         $preloadedChatUser = null;
+        $chatErrorType = null; // <-- Variable nueva para el tipo de error
         $targetUserUuid = $_GET['user_uuid'] ?? null;
         $currentUserId = $_SESSION['user_id'];
 
         if ($targetUserUuid) { 
             try {
                 // 1. Buscar al usuario por UUID y OBTENER SU CONFIGURACIÓN DE PRIVACIDAD
-                // (Asumo que la columna se llama 'message_privacy' y puede tener valores 'all' o 'friends')
+                // (CORREGIDO: Se une a user_preferences y se selecciona message_privacy_level)
                 $stmt_user = $pdo->prepare("
-                    SELECT id, username, uuid, profile_image_url, role, last_seen, 
-                           COALESCE(message_privacy, 'friends') AS message_privacy 
-                    FROM users 
-                    WHERE uuid = ? AND account_status = 'active'
-                ");
+                    SELECT u.id, u.username, u.uuid, u.profile_image_url, u.role, u.last_seen, 
+                           COALESCE(p.message_privacy_level, 'all') AS message_privacy_level 
+                    FROM users u
+                    LEFT JOIN user_preferences p ON u.id = p.user_id
+                    WHERE u.uuid = ? AND u.account_status = 'active'
+                "); // <-- CORREGIDO
                 $stmt_user->execute([$targetUserUuid]);
                 $targetUser = $stmt_user->fetch();
 
@@ -708,26 +711,26 @@ if (array_key_exists($page, $allowedPages)) {
                         $areFriends = $stmt_friend->fetch();
 
                         // 3. Obtener la configuración de privacidad del *usuario de destino*
-                        $messagePrivacySetting = $targetUser['message_privacy']; // Ya la tenemos del SQL
+                        $messagePrivacySetting = $targetUser['message_privacy_level']; // <-- CORREGIDO 
 
                         // 4. Decidir si se permite el chat
-                        // Se permite si:
-                        //    a) Son amigos
-                        //    b) El usuario de destino permite mensajes de 'all' (todos)
-                        
                         if ($areFriends || $messagePrivacySetting === 'all') {
                             // 4a. Permitido: pre-cargar los datos
                             $preloadedChatUser = $targetUser;
                         } else {
-                            // 4b. No permitido: El usuario solo acepta mensajes de amigos y no lo son
-                            // Mostramos el 404, que es el comportamiento que veías
-                            $page = '404';
-                            $CURRENT_SECTION = '404';
+                            // 4b. No permitido: En lugar de 404, establece el tipo de error
+                            $preloadedChatUser = null; // No cargar datos de chat
+                            if ($messagePrivacySetting === 'none') {
+                                $chatErrorType = 'none'; // <-- NUEVO
+                            } else {
+                                $chatErrorType = 'friends_only'; // <-- NUEVO (para 'friends')
+                            }
+                            // ¡Ya no se asigna page = '404' aquí!
                         }
                     }
 
                 } else {
-                    // Usuario no encontrado, redirigir a 404
+                    // Usuario no encontrado, ESTO SÍ es un 404
                     $page = '404';
                     $CURRENT_SECTION = '404';
                 }
@@ -735,6 +738,7 @@ if (array_key_exists($page, $allowedPages)) {
             } catch (PDOException $e) {
                 logDatabaseError($e, 'router - messages - preload');
                 $preloadedChatUser = null; // Fallback a la vista de lista normal
+                $chatErrorType = null;
             }
         }
         
