@@ -102,9 +102,11 @@ function renderConversationList(conversations) {
 /**
  * Carga la lista de amigos/conversaciones inicial.
  */
+// --- INICIO DE CORRECCIÓN 1 (loadConversations) ---
 async function loadConversations() {
     let onlineUserIds = {};
     try {
+        // Cargar estado online de amigos (rápido)
         const formData = new FormData();
         formData.append('action', 'get-friends-list');
         const friendResult = await callFriendApi(formData);
@@ -120,24 +122,29 @@ async function loadConversations() {
     }
 
     try {
+        // Cargar historial de conversaciones
         const formData = new FormData();
         formData.append('action', 'get-conversations');
         const result = await callChatApi(formData);
 
         if (result.success) {
+            // Combinar estado online con datos de conversación
             result.conversations.forEach(convo => {
                 convo.is_online = !!onlineUserIds[convo.friend_id];
             });
             
-            // --- INICIO DE MODIFICACIÓN (CAMBIO 1) ---
-            // Guardar TODOS los amigos en el caché para la búsqueda
+            // 1. Guardar TODOS los amigos en el caché
             friendCache = result.conversations;
-            // Filtrar la lista para mostrar solo amigos con historial
-            const conversationsWithHistory = friendCache.filter(convo => convo.last_message_time !== null);
-            // Renderizar la lista filtrada
-            renderConversationList(conversationsWithHistory);
-            // --- FIN DE MODIFICACIÓN ---
-
+            
+            // 2. OBTENER la query de búsqueda actual
+            const searchInput = document.getElementById('chat-friend-search');
+            const currentQuery = searchInput ? searchInput.value : '';
+            
+            // 3. LLAMAR a filterConversationList para que ella decida qué renderizar
+            // Esta función aplicará el filtro de "solo historial" si currentQuery está vacío,
+            // o aplicará el filtro de búsqueda si no lo está.
+            filterConversationList(currentQuery);
+            
         } else {
             const listContainer = document.getElementById('chat-conversation-list');
             if (listContainer) listContainer.innerHTML = '<div class="chat-list-placeholder">Error al cargar.</div>';
@@ -146,6 +153,7 @@ async function loadConversations() {
         console.error("Error al cargar conversaciones:", e);
     }
 }
+// --- FIN DE CORRECCIÓN 1 ---
 
 /**
  * Filtra la lista de amigos en el panel izquierdo.
@@ -153,11 +161,9 @@ async function loadConversations() {
 function filterConversationList(query) {
     query = query.toLowerCase().trim();
     if (!query) {
-        // --- INICIO DE MODIFICACIÓN (CAMBIO 1) ---
         // Si la búsqueda está vacía, mostrar la lista filtrada por historial
         const conversationsWithHistory = friendCache.filter(convo => convo.last_message_time !== null);
         renderConversationList(conversationsWithHistory);
-        // --- FIN DE MODIFICACIÓN ---
         return;
     }
     // Si hay búsqueda, filtrar sobre TODOS los amigos en caché
@@ -461,7 +467,6 @@ async function sendMessage() {
             renderMessageBubble(result.message_sent, true);
             scrollToBottom();
             
-            // --- INICIO DE MODIFICACIÓN (CAMBIO 2) ---
             // 2. Recargar la lista de conversaciones (para que este chat aparezca o suba)
             await loadConversations();
             
@@ -471,7 +476,6 @@ async function sendMessage() {
                 document.querySelectorAll('.chat-conversation-item').forEach(item => item.classList.remove('active'));
                 friendItem.classList.add('active');
             }
-            // --- FIN DE MODIFICACIÓN ---
             
             // 4. Limpiar todo
             input.value = '';
@@ -497,6 +501,7 @@ async function sendMessage() {
 /**
  * Maneja un mensaje de chat entrante desde el WebSocket.
  */
+// --- INICIO DE CORRECCIÓN 2 (handleChatMessageReceived) ---
 export function handleChatMessageReceived(message) {
     if (!message || !message.sender_id) return;
     
@@ -510,14 +515,12 @@ export function handleChatMessageReceived(message) {
         // TODO: Enviar un 'ack' al servidor para marcar como leído
         
     } else {
-        // Si el chat no está abierto, actualizar la lista de conversaciones
-        // --- INICIO DE MODIFICACIÓN (CAMBIO 1) ---
-        // Debemos buscar en el caché, no solo en el DOM
+        // El chat no está abierto, actualizar la lista
         let friend = friendCache.find(f => f.friend_id == senderId);
         
-        // Si no está en el caché, recargar la lista de amigos (raro, pero seguro)
+        // Si no está en el caché, recargar la lista de amigos
         if (!friend) {
-            loadConversations();
+            loadConversations(); // Esto ya está arreglado y re-renderizará
             return;
         }
 
@@ -534,17 +537,18 @@ export function handleChatMessageReceived(message) {
         
         // Re-ordenar el caché (más reciente primero)
         friendCache.sort((a, b) => {
-            const timeA = a.last_message_time ? new Date(a.last_message_time) : 0;
-            const timeB = b.last_message_time ? new Date(b.last_message_time) : 0;
+            const timeA = a.last_message_time ? new Date(a.last_message_time).getTime() : 0;
+            const timeB = b.last_message_time ? new Date(b.last_message_time).getTime() : 0;
             return timeB - timeA;
         });
 
-        // Re-renderizar la lista filtrada por historial
-        const conversationsWithHistory = friendCache.filter(convo => convo.last_message_time !== null);
-        renderConversationList(conversationsWithHistory);
-        // --- FIN DE MODIFICACIÓN ---
+        // Re-renderizar la lista basado en la query actual
+        const searchInput = document.getElementById('chat-friend-search');
+        const currentQuery = searchInput ? searchInput.value : '';
+        filterConversationList(currentQuery);
     }
 }
+// --- FIN DE CORRECCIÓN 2 ---
 
 /**
  * Muestra u oculta el indicador "escribiendo..."
@@ -588,7 +592,6 @@ export function initChatManager() {
                         loadConversations();
                         document.dispatchEvent(new CustomEvent('request-friend-list-presence-update'));
                         
-                        // --- INICIO DE MODIFICACIÓN (CAMBIO 3) ---
                         // 2. Comprobar si se debe auto-cargar un chat
                         const chatMain = messagesSection.querySelector('#chat-content-main[data-autoload-chat="true"]');
                         if (chatMain) {
@@ -615,7 +618,6 @@ export function initChatManager() {
                                 chatMain.dataset.autoloadChat = 'false';
                             }
                         }
-                        // --- FIN DE MODIFICACIÓN ---
 
                     } else {
                         // El usuario salió de la sección de mensajes
