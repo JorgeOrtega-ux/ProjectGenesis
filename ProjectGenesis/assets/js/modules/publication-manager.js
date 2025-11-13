@@ -3,25 +3,22 @@ import { getTranslation } from '../services/i18n-manager.js';
 import { showAlert } from '../services/alert-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js';
 
+console.log("🔵 [DEBUG] publication-manager.js cargado (Nivel 0 - Script)");
+
 const MAX_FILES = 4;
 const MAX_POLL_OPTIONS = 6;
-const MAX_HASHTAGS = 5; // --- [HASTAGS] --- Nueva constante
+const MAX_HASHTAGS = 5;
 let selectedFiles = []; 
+let selectedCommunityId = 'profile'; 
+let selectedPrivacyLevel = 'public'; 
+let currentPostType = 'post'; // Valor por defecto
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (Default a 'profile') ▼▼▼ ---
-let selectedCommunityId = 'profile'; // Por defecto es el perfil
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
-let selectedPrivacyLevel = 'public'; // Por defecto es público
-let currentPostType = 'post'; 
-
-// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (Helper) ▼▼▼ ---
+// --- (FUNCIONES HELPER - SIN CAMBIOS) ---
 function togglePrimaryButtonSpinner(button, isLoading) {
     if (!button) return;
     button.disabled = isLoading;
     if (isLoading) {
         button.dataset.originalText = button.innerHTML;
-        // Estilo para spinner blanco (copiado de otros módulos)
         button.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;"></span>`;
     } else {
         if (button.dataset.originalText) {
@@ -29,8 +26,6 @@ function togglePrimaryButtonSpinner(button, isLoading) {
         }
     }
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN (Helper) ▲▲▲ ---
-
 function togglePublishSpinner(button, isLoading) {
     if (!button) return;
     button.disabled = isLoading;
@@ -43,8 +38,6 @@ function togglePublishSpinner(button, isLoading) {
         }
     }
 }
-
-// --- [HASTAGS] --- INICIO DE NUEVAS FUNCIONES DE VALIDACIÓN ---
 function showValidationError(messageKey) {
     const errorDiv = document.getElementById('create-post-error-div');
     if (errorDiv) {
@@ -52,14 +45,12 @@ function showValidationError(messageKey) {
         errorDiv.style.display = 'block';
     }
 }
-
 function hideValidationError() {
      const errorDiv = document.getElementById('create-post-error-div');
     if (errorDiv) {
         errorDiv.style.display = 'none';
     }
 }
-
 function getHashtags() {
     const postHashtagInput = document.getElementById('publication-hashtags');
     const pollHashtagInput = document.getElementById('poll-hashtags');
@@ -71,49 +62,50 @@ function getHashtags() {
         hashtagInput = pollHashtagInput;
     }
 
-    if (!hashtagInput) return { valid: true, tags: [] }; // No hay campo de hashtag, así que es válido
+    if (!hashtagInput) return { valid: true, tags: [] }; 
 
     const rawValue = hashtagInput.value.trim();
     if (rawValue.length === 0) {
-        return { valid: true, tags: [] }; // Vacío es válido
+        return { valid: true, tags: [] }; 
     }
 
-    const tags = rawValue.split(/[\s,]+/) // Separar por espacio o coma
-                         .map(tag => tag.startsWith('#') ? tag.substring(1) : tag) // Quitar #
+    const tags = rawValue.split(/[\s,]+/) 
+                         .map(tag => tag.startsWith('#') ? tag.substring(1) : tag) 
                          .map(tag => tag.trim())
-                         .filter(tag => tag.length > 0) // Quitar vacíos
-                         .filter((value, index, self) => self.indexOf(value) === index); // Únicos
+                         .filter(tag => tag.length > 0) 
+                         .filter((value, index, self) => self.indexOf(value) === index); 
 
     if (tags.length > MAX_HASHTAGS) {
-        return { valid: false, tags: [], error: 'js.publication.errorHashtagLimit' }; // TODO: Añadir clave i18n
+        return { valid: false, tags: [], error: 'js.publication.errorHashtagLimit' }; 
     }
     
-    // Validar longitud de cada tag (opcional, pero buena idea)
     const MAX_TAG_LENGTH = 50;
     for (const tag of tags) {
         if (tag.length > MAX_TAG_LENGTH) {
-            return { valid: false, tags: [], error: 'js.publication.errorHashtagLength' }; // TODO: Añadir clave i18n
+            return { valid: false, tags: [], error: 'js.publication.errorHashtagLength' }; 
         }
     }
 
     return { valid: true, tags: tags };
 }
-// --- [HASTAGS] --- FIN DE NUEVAS FUNCIONES DE VALIDACIÓN ---
-
 
 function validatePublicationState() {
-    const publishButton = document.getElementById('publish-post-btn');
-    if (!publishButton) return;
+    console.log("🟡 [DEBUG] Ejecutando validatePublicationState()...");
     
-    hideValidationError(); // --- [HASTAGS] --- Ocultar error al re-validar
+    const publishButton = document.getElementById('publish-post-btn');
+    if (!publishButton) {
+        console.error("🔴 [DEBUG] ERROR FATAL: No se encontró el botón #publish-post-btn");
+        return;
+    }
+    
+    hideValidationError(); 
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Validación de destino) ▼▼▼ ---
-    // Ahora es válido si no es null (es 'profile' o un ID numérico)
     const hasDestination = selectedCommunityId !== null && selectedCommunityId !== '';
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     let isContentValid = false;
-    const hashtagValidation = getHashtags(); // --- [HASTAGS] --- Validar hashtags
+    const hashtagValidation = getHashtags(); 
+
+    console.log(`🟡 [DEBUG] validate: El tipo de post actual es: '${currentPostType}'`);
 
     if (currentPostType === 'post') {
         const textInput = document.getElementById('publication-text');
@@ -121,9 +113,11 @@ function validatePublicationState() {
         const hasText = textInput ? textInput.value.trim().length > 0 : false;
         const hasTitle = titleInput ? titleInput.value.trim().length > 0 : false; 
         const hasFiles = selectedFiles.length > 0;
-        // --- [HASTAGS] --- Un post es válido si tiene texto, título, archivos O hashtags
         isContentValid = hasText || hasFiles || hasTitle || (hashtagValidation.tags.length > 0); 
-    } else { 
+        
+        console.log(`🟡 [DEBUG] validate (Modo POST): hasText=${hasText}, hasFiles=${hasFiles}, hasTitle=${hasTitle}, tags=${hashtagValidation.tags.length}`);
+        
+    } else { // Asume 'poll'
         const questionInput = document.getElementById('poll-question');
         const options = document.querySelectorAll('#poll-options-container .component-input-group');
         const hasQuestion = questionInput ? questionInput.value.trim().length > 0 : false;
@@ -131,46 +125,41 @@ function validatePublicationState() {
         const allOptionsFilled = Array.from(options).every(opt => opt.querySelector('input').value.trim().length > 0);
         
         isContentValid = hasQuestion && hasMinOptions && allOptionsFilled;
+
+        console.log(`🟡 [DEBUG] validate (Modo POLL): hasQuestion=${hasQuestion}, hasMinOptions=${hasMinOptions} (Opciones: ${options.length}), allOptionsFilled=${allOptionsFilled}`);
     }
     
-    // --- [HASTAGS] --- Comprobar si los hashtags son válidos
     if (!hashtagValidation.valid) {
         showValidationError(hashtagValidation.error);
         publishButton.disabled = true;
         return;
     }
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Validación de botón) ▼▼▼ ---
+    console.log(`🟡 [DEBUG] validate: isContentValid=${isContentValid}, hasDestination=${hasDestination}`);
+    console.log(`🟡 [DEBUG] validate: Botón 'Publicar' se pondrá: disabled = ${!isContentValid || !hasDestination}`);
+    
     publishButton.disabled = !isContentValid || !hasDestination;
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
-
 
 function createPreviewElement(file, src) {
     const container = document.getElementById('publication-preview-container');
     if (!container) return;
-
     const previewItem = document.createElement('div');
     previewItem.className = 'preview-item';
-
     const img = document.createElement('img');
     img.src = src;
     img.alt = file.name;
     previewItem.appendChild(img);
-
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'preview-remove-btn';
     removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
-    
     removeBtn.addEventListener('click', () => {
         removeFilePreview(previewItem, file);
     });
-    
     previewItem.appendChild(removeBtn);
     container.appendChild(previewItem);
 }
-
 function removeFilePreview(previewItem, file) {
     selectedFiles = selectedFiles.filter(f => f !== file);
     previewItem.remove();
@@ -178,20 +167,16 @@ function removeFilePreview(previewItem, file) {
     if (fileInput) fileInput.value = ''; 
     validatePublicationState();
 }
-
 function handleFileSelection(event) {
     const files = event.target.files;
     const previewContainer = document.getElementById('publication-preview-container');
     if (!files || !previewContainer) return;
-
     const MAX_SIZE_MB = window.avatarMaxSizeMB || 2;
     const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-
     if (selectedFiles.length + files.length > MAX_FILES) {
         showAlert(getTranslation('js.publication.errorFileCount'), 'error');
         return;
     }
-
     for (const file of files) {
         if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
             showAlert(getTranslation('js.publication.errorFileType'), 'error');
@@ -210,18 +195,14 @@ function handleFileSelection(event) {
     }
     validatePublicationState();
 }
-
-
 function addPollOption(focusNew = true) {
     const container = document.getElementById('poll-options-container');
     if (!container) return;
-
     const optionCount = container.querySelectorAll('.component-input-group').length;
     if (optionCount >= MAX_POLL_OPTIONS) {
         showAlert(getTranslation('js.publication.errorPollMaxOptions'), 'info'); 
         return;
     }
-    
     const newOptionIndex = optionCount + 1;
     const optionDiv = document.createElement('div');
     optionDiv.className = 'component-input-group';
@@ -232,27 +213,20 @@ function addPollOption(focusNew = true) {
             <span class="material-symbols-rounded">remove_circle</span>
         </button>
     `;
-
     container.appendChild(optionDiv);
-    
     if (focusNew) {
         optionDiv.querySelector('input').focus();
     }
-    
     const addBtn = document.getElementById('add-poll-option-btn');
     if (addBtn && (optionCount + 1) >= MAX_POLL_OPTIONS) {
         addBtn.disabled = true;
     }
-    
     validatePublicationState();
 }
-
 function removePollOption(button) {
     const optionDiv = button.closest('.component-input-group');
     if (!optionDiv) return;
-    
     optionDiv.remove();
-    
     const container = document.getElementById('poll-options-container');
     container.querySelectorAll('.component-input-group').forEach((opt, index) => {
         const newIndex = index + 1;
@@ -264,19 +238,16 @@ function removePollOption(button) {
             label.textContent = `${getTranslation('create_publication.pollOptionLabel')} ${newIndex}`;
         }
     });
-    
     const addBtn = document.getElementById('add-poll-option-btn');
     if (addBtn) {
         addBtn.disabled = false;
     }
-    
     validatePublicationState();
 }
-
 function resetForm() {
+    console.log("🔵 [DEBUG] resetForm() llamado.");
     const titleInput = document.getElementById('publication-title');
     if (titleInput) titleInput.value = '';
-
     const textInput = document.getElementById('publication-text');
     if (textInput) textInput.value = '';
     selectedFiles = [];
@@ -284,36 +255,26 @@ function resetForm() {
     if (previewContainer) previewContainer.innerHTML = '';
     const fileInput = document.getElementById('publication-file-input');
     if (fileInput) fileInput.value = '';
-    
     const pollQuestion = document.getElementById('poll-question');
     if (pollQuestion) pollQuestion.value = '';
     const pollOptions = document.getElementById('poll-options-container');
     if (pollOptions) pollOptions.innerHTML = '';
-
-    // --- [HASTAGS] --- INICIO DE RESET ---
     const postHashtags = document.getElementById('publication-hashtags');
     if (postHashtags) postHashtags.value = '';
     const pollHashtags = document.getElementById('poll-hashtags');
     if (pollHashtags) pollHashtags.value = '';
     hideValidationError();
-    // --- [HASTAGS] --- FIN DE RESET ---
-    
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Reset de Destino) ▼▼▼ ---
-    selectedCommunityId = 'profile'; // Default a 'profile'
+    selectedCommunityId = 'profile'; 
     const triggerText = document.getElementById('publication-community-text');
     const triggerIcon = document.getElementById('publication-community-icon');
-    
-    // (Asumiendo que has añadido 'create_publication.myProfile' a tus JSON de idiomas)
     const myProfileText = getTranslation('create_publication.myProfile') || 'Mi Perfil';
-    
     if (triggerText) {
         triggerText.textContent = myProfileText;
         triggerText.setAttribute('data-i18n', 'create_publication.myProfile');
     }
     if (triggerIcon) {
-        triggerIcon.textContent = 'person'; // Icono de perfil
+        triggerIcon.textContent = 'person'; 
     }
-    
     const popover = document.querySelector('[data-module="moduleCommunitySelect"]');
     if (popover) {
         popover.querySelectorAll('.menu-link').forEach(link => {
@@ -325,9 +286,6 @@ function resetForm() {
             }
         });
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN (Reset de Destino) ▲▲▲ ---
-    
-    // --- (Reset de Privacidad sin cambios) ---
     selectedPrivacyLevel = 'public';
     const privacyTriggerText = document.getElementById('publication-privacy-text');
     const privacyTriggerIcon = document.getElementById('publication-privacy-icon');
@@ -349,58 +307,50 @@ function resetForm() {
             }
         });
     }
-    
-    validatePublicationState();
+    // No llamamos a validatePublicationState() aquí, porque initPublicationForm() lo hará
 }
-
 async function handlePublishSubmit() {
+    console.log("🟢 [DEBUG] handlePublishSubmit() llamado.");
+    
     const publishButton = document.getElementById('publish-post-btn');
     if (!publishButton) return;
 
-    // --- [HASTAGS] --- Re-validar antes de enviar
     const hashtagValidation = getHashtags();
     if (!hashtagValidation.valid) {
         showValidationError(hashtagValidation.error);
         return;
     }
-    // --- [HASTAGS] --- Fin
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Manejar 'profile') ▼▼▼ ---
     let communityId = selectedCommunityId;
-    
-    // Si el destino es 'profile', enviar un string vacío. 
-    // El backend (api/publication_handler.php) lo interpretará como NULL.
     if (communityId === 'profile') {
         communityId = '';
     } else if (communityId === null || communityId === undefined) {
-        // Esto ya no debería pasar si 'profile' es el default, pero es una salvaguarda.
         showAlert(getTranslation('js.publication.errorNoCommunity'), 'error'); 
         return;
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     togglePublishSpinner(publishButton, true);
 
     const formData = new FormData();
     formData.append('action', 'create-post'); 
-    formData.append('community_id', communityId); // Enviará '' para perfil, o '123' para un grupo
-    formData.append('post_type', currentPostType);
+    formData.append('community_id', communityId); 
+    formData.append('post_type', currentPostType); // <-- ¡¡VALOR CLAVE!!
     formData.append('privacy_level', selectedPrivacyLevel);
-    
-    // --- [HASTAGS] --- Añadir hashtags al formulario
     formData.append('hashtags', JSON.stringify(hashtagValidation.tags));
-    // --- [HASTAGS] --- Fin
+
+    console.log(`🟢 [DEBUG] submit: Enviando 'post_type' = '${currentPostType}'`);
 
     try {
         if (currentPostType === 'post') {
+            console.log("🟢 [DEBUG] submit: Entrando a la lógica de POST.");
+            
             const title = document.getElementById('publication-title').value.trim();
             const textContent = document.getElementById('publication-text').value.trim();
             
-            // --- [HASTAGS] --- Modificación de validación de vacío
             if (!textContent && selectedFiles.length === 0 && !title && hashtagValidation.tags.length === 0) {
+                console.error("🔴 [DEBUG] submit: ERROR: js.publication.errorEmpty (Post vacío)");
                 throw new Error('js.publication.errorEmpty');
             }
-            // --- [HASTAGS] --- Fin
             
             formData.append('title', title);
             formData.append('text_content', textContent);
@@ -408,7 +358,9 @@ async function handlePublishSubmit() {
             for (const file of selectedFiles) {
                 formData.append('attachments[]', file, file.name);
             }
-        } else { 
+        } else { // Asume 'poll'
+            console.log("🟢 [DEBUG] submit: Entrando a la lógica de POLL.");
+
             const question = document.getElementById('poll-question').value.trim();
             const options = Array.from(document.querySelectorAll('#poll-options-container input'))
                                  .map(input => input.value.trim())
@@ -430,14 +382,11 @@ async function handlePublishSubmit() {
         if (result.success) {
             showAlert(getTranslation(result.message || 'js.publication.success'), 'success');
             
-            resetForm(); 
+            // No reseteamos el formulario aquí, la navegación lo hará
+            // resetForm(); 
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Navegar a perfil o home) ▼▼▼ ---
-            let returnUrl = window.projectBasePath + '/'; // Default a home
-            
-            // Si la publicación fue en el perfil, navegar al perfil
+            let returnUrl = window.projectBasePath + '/'; 
             if (communityId === '') {
-                // Tomamos la URL del enlace "Mi Perfil" en el header
                 const profileLink = document.querySelector('.popover-module[data-module="moduleSelect"] a[data-i18n="header.profile.myProfile"]');
                 if (profileLink && profileLink.href) {
                     returnUrl = profileLink.href;
@@ -450,63 +399,45 @@ async function handlePublishSubmit() {
             document.body.appendChild(link);
             link.click();
             link.remove();
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
         } else {
             throw new Error(result.message || 'js.api.errorServer');
         }
 
     } catch (error) {
-        // --- [HASTAGS] --- Mostrar error de hashtag
         if (error.message === 'js.publication.errorHashtagLimit' || error.message === 'js.publication.errorHashtagLength') {
             showValidationError(error.message);
         } else {
             showAlert(getTranslation(error.message || 'js.api.errorConnection'), 'error');
         }
-        // --- [HASTAGS] --- Fin
         togglePublishSpinner(publishButton, false);
     }
 }
-
-// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (Publicar desde Perfil) ▼▼▼ ---
 async function handleProfilePostSubmit(form) {
     const submitButton = form.querySelector('button[type="submit"]');
     const input = form.querySelector('input[name="text_content"]'); 
     if (!submitButton || !input || submitButton.disabled || !input.value.trim()) {
         return;
     }
-
     togglePrimaryButtonSpinner(submitButton, true);
-        const formData = new FormData(form);
+    const formData = new FormData(form);
     input.disabled = true;
-
-
-    // Los campos action, community_id, y privacy_level ya están en el form como hidden inputs.
-    
-    // --- [HASTAGS] --- Añadir hashtags (asumiendo que NO hay campo de hashtags en el perfil)
     formData.append('hashtags', JSON.stringify([])); 
-    // --- [HASTAGS] --- Fin
-
     try {
         const result = await callPublicationApi(formData);
         if (result.success) {
             showAlert(getTranslation('js.publication.success'), 'success');
-            input.value = ''; // Limpiar
-            input.dispatchEvent(new Event('input')); // Disparar input para deshabilitar botón
-
-            // Recargar la pestaña de publicaciones
-            // Buscamos el botón de la pestaña que esté activo o el de "Publicaciones"
+            input.value = ''; 
+            input.dispatchEvent(new Event('input')); 
             const currentTab = document.querySelector('.profile-nav-button.active[data-nav-js="true"]');
-            const postsTab = document.querySelector('.profile-nav-button[data-nav-js="true"][data-href*="/profile/"]'); // Asume que el primero es "Publicaciones"
-
+            const postsTab = document.querySelector('.profile-nav-button[data-nav-js="true"][data-href*="/profile/"]'); 
             if (currentTab && (currentTab.href.endsWith('/profile/' + window.location.pathname.split('/')[2]) || currentTab.href.endsWith('/posts'))) {
-                currentTab.click(); // Recargar pestaña actual
+                currentTab.click(); 
             } else if (postsTab) {
-                postsTab.click(); // Ir a la pestaña de publicaciones
+                postsTab.click(); 
             } else {
-                window.location.reload(); // Fallback
+                window.location.reload(); 
             }
-
         } else {
             showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
         }
@@ -517,16 +448,11 @@ async function handleProfilePostSubmit(form) {
         input.disabled = false;
     }
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
-
 function resetCommunityTrigger() {
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Reset de Destino) ▼▼▼ ---
     selectedCommunityId = 'profile';
     const triggerText = document.getElementById('publication-community-text');
     const triggerIcon = document.getElementById('publication-community-icon');
-    
     const myProfileText = getTranslation('create_publication.myProfile') || 'Mi Perfil';
-
     if (triggerText) {
         triggerText.textContent = myProfileText;
         triggerText.setAttribute('data-i18n', 'create_publication.myProfile');
@@ -534,7 +460,6 @@ function resetCommunityTrigger() {
     if (triggerIcon) {
         triggerIcon.textContent = 'person'; 
     }
-
     const popover = document.querySelector('[data-module="moduleCommunitySelect"]');
     if (popover) {
         popover.querySelectorAll('.menu-link').forEach(link => {
@@ -546,39 +471,30 @@ function resetCommunityTrigger() {
             }
         });
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
 
 
-export function initPublicationManager() {
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+
+// Esta función se llamará UNA SOLA VEZ desde app-init.js
+// Configura los listeners globales que siempre deben estar activos.
+export function setupPublicationListeners() {
     
-    // Resetear el formulario principal solo si existe
-    if (document.getElementById('create-post-form')) {
-        resetForm();
-        currentPostType = document.querySelector('#post-type-toggle .component-toggle-tab.active')?.dataset.type || 'post';
-
-        if (currentPostType === 'poll') {
-            const optionsContainer = document.getElementById('poll-options-container');
-            if (optionsContainer && optionsContainer.children.length === 0) {
-                addPollOption(false);
-                addPollOption(false);
-            }
-        }
-    }
-
+    console.log("🔵 [DEBUG] setupPublicationListeners() llamado. Configurando listeners globales.");
 
     document.body.addEventListener('click', (e) => {
-        // ... (código del listener de 'post-type-toggle' sin cambios) ...
+        // --- (Listener de 'post-type-toggle' - CÓDIGO MUERTO) ---
+        // Este código está aquí por si lo implementas en el futuro,
+        // pero actualmente no hace nada porque tu PHP no tiene el toggle.
         const toggleButton = e.target.closest('#post-type-toggle .component-toggle-tab');
-        const section = e.target.closest('[data-section*="create-"]');
-        if (!toggleButton || !section) {
-            // (no es un toggle, continuar más abajo)
-        } else {
+        let section = e.target.closest('[data-section*="create-"]');
+        if (toggleButton && section) {
             e.preventDefault();
             if (toggleButton.classList.contains('active')) return;
             
             const newType = toggleButton.dataset.type;
             currentPostType = newType; 
+            console.log(`🔵 [DEBUG] click-toggle: Cambiando a tipo: '${currentPostType}'`);
             
             const postArea = document.getElementById('post-content-area');
             const pollArea = document.getElementById('poll-content-area');
@@ -586,9 +502,7 @@ export function initPublicationManager() {
             const attachSpacer = document.getElementById('attach-files-spacer');
             const toggleContainer = document.getElementById('post-type-toggle');
     
-            toggleContainer.querySelectorAll('.component-toggle-tab').forEach(btn => {
-                btn.classList.remove('active');
-            });
+            toggleContainer.querySelectorAll('.component-toggle-tab').forEach(btn => btn.classList.remove('active'));
             toggleButton.classList.add('active');
     
             if (newType === 'poll') {
@@ -603,7 +517,6 @@ export function initPublicationManager() {
                     addPollOption(false);
                     addPollOption(false);
                 }
-    
             } else { 
                 if (postArea) { postArea.classList.add('active'); postArea.classList.remove('disabled'); }
                 if (pollArea) { pollArea.classList.remove('active'); pollArea.classList.add('disabled'); }
@@ -611,64 +524,14 @@ export function initPublicationManager() {
                 if (attachSpacer) attachSpacer.style.display = 'none';
                 history.pushState(null, '', window.projectBasePath + '/create-publication');
             }
-            
             validatePublicationState();
-            return; // Importante salir después de manejar el toggle
+            return; 
         }
 
+        // --- (Listeners de click para el formulario de publicación) ---
+        section = e.target.closest('[data-section*="create-"]');
+        if (!section) return; // Si el clic no fue en la sección de crear, ignorar el resto
 
-        // --- (Listener de 'input' sin cambios) ---
-        // ...
-    });
-    
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir listener para formulario de perfil) ▼▼▼ ---
-    document.body.addEventListener('input', (e) => {
-        const createSection = e.target.closest('[data-section*="create-"]');
-        if (createSection) {
-            // --- [HASTAGS] --- Añadido listener para inputs de hashtag
-            if (e.target.id === 'publication-title' || e.target.id === 'publication-text' || e.target.id === 'poll-question' || e.target.closest('#poll-options-container') || e.target.id === 'publication-hashtags' || e.target.id === 'poll-hashtags') {
-                validatePublicationState();
-            }
-            return;
-        }
-
-        // Nuevo listener para el formulario del perfil
-        const profilePostInput = e.target.closest('form[data-action="profile-post-submit"] input[name="text_content"]');
-        if (profilePostInput) {
-            const form = profilePostInput.closest('form');
-            const submitButton = form.querySelector('button[type="submit"]');
-            if (submitButton) {
-                submitButton.disabled = profilePostInput.value.trim().length === 0;
-            }
-        }
-    });
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir listener para formulario de perfil) ▼▼▼ ---
-    document.body.addEventListener('submit', async (e) => {
-        const createPostForm = e.target.closest('form#create-post-form');
-        if (createPostForm) {
-            // (Esta lógica es para la página /create-publication, se mantiene)
-            e.preventDefault();
-            handlePublishSubmit();
-            return;
-        }
-
-        // Nuevo listener para el formulario del perfil
-        const profilePostForm = e.target.closest('form[data-action="profile-post-submit"]');
-        if (profilePostForm) {
-            e.preventDefault();
-            await handleProfilePostSubmit(profilePostForm);
-            return;
-        }
-    });
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-    
-    document.body.addEventListener('click', (e) => {
-        const section = e.target.closest('[data-section*="create-"]');
-        if (!section) return; 
-
-        // --- (Listener de 'moduleCommunitySelect') ---
         const trigger = e.target.closest('#publication-community-trigger[data-action="toggleModuleCommunitySelect"]');
         if (trigger) {
             e.preventDefault();
@@ -682,51 +545,40 @@ export function initPublicationManager() {
             return;
         }
 
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Listener de 'moduleCommunitySelect' link) ▼▼▼ ---
         const menuLink = e.target.closest('[data-module="moduleCommunitySelect"] .menu-link[data-value]');
         if (menuLink) {
             e.preventDefault();
-            
-            const newId = menuLink.dataset.value; // Puede ser 'profile' o un ID numérico
+            const newId = menuLink.dataset.value; 
             const newTextKey = menuLink.dataset.textKey;
             const newIcon = menuLink.dataset.icon;
-            
             selectedCommunityId = newId;
-
             const triggerText = document.getElementById('publication-community-text');
             const triggerIcon = document.getElementById('publication-community-icon');
-            
             if (triggerText) {
-                // Usar la clave de traducción o el texto directo (para nombres de grupos)
                 if (newTextKey.includes('.')) {
                     triggerText.textContent = getTranslation(newTextKey);
                     triggerText.setAttribute('data-i18n', newTextKey);
                 } else {
-                    triggerText.textContent = newTextKey; // Es un nombre de grupo
+                    triggerText.textContent = newTextKey; 
                     triggerText.removeAttribute('data-i18n');
                 }
             }
             if (triggerIcon) {
                 triggerIcon.textContent = newIcon; 
             }
-
             const menuList = menuLink.closest('.menu-list');
             if (menuList) {
                 menuList.querySelectorAll('.menu-link').forEach(link => link.classList.remove('active'));
                 menuList.querySelectorAll('.menu-link-check-icon').forEach(icon => icon.innerHTML = '');
             }
-            
             menuLink.classList.add('active');
             const checkIcon = menuLink.querySelector('.menu-link-check-icon');
             if (checkIcon) checkIcon.innerHTML = '<span class="material-symbols-rounded">check</span>';
-
             deactivateAllModules();
             validatePublicationState();
             return;
         }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         
-        // --- (Listener de 'modulePrivacySelect' sin cambios) ---
         const privacyTrigger = e.target.closest('#publication-privacy-trigger[data-action="toggleModulePrivacySelect"]');
         if (privacyTrigger) {
             e.preventDefault();
@@ -743,14 +595,11 @@ export function initPublicationManager() {
         const privacyMenuLink = e.target.closest('[data-module="modulePrivacySelect"] .menu-link[data-value]');
         if (privacyMenuLink) {
             e.preventDefault();
-            
             selectedPrivacyLevel = privacyMenuLink.dataset.value;
             const newTextKey = privacyMenuLink.dataset.textKey;
             const newIcon = privacyMenuLink.dataset.icon;
-
             const triggerText = document.getElementById('publication-privacy-text');
             const triggerIcon = document.getElementById('publication-privacy-icon');
-            
             if (triggerText) {
                 triggerText.textContent = getTranslation(newTextKey);
                 triggerText.setAttribute('data-i18n', newTextKey);
@@ -758,29 +607,26 @@ export function initPublicationManager() {
             if (triggerIcon) {
                 triggerIcon.textContent = newIcon; 
             }
-
             const menuList = privacyMenuLink.closest('.menu-list');
             if (menuList) {
                 menuList.querySelectorAll('.menu-link').forEach(link => link.classList.remove('active'));
                 menuList.querySelectorAll('.menu-link-check-icon').forEach(icon => icon.innerHTML = '');
             }
-            
             privacyMenuLink.classList.add('active');
             const checkIcon = privacyMenuLink.querySelector('.menu-link-check-icon');
             if (checkIcon) checkIcon.innerHTML = '<span class="material-symbols-rounded">check</span>';
-
             deactivateAllModules();
             return;
         }
         
-        // --- (Listeners de botones de submit, attach, poll, etc. sin cambios) ---
-        if (e.target.id === 'publish-post-btn') {
+        if (e.target.id === 'publish-post-btn' || e.target.closest('#publish-post-btn')) {
             e.preventDefault();
+            console.log("🔵 [DEBUG] click: Detectado 'click' en #publish-post-btn. Llamando a handlePublishSubmit().");
             handlePublishSubmit();
             return;
         }
         
-        if (e.target.id === 'attach-files-btn') {
+        if (e.target.id === 'attach-files-btn' || e.target.closest('#attach-files-btn')) {
             e.preventDefault();
             document.getElementById('publication-file-input')?.click();
             return;
@@ -800,15 +646,100 @@ export function initPublicationManager() {
         }
     });
     
-    // --- (Listener de 'change' para input de archivos sin cambios) ---
+    document.body.addEventListener('input', (e) => {
+        const createSection = e.target.closest('[data-section*="create-"]');
+        if (createSection) {
+            if (e.target.id === 'publication-title' || e.target.id === 'publication-text' || e.target.id === 'poll-question' || e.target.closest('#poll-options-container') || e.target.id === 'publication-hashtags' || e.target.id === 'poll-hashtags') {
+                console.log(`🔵 [DEBUG] input: Detectado input en '${e.target.id}'. Re-validando...`);
+                validatePublicationState();
+            }
+            return;
+        }
+
+        const profilePostInput = e.target.closest('form[data-action="profile-post-submit"] input[name="text_content"]');
+        if (profilePostInput) {
+            const form = profilePostInput.closest('form');
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = profilePostInput.value.trim().length === 0;
+            }
+        }
+    });
+    
+    document.body.addEventListener('submit', async (e) => {
+        const createPostForm = e.target.closest('form#create-post-form');
+        if (createPostForm) {
+            e.preventDefault();
+            console.log("🔵 [DEBUG] submit: Detectado 'submit' en #create-post-form. Llamando a handlePublishSubmit().");
+            handlePublishSubmit();
+            return;
+        }
+
+        const profilePostForm = e.target.closest('form[data-action="profile-post-submit"]');
+        if (profilePostForm) {
+            e.preventDefault();
+            await handleProfilePostSubmit(profilePostForm);
+            return;
+        }
+    });
+    
     document.body.addEventListener('change', (e) => {
         const section = e.target.closest('[data-section*="create-"]');
          if (e.target.id === 'publication-file-input' && section) {
             handleFileSelection(e);
         }
     });
+}
+
+// Esta función se llamará CADA VEZ que se cargue una página (desde url-manager.js)
+// Inicializa el formulario de publicación SI EXISTE en la página actual.
+export function initPublicationForm() {
     
-    if (document.querySelector('[data-section*="create-"].active')) {
-         validatePublicationState();
+    console.log("🔵 [DEBUG] initPublicationForm() llamado.");
+
+    if (document.getElementById('create-post-form')) {
+        
+        console.log("🔵 [DEBUG] initForm: Encontrado #create-post-form. Ejecutando resetForm().");
+        resetForm();
+
+        // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
+        console.log("🔵 [DEBUG] initForm: Buscando #poll-content-area...");
+        const pollAreaOnLoad = document.getElementById('poll-content-area');
+        
+        if (pollAreaOnLoad) {
+            console.log("🔵 [DEBUG] initForm: Encontrado #poll-content-area.");
+            console.log("🔵 [DEBUG] initForm: Clases de #poll-content-area:", pollAreaOnLoad.classList);
+            
+            if (pollAreaOnLoad.classList.contains('active')) {
+                console.log("🔵 [DEBUG] initForm: #poll-content-area TIENE la clase 'active'.");
+                currentPostType = 'poll';
+            } else {
+                console.log("🔵 [DEBUG] initForm: #poll-content-area NO tiene la clase 'active'.");
+                currentPostType = 'post';
+            }
+        } else {
+            console.error("🔴 [DEBUG] initForm: ERROR FATAL: No se encontró #poll-content-area. Asumiendo 'post'.");
+            currentPostType = 'post';
+        }
+        
+        console.log(`✅ [DEBUG] initForm: currentPostType se ha establecido en: '${currentPostType}'`);
+        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
+
+
+        if (currentPostType === 'poll') {
+            const optionsContainer = document.getElementById('poll-options-container');
+            if (optionsContainer && optionsContainer.children.length === 0) {
+                console.log("🔵 [DEBUG] initForm: Añadiendo opciones de encuesta iniciales.");
+                addPollOption(false);
+                addPollOption(false);
+            }
+        }
+        
+        console.log("🔵 [DEBUG] initForm: Ejecutando validación final al cargar.");
+        validatePublicationState();
+        
+    } else {
+        console.log("🔵 [DEBUG] initForm: No se encontró #create-post-form en esta página. Saliendo.");
     }
 }
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
