@@ -1,5 +1,5 @@
 // FILE: assets/js/modules/chat-manager.js
-// (NUEVO ARCHIVO)
+// (MODIFICADO)
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -189,21 +189,36 @@ function renderChatHistory(messages, receiverAvatar, receiverRole) {
  * Carga el historial de chat con un amigo específico.
  */
 async function openChat(friendId, username, avatar, role, isOnline) {
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     const placeholder = document.getElementById('chat-content-placeholder');
     const chatMain = document.getElementById('chat-content-main');
-    if (!placeholder || !chatMain) return;
+    if (!chatMain) return; // Solo chatMain es crítico
 
     // Actualizar UI
-    placeholder.classList.remove('active');
-    placeholder.classList.add('disabled');
+    if (placeholder) { // Comprobar si existe antes de tocarlo
+        placeholder.classList.remove('active');
+        placeholder.classList.add('disabled');
+    }
     chatMain.classList.remove('disabled');
     chatMain.classList.add('active');
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     document.getElementById('chat-header-avatar').src = avatar;
     document.getElementById('chat-header-username').textContent = username;
     const statusEl = document.getElementById('chat-header-status');
     statusEl.textContent = isOnline ? 'Online' : 'Offline';
     statusEl.className = isOnline ? 'chat-header-status online' : 'chat-header-status';
+    
+    // Al abrir un chat, asegurarse de que el indicador "escribiendo" esté oculto
+    const typingEl = document.getElementById('chat-header-typing');
+    if (typingEl) {
+        typingEl.classList.remove('active');
+        typingEl.classList.add('disabled');
+    }
+    if (statusEl) {
+        statusEl.classList.add('active');
+        statusEl.classList.remove('disabled');
+    }
     
     document.getElementById('chat-message-list').innerHTML = '<div class="chat-list-placeholder" id="chat-list-loader"><span class="logout-spinner" style="width: 32px; height: 32px; border-width: 3px;"></span></div>';
     document.getElementById('chat-message-input').disabled = true;
@@ -343,6 +358,35 @@ export function handleChatMessageReceived(message) {
     }
 }
 
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN ▼▼▼ ---
+/**
+ * Muestra u oculta el indicador "escribiendo..."
+ */
+export function handleTypingEvent(senderId, isTyping) {
+    if (parseInt(senderId, 10) !== currentChatUserId) {
+        return; // No es el chat que estamos viendo
+    }
+
+    const statusEl = document.getElementById('chat-header-status');
+    const typingEl = document.getElementById('chat-header-typing');
+
+    // Decisión: Reemplazar el estado.
+    if (statusEl && typingEl) {
+        if (isTyping) {
+            statusEl.classList.remove('active');
+            statusEl.classList.add('disabled');
+            typingEl.classList.add('active');
+            typingEl.classList.remove('disabled');
+        } else {
+            statusEl.classList.add('active');
+            statusEl.classList.remove('disabled');
+            typingEl.classList.remove('active');
+            typingEl.classList.add('disabled');
+        }
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+
 /**
  * Inicializa todos los listeners para la página de chat.
  */
@@ -416,7 +460,11 @@ export function initChatManager() {
         }
     });
 
-    // Listener para habilitar/deshabilitar el botón de envío
+    // --- ▼▼▼ INICIO DE LISTENER MODIFICADO ▼▼▼ ---
+    let typingTimer;
+    let isTyping = false;
+
+    // Listener para habilitar/deshabilitar el botón de envío Y "escribiendo"
     document.body.addEventListener('input', (e) => {
         const chatInput = e.target.closest('#chat-message-input');
         if (chatInput) {
@@ -424,6 +472,30 @@ export function initChatManager() {
             if (sendBtn) {
                 sendBtn.disabled = chatInput.value.trim().length === 0;
             }
+            
+            // --- INICIO DE NUEVA LÓGICA DE TYPING ---
+            const receiverId = document.getElementById('chat-receiver-id').value;
+            if (receiverId && window.ws && window.ws.readyState === WebSocket.OPEN) {
+                if (!isTyping) {
+                    isTyping = true;
+                    window.ws.send(JSON.stringify({
+                        type: 'typing_start',
+                        recipient_id: parseInt(receiverId, 10)
+                    }));
+                }
+                
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
+                    if (window.ws && window.ws.readyState === WebSocket.OPEN) {
+                        window.ws.send(JSON.stringify({
+                            type: 'typing_stop',
+                            recipient_id: parseInt(receiverId, 10)
+                        }));
+                    }
+                    isTyping = false;
+                }, 2000); // 2 segundos de "parada"
+            }
+            // --- FIN DE NUEVA LÓGICA DE TYPING ---
         }
         
         // Listener para el filtro de búsqueda
@@ -432,6 +504,7 @@ export function initChatManager() {
             filterConversationList(searchInput.value);
         }
     });
+    // --- ▲▲▲ FIN DE LISTENER MODIFICADO ▲▲▲ ---
     
     // Listener para el evento de presencia (del friend-manager)
     document.addEventListener('user-presence-changed', (e) => {

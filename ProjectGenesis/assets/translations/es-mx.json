@@ -897,5 +897,14 @@
       "desc": "Aún no hay suficientes publicaciones con hashtags para mostrar tendencias."
     },
     "postCount": "%count% publicaciones"
+  },
+  
+  "chat": {
+    "title": "Mensajes",
+    "searchPlaceholder": "Buscar amigos...",
+    "selectConversation": "Selecciona una conversación para empezar",
+    "messagePlaceholder": "Escribe tu mensaje...",
+    "offline": "Desconectado",
+    "typing": "Escribiendo"
   }
 }

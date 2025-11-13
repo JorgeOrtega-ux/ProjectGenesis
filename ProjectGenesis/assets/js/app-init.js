@@ -1,5 +1,5 @@
 // FILE: assets/js/app-init.js
-// (CORREGIDO - Lógica de notificaciones movida a su propio módulo)
+// (MODIFICADO)
 
 import { initMainController } from './app/main-controller.js';
 import { initRouter, loadPage } from './app/url-manager.js';
@@ -13,7 +13,11 @@ import { initCommunityManager } from './modules/community-manager.js';
 // --- ▼▼▼ IMPORTACIÓN MODIFICADA ▼▼▼ ---
 import { setupPublicationListeners } from './modules/publication-manager.js';
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-import { initChatManager, handleChatMessageReceived } from './modules/chat-manager.js';
+
+// --- ▼▼▼ INICIO DE IMPORTACIÓN MODIFICADA ▼▼▼ ---
+import { initChatManager, handleChatMessageReceived, handleTypingEvent } from './modules/chat-manager.js';
+// --- ▲▲▲ FIN DE IMPORTACIÓN MODIFICADA ▲▲▲ ---
+
 import { initFriendManager, initFriendList } from './modules/friend-manager.js';
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager, getTranslation } from './services/i18n-manager.js';
@@ -185,6 +189,23 @@ document.addEventListener('DOMContentLoaded', async function () {
                             handleChatMessageReceived(data.payload);
                         }
                         // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                        
+                        // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE TYPING ▼▼▼ ---
+                        else if (data.type === 'typing_start') {
+                            console.log("[WS] 'typing_start' recibido de", data.sender_id);
+                            // Delegar al chat manager
+                            if (typeof handleTypingEvent === 'function') {
+                                handleTypingEvent(data.sender_id, true);
+                            }
+                        }
+                        else if (data.type === 'typing_stop') {
+                            console.log("[WS] 'typing_stop' recibido de", data.sender_id);
+                            // Delegar al chat manager
+                            if (typeof handleTypingEvent === 'function') {
+                                handleTypingEvent(data.sender_id, false);
+                            }
+                        }
+                        // --- ▲▲▲ FIN DE NUEVA LÓGICA DE TYPING ▲▲▲ ---
 
                         else if (data.type === 'presence_update') {
                             console.log(`[WS] Actualización de estado: User ${data.user_id} está ${data.status}`);

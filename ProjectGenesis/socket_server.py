@@ -126,8 +126,35 @@ async def ws_handler(websocket):
             raise Exception("Autenticación fallida")
         
         # Mantener la conexión abierta para escuchar
-        async for message in websocket:
-            pass # No esperamos más mensajes, solo mantenemos la conexión
+        # --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ ---
+        async for message_json in websocket:
+            try:
+                data = json.loads(message_json)
+                
+                # --- Lógica de "Escribiendo..." ---
+                if data.get("type") == "typing_start" and data.get("recipient_id"):
+                    recipient_id = int(data["recipient_id"])
+                    # Solo reenviar si el destinatario está conectado
+                    websockets_to_notify = CLIENTS_BY_USER_ID.get(recipient_id)
+                    if websockets_to_notify:
+                        payload = json.dumps({"type": "typing_start", "sender_id": user_id})
+                        tasks = [ws.send(payload) for ws in websockets_to_notify]
+                        await asyncio.gather(*tasks, return_exceptions=True)
+                        
+                elif data.get("type") == "typing_stop" and data.get("recipient_id"):
+                    recipient_id = int(data["recipient_id"])
+                    # Solo reenviar si el destinatario está conectado
+                    websockets_to_notify = CLIENTS_BY_USER_ID.get(recipient_id)
+                    if websockets_to_notify:
+                        payload = json.dumps({"type": "typing_stop", "sender_id": user_id})
+                        tasks = [ws.send(payload) for ws in websockets_to_notify]
+                        await asyncio.gather(*tasks, return_exceptions=True)
+                
+                # (Aquí puedes añadir más tipos de mensajes del cliente si es necesario)
+
+            except Exception as e:
+                logging.warning(f"[WS] Error al procesar mensaje de cliente (user_id={user_id}): {e}")
+        # --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
 
     except websockets.exceptions.ConnectionClosed:
         logging.info("[WS] Conexión cerrada (normal).")

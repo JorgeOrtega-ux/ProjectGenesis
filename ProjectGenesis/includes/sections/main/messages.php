@@ -1,6 +1,6 @@
 <?php
 // FILE: includes/sections/main/messages.php
-// (NUEVO ARCHIVO)
+// (MODIFICADO)
 global $basePath;
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
@@ -241,6 +241,48 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 .chat-header-status.online {
     color: #28a745;
 }
+
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS ▼▼▼ --- */
+.chat-header-status-typing {
+    display: none; /* Oculto por .disabled */
+    align-items: center;
+    gap: 3px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0056b3; /* Un color azul para destacar */
+}
+.chat-header-status-typing.active {
+    display: flex; /* Mostrar cuando está activo */
+}
+.chat-header-status-typing .typing-dot {
+    width: 4px;
+    height: 4px;
+    background-color: #0056b3;
+    border-radius: 50%;
+    animation: typing-bounce 1.2s infinite ease-in-out;
+}
+.chat-header-status-typing .typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+.chat-header-status-typing .typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+@keyframes typing-bounce {
+    0%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-4px);
+    }
+}
+.chat-header-status.disabled {
+    display: none;
+}
+.chat-header-status-typing.disabled {
+    display: none;
+}
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */
+
 .chat-message-list {
     flex-grow: 1;
     padding: 16px;
@@ -423,10 +465,14 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 
         <div class="chat-content-right" id="chat-content-right">
 
+            <?php // --- ▼▼▼ BLOQUE ELIMINADO ▼▼▼ --- ?>
+            <?php /*
             <div class="chat-content-placeholder active" id="chat-content-placeholder">
                 <span class="material-symbols-rounded">chat</span>
                 <span data-i18n="chat.selectConversation">Selecciona una conversación para empezar</span>
             </div>
+            */ ?>
+            <?php // --- ▲▲▲ FIN BLOQUE ELIMINADO ▲▲▲ --- ?>
 
             <div class="chat-content-main disabled" id="chat-content-main">
                 
@@ -437,10 +483,18 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
                     <div class="chat-header-avatar">
                         <img src="<?php echo $defaultAvatar; ?>" id="chat-header-avatar" alt="Avatar">
                     </div>
-                    <div class="chat-header-info">
+                    <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ --- ?>
+                    <div class="chat-header-info" id="chat-header-info">
                         <div class="chat-header-username" id="chat-header-username">Nombre de Usuario</div>
-                        <div class="chat-header-status" id="chat-header-status" data-i18n-offline="chat.offline">Offline</div>
+                        <div class="chat-header-status active" id="chat-header-status" data-i18n-offline="chat.offline">Offline</div>
+                        <div class="chat-header-status-typing disabled" id="chat-header-typing">
+                            <span class="typing-dot"></span>
+                            <span class="typing-dot"></span>
+                            <span class="typing-dot"></span>
+                            <span data-i18n="chat.typing">Escribiendo</span>
+                        </div>
                     </div>
+                    <?php // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- ?>
                 </div>
 
                 <div class="chat-message-list" id="chat-message-list">
