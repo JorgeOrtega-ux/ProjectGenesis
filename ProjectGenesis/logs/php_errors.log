@@ -1483,3 +1483,11 @@
 [12-Nov-2025 23:54:17 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 294
 [12-Nov-2025 23:54:17 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 303
 [12-Nov-2025 23:54:17 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 339
+[13-Nov-2025 00:05:24 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 726
+[13-Nov-2025 00:05:34 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 726
+[13-Nov-2025 00:17:07 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 726
+[13-Nov-2025 00:17:20 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 726
+[13-Nov-2025 00:17:26 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 726
+[13-Nov-2025 00:17:28 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 726
+[13-Nov-2025 00:21:26 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 704
+[13-Nov-2025 00:21:31 UTC] PHP Warning:  Undefined variable $isAdminPage in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 704

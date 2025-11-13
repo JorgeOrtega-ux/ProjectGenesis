@@ -1,104 +1,10 @@
 <?php
 // FILE: includes/sections/admin/manage-users.php
+// (LÓGICA PHP MOVIDA A 'admin_users_fetcher.php')
 
-// --- ▼▼▼ INICIO DE LÓGICA PHP MODIFICADA ▼▼▼ ---
-$usersList = [];
-$defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
-
-// 1. OBTENER PARÁMETROS DE URL
-$adminCurrentPage = (int)($_GET['p'] ?? 1);
-if ($adminCurrentPage < 1) $adminCurrentPage = 1;
-
-$searchQuery = trim($_GET['q'] ?? '');
-$isSearching = !empty($searchQuery);
-
-// ¡NUEVO! OBTENER PARÁMETROS DE ORDEN (o string vacío si no existen)
-$sort_by_param = trim($_GET['s'] ?? '');
-$sort_order_param = trim($_GET['o'] ?? '');
-
-// ¡NUEVO! Lista blanca para seguridad
-$allowed_sort = ['created_at', 'username', 'email'];
-$allowed_order = ['ASC', 'DESC'];
-
-// ¡NUEVO! Validar parámetros. Si son inválidos, se tratan como vacíos (default)
-if (!in_array($sort_by_param, $allowed_sort)) {
-    $sort_by_param = '';
-}
-if (!in_array($sort_order_param, $allowed_order)) {
-    $sort_order_param = '';
-}
-
-// ¡NUEVO! Definir los valores REALES para la consulta SQL
-// Si los parámetros están vacíos, usamos el orden por defecto.
-$sort_by_sql = ($sort_by_param === '') ? 'created_at' : $sort_by_param;
-$sort_order_sql = ($sort_order_param === '') ? 'DESC' : $sort_order_param;
-
-// --- ▲▲▲ FIN DE LÓGICA PHP MODIFICADA ▲▲▲ ---
-
-$usersPerPage = 1; // 20 usuarios por página
-$totalUsers = 0;
-$totalPages = 1;
-
-try {
-    // --- ▼▼▼ INICIO DE SQL MODIFICADO ▼▼▼ ---
-
-    // 2. Contar el total de usuarios (con filtro si existe)
-    $sqlCount = "SELECT COUNT(*) FROM users";
-    if ($isSearching) {
-        $sqlCount .= " WHERE (username LIKE :query OR email LIKE :query)";
-    }
-
-    $totalUsersStmt = $pdo->prepare($sqlCount);
-
-    if ($isSearching) {
-        $searchParam = '%' . $searchQuery . '%';
-        $totalUsersStmt->bindParam(':query', $searchParam, PDO::PARAM_STR);
-    }
-
-    $totalUsersStmt->execute();
-    $totalUsers = (int)$totalUsersStmt->fetchColumn();
-    // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
-
-    if ($totalUsers > 0) {
-        $totalPages = (int)ceil($totalUsers / $usersPerPage);
-    } else {
-        $totalPages = 1; // Si no hay usuarios, seguimos en la página 1
-    }
-
-    // 2. Asegurarse de que la página actual es válida
-    if ($adminCurrentPage > $totalPages) {
-        $adminCurrentPage = $totalPages;
-    }
-
-    // 3. Calcular el OFFSET
-    $offset = ($adminCurrentPage - 1) * $usersPerPage;
-
-    // --- ▼▼▼ INICIO DE SQL MODIFICADO ▼▼▼ ---
-    // 4. Obtener los usuarios para la página actual (con filtro si existe)
-    $sqlSelect = "SELECT id, username, email, profile_image_url, role, created_at, account_status 
-                  FROM users";
-    if ($isSearching) {
-        $sqlSelect .= " WHERE (username LIKE :query OR email LIKE :query)";
-    }
-    
-    // ¡MODIFICADO! Usar las variables SQL seguras
-    $sqlSelect .= " ORDER BY $sort_by_sql $sort_order_sql LIMIT :limit OFFSET :offset";
-
-    $stmt = $pdo->prepare($sqlSelect);
-
-    if ($isSearching) {
-        $stmt->bindParam(':query', $searchParam, PDO::PARAM_STR);
-    }
-    $stmt->bindValue(':limit', $usersPerPage, PDO::PARAM_INT);
-    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-
-    $stmt->execute();
-    $usersList = $stmt->fetchAll();
-    // --- ▲▲▲ FIN DE SQL MODIFICADO ▲▲▲ ---
-
-} catch (PDOException $e) {
-    logDatabaseError($e, 'admin - manage-users');
-}
+// Las variables $usersList, $adminCurrentPage, $totalPages, $isSearching,
+// $searchQuery, $sort_by_param, $sort_order_param son
+// cargadas por config/routing/router.php
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-manage-users') ? 'active' : 'disabled'; ?>" data-section="admin-users">
 

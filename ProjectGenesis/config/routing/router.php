@@ -2,16 +2,11 @@
 
 include '../config.php';
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-// Incluir los nuevos archivos de lógica/fetcher
-// (Usa __DIR__ para una ruta más robusta)
 include_once __DIR__ . '/../../includes/data_fetchers/profile_data_fetcher.php';
-// (Aquí añadirías los otros fetchers a medida que los crees, ej. home_feed_fetcher.php)
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
+include_once __DIR__ . '/../../includes/data_fetchers/home_feed_fetcher.php';
+include_once __DIR__ . '/../../includes/data_fetchers/admin_users_fetcher.php';
 
 $isPartialLoad = isset($_GET['partial']) && $_GET['partial'] === 'true';
-
 
 function showRegistrationError($basePath, $messageKey, $detailsKey)
 {
@@ -83,7 +78,6 @@ function formatBackupDate($timestamp)
     return date('d/m/Y H:i:s', $timestamp);
 }
 
-
 $page = $_GET['page'] ?? 'home';
 
 $CURRENT_SECTION = $page;
@@ -108,8 +102,8 @@ $allowedPages = [
     'view-profile' => '../../includes/sections/main/view-profile.php',
 
     'search-results' => '../../includes/sections/main/search-results.php',
-    
-    'trends' => '../../includes/sections/main/trends.php', // --- [HASTAGS] --- Nueva página
+
+    'trends' => '../../includes/sections/main/trends.php',
 
     'register-step1' => '../../includes/sections/auth/register.php',
     'register-step2' => '../../includes/sections/auth/register.php',
@@ -249,11 +243,8 @@ if (array_key_exists($page, $allowedPages)) {
         $isFriendListPrivate = (int) ($_SESSION['is_friend_list_private'] ?? 1);
         $isEmailPublic = (int) ($_SESSION['is_email_public'] ?? 0);
 
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR employment/education) ▼▼▼ ---
-        $userEmployment = $_SESSION['employment'] ?? 'none'; // 'none' como default
-        $userEducation = $_SESSION['education'] ?? 'none'; // 'none' como default
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
+        $userEmployment = $_SESSION['employment'] ?? 'none';
+        $userEducation = $_SESSION['education'] ?? 'none';
     } elseif ($page === 'settings-login') {
         try {
             $stmt_user = $pdo->prepare("SELECT is_2fa_enabled, created_at FROM users WHERE id = ?");
@@ -371,6 +362,14 @@ if (array_key_exists($page, $allowedPages)) {
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - create-post-communities');
         }
+    } elseif ($page === 'home') {
+
+        $communityUuid = $_GET['community_uuid'] ?? null;
+        $currentUserId = $_SESSION['user_id'];
+
+        $homeFeedData = getHomeFeedData($pdo, $currentUserId, $communityUuid);
+
+        extract($homeFeedData);
     } elseif ($page === 'post-view') {
         $viewPostData = null;
         $postId = (int) ($_GET['post_id'] ?? 0);
@@ -382,7 +381,6 @@ if (array_key_exists($page, $allowedPages)) {
         } else {
             try {
 
-                // --- [HASTAGS] --- INICIO DE SQL MODIFICADO ---
                 $sql_post =
                     "SELECT 
                            p.*, 
@@ -414,7 +412,6 @@ if (array_key_exists($page, $allowedPages)) {
                          JOIN users u ON p.user_id = u.id
                          LEFT JOIN communities c ON p.community_id = c.id
                          WHERE p.id = ?";
-                // --- [HASTAGS] --- FIN DE SQL MODIFICADO ---
 
                 $stmt_post = $pdo->prepare($sql_post);
                 $stmt_post->execute([$userId, $userId, $userId, $postId]);
@@ -448,37 +445,26 @@ if (array_key_exists($page, $allowedPages)) {
                 $CURRENT_SECTION = '404';
             }
         }
-    
-    // --- ▼▼▼ INICIO DEL BLOQUE REFACTORIZADO ▼▼▼ ---
-    
     } elseif ($page === 'view-profile') {
-        
+
         $targetUsername = $_GET['username'] ?? '';
         $currentTab = $_GET['tab'] ?? 'posts';
         $currentUserId = $_SESSION['user_id'];
-    
-        // 1. Llama a la nueva función para obtener todos los datos
+
         $viewProfileData = getProfileData($pdo, $targetUsername, $currentTab, $currentUserId);
-    
-        // 2. Comprueba si la función devolvió datos
+
         if ($viewProfileData === null) {
-            // Si devuelve null, el usuario no se encontró o no se pudo cargar.
             $page = '404';
             $CURRENT_SECTION = '404';
-            // $viewProfileData se queda como null
         } else {
-            // Si se encontraron datos, actualiza $currentTab (ya que la función lo valida)
             $currentTab = $viewProfileData['current_tab'];
         }
-    
-        // 3. Manejar la carga parcial (AJAX para pestañas)
-        // Esta lógica se queda aquí porque es parte del "Controlador" (decide QUÉ renderizar)
+
         if ($isPartialLoad && $page !== '404') {
-            
+
             $tabBasePath = '../../includes/sections/main/profile-tabs/';
             $tabFile = '';
 
-            // Usamos $currentTab, que ya fue validado por getProfileData()
             switch ($currentTab) {
                 case 'info':
                     $tabFile = $tabBasePath . 'view-profile-information.php';
@@ -493,29 +479,23 @@ if (array_key_exists($page, $allowedPages)) {
                 case 'bookmarks':
                 case 'posts':
                 default:
-                    // 'posts', 'likes', 'bookmarks' usan el mismo layout
                     $tabFile = $tabBasePath . 'view-profile-posts.php';
                     break;
             }
-            
+
             if (file_exists($tabFile)) {
-                // Pasamos $viewProfileData a la pestaña que se va a incluir
                 include $tabFile;
             } else {
-                // Error si el archivo de la pestaña no existe
                 echo '<div class="component-card"><p>Error: No se pudo cargar el contenido de la pestaña.</p></div>';
             }
-            exit; // Importante: detener aquí para no cargar el main-layout.php
+            exit;
         }
-    
-    } // --- ▲▲▲ FIN DEL BLOQUE REFACTORIZADO ▲▲▲ ---
-    
-    elseif ($page === 'search-results') {
+    } elseif ($page === 'search-results') {
         $searchQuery = $_GET['q'] ?? '';
         $userResults = [];
         $postResults = [];
         $communityResults = [];
-        
+
         $isHashtagSearch = (strpos($searchQuery, '#') === 0);
         $searchTag = '';
 
@@ -566,10 +546,9 @@ if (array_key_exists($page, $allowedPages)) {
                         ]);
                         $postResults = $stmt_posts->fetchAll();
                     }
-                    
                 } else {
                     $searchParam = '%' . $searchQuery . '%';
-                    
+
                     $stmt_users = $pdo->prepare(
                         "SELECT id, username, profile_image_url, role 
                            FROM users 
@@ -592,7 +571,6 @@ if (array_key_exists($page, $allowedPages)) {
                         ];
                     }
 
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL CON NUEVAS COLUMNAS) ▼▼▼ ---
                     $stmt_posts = $pdo->prepare(
                         "SELECT 
                                p.id, 
@@ -632,7 +610,6 @@ if (array_key_exists($page, $allowedPages)) {
                            ORDER BY p.created_at DESC
                            LIMIT 20"
                     );
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     $stmt_posts->execute([$searchParam, $searchParam, $currentUserId, $currentUserId, $currentUserId, $currentUserId]);
                     $postResults = $stmt_posts->fetchAll();
 
@@ -677,14 +654,15 @@ if (array_key_exists($page, $allowedPages)) {
             );
             $stmt_trends->execute();
             $trendingHashtags = $stmt_trends->fetchAll();
-
         } catch (PDOException $e) {
             logDatabaseError($e, 'router - trends');
             $trendingHashtags = [];
         }
     } elseif ($page === 'admin-manage-users') {
-        $adminCurrentPage = (int) ($_GET['p'] ?? 1);
-        if ($adminCurrentPage < 1) $adminCurrentPage = 1;
+
+        $adminUsersData = getAdminUsersData($pdo, $_GET);
+
+        extract($adminUsersData);
     } elseif ($page === 'admin-edit-user') {
         $targetUserId = (int) ($_GET['id'] ?? 0);
         if ($targetUserId === 0) {
@@ -733,4 +711,3 @@ if (array_key_exists($page, $allowedPages)) {
     $CURRENT_SECTION = '404';
     include $allowedPages['404'];
 }
-?>
