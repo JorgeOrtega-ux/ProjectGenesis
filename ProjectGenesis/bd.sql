@@ -329,6 +329,13 @@ CREATE TABLE `publication_hashtags` (
 
 -- Este script añade las tablas necesarias para el sistema de chat.
 -- Agrégalo a tu `bd.sql` o ejecútalo en tu base de datos.
+ALTER TABLE users
+ADD COLUMN bio TEXT NULL DEFAULT NULL AFTER account_status;
+ALTER TABLE user_preferences
+ADD COLUMN employment VARCHAR(100) NULL DEFAULT 'none' AFTER is_email_public;
+
+ALTER TABLE user_preferences
+ADD COLUMN education VARCHAR(100) NULL DEFAULT 'none' AFTER employment;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS=0;

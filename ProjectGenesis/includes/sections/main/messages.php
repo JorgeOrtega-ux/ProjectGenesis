@@ -200,6 +200,7 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 }
 .chat-content-main {
     flex-grow: 1;
+    overflow: auto;
     display: flex;
     flex-direction: column;
     height: 100%;
