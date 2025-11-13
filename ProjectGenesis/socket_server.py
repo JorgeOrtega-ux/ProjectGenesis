@@ -377,6 +377,50 @@ async def run_http_server():
     await http_site.start()
     await asyncio.Event().wait() 
 
+
+async def http_handler_notify_user(request):
+    """
+    Recibe una notificación genérica (amistad, chat, etc.) y la reenvía
+    al target_user_id.
+    Espera JSON: {"target_user_id": 123, "payload": {...}}
+    """
+    if request.method != 'POST':
+        return web.Response(status=405)
+
+    try:
+        data = await request.json()
+        target_user_id = int(data.get("target_user_id"))
+        payload_data = data.get("payload") # El payload es el JSON completo {type: ..., payload: ...}
+
+        if not target_user_id or not payload_data:
+            raise ValueError("Faltan target_user_id o payload")
+            
+        logging.info(f"[HTTP-NOTIFY] Recibida notificación para user_id={target_user_id} (Tipo: {payload_data.get('type')})")
+
+        websockets_to_notify = CLIENTS_BY_USER_ID.get(target_user_id)
+        if not websockets_to_notify:
+            logging.info(f"[HTTP-NOTIFY] No se encontraron conexiones activas para user_id={target_user_id}.")
+            return web.json_response({"status": "ok", "notified": 0})
+        
+        # --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        # El payload_data ya es el objeto JSON {type: '...', ...}
+        # Lo convertimos a string para enviarlo por el socket.
+        message_json = json.dumps(payload_data)
+        # --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+        
+        tasks = [ws.send(message_json) for ws in list(websockets_to_notify)]
+        notified_count = 0
+        
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+            notified_count = len(tasks)
+
+        return web.json_response({"status": "ok", "notified": notified_count})
+
+    except Exception as e:
+        logging.error(f"[HTTP-NOTIFY] Error al procesar notificación: {e}")
+        return web.json_response({"status": "error", "message": str(e)}, status=400)
+    
 async def start_servers():
     """Inicia ambos servidores (WS y HTTP) en paralelo."""
     ws_task = asyncio.create_task(run_ws_server())

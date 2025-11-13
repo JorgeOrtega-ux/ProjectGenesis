@@ -13,6 +13,7 @@ import { initCommunityManager } from './modules/community-manager.js';
 // --- ▼▼▼ IMPORTACIÓN MODIFICADA ▼▼▼ ---
 import { setupPublicationListeners } from './modules/publication-manager.js';
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+import { initChatManager, handleChatMessageReceived } from './modules/chat-manager.js';
 import { initFriendManager, initFriendList } from './modules/friend-manager.js';
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager, getTranslation } from './services/i18n-manager.js';
@@ -102,6 +103,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     
     // --- ▼▼▼ NUEVA LÍNEA AÑADIDA ▼▼▼ ---
     initAdminCommunityManager();
+    initChatManager();
     // --- ▲▲▲ FIN NUEVA LÍNEA ▲▲▲ ---
 
     initRouter(); 
@@ -176,6 +178,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                             console.log("[WS] Ping de nueva notificación recibido");
                             // Delegar al manager
                             handleNotificationPing();
+                        }
+
+                        else if (data.type === 'new_chat_message') {
+                            console.log("[WS] Mensaje de chat recibido");
+                            handleChatMessageReceived(data.payload);
                         }
                         // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 

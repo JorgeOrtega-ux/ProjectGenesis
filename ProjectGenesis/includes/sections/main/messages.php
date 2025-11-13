@@ -1,16 +1,12 @@
 <?php
 // FILE: includes/sections/main/messages.php
 // (NUEVO ARCHIVO)
-// Este archivo es la vista principal de la sección de chat.
-
-// Asumimos que $basePath y $userAvatar están disponibles desde el scope global
 global $basePath;
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
-
 ?>
 <style>
-/* Estilos específicos para el chat (Mover a components.css o styles.css eventualmente) */
+/* Estilos específicos para el chat */
 .chat-layout-container {
     display: flex;
     width: 100%;
@@ -38,11 +34,11 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 .chat-sidebar-header .component-page-title {
     font-size: 24px;
     text-align: left;
+    margin-bottom: 16px;
 }
 
 .chat-sidebar-search {
     position: relative;
-    margin-top: 16px;
 }
 
 .chat-sidebar-search .search-icon {
@@ -125,7 +121,7 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 
 .chat-item-info {
     flex-grow: 1;
-    min-width: 0; /* Para que text-overflow funcione */
+    min-width: 0;
 }
 .chat-item-info-header {
     display: flex;
@@ -186,8 +182,6 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
     flex-direction: column;
     background-color: #ffffff;
 }
-
-/* Placeholder "Selecciona un chat" */
 .chat-content-placeholder {
     flex-grow: 1;
     display: flex;
@@ -204,8 +198,6 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
     font-size: 18px;
     font-weight: 500;
 }
-
-/* Chat principal (oculto por defecto) */
 .chat-content-main {
     flex-grow: 1;
     display: flex;
@@ -215,7 +207,6 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 .chat-content-main.disabled {
     display: none;
 }
-
 .chat-content-header {
     display: flex;
     align-items: center;
@@ -249,7 +240,6 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 .chat-header-status.online {
     color: #28a745;
 }
-
 .chat-message-list {
     flex-grow: 1;
     padding: 16px;
@@ -258,7 +248,6 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
     flex-direction: column;
     gap: 16px;
 }
-
 .chat-bubble {
     display: flex;
     align-items: flex-start;
@@ -269,7 +258,7 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
     width: 32px;
     height: 32px;
     flex-shrink: 0;
-    margin-top: auto; /* Alinear con la última línea */
+    margin-top: auto;
 }
 .chat-bubble-avatar img {
     width: 100%;
@@ -284,26 +273,22 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
     font-size: 15px;
     line-height: 1.5;
     color: #1f2937;
+    word-break: break-word;
 }
-
-/* Mensaje enviado (propio) */
 .chat-bubble.sent {
-    margin-left: auto; /* Alinea a la derecha */
-    flex-direction: row-reverse; /* Invierte orden */
+    margin-left: auto;
+    flex-direction: row-reverse;
 }
 .chat-bubble.sent .chat-bubble-content {
     background-color: #000;
     color: #ffffff;
 }
 .chat-bubble.sent .chat-bubble-avatar {
-    display: none; /* Oculta tu propio avatar */
+    display: none;
 }
-
-/* Mensaje recibido */
 .chat-bubble.received {
-    margin-right: auto; /* Alinea a la izquierda */
+    margin-right: auto;
 }
-
 .chat-message-input-form {
     padding: 16px;
     border-top: 1px solid #00000020;
@@ -353,43 +338,47 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 .chat-send-button .material-symbols-rounded {
     font-size: 24px;
 }
+.chat-attach-button {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid #00000020;
+    background-color: #f5f5fa;
+    color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+}
+.chat-attach-button:hover {
+    background-color: #e9ecef;
+}
 
-/* Responsividad */
 @media (max-width: 768px) {
     .chat-sidebar-left {
         width: 100%;
-        height: 100%;
-        border-right: none;
         position: absolute;
-        top: 0;
-        left: 0;
         z-index: 10;
         transition: transform 0.3s ease-in-out;
     }
     .chat-content-right {
         width: 100%;
-        height: 100%;
         position: absolute;
-        top: 0;
-        left: 0;
         z-index: 9;
     }
-    
-    /* Lógica JS controlará esto */
     .chat-layout-container.show-chat .chat-sidebar-left {
         transform: translateX(-100%);
     }
     .chat-layout-container:not(.show-chat) .chat-content-right {
         transform: translateX(100%);
     }
-    
     .chat-content-header {
         padding: 12px 8px 12px 16px;
     }
-    
-    /* Botón de "Volver" para móvil */
     .chat-back-button {
-        display: flex; /* Oculto en escritorio */
+        display: flex;
         align-items: center;
         justify-content: center;
         width: 40px;
@@ -405,16 +394,15 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 }
 @media (min-width: 769px) {
     .chat-back-button {
-        display: none; /* Oculto en escritorio */
+        display: none;
     }
 }
 </style>
 
-<div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'messages') ? 'active' : 'disabled'; ?>" data-section="messages">
+<div class="section-content <?php echo ($CURRENT_SECTION === 'messages') ? 'active' : 'disabled'; ?>" data-section="messages" style="overflow-y: hidden;">
     
     <div class="chat-layout-container" id="chat-layout-container">
 
-        <!-- ===== PANEL IZQUIERDO (LISTA DE AMIGOS) ===== -->
         <div class="chat-sidebar-left" id="chat-sidebar-left">
             <div class="chat-sidebar-header">
                 <h1 class="component-page-title" data-i18n="chat.title">Mensajes</h1>
@@ -425,32 +413,22 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
             </div>
             
             <div class="chat-sidebar-list" id="chat-conversation-list">
-                <!-- El JS insertará la lista de conversaciones aquí -->
                 <div class="chat-list-placeholder" id="chat-list-loader">
                     <span class="logout-spinner" style="width: 32px; height: 32px; border-width: 3px;"></span>
                     <span data-i18n="friends.list.loading">Cargando...</span>
                 </div>
-                
-                <div class="chat-list-placeholder" id="chat-list-empty" style="display: none;">
-                    <span class="material-symbols-rounded">person_off</span>
-                    <span data-i18n="friends.list.noFriends">No tienes amigos.</span>
-                </div>
             </div>
         </div>
 
-        <!-- ===== PANEL DERECHO (CHAT ACTIVO) ===== -->
         <div class="chat-content-right" id="chat-content-right">
 
-            <!-- Estado por Defecto (Placeholder) -->
             <div class="chat-content-placeholder active" id="chat-content-placeholder">
                 <span class="material-symbols-rounded">chat</span>
                 <span data-i18n="chat.selectConversation">Selecciona una conversación para empezar</span>
             </div>
 
-            <!-- Chat Activo (Oculto por defecto) -->
             <div class="chat-content-main disabled" id="chat-content-main">
                 
-                <!-- Header del Chat -->
                 <div class="chat-content-header">
                     <button type="button" class="chat-back-button" id="chat-back-button">
                         <span class="material-symbols-rounded">arrow_back</span>
@@ -462,18 +440,18 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
                         <div class="chat-header-username" id="chat-header-username">Nombre de Usuario</div>
                         <div class="chat-header-status" id="chat-header-status" data-i18n-offline="chat.offline">Offline</div>
                     </div>
-                    <!-- Aquí puedes añadir botones de acción (llamar, info, etc.) -->
                 </div>
 
-                <!-- Lista de Mensajes -->
                 <div class="chat-message-list" id="chat-message-list">
-                    <!-- El JS insertará las burbujas de chat aquí -->
-                </div>
+                    </div>
 
-                <!-- Formulario de Envío -->
                 <form class="chat-message-input-form" id="chat-message-input-form" action="#">
                     <?php outputCsrfInput(); ?>
                     <input type="hidden" id="chat-receiver-id" value="">
+                    
+                    <button type="button" class="chat-attach-button" id="chat-attach-button">
+                         <span class="material-symbols-rounded">attach_file</span>
+                    </button>
                     
                     <input type="text" class="chat-input-field" id="chat-message-input" placeholder="Escribe tu mensaje..." data-i18n-placeholder="chat.messagePlaceholder" autocomplete="off" disabled>
                     
@@ -481,10 +459,7 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
                         <span class="material-symbols-rounded">send</span>
                     </button>
                 </form>
-
             </div>
-
         </div>
-
     </div>
 </div>

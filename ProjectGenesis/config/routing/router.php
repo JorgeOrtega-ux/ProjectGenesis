@@ -104,7 +104,7 @@ $allowedPages = [
     'search-results' => '../../includes/sections/main/search-results.php',
 
     'trends' => '../../includes/sections/main/trends.php',
-
+'messages' => '../../includes/sections/main/messages.php',
     'register-step1' => '../../includes/sections/auth/register.php',
     'register-step2' => '../../includes/sections/auth/register.php',
     'register-step3' => '../../includes/sections/auth/register.php',

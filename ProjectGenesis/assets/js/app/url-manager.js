@@ -61,7 +61,8 @@ const routes = {
     'toggleSectionAdminCreateUser': 'admin-create-user', 
     'toggleSectionAdminEditUser': 'admin-edit-user', 
     'toggleSectionAdminServerSettings': 'admin-server-settings', 
-
+// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    'toggleSectionMessages': 'messages',
     'toggleSectionAdminManageBackups': 'admin-manage-backups',
     'toggleSectionAdminManageLogs': 'admin-manage-logs',
     
@@ -78,7 +79,7 @@ const paths = {
     '/server-full': 'toggleSectionServerFull', 
 
     '/join-group': 'toggleSectionJoinGroup',
-    
+    '/messages': 'toggleSectionMessages',
     '/create-publication': 'toggleSectionCreatePublication', 
     '/create-poll': 'toggleSectionCreatePoll', 
     
@@ -514,7 +515,7 @@ export function initRouter() {
       const link = e.target.closest(
             '.menu-link[data-action*="toggleSection"], ' +
             'a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], ' +
-            'a[href*="/profile/"], a[href*="/search"], a[href*="/trends"], ' + // --- [HASTAGS] --- Añadido /trends
+          'a[href*="/profile/"], a[href*="/search"], a[href*="/trends"], a[href*="/messages"], ' +
             '.component-button[data-action*="toggleSection"], ' +
             '.page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], ' +
             '.auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], ' +

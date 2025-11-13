@@ -139,6 +139,8 @@ function initMainController() {
                 'toggleModuleSearch',
                 'toggleModuleSearchFilter',
                 'toggleModuleNotifications',
+                
+
                 'toggle-post-options',   
                 'toggle-post-privacy',   
                 'toggle-comments',       

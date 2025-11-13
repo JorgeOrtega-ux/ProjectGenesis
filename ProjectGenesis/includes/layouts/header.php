@@ -63,6 +63,11 @@ $userRole = $_SESSION['role'] ?? 'user';
 
             <?php // --- ▼▼▼ INICIO DE BOTÓN MOVIDO ▼▼▼ --- ?>
             <div class="header-button"
+                data-action="toggleSectionMessages"
+                data-tooltip="Mensajes">
+                <span class="material-symbols-rounded">chat</span>
+            </div>
+            <div class="header-button"
                 data-action="toggleModuleCreatePost" 
                 data-tooltip="home.toolbar.createPost">
                 <span class="material-symbols-rounded">add</span>
