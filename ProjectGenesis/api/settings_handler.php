@@ -824,7 +824,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'is_email_public' => ['0', '1'],
                     // --- ▼▼▼ NUEVOS CAMPOS AÑADIDOS ▼▼▼ ---
                     'employment' => [], // Array vacío significa que cualquier string es válido
-                    'education' => []   // Array vacío significa que cualquier string es válido
+                    'education' => [],   // Array vacío significa que cualquier string es válido
+                    'message_privacy_level' => ['all', 'friends', 'none'] // <-- CAMPO AÑADIDO
                     // --- ▲▲▲ FIN DE NUEVOS CAMPOS ▲▲▲ ---
                 ];
 
@@ -836,9 +837,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Solo validamos el valor si el array de valores permitidos NO está vacío
                 if (!empty($allowedFields[$field])) {
                     if (!in_array($value, $allowedFields[$field])) {
+                        // --- ▼▼▼ CORRECCIÓN: Se añade 'message_privacy_level' a la comprobación de 'boolean' por error, se saca. ---
                         if ($field === 'open_links_in_new_tab' || $field === 'increase_message_duration' || $field === 'is_friend_list_private' || $field === 'is_email_public') {
                             throw new Exception('js.settings.errorPreferenceToggle');
                         }
+                        // --- ▲▲▲ FIN DE CORRECCIÓN ---
                         throw new Exception('js.settings.errorPreferenceInvalid');
                     }
                 }
@@ -859,12 +862,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if ($stmt_check->fetch()) {
                     // 2. Si existe, actualizarla
-                    $sql = "UPDATE user_preferences SET $field = ? WHERE user_id = ?";
+                    // Validar $field contra una lista blanca para evitar inyección SQL
+                    $whitelistedFields = [
+                        'language', 'theme', 'usage_type', 'open_links_in_new_tab',
+                        'increase_message_duration', 'is_friend_list_private',
+                        'is_email_public', 'employment', 'education', 'message_privacy_level'
+                    ];
+                    
+                    if (!in_array($field, $whitelistedFields)) {
+                        throw new Exception('js.settings.errorPreferenceInvalid');
+                    }
+                    
+                    $sql = "UPDATE user_preferences SET `$field` = ? WHERE user_id = ?";
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute([$finalValue, $userId]);
 
                     // Registrar el intento (esto es para el spam)
                     logFailedAttempt($pdo, $userId, $ip, 'preference_spam');
+                    
+                    // Actualizar la sesión si es necesario
+                    if (in_array($field, ['language', 'theme', 'usage_type', 'open_links_in_new_tab', 'increase_message_duration', 'is_friend_list_private', 'is_email_public', 'employment', 'education', 'message_privacy_level'])) {
+                        $_SESSION[$field] = $finalValue;
+                    }
 
                     $response['success'] = true;
                     $response['message'] = 'js.settings.successPreference';

@@ -122,13 +122,14 @@ async function handlePreferenceChange(preferenceTypeOrField, newValue, cardEleme
 
     hideInlineError(cardElement);
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR employment/education) ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR employment/education/privacy) ▼▼▼ ---
     const fieldMap = {
         'language': 'language',
         'theme': 'theme',
         'usage': 'usage_type',
         'employment': 'employment',
-        'education': 'education'
+        'education': 'education',
+        'privacy': 'message_privacy_level' // <-- NUEVA LÍNEA
     };
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
@@ -746,7 +747,7 @@ export function initSettingsManager() {
 
             // --- Inicio de corrección ---
             if (newTextKey) {
-                // Si es una clave i18n (Idioma, Uso)
+                // Si es una clave i18n (Idioma, Uso, Privacidad)
                 triggerTextEl.setAttribute('data-i18n', newTextKey);
                 triggerTextEl.textContent = getTranslation(newTextKey);
             } else {

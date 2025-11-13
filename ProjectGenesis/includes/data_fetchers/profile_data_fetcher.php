@@ -24,18 +24,20 @@ function getProfileData($pdo, $targetUsername, $currentTab, $currentUserId)
 
     try {
         // 1. OBTENER LOS DATOS PRINCIPALES DEL PERFIL
-        // (Esta es tu consulta de router.php, línea 451)
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Consulta principal) ▼▼▼ ---
         $stmt_profile = $pdo->prepare(
-            "SELECT u.id, u.username, u.profile_image_url, u.banner_url, u.role, u.created_at, u.is_online, u.last_seen,
+            "SELECT u.id, u.uuid, u.username, u.profile_image_url, u.banner_url, u.role, u.created_at, u.is_online, u.last_seen,
                     u.email, u.bio,
                     COALESCE(p.is_friend_list_private, 1) AS is_friend_list_private, 
                     COALESCE(p.is_email_public, 0) AS is_email_public,
+                    COALESCE(p.message_privacy_level, 'all') AS message_privacy_level,
                     p.employment, 
                     p.education
                FROM users u 
                LEFT JOIN user_preferences p ON u.id = p.user_id
                WHERE u.username = ? AND u.account_status = 'active'"
         );
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         $stmt_profile->execute([$targetUsername]);
         $userProfile = $stmt_profile->fetch();
 

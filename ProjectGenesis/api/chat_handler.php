@@ -2,6 +2,7 @@
 // FILE: api/chat_handler.php
 // (MODIFICADO PARA PAGINACIÓN, MÚLTIPLES FOTOS, RESPUESTAS Y ELIMINAR)
 // (MODIFICADO OTRA VEZ PARA INCLUIR UUID EN CONVERSACIONES)
+// (MODIFICADO OTRA VEZ PARA PRIVACIDAD DE MENSAJES)
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -55,6 +56,58 @@ function notifyUser($targetUserId, $payload)
         logDatabaseError($e, 'chat_handler - (ws_notify_fail)');
     }
 }
+
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (checkMessagePrivacy) ▼▼▼ ---
+/**
+ * Comprueba si el usuario actual ($currentUserId) tiene permiso para
+ * enviar mensajes al usuario receptor ($receiverId).
+ * Lanza una Excepción si la acción está bloqueada.
+ *
+ * @param PDO $pdo
+ * @param int $currentUserId ID del usuario que inicia la acción
+ * @param int $receiverId ID del usuario que recibe la acción
+ * @return void
+ * @throws Exception Si la mensajería está bloqueada
+ */
+function checkMessagePrivacy($pdo, $currentUserId, $receiverId) {
+    // No comprobar si se envían mensajes a sí mismo (guardados)
+    if ($currentUserId == $receiverId) {
+        return;
+    }
+
+    // Obtener la configuración de privacidad del RECEPTOR
+    $stmt_privacy = $pdo->prepare("SELECT message_privacy_level FROM user_preferences WHERE user_id = ?");
+    $stmt_privacy->execute([$receiverId]);
+    $privacy = $stmt_privacy->fetchColumn();
+    
+    // Valor por defecto 'all' si no hay fila de preferencias
+    if (!$privacy) {
+        $privacy = 'all';
+    }
+
+    // Opción 1: El receptor no acepta mensajes de nadie.
+    if ($privacy === 'none') {
+        throw new Exception('js.chat.errorPrivacyBlocked');
+    }
+
+    // Opción 2: El receptor solo acepta mensajes de amigos.
+    if ($privacy === 'friends') {
+        // Comprobar si son amigos
+        $userId1 = min($currentUserId, $receiverId);
+        $userId2 = max($currentUserId, $receiverId);
+        
+        $stmt_friend = $pdo->prepare("SELECT status FROM friendships WHERE user_id_1 = ? AND user_id_2 = ? AND status = 'accepted'");
+        $stmt_friend->execute([$userId1, $userId2]);
+        
+        if (!$stmt_friend->fetch()) {
+            // No son amigos, bloquear.
+            throw new Exception('js.chat.errorPrivacyBlocked');
+        }
+    }
+    
+    // Opción 3: 'all'. No hacer nada, permitir la acción.
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ---
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -120,10 +173,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $response['success'] = true;
             $response['conversations'] = $friends;
+
         } elseif ($action === 'get-chat-history') {
 
             $targetUserId = (int)($_POST['target_user_id'] ?? 0);
             if ($targetUserId === 0) throw new Exception('js.api.invalidAction');
+
+            // --- ▼▼▼ INICIO DE COMPROBACIÓN DE PRIVACIDAD ▼▼▼ ---
+            checkMessagePrivacy($pdo, $currentUserId, $targetUserId);
+            // --- ▲▲▲ FIN DE COMPROBACIÓN ▲▲▲ ---
 
             $beforeMessageId = (int)($_POST['before_message_id'] ?? 0);
 
@@ -185,6 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['messages'] = $messages;
             $response['message_count'] = count($messages);
             $response['limit'] = CHAT_PAGE_SIZE;
+
         } elseif ($action === 'send-message') {
 
             $receiverId = (int)($_POST['receiver_id'] ?? 0);
@@ -200,6 +259,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($receiverId === 0) {
                 throw new Exception('js.api.invalidAction');
             }
+            
+            // --- ▼▼▼ INICIO DE COMPROBACIÓN DE PRIVACIDAD ▼▼▼ ---
+            checkMessagePrivacy($pdo, $currentUserId, $receiverId);
+            // --- ▲▲▲ FIN DE COMPROBACIÓN ▲▲▲ ---
+
             if (empty($messageText) && (empty($uploadedFiles['name'][0]) || $uploadedFiles['error'][0] !== UPLOAD_ERR_OK)) {
                 throw new Exception('js.publication.errorEmpty'); // Mensaje vacío
             }

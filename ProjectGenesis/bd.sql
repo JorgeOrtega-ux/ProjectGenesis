@@ -112,6 +112,7 @@ CREATE TABLE `user_preferences` (
   `is_email_public` tinyint(1) NOT NULL DEFAULT 0,
   `employment` varchar(100) DEFAULT 'none',
   `education` varchar(100) DEFAULT 'none',
+  `message_privacy_level` enum('all','friends','none') NOT NULL DEFAULT 'all' COMMENT 'Controla quién puede enviar mensajes al usuario',
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `user_preferences_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE

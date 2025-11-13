@@ -353,10 +353,12 @@ if ($is_actually_online) {
                         </div>
                     </div>
                     
-                    <?php // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (BOTONES DE AMISTAD) ▼▼▼ --- ?>
+                    <?php // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (BOTONES DE ACCIÓN) ▼▼▼ --- ?>
                     <?php if (!$isOwnProfile): ?>
                         <div class="profile-actions" data-user-id="<?php echo htmlspecialchars($targetUserId); ?>">
+                            
                             <?php
+                            // --- Lógica de Botones de Amistad (Existente) ---
                             switch ($friendshipStatus) {
                                 case 'not_friends':
                                     echo '<button type="button" class="component-button component-button--primary" data-action="friend-send-request" data-user-id="' . $targetUserId . '">
@@ -387,10 +389,40 @@ if ($is_actually_online) {
                                           </button>';
                                     break;
                             }
+                            
+                            // --- Lógica y Botón de Enviar Mensaje (Nuevo) ---
+                            
+                            // Datos obtenidos del profile_data_fetcher
+                            $privacy = $profile['message_privacy_level'] ?? 'all'; 
+                            $userUuid = $profile['uuid'] ?? '';
+                            $isFriend = ($friendshipStatus === 'friends');
+                            
+                            $canMessage = false;
+                            if ($privacy === 'all') {
+                                $canMessage = true;
+                            } elseif ($privacy === 'friends' && $isFriend) {
+                                $canMessage = true;
+                            }
+                            
+                            $messageUrl = $basePath . '/messages/' . htmlspecialchars($userUuid);
+                            $disabledClass = $canMessage ? '' : 'disabled';
+                            $ariaDisabled = $canMessage ? 'false' : 'true';
+                            
+                            // Si son amigos, hacer el botón de mensaje primario. Si no, secundario.
+                            $messageButtonClass = ($isFriend && $canMessage) ? 'component-button--primary' : '';
+
+                            echo '<a href="' . ($canMessage ? $messageUrl : '#') . '" 
+                                   class="component-button ' . $messageButtonClass . ' ' . $disabledClass . '" 
+                                   data-nav-js="' . ($canMessage ? 'true' : 'false') . '"
+                                   aria-disabled="' . $ariaDisabled . '"
+                                   ' . (!$canMessage ? 'onclick="return false;"' : '') . '>
+                                    <span class="material-symbols-rounded">chat</span>
+                                    <span>Enviar Mensaje</span>
+                                  </a>';
                             ?>
                         </div>
                     <?php endif; ?>
-                    <?php // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ --- ?>
+                    <?php // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- ?>
                     
                     </div>
                 
