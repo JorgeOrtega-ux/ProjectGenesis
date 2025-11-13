@@ -468,17 +468,23 @@ if ($hasPreloadedUser) {
                 </div>
             </div>
             
-            <div class="chat-sidebar-list" id="chat-conversation-list">
+            <div class="chat-sidebar-list">
+
                 <div class="chat-list-placeholder" id="chat-list-loader">
                     <span class="logout-spinner" style="width: 32px; height: 32px; border-width: 3px;"></span>
                     <span data-i18n="friends.list.loading">Cargando...</span>
                 </div>
+                
                 <div class="chat-list-placeholder" id="chat-list-empty" style="display: none;">
                     <span class="material-symbols-rounded">chat</span>
                     <span>Inicia una conversación con un amigo.</span>
                 </div>
+
+                <div id="chat-conversation-list">
+                    </div>
+
             </div>
-        </div>
+            </div>
 
         <div class="chat-content-right" id="chat-content-right">
 
