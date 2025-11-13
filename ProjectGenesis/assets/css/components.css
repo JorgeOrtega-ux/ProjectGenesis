@@ -4205,3 +4205,82 @@ a.profile-tab.active {
 }
 
 /* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */
+
+/* ... (todo el contenido existente de components.css va aquí) ... */
+
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (Opciones de Chat) ▼▼▼ --- */
+
+/* Contenedor de acciones (el menú que aparece en hover) */
+.chat-bubble-actions {
+    display: flex;
+    flex-direction: row; /* Los botones estarán uno al lado del otro */
+    align-items: center;  /* Centrados verticalmente */
+    align-self: center;   /* Centra el contenedor mismo en el flex-item */
+    gap: 4px;             /* Pequeño espacio entre botones */
+    
+    /* Oculto por defecto */
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.9);
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+    
+    /* Asegura que no ocupe espacio cuando está oculto */
+    width: 0;
+    overflow: hidden;
+    
+    /* Asegurar que esté por encima del contenido de la burbuja si se superponen */
+    z-index: 2; 
+}
+
+/* Mostrar en hover */
+.chat-bubble:hover .chat-bubble-actions {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+    width: auto; /* Permite que el contenedor crezca al contenido */
+    overflow: visible;
+}
+
+/* Posicionamiento para mensajes RECIBIDOS (normal) */
+.chat-bubble.received .chat-bubble-actions {
+    margin-left: 8px;
+}
+
+/* Posicionamiento para mensajes ENVIADOS (row-reverse) */
+.chat-bubble.sent .chat-bubble-actions {
+    margin-right: 8px; /* row-reverse lo pondrá a la izquierda del globo */
+    /* Invertimos el orden de los botones para que se lean de izq a der */
+    flex-direction: row-reverse; 
+}
+
+/* Estilo de los botones de acción individuales */
+.chat-action-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f0f0; /* Un gris muy claro */
+    color: #6b7280; /* Color de icono sutil */
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.chat-action-btn .material-symbols-rounded {
+    font-size: 18px;
+}
+
+.chat-action-btn:hover {
+    background-color: #e0e0e0; /* Un gris más oscuro al pasar el ratón */
+    color: #1f2937; /* Color de texto normal */
+}
+
+/* Botón de peligro (Eliminar) */
+.chat-action-btn.chat-action-btn--danger:hover {
+    background-color: #fbebee; /* Fondo rojo claro */
+    color: #c62828; /* Icono rojo */
+}
+
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS --- */

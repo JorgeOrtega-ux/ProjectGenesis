@@ -1,6 +1,6 @@
 <?php
 // FILE: api/chat_handler.php
-// (MODIFICADO PARA ACEPTAR MÚLTIPLES FOTOS)
+// (MODIFICADO PARA PAGINACIÓN Y MÚLTIPLES FOTOS)
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -15,12 +15,13 @@ if (!isset($_SESSION['user_id'])) {
 
 $currentUserId = (int)$_SESSION['user_id'];
 
-// --- ▼▼▼ INICIO DE CONSTANTES DE SUBIDA (MODIFICADO) ▼▼▼ ---
+// --- MODIFICACIÓN: Constantes de subida ---
 $ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 $MAX_SIZE_MB = 5; // Límite de 5MB para fotos en chat
 $MAX_SIZE_BYTES = $MAX_SIZE_MB * 1024 * 1024;
 $MAX_CHAT_FILES = 4; // Límite de 4 fotos por mensaje
-// --- ▲▲▲ FIN DE CONSTANTES DE SUBIDA ▲▲▲ ---
+// --- MODIFICACIÓN: Constante de paginación ---
+define('CHAT_PAGE_SIZE', 30); // Número de mensajes a cargar por página
 
 /**
  * Notifica al servidor WebSocket sobre un nuevo mensaje.
@@ -68,7 +69,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL CON SUBQUERY A 'chat_message_attachments') ▼▼▼ ---
             $stmt_friends = $pdo->prepare(
                 "SELECT 
                     f.friend_id,
@@ -83,7 +83,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      WHERE (cm.sender_id = :current_user_id AND cm.receiver_id = f.friend_id) 
                         OR (cm.sender_id = f.friend_id AND cm.receiver_id = :current_user_id)
                      ORDER BY cm.created_at DESC LIMIT 1) AS last_message,
-            -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     (SELECT cm.created_at 
                      FROM chat_messages cm 
                      WHERE (cm.sender_id = :current_user_id AND cm.receiver_id = f.friend_id) 
@@ -118,9 +117,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $targetUserId = (int)($_POST['target_user_id'] ?? 0);
             if ($targetUserId === 0) throw new Exception('js.api.invalidAction');
+            
+            // --- MODIFICACIÓN: Recibir el ID del mensaje más antiguo ---
+            $beforeMessageId = (int)($_POST['before_message_id'] ?? 0);
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL CON GROUP_CONCAT) ▼▼▼ ---
-            $stmt_msg = $pdo->prepare(
+            // --- MODIFICACIÓN: SQL ahora usa 'before_message_id', 'ORDER BY DESC' y un 'LIMIT' más bajo ---
+            $sql_select = 
                 "SELECT 
                     cm.*,
                     (SELECT GROUP_CONCAT(cf.public_url SEPARATOR ',') 
@@ -130,45 +132,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      ORDER BY cma.sort_order ASC
                     ) AS attachment_urls
                  FROM chat_messages cm
-                 WHERE (cm.sender_id = :current_user_id AND cm.receiver_id = :target_user_id) 
-                    OR (cm.sender_id = :target_user_id AND cm.receiver_id = :current_user_id)
-                 GROUP BY cm.id
-                 ORDER BY cm.created_at ASC
-                 LIMIT 100"
-            );
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                 WHERE ((cm.sender_id = :current_user_id AND cm.receiver_id = :target_user_id) 
+                    OR (cm.sender_id = :target_user_id AND cm.receiver_id = :current_user_id))";
+
+            // --- MODIFICACIÓN: Añadir cláusula 'WHERE' para paginación ---
+            if ($beforeMessageId > 0) {
+                $sql_select .= " AND cm.id < :before_message_id";
+            }
             
-            $stmt_msg->execute([
-                ':current_user_id' => $currentUserId,
-                ':target_user_id' => $targetUserId
-            ]);
+            // --- MODIFICACIÓN: Cambiar orden y límite ---
+            $sql_select .= "
+                 GROUP BY cm.id
+                 ORDER BY cm.created_at DESC
+                 LIMIT " . CHAT_PAGE_SIZE;
+            
+            $stmt_msg = $pdo->prepare($sql_select);
+            
+            $stmt_msg->bindValue(':current_user_id', $currentUserId, PDO::PARAM_INT);
+            $stmt_msg->bindValue(':target_user_id', $targetUserId, PDO::PARAM_INT);
+            
+            // --- MODIFICACIÓN: Bind del nuevo parámetro ---
+            if ($beforeMessageId > 0) {
+                $stmt_msg->bindValue(':before_message_id', $beforeMessageId, PDO::PARAM_INT);
+            }
+            
+            $stmt_msg->execute();
             $messages = $stmt_msg->fetchAll();
             
-            // 2. Marcar mensajes como leídos
-            $stmt_read = $pdo->prepare(
-                "UPDATE chat_messages SET is_read = 1 
-                 WHERE sender_id = :target_user_id 
-                   AND receiver_id = :current_user_id 
-                   AND is_read = 0"
-            );
-            $stmt_read->execute([
-                ':target_user_id' => $targetUserId,
-                ':current_user_id' => $currentUserId
-            ]);
+            // 2. Marcar mensajes como leídos (SOLO en la primera carga, no en paginación)
+            if ($beforeMessageId === 0) {
+                $stmt_read = $pdo->prepare(
+                    "UPDATE chat_messages SET is_read = 1 
+                     WHERE sender_id = :target_user_id 
+                       AND receiver_id = :current_user_id 
+                       AND is_read = 0"
+                );
+                $stmt_read->execute([
+                    ':target_user_id' => $targetUserId,
+                    ':current_user_id' => $currentUserId
+                ]);
+            }
 
             $response['success'] = true;
             $response['messages'] = $messages;
+            // --- MODIFICACIÓN: Enviar el conteo de mensajes ---
+            $response['message_count'] = count($messages);
+            $response['limit'] = CHAT_PAGE_SIZE;
 
         } elseif ($action === 'send-message') {
-            
-            // --- ▼▼▼ INICIO DE LÓGICA DE SUBIDA DE MÚLTIPLES ARCHIVOS ▼▼▼ ---
             
             $receiverId = (int)($_POST['receiver_id'] ?? 0);
             $messageText = trim($_POST['message_text'] ?? '');
             $uploadedFiles = $_FILES['attachments'] ?? [];
-            $fileIds = []; // Array para guardar los IDs de los archivos insertados en `chat_files`
+            $fileIds = []; 
 
-            // 1. Validar que no esté vacío (texto O archivos)
             if ($receiverId === 0) {
                 throw new Exception('js.api.invalidAction');
             }
@@ -178,19 +195,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $pdo->beginTransaction();
 
-            // 2. Procesar archivos si existen
             if (!empty($uploadedFiles['name'][0]) && $uploadedFiles['error'][0] === UPLOAD_ERR_OK) {
                 
                 $fileCount = count($uploadedFiles['name']);
                 if ($fileCount > $MAX_CHAT_FILES) {
                     $response['data'] = ['count' => $MAX_CHAT_FILES];
-                    throw new Exception('js.publication.errorFileCount'); // Reutilizamos clave i18n
+                    throw new Exception('js.publication.errorFileCount');
                 }
 
                 $uploadDir = dirname(__DIR__) . '/assets/uploads/chat_attachments';
                 if (!is_dir($uploadDir)) {
                     if (!@mkdir($uploadDir, 0755, true)) {
-                        throw new Exception('js.api.errorServer'); // Error de permisos
+                        throw new Exception('js.api.errorServer');
                     }
                 }
                 
@@ -199,7 +215,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      VALUES (?, ?, ?, ?, ?, ?)"
                 );
                 
-                // Iterar sobre cada archivo subido
                 foreach ($uploadedFiles['error'] as $key => $error) {
                     if ($error !== UPLOAD_ERR_OK) continue;
 
@@ -207,20 +222,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $originalName = $uploadedFiles['name'][$key];
                     $fileSize = $uploadedFiles['size'][$key];
                     
-                    // 2a. Validar tamaño
                     if ($fileSize > $MAX_SIZE_BYTES) {
                         $response['data'] = ['size' => $MAX_SIZE_MB];
                         throw new Exception('js.publication.errorFileSize');
                     }
 
-                    // 2b. Validar tipo
                     $finfo = new finfo(FILEINFO_MIME_TYPE);
                     $mimeType = $finfo->file($tmpName);
                     if (!in_array($mimeType, $ALLOWED_TYPES)) {
                         throw new Exception('js.publication.errorFileType');
                     }
                     
-                    // 2c. Crear nombre y mover archivo
                     $extension = pathinfo($originalName, PATHINFO_EXTENSION);
                     $systemName = "chat-{$currentUserId}-" . time() . "-" . bin2hex(random_bytes(4)) . "-{$key}." . $extension;
                     $filePath = $uploadDir . '/' . $systemName;
@@ -230,15 +242,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception('js.settings.errorAvatarSave');
                     }
 
-                    // 2d. Insertar en `chat_files`
                     $stmt_insert_file->execute([
                         $currentUserId, $systemName, $originalName, $attachmentUrl, $mimeType, $fileSize
                     ]);
-                    $fileIds[] = $pdo->lastInsertId(); // Guardar el ID del archivo
+                    $fileIds[] = $pdo->lastInsertId();
                 }
             }
 
-            // 3. Guardar el mensaje en `chat_messages`
             $stmt_insert = $pdo->prepare(
                 "INSERT INTO chat_messages (sender_id, receiver_id, message_text) 
                  VALUES (?, ?, ?)"
@@ -246,7 +256,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_insert->execute([$currentUserId, $receiverId, $messageText]);
             $newMessageId = $pdo->lastInsertId();
 
-            // 4. Vincular archivos al mensaje en `chat_message_attachments`
             if (!empty($fileIds)) {
                 $stmt_link_file = $pdo->prepare(
                     "INSERT INTO chat_message_attachments (message_id, file_id, sort_order)
@@ -257,7 +266,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // 5. Obtener el mensaje completo para enviarlo por WebSocket (usando la consulta con GROUP_CONCAT)
             $stmt_get = $pdo->prepare(
                  "SELECT 
                     cm.*,
@@ -276,20 +284,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->commit();
 
-            // 6. Preparar el payload para el WebSocket
             $payload = [
                 'type' => 'new_chat_message',
-                'payload' => $newMessage // Enviar el objeto completo del mensaje
+                'payload' => $newMessage 
             ];
 
-            // 7. Notificar al destinatario
             notifyUser($receiverId, $payload);
             
-            // 8. Devolver el mensaje al remitente (para confirmación)
             $response['success'] = true;
             $response['message_sent'] = $newMessage;
-            
-            // --- ▲▲▲ FIN DE LÓGICA DE SUBIDA DE MÚLTIPLES ARCHIVOS ▲▲▲ ---
         }
 
     } catch (Exception $e) {
@@ -302,7 +305,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = 'js.api.errorDatabase';
         } else {
             $response['message'] = $e->getMessage();
-            // Pasar datos extra para errores (ej. tamaño o límite de archivos)
             if (!isset($response['data'])) {
                 $response['data'] = null;
             }
