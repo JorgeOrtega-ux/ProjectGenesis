@@ -556,6 +556,7 @@ export function initRouter() {
   'a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], ' +
   'a[href*="/profile/"], a[href*="/search"], a[href*="/trends"], a[href*="/messages"], ' +
   '.component-button[data-action*="toggleSection"], ' +
+  '.header-button[data-action*="toggleSection"], ' + // --- <<< LÍNEA AÑADIDA ---
   '.page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], ' +
   '.auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], ' +
   '[data-module="moduleProfileMore"] a.menu-link[data-nav-js="true"], ' +
