@@ -1,4 +1,5 @@
 // FILE: assets/js/app/url-manager.js
+// (CORREGIDO - La lista de amigos solo se muestra en 'home')
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
@@ -190,7 +191,12 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
     const friendListWrapper = document.getElementById('friend-list-wrapper');
     
     if (friendListWrapper) {
-        if (page === 'home' || page === 'trends') { // --- [HASTAGS] --- Mostrar amigos también en 'trends'
+        
+        // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+        // Se eliminó '|| page === 'trends'' de la condición
+        if (page === 'home') { 
+        // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+            
             if (!friendListWrapper.querySelector('#friend-list-container')) {
                 try {
                     const friendListUrl = `${basePath}/includes/modules/module-friend-list.php`;

@@ -73,20 +73,11 @@ if (!isset($trendingHashtags)) {
 </style>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'trends') ? 'active' : 'disabled'; ?>" data-section="trends">
 
-    <div class="page-toolbar-container" id="trends-toolbar-container">
-        <div class="page-toolbar-floating">
-            <div class="toolbar-action-default">
-                <div class="page-toolbar-left">
-                    <button type="button"
-                        class="page-toolbar-button"
-                        data-action="toggleSectionHome" 
-                        data-tooltip="create_publication.backTooltip">
-                        <span class="material-symbols-rounded">arrow_back</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    // El div .page-toolbar-container ha sido eliminado
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    ?>
     
     <div class="component-wrapper">
 

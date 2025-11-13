@@ -126,7 +126,7 @@ function initMainController() {
 
         if (action.startsWith('toggle')) {
             
-            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
             const managedActions = [
                 'toggleModulePageFilter',
                 'toggleModuleAdminRole',
@@ -144,10 +144,14 @@ function initMainController() {
                 'toggle-comments',       
                 'toggle-post-text',
                 'toggleModulePrivacySelect',
-                'toggleModuleProfileMore', // <-- Ya estaba aquí
-                'toggleFriendItemOptions' // <-- LÍNEA AÑADIDA
+                'toggleModuleProfileMore',
+                'toggleFriendItemOptions',
+                
+                // --- ¡LÍNEA AÑADIDA! ---
+                'toggleModuleAdminExport'
+                // --- ¡FIN DE LÍNEA AÑADIDA! ---
             ];
-            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
             if (managedActions.includes(action)) {
                 console.log(`[MainController] Acción ${action} es manejada por su propio módulo. Omitiendo.`);

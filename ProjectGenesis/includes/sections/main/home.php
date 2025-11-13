@@ -1,6 +1,6 @@
 <?php
 // FILE: includes/sections/main/home.php
-// (LÓGICA DE DATOS MOVIDA A home_feed_fetcher.php)
+// (CÓDIGO CORREGIDO Y COMPLETO)
 
 // Estas variables ahora son cargadas por config/routing/router.php:
 // $publications, $currentCommunityId, $currentCommunityNameKey, $communityUuid
@@ -11,10 +11,9 @@ $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&
 $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 $userId = $_SESSION['user_id']; // ID del usuario actual
 
-// --- ¡EL BLOQUE TRY...CATCH DE SQL (LÍNEAS 12-156) SE HA ELIMINADO DE AQUÍ! ---
-
 ?>
 <style>
+    /* --- (Estilos de Hashtag) --- */
     .post-hashtag-list {
         display: flex;
         flex-wrap: wrap;
@@ -26,8 +25,8 @@ $userId = $_SESSION['user_id']; // ID del usuario actual
         padding: 4px 12px;
         font-size: 13px;
         font-weight: 600;
-        color: #0056b3; /* Color de enlace */
-        background-color: #f0f5fa; /* Fondo azul claro */
+        color: #0056b3;
+        background-color: #f0f5fa;
         border-radius: 50px;
         text-decoration: none;
         transition: background-color 0.2s;
@@ -59,8 +58,6 @@ $userId = $_SESSION['user_id']; // ID del usuario actual
                         <span class="material-symbols-rounded">group</span>
                     </button>
                     
-                    <?php // --- BOTÓN "CREAR PUBLICACIÓN" ELIMINADO DE AQUÍ --- ?>
-                    
                     </div>
                 
                 </div>
@@ -89,7 +86,7 @@ $userId = $_SESSION['user_id']; // ID del usuario actual
                         </div>
                     </div>
                 </div>
-                <?php else: ?>
+            <?php else: ?>
                 <?php foreach ($publications as $post): ?>
                     <?php
                     // --- (Lógica de renderizado de post) ---
@@ -133,7 +130,8 @@ $userId = $_SESSION['user_id']; // ID del usuario actual
                     <div class="component-card component-card--post component-card--column" 
                          data-post-id="<?php echo $post['id']; ?>" 
                          data-privacy="<?php echo htmlspecialchars($privacyLevel); ?>">
-                    <div class="post-card-header">
+                        
+                        <div class="post-card-header">
                             <div class="component-card__content">
                                 <div class="component-card__avatar" data-role="<?php echo htmlspecialchars($postRole); ?>">
                                     <img src="<?php echo htmlspecialchars($postAvatar); ?>" alt="<?php echo htmlspecialchars($post['username']); ?>" class="component-card__avatar-image">
@@ -157,24 +155,85 @@ $userId = $_SESSION['user_id']; // ID del usuario actual
                                             </div>
                                         <?php endif; ?>
                                     </div>
-
                                 </div>
                             </div>
                             
                             <?php if ($isOwner): ?>
                             <div class="post-card-options">
+                                <button type="button" 
+                                        class="component-action-button--icon" 
+                                        data-action="toggle-post-options"
+                                        data-post-id="<?php echo $post['id']; ?>"
+                                        data-tooltip="tooltips.masOpciones">
+                                    <span class="material-symbols-rounded">more_vert</span>
+                                </button>
+                                
+                                <div class="popover-module body-title disabled" data-module="modulePostOptions">
+                                    <div class="menu-content">
+                                        <div class="menu-list">
+                                            <div class="menu-link" data-action="toggle-post-privacy">
+                                                <div class="menu-link-icon"><span class="material-symbols-rounded">visibility</span></div>
+                                                <div class="menu-link-text"><span data-i18n="post.options.changePrivacy"></span></div>
+                                            </div>
+                                            <div class="menu-link" data-action="post-delete">
+                                                <div class="menu-link-icon"><span class="material-symbols-rounded" style="color: #c62828;">delete</span></div>
+                                                <div class="menu-link-text"><span data-i18n="post.options.delete" style="color: #c62828;"></span></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            <?php endif; ?>
+
+                                <div class="popover-module body-title disabled" data-module="modulePostPrivacy">
+                                    <div class="menu-content">
+                                        <div class="menu-list">
+                                            <div class="menu-header" data-i18n="post.options.privacyTitle"></div>
+                                            <div class="menu-link" data-action="post-set-privacy" data-value="public">
+                                                <div class="menu-link-icon"><span class="material-symbols-rounded">public</span></div>
+                                                <div class="menu-link-text"><span data-i18n="post.options.privacyPublic"></span></div>
+                                                <div class="menu-link-check-icon"></div>
+                                            </div>
+                                            <div class="menu-link" data-action="post-set-privacy" data-value="friends">
+                                                <div class="menu-link-icon"><span class="material-symbols-rounded">group</span></div>
+                                                <div class="menu-link-text"><span data-i18n="post.options.privacyFriends"></span></div>
+                                                <div class="menu-link-check-icon"></div>
+                                            </div>
+                                            <div class="menu-link" data-action="post-set-privacy" data-value="private">
+                                                <div class="menu-link-icon"><span class="material-symbols-rounded">lock</span></div>
+                                                <div class="menu-link-text"><span data-i18n="post.options.privacyPrivate"></span></div>
+                                                <div class="menu-link-check-icon"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <?php // --- ▼▼▼ INICIO DEL CÓDIGO FALTANTE ▼▼▼ --- ?>
 
                         <?php if (!empty($post['title']) && !$isPoll): ?>
-                            <?php endif; ?>
+                            <div class="post-card-content" style="padding-bottom: 0;">
+                                <h3 class="post-title"><?php echo htmlspecialchars($post['title']); ?></h3>
+                            </div>
+                        <?php endif; ?>
 
                         <?php if (!empty($post['text_content'])): ?>
-                            <?php endif; ?>
+                            <div class="post-card-content" <?php if (!empty($post['title'])) echo 'style="padding-top: 8px;"'; ?>>
+                                <?php if ($isPoll): ?>
+                                    <h3 class="poll-question"><?php echo htmlspecialchars($post['text_content']); ?></h3>
+                                <?php else: ?>
+                                    <div>
+                                        <?php 
+                                        // Usamos la función truncatePostText para acortar el texto en el feed
+                                        echo truncatePostText($post['text_content'], $post['id'], $basePath, 500); 
+                                        ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
                         
                         <?php if (!empty($hashtags)): ?>
-                            <div class="post-card-content" style="padding-top: 0; <?php if(empty($post['text_content'])) echo 'padding-top: 12px;'; ?>">
+                            <div class="post-card-content" style="padding-top: 0; <?php if(empty($post['text_content']) && empty($post['title'])) echo 'padding-top: 12px;'; ?>">
                                 <div class="post-hashtag-list">
                                     <?php foreach ($hashtags as $tag): ?>
                                         <a href="<?php echo $basePath . '/search?q=' . urlencode('#' . htmlspecialchars($tag)); ?>" 
@@ -188,17 +247,92 @@ $userId = $_SESSION['user_id']; // ID del usuario actual
                         <?php endif; ?>
 
                         <?php if ($isPoll && !empty($pollOptions)): ?>
-                            <?php endif; ?>
-                        
-                        <?php if (!$isPoll && $attachmentCount > 0): ?>
-                        <div class="post-attachments-container" data-count="<?php echo $attachmentCount; ?>">
+                            <div class="poll-container" id="poll-<?php echo $post['id']; ?>" data-poll-id="<?php echo $post['id']; ?>">
+                                <?php if ($hasVoted): ?>
+                                    <div class="poll-results">
+                                        <?php foreach ($pollOptions as $option): 
+                                            $voteCount = (int)$option['vote_count'];
+                                            $percentage = ($totalVotes > 0) ? round(($voteCount / $totalVotes) * 100) : 0;
+                                            $isUserVote = ($option['id'] == $post['user_voted_option_id']);
+                                        ?>
+                                            <div class="poll-option-result <?php echo $isUserVote ? 'voted-by-user' : ''; ?>">
+                                                <div class="poll-option-bar" style="width: <?php echo $percentage; ?>%;"></div>
+                                                <div class="poll-option-text">
+                                                    <span><?php echo htmlspecialchars($option['option_text']); ?></span>
+                                                    <?php if ($isUserVote): ?>
+                                                        <span class="material-symbols-rounded poll-user-vote-icon">check_circle</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <div class="poll-option-percent"><?php echo $percentage; ?>%</div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                        <p class="poll-total-votes" data-i18n="home.poll.totalVotes" data-count="<?php echo $totalVotes; ?>"><?php echo $totalVotes; ?> votos</p>
+                                    </div>
+                                <?php else: ?>
+                                    <form class="poll-form" data-action="submit-poll-vote">
+                                        <input type="hidden" name="publication_id" value="<?php echo $post['id']; ?>">
+                                        <?php foreach ($pollOptions as $option): ?>
+                                            <label class="poll-option-vote">
+                                                <input type="radio" name="poll_option_id" value="<?php echo $option['id']; ?>" required>
+                                                <span class="poll-option-radio"></span>
+                                                <span class="poll-option-text"><?php echo htmlspecialchars($option['option_text']); ?></span>
+                                            </label>
+                                        <?php endforeach; ?>
+                                        <div class="poll-form-actions">
+                                            <button type="submit" class="component-action-button component-action-button--primary" data-i18n="home.poll.voteButton">Votar</button>
+                                            <p class="poll-total-votes" data-i18n="home.poll.totalVotes" data-count="<?php echo $totalVotes; ?>"><?php echo $totalVotes; ?> votos</p>
+                                        </div>
+                                    </form>
+                                <?php endif; ?>
                             </div>
                         <?php endif; ?>
                         
-                        <div class="post-actions-container">
-                            </div>
-                        
+                        <?php if (!$isPoll && $attachmentCount > 0): ?>
+                        <div class="post-attachments-container" data-count="<?php echo $attachmentCount; ?>">
+                            <?php foreach ($attachments as $imgUrl): ?>
+                                <div class="post-attachment-item">
+                                    <img src="<?php echo htmlspecialchars($imgUrl); ?>" alt="Adjunto de publicación" loading="lazy">
+                                </div>
+                            <?php endforeach; ?>
                         </div>
+                        <?php endif; ?>
+                        
+                        <div class="post-actions-container">
+                            <div class="post-actions-left">
+                                <button type="button" 
+                                        class="component-action-button--icon post-action-like <?php echo $userHasLiked ? 'active' : ''; ?>" 
+                                        data-tooltip="home.actions.like"
+                                        data-action="like-toggle"
+                                        data-post-id="<?php echo $post['id']; ?>">
+                                    <span class="material-symbols-rounded"><?php echo $userHasLiked ? 'favorite' : 'favorite_border'; ?></span>
+                                    <span class="action-text"><?php echo $likeCount; ?></span>
+                                </button>
+                                
+                                <button type="button"
+                                   class="component-action-button--icon post-action-comment" 
+                                   data-tooltip="home.actions.comment"
+                                   data-action="toggleSectionPostView"
+                                   data-post-id="<?php echo $post['id']; ?>">
+                                    <span class="material-symbols-rounded">chat_bubble_outline</span>
+                                    <span class="action-text"><?php echo $commentCount; ?></span>
+                                </button>
+                                <button type="button" class="component-action-button--icon" data-tooltip="home.actions.share">
+                                    <span class="material-symbols-rounded">send</span>
+                                </button>
+                            </div>
+                            <div class="post-actions-right">
+                                <button type="button" 
+                                        class="component-action-button--icon post-action-bookmark <?php echo $userHasBookmarked ? 'active' : ''; ?>" 
+                                        data-tooltip="home.actions.save"
+                                        data-action="bookmark-toggle"
+                                        data-post-id="<?php echo $post['id']; ?>">
+                                    <span class="material-symbols-rounded"><?php echo $userHasBookmarked ? 'bookmark' : 'bookmark_border'; ?></span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <?php // --- ▲▲▲ FIN DEL CÓDIGO FALTANTE ▲▲▲ --- ?>
+                    </div>
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>

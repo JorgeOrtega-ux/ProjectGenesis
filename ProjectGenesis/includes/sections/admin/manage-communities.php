@@ -133,13 +133,9 @@ try {
 
                         </div>
                         
-                        <a href="<?php echo $basePath . '/admin/edit-community?id=' . $community['id']; ?>" 
-                           class="page-toolbar-button"
-                           data-nav-js="true" 
-                           data-tooltip="admin.communities.editTooltip"
-                           style="margin-left: auto; flex-shrink: 0;">
-                            <span class="material-symbols-rounded">edit</span>
-                        </a>
+                        <?php // --- INICIO DE MODIFICACIÓN --- ?>
+                        <?php // Se eliminó el botón '<a>' de editar que estaba aquí ?>
+                        <?php // --- FIN DE MODIFICACIÓN --- ?>
 
                     </div>
                 <?php endforeach; ?>

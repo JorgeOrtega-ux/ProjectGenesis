@@ -6,6 +6,12 @@
 // $searchQuery, $sort_by_param, $sort_order_param son
 // cargadas por config/routing/router.php
 ?>
+
+
+
+             
+
+
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-manage-users') ? 'active' : 'disabled'; ?>" data-section="admin-users">
 
     <div class="page-toolbar-container">
@@ -39,6 +45,11 @@
                 </div>
                 
                 <div class="page-toolbar-right">
+                        <button type="button"
+                        class="page-toolbar-button"
+                        data-action="toggleModuleAdminExport"
+                        data-tooltip="admin.users.exportTooltip"> <span class="material-symbols-rounded">upload_file</span>
+                    </button>
                     <div class="page-toolbar-pagination">
                         <button type="button" class="page-toolbar-button"
                             data-action="admin-page-prev"
@@ -226,7 +237,27 @@
                 </div>
             </div>
         </div>
-        
+               <div class="popover-module body-title disabled" data-module="moduleAdminExport">
+                        <div class="menu-content">
+                            <div class="menu-list">
+                                <div class="menu-header" data-i18n="admin.users.exportAs">Exportar como...</div>
+
+                                <div class="menu-link" data-action="admin-export-as" data-format="json">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">data_object</span></div>
+                                    <div class="menu-link-text"><span>JSON</span></div>
+                                </div>
+                                <div class="menu-link" data-action="admin-export-as" data-format="csv">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">description</span></div>
+                                    <div class="menu-link-text"><span>CSV</span></div>
+                                </div>
+                                <div class="menu-link" data-action="admin-export-as" data-format="excel">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">spreadsheet</span></div>
+                                    <div class="menu-link-text"><span>Excel (XLSX)</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
         <div class="page-toolbar-floating <?php echo $isSearching ? 'active' : 'disabled'; ?>" id="page-search-bar-container">
             
             <div class="page-search-bar active" id="page-search-bar">

@@ -82,6 +82,8 @@
       "statusDeleted": "Eliminado (Inactivo)",
       "createUser": "Crear nuevo usuario",
       "editUserTooltip": "Editar datos del usuario",
+      "exportTooltip": "Exportar usuarios",
+      "exportAs": "Exportar como...",
       "labelUsername": "Nombre del usuario",
       "labelRole": "Rol",
       "labelCreated": "Fecha de creación",

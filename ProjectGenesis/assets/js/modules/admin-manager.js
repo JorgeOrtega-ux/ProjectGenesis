@@ -1,3 +1,4 @@
+// FILE: assets/js/modules/admin-manager.js
 
 import { callAdminApi } from '../services/api-service.js';
 import { showAlert } from '../services/alert-manager.js';
@@ -34,6 +35,10 @@ export function initAdminManager() {
         currentOrder = activeFilter.dataset.order || '';
     }
 
+    // ... (El resto de funciones helper: enableSelectionActions, disableSelectionActions, clearAdminUserSelection, etc. van aquí sin cambios) ...
+    // ... (enableLogSelectionActions, disableLogSelectionActions, clearLogSelection, updateAdminModals) ...
+    // ... (setListLoadingState, updatePaginationControls, renderUserList, fetchAndRenderUsers, handleAdminAction) ...
+    // ... (showCreateUserError, hideCreateUserError, closeAllToolbarModes, openSearchMode, openFilterMode) ...
 
     function enableSelectionActions() {
         const toolbarContainer = document.querySelector('.page-toolbar-container');
@@ -485,6 +490,7 @@ export function initAdminManager() {
         const action = button.getAttribute('data-action');
 
         if (action === 'admin-generate-username') {
+            // ... (código existente)
             event.preventDefault();
             const inputId = button.getAttribute('data-toggle');
             const input = document.getElementById(inputId);
@@ -517,6 +523,7 @@ export function initAdminManager() {
         }
 
         if (action === 'admin-generate-password') {
+            // ... (código existente)
             event.preventDefault();
             const passInput = document.getElementById('admin-create-password');
             const generateBtn = button; 
@@ -546,6 +553,7 @@ export function initAdminManager() {
         }
         
         if (action === 'admin-copy-password') {
+            // ... (código existente)
             event.preventDefault();
             const passInput = document.getElementById('admin-create-password');
             if (passInput && passInput.value) {
@@ -576,6 +584,7 @@ export function initAdminManager() {
         }
         
         if (action === 'admin-create-user-submit') {
+            // ... (código existente)
             event.preventDefault();
             const button = event.target.closest('#admin-create-user-submit');
             
@@ -654,6 +663,7 @@ export function initAdminManager() {
 
 
         if (action === 'admin-page-next' || action === 'admin-page-prev') {
+            // ... (código existente)
             event.preventDefault();
             hideTooltip();
             
@@ -672,6 +682,7 @@ export function initAdminManager() {
         }
         
         if (action === 'admin-toggle-search') {
+            // ... (código existente)
             event.preventDefault();
             const searchButton = button;
             const isActive = searchButton.classList.contains('active');
@@ -695,6 +706,7 @@ export function initAdminManager() {
         }
         
         if (action === 'toggleModulePageFilter') {
+            // ... (código existente)
             event.stopPropagation(); 
             const filterButton = button;
             const isActive = filterButton.classList.contains('active');
@@ -708,18 +720,21 @@ export function initAdminManager() {
         }
 
         if (action === 'admin-clear-selection') {
+            // ... (código existente)
             event.preventDefault();
             clearAdminUserSelection();
             return;
         }
 
         if (action === 'admin-log-clear-selection') {
+            // ... (código existente)
             event.preventDefault();
             clearLogSelection();
             return;
         }
         
         if (action === 'admin-log-view') {
+            // ... (código existente)
             if (!selectedAdminLogFile) {
                 showAlert(getTranslation('js.admin.logs.errorNoSelection') || "Por favor, selecciona un archivo de log primero.", 'error');
                 event.preventDefault(); 
@@ -741,6 +756,7 @@ export function initAdminManager() {
         }
 
         if (action === 'toggleSectionAdminEditUser') {
+            // ... (código existente)
             if (!selectedAdminUserId) {
                 showAlert(getTranslation('js.admin.errorNoSelection'), 'error');
                 event.preventDefault(); 
@@ -768,6 +784,7 @@ export function initAdminManager() {
         }
         
         if (action === 'admin-set-filter') {
+            // ... (código existente)
             event.preventDefault();
             hideTooltip();
             clearAdminUserSelection(); 
@@ -802,12 +819,57 @@ export function initAdminManager() {
         }
         
         if (action === 'admin-set-role' || action === 'admin-set-status') {
+            // ... (código existente)
             event.preventDefault();
             hideTooltip();
             const newValue = button.dataset.value;
             handleAdminAction(action, selectedAdminUserId, newValue, button);
             return;
         }
+
+        // --- ▼▼▼ LÓGICA AÑADIDA (PARA EL BOTÓN DE EXPORTAR) ▼▼▼ ---
+        if (action === 'toggleModuleAdminExport') {
+            event.stopPropagation();
+            const module = document.querySelector('[data-module="moduleAdminExport"]');
+            if (module) {
+                const isOpening = module.classList.contains('disabled');
+                // Cierra otros popovers antes de abrir este
+                if (isOpening) {
+                    deactivateAllModules(module);
+                }
+                module.classList.toggle('disabled');
+                module.classList.toggle('active');
+            }
+            return;
+        }
+
+        if (action === 'admin-export-as') {
+            event.preventDefault();
+            const format = button.dataset.format;
+            
+            // 1. Mostrar alerta al usuario
+            showAlert(`Iniciando exportación a ${format.toUpperCase()}...`, 'info');
+            
+            // 2. Cerrar el popover
+            deactivateAllModules();
+
+            // 3. Lógica de exportación (Simulación)
+            // Aquí es donde llamarías a tu backend para generar el archivo.
+            // Esta implementación es solo frontend, como se solicitó.
+            console.log(`Solicitando exportación de usuarios como: ${format}`);
+            
+            // --- INICIO: Lógica de simulación de backend ---
+            // En un caso real, crearías un nuevo endpoint (ej. /api/admin_export_handler.php)
+            // y harías un 'window.location.href' a él con los parámetros.
+            
+            // const csrfToken = getCsrfTokenFromPage(); // Asegúrate de tener una función getCsrfTokenFromPage
+            // window.location.href = `${window.projectBasePath}/api/admin_export_handler.php?format=${format}&csrf_token=${csrfToken}`;
+            
+            // --- FIN: Lógica de simulación ---
+            
+            return;
+        }
+        // --- ▲▲▲ FIN DE LÓGICA AÑADIDA ---
 
         if (action === 'toggleModuleAdminRole' || 
             action === 'toggleModuleAdminStatus' ||
