@@ -1,5 +1,5 @@
 // FILE: assets/js/modules/chat-manager.js
-// (MODIFICADO PARA PAGINACIÓN Y MENÚ HOVER EN MENSAJES)
+// (MODIFICADO PARA PAGINACIÓN, RESPUESTAS Y ELIMINAR)
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -15,6 +15,12 @@ const MAX_CHAT_FILES = 4;
 let isLoadingOlderMessages = false; 
 let allMessagesLoaded = false;      
 const CHAT_PAGE_SIZE = 30;          
+
+// --- ▼▼▼ INICIO DE NUEVAS VARIABLES GLObales ▼▼▼ ---
+let currentReplyMessageId = null; // Almacena el ID del mensaje al que se está respondiendo
+let typingTimer;
+let isTyping = false;
+// --- ▲▲▲ FIN DE NUEVAS VARIABLES GLObales ▲▲▲ ---
 
 
 /**
@@ -71,6 +77,8 @@ function renderConversationList(conversations) {
         let snippet = '...';
         if (friend.last_message === '[Imagen]') {
             snippet = `<span data-i18n="chat.snippet.image">[Imagen]</span>`;
+        } else if (friend.last_message === 'Se eliminó este mensaje') {
+            snippet = `<i data-i18n="chat.snippet.deleted">[Mensaje eliminado]</i>`;
         } else if (friend.last_message) {
             snippet = escapeHTML(friend.last_message);
         }
@@ -174,13 +182,13 @@ function scrollToBottom() {
     }
 }
 
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (createMessageBubbleHtml) ▼▼▼ ---
 /**
  * Crea y añade una burbuja de mensaje (enviado o recibido) al DOM.
- * @param {object} msg - El objeto del mensaje (debe tener message_text, attachment_urls, sender_id, id).
+ * @param {object} msg - El objeto del mensaje (debe tener message_text, attachment_urls, sender_id, id, status, reply_to...).
  * @param {boolean} isSent - true si es un mensaje enviado, false si es recibido.
  * @returns {string} El HTML de la burbuja.
  */
-// --- MODIFICACIÓN: Esta función ahora incluye el .chat-bubble-actions ---
 function createMessageBubbleHtml(msg, isSent) {
     const myUserId = parseInt(window.userId, 10);
     const myAvatar = document.querySelector('.header-profile-image')?.src || defaultAvatar;
@@ -203,36 +211,58 @@ function createMessageBubbleHtml(msg, isSent) {
         }
     }
     
-    // 1. Crear el menú de acciones
-    const actionsMenuHtml = `
-        <div class="chat-bubble-actions">
-            <button type="button" class="chat-action-btn" data-action="msg-info" title="Info del mensaje">
-                <span class="material-symbols-rounded">info</span>
-            </button>
-            <button type="button" class="chat-action-btn" data-action="msg-reply" title="Responder">
-                <span class="material-symbols-rounded">reply</span>
-            </button>
-            <button type="button" class="chat-action-btn" data-action="msg-copy" title="Copiar">
-                <span class="material-symbols-rounded">content_copy</span>
-            </button>
-            ${isSent ? `
-            <button type="button" class="chat-action-btn chat-action-btn--danger" data-action="msg-delete" title="Eliminar mensaje">
-                <span class="material-symbols-rounded">delete</span>
-            </button>
-            ` : ''}
-        </div>
-    `;
+    // 1. Crear el menú de acciones (solo si el mensaje no está eliminado)
+    let actionsMenuHtml = '';
+    if (msg.status !== 'deleted') {
+         actionsMenuHtml = `
+            <div class="chat-bubble-actions">
+                <button type="button" class="chat-action-btn" data-action="msg-reply" title="Responder">
+                    <span class="material-symbols-rounded">reply</span>
+                </button>
+                <button type="button" class="chat-action-btn" data-action="msg-copy" title="Copiar">
+                    <span class="material-symbols-rounded">content_copy</span>
+                </button>
+                ${isSent ? `
+                <button type="button" class="chat-action-btn chat-action-btn--danger" data-action="msg-delete" title="Eliminar mensaje">
+                    <span class="material-symbols-rounded">delete</span>
+                </button>
+                ` : ''}
+            </div>
+        `;
+    }
 
-    // 2. Crear parte de texto
-    const textHtml = `
-        <div class="chat-bubble-content">
-            ${escapeHTML(msg.message_text)}
-        </div>
-    `;
+    // 2. Crear parte de respuesta (si existe y el mensaje no está eliminado)
+    let replyContextHtml = '';
+    if (msg.reply_to_message_id && msg.status !== 'deleted') {
+        const repliedUser = msg.replied_message_user || 'Usuario';
+        let repliedText = msg.replied_message_text || '';
+        
+        // Comprobar si el mensaje al que se respondió fue eliminado
+        if (repliedText === 'Se eliminó este mensaje') {
+            repliedText = `<i>${escapeHTML(repliedText)}</i>`;
+        } else {
+            repliedText = escapeHTML(repliedText);
+        }
+
+        replyContextHtml = `
+            <div class="chat-reply-context">
+                <div class="chat-reply-context-user">${escapeHTML(repliedUser)}</div>
+                <div class="chat-reply-context-text">${repliedText}</div>
+            </div>
+        `;
+    }
     
-    // 3. Crear parte de adjuntos
+    // 3. Crear parte de texto
+    let textHtml = '';
+    if (msg.status === 'deleted') {
+        textHtml = `<div class="chat-bubble-content"><i>${escapeHTML(msg.message_text)}</i></div>`;
+    } else {
+        textHtml = `<div class="chat-bubble-content">${escapeHTML(msg.message_text)}</div>`;
+    }
+
+    // 4. Crear parte de adjuntos (solo si el mensaje no está eliminado)
     let attachmentsHtml = '';
-    const attachments = msg.attachment_urls ? msg.attachment_urls.split(',') : [];
+    const attachments = (msg.attachment_urls && msg.status !== 'deleted') ? msg.attachment_urls.split(',') : [];
     
     if (attachments.length > 0) {
         let itemsHtml = '';
@@ -251,13 +281,15 @@ function createMessageBubbleHtml(msg, isSent) {
         `;
     }
 
-    // 4. Ensamblar burbuja
+    // 5. Ensamblar burbuja
+    const deletedClass = (msg.status === 'deleted') ? 'deleted' : '';
     const bubbleHtml = `
-        <div class="chat-bubble ${bubbleClass}" data-message-id="${msg.id}">
+        <div class="chat-bubble ${bubbleClass} ${deletedClass}" data-message-id="${msg.id}" data-text-content="${escapeHTML(msg.message_text)}">
             <div class="chat-bubble-avatar" data-role="${escapeHTML(role)}">
                 <img src="${escapeHTML(avatar)}" alt="Avatar">
             </div>
             <div class="chat-bubble-main-content">
+                ${replyContextHtml}
                 ${textHtml}
                 ${attachmentsHtml}
             </div>
@@ -267,6 +299,7 @@ function createMessageBubbleHtml(msg, isSent) {
     
     return bubbleHtml;
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (createMessageBubbleHtml) ---
 
 
 /**
@@ -414,6 +447,10 @@ async function openChat(friendId, username, avatar, role, isOnline) {
     const chatMain = document.getElementById('chat-content-main');
     if (!chatMain || !placeholder) return; 
 
+    // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Limpiar respuesta) ▼▼▼ ---
+    hideReplyPreview();
+    // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
+
     placeholder.classList.remove('active');
     placeholder.classList.add('disabled');
     chatMain.classList.remove('disabled');
@@ -531,6 +568,46 @@ function handleAttachmentChange(e) {
     validateSendButton();
 }
 
+// --- ▼▼▼ INICIO DE NUEVAS FUNCIONES (Reply Preview) ▼▼▼ ---
+/**
+ * Muestra la vista previa de respuesta sobre el campo de texto.
+ */
+function showReplyPreview(messageId, username, text) {
+    const container = document.getElementById('chat-reply-preview-container');
+    if (!container) return;
+
+    // Truncar texto si es muy largo
+    const snippet = text.length > 100 ? text.substring(0, 100) + '...' : text;
+
+    container.innerHTML = `
+        <div class="chat-reply-preview-content">
+            <div class="chat-reply-preview-user">${escapeHTML(username)}</div>
+            <div class="chat-reply-preview-text">${escapeHTML(snippet)}</div>
+        </div>
+        <button type="button" class="chat-reply-preview-close" id="chat-reply-preview-close">
+            <span class="material-symbols-rounded">close</span>
+        </button>
+    `;
+    container.style.display = 'flex';
+    currentReplyMessageId = messageId;
+    
+    document.getElementById('chat-reply-preview-close').addEventListener('click', hideReplyPreview);
+    document.getElementById('chat-message-input')?.focus();
+}
+
+/**
+ * Oculta y limpia la vista previa de respuesta.
+ */
+function hideReplyPreview() {
+    const container = document.getElementById('chat-reply-preview-container');
+    if (container) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+    }
+    currentReplyMessageId = null;
+}
+// --- ▲▲▲ FIN DE NUEVAS FUNCIONES (Reply Preview) ▲▲▲ ---
+
 
 /**
  * Envía un mensaje de chat (texto y/o archivos).
@@ -552,6 +629,12 @@ async function sendMessage() {
     formData.append('action', 'send-message');
     formData.append('receiver_id', receiverId);
     formData.append('message_text', messageText);
+    
+    // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Enviar reply_id) ▼▼▼ ---
+    if (currentReplyMessageId) {
+        formData.append('reply_to_message_id', currentReplyMessageId);
+    }
+    // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
     
     for (const file of selectedAttachments) {
         formData.append('attachments[]', file, file.name);
@@ -576,6 +659,9 @@ async function sendMessage() {
             selectedAttachments = [];
             document.getElementById('chat-attachment-preview-container').innerHTML = '';
             document.getElementById('chat-attachment-input').value = '';
+            // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Limpiar reply) ▼▼▼ ---
+            hideReplyPreview();
+            // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
             input.focus();
             
         } else {
@@ -598,40 +684,55 @@ export function handleChatMessageReceived(message) {
     
     const senderId = parseInt(message.sender_id, 10);
     
+    // Actualizar la lista de conversaciones (siempre)
+    loadConversations();
+    
+    // Si el chat está abierto, añade la burbuja
     if (senderId === currentChatUserId) {
         const bubbleHtml = createMessageBubbleHtml(message, false);
         document.getElementById('chat-message-list').insertAdjacentHTML('beforeend', bubbleHtml);
         scrollToBottom();
-        
-    } else {
-        let friend = friendCache.find(f => f.friend_id == senderId);
-        
-        if (!friend) {
-            loadConversations(); 
-            return;
-        }
-
-        let snippet = '...';
-        if (message.attachment_urls && !message.message_text) {
-            snippet = '[Imagen]';
-        } else {
-            snippet = escapeHTML(message.message_text);
-        }
-        friend.last_message = snippet;
-        friend.last_message_time = message.created_at;
-        friend.unread_count = (parseInt(friend.unread_count) || 0) + 1;
-        
-        friendCache.sort((a, b) => {
-            const timeA = a.last_message_time ? new Date(a.last_message_time).getTime() : 0;
-            const timeB = b.last_message_time ? new Date(b.last_message_time).getTime() : 0;
-            return timeB - timeA;
-        });
-
-        const searchInput = document.getElementById('chat-friend-search');
-        const currentQuery = searchInput ? searchInput.value : '';
-        filterConversationList(currentQuery);
     }
+    // (La lógica de notificación de insignia se maneja en loadConversations)
 }
+
+// --- ▼▼▼ INICIO DE NUEVAS FUNCIONES (Manejo de WS) ▼▼▼ ---
+/**
+ * Transforma una burbuja de chat existente al estado "eliminado".
+ * @param {HTMLElement} bubbleEl - El elemento DOM de la burbuja.
+ */
+function renderDeletedMessage(bubbleEl) {
+    if (!bubbleEl) return;
+    bubbleEl.classList.add('deleted');
+    
+    const mainContent = bubbleEl.querySelector('.chat-bubble-main-content');
+    if (mainContent) {
+        mainContent.innerHTML = `<div class="chat-bubble-content"><i>${getTranslation('chat.messageDeleted', 'Se eliminó este mensaje')}</i></div>`;
+    }
+    
+    const actions = bubbleEl.querySelector('.chat-bubble-actions');
+    if (actions) actions.remove();
+}
+
+/**
+ * Maneja un evento de eliminación de mensaje desde WebSocket.
+ * @param {object} payload - El payload del evento ({ message_id: ... }).
+ */
+export function handleMessageDeleted(payload) {
+    if (!payload || !payload.message_id) return;
+    
+    const messageId = payload.message_id;
+    const bubble = document.querySelector(`.chat-bubble[data-message-id="${messageId}"]`);
+    
+    if (bubble) {
+        renderDeletedMessage(bubble);
+    }
+    
+    // Actualizar la lista de conversaciones
+    loadConversations();
+}
+// --- ▲▲▲ FIN DE NUEVAS FUNCIONES (Manejo de WS) ▲▲▲ ---
+
 
 /**
  * Muestra u oculta el indicador "escribiendo..."
@@ -703,7 +804,7 @@ export function initChatManager() {
         observer.observe(sectionsContainer, { childList: true });
     }
 
-    document.body.addEventListener('click', (e) => {
+    document.body.addEventListener('click', async (e) => {
         const chatSection = e.target.closest('[data-section="messages"]');
         if (!chatSection) return;
         
@@ -742,31 +843,63 @@ export function initChatManager() {
             return;
         }
 
-        // --- MODIFICACIÓN: Listener para los nuevos botones de acción ---
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Acciones de burbuja) ▼▼▼ ---
         const actionBtn = e.target.closest('.chat-action-btn[data-action]');
         if (actionBtn) {
             const action = actionBtn.dataset.action;
             const messageBubble = actionBtn.closest('.chat-bubble');
             const messageId = messageBubble?.dataset.messageId;
+            if (!messageId) return;
+
+            if (action === 'msg-copy') {
+                const textContent = messageBubble.dataset.textContent;
+                if (textContent) {
+                    try {
+                        await navigator.clipboard.writeText(textContent);
+                        showAlert(getTranslation('js.chat.copied', 'Mensaje copiado'), 'success');
+                    } catch (err) {
+                        showAlert(getTranslation('js.chat.copyError', 'Error al copiar'), 'error');
+                    }
+                }
+            } 
             
-            // (Por ahora solo mostramos una alerta, como solicitaste)
-            switch(action) {
-                case 'msg-info':
-                    showAlert(`Acción: Info (ID: ${messageId})`, 'info');
-                    break;
-                case 'msg-reply':
-                    showAlert(`Acción: Responder (ID: ${messageId})`, 'info');
-                    break;
-                case 'msg-copy':
-                    showAlert(`Acción: Copiar (ID: ${messageId})`, 'info');
-                    break;
-                case 'msg-delete':
-                    showAlert(`Acción: Eliminar (ID: ${messageId})`, 'info');
-                    break;
+            else if (action === 'msg-reply') {
+                const username = messageBubble.classList.contains('sent') 
+                    ? getTranslation('js.chat.replyToSelf', 'a ti mismo') 
+                    : document.getElementById('chat-header-username').textContent;
+                const textContent = messageBubble.dataset.textContent;
+                
+                showReplyPreview(messageId, username, textContent);
+            } 
+            
+            else if (action === 'msg-delete') {
+                if (!confirm(getTranslation('js.chat.confirmDelete', '¿Eliminar este mensaje? Esta acción no se puede deshacer.'))) {
+                    return;
+                }
+                
+                actionBtn.disabled = true;
+                const formData = new FormData();
+                formData.append('action', 'delete-message');
+                formData.append('message_id', messageId);
+                
+                const result = await callChatApi(formData);
+                if (result.success) {
+                    // El WebSocket se encargará de actualizar la UI
+                    // (Tanto para este cliente como para el receptor)
+                    showAlert(getTranslation('js.chat.successDeleted', 'Mensaje eliminado'), 'info');
+                } else {
+                    showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+                    actionBtn.disabled = false;
+                }
+            } 
+            
+            else if (action === 'msg-info') {
+                // Función de información (futuro)
+                showAlert(`Info para msg ID: ${messageId} (no implementado)`, 'info');
             }
             return;
         }
-        // --- FIN DE MODIFICACIÓN ---
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
     });
     
     document.body.addEventListener('submit', (e) => {
@@ -777,9 +910,6 @@ export function initChatManager() {
             return;
         }
     });
-
-    let typingTimer;
-    let isTyping = false;
 
     document.body.addEventListener('input', (e) => {
         const chatInput = e.target.closest('#chat-message-input');

@@ -1,5 +1,5 @@
 // FILE: assets/js/app/main-controller.js
-// (MODIFICADO CON LOGS Y CORRECCIÓN DE CONFLICTO)
+// (MODIFICADO - Añadidas acciones de chat a managedActions)
 
 import { getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js'; 
@@ -126,7 +126,7 @@ function initMainController() {
 
         if (action.startsWith('toggle')) {
             
-            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Añadir acciones de chat) ▼▼▼ ---
             const managedActions = [
                 'toggleModulePageFilter',
                 'toggleModuleAdminRole',
@@ -140,7 +140,6 @@ function initMainController() {
                 'toggleModuleSearchFilter',
                 'toggleModuleNotifications',
                 
-
                 'toggle-post-options',   
                 'toggle-post-privacy',   
                 'toggle-comments',       
@@ -149,9 +148,14 @@ function initMainController() {
                 'toggleModuleProfileMore',
                 'toggleFriendItemOptions',
                 
-                // --- ¡LÍNEA AÑADIDA! ---
-                'toggleModuleAdminExport'
-                // --- ¡FIN DE LÍNEA AÑADIDA! ---
+                'toggleModuleAdminExport',
+
+                // --- ¡LÍNEAS AÑADIDAS! ---
+                'msg-reply',
+                'msg-copy',
+                'msg-delete',
+                'msg-info'
+                // --- ¡FIN DE LÍNEAS AÑADIDAS! ---
             ];
             // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 

@@ -1,6 +1,6 @@
 <?php
 // FILE: api/chat_handler.php
-// (MODIFICADO PARA PAGINACIÓN Y MÚLTIPLES FOTOS)
+// (MODIFICADO PARA PAGINACIÓN, MÚLTIPLES FOTOS, RESPUESTAS Y ELIMINAR)
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -15,13 +15,16 @@ if (!isset($_SESSION['user_id'])) {
 
 $currentUserId = (int)$_SESSION['user_id'];
 
-// --- MODIFICACIÓN: Constantes de subida ---
+// --- Constantes de subida ---
 $ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 $MAX_SIZE_MB = 5; // Límite de 5MB para fotos en chat
 $MAX_SIZE_BYTES = $MAX_SIZE_MB * 1024 * 1024;
 $MAX_CHAT_FILES = 4; // Límite de 4 fotos por mensaje
-// --- MODIFICACIÓN: Constante de paginación ---
+// --- Constante de paginación ---
 define('CHAT_PAGE_SIZE', 30); // Número de mensajes a cargar por página
+// --- LÍMITE DE TIEMPO PARA ELIMINAR (72 horas) ---
+define('CHAT_DELETE_LIMIT_HOURS', 72);
+
 
 /**
  * Notifica al servidor WebSocket sobre un nuevo mensaje.
@@ -80,19 +83,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                              ELSE cm.message_text 
                          END
                      FROM chat_messages cm 
-                     WHERE (cm.sender_id = :current_user_id AND cm.receiver_id = f.friend_id) 
-                        OR (cm.sender_id = f.friend_id AND cm.receiver_id = :current_user_id)
+                     WHERE ((cm.sender_id = :current_user_id AND cm.receiver_id = f.friend_id) 
+                        OR (cm.sender_id = f.friend_id AND cm.receiver_id = :current_user_id))
+                     AND cm.status = 'active'
                      ORDER BY cm.created_at DESC LIMIT 1) AS last_message,
                     (SELECT cm.created_at 
                      FROM chat_messages cm 
-                     WHERE (cm.sender_id = :current_user_id AND cm.receiver_id = f.friend_id) 
-                        OR (cm.sender_id = f.friend_id AND cm.receiver_id = :current_user_id)
+                     WHERE ((cm.sender_id = :current_user_id AND cm.receiver_id = f.friend_id) 
+                        OR (cm.sender_id = f.friend_id AND cm.receiver_id = :current_user_id))
+                     AND cm.status = 'active'
                      ORDER BY cm.created_at DESC LIMIT 1) AS last_message_time,
                     (SELECT COUNT(*) 
                      FROM chat_messages cm 
                      WHERE cm.sender_id = f.friend_id 
                        AND cm.receiver_id = :current_user_id 
-                       AND cm.is_read = 0) AS unread_count
+                       AND cm.is_read = 0
+                       AND cm.status = 'active') AS unread_count
                 FROM (
                     (SELECT user_id_2 AS friend_id FROM friendships WHERE user_id_1 = :current_user_id AND status = 'accepted')
                     UNION
@@ -118,10 +124,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $targetUserId = (int)($_POST['target_user_id'] ?? 0);
             if ($targetUserId === 0) throw new Exception('js.api.invalidAction');
             
-            // --- MODIFICACIÓN: Recibir el ID del mensaje más antiguo ---
             $beforeMessageId = (int)($_POST['before_message_id'] ?? 0);
 
-            // --- MODIFICACIÓN: SQL ahora usa 'before_message_id', 'ORDER BY DESC' y un 'LIMIT' más bajo ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL CON status y reply_to) ▼▼▼ ---
             $sql_select = 
                 "SELECT 
                     cm.*,
@@ -130,17 +135,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      JOIN chat_files cf ON cma.file_id = cf.id
                      WHERE cma.message_id = cm.id
                      ORDER BY cma.sort_order ASC
-                    ) AS attachment_urls
+                    ) AS attachment_urls,
+                    replied_msg.message_text AS replied_message_text,
+                    replied_user.username AS replied_message_user
                  FROM chat_messages cm
+                 LEFT JOIN chat_messages AS replied_msg ON cm.reply_to_message_id = replied_msg.id
+                 LEFT JOIN users AS replied_user ON replied_msg.sender_id = replied_user.id
                  WHERE ((cm.sender_id = :current_user_id AND cm.receiver_id = :target_user_id) 
                     OR (cm.sender_id = :target_user_id AND cm.receiver_id = :current_user_id))";
+            // --- ▲▲▲ FIN DE MODIFICACIÓN (SQL) ▲▲▲ ---
 
-            // --- MODIFICACIÓN: Añadir cláusula 'WHERE' para paginación ---
             if ($beforeMessageId > 0) {
                 $sql_select .= " AND cm.id < :before_message_id";
             }
             
-            // --- MODIFICACIÓN: Cambiar orden y límite ---
             $sql_select .= "
                  GROUP BY cm.id
                  ORDER BY cm.created_at DESC
@@ -151,7 +159,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_msg->bindValue(':current_user_id', $currentUserId, PDO::PARAM_INT);
             $stmt_msg->bindValue(':target_user_id', $targetUserId, PDO::PARAM_INT);
             
-            // --- MODIFICACIÓN: Bind del nuevo parámetro ---
             if ($beforeMessageId > 0) {
                 $stmt_msg->bindValue(':before_message_id', $beforeMessageId, PDO::PARAM_INT);
             }
@@ -159,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_msg->execute();
             $messages = $stmt_msg->fetchAll();
             
-            // 2. Marcar mensajes como leídos (SOLO en la primera carga, no en paginación)
+            // Marcar mensajes como leídos (SOLO en la primera carga)
             if ($beforeMessageId === 0) {
                 $stmt_read = $pdo->prepare(
                     "UPDATE chat_messages SET is_read = 1 
@@ -175,7 +182,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $response['success'] = true;
             $response['messages'] = $messages;
-            // --- MODIFICACIÓN: Enviar el conteo de mensajes ---
             $response['message_count'] = count($messages);
             $response['limit'] = CHAT_PAGE_SIZE;
 
@@ -183,6 +189,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $receiverId = (int)($_POST['receiver_id'] ?? 0);
             $messageText = trim($_POST['message_text'] ?? '');
+            // --- ▼▼▼ INICIO DE NUEVA LÓGICA (reply_to) ▼▼▼ ---
+            $replyToMessageId = (int)($_POST['reply_to_message_id'] ?? 0);
+            $dbReplyToId = ($replyToMessageId > 0) ? $replyToMessageId : null;
+            // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
+            
             $uploadedFiles = $_FILES['attachments'] ?? [];
             $fileIds = []; 
 
@@ -195,6 +206,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $pdo->beginTransaction();
 
+            // --- Lógica de subida de archivos (sin cambios) ---
             if (!empty($uploadedFiles['name'][0]) && $uploadedFiles['error'][0] === UPLOAD_ERR_OK) {
                 
                 $fileCount = count($uploadedFiles['name']);
@@ -249,11 +261,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL INSERT con reply_to) ▼▼▼ ---
             $stmt_insert = $pdo->prepare(
-                "INSERT INTO chat_messages (sender_id, receiver_id, message_text) 
-                 VALUES (?, ?, ?)"
+                "INSERT INTO chat_messages (sender_id, receiver_id, message_text, reply_to_message_id) 
+                 VALUES (?, ?, ?, ?)"
             );
-            $stmt_insert->execute([$currentUserId, $receiverId, $messageText]);
+            $stmt_insert->execute([$currentUserId, $receiverId, $messageText, $dbReplyToId]);
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $newMessageId = $pdo->lastInsertId();
 
             if (!empty($fileIds)) {
@@ -266,6 +280,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL SELECT con reply_to) ▼▼▼ ---
             $stmt_get = $pdo->prepare(
                  "SELECT 
                     cm.*,
@@ -274,11 +289,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      JOIN chat_files cf ON cma.file_id = cf.id
                      WHERE cma.message_id = cm.id
                      ORDER BY cma.sort_order ASC
-                    ) AS attachment_urls
+                    ) AS attachment_urls,
+                    replied_msg.message_text AS replied_message_text,
+                    replied_user.username AS replied_message_user
                  FROM chat_messages cm
+                 LEFT JOIN chat_messages AS replied_msg ON cm.reply_to_message_id = replied_msg.id
+                 LEFT JOIN users AS replied_user ON replied_msg.sender_id = replied_user.id
                  WHERE cm.id = ?
                  GROUP BY cm.id"
             );
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $stmt_get->execute([$newMessageId]);
             $newMessage = $stmt_get->fetch();
 
@@ -293,6 +313,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $response['success'] = true;
             $response['message_sent'] = $newMessage;
+            
+        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN (delete-message) ▼▼▼ ---
+        } elseif ($action === 'delete-message') {
+            
+            $messageId = (int)($_POST['message_id'] ?? 0);
+            if ($messageId === 0) {
+                throw new Exception('js.api.invalidAction');
+            }
+
+            $stmt_check = $pdo->prepare(
+                "SELECT sender_id, receiver_id, created_at, status 
+                 FROM chat_messages WHERE id = ? AND sender_id = ?"
+            );
+            $stmt_check->execute([$messageId, $currentUserId]);
+            $message = $stmt_check->fetch();
+
+            if (!$message) {
+                throw new Exception('js.chat.errorNotOwner'); // Error: No eres el dueño o no existe
+            }
+            
+            if ($message['status'] === 'deleted') {
+                throw new Exception('js.chat.errorAlreadyDeleted'); // Ya está borrado
+            }
+
+            $createdTime = new DateTime($message['created_at'], new DateTimeZone('UTC'));
+            $currentTime = new DateTime('now', new DateTimeZone('UTC'));
+            $interval = $currentTime->getTimestamp() - $createdTime->getTimestamp();
+            $hoursPassed = $interval / 3600;
+
+            if ($hoursPassed > CHAT_DELETE_LIMIT_HOURS) {
+                throw new Exception('js.chat.errorDeleteTimeLimit'); // Error: Límite de 72h pasado
+            }
+
+            $stmt_update = $pdo->prepare(
+                "UPDATE chat_messages SET status = 'deleted', message_text = 'Se eliminó este mensaje' 
+                 WHERE id = ?"
+            );
+            $stmt_update->execute([$messageId]);
+
+            // Notificar al receptor Y al emisor (otras sesiones)
+            $receiverId = (int)$message['receiver_id'];
+            $payload = [
+                'type' => 'message_deleted',
+                'payload' => [
+                    'message_id' => $messageId,
+                    'conversation_user_id' => $receiverId // Para que el JS del emisor sepa qué chat actualizar
+                ]
+            ];
+            
+            notifyUser($receiverId, $payload);
+            notifyUser($currentUserId, $payload); // Notificar a mis otras sesiones
+
+            $response['success'] = true;
+            $response['message'] = 'js.chat.successDeleted';
+        // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
         }
 
     } catch (Exception $e) {

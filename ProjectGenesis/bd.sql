@@ -433,11 +433,15 @@ CREATE TABLE `chat_messages` (
   `message_text` text NOT NULL,
   `is_read` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `status` enum('active','deleted') NOT NULL DEFAULT 'active',
+  `reply_to_message_id` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_conversation_pair` (`sender_id`,`receiver_id`,`created_at`),
   KEY `idx_receiver_unread` (`receiver_id`,`is_read`),
+  KEY `idx_reply_to` (`reply_to_message_id`),
   CONSTRAINT `chat_messages_ibfk_1` FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `chat_messages_ibfk_2` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  CONSTRAINT `chat_messages_ibfk_2` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `chat_messages_ibfk_3` FOREIGN KEY (`reply_to_message_id`) REFERENCES `chat_messages` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ----------------------------
