@@ -1,5 +1,5 @@
 // FILE: assets/js/modules/chat-manager.js
-// (MODIFICADO)
+// (MODIFICADO PARA MÚLTIPLES FOTOS)
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -8,7 +8,11 @@ import { showAlert } from '../services/alert-manager.js';
 let currentChatUserId = null;
 let friendCache = []; // Almacena la lista de amigos para el filtrado
 const defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
-const myAvatar = window.profile_image_url || defaultAvatar; // Asumiendo que esto se carga en main-layout
+
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (Estado de adjuntos) ▼▼▼ ---
+let selectedAttachments = []; // Cambiado de null a array
+const MAX_CHAT_FILES = 4;
+// --- ▲▲▲ FIN DE MODIFICACIÓN ---
 
 /**
  * Escapa HTML simple para evitar XSS.
@@ -39,19 +43,20 @@ function formatTime(dateString) {
  */
 function renderConversationList(conversations) {
     const listContainer = document.getElementById('chat-conversation-list');
-    if (!listContainer) return;
-    
-    // Ocultar el loader
     const loader = document.getElementById('chat-list-loader');
-    if (loader) loader.style.display = 'none';
+    const emptyEl = document.getElementById('chat-list-empty');
+    if (!listContainer || !loader || !emptyEl) return;
+    
+    loader.style.display = 'none';
 
     if (!conversations || conversations.length === 0) {
-        const empty = document.getElementById('chat-list-empty');
-        if (empty) empty.style.display = 'flex';
+        emptyEl.style.display = 'flex';
+        listContainer.innerHTML = ''; // Limpiar por si acaso
         return;
     }
     
-    listContainer.innerHTML = ''; // Limpiar (quitar loader)
+    emptyEl.style.display = 'none';
+    listContainer.innerHTML = ''; // Limpiar
     let html = '';
 
     conversations.forEach(friend => {
@@ -88,11 +93,11 @@ function renderConversationList(conversations) {
  * Carga la lista de amigos/conversaciones inicial.
  */
 async function loadConversations() {
-    // Primero, obtenemos el estado online de todos los amigos
+    // ... (Esta función no necesita cambios, `callFriendApi` y `callChatApi` siguen siendo válidos) ...
     let onlineUserIds = {};
     try {
         const formData = new FormData();
-        formData.append('action', 'get-friends-list'); // Reutilizamos el endpoint de friend_handler
+        formData.append('action', 'get-friends-list');
         const friendResult = await callFriendApi(formData);
         if (friendResult.success) {
             friendResult.friends.forEach(friend => {
@@ -105,21 +110,18 @@ async function loadConversations() {
         console.error("Error al obtener estado online de amigos:", e);
     }
 
-    // Segundo, obtenemos las conversaciones (con último mensaje)
     try {
         const formData = new FormData();
         formData.append('action', 'get-conversations');
         const result = await callChatApi(formData);
 
         if (result.success) {
-            // Combinamos el estado online con los datos de la conversación
             result.conversations.forEach(convo => {
                 convo.is_online = !!onlineUserIds[convo.friend_id];
             });
-            friendCache = result.conversations; // Guardar en caché
+            friendCache = result.conversations; 
             renderConversationList(friendCache);
         } else {
-            // Manejar error de carga
             const listContainer = document.getElementById('chat-conversation-list');
             if (listContainer) listContainer.innerHTML = '<div class="chat-list-placeholder">Error al cargar.</div>';
         }
@@ -153,10 +155,88 @@ function scrollToBottom() {
     }
 }
 
+
+// --- ▼▼▼ INICIO DE FUNCIÓN NUEVA/MODIFICADA (Renderizado de Burbuja) ▼▼▼ ---
+
+/**
+ * Crea y añade una burbuja de mensaje (enviado o recibido) al DOM.
+ * @param {object} msg - El objeto del mensaje (debe tener message_text, attachment_urls, sender_id).
+ * @param {boolean} isSent - true si es un mensaje enviado, false si es recibido.
+ */
+function renderMessageBubble(msg, isSent) {
+    const msgList = document.getElementById('chat-message-list');
+    if (!msgList) return;
+
+    const myUserId = parseInt(window.userId, 10);
+    const myAvatar = window.profile_image_url || defaultAvatar;
+    const myRole = window.userRole || 'user';
+    
+    let avatar, role;
+    const bubbleClass = isSent ? 'sent' : 'received';
+
+    if (isSent) {
+        avatar = myAvatar;
+        role = myRole;
+    } else {
+        const friendItem = document.querySelector(`.chat-conversation-item.active`);
+        if (!friendItem) {
+             console.error("No se puede renderizar burbuja recibida, no hay chat activo.");
+             return;
+        }
+        avatar = friendItem.dataset.avatar;
+        role = friendItem.dataset.role;
+    }
+    
+    // 1. Crear parte de texto (se oculta con CSS si está vacío)
+    const textHtml = `
+        <div class="chat-bubble-content">
+            ${escapeHTML(msg.message_text)}
+        </div>
+    `;
+    
+    // 2. Crear parte de adjuntos
+    let attachmentsHtml = '';
+    const attachments = msg.attachment_urls ? msg.attachment_urls.split(',') : [];
+    
+    if (attachments.length > 0) {
+        let itemsHtml = '';
+        attachments.forEach(url => {
+            itemsHtml += `
+                <div class="chat-attachment-item">
+                    <img src="${escapeHTML(url)}" alt="Adjunto de chat" loading="lazy">
+                </div>
+            `;
+        });
+        
+        attachmentsHtml = `
+            <div class="chat-attachments-container" data-count="${attachments.length}">
+                ${itemsHtml}
+            </div>
+        `;
+    }
+
+    // 3. Ensamblar burbuja
+    const bubbleHtml = `
+        <div class="chat-bubble ${bubbleClass}">
+            <div class="chat-bubble-avatar" data-role="${escapeHTML(role)}">
+                <img src="${escapeHTML(avatar)}" alt="Avatar">
+            </div>
+            <div class="chat-bubble-main-content">
+                ${textHtml}
+                ${attachmentsHtml}
+            </div>
+        </div>
+    `;
+    
+    msgList.insertAdjacentHTML('beforeend', bubbleHtml);
+}
+// --- ▲▲▲ FIN DE FUNCIÓN NUEVA/MODIFICADA ---
+
+
 /**
  * Renderiza las burbujas de chat en el panel derecho.
  */
-function renderChatHistory(messages, receiverAvatar, receiverRole) {
+function renderChatHistory(messages) {
     const msgList = document.getElementById('chat-message-list');
     if (!msgList) return;
 
@@ -165,21 +245,7 @@ function renderChatHistory(messages, receiverAvatar, receiverRole) {
     
     messages.forEach(msg => {
         const isSent = parseInt(msg.sender_id, 10) === myUserId;
-        const bubbleClass = isSent ? 'sent' : 'received';
-        const avatar = isSent ? myAvatar : receiverAvatar;
-        const role = isSent ? (window.userRole || 'user') : receiverRole;
-        
-        const bubbleHtml = `
-            <div class="chat-bubble ${bubbleClass}">
-                <div class="chat-bubble-avatar" data-role="${escapeHTML(role)}">
-                    <img src="${escapeHTML(avatar)}" alt="Avatar">
-                </div>
-                <div class="chat-bubble-content">
-                    ${escapeHTML(msg.message_text)}
-                </div>
-            </div>
-        `;
-        msgList.insertAdjacentHTML('beforeend', bubbleHtml);
+        renderMessageBubble(msg, isSent); // Usar la nueva función
     });
     
     scrollToBottom();
@@ -189,42 +255,36 @@ function renderChatHistory(messages, receiverAvatar, receiverRole) {
  * Carga el historial de chat con un amigo específico.
  */
 async function openChat(friendId, username, avatar, role, isOnline) {
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     const placeholder = document.getElementById('chat-content-placeholder');
     const chatMain = document.getElementById('chat-content-main');
-    if (!chatMain) return; // Solo chatMain es crítico
+    if (!chatMain || !placeholder) return; 
 
     // Actualizar UI
-    if (placeholder) { // Comprobar si existe antes de tocarlo
-        placeholder.classList.remove('active');
-        placeholder.classList.add('disabled');
-    }
+    placeholder.classList.remove('active');
+    placeholder.classList.add('disabled');
     chatMain.classList.remove('disabled');
     chatMain.classList.add('active');
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     document.getElementById('chat-header-avatar').src = avatar;
     document.getElementById('chat-header-username').textContent = username;
     const statusEl = document.getElementById('chat-header-status');
-    statusEl.textContent = isOnline ? 'Online' : 'Offline';
-    statusEl.className = isOnline ? 'chat-header-status online' : 'chat-header-status';
+    statusEl.textContent = isOnline ? getTranslation('chat.online', 'Online') : getTranslation('chat.offline', 'Offline');
+    statusEl.className = isOnline ? 'chat-header-status online active' : 'chat-header-status active';
     
-    // Al abrir un chat, asegurarse de que el indicador "escribiendo" esté oculto
     const typingEl = document.getElementById('chat-header-typing');
-    if (typingEl) {
-        typingEl.classList.remove('active');
-        typingEl.classList.add('disabled');
-    }
-    if (statusEl) {
-        statusEl.classList.add('active');
-        statusEl.classList.remove('disabled');
-    }
+    if (typingEl) typingEl.classList.add('disabled');
     
     document.getElementById('chat-message-list').innerHTML = '<div class="chat-list-placeholder" id="chat-list-loader"><span class="logout-spinner" style="width: 32px; height: 32px; border-width: 3px;"></span></div>';
     document.getElementById('chat-message-input').disabled = true;
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Resetear adjuntos) ▼▼▼ ---
     document.getElementById('chat-send-button').disabled = true;
-    document.getElementById('chat-receiver-id').value = friendId;
+    document.getElementById('chat-attachment-preview-container').innerHTML = '';
+    selectedAttachments = [];
+    document.getElementById('chat-attachment-input').value = ''; // Limpiar el input
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ---
 
+    document.getElementById('chat-receiver-id').value = friendId;
     currentChatUserId = parseInt(friendId, 10);
     
     // Marcar como activo en la lista
@@ -241,7 +301,7 @@ async function openChat(friendId, username, avatar, role, isOnline) {
     try {
         const result = await callChatApi(formData);
         if (result.success) {
-            renderChatHistory(result.messages, avatar, role);
+            renderChatHistory(result.messages); // Función actualizada
             document.getElementById('chat-message-input').disabled = false;
         } else {
             document.getElementById('chat-message-list').innerHTML = '<div class="chat-list-placeholder">Error al cargar mensajes.</div>';
@@ -251,8 +311,110 @@ async function openChat(friendId, username, avatar, role, isOnline) {
     }
 }
 
+
+// --- ▼▼▼ INICIO DE FUNCIONES MODIFICADAS (Manejo de adjuntos) ▼▼▼ ---
+
 /**
- * Envía un mensaje de chat.
+ * Habilita o deshabilita el botón de enviar.
+ */
+function validateSendButton() {
+    const input = document.getElementById('chat-message-input');
+    const sendBtn = document.getElementById('chat-send-button');
+    if (!input || !sendBtn) return;
+    
+    const hasText = input.value.trim().length > 0;
+    const hasFiles = selectedAttachments.length > 0;
+    
+    sendBtn.disabled = !hasText && !hasFiles;
+}
+
+/**
+ * Crea una miniatura de previsualización en el área de input.
+ * @param {File} file - El archivo a previsualizar.
+ */
+function createAttachmentPreview(file) {
+    const container = document.getElementById('chat-attachment-preview-container');
+    if (!container) return;
+
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'chat-attachment-preview-item';
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        previewDiv.innerHTML = `
+            <img src="${e.target.result}" alt="${escapeHTML(file.name)}">
+            <button type="button" class="chat-preview-remove-btn">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+        `;
+        
+        // Añadir listener al botón de eliminar
+        previewDiv.querySelector('.chat-preview-remove-btn').addEventListener('click', () => {
+            // Eliminar este archivo del array
+            selectedAttachments = selectedAttachments.filter(f => f !== file);
+            // Eliminar este elemento del DOM
+            previewDiv.remove();
+            // Resetear el input de archivo (para permitir volver a seleccionarlo si se elimina)
+            document.getElementById('chat-attachment-input').value = '';
+            // Re-validar el botón de envío
+            validateSendButton();
+        });
+    };
+    reader.readAsDataURL(file);
+    
+    container.appendChild(previewDiv);
+}
+
+/**
+ * Maneja la selección de uno o más archivos.
+ * @param {Event} e - El evento 'change' del input.
+ */
+function handleAttachmentChange(e) {
+    const files = e.target.files;
+    if (!files) return;
+
+    const currentCount = selectedAttachments.length;
+    const allowedNewCount = MAX_CHAT_FILES - currentCount;
+
+    if (files.length > allowedNewCount) {
+        showAlert(getTranslation('js.publication.errorFileCount', 'No puedes subir más de 4 archivos.').replace('4', MAX_CHAT_FILES), 'error');
+    }
+
+    // Tomar solo los archivos permitidos
+    const filesToProcess = Array.from(files).slice(0, allowedNewCount);
+
+    const MAX_SIZE_MB = 5; // Debería coincidir con el backend
+    const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+    for (const file of filesToProcess) {
+        // Validar tipo
+        if (!ALLOWED_TYPES.includes(file.type)) {
+            showAlert(getTranslation('js.publication.errorFileType'), 'error');
+            continue; // Saltar este archivo
+        }
+        
+        // Validar tamaño
+        if (file.size > MAX_SIZE_BYTES) {
+            showAlert(getTranslation('js.publication.errorFileSize').replace('%size%', MAX_SIZE_MB), 'error');
+            continue; // Saltar este archivo
+        }
+
+        // Si es válido, añadir al array y crear previsualización
+        selectedAttachments.push(file);
+        createAttachmentPreview(file);
+    }
+    
+    // Resetear el input para permitir volver a seleccionar
+    e.target.value = '';
+    
+    validateSendButton();
+}
+// --- ▲▲▲ FIN DE FUNCIONES MODIFICADAS ---
+
+
+/**
+ * Envía un mensaje de chat (texto y/o archivos).
  */
 async function sendMessage() {
     const input = document.getElementById('chat-message-input');
@@ -260,36 +422,38 @@ async function sendMessage() {
     const receiverId = document.getElementById('chat-receiver-id').value;
     const messageText = input.value.trim();
 
-    if (!messageText || !receiverId || sendBtn.disabled) return;
+    // Validación movida a validateSendButton(), pero doble check aquí
+    if (!messageText && selectedAttachments.length === 0) return;
+    if (!receiverId || sendBtn.disabled) return;
     
     sendBtn.disabled = true;
     input.disabled = true;
+    document.getElementById('chat-attach-button').disabled = true;
 
     const formData = new FormData();
     formData.append('action', 'send-message');
     formData.append('receiver_id', receiverId);
     formData.append('message_text', messageText);
+    
+    // Adjuntar todos los archivos
+    for (const file of selectedAttachments) {
+        formData.append('attachments[]', file, file.name);
+    }
 
     try {
         const result = await callChatApi(formData);
         if (result.success && result.message_sent) {
             // Optimistic UI: renderizar el mensaje enviado
-            const msgList = document.getElementById('chat-message-list');
-            const bubbleHtml = `
-                <div class="chat-bubble sent">
-                    <div class="chat-bubble-avatar" data-role="${window.userRole || 'user'}">
-                        <img src="${myAvatar}" alt="Avatar">
-                    </div>
-                    <div class="chat-bubble-content">
-                        ${escapeHTML(result.message_sent.message_text)}
-                    </div>
-                </div>
-            `;
-            msgList.insertAdjacentHTML('beforeend', bubbleHtml);
+            renderMessageBubble(result.message_sent, true); // Usar la nueva función
             scrollToBottom();
             
+            // Limpiar todo
             input.value = '';
+            selectedAttachments = [];
+            document.getElementById('chat-attachment-preview-container').innerHTML = '';
+            document.getElementById('chat-attachment-input').value = '';
             input.focus();
+            
         } else {
             showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
         }
@@ -298,6 +462,8 @@ async function sendMessage() {
     } finally {
         sendBtn.disabled = true; // Se mantiene deshabilitado hasta que se escriba texto
         input.disabled = false;
+        document.getElementById('chat-attach-button').disabled = false;
+        validateSendButton(); // Re-validar (debería deshabilitarlo)
     }
 }
 
@@ -311,25 +477,7 @@ export function handleChatMessageReceived(message) {
     
     // Si el chat de esta persona está abierto, renderiza el mensaje
     if (senderId === currentChatUserId) {
-        const msgList = document.getElementById('chat-message-list');
-        const friendItem = document.querySelector(`.chat-conversation-item.active[data-user-id="${senderId}"]`);
-        
-        if (!msgList || !friendItem) return;
-
-        const avatar = friendItem.dataset.avatar;
-        const role = friendItem.dataset.role;
-
-        const bubbleHtml = `
-            <div class="chat-bubble received">
-                <div class="chat-bubble-avatar" data-role="${escapeHTML(role)}">
-                    <img src="${escapeHTML(avatar)}" alt="Avatar">
-                </div>
-                <div class="chat-bubble-content">
-                    ${escapeHTML(message.message_text)}
-                </div>
-            </div>
-        `;
-        msgList.insertAdjacentHTML('beforeend', bubbleHtml);
+        renderMessageBubble(message, false); // Usar la nueva función
         scrollToBottom();
         
         // TODO: Enviar un 'ack' al servidor para marcar como leído
@@ -338,11 +486,19 @@ export function handleChatMessageReceived(message) {
         // Si el chat no está abierto, actualizar la lista de conversaciones
         const friendItem = document.querySelector(`.chat-conversation-item[data-user-id="${senderId}"]`);
         if (friendItem) {
-            // Actualizar snippet
-            friendItem.querySelector('.chat-item-snippet').textContent = escapeHTML(message.message_text);
-            // Actualizar hora
+            
+            // --- ▼▼▼ INICIO DE LÓGICA DE SNIPPET MODIFICADA ▼▼▼ ---
+            let snippet = '...';
+            if (message.attachment_urls && !message.message_text) {
+                snippet = '[Imagen]';
+            } else {
+                snippet = escapeHTML(message.message_text);
+            }
+            friendItem.querySelector('.chat-item-snippet').textContent = snippet;
+            // --- ▲▲▲ FIN DE LÓGICA DE SNIPPET MODIFICADA ---
+            
             friendItem.querySelector('.chat-item-timestamp').textContent = formatTime(message.created_at);
-            // Actualizar badge de no leído
+            
             let badge = friendItem.querySelector('.chat-item-unread-badge');
             if (!badge) {
                 badge = document.createElement('span');
@@ -352,25 +508,21 @@ export function handleChatMessageReceived(message) {
             const newCount = (parseInt(badge.textContent) || 0) + 1;
             badge.textContent = newCount;
             
-            // Mover al principio de la lista
             friendItem.parentElement.prepend(friendItem);
         }
     }
 }
 
-// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN ▼▼▼ ---
 /**
  * Muestra u oculta el indicador "escribiendo..."
  */
 export function handleTypingEvent(senderId, isTyping) {
+    // ... (Esta función no necesita cambios) ...
     if (parseInt(senderId, 10) !== currentChatUserId) {
-        return; // No es el chat que estamos viendo
+        return; 
     }
-
     const statusEl = document.getElementById('chat-header-status');
     const typingEl = document.getElementById('chat-header-typing');
-
-    // Decisión: Reemplazar el estado.
     if (statusEl && typingEl) {
         if (isTyping) {
             statusEl.classList.remove('active');
@@ -385,15 +537,13 @@ export function handleTypingEvent(senderId, isTyping) {
         }
     }
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
 
 /**
  * Inicializa todos los listeners para la página de chat.
  */
 export function initChatManager() {
     
-    // Listener para cargar la lista de conversaciones al entrar a la sección
-    // Usamos un MutationObserver para detectar cuándo se carga la sección de 'messages'
+    // Observer para cargar la lista al entrar a la sección
     const sectionsContainer = document.querySelector('.main-sections');
     if (sectionsContainer) {
         const observer = new MutationObserver((mutations) => {
@@ -402,10 +552,9 @@ export function initChatManager() {
                     const messagesSection = document.querySelector('[data-section="messages"]');
                     if (messagesSection) {
                         loadConversations();
-                        // Aplicar estado online desde el WebSocket si ya está disponible
                         document.dispatchEvent(new CustomEvent('request-friend-list-presence-update'));
                     } else {
-                        currentChatUserId = null; // Resetea el chat activo al salir de la sección
+                        currentChatUserId = null; 
                     }
                 }
             }
@@ -413,7 +562,7 @@ export function initChatManager() {
         observer.observe(sectionsContainer, { childList: true });
     }
 
-    // Listeners de clics dentro de la sección de chat
+    // Listeners de clics
     document.body.addEventListener('click', (e) => {
         const chatSection = e.target.closest('[data-section="messages"]');
         if (!chatSection) return;
@@ -429,11 +578,7 @@ export function initChatManager() {
             const isOnline = friendItem.querySelector('.chat-item-status')?.classList.contains('online');
             
             openChat(friendId, username, avatar, role, isOnline);
-            
-            // (Móvil) Ocultar lista, mostrar chat
             document.getElementById('chat-layout-container')?.classList.add('show-chat');
-            
-            // Limpiar badge de no leídos
             friendItem.querySelector('.chat-item-unread-badge')?.remove();
             return;
         }
@@ -444,10 +589,22 @@ export function initChatManager() {
             e.preventDefault();
             document.getElementById('chat-layout-container')?.classList.remove('show-chat');
             currentChatUserId = null;
-            // Recargar la lista de conversaciones para actualizar snippets/badges
-            loadConversations();
+            loadConversations(); // Recargar lista
             return;
         }
+
+        // --- ▼▼▼ INICIO DE LISTENER MODIFICADO (Botón de adjuntar) ▼▼▼ ---
+        const attachBtn = e.target.closest('#chat-attach-button');
+        if (attachBtn) {
+            e.preventDefault();
+            if (selectedAttachments.length >= MAX_CHAT_FILES) {
+                showAlert(getTranslation('js.publication.errorFileCount', 'No puedes subir más de 4 archivos.').replace('4', MAX_CHAT_FILES), 'error');
+                return;
+            }
+            document.getElementById('chat-attachment-input')?.click();
+            return;
+        }
+        // --- ▲▲▲ FIN DE LISTENER MODIFICADO ---
     });
     
     // Listener para el formulario de envío
@@ -460,20 +617,16 @@ export function initChatManager() {
         }
     });
 
-    // --- ▼▼▼ INICIO DE LISTENER MODIFICADO ▼▼▼ ---
     let typingTimer;
     let isTyping = false;
 
-    // Listener para habilitar/deshabilitar el botón de envío Y "escribiendo"
+    // Listener para input (texto y filtro)
     document.body.addEventListener('input', (e) => {
         const chatInput = e.target.closest('#chat-message-input');
         if (chatInput) {
-            const sendBtn = document.getElementById('chat-send-button');
-            if (sendBtn) {
-                sendBtn.disabled = chatInput.value.trim().length === 0;
-            }
+            validateSendButton(); // Validar botón de envío
             
-            // --- INICIO DE NUEVA LÓGICA DE TYPING ---
+            // Lógica de "Escribiendo..."
             const receiverId = document.getElementById('chat-receiver-id').value;
             if (receiverId && window.ws && window.ws.readyState === WebSocket.OPEN) {
                 if (!isTyping) {
@@ -483,7 +636,6 @@ export function initChatManager() {
                         recipient_id: parseInt(receiverId, 10)
                     }));
                 }
-                
                 clearTimeout(typingTimer);
                 typingTimer = setTimeout(() => {
                     if (window.ws && window.ws.readyState === WebSocket.OPEN) {
@@ -493,24 +645,29 @@ export function initChatManager() {
                         }));
                     }
                     isTyping = false;
-                }, 2000); // 2 segundos de "parada"
+                }, 2000); 
             }
-            // --- FIN DE NUEVA LÓGICA DE TYPING ---
         }
         
-        // Listener para el filtro de búsqueda
         const searchInput = e.target.closest('#chat-friend-search');
         if (searchInput) {
             filterConversationList(searchInput.value);
         }
     });
-    // --- ▲▲▲ FIN DE LISTENER MODIFICADO ▲▲▲ ---
     
-    // Listener para el evento de presencia (del friend-manager)
+    // --- ▼▼▼ INICIO DE LISTENER NUEVO (Detección de archivos) ▼▼▼ ---
+    document.body.addEventListener('change', (e) => {
+        const fileInput = e.target.closest('#chat-attachment-input');
+        if (fileInput) {
+            handleAttachmentChange(e);
+        }
+    });
+    // --- ▲▲▲ FIN DE LISTENER NUEVO ---
+
+    // Listener para el evento de presencia
     document.addEventListener('user-presence-changed', (e) => {
-        const { userId, status } = e.detail; // "online" u "offline"
-        
-        // Actualizar la lista de chat
+        // ... (Esta función no necesita cambios) ...
+        const { userId, status } = e.detail; 
         const chatItem = document.querySelector(`.chat-conversation-item[data-user-id="${userId}"]`);
         if (chatItem) {
             const dot = chatItem.querySelector('.chat-item-status');
@@ -519,13 +676,11 @@ export function initChatManager() {
                 dot.classList.add(status); 
             }
         }
-        
-        // Actualizar el header del chat si está abierto
         if (parseInt(userId, 10) === currentChatUserId) {
             const statusEl = document.getElementById('chat-header-status');
-            if (statusEl) {
-                statusEl.textContent = status === 'online' ? 'Online' : 'Offline';
-                statusEl.className = status === 'online' ? 'chat-header-status online' : 'chat-header-status';
+            if (statusEl && statusEl.classList.contains('active')) { // Solo actualizar si 'escribiendo' no está activo
+                statusEl.textContent = status === 'online' ? getTranslation('chat.online', 'Online') : getTranslation('chat.offline', 'Offline');
+                statusEl.className = status === 'online' ? 'chat-header-status online active' : 'chat-header-status active';
             }
         }
     });

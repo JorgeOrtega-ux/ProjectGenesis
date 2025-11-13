@@ -340,6 +340,8 @@ ADD COLUMN education VARCHAR(100) NULL DEFAULT 'none' AFTER employment;
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS=0;
 
+-- ... (resto de tu bd.sql) ...
+
 -- ----------------------------
 -- Table structure for chat_messages
 -- ----------------------------
@@ -349,6 +351,13 @@ CREATE TABLE `chat_messages` (
   `sender_id` INT NOT NULL,
   `receiver_id` INT NOT NULL,
   `message_text` TEXT NOT NULL,
+  
+  -- --- ▼▼▼ NOTA IMPORTANTE ▼▼▼ ---
+  -- Las columnas 'attachment_url' y 'attachment_type'
+  -- que añadimos la última vez DEBEN SER ELIMINADAS.
+  -- Esta es la estructura final correcta.
+  -- --- ▲▲▲ FIN NOTA ▲▲▲ ---
+  
   `is_read` TINYINT(1) NOT NULL DEFAULT 0,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   
@@ -360,4 +369,44 @@ CREATE TABLE `chat_messages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
+-- --- ▼▼▼ INICIO DE NUEVAS TABLAS (MUY IMPORTANTE) ▼▼▼ ---
+
+-- ----------------------------
+-- Table structure for chat_files
+-- ----------------------------
+DROP TABLE IF EXISTS `chat_files`;
+CREATE TABLE `chat_files` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `uploader_id` INT NOT NULL,
+  `file_name_system` VARCHAR(255) NOT NULL,
+  `file_name_original` VARCHAR(255) NOT NULL,
+  `public_url` VARCHAR(512) NOT NULL,
+  `file_type` VARCHAR(100) NOT NULL,
+  `file_size` INT NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (uploader_id) REFERENCES `users`(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ----------------------------
+-- Table structure for chat_message_attachments
+-- ----------------------------
+DROP TABLE IF EXISTS `chat_message_attachments`;
+CREATE TABLE `chat_message_attachments` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `message_id` BIGINT NOT NULL,
+  `file_id` BIGINT NOT NULL,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  
+  FOREIGN KEY (message_id) REFERENCES `chat_messages`(id) ON DELETE CASCADE,
+  FOREIGN KEY (file_id) REFERENCES `chat_files`(id) ON DELETE CASCADE,
+  
+  UNIQUE KEY `uk_message_file` (`message_id`, `file_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --- ▲▲▲ FIN DE NUEVAS TABLAS ▲▲▲ ---
+
+
 SET FOREIGN_KEY_CHECKS=1;
+
+-- ... (resto de tu bd.sql) ...
