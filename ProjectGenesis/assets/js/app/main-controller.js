@@ -144,7 +144,7 @@ function initMainController() {
                 'toggle-post-privacy',   
                 'toggle-comments',       
                 'toggle-post-text',
-                'toggleModulePrivacySelect',
+                
                 'toggleModuleProfileMore',
                 'toggleFriendItemOptions',
                 
