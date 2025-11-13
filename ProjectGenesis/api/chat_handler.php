@@ -3,6 +3,7 @@
 // (MODIFICADO PARA PAGINACIÓN, MÚLTIPLES FOTOS, RESPUESTAS Y ELIMINAR)
 // (MODIFICADO OTRA VEZ PARA INCLUIR UUID EN CONVERSACIONES)
 // (MODIFICADO OTRA VEZ PARA PRIVACIDAD DE MENSAJES)
+// (CORREGIDO: SEPARADA LA LÓGICA DE VER HISTORIAL VS ENVIAR MENSAJES)
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -57,22 +58,23 @@ function notifyUser($targetUserId, $payload)
     }
 }
 
-// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (checkMessagePrivacy) ▼▼▼ ---
+
+// --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD ▼▼▼ ---
+
 /**
  * Comprueba si el usuario actual ($currentUserId) tiene permiso para
  * enviar mensajes al usuario receptor ($receiverId).
- * Lanza una Excepción si la acción está bloqueada.
+ * Devuelve true si está permitido, false si no.
  *
  * @param PDO $pdo
  * @param int $currentUserId ID del usuario que inicia la acción
  * @param int $receiverId ID del usuario que recibe la acción
- * @return void
- * @throws Exception Si la mensajería está bloqueada
+ * @return bool
  */
-function checkMessagePrivacy($pdo, $currentUserId, $receiverId) {
+function canSendMessage($pdo, $currentUserId, $receiverId) {
     // No comprobar si se envían mensajes a sí mismo (guardados)
     if ($currentUserId == $receiverId) {
-        return;
+        return true;
     }
 
     // Obtener la configuración de privacidad del RECEPTOR
@@ -87,7 +89,7 @@ function checkMessagePrivacy($pdo, $currentUserId, $receiverId) {
 
     // Opción 1: El receptor no acepta mensajes de nadie.
     if ($privacy === 'none') {
-        throw new Exception('js.chat.errorPrivacyBlocked');
+        return false;
     }
 
     // Opción 2: El receptor solo acepta mensajes de amigos.
@@ -101,13 +103,31 @@ function checkMessagePrivacy($pdo, $currentUserId, $receiverId) {
         
         if (!$stmt_friend->fetch()) {
             // No son amigos, bloquear.
-            throw new Exception('js.chat.errorPrivacyBlocked');
+            return false;
         }
     }
     
-    // Opción 3: 'all'. No hacer nada, permitir la acción.
+    // Opción 3: 'all'. Permitir.
+    return true;
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ---
+
+/**
+ * Lanza una Excepción si la mensajería está bloqueada.
+ * (Ahora usa canSendMessage)
+ *
+ * @param PDO $pdo
+ * @param int $currentUserId
+ * @param int $receiverId
+ * @return void
+ * @throws Exception
+ */
+function checkMessagePrivacy($pdo, $currentUserId, $receiverId) {
+    if (!canSendMessage($pdo, $currentUserId, $receiverId)) {
+        throw new Exception('js.chat.errorPrivacyBlocked');
+    }
+    // Si está permitido, no hace nada.
+}
+// --- ▲▲▲ FIN DE MODIFICACIÓN DE PRIVACIDAD ---
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -126,6 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
+            // Consulta que obtiene amigos Y no-amigos con chat
             $stmt_friends = $pdo->prepare(
                 "SELECT 
                     f.friend_id,
@@ -137,7 +158,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                              ELSE cm.message_text 
                          END
                      FROM chat_messages cm 
-
                      WHERE ((cm.sender_id = :current_user_id AND cm.receiver_id = f.friend_id) 
                         OR (cm.sender_id = f.friend_id AND cm.receiver_id = :current_user_id))
                      AND cm.status = 'active'
@@ -155,13 +175,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        AND cm.is_read = 0
                        AND cm.status = 'active') AS unread_count
                 FROM (
-                    (SELECT user_id_2 AS friend_id FROM friendships WHERE user_id_1 = :current_user_id AND status = 'accepted')
+                    -- 1. Todos los amigos aceptados
+                    SELECT user_id_2 AS friend_id FROM friendships WHERE user_id_1 = :current_user_id AND status = 'accepted'
                     UNION
-                    (SELECT user_id_1 AS friend_id FROM friendships WHERE user_id_2 = :current_user_id AND status = 'accepted')
+                    SELECT user_id_1 AS friend_id FROM friendships WHERE user_id_2 = :current_user_id AND status = 'accepted'
+                    UNION
+                    -- 2. Todas las personas a las que he enviado mensaje
+                    SELECT receiver_id AS friend_id FROM chat_messages WHERE sender_id = :current_user_id
+                    UNION
+                    -- 3. Todas las personas que me han enviado mensaje
+                    SELECT sender_id AS friend_id FROM chat_messages WHERE receiver_id = :current_user_id
                 ) AS f
                 JOIN users u ON f.friend_id = u.id
+                WHERE f.friend_id != :current_user_id
                 ORDER BY last_message_time DESC, u.username ASC"
             );
+            
             $stmt_friends->execute([':current_user_id' => $currentUserId]);
             $friends = $stmt_friends->fetchAll();
 
@@ -179,13 +208,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $targetUserId = (int)($_POST['target_user_id'] ?? 0);
             if ($targetUserId === 0) throw new Exception('js.api.invalidAction');
 
-            // --- ▼▼▼ INICIO DE COMPROBACIÓN DE PRIVACIDAD ▼▼▼ ---
-            checkMessagePrivacy($pdo, $currentUserId, $targetUserId);
-            // --- ▲▲▲ FIN DE COMPROBACIÓN ▲▲▲ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD ▼▼▼ ---
+            // ¡Quitamos el bloqueo de aquí!
+            // checkMessagePrivacy($pdo, $currentUserId, $targetUserId);
+            
+            // En su lugar, comprobamos si se puede enviar y lo notificamos al frontend
+            $canSendMessage = canSendMessage($pdo, $currentUserId, $targetUserId);
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             $beforeMessageId = (int)($_POST['before_message_id'] ?? 0);
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL CON status y reply_to) ▼▼▼ ---
+            // (El SQL para obtener mensajes no cambia)
             $sql_select =
                 "SELECT 
                     cm.*,
@@ -202,7 +235,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  LEFT JOIN users AS replied_user ON replied_msg.sender_id = replied_user.id
                  WHERE ((cm.sender_id = :current_user_id AND cm.receiver_id = :target_user_id) 
                     OR (cm.sender_id = :target_user_id AND cm.receiver_id = :current_user_id))";
-            // --- ▲▲▲ FIN DE MODIFICACIÓN (SQL) ▲▲▲ ---
 
             if ($beforeMessageId > 0) {
                 $sql_select .= " AND cm.id < :before_message_id";
@@ -214,18 +246,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  LIMIT " . CHAT_PAGE_SIZE;
 
             $stmt_msg = $pdo->prepare($sql_select);
-
             $stmt_msg->bindValue(':current_user_id', $currentUserId, PDO::PARAM_INT);
             $stmt_msg->bindValue(':target_user_id', $targetUserId, PDO::PARAM_INT);
-
             if ($beforeMessageId > 0) {
                 $stmt_msg->bindValue(':before_message_id', $beforeMessageId, PDO::PARAM_INT);
             }
-
             $stmt_msg->execute();
             $messages = $stmt_msg->fetchAll();
 
-            // Marcar mensajes como leídos (SOLO en la primera carga)
+            // (Marcar como leído no cambia)
             if ($beforeMessageId === 0) {
                 $stmt_read = $pdo->prepare(
                     "UPDATE chat_messages SET is_read = 1 
@@ -243,16 +272,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['messages'] = $messages;
             $response['message_count'] = count($messages);
             $response['limit'] = CHAT_PAGE_SIZE;
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD ▼▼▼ ---
+            // Añadimos el nuevo flag a la respuesta
+            $response['can_send_message'] = $canSendMessage;
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         } elseif ($action === 'send-message') {
 
             $receiverId = (int)($_POST['receiver_id'] ?? 0);
             $messageText = trim($_POST['message_text'] ?? '');
-            // --- ▼▼▼ INICIO DE NUEVA LÓGICA (reply_to) ▼▼▼ ---
             $replyToMessageId = (int)($_POST['reply_to_message_id'] ?? 0);
             $dbReplyToId = ($replyToMessageId > 0) ? $replyToMessageId : null;
-            // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
-
             $uploadedFiles = $_FILES['attachments'] ?? [];
             $fileIds = [];
 
@@ -260,7 +291,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.api.invalidAction');
             }
             
-            // --- ▼▼▼ INICIO DE COMPROBACIÓN DE PRIVACIDAD ▼▼▼ ---
+            // --- ▼▼▼ COMPROBACIÓN DE PRIVACIDAD ▼▼▼ ---
+            // Esta comprobación SÍ se queda aquí. No puedes ENVIAR si está bloqueado.
             checkMessagePrivacy($pdo, $currentUserId, $receiverId);
             // --- ▲▲▲ FIN DE COMPROBACIÓN ▲▲▲ ---
 
@@ -270,54 +302,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->beginTransaction();
 
-            // --- Lógica de subida de archivos (sin cambios) ---
+            // (Lógica de subida de archivos no cambia...)
             if (!empty($uploadedFiles['name'][0]) && $uploadedFiles['error'][0] === UPLOAD_ERR_OK) {
-
                 $fileCount = count($uploadedFiles['name']);
                 if ($fileCount > $MAX_CHAT_FILES) {
                     $response['data'] = ['count' => $MAX_CHAT_FILES];
                     throw new Exception('js.publication.errorFileCount');
                 }
-
                 $uploadDir = dirname(__DIR__) . '/assets/uploads/chat_attachments';
                 if (!is_dir($uploadDir)) {
                     if (!@mkdir($uploadDir, 0755, true)) {
                         throw new Exception('js.api.errorServer');
                     }
                 }
-
                 $stmt_insert_file = $pdo->prepare(
                     "INSERT INTO chat_files (uploader_id, file_name_system, file_name_original, public_url, file_type, file_size)
                      VALUES (?, ?, ?, ?, ?, ?)"
                 );
-
                 foreach ($uploadedFiles['error'] as $key => $error) {
                     if ($error !== UPLOAD_ERR_OK) continue;
-
                     $tmpName = $uploadedFiles['tmp_name'][$key];
                     $originalName = $uploadedFiles['name'][$key];
                     $fileSize = $uploadedFiles['size'][$key];
-
                     if ($fileSize > $MAX_SIZE_BYTES) {
                         $response['data'] = ['size' => $MAX_SIZE_MB];
                         throw new Exception('js.publication.errorFileSize');
                     }
-
                     $finfo = new finfo(FILEINFO_MIME_TYPE);
                     $mimeType = $finfo->file($tmpName);
                     if (!in_array($mimeType, $ALLOWED_TYPES)) {
                         throw new Exception('js.publication.errorFileType');
                     }
-
                     $extension = pathinfo($originalName, PATHINFO_EXTENSION);
                     $systemName = "chat-{$currentUserId}-" . time() . "-" . bin2hex(random_bytes(4)) . "-{$key}." . $extension;
                     $filePath = $uploadDir . '/' . $systemName;
                     $attachmentUrl = $basePath . '/assets/uploads/chat_attachments/' . $systemName;
-
                     if (!move_uploaded_file($tmpName, $filePath)) {
                         throw new Exception('js.settings.errorAvatarSave');
                     }
-
                     $stmt_insert_file->execute([
                         $currentUserId,
                         $systemName,
@@ -330,13 +352,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL INSERT con reply_to) ▼▼▼ ---
+            // (Insertar mensaje no cambia)
             $stmt_insert = $pdo->prepare(
                 "INSERT INTO chat_messages (sender_id, receiver_id, message_text, reply_to_message_id) 
                  VALUES (?, ?, ?, ?)"
             );
             $stmt_insert->execute([$currentUserId, $receiverId, $messageText, $dbReplyToId]);
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $newMessageId = $pdo->lastInsertId();
 
             if (!empty($fileIds)) {
@@ -348,8 +369,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt_link_file->execute([$newMessageId, $fileId, $index]);
                 }
             }
-
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL SELECT con reply_to) ▼▼▼ ---
+            
+            // (Obtener mensaje enviado no cambia)
             $stmt_get = $pdo->prepare(
                 "SELECT 
                     cm.*,
@@ -367,7 +388,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  WHERE cm.id = ?
                  GROUP BY cm.id"
             );
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             $stmt_get->execute([$newMessageId]);
             $newMessage = $stmt_get->fetch();
 
@@ -383,60 +403,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
             $response['message_sent'] = $newMessage;
 
-            // --- ▼▼▼ INICIO DE NUEVA ACCIÓN (delete-message) ▼▼▼ ---
         } elseif ($action === 'delete-message') {
 
+            // (Toda la lógica de delete-message no cambia)
             $messageId = (int)($_POST['message_id'] ?? 0);
             if ($messageId === 0) {
                 throw new Exception('js.api.invalidAction');
             }
-
             $stmt_check = $pdo->prepare(
                 "SELECT sender_id, receiver_id, created_at, status 
                  FROM chat_messages WHERE id = ? AND sender_id = ?"
             );
             $stmt_check->execute([$messageId, $currentUserId]);
             $message = $stmt_check->fetch();
-
             if (!$message) {
-                throw new Exception('js.chat.errorNotOwner'); // Error: No eres el dueño o no existe
+                throw new Exception('js.chat.errorNotOwner');
             }
-
             if ($message['status'] === 'deleted') {
-                throw new Exception('js.chat.errorAlreadyDeleted'); // Ya está borrado
+                throw new Exception('js.chat.errorAlreadyDeleted');
             }
-
             $createdTime = new DateTime($message['created_at'], new DateTimeZone('UTC'));
             $currentTime = new DateTime('now', new DateTimeZone('UTC'));
             $interval = $currentTime->getTimestamp() - $createdTime->getTimestamp();
             $hoursPassed = $interval / 3600;
-
             if ($hoursPassed > CHAT_DELETE_LIMIT_HOURS) {
-                throw new Exception('js.chat.errorDeleteTimeLimit'); // Error: Límite de 72h pasado
+                throw new Exception('js.chat.errorDeleteTimeLimit');
             }
-
             $stmt_update = $pdo->prepare(
                 "UPDATE chat_messages SET status = 'deleted', message_text = 'Se eliminó este mensaje' 
                  WHERE id = ?"
             );
             $stmt_update->execute([$messageId]);
-
-            // Notificar al receptor Y al emisor (otras sesiones)
             $receiverId = (int)$message['receiver_id'];
             $payload = [
                 'type' => 'message_deleted',
                 'payload' => [
                     'message_id' => $messageId,
-                    'conversation_user_id' => $receiverId // Para que el JS del emisor sepa qué chat actualizar
+                    'conversation_user_id' => $receiverId
                 ]
             ];
-
             notifyUser($receiverId, $payload);
-            notifyUser($currentUserId, $payload); // Notificar a mis otras sesiones
-
+            notifyUser($currentUserId, $payload);
             $response['success'] = true;
             $response['message'] = 'js.chat.successDeleted';
-            // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
         }
     } catch (Exception $e) {
         if ($pdo->inTransaction()) {

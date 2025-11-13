@@ -3,6 +3,7 @@
 // (MODIFICADO OTRA VEZ PARA USAR UUID EN URLS)
 // (MODIFICADO DE NUEVO PARA ARREGLAR LA RECARGA DE LA LISTA DEL REMITENTE)
 // (MODIFICADO CON CONSOLE.LOGS PARA DEPURACIÓN)
+// (CORREGIDO: Lógica de filtrado de lista y bloqueo de input por privacidad)
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -187,54 +188,70 @@ async function loadConversations() {
     console.groupEnd();
 }
 
+// --- ▼▼▼ INICIO DE FUNCIÓN CORREGIDA (filterConversationList) ▼▼▼ ---
 /**
  * Filtra la lista de amigos en el panel izquierdo.
- * (MODIFICADO según la especificación: la búsqueda SÓLO filtra chats existentes)
+ * (MODIFICADO: Muestra a TODOS los amigos. Los chats con historial
+ * aparecen primero, y el input busca en todos los amigos.)
  */
 function filterConversationList(query) {
     console.log(`%c[FILTER] filterConversationList() -> Query: "${query}"`, 'color: orange; font-weight: bold;');
     
     query = query.toLowerCase().trim();
     
-    // 1. La "lista de chats" base son SÓLO amigos con historial.
-    const conversationsWithHistory = friendCache.filter(convo => convo.last_message_time !== null);
-    console.log(`[FILTER] friendCache total: ${friendCache.length}. Chats con historial: ${conversationsWithHistory.length}`);
-    console.log("[FILTER] Chats con historial encontrados:", conversationsWithHistory.map(c => ({ user: c.username, time: c.last_message_time })));
-
-
     let conversationsToShow = [];
 
     if (!query) {
-        // Si la búsqueda está vacía, mostramos todos los chats con historial.
-        conversationsToShow = conversationsWithHistory;
-        console.log("[FILTER] Query está vacía. Mostrando chats con historial.");
+        // 1. SIN BÚSQUEDA: Mostrar TODOS los amigos del cache
+        // Usamos [...friendCache] para crear una copia y no modificar el original
+        conversationsToShow = [...friendCache]; 
+        console.log(`[FILTER] Query vacía. Mostrando TODOS los ${conversationsToShow.length} amigos.`);
+        
     } else {
-        // Si hay búsqueda, filtramos SÓLO los chats con historial.
-        conversationsToShow = conversationsWithHistory.filter(friend => 
+        // 2. CON BÚSQUEDA: Filtrar de TODOS los amigos del cache
+        conversationsToShow = friendCache.filter(friend => 
             friend.username.toLowerCase().includes(query)
         );
-        console.log(`[FILTER] Query no está vacía. Filtrando... ${conversationsToShow.length} chats coinciden.`);
+        console.log(`[FILTER] Query presente. Filtrando de *TODOS* ${friendCache.length} amigos... ${conversationsToShow.length} coinciden.`);
     }
     
-    // 2. Ordenamos la lista a mostrar por el mensaje más reciente
+    // 3. Ordenar la lista resultante (con o sin filtro)
+    // Lógica de ordenación:
+    //  - Amigos con mensajes (timeB) van antes que amigos sin mensajes (timeA == null)
+    //  - Amigos con mensajes se ordenan por el más reciente (timeB - timeA)
+    //  - Amigos sin mensajes se ordenan alfabéticamente (a.username.localeCompare(b.username))
+    
     conversationsToShow.sort((a, b) => {
-        // Ya sabemos que last_message_time no es nulo por el filtro anterior
-        const timeA = new Date(a.last_message_time);
-        const timeB = new Date(b.last_message_time);
-        
-        // Comprobar si las fechas son válidas antes de restar
-        if (isNaN(timeA) || isNaN(timeB)) {
-            return 0; // No mover si una fecha es inválida
+        const timeA = a.last_message_time ? new Date(a.last_message_time) : null;
+        const timeB = b.last_message_time ? new Date(b.last_message_time) : null;
+
+        // Caso 1: Ambos tienen historial. Ordenar por fecha.
+        if (timeA && timeB) {
+            if (isNaN(timeA) || isNaN(timeB)) return 0;
+            return timeB - timeA; // El más reciente (B) primero
         }
         
-        return timeB - timeA; // El más reciente (mayor timestamp) primero
+        // Caso 2: B tiene historial, A no. B va primero.
+        if (!timeA && timeB) {
+            return 1;
+        }
+        
+        // Caso 3: A tiene historial, B no. A va primero.
+        if (timeA && !timeB) {
+            return -1;
+        }
+        
+        // Caso 4: Ninguno tiene historial. Ordenar alfabéticamente.
+        return a.username.localeCompare(b.username);
     });
+
     console.log(`[FILTER] Ordenación completada. Se mostrarán ${conversationsToShow.length} chats.`);
 
-    // 3. Renderizar la lista final
+    // 4. Renderizar la lista final
     console.log("[FILTER] Llamando a renderConversationList...");
     renderConversationList(conversationsToShow);
 }
+// --- ▲▲▲ FIN DE FUNCIÓN CORREGIDA (filterConversationList) ---
 
 
 /**
@@ -248,6 +265,42 @@ function scrollToBottom() {
         }, 0);
     }
 }
+
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (enableChatInput) ▼▼▼ ---
+/**
+ * Habilita o deshabilita la barra de input del chat.
+ * @param {boolean} allow - true para permitir, false para bloquear.
+ */
+function enableChatInput(allow) {
+    const input = document.getElementById('chat-message-input');
+    const attachBtn = document.getElementById('chat-attach-button');
+    const sendBtn = document.getElementById('chat-send-button');
+    
+    if (!input || !attachBtn || !sendBtn) return;
+
+    if (allow) {
+        input.disabled = false;
+        attachBtn.disabled = false;
+        input.placeholder = getTranslation('chat.placeholder', 'Escribe un mensaje...');
+        validateSendButton(); // Re-validar el botón de envío
+    } else {
+        input.disabled = true;
+        attachBtn.disabled = true;
+        sendBtn.disabled = true; // Forzar deshabilitado
+        input.value = ''; // Limpiar por si acaso
+        input.placeholder = getTranslation('chat.privacyBlocked', 'No puedes enviar mensajes a este usuario.');
+        
+        // Limpiar adjuntos y previsualización de respuesta
+        selectedAttachments = [];
+        const previewContainer = document.getElementById('chat-attachment-preview-container');
+        const fileInput = document.getElementById('chat-attachment-input');
+        if (previewContainer) previewContainer.innerHTML = '';
+        if (fileInput) fileInput.value = '';
+        hideReplyPreview();
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN (enableChatInput) ---
+
 
 // --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (createMessageBubbleHtml) ▼▼▼ ---
 /**
@@ -442,6 +495,7 @@ function showHistoryLoader(show) {
     }
 }
 
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (loadChatHistory) ▼▼▼ ---
 /**
  * Llama a la API para obtener el historial de chat, opcionalmente antes de un ID.
  * @param {number} friendId - El ID del amigo.
@@ -481,20 +535,33 @@ async function loadChatHistory(friendId, beforeId = null) {
                 prependChatHistory(result.messages);
             } else {
                 renderChatHistory(result.messages);
-                document.getElementById('chat-message-input').disabled = false;
+                
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                // Leemos el nuevo flag 'can_send_message' de la API
+                if (result.can_send_message) {
+                    enableChatInput(true); // Permitir escribir
+                } else {
+                    enableChatInput(false); // Bloquear
+                }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
             
         } else {
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            // Si la API falla (ej. por privacidad en un futuro), bloqueamos el input
             if (!isPaginating) {
-                msgList.innerHTML = '<div class="chat-list-placeholder">Error al cargar mensajes.</div>';
+                msgList.innerHTML = `<div class="chat-list-placeholder">${getTranslation(result.message || 'js.api.errorServer')}</div>`;
+                enableChatInput(false); // Bloquear input en caso de error al cargar
             } else {
-                showAlert(getTranslation('js.api.errorServer'), 'error');
+                showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
             }
+             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         }
     } catch (e) {
         if (isPaginating) showHistoryLoader(false);
         if (!isPaginating) {
             msgList.innerHTML = '<div class="chat-list-placeholder">Error de conexión.</div>';
+            enableChatInput(false); // Bloquear input en caso de error de red
         } else {
             showAlert(getTranslation('js.api.errorConnection'), 'error');
         }
@@ -504,8 +571,10 @@ async function loadChatHistory(friendId, beforeId = null) {
         }
     }
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (loadChatHistory) ---
 
 
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (openChat) ▼▼▼ ---
 /**
  * Carga el historial de chat con un amigo específico.
  */
@@ -534,6 +603,15 @@ async function openChat(friendId, username, avatar, role, isOnline) {
     
     document.getElementById('chat-message-input').disabled = true;
     document.getElementById('chat-send-button').disabled = true;
+
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    // Resetear el placeholder por si el chat anterior estaba bloqueado
+    const input = document.getElementById('chat-message-input');
+    if (input) {
+        input.placeholder = getTranslation('chat.placeholder', 'Escribe un mensaje...');
+    }
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+
     document.getElementById('chat-attachment-preview-container').innerHTML = '';
     selectedAttachments = [];
     document.getElementById('chat-attachment-input').value = ''; 
@@ -548,6 +626,7 @@ async function openChat(friendId, username, avatar, role, isOnline) {
 
     await loadChatHistory(friendId, null);
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (openChat) ---
 
 /**
  * Habilita o deshabilita el botón de enviar.
@@ -556,6 +635,14 @@ function validateSendButton() {
     const input = document.getElementById('chat-message-input');
     const sendBtn = document.getElementById('chat-send-button');
     if (!input || !sendBtn) return;
+
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    // No habilitar el botón si el input está deshabilitado (por privacidad)
+    if (input.disabled) {
+        sendBtn.disabled = true;
+        return;
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     const hasText = input.value.trim().length > 0;
     const hasFiles = selectedAttachments.length > 0;
@@ -642,6 +729,14 @@ function handleAttachmentChange(e) {
 function showReplyPreview(messageId, username, text) {
     const container = document.getElementById('chat-reply-preview-container');
     if (!container) return;
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    // No permitir responder si el input está deshabilitado
+    const input = document.getElementById('chat-message-input');
+    if (input && input.disabled) {
+        return;
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     // Truncar texto si es muy largo
     const snippet = text.length > 100 ? text.substring(0, 100) + '...' : text;
@@ -750,15 +845,29 @@ async function sendMessage() {
         } else {
             console.error("[SENDER] La API reportó un fallo al enviar el mensaje:", result.message);
             showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            // Si el error es por privacidad, bloquear el input
+            if (result.message === 'js.chat.errorPrivacyBlocked') {
+                enableChatInput(false);
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         }
     } catch (e) {
         console.error("[SENDER] Error de red o excepción al enviar mensaje:", e);
         showAlert(getTranslation('js.api.errorConnection'), 'error');
     } finally {
-        input.disabled = false;
-        document.getElementById('chat-attach-button').disabled = false;
-        validateSendButton(); 
-        console.log("[SENDER] Controles re-habilitados.");
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        // Solo re-habilitar el input si no está bloqueado por privacidad
+        const currentInput = document.getElementById('chat-message-input');
+        if (currentInput && !currentInput.disabled) {
+             enableChatInput(true); // Re-habilita los 3 controles
+        } else if (currentInput) {
+             // Si está deshabilitado (por privacidad), asegurarse de que todo siga bloqueado
+             enableChatInput(false);
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+        console.log("[SENDER] Controles re-evaluados.");
     }
 }
 
@@ -911,11 +1020,8 @@ export function initChatManager() {
         if (!chatSection) return;
         
         // --- ▼▼▼ INICIO DE MODIFICACIÓN (Listener de Clic Eliminado) ▼▼▼ ---
-        // const friendItem = e.target.closest('.chat-conversation-item');
-        // if (friendItem) {
-        //     ... (ESTE BLOQUE SE HA ELIMINADO) ...
-        //     return;
-        // }
+        // El click en 'chat-conversation-item' ahora es manejado por el router
+        // (data-nav-js="true")
         // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         
         const backBtn = e.target.closest('#chat-back-button');
