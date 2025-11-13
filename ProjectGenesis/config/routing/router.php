@@ -670,41 +670,62 @@ if (array_key_exists($page, $allowedPages)) {
             logDatabaseError($e, 'router - trends');
             $trendingHashtags = [];
         }
-    // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (LÓGICA DE PRE-CARGA DE CHAT) ▼▼▼ ---
+        
+    // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (LÓGICA DE PRE-CARGA DE CHAT CON PRIVACIDAD) ▼▼▼ ---
     } elseif ($page === 'messages') {
         
         $preloadedChatUser = null;
-        $targetUserUuid = $_GET['user_uuid'] ?? null; // <-- CAMBIADO: de username a user_uuid
+        $targetUserUuid = $_GET['user_uuid'] ?? null;
         $currentUserId = $_SESSION['user_id'];
 
-        if ($targetUserUuid) { // <-- CAMBIADO
+        if ($targetUserUuid) { 
             try {
-                // 1. Buscar al usuario por UUID
-                // --- ▼▼▼ CAMBIO: SQL usa 'uuid' en lugar de 'username' ▼▼▼ ---
-                $stmt_user = $pdo->prepare("SELECT id, username, uuid, profile_image_url, role, last_seen FROM users WHERE uuid = ? AND account_status = 'active'");
-                $stmt_user->execute([$targetUserUuid]); // <-- CAMBIADO
+                // 1. Buscar al usuario por UUID y OBTENER SU CONFIGURACIÓN DE PRIVACIDAD
+                // (Asumo que la columna se llama 'message_privacy' y puede tener valores 'all' o 'friends')
+                $stmt_user = $pdo->prepare("
+                    SELECT id, username, uuid, profile_image_url, role, last_seen, 
+                           COALESCE(message_privacy, 'friends') AS message_privacy 
+                    FROM users 
+                    WHERE uuid = ? AND account_status = 'active'
+                ");
+                $stmt_user->execute([$targetUserUuid]);
                 $targetUser = $stmt_user->fetch();
-                // --- ▲▲▲ FIN CAMBIO SQL ▲▲▲ ---
 
                 if ($targetUser) {
                     $targetUserId = $targetUser['id'];
-
-                    // 2. Verificar que sean amigos (¡importante para seguridad!)
-                    $userId1 = min($currentUserId, $targetUserId);
-                    $userId2 = max($currentUserId, $targetUserId);
                     
-                    $stmt_friend = $pdo->prepare("SELECT status FROM friendships WHERE user_id_1 = ? AND user_id_2 = ? AND status = 'accepted'");
-                    $stmt_friend->execute([$userId1, $userId2]);
-                    $friendship = $stmt_friend->fetch();
-
-                    if ($friendship) {
-                        // 3. Son amigos, pre-cargar los datos
-                        $preloadedChatUser = $targetUser;
+                    // No puedes chatear contigo mismo desde esta vista
+                    if ($targetUserId === $currentUserId) {
+                         $preloadedChatUser = null; // Simplemente no pre-cargues, muestra la lista
                     } else {
-                        // No son amigos, redirigir a 404
-                        $page = '404';
-                        $CURRENT_SECTION = '404';
+                        
+                        // 2. Comprobar si son amigos
+                        $userId1 = min($currentUserId, $targetUserId);
+                        $userId2 = max($currentUserId, $targetUserId);
+                        
+                        $stmt_friend = $pdo->prepare("SELECT status FROM friendships WHERE user_id_1 = ? AND user_id_2 = ? AND status = 'accepted'");
+                        $stmt_friend->execute([$userId1, $userId2]);
+                        $areFriends = $stmt_friend->fetch();
+
+                        // 3. Obtener la configuración de privacidad del *usuario de destino*
+                        $messagePrivacySetting = $targetUser['message_privacy']; // Ya la tenemos del SQL
+
+                        // 4. Decidir si se permite el chat
+                        // Se permite si:
+                        //    a) Son amigos
+                        //    b) El usuario de destino permite mensajes de 'all' (todos)
+                        
+                        if ($areFriends || $messagePrivacySetting === 'all') {
+                            // 4a. Permitido: pre-cargar los datos
+                            $preloadedChatUser = $targetUser;
+                        } else {
+                            // 4b. No permitido: El usuario solo acepta mensajes de amigos y no lo son
+                            // Mostramos el 404, que es el comportamiento que veías
+                            $page = '404';
+                            $CURRENT_SECTION = '404';
+                        }
                     }
+
                 } else {
                     // Usuario no encontrado, redirigir a 404
                     $page = '404';
@@ -718,6 +739,7 @@ if (array_key_exists($page, $allowedPages)) {
         }
         
     // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
+    
     } elseif ($page === 'admin-manage-users') {
 
         $adminUsersData = getAdminUsersData($pdo, $_GET);
