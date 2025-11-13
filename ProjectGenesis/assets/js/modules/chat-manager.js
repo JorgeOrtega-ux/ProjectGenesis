@@ -1,5 +1,6 @@
 // FILE: assets/js/modules/chat-manager.js
 // (MODIFICADO PARA PAGINACIÓN, RESPUESTAS Y ELIMINAR)
+// (MODIFICADO OTRA VEZ PARA USAR UUID EN URLS)
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -86,8 +87,19 @@ function renderConversationList(conversations) {
         const unreadCount = parseInt(friend.unread_count, 10);
         const unreadBadge = unreadCount > 0 ? `<span class="chat-item-unread-badge">${unreadCount}</span>` : '';
         
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Convertir DIV a A) ▼▼▼ ---
+        // Asumiendo que friend.uuid ahora viene de la API
+        const chatUrl = `${window.projectBasePath}/messages/${friend.uuid}`; 
+
         html += `
-            <div class="chat-conversation-item" data-user-id="${friend.friend_id}" data-username="${escapeHTML(friend.username)}" data-avatar="${escapeHTML(avatar)}" data-role="${escapeHTML(friend.role)}">
+            <a class="chat-conversation-item" 
+               href="${chatUrl}"
+               data-nav-js="true"
+               data-user-id="${friend.friend_id}" 
+               data-username="${escapeHTML(friend.username)}" 
+               data-avatar="${escapeHTML(avatar)}" 
+               data-role="${escapeHTML(friend.role)}">
+                
                 <div class="chat-item-avatar" data-role="${escapeHTML(friend.role)}">
                     <img src="${escapeHTML(avatar)}" alt="${escapeHTML(friend.username)}">
                     <span class="chat-item-status ${statusClass}" id="chat-status-dot-${friend.friend_id}"></span>
@@ -102,8 +114,9 @@ function renderConversationList(conversations) {
                         ${unreadBadge}
                     </div>
                 </div>
-            </div>
+            </a>
         `;
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     });
     listContainer.innerHTML = html;
 }
@@ -808,20 +821,13 @@ export function initChatManager() {
         const chatSection = e.target.closest('[data-section="messages"]');
         if (!chatSection) return;
         
-        const friendItem = e.target.closest('.chat-conversation-item');
-        if (friendItem) {
-            e.preventDefault();
-            const friendId = friendItem.dataset.userId;
-            const username = friendItem.dataset.username;
-            const avatar = friendItem.dataset.avatar;
-            const role = friendItem.dataset.role;
-            const isOnline = friendItem.querySelector('.chat-item-status')?.classList.contains('online');
-            
-            openChat(friendId, username, avatar, role, isOnline);
-            document.getElementById('chat-layout-container')?.classList.add('show-chat');
-            friendItem.querySelector('.chat-item-unread-badge')?.remove();
-            return;
-        }
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Listener de Clic Eliminado) ▼▼▼ ---
+        // const friendItem = e.target.closest('.chat-conversation-item');
+        // if (friendItem) {
+        //     ... (ESTE BLOQUE SE HA ELIMINADO) ...
+        //     return;
+        // }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         
         const backBtn = e.target.closest('#chat-back-button');
         if (backBtn) {

@@ -1,6 +1,7 @@
 <?php
 // FILE: config/routing/router.php
 // (MODIFICADO - Añadida lógica para pre-cargar chat y corrección de error de log)
+// (MODIFICADO OTRA VEZ - Cambiado /messages/username a /messages/uuid)
 
 include '../config.php';
 
@@ -112,7 +113,7 @@ $allowedPages = [
 
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (RUTAS DE MENSAJES) ▼▼▼ ---
     'messages' => '../../includes/sections/main/messages.php',
-    'messages/username-placeholder' => '../../includes/sections/main/messages.php',
+    'messages/uuid-placeholder' => '../../includes/sections/main/messages.php', // <-- RUTA MODIFICADA
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     'register-step1' => '../../includes/sections/auth/register.php',
@@ -669,19 +670,21 @@ if (array_key_exists($page, $allowedPages)) {
             logDatabaseError($e, 'router - trends');
             $trendingHashtags = [];
         }
-    // --- ▼▼▼ INICIO DE NUEVO BLOQUE (LÓGICA DE PRE-CARGA DE CHAT) ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (LÓGICA DE PRE-CARGA DE CHAT) ▼▼▼ ---
     } elseif ($page === 'messages') {
         
         $preloadedChatUser = null;
-        $targetUsername = $_GET['username'] ?? null;
+        $targetUserUuid = $_GET['user_uuid'] ?? null; // <-- CAMBIADO: de username a user_uuid
         $currentUserId = $_SESSION['user_id'];
 
-        if ($targetUsername) {
+        if ($targetUserUuid) { // <-- CAMBIADO
             try {
-                // 1. Buscar al usuario
-                $stmt_user = $pdo->prepare("SELECT id, username, profile_image_url, role, last_seen FROM users WHERE username = ? AND account_status = 'active'");
-                $stmt_user->execute([$targetUsername]);
+                // 1. Buscar al usuario por UUID
+                // --- ▼▼▼ CAMBIO: SQL usa 'uuid' en lugar de 'username' ▼▼▼ ---
+                $stmt_user = $pdo->prepare("SELECT id, username, uuid, profile_image_url, role, last_seen FROM users WHERE uuid = ? AND account_status = 'active'");
+                $stmt_user->execute([$targetUserUuid]); // <-- CAMBIADO
                 $targetUser = $stmt_user->fetch();
+                // --- ▲▲▲ FIN CAMBIO SQL ▲▲▲ ---
 
                 if ($targetUser) {
                     $targetUserId = $targetUser['id'];
@@ -714,7 +717,7 @@ if (array_key_exists($page, $allowedPages)) {
             }
         }
         
-    // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
+    // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
     } elseif ($page === 'admin-manage-users') {
 
         $adminUsersData = getAdminUsersData($pdo, $_GET);

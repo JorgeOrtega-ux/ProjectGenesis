@@ -1,5 +1,6 @@
 // FILE: assets/js/app/url-manager.js
 // (CORREGIDO - Error 'Cannot access 'page' before initialization')
+// (MODIFICADO OTRA VEZ - Cambiado /messages/username a /messages/uuid)
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
@@ -9,35 +10,35 @@ import { hideTooltip } from '../services/tooltip-manager.js';
 import { loadSavedCommunity, loadCommentsForPost } from '../modules/community-manager.js';
 import { initPublicationForm } from '../modules/publication-manager.js';
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-import { initFriendList } from '../modules/friend-manager.js'; 
+import { initFriendList } from '../modules/friend-manager.js';
 
 const contentContainer = document.querySelector('.main-sections');
 const pageLoader = document.getElementById('page-loader');
 
 let loaderTimer = null;
-let currentMenuType = null; 
+let currentMenuType = null;
 
 const routes = {
     'toggleSectionHome': 'home',
     'toggleSectionExplorer': 'explorer',
     'toggleSectionTrends': 'trends', // --- [HASTAGS] --- Nueva ruta
     'toggleSectionLogin': 'login',
-    'toggleSectionMaintenance': 'maintenance', 
-    'toggleSectionServerFull': 'server-full', 
+    'toggleSectionMaintenance': 'maintenance',
+    'toggleSectionServerFull': 'server-full',
 
     // --- ▼▼▼ RUTA ELIMINADA ▼▼▼ ---
     // 'toggleSectionJoinGroup': 'join-group', 
     // --- ▲▲▲ FIN RUTA ELIMINADA ▲▲▲ ---
-    
-    'toggleSectionCreatePublication': 'create-publication', 
-    'toggleSectionCreatePoll': 'create-poll', 
-    
-    'toggleSectionPostView': 'post-view', 
 
-    'toggleSectionViewProfile': 'view-profile', 
+    'toggleSectionCreatePublication': 'create-publication',
+    'toggleSectionCreatePoll': 'create-poll',
+
+    'toggleSectionPostView': 'post-view',
+
+    'toggleSectionViewProfile': 'view-profile',
 
     'toggleSectionSearchResults': 'search-results',
-    
+
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Ruta de Mensajes) ▼▼▼ ---
     'toggleSectionMessages': 'messages',
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
@@ -54,7 +55,7 @@ const routes = {
     'toggleSectionSettingsLogin': 'settings-login',
     'toggleSectionSettingsAccess': 'accessibility',
     'toggleSectionSettingsDevices': 'settings-devices',
-    
+
     'toggleSectionSettingsPassword': 'settings-change-password',
     'toggleSectionSettingsChangeEmail': 'settings-change-email',
     'toggleSectionSettingsToggle2fa': 'settings-toggle-2fa',
@@ -62,46 +63,46 @@ const routes = {
 
     'toggleSectionAccountStatusDeleted': 'account-status-deleted',
     'toggleSectionAccountStatusSuspended': 'account-status-suspended',
-    
+
     'toggleSectionAdminDashboard': 'admin-dashboard',
-    'toggleSectionAdminManageUsers': 'admin-manage-users', 
-    'toggleSectionAdminCreateUser': 'admin-create-user', 
-    'toggleSectionAdminEditUser': 'admin-edit-user', 
-    'toggleSectionAdminServerSettings': 'admin-server-settings', 
+    'toggleSectionAdminManageUsers': 'admin-manage-users',
+    'toggleSectionAdminCreateUser': 'admin-create-user',
+    'toggleSectionAdminEditUser': 'admin-edit-user',
+    'toggleSectionAdminServerSettings': 'admin-server-settings',
     'toggleSectionAdminManageBackups': 'admin-manage-backups',
     'toggleSectionAdminManageLogs': 'admin-manage-logs',
-    
+
     'toggleSectionAdminManageCommunities': 'admin-manage-communities',
     'toggleSectionAdminEditCommunity': 'admin-edit-community',
 };
 
 const paths = {
     '/': 'toggleSectionHome',
-    '/c/uuid-placeholder': 'toggleSectionHome', 
-    '/post/id-placeholder': 'toggleSectionPostView', 
-    '/profile/username-placeholder': 'toggleSectionViewProfile', 
-    
+    '/c/uuid-placeholder': 'toggleSectionHome',
+    '/post/id-placeholder': 'toggleSectionPostView',
+    '/profile/username-placeholder': 'toggleSectionViewProfile',
+
     '/search': 'toggleSectionSearchResults',
-    
+
     '/trends': 'toggleSectionTrends', // --- [HASTAGS] --- Nueva ruta
 
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Rutas de Mensajes) ▼▼▼ ---
     '/messages': 'toggleSectionMessages',
-    '/messages/username-placeholder': 'toggleSectionMessages',
+    '/messages/uuid-placeholder': 'toggleSectionMessages', // <-- Placeholder actualizado
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     '/explorer': 'toggleSectionExplorer',
     '/login': 'toggleSectionLogin',
-    '/maintenance': 'toggleSectionMaintenance', 
-    '/server-full': 'toggleSectionServerFull', 
+    '/maintenance': 'toggleSectionMaintenance',
+    '/server-full': 'toggleSectionServerFull',
 
     // --- ▼▼▼ RUTA ELIMINADA ▼▼▼ ---
     // '/join-group': 'toggleSectionJoinGroup',
     // --- ▲▲▲ FIN RUTA ELIMINADA ▲▲▲ ---
-    
-    '/create-publication': 'toggleSectionCreatePublication', 
-    '/create-poll': 'toggleSectionCreatePoll', 
-    
+
+    '/create-publication': 'toggleSectionCreatePublication',
+    '/create-poll': 'toggleSectionCreatePoll',
+
     '/profile/username-placeholder/likes': 'toggleSectionViewProfile',
     '/profile/username-placeholder/bookmarks': 'toggleSectionViewProfile',
     '/profile/username-placeholder/info': 'toggleSectionViewProfile',
@@ -111,7 +112,7 @@ const paths = {
     '/register': 'toggleSectionRegisterStep1',
     '/register/additional-data': 'toggleSectionRegisterStep2',
     '/register/verification-code': 'toggleSectionRegisterStep3',
-    
+
     '/reset-password': 'toggleSectionResetStep1',
     '/reset-password/verify-code': 'toggleSectionResetStep2',
     '/reset-password/new-password': 'toggleSectionResetStep3',
@@ -120,7 +121,7 @@ const paths = {
     '/settings/login-security': 'toggleSectionSettingsLogin',
     '/settings/accessibility': 'toggleSectionSettingsAccess',
     '/settings/device-sessions': 'toggleSectionSettingsDevices',
-    
+
     '/settings/change-password': 'toggleSectionSettingsPassword',
     '/settings/change-email': 'toggleSectionSettingsChangeEmail',
     '/settings/toggle-2fa': 'toggleSectionSettingsToggle2fa',
@@ -128,16 +129,16 @@ const paths = {
 
     '/account-status/deleted': 'toggleSectionAccountStatusDeleted',
     '/account-status/suspended': 'toggleSectionAccountStatusSuspended',
-    
+
     '/admin/dashboard': 'toggleSectionAdminDashboard',
-    '/admin/manage-users': 'toggleSectionAdminManageUsers', 
-    '/admin/create-user': 'toggleSectionAdminCreateUser', 
-    '/admin/edit-user': 'toggleSectionAdminEditUser', 
-    '/admin/server-settings': 'toggleSectionAdminServerSettings', 
+    '/admin/manage-users': 'toggleSectionAdminManageUsers',
+    '/admin/create-user': 'toggleSectionAdminCreateUser',
+    '/admin/edit-user': 'toggleSectionAdminEditUser',
+    '/admin/server-settings': 'toggleSectionAdminServerSettings',
 
     '/admin/manage-backups': 'toggleSectionAdminManageBackups',
     '/admin/manage-logs': 'admin-manage-logs',
-    
+
     '/admin/manage-communities': 'toggleSectionAdminManageCommunities',
     '/admin/edit-community': 'toggleSectionAdminEditCommunity',
 };
@@ -165,13 +166,13 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
                 <div class="spinner"></div>
             </div>
         `;
-        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
+        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▼▼▼ ---
 
         let queryString = '';
         if (fetchParams) {
             queryString = new URLSearchParams(fetchParams).toString().replace(/\+/g, '%20');
         }
-        
+
         // Añadir el parámetro 'partial=true' para que el router sepa qué enviar
         const partialQuery = `partial=true${queryString ? `&${queryString}` : ''}`;
         const fetchUrl = `${basePath}/config/routing/router.php?page=${page}&${partialQuery}`;
@@ -196,57 +197,57 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
         }
         return; // Fin de la carga parcial
     }
-    
+
     // --- Lógica de Carga Completa (la original) ---
     const headerTop = document.querySelector('.general-content-top');
-    
+
     if (headerTop) {
         headerTop.classList.remove('shadow');
     }
 
     const friendListWrapper = document.getElementById('friend-list-wrapper');
-    
+
     if (friendListWrapper) {
-        
+
         // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
         // Se eliminó '|| page === 'trends'' de la condición
-        if (page === 'home') { 
-        // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
-            
+        if (page === 'home') {
+            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+
             if (!friendListWrapper.querySelector('#friend-list-container')) {
                 try {
                     const friendListUrl = `${basePath}/includes/modules/module-friend-list.php`;
                     const response = await fetch(friendListUrl);
-                    
+
                     if (response.ok) {
                         friendListWrapper.innerHTML = await response.text();
-                        
+
                         const newFriendListModule = friendListWrapper.querySelector('#friend-list-container');
                         if (newFriendListModule) {
                             applyTranslations(newFriendListModule);
-                            initFriendList(); 
+                            initFriendList();
                         }
                     } else {
                         throw new Error('Falló el fetch del módulo de amigos');
                     }
                 } catch (err) {
                     console.error("Error al cargar dinámicamente la lista de amigos:", err);
-                    friendListWrapper.innerHTML = ''; 
+                    friendListWrapper.innerHTML = '';
                 }
             } else {
                 const friendListItems = friendListWrapper.querySelector('#friend-list-items');
                 if (friendListItems && friendListItems.querySelector('.logout-spinner')) {
-                     initFriendList(); 
+                    initFriendList();
                 }
             }
         } else {
             if (friendListWrapper.querySelector('#friend-list-container')) {
-                friendListWrapper.innerHTML = ''; 
+                friendListWrapper.innerHTML = '';
             }
         }
     }
 
-    contentContainer.innerHTML = ''; 
+    contentContainer.innerHTML = '';
     if (loaderTimer) {
         clearTimeout(loaderTimer);
     }
@@ -256,10 +257,10 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
         }
     }, 200);
 
-    
+
     const isSettingsPage = page.startsWith('settings-');
     const isAdminPage = page.startsWith('admin-');
-    
+
     let menuType = 'main';
     if (isSettingsPage) {
         menuType = 'settings';
@@ -268,8 +269,8 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
     }
 
     if (currentMenuType === null || currentMenuType !== menuType) {
-        currentMenuType = menuType; 
-        
+        currentMenuType = menuType;
+
         fetch(`${basePath}/config/routing/menu_router.php?type=${menuType}`)
             .then(res => res.text())
             .then(menuHtml => {
@@ -280,8 +281,8 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
                     if (newMenu) {
                         applyTranslations(newMenu);
                     }
-                    
-                    updateMenuState(action); 
+
+                    updateMenuState(action);
                 }
             })
             .catch(err => console.error('Error al cargar el menú lateral:', err));
@@ -295,18 +296,18 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
 
         if (fetchParams) {
             queryString = new URLSearchParams(fetchParams).toString().replace(/\+/g, '%20');
-        
+
         } else {
             const browserQuery = window.location.search;
             if (browserQuery) {
-                queryString = browserQuery.substring(1); 
+                queryString = browserQuery.substring(1);
             }
         }
-        
+
         const fetchUrl = `${basePath}/config/routing/router.php?page=${page}${queryString ? `&${queryString}` : ''}`;
 
         const response = await fetch(fetchUrl);
-        
+
         const html = await response.text();
 
         contentContainer.innerHTML = html;
@@ -327,7 +328,7 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
             link = document.getElementById('register-resend-code-link');
         } else if (page === 'reset-step2') {
             link = document.getElementById('reset-resend-code-link');
-        } else if (page === 'settings-change-email') { 
+        } else if (page === 'settings-change-email') {
             link = document.getElementById('email-verify-resend');
         }
 
@@ -342,9 +343,9 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
         const newScrollableContent = contentContainer.querySelector('.section-content.overflow-y');
 
         if (newScrollableContent && headerTopForListener) {
-            
-            newScrollableContent.addEventListener('scroll', function() {
-                
+
+            newScrollableContent.addEventListener('scroll', function () {
+
                 if (this.scrollTop > 0) {
                     headerTopForListener.classList.add('shadow');
                 } else {
@@ -352,24 +353,24 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
                 }
             });
         }
-        
+
         if (page === 'home') {
             loadSavedCommunity();
         }
-        
+
         if (page === 'post-view') {
-            
+
             const commentsContainer = contentContainer.querySelector('.post-comments-container[data-post-id]');
             const commentInputContainer = contentContainer.querySelector('.post-comment-input-container[data-action="post-comment"]');
-            
+
             if (commentsContainer && commentInputContainer) {
                 commentsContainer.classList.add('active');
                 commentInputContainer.classList.add('active');
-                
+
                 loadCommentsForPost(commentsContainer.dataset.postId);
             }
         }
-        
+
         // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ ---
         if (page === 'create-publication' || page === 'create-poll') {
             initPublicationForm(); // ¡¡LA LLAMADA QUE FALTABA!!
@@ -399,14 +400,14 @@ export function handleNavigation() {
     let action = null;
     // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
     let page = null; // 1. Declarar 'page' aquí con 'let'
-    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
-    
+    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▼▼▼ ---
+
     const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
-    const postViewRegex = /^\/post\/(\d+)$/i; 
-    
+    const postViewRegex = /^\/post\/(\d+)$/i;
+
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Regex de Perfil y Mensajes) ▼▼▼ ---
     const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(posts|likes|bookmarks|info|amigos|fotos))?$/i;
-    const messagesRegex = /^\/messages\/([a-zA-Z0-9_]+)$/i;
+    const messagesRegex = /^\/messages\/([a-fA-F0-9\-]{36})$/i; // <-- MODIFICADO
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
@@ -416,49 +417,49 @@ export function handleNavigation() {
         const matches = path.match(communityUuidRegex);
         const uuid = matches[1];
         loadPage('home', action, { community_uuid: uuid });
-        return; 
-        
-    } else if (postViewRegex.test(path)) { 
+        return;
+
+    } else if (postViewRegex.test(path)) {
         action = 'toggleSectionPostView';
         const matches = path.match(postViewRegex);
         const postId = matches[1];
-        loadPage('post-view', action, { post_id: postId }); 
+        loadPage('post-view', action, { post_id: postId });
         return;
 
     } else if (profileRegex.test(path)) {
         action = 'toggleSectionViewProfile';
         const matches = path.match(profileRegex);
         const username = matches[1];
-        const tab = matches[2] || 'posts'; 
+        const tab = matches[2] || 'posts';
         loadPage('view-profile', action, { username: username, tab: tab });
         return;
-        
-    // --- ▼▼▼ INICIO DE NUEVO BLOQUE (Manejo de /messages/username) ▼▼▼ ---
+
+        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Manejo de /messages/uuid) ▼▼▼ ---
     } else if (messagesRegex.test(path)) {
         action = 'toggleSectionMessages';
         page = 'messages'; // 2. Asignar 'page' (esto ahora es válido)
         const matches = path.match(messagesRegex);
-        const username = matches[1];
-        loadPage(page, action, { username: username });
+        const userUuid = matches[1]; // <-- CAMBIADO
+        loadPage(page, action, { user_uuid: userUuid }); // <-- CAMBIADO
         return;
-    // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
+        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
 
-    } else { 
+    } else {
         if (path === '/settings') {
             path = '/settings/your-profile';
             history.replaceState(null, '', `${basePath}${path}`);
         }
-        
+
         if (path === '/admin') {
             path = '/admin/dashboard';
             history.replaceState(null, '', `${basePath}${path}`);
         }
-        
+
         action = paths[path];
     }
 
     if (!action) {
-        loadPage('404', null); 
+        loadPage('404', null);
         return;
     }
 
@@ -468,19 +469,19 @@ export function handleNavigation() {
     // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
     if (page) {
-        loadPage(page, action); 
+        loadPage(page, action);
     } else {
         loadPage('404', null);
     }
 }
 
 function updateMenuState(currentAction) {
-    
+
     let menuAction = currentAction;
     if (currentAction && currentAction.startsWith('toggleSectionRegister')) menuAction = 'toggleSectionRegister';
     if (currentAction && currentAction.startsWith('toggleSectionReset')) menuAction = 'toggleSectionResetPassword';
 
-    if (currentAction === 'toggleSectionSettingsPassword' || 
+    if (currentAction === 'toggleSectionSettingsPassword' ||
         currentAction === 'toggleSectionSettingsToggle2fa' ||
         currentAction === 'toggleSectionSettingsDeleteAccount') {
         menuAction = 'toggleSectionSettingsLogin';
@@ -488,9 +489,9 @@ function updateMenuState(currentAction) {
     if (currentAction === 'toggleSectionSettingsChangeEmail') {
         menuAction = 'toggleSectionSettingsProfile';
     }
-    
-    if (currentAction === 'toggleSectionAdminManageUsers') { 
-        menuAction = 'toggleSectionAdminManageUsers'; 
+
+    if (currentAction === 'toggleSectionAdminManageUsers') {
+        menuAction = 'toggleSectionAdminManageUsers';
     }
     if (currentAction === 'toggleSectionAdminCreateUser') {
         menuAction = 'toggleSectionAdminCreateUser';
@@ -505,25 +506,25 @@ function updateMenuState(currentAction) {
     if (currentAction === 'toggleSectionAdminManageBackups') {
         menuAction = 'toggleSectionAdminManageBackups';
     }
-    
+
     if (currentAction === 'toggleSectionAdminManageLogs') {
-         menuAction = 'toggleSectionAdminDashboard'; 
+        menuAction = 'toggleSectionAdminDashboard';
     }
-    
+
     if (currentAction === 'toggleSectionAdminManageCommunities' || currentAction === 'toggleSectionAdminEditCommunity') {
         menuAction = 'toggleSectionAdminManageCommunities';
     }
 
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Agrupar todo bajo 'home' y 'messages') ▼▼▼ ---
-    if (currentAction === 'toggleSectionJoinGroup' || 
-        currentAction === 'toggleSectionCreatePublication' || 
+    if (currentAction === 'toggleSectionJoinGroup' ||
+        currentAction === 'toggleSectionCreatePublication' ||
         currentAction === 'toggleSectionCreatePoll' ||
         currentAction === 'toggleSectionPostView' ||
         currentAction === 'toggleSectionViewProfile' ||
-        currentAction === 'toggleSectionSearchResults') { 
+        currentAction === 'toggleSectionSearchResults') {
         menuAction = 'toggleSectionHome'; // Todas estas acciones resaltan 'Home'
     }
-    
+
     if (currentAction === 'toggleSectionMessages') {
         menuAction = 'toggleSectionMessages'; // La acción de mensajes se resalta a sí misma
     }
@@ -532,7 +533,7 @@ function updateMenuState(currentAction) {
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
         const linkAction = link.getAttribute('data-action');
 
-        if (linkAction === menuAction) { 
+        if (linkAction === menuAction) {
             link.classList.add('active');
         } else {
             link.classList.remove('active');
@@ -544,45 +545,45 @@ function updateMenuState(currentAction) {
 export function initRouter() {
 
     document.body.addEventListener('click', e => {
-      const communityLink = e.target.closest('[data-module="moduleSelectGroup"] .menu-link[data-community-id]');
-      if (communityLink) {
-          return;
-      }
-      
-      // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (SELECTOR DE NAVEGACIÓN) ▼▼▼ ---
-      const link = e.target.closest(
-            '.menu-link[data-action*="toggleSection"], ' +
-            'a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], ' +
-            // --- ▼▼▼ MODIFICACIÓN: Añadido /messages ▼▼▼ ---
-            'a[href*="/profile/"], a[href*="/search"], a[href*="/trends"], a[href*="/messages"], ' +
-            '.component-button[data-action*="toggleSection"], ' +
-            '.page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], ' +
-            '.auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], ' +
-            '[data-module="moduleProfileMore"] a.menu-link[data-nav-js="true"], ' + 
-            'div.profile-nav-button[data-nav-js="true"],' +
-            '[data-module="moduleSelect"] .menu-link[data-nav-js="true"],' +
-            'a.post-hashtag-link[data-nav-js="true"],' +
-            // --- ▼▼▼ MODIFICACIÓN: Añadido selector del menú de amigos ▼▼▼ ---
-            '[data-module="friend-context-menu"] [data-nav-js="true"]'
-        );
-      // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+        const communityLink = e.target.closest('[data-module="moduleSelectGroup"] .menu-link[data-community-id]');
+        if (communityLink) {
+            return;
+        }
+
+        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (SELECTOR DE NAVEGACIÓN) ▼▼▼ ---
+       const link = e.target.closest(
+  '.menu-link[data-action*="toggleSection"], ' +
+  'a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], ' +
+  'a[href*="/profile/"], a[href*="/search"], a[href*="/trends"], a[href*="/messages"], ' +
+  '.component-button[data-action*="toggleSection"], ' +
+  '.page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], ' +
+  '.auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], ' +
+  '[data-module="moduleProfileMore"] a.menu-link[data-nav-js="true"], ' +
+  'div.profile-nav-button[data-nav-js="true"],' +
+  '[data-module="moduleSelect"] .menu-link[data-nav-js="true"],' +
+  'a.post-hashtag-link[data-nav-js="true"],' +
+  '[data-module="friend-context-menu"] [data-nav-js="true"],' + // Clic en "Ver Perfil"
+  'a.chat-conversation-item[data-nav-js="true"]' // Clic en conversación
+);
+
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
         if (link) {
-            
+
             hideTooltip();
 
-            if (link.classList.contains('component-button') && !link.hasAttribute('data-action') && !link.hasAttribute('data-nav-js')) { 
+            if (link.classList.contains('component-button') && !link.hasAttribute('data-action') && !link.hasAttribute('data-nav-js')) {
                 return;
             }
 
             e.preventDefault();
 
             let action, page, newPath;
-            let fetchParams = null; 
-            
+            let fetchParams = null;
+
             let isPartialLoad = false;
             const currentProfileSection = document.querySelector('[data-section="view-profile"]');
-            
+
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (Detectar clic en div.profile-nav-button) ▼▼▼ ---
             if (currentProfileSection && (link.classList.contains('profile-nav-button') || link.closest('[data-module="moduleProfileMore"]'))) {
                 isPartialLoad = true;
@@ -606,7 +607,7 @@ export function initRouter() {
                     // Si el clic fue en el menú "Más"
                     const mainNavBar = document.querySelector('.profile-nav-bar');
                     if (mainNavBar) {
-                         mainNavBar.querySelectorAll('.profile-nav-button').forEach(btn => btn.classList.remove('active'));
+                        mainNavBar.querySelectorAll('.profile-nav-button').forEach(btn => btn.classList.remove('active'));
                     }
                     moreMenu.querySelectorAll('a.menu-link').forEach(ml => ml.classList.remove('active'));
                     link.classList.add('active');
@@ -616,50 +617,50 @@ export function initRouter() {
 
             if (link.hasAttribute('data-action')) {
                 action = link.getAttribute('data-action');
-                
-                // --- ▼▼▼ INICIO DE NUEVO BLOQUE (Manejar clic en "Enviar Mensaje") ▼▼▼ ---
-                if (action === 'friend-menu-message' && link.dataset.username) {
-                    const username = link.dataset.username;
+
+                // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Manejar clic en "Enviar Mensaje") ▼▼▼ ---
+                if (action === 'friend-menu-message' && link.dataset.uuid) { // <-- CAMBIADO: a uuid
+                    const userUuid = link.dataset.uuid; // <-- CAMBIADO
                     page = 'messages';
                     action = 'toggleSectionMessages';
-                    newPath = '/messages/' + username;
-                    fetchParams = { username: username };
+                    newPath = '/messages/' + userUuid; // <-- CAMBIADO
+                    fetchParams = { user_uuid: userUuid }; // <-- CAMBIADO
                 }
-                // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
+                // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
                 else if (action === 'toggleSectionPostView' && link.dataset.postId) {
                     page = 'post-view';
                     newPath = '/post/' + link.dataset.postId;
                     fetchParams = { post_id: link.dataset.postId };
-                } 
-                else { 
+                }
+                else {
                     page = routes[action];
                     newPath = Object.keys(paths).find(key => paths[key] === action);
                 }
 
             } else {
-                
+
                 // --- ▼▼▼ INICIO DE MODIFICACIÓN (Leer 'href' o 'data-href') ▼▼▼ ---
                 const href = link.href || link.dataset.href;
                 if (!href) return; // No es un enlace válido, salir
                 const url = new URL(href, window.location.origin); // Usar window.location.origin como base
                 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-                
+
                 newPath = url.pathname.replace(basePath, '') || '/';
-                
+
                 const postViewRegex = /^\/post\/(\d+)$/i;
                 const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
-                
+
                 // --- ▼▼▼ INICIO DE MODIFICACIÓN (Nuevos Regex) ▼▼▼ ---
                 const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(posts|likes|bookmarks|info|amigos|fotos))?$/i;
-                const messagesRegex = /^\/messages\/([a-zA-Z0-9_]+)$/i;
+                const messagesRegex = /^\/messages\/([a-fA-F0-9\-]{36})$/i; // <-- MODIFICADO
                 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 if (postViewRegex.test(newPath)) {
                     action = 'toggleSectionPostView';
                     page = 'post-view';
                     const matches = newPath.match(postViewRegex);
-                    fetchParams = { post_id: matches[1] }; 
-                
+                    fetchParams = { post_id: matches[1] };
+
                 } else if (communityUuidRegex.test(newPath)) {
                     action = 'toggleSectionHome';
                     page = 'home';
@@ -671,41 +672,41 @@ export function initRouter() {
                     page = 'view-profile';
                     const matches = newPath.match(profileRegex);
                     fetchParams = { username: matches[1], tab: matches[2] || 'posts' };
-                
-                // --- ▼▼▼ INICIO DE NUEVO BLOQUE (Manejo de URL de Mensajes) ▼▼▼ ---
+
+                    // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Manejo de URL de Mensajes) ▼▼▼ ---
                 } else if (messagesRegex.test(newPath)) {
                     action = 'toggleSectionMessages';
                     page = 'messages';
                     const matches = newPath.match(messagesRegex);
-                    fetchParams = { username: matches[1] };
-                // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
+                    fetchParams = { user_uuid: matches[1] }; // <-- CAMBIADO
+                    // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
 
-                } else { 
+                } else {
                     if (newPath === '/settings') newPath = '/settings/your-profile';
                     if (newPath === '/admin') newPath = '/admin/dashboard';
                     action = paths[newPath];
                     page = routes[action];
                 }
             }
-            
-            
+
+
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (Leer 'href' o 'data-href') ▼▼▼ ---
             const href = link.href || link.dataset.href;
-            const url = href ? new URL(href, window.location.origin) : null; 
+            const url = href ? new URL(href, window.location.origin) : null;
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-            
+
             if (link.hasAttribute('data-nav-js') && url && url.search) {
-                 if (!fetchParams) fetchParams = {};
-                 const searchParams = new URLSearchParams(url.search);
-                 searchParams.forEach((value, key) => {
-                    if (!fetchParams.hasOwnProperty(key)) { 
+                if (!fetchParams) fetchParams = {};
+                const searchParams = new URLSearchParams(url.search);
+                searchParams.forEach((value, key) => {
+                    if (!fetchParams.hasOwnProperty(key)) {
                         fetchParams[key] = value;
                     }
-                 });
+                });
             }
 
             if (!page) {
-                if(link.tagName === 'A' && !link.hasAttribute('data-action')) {
+                if (link.tagName === 'A' && !link.hasAttribute('data-action')) {
                     window.location.href = link.href;
                 }
                 return;
@@ -713,21 +714,21 @@ export function initRouter() {
 
             const queryString = (url && url.search) ? url.search : '';
             let fullUrlPath;
-            
+
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir 'messages' a la lógica) ▼▼▼ ---
             if ((action === 'toggleSectionPostView' || action === 'toggleSectionViewProfile' || action === 'toggleSectionMessages') && newPath) {
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-                fullUrlPath = `${basePath}${newPath}${queryString}`; 
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                fullUrlPath = `${basePath}${newPath}${queryString}`;
             } else {
                 fullUrlPath = `${basePath}${newPath === '/' ? '/' : newPath}${queryString}`;
             }
-            
-            
+
+
             const currentFullUrl = window.location.pathname + window.location.search;
             if (currentFullUrl !== fullUrlPath) {
                 history.pushState(null, '', fullUrlPath);
-                
-                loadPage(page, action, fetchParams, isPartialLoad); 
+
+                loadPage(page, action, fetchParams, isPartialLoad);
             }
 
             deactivateAllModules();

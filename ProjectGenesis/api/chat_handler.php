@@ -1,6 +1,7 @@
 <?php
 // FILE: api/chat_handler.php
 // (MODIFICADO PARA PAGINACIÓN, MÚLTIPLES FOTOS, RESPUESTAS Y ELIMINAR)
+// (MODIFICADO OTRA VEZ PARA INCLUIR UUID EN CONVERSACIONES)
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -72,11 +73,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIDO u.uuid) ▼▼▼ ---
             $stmt_friends = $pdo->prepare(
                 "SELECT 
                     f.friend_id,
-                    u.username, u.profile_image_url, u.role, u.last_seen,
+                    u.username, u.uuid, u.profile_image_url, u.role, u.last_seen,
                     (SELECT 
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                          CASE 
                              WHEN (SELECT 1 FROM chat_message_attachments cma WHERE cma.message_id = cm.id LIMIT 1) IS NOT NULL AND cm.message_text = '' THEN '[Imagen]'
                              WHEN (SELECT 1 FROM chat_message_attachments cma WHERE cma.message_id = cm.id LIMIT 1) IS NOT NULL AND cm.message_text != '' THEN cm.message_text

@@ -1,6 +1,7 @@
 <?php
 // FILE: config/bootstrapper.php
 // (MODIFICADO - Añadida nueva regla de enrutado para /messages/username)
+// (MODIFICADO OTRA VEZ - Cambiado /messages/username a /messages/uuid)
 
 // Carga la configuración base (BD, sesiones, etc.)
 include 'config/config.php';
@@ -358,17 +359,16 @@ if (preg_match('/^\/c\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
     $path = '/search';
 // --- ▲▲▲ FIN DE NUEVA RUTA DE BÚSQUEDA ▲▲▲ ---
 
-// --- ▼▼▼ INICIO DE NUEVA RUTA DE MENSAJES ▼▼▼ ---
-} elseif (preg_match('/^\/messages\/([a-zA-Z0-9_]+)$/i', $path, $matches)) {
-    $username = $matches[1];
-    $_GET['username'] = $username; // Poner el username en $_GET para que router.php lo lea
-    $path = '/messages/username-placeholder'; // Usar un placeholder para el mapeo
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (Ruta de Mensajes: username -> uuid) ▼▼▼ ---
+} elseif (preg_match('/^\/messages\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
+    $userUuid = $matches[1];
+    $_GET['user_uuid'] = $userUuid; // Poner el UUID en $_GET para que router.php lo lea
+    $path = '/messages/uuid-placeholder'; // Usar un placeholder para el mapeo
 } elseif ($path === '/messages') {
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     // La ruta base /messages se mantiene
     $path = '/messages';
 }
-// --- ▲▲▲ FIN DE NUEVA RUTA DE MENSAJES ▲▲▲ ---
-
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
@@ -385,7 +385,7 @@ $pathsToPages = [
 
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (RUTAS DE MENSAJES) ▼▼▼ ---
     '/messages' => 'messages',
-    '/messages/username-placeholder' => 'messages',
+    '/messages/uuid-placeholder' => 'messages', // <-- Placeholder actualizado
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     '/explorer'   => 'explorer',
