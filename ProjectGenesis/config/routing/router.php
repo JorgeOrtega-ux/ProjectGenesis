@@ -3,6 +3,7 @@
 // (MODIFICADO - Añadida lógica para pre-cargar chat y corrección de error de log)
 // (MODIFICADO OTRA VEZ - Cambiado /messages/username a /messages/uuid)
 // (MODIFICADO DE NUEVO - Para mostrar error de privacidad en lugar de 404)
+// (CORREGIDO - Para comprobar el historial existente antes de mostrar el error de privacidad)
 
 include '../config.php';
 
@@ -683,23 +684,21 @@ if (array_key_exists($page, $allowedPages)) {
         if ($targetUserUuid) { 
             try {
                 // 1. Buscar al usuario por UUID y OBTENER SU CONFIGURACIÓN DE PRIVACIDAD
-                // (CORREGIDO: Se une a user_preferences y se selecciona message_privacy_level)
                 $stmt_user = $pdo->prepare("
                     SELECT u.id, u.username, u.uuid, u.profile_image_url, u.role, u.last_seen, 
                            COALESCE(p.message_privacy_level, 'all') AS message_privacy_level 
                     FROM users u
                     LEFT JOIN user_preferences p ON u.id = p.user_id
                     WHERE u.uuid = ? AND u.account_status = 'active'
-                "); // <-- CORREGIDO
+                ");
                 $stmt_user->execute([$targetUserUuid]);
                 $targetUser = $stmt_user->fetch();
 
                 if ($targetUser) {
                     $targetUserId = $targetUser['id'];
                     
-                    // No puedes chatear contigo mismo desde esta vista
                     if ($targetUserId === $currentUserId) {
-                         $preloadedChatUser = null; // Simplemente no pre-cargues, muestra la lista
+                         $preloadedChatUser = null;
                     } else {
                         
                         // 2. Comprobar si son amigos
@@ -711,33 +710,53 @@ if (array_key_exists($page, $allowedPages)) {
                         $areFriends = $stmt_friend->fetch();
 
                         // 3. Obtener la configuración de privacidad del *usuario de destino*
-                        $messagePrivacySetting = $targetUser['message_privacy_level']; // <-- CORREGIDO 
+                        $messagePrivacySetting = $targetUser['message_privacy_level'];
 
                         // 4. Decidir si se permite el chat
                         if ($areFriends || $messagePrivacySetting === 'all') {
                             // 4a. Permitido: pre-cargar los datos
                             $preloadedChatUser = $targetUser;
                         } else {
-                            // 4b. No permitido: En lugar de 404, establece el tipo de error
-                            $preloadedChatUser = null; // No cargar datos de chat
-                            if ($messagePrivacySetting === 'none') {
-                                $chatErrorType = 'none'; // <-- NUEVO
+                            // 4b. No permitido: Comprobar si existe historial
+                            
+                            // --- ▼▼▼ INICIO DE LÓGICA CORREGIDA ▼▼▼ ---
+                            $stmt_history_check = $pdo->prepare(
+                                "SELECT 1 FROM chat_messages 
+                                 WHERE (sender_id = :user1 AND receiver_id = :user2) 
+                                    OR (sender_id = :user2 AND receiver_id = :user1) 
+                                 LIMIT 1"
+                            );
+                            $stmt_history_check->execute([
+                                ':user1' => $currentUserId,
+                                ':user2' => $targetUserId
+                            ]);
+                            $hasHistory = $stmt_history_check->fetch();
+
+                            if ($hasHistory) {
+                                // SÍ hay historial. Carga el chat, el JS lo bloqueará.
+                                $preloadedChatUser = $targetUser;
+                                $chatErrorType = null; // No hay error de PHP
                             } else {
-                                $chatErrorType = 'friends_only'; // <-- NUEVO (para 'friends')
+                                // NO hay historial. Muestra el error de PHP.
+                                $preloadedChatUser = null;
+                                if ($messagePrivacySetting === 'none') {
+                                    $chatErrorType = 'none';
+                                } else {
+                                    $chatErrorType = 'friends_only'; // (para 'friends')
+                                }
                             }
-                            // ¡Ya no se asigna page = '404' aquí!
+                            // --- ▲▲▲ FIN DE LÓGICA CORREGIDA ▲▲▲ ---
                         }
                     }
 
                 } else {
-                    // Usuario no encontrado, ESTO SÍ es un 404
                     $page = '404';
                     $CURRENT_SECTION = '404';
                 }
 
             } catch (PDOException $e) {
                 logDatabaseError($e, 'router - messages - preload');
-                $preloadedChatUser = null; // Fallback a la vista de lista normal
+                $preloadedChatUser = null;
                 $chatErrorType = null;
             }
         }

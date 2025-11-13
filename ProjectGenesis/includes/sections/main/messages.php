@@ -421,8 +421,13 @@ $hasChatError = isset($chatErrorType) && $chatErrorType; // <-- NUEVO
 $chatSidebarClass = ($hasPreloadedUser || $hasChatError) ? 'disabled' : 'active'; // <-- MODIFICADO
 // Ocultar el placeholder por defecto si hay un chat O un error
 $chatContentPlaceholderClass = ($hasPreloadedUser || $hasChatError) ? 'disabled' : 'active'; // <-- MODIFICADO
+
+// --- ▼▼▼ ¡ESTA ES LA LÓGICA ORIGINAL Y CORRECTA! ▼▼▼ ---
 // Mostrar el chat principal solo si hay un usuario pre-cargado (sin error)
+// Si hay error ($hasChatError) pero no usuario ($hasPreloadedUser), esto será 'disabled'
 $chatContentMainClass = $hasPreloadedUser ? 'active' : 'disabled';
+// --- ▲▲▲ FIN DE LÓGICA ORIGINAL ▲▲▲ ---
+
 // Forzar la vista de chat en móvil si hay un chat O un error
 $chatLayoutClass = ($hasPreloadedUser || $hasChatError) ? 'show-chat' : ''; // <-- MODIFICADO
 
@@ -492,7 +497,7 @@ if ($hasPreloadedUser) {
                     </div>
 
             </div>
-            </div>
+        </div>
 
         <div class="chat-content-right" id="chat-content-right">
 
@@ -532,7 +537,7 @@ if ($hasPreloadedUser) {
                             <span data-i18n="chat.typing">Escribiendo</span>
                         </div>
                     </div>
-                    </div>
+                </div>
 
                 <div class="chat-message-list" id="chat-message-list">
                     </div>
