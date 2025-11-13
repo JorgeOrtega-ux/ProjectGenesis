@@ -1,8 +1,16 @@
 // FILE: assets/js/modules/friend-manager.js
+// (MODIFICADO - Añadido menú contextual al hacer clic en amigo)
 
 import { getTranslation } from '../services/i18n-manager.js';
 import { showAlert } from '../services/alert-manager.js';
-import { callFriendApi as callApi } from '../services/api-service.js'; 
+import { callFriendApi as callApi } from '../services/api-service.js';
+// --- ▼▼▼ INICIO DE IMPORTACIONES AÑADIDAS ▼▼▼ ---
+import { createPopper } from 'https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/esm/popper.min.js';
+import { deactivateAllModules } from '../app/main-controller.js';
+import { handleNavigation } from '../app/url-manager.js';
+// --- ▲▲▲ FIN DE IMPORTACIONES AÑADIDAS ▲▲▲ ---
+
+let popperInstance = null; // Instancia para el popover de contexto
 
 // --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (RENDER) ▼▼▼ ---
 function renderFriendList(friends) {
@@ -24,18 +32,20 @@ function renderFriendList(friends) {
 
     let html = '';
     friends.forEach(friend => {
-        // Determinar la clase de estado inicial
         const statusClass = friend.is_online ? 'online' : 'offline';
+        const profileUrl = `${window.projectBasePath}/profile/${friend.username}`;
         
-        // --- INICIO DE LA CORRECCIÓN ---
-        // Se añade el rol del amigo (friend.role) al atributo data-role
-        // y se usa la clase 'comment-avatar' (que tiene los estilos de 32px + bordes)
-        // en lugar de la clase 'menu-link-avatar'.
+        // --- INICIO DE LA MODIFICACIÓN ---
+        // Se cambia <a> por <div>
+        // Se quita href y data-nav-js
+        // Se añade data-action="toggle-friend-context-menu"
+        // Se añaden data-username y data-profile-url para el popover
         html += `
-            <a class="menu-link friend-item" 
-               href="${window.projectBasePath}/profile/${friend.username}"
-               data-nav-js="true"
+            <div class="menu-link friend-item" 
+               data-action="toggle-friend-context-menu"
                data-friend-id="${friend.friend_id}"
+               data-username="${friend.username}"
+               data-profile-url="${profileUrl}"
                title="${friend.username}">
                
                 <div class="menu-link-icon">
@@ -48,9 +58,9 @@ function renderFriendList(friends) {
                 <div class="menu-link-text">
                     <span>${friend.username}</span>
                 </div>
-            </a>
+            </div>
         `;
-        // --- FIN DE LA CORRECCIÓN ---
+        // --- FIN DE LA MODIFICACIÓN ---
     });
     container.innerHTML = html;
 }
@@ -180,8 +190,69 @@ export function initFriendManager() {
     // --- ▲▲▲ FIN DE NUEVO LISTENER ▲▲▲ ---
 
     document.body.addEventListener('click', async (e) => {
+        
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Menú contextual de amigo) ▼▼▼ ---
+        const friendItem = e.target.closest('[data-action="toggle-friend-context-menu"]');
+        if (friendItem) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (popperInstance) {
+                popperInstance.destroy();
+                popperInstance = null;
+            }
+
+            const popover = document.getElementById('friend-context-menu');
+            if (!popover) return;
+            
+            // Rellenar los datos en el popover
+            const profileUrl = friendItem.dataset.profileUrl;
+            const username = friendItem.dataset.username;
+            
+            const profileLink = popover.querySelector('[data-action="friend-menu-profile"]');
+            const messageLink = popover.querySelector('[data-action="friend-menu-message"]');
+            
+            if (profileLink) profileLink.href = profileUrl;
+            if (messageLink) messageLink.dataset.username = username;
+
+            // Posicionar y mostrar el popover
+            popperInstance = createPopper(friendItem, popover, {
+                placement: 'left-start',
+                modifiers: [{ name: 'offset', options: { offset: [0, 8] } }]
+            });
+
+            deactivateAllModules(popover);
+            popover.classList.remove('disabled');
+            popover.classList.add('active');
+            
+            return;
+        }
+        
+        // Clic en "Enviar Mensaje"
+        const messageButton = e.target.closest('[data-action="friend-menu-message"]');
+        if (messageButton) {
+            e.preventDefault();
+            const username = messageButton.dataset.username;
+            if (!username) return;
+
+            // Construir la nueva URL y navegar
+            const newPath = `${window.projectBasePath}/messages/${username}`;
+            history.pushState(null, '', newPath);
+            handleNavigation(); // Dejar que el url-manager maneje la carga
+            
+            deactivateAllModules();
+            return;
+        }
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
+
+
         const button = e.target.closest('[data-action^="friend-"]');
         if (!button) return;
+
+        // Prevenir que el clic en "enviar mensaje" o "ver perfil" se propague
+        if (button.dataset.action === 'friend-menu-profile' || button.dataset.action === 'friend-menu-message') {
+            return;
+        }
 
         e.preventDefault();
         const actionStr = button.dataset.action;

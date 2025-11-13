@@ -296,11 +296,64 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 }
 </style>
 
+<?php
+// FILE: includes/sections/main/messages.php
+// (MODIFICADO - Ahora acepta un usuario pre-cargado desde el router)
+global $basePath;
+$defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+$userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
+
+// --- ▼▼▼ INICIO DE NUEVA LÓGICA DE PRE-CARGA ▼▼▼ ---
+
+// $preloadedChatUser es inyectado por router.php si la URL es /messages/username
+$hasPreloadedUser = isset($preloadedChatUser) && $preloadedChatUser;
+
+$chatSidebarClass = $hasPreloadedUser ? 'disabled' : 'active';
+$chatContentPlaceholderClass = $hasPreloadedUser ? 'disabled' : 'active';
+$chatContentMainClass = $hasPreloadedUser ? 'active' : 'disabled';
+$chatLayoutClass = $hasPreloadedUser ? 'show-chat' : ''; // Para móvil
+
+$preloadedReceiverId = '';
+$preloadedAvatar = $defaultAvatar;
+$preloadedUsername = '...';
+$preloadedStatusText = 'Offline';
+$preloadedStatusClass = 'offline';
+
+if ($hasPreloadedUser) {
+    $preloadedReceiverId = htmlspecialchars($preloadedChatUser['id']);
+    $preloadedAvatar = htmlspecialchars($preloadedChatUser['profile_image_url'] ?? $defaultAvatar);
+    if (empty($preloadedAvatar)) $preloadedAvatar = "https://ui-avatars.com/api/?name=" . urlencode($preloadedChatUser['username']) . "&size=100&background=e0e0e0&color=ffffff";
+    $preloadedUsername = htmlspecialchars($preloadedChatUser['username']);
+    
+    // (Lógica de estado online/offline copiada de view-profile.php)
+    $is_actually_online = false;
+    try {
+        $context = stream_context_create(['http' => ['timeout' => 0.5]]); 
+        $jsonResponse = @file_get_contents('http://127.0.0.1:8766/get-online-users', false, $context);
+        if ($jsonResponse !== false) {
+            $data = json_decode($jsonResponse, true);
+            if (isset($data['status']) && $data['status'] === 'ok' && isset($data['online_users'])) {
+                $is_actually_online = in_array($preloadedChatUser['id'], $data['online_users']);
+            }
+        }
+    } catch (Exception $e) { /* Fallo de WS, se asume offline */ }
+    
+    if ($is_actually_online) {
+        $preloadedStatusText = 'Online';
+        $preloadedStatusClass = 'online active';
+    } else {
+        $preloadedStatusText = 'Desconectado';
+        $preloadedStatusClass = 'active'; // 'active' (visible), pero sin clase 'online'
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA LÓGICA DE PRE-CARGA ▲▲▲ ---
+?>
+
 <div class="section-content <?php echo ($CURRENT_SECTION === 'messages') ? 'active' : 'disabled'; ?>" data-section="messages" style="overflow-y: hidden;">
     
-    <div class="chat-layout-container" id="chat-layout-container">
+    <div class="chat-layout-container <?php echo $chatLayoutClass; ?>" id="chat-layout-container">
 
-        <div class="chat-sidebar-left" id="chat-sidebar-left">
+        <div class="chat-sidebar-left <?php echo $chatSidebarClass; ?>" id="chat-sidebar-left">
             <div class="chat-sidebar-header">
                 <h1 class="component-page-title" data-i18n="chat.title">Mensajes</h1>
                 <div class="chat-sidebar-search">
@@ -323,23 +376,25 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 
         <div class="chat-content-right" id="chat-content-right">
 
-            <div class="chat-content-placeholder active" id="chat-content-placeholder">
+            <div class="chat-content-placeholder <?php echo $chatContentPlaceholderClass; ?>" id="chat-content-placeholder">
                 <span class="material-symbols-rounded">chat</span>
                 <span data-i18n="chat.selectConversation">Selecciona una conversación para empezar</span>
             </div>
 
-            <div class="chat-content-main disabled" id="chat-content-main">
+            <div class="chat-content-main <?php echo $chatContentMainClass; ?>" 
+                 id="chat-content-main" 
+                 data-autoload-chat="<?php echo $hasPreloadedUser ? 'true' : 'false'; ?>">
                 
                 <div class="chat-content-header">
                     <button type="button" class="chat-back-button" id="chat-back-button">
                         <span class="material-symbols-rounded">arrow_back</span>
                     </button>
                     <div class="chat-header-avatar">
-                        <img src="<?php echo $defaultAvatar; ?>" id="chat-header-avatar" alt="Avatar">
+                        <img src="<?php echo $preloadedAvatar; ?>" id="chat-header-avatar" alt="Avatar">
                     </div>
                     <div class="chat-header-info" id="chat-header-info">
-                        <div class="chat-header-username" id="chat-header-username">Nombre de Usuario</div>
-                        <div class="chat-header-status active" id="chat-header-status" data-i18n-offline="chat.offline">Offline</div>
+                        <div class="chat-header-username" id="chat-header-username"><?php echo $preloadedUsername; ?></div>
+                        <div class="chat-header-status <?php echo $preloadedStatusClass; ?>" id="chat-header-status" data-i18n-offline="chat.offline"><?php echo $preloadedStatusText; ?></div>
                         <div class="chat-header-status-typing disabled" id="chat-header-typing">
                             <span class="typing-dot"></span>
                             <span class="typing-dot"></span>
@@ -347,14 +402,14 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
                             <span data-i18n="chat.typing">Escribiendo</span>
                         </div>
                     </div>
-                </div>
+                    </div>
 
                 <div class="chat-message-list" id="chat-message-list">
                     </div>
 
                 <form class="chat-message-input-form" id="chat-message-input-form" action="#">
                     <?php outputCsrfInput(); ?>
-                    <input type="hidden" id="chat-receiver-id" value="">
+                    <input type="hidden" id="chat-receiver-id" value="<?php echo $preloadedReceiverId; ?>">
                     
                     <input type="file" id="chat-attachment-input" class="visually-hidden" 
                            accept="image/png, image/jpeg, image/gif, image/webp" 
@@ -367,7 +422,7 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
                              <span class="material-symbols-rounded">add_photo_alternate</span>
                         </button>
                         
-                        <input type="text" class="chat-input-field" id="chat-message-input" placeholder="Escribe tu mensaje..." data-i18n-placeholder="chat.messagePlaceholder" autocomplete="off" disabled>
+                        <input type="text" class="chat-input-field" id="chat-message-input" placeholder="Escribe tu mensaje..." data-i18n-placeholder="chat.messagePlaceholder" autocomplete="off" <?php echo $hasPreloadedUser ? '' : 'disabled'; ?>>
                         
                         <button type="submit" class="chat-send-button" id="chat-send-button" disabled>
                             <span class="material-symbols-rounded">send</span>

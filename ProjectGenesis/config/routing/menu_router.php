@@ -3,7 +3,7 @@
 // (CÓDIGO MODIFICADO CON RUTAS CORREGIDAS)
 
 // --- ▼▼▼ CAMBIO DE RUTA ▼▼▼ ---
-include '../config.php';
+include dirname(__DIR__, 2) . '/config/config.php';
 // --- ▲▲▲ FIN DE CAMBIO ▲▲▲ ---
 
 if (!isset($_SESSION['user_id'])) {
@@ -29,6 +29,6 @@ if ($isAdminPage) {
 // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
 // --- ▼▼▼ CAMBIO DE RUTA ▼▼▼ ---
-include '../../includes/modules/module-surface.php';
+include dirname(__DIR__, 2) . '/includes/modules/module-surface.php';
 // --- ▲▲▲ FIN DE CAMBIO ▲▲▲ ---
 ?>

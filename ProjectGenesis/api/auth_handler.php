@@ -1,4 +1,6 @@
 <?php
+// FILE: api/auth_handler.php
+// (MODIFICADO - Se eliminaron las llamadas redundantes a session_set_cookie_params)
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -102,9 +104,10 @@ function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $
         logDatabaseError($e, 'auth_handler - createUser - preferences');
     }
 
-
-    $session_lifetime = 60 * 60 * 24 * 90; 
-    session_set_cookie_params($session_lifetime);
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Líneas eliminadas) ▼▼▼ ---
+    // $session_lifetime = 60 * 60 * 24 * 90; 
+    // session_set_cookie_params($session_lifetime);
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (Líneas eliminadas) ▲▲▲ ---
     
     session_regenerate_id(true);
 
@@ -540,8 +543,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $response['cooldown'] = $codeResendCooldownSeconds; 
 
                         } else {
-                            $session_lifetime = 60 * 60 * 24 * 90; 
-                            session_set_cookie_params($session_lifetime);
+                            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Líneas eliminadas) ▼▼▼ ---
+                            // $session_lifetime = 60 * 60 * 24 * 90; 
+                            // session_set_cookie_params($session_lifetime);
+                            // --- ▲▲▲ FIN DE MODIFICACIÓN (Líneas eliminadas) ▲▲▲ ---
                             
                             session_regenerate_id(true);
 
@@ -621,8 +626,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $user = $stmt_user->fetch();
 
                         if ($user) {
-                            $session_lifetime = 60 * 60 * 24 * 90; 
-                            session_set_cookie_params($session_lifetime);
+                            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Líneas eliminadas) ▼▼▼ ---
+                            // $session_lifetime = 60 * 60 * 24 * 90; 
+                            // session_set_cookie_params($session_lifetime);
+                            // --- ▲▲▲ FIN DE MODIFICACIÓN (Líneas eliminadas) ▲▲▲ ---
                             
                             session_regenerate_id(true);
 

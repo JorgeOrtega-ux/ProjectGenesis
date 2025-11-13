@@ -1,7 +1,7 @@
 <?php
 // FILE: includes/modules/module-friend-list.php
 // (CORREGIDO: Eliminado data-module y la clase "disabled")
-// (NUEVA MODIFICACIÓN: Añadido style="display: none;" para evitar el "flash")
+// (NUEVA MODIFICACIÓN: Añadido popover de contexto)
 ?>
 <div class="module-content module-surface body-title" id="friend-list-container">
     <div class="menu-content">
@@ -30,4 +30,36 @@
         </div>
 
     </div>
-</div>
+
+    <div class="popover-module body-title disabled" 
+         data-module="friend-context-menu" 
+         id="friend-context-menu" 
+         style="width: 200px; /* Ancho fijo para el popover */">
+        <div class="menu-content">
+            <div class="menu-list">
+                
+                <a class="menu-link" 
+                   data-action="friend-menu-profile"
+                   data-nav-js="true" 
+                   href="#"> <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">person</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span>Ver Perfil</span>
+                    </div>
+                </a>
+
+                <div class="menu-link" 
+                     data-action="friend-menu-message"
+                     data-username=""> <div class="menu-link-icon">
+                        <span class="material-symbols-rounded">chat</span>
+                    </div>
+                    <div class="menu-link-text">
+                        <span>Enviar Mensaje</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    </div>

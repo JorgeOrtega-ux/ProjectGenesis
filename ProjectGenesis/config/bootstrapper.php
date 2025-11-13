@@ -1,5 +1,6 @@
 <?php
 // FILE: config/bootstrapper.php
+// (MODIFICADO - Añadida nueva regla de enrutado para /messages/username)
 
 // Carga la configuración base (BD, sesiones, etc.)
 include 'config/config.php';
@@ -356,7 +357,18 @@ if (preg_match('/^\/c\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
     // ya estará en la URL (ej. /search?q=hola) y router.php la leerá.
     $path = '/search';
 // --- ▲▲▲ FIN DE NUEVA RUTA DE BÚSQUEDA ▲▲▲ ---
+
+// --- ▼▼▼ INICIO DE NUEVA RUTA DE MENSAJES ▼▼▼ ---
+} elseif (preg_match('/^\/messages\/([a-zA-Z0-9_]+)$/i', $path, $matches)) {
+    $username = $matches[1];
+    $_GET['username'] = $username; // Poner el username en $_GET para que router.php lo lea
+    $path = '/messages/username-placeholder'; // Usar un placeholder para el mapeo
+} elseif ($path === '/messages') {
+    // La ruta base /messages se mantiene
+    $path = '/messages';
 }
+// --- ▲▲▲ FIN DE NUEVA RUTA DE MENSAJES ▲▲▲ ---
+
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
@@ -370,6 +382,11 @@ $pathsToPages = [
     '/search' => 'search-results', // <-- LÍNEA AÑADIDA
     
     '/trends' => 'trends', // --- [HASTAGS] --- Nueva ruta
+
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (RUTAS DE MENSAJES) ▼▼▼ ---
+    '/messages' => 'messages',
+    '/messages/username-placeholder' => 'messages',
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     '/explorer'   => 'explorer',
     '/login'      => 'login',
@@ -413,6 +430,10 @@ $pathsToPages = [
     '/admin/manage-communities' => 'admin-manage-communities',
     '/admin/edit-community'     => 'admin-edit-community',
     // --- ▲▲▲ FIN LÍNEAS AÑADIDAS ▲▲▲ ---
+
+    // --- ▼▼▼ LÍNEA ELIMINADA (Ya no se usa) ▼▼▼ ---
+    // '/join-group' => 'join-group',
+    // --- ▲▲▲ FIN LÍNEA ELIMINADA ▲▲▲ ---
 ];
 
 // 3. Determinar la página actual y los tipos de página

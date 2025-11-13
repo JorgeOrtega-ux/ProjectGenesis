@@ -1,4 +1,6 @@
 <?php
+// FILE: config/routing/router.php
+// (MODIFICADO - Añadida lógica para pre-cargar chat y corrección de error de log)
 
 include '../config.php';
 
@@ -94,7 +96,10 @@ $allowedPages = [
     'account-status-deleted' => '../../includes/sections/main/status-page.php',
     'account-status-suspended' => '../../includes/sections/main/status-page.php',
 
-    'join-group' => '../../includes/sections/main/join-group.php',
+    // --- ▼▼▼ RUTA ELIMINADA ▼▼▼ ---
+    // 'join-group' => '../../includes/sections/main/join-group.php',
+    // --- ▲▲▲ FIN RUTA ELIMINADA ▲▲▲ ---
+    
     'create-publication' => '../../includes/sections/main/create-publication.php',
     'create-poll' => '../../includes/sections/main/create-publication.php',
 
@@ -104,7 +109,12 @@ $allowedPages = [
     'search-results' => '../../includes/sections/main/search-results.php',
 
     'trends' => '../../includes/sections/main/trends.php',
-'messages' => '../../includes/sections/main/messages.php',
+
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (RUTAS DE MENSAJES) ▼▼▼ ---
+    'messages' => '../../includes/sections/main/messages.php',
+    'messages/username-placeholder' => '../../includes/sections/main/messages.php',
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    
     'register-step1' => '../../includes/sections/auth/register.php',
     'register-step2' => '../../includes/sections/auth/register.php',
     'register-step3' => '../../includes/sections/auth/register.php',
@@ -340,6 +350,7 @@ if (array_key_exists($page, $allowedPages)) {
         $profileImageUrl = $_SESSION['profile_image_url'] ?? $defaultAvatar;
         if (empty($profileImageUrl)) $profileImageUrl = $defaultAvatar;
     } elseif ($page === 'join-group') {
+        // Esta página ya no se usa, pero se mantiene la lógica por si acaso.
         try {
             $stmt_public = $pdo->prepare("SELECT id, name FROM communities WHERE privacy = 'public' ORDER BY name ASC");
             $stmt_public->execute();
@@ -658,6 +669,52 @@ if (array_key_exists($page, $allowedPages)) {
             logDatabaseError($e, 'router - trends');
             $trendingHashtags = [];
         }
+    // --- ▼▼▼ INICIO DE NUEVO BLOQUE (LÓGICA DE PRE-CARGA DE CHAT) ▼▼▼ ---
+    } elseif ($page === 'messages') {
+        
+        $preloadedChatUser = null;
+        $targetUsername = $_GET['username'] ?? null;
+        $currentUserId = $_SESSION['user_id'];
+
+        if ($targetUsername) {
+            try {
+                // 1. Buscar al usuario
+                $stmt_user = $pdo->prepare("SELECT id, username, profile_image_url, role, last_seen FROM users WHERE username = ? AND account_status = 'active'");
+                $stmt_user->execute([$targetUsername]);
+                $targetUser = $stmt_user->fetch();
+
+                if ($targetUser) {
+                    $targetUserId = $targetUser['id'];
+
+                    // 2. Verificar que sean amigos (¡importante para seguridad!)
+                    $userId1 = min($currentUserId, $targetUserId);
+                    $userId2 = max($currentUserId, $targetUserId);
+                    
+                    $stmt_friend = $pdo->prepare("SELECT status FROM friendships WHERE user_id_1 = ? AND user_id_2 = ? AND status = 'accepted'");
+                    $stmt_friend->execute([$userId1, $userId2]);
+                    $friendship = $stmt_friend->fetch();
+
+                    if ($friendship) {
+                        // 3. Son amigos, pre-cargar los datos
+                        $preloadedChatUser = $targetUser;
+                    } else {
+                        // No son amigos, redirigir a 404
+                        $page = '404';
+                        $CURRENT_SECTION = '404';
+                    }
+                } else {
+                    // Usuario no encontrado, redirigir a 404
+                    $page = '404';
+                    $CURRENT_SECTION = '404';
+                }
+
+            } catch (PDOException $e) {
+                logDatabaseError($e, 'router - messages - preload');
+                $preloadedChatUser = null; // Fallback a la vista de lista normal
+            }
+        }
+        
+    // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
     } elseif ($page === 'admin-manage-users') {
 
         $adminUsersData = getAdminUsersData($pdo, $_GET);
@@ -701,8 +758,14 @@ if (array_key_exists($page, $allowedPages)) {
     } elseif ($page === 'admin-server-settings') {
         $maintenanceModeStatus = $GLOBALS['site_settings']['maintenance_mode'] ?? '0';
         $allowRegistrationStatus = $GLOBALS['site_settings']['allow_new_registrations'] ?? '1';
-    } elseif ($isAdminPage) {
+    
+    // --- ▼▼▼ INICIO DE CORRECCIÓN (Eliminar 'elseif ($isAdminPage)') ▼▼▼ ---
+    // } elseif ($isAdminPage) { 
+    //     // Esta línea [704] causaba el error en php_errors.log porque $isAdminPage
+    //     // no se define en todos los flujos (ej. carga parcial).
+    //     // Ya no es necesaria, la lógica de admin se maneja en los 'elseif' de arriba.
     }
+    // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
 
 
     include $allowedPages[$page];

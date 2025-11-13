@@ -1,5 +1,5 @@
 // FILE: assets/js/app/url-manager.js
-// (CORREGIDO - La lista de amigos solo se muestra en 'home')
+// (CORREGIDO - Error 'Cannot access 'page' before initialization')
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
@@ -25,7 +25,10 @@ const routes = {
     'toggleSectionMaintenance': 'maintenance', 
     'toggleSectionServerFull': 'server-full', 
 
-    'toggleSectionJoinGroup': 'join-group',
+    // --- ▼▼▼ RUTA ELIMINADA ▼▼▼ ---
+    // 'toggleSectionJoinGroup': 'join-group', 
+    // --- ▲▲▲ FIN RUTA ELIMINADA ▲▲▲ ---
+    
     'toggleSectionCreatePublication': 'create-publication', 
     'toggleSectionCreatePoll': 'create-poll', 
     
@@ -34,6 +37,10 @@ const routes = {
     'toggleSectionViewProfile': 'view-profile', 
 
     'toggleSectionSearchResults': 'search-results',
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Ruta de Mensajes) ▼▼▼ ---
+    'toggleSectionMessages': 'messages',
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     'toggleSectionRegisterStep1': 'register-step1',
     'toggleSectionRegisterStep2': 'register-step2',
@@ -45,7 +52,7 @@ const routes = {
 
     'toggleSectionSettingsProfile': 'settings-profile',
     'toggleSectionSettingsLogin': 'settings-login',
-    'toggleSectionSettingsAccess': 'settings-accessibility',
+    'toggleSectionSettingsAccess': 'accessibility',
     'toggleSectionSettingsDevices': 'settings-devices',
     
     'toggleSectionSettingsPassword': 'settings-change-password',
@@ -61,8 +68,6 @@ const routes = {
     'toggleSectionAdminCreateUser': 'admin-create-user', 
     'toggleSectionAdminEditUser': 'admin-edit-user', 
     'toggleSectionAdminServerSettings': 'admin-server-settings', 
-// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
-    'toggleSectionMessages': 'messages',
     'toggleSectionAdminManageBackups': 'admin-manage-backups',
     'toggleSectionAdminManageLogs': 'admin-manage-logs',
     
@@ -72,24 +77,31 @@ const routes = {
 
 const paths = {
     '/': 'toggleSectionHome',
-    '/explorer': 'toggleSectionExplorer',
+    '/c/uuid-placeholder': 'toggleSectionHome', 
+    '/post/id-placeholder': 'toggleSectionPostView', 
+    '/profile/username-placeholder': 'toggleSectionViewProfile', 
+    
+    '/search': 'toggleSectionSearchResults',
+    
     '/trends': 'toggleSectionTrends', // --- [HASTAGS] --- Nueva ruta
+
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Rutas de Mensajes) ▼▼▼ ---
+    '/messages': 'toggleSectionMessages',
+    '/messages/username-placeholder': 'toggleSectionMessages',
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+    '/explorer': 'toggleSectionExplorer',
     '/login': 'toggleSectionLogin',
     '/maintenance': 'toggleSectionMaintenance', 
     '/server-full': 'toggleSectionServerFull', 
 
-    '/join-group': 'toggleSectionJoinGroup',
-    '/messages': 'toggleSectionMessages',
+    // --- ▼▼▼ RUTA ELIMINADA ▼▼▼ ---
+    // '/join-group': 'toggleSectionJoinGroup',
+    // --- ▲▲▲ FIN RUTA ELIMINADA ▲▲▲ ---
+    
     '/create-publication': 'toggleSectionCreatePublication', 
     '/create-poll': 'toggleSectionCreatePoll', 
     
-    '/post': 'toggleSectionPostView', 
-
-    '/search': 'toggleSectionSearchResults',
-
-    '/profile': 'toggleSectionViewProfile', 
-    '/profile/username-placeholder': 'toggleSectionViewProfile', 
-    // '/profile/username-placeholder/posts': 'toggleSectionViewProfile', // <-- LÍNEA ELIMINADA
     '/profile/username-placeholder/likes': 'toggleSectionViewProfile',
     '/profile/username-placeholder/bookmarks': 'toggleSectionViewProfile',
     '/profile/username-placeholder/info': 'toggleSectionViewProfile',
@@ -385,10 +397,17 @@ export function handleNavigation() {
     if (path === '' || path === '/') path = '/';
 
     let action = null;
+    // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+    let page = null; // 1. Declarar 'page' aquí con 'let'
+    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+    
     const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
     const postViewRegex = /^\/post\/(\d+)$/i; 
     
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Regex de Perfil y Mensajes) ▼▼▼ ---
     const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(posts|likes|bookmarks|info|amigos|fotos))?$/i;
+    const messagesRegex = /^\/messages\/([a-zA-Z0-9_]+)$/i;
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
     if (path === '/') {
@@ -413,8 +432,18 @@ export function handleNavigation() {
         const tab = matches[2] || 'posts'; 
         loadPage('view-profile', action, { username: username, tab: tab });
         return;
+        
+    // --- ▼▼▼ INICIO DE NUEVO BLOQUE (Manejo de /messages/username) ▼▼▼ ---
+    } else if (messagesRegex.test(path)) {
+        action = 'toggleSectionMessages';
+        page = 'messages'; // 2. Asignar 'page' (esto ahora es válido)
+        const matches = path.match(messagesRegex);
+        const username = matches[1];
+        loadPage(page, action, { username: username });
+        return;
+    // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 
-    } else {
+    } else { 
         if (path === '/settings') {
             path = '/settings/your-profile';
             history.replaceState(null, '', `${basePath}${path}`);
@@ -433,7 +462,10 @@ export function handleNavigation() {
         return;
     }
 
-    const page = routes[action];
+    // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+    // 3. Cambiar 'const' por una simple asignación
+    page = routes[action];
+    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
     if (page) {
         loadPage(page, action); 
@@ -482,14 +514,20 @@ function updateMenuState(currentAction) {
         menuAction = 'toggleSectionAdminManageCommunities';
     }
 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Agrupar todo bajo 'home' y 'messages') ▼▼▼ ---
     if (currentAction === 'toggleSectionJoinGroup' || 
         currentAction === 'toggleSectionCreatePublication' || 
         currentAction === 'toggleSectionCreatePoll' ||
         currentAction === 'toggleSectionPostView' ||
         currentAction === 'toggleSectionViewProfile' ||
         currentAction === 'toggleSectionSearchResults') { 
-        menuAction = 'toggleSectionHome';
+        menuAction = 'toggleSectionHome'; // Todas estas acciones resaltan 'Home'
     }
+    
+    if (currentAction === 'toggleSectionMessages') {
+        menuAction = 'toggleSectionMessages'; // La acción de mensajes se resalta a sí misma
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
         const linkAction = link.getAttribute('data-action');
@@ -515,14 +553,17 @@ export function initRouter() {
       const link = e.target.closest(
             '.menu-link[data-action*="toggleSection"], ' +
             'a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], ' +
-          'a[href*="/profile/"], a[href*="/search"], a[href*="/trends"], a[href*="/messages"], ' +
+            // --- ▼▼▼ MODIFICACIÓN: Añadido /messages ▼▼▼ ---
+            'a[href*="/profile/"], a[href*="/search"], a[href*="/trends"], a[href*="/messages"], ' +
             '.component-button[data-action*="toggleSection"], ' +
             '.page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], ' +
             '.auth-button-back[data-action*="toggleSection"], .post-action-comment[data-action="toggleSectionPostView"], ' +
             '[data-module="moduleProfileMore"] a.menu-link[data-nav-js="true"], ' + 
             'div.profile-nav-button[data-nav-js="true"],' +
             '[data-module="moduleSelect"] .menu-link[data-nav-js="true"],' +
-            'a.post-hashtag-link[data-nav-js="true"]' // --- [HASTAGS] --- Añadido el selector de link de hashtag
+            'a.post-hashtag-link[data-nav-js="true"],' +
+            // --- ▼▼▼ MODIFICACIÓN: Añadido selector del menú de amigos ▼▼▼ ---
+            '[data-module="friend-context-menu"] [data-nav-js="true"]'
         );
       // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
@@ -576,7 +617,16 @@ export function initRouter() {
             if (link.hasAttribute('data-action')) {
                 action = link.getAttribute('data-action');
                 
-                if (action === 'toggleSectionPostView' && link.dataset.postId) {
+                // --- ▼▼▼ INICIO DE NUEVO BLOQUE (Manejar clic en "Enviar Mensaje") ▼▼▼ ---
+                if (action === 'friend-menu-message' && link.dataset.username) {
+                    const username = link.dataset.username;
+                    page = 'messages';
+                    action = 'toggleSectionMessages';
+                    newPath = '/messages/' + username;
+                    fetchParams = { username: username };
+                }
+                // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
+                else if (action === 'toggleSectionPostView' && link.dataset.postId) {
                     page = 'post-view';
                     newPath = '/post/' + link.dataset.postId;
                     fetchParams = { post_id: link.dataset.postId };
@@ -599,7 +649,10 @@ export function initRouter() {
                 const postViewRegex = /^\/post\/(\d+)$/i;
                 const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
                 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Nuevos Regex) ▼▼▼ ---
                 const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(posts|likes|bookmarks|info|amigos|fotos))?$/i;
+                const messagesRegex = /^\/messages\/([a-zA-Z0-9_]+)$/i;
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 if (postViewRegex.test(newPath)) {
                     action = 'toggleSectionPostView';
@@ -618,6 +671,14 @@ export function initRouter() {
                     page = 'view-profile';
                     const matches = newPath.match(profileRegex);
                     fetchParams = { username: matches[1], tab: matches[2] || 'posts' };
+                
+                // --- ▼▼▼ INICIO DE NUEVO BLOQUE (Manejo de URL de Mensajes) ▼▼▼ ---
+                } else if (messagesRegex.test(newPath)) {
+                    action = 'toggleSectionMessages';
+                    page = 'messages';
+                    const matches = newPath.match(messagesRegex);
+                    fetchParams = { username: matches[1] };
+                // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 
                 } else { 
                     if (newPath === '/settings') newPath = '/settings/your-profile';
@@ -653,7 +714,9 @@ export function initRouter() {
             const queryString = (url && url.search) ? url.search : '';
             let fullUrlPath;
             
-            if ((action === 'toggleSectionPostView' || action === 'toggleSectionViewProfile') && newPath) {
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir 'messages' a la lógica) ▼▼▼ ---
+            if ((action === 'toggleSectionPostView' || action === 'toggleSectionViewProfile' || action === 'toggleSectionMessages') && newPath) {
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 fullUrlPath = `${basePath}${newPath}${queryString}`; 
             } else {
                 fullUrlPath = `${basePath}${newPath === '/' ? '/' : newPath}${queryString}`;
