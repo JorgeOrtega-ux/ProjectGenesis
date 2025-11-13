@@ -5,7 +5,10 @@ import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
 import { applyTranslations, getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js';
+// --- ▼▼▼ IMPORTACIÓN MODIFICADA ▼▼▼ ---
 import { loadSavedCommunity, loadCommentsForPost } from '../modules/community-manager.js';
+import { initPublicationForm } from '../modules/publication-manager.js';
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 import { initFriendList } from '../modules/friend-manager.js'; 
 
 const contentContainer = document.querySelector('.main-sections');
@@ -353,6 +356,13 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
                 loadCommentsForPost(commentsContainer.dataset.postId);
             }
         }
+        
+        // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ ---
+        if (page === 'create-publication' || page === 'create-poll') {
+            initPublicationForm(); // ¡¡LA LLAMADA QUE FALTABA!!
+        }
+        // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
+
 
     } catch (error) {
         console.error('Error al cargar la página:', error);

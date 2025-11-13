@@ -1,5 +1,5 @@
 // FILE: assets/js/app-init.js
-// (MODIFICADO - Lógica de notificaciones movida a su propio módulo)
+// (CORREGIDO - Lógica de notificaciones movida a su propio módulo)
 
 import { initMainController } from './app/main-controller.js';
 import { initRouter, loadPage } from './app/url-manager.js';
@@ -10,7 +10,9 @@ import { initAdminEditUserManager } from './modules/admin-edit-user-manager.js';
 import { initAdminServerSettingsManager } from './modules/admin-server-settings-manager.js';
 import { initAdminBackupModule } from './modules/admin-backup-module.js'; 
 import { initCommunityManager } from './modules/community-manager.js';
-import { initPublicationManager } from './modules/publication-manager.js';
+// --- ▼▼▼ IMPORTACIÓN MODIFICADA ▼▼▼ ---
+import { setupPublicationListeners } from './modules/publication-manager.js';
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 import { initFriendManager, initFriendList } from './modules/friend-manager.js';
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager, getTranslation } from './services/i18n-manager.js';
@@ -89,7 +91,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     initAdminServerSettingsManager();
     initAdminBackupModule();
     initCommunityManager();
-    initPublicationManager();
+    
+    // --- ▼▼▼ LLAMADA MODIFICADA ▼▼▼ ---
+    setupPublicationListeners(); // Llama a la función que existe
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    
     initFriendManager(); 
     initNotificationManager(); // <-- Se mantiene la inicialización
     initSearchManager();
