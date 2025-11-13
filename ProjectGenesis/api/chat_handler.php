@@ -30,7 +30,8 @@ define('CHAT_DELETE_LIMIT_HOURS', 72);
 /**
  * Notifica al servidor WebSocket sobre un nuevo mensaje.
  */
-function notifyUser($targetUserId, $payload) {
+function notifyUser($targetUserId, $payload)
+{
     try {
         $post_data = json_encode([
             'target_user_id' => (int)$targetUserId,
@@ -46,11 +47,10 @@ function notifyUser($targetUserId, $payload) {
             'Content-Type: application/json',
             'Content-Length: ' . strlen($post_data)
         ]);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); 
-        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        
-        curl_exec($ch); 
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
+        curl_exec($ch);
         curl_close($ch);
-        
     } catch (Exception $e) {
         logDatabaseError($e, 'chat_handler - (ws_notify_fail)');
     }
@@ -70,22 +70,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         if ($action === 'get-conversations') {
-            
+
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIDO u.uuid) ▼▼▼ ---
             $stmt_friends = $pdo->prepare(
                 "SELECT 
                     f.friend_id,
                     u.username, u.uuid, u.profile_image_url, u.role, u.last_seen,
                     (SELECT 
-            /* --- ▼▼▼ ¡LÍNEA CORREGIDA! El comentario de PHP fue eliminado de aquí. ▼▼▼ --- */
                          CASE 
                              WHEN (SELECT 1 FROM chat_message_attachments cma WHERE cma.message_id = cm.id LIMIT 1) IS NOT NULL AND cm.message_text = '' THEN '[Imagen]'
                              WHEN (SELECT 1 FROM chat_message_attachments cma WHERE cma.message_id = cm.id LIMIT 1) IS NOT NULL AND cm.message_text != '' THEN cm.message_text
                              ELSE cm.message_text 
                          END
                      FROM chat_messages cm 
+
                      WHERE ((cm.sender_id = :current_user_id AND cm.receiver_id = f.friend_id) 
                         OR (cm.sender_id = f.friend_id AND cm.receiver_id = :current_user_id))
                      AND cm.status = 'active'
@@ -121,16 +120,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $response['success'] = true;
             $response['conversations'] = $friends;
-        
         } elseif ($action === 'get-chat-history') {
-            
+
             $targetUserId = (int)($_POST['target_user_id'] ?? 0);
             if ($targetUserId === 0) throw new Exception('js.api.invalidAction');
-            
+
             $beforeMessageId = (int)($_POST['before_message_id'] ?? 0);
 
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL CON status y reply_to) ▼▼▼ ---
-            $sql_select = 
+            $sql_select =
                 "SELECT 
                     cm.*,
                     (SELECT GROUP_CONCAT(cf.public_url SEPARATOR ',') 
@@ -151,24 +149,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($beforeMessageId > 0) {
                 $sql_select .= " AND cm.id < :before_message_id";
             }
-            
+
             $sql_select .= "
                  GROUP BY cm.id
                  ORDER BY cm.created_at DESC
                  LIMIT " . CHAT_PAGE_SIZE;
-            
+
             $stmt_msg = $pdo->prepare($sql_select);
-            
+
             $stmt_msg->bindValue(':current_user_id', $currentUserId, PDO::PARAM_INT);
             $stmt_msg->bindValue(':target_user_id', $targetUserId, PDO::PARAM_INT);
-            
+
             if ($beforeMessageId > 0) {
                 $stmt_msg->bindValue(':before_message_id', $beforeMessageId, PDO::PARAM_INT);
             }
-            
+
             $stmt_msg->execute();
             $messages = $stmt_msg->fetchAll();
-            
+
             // Marcar mensajes como leídos (SOLO en la primera carga)
             if ($beforeMessageId === 0) {
                 $stmt_read = $pdo->prepare(
@@ -187,18 +185,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['messages'] = $messages;
             $response['message_count'] = count($messages);
             $response['limit'] = CHAT_PAGE_SIZE;
-
         } elseif ($action === 'send-message') {
-            
+
             $receiverId = (int)($_POST['receiver_id'] ?? 0);
             $messageText = trim($_POST['message_text'] ?? '');
             // --- ▼▼▼ INICIO DE NUEVA LÓGICA (reply_to) ▼▼▼ ---
             $replyToMessageId = (int)($_POST['reply_to_message_id'] ?? 0);
             $dbReplyToId = ($replyToMessageId > 0) ? $replyToMessageId : null;
             // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
-            
+
             $uploadedFiles = $_FILES['attachments'] ?? [];
-            $fileIds = []; 
+            $fileIds = [];
 
             if ($receiverId === 0) {
                 throw new Exception('js.api.invalidAction');
@@ -206,12 +203,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($messageText) && (empty($uploadedFiles['name'][0]) || $uploadedFiles['error'][0] !== UPLOAD_ERR_OK)) {
                 throw new Exception('js.publication.errorEmpty'); // Mensaje vacío
             }
-            
+
             $pdo->beginTransaction();
 
             // --- Lógica de subida de archivos (sin cambios) ---
             if (!empty($uploadedFiles['name'][0]) && $uploadedFiles['error'][0] === UPLOAD_ERR_OK) {
-                
+
                 $fileCount = count($uploadedFiles['name']);
                 if ($fileCount > $MAX_CHAT_FILES) {
                     $response['data'] = ['count' => $MAX_CHAT_FILES];
@@ -224,19 +221,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception('js.api.errorServer');
                     }
                 }
-                
+
                 $stmt_insert_file = $pdo->prepare(
                     "INSERT INTO chat_files (uploader_id, file_name_system, file_name_original, public_url, file_type, file_size)
                      VALUES (?, ?, ?, ?, ?, ?)"
                 );
-                
+
                 foreach ($uploadedFiles['error'] as $key => $error) {
                     if ($error !== UPLOAD_ERR_OK) continue;
 
                     $tmpName = $uploadedFiles['tmp_name'][$key];
                     $originalName = $uploadedFiles['name'][$key];
                     $fileSize = $uploadedFiles['size'][$key];
-                    
+
                     if ($fileSize > $MAX_SIZE_BYTES) {
                         $response['data'] = ['size' => $MAX_SIZE_MB];
                         throw new Exception('js.publication.errorFileSize');
@@ -247,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!in_array($mimeType, $ALLOWED_TYPES)) {
                         throw new Exception('js.publication.errorFileType');
                     }
-                    
+
                     $extension = pathinfo($originalName, PATHINFO_EXTENSION);
                     $systemName = "chat-{$currentUserId}-" . time() . "-" . bin2hex(random_bytes(4)) . "-{$key}." . $extension;
                     $filePath = $uploadDir . '/' . $systemName;
@@ -258,7 +255,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     $stmt_insert_file->execute([
-                        $currentUserId, $systemName, $originalName, $attachmentUrl, $mimeType, $fileSize
+                        $currentUserId,
+                        $systemName,
+                        $originalName,
+                        $attachmentUrl,
+                        $mimeType,
+                        $fileSize
                     ]);
                     $fileIds[] = $pdo->lastInsertId();
                 }
@@ -285,7 +287,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL SELECT con reply_to) ▼▼▼ ---
             $stmt_get = $pdo->prepare(
-                 "SELECT 
+                "SELECT 
                     cm.*,
                     (SELECT GROUP_CONCAT(cf.public_url SEPARATOR ',') 
                      FROM chat_message_attachments cma
@@ -309,17 +311,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $payload = [
                 'type' => 'new_chat_message',
-                'payload' => $newMessage 
+                'payload' => $newMessage
             ];
 
             notifyUser($receiverId, $payload);
-            
+
             $response['success'] = true;
             $response['message_sent'] = $newMessage;
-            
-        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN (delete-message) ▼▼▼ ---
+
+            // --- ▼▼▼ INICIO DE NUEVA ACCIÓN (delete-message) ▼▼▼ ---
         } elseif ($action === 'delete-message') {
-            
+
             $messageId = (int)($_POST['message_id'] ?? 0);
             if ($messageId === 0) {
                 throw new Exception('js.api.invalidAction');
@@ -335,7 +337,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$message) {
                 throw new Exception('js.chat.errorNotOwner'); // Error: No eres el dueño o no existe
             }
-            
+
             if ($message['status'] === 'deleted') {
                 throw new Exception('js.chat.errorAlreadyDeleted'); // Ya está borrado
             }
@@ -364,20 +366,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'conversation_user_id' => $receiverId // Para que el JS del emisor sepa qué chat actualizar
                 ]
             ];
-            
+
             notifyUser($receiverId, $payload);
             notifyUser($currentUserId, $payload); // Notificar a mis otras sesiones
 
             $response['success'] = true;
             $response['message'] = 'js.chat.successDeleted';
-        // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
         }
-
     } catch (Exception $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
-        
+
         if ($e instanceof PDOException) {
             logDatabaseError($e, 'chat_handler - ' . $action);
             $response['message'] = 'js.api.errorDatabase';
@@ -392,4 +393,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 echo json_encode($response);
 exit;
-?>

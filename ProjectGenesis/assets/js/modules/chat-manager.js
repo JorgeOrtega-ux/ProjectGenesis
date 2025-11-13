@@ -1,6 +1,7 @@
 // FILE: assets/js/modules/chat-manager.js
 // (MODIFICADO PARA PAGINACIÓN, RESPUESTAS Y ELIMINAR)
 // (MODIFICADO OTRA VEZ PARA USAR UUID EN URLS)
+// (MODIFICADO DE NUEVO PARA ARREGLAR LA RECARGA DE LA LISTA DEL REMITENTE)
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -660,7 +661,9 @@ async function sendMessage() {
             document.getElementById('chat-message-list').insertAdjacentHTML('beforeend', bubbleHtml);
             scrollToBottom();
             
+            // --- ▼▼▼ ¡ESTA ES LA LÍNEA AÑADIDA! ▼▼▼ ---
             await loadConversations();
+            // --- ▲▲▲ ¡FIN DE LA LÍNEA AÑADIDA! ▲▲▲ ---
             
             const friendItem = document.querySelector(`.chat-conversation-item[data-user-id="${receiverId}"]`);
             if (friendItem) {
