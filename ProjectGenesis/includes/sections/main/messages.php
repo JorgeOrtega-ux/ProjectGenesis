@@ -422,11 +422,8 @@ $chatSidebarClass = ($hasPreloadedUser || $hasChatError) ? 'disabled' : 'active'
 // Ocultar el placeholder por defecto si hay un chat O un error
 $chatContentPlaceholderClass = ($hasPreloadedUser || $hasChatError) ? 'disabled' : 'active'; // <-- MODIFICADO
 
-// --- ▼▼▼ ¡ESTA ES LA LÓGICA ORIGINAL Y CORRECTA! ▼▼▼ ---
 // Mostrar el chat principal solo si hay un usuario pre-cargado (sin error)
-// Si hay error ($hasChatError) pero no usuario ($hasPreloadedUser), esto será 'disabled'
 $chatContentMainClass = $hasPreloadedUser ? 'active' : 'disabled';
-// --- ▲▲▲ FIN DE LÓGICA ORIGINAL ▲▲▲ ---
 
 // Forzar la vista de chat en móvil si hay un chat O un error
 $chatLayoutClass = ($hasPreloadedUser || $hasChatError) ? 'show-chat' : ''; // <-- MODIFICADO
@@ -468,6 +465,10 @@ if ($hasPreloadedUser) {
 // --- ▲▲▲ FIN DE NUEVA LÓGICA DE PRE-CARGA Y ERROR ▲▲▲ ---
 ?>
 
+<style>
+/* ... */
+</style>
+
 <div class="section-content <?php echo ($CURRENT_SECTION === 'messages') ? 'active' : 'disabled'; ?>" data-section="messages" style="overflow-y: hidden;">
     
     <div class="chat-layout-container <?php echo $chatLayoutClass; ?>" id="chat-layout-container">
@@ -477,8 +478,9 @@ if ($hasPreloadedUser) {
                 <h1 class="component-page-title" data-i18n="chat.title">Mensajes</h1>
                 <div class="chat-sidebar-search">
                     <span class="material-symbols-rounded search-icon">search</span>
-                    <input type="text" class="chat-sidebar-search-input" id="chat-friend-search" placeholder="Buscar amigos..." data-i18n-placeholder="chat.searchPlaceholder">
-                </div>
+                    
+                    <input type="text" class="chat-sidebar-search-input" id="chat-friend-search" placeholder="Buscar conversación..." data-i18n-placeholder="chat.searchPlaceholder">
+                    </div>
             </div>
             
             <div class="chat-sidebar-list">
@@ -490,9 +492,8 @@ if ($hasPreloadedUser) {
                 
                 <div class="chat-list-placeholder" id="chat-list-empty" style="display: none;">
                     <span class="material-symbols-rounded">chat</span>
-                    <span>Inicia una conversación con un amigo.</span>
+                    <span>Inicia una conversación.</span>
                 </div>
-
                 <div id="chat-conversation-list">
                     </div>
 
@@ -516,6 +517,7 @@ if ($hasPreloadedUser) {
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
+            
             <div class="chat-content-main <?php echo $chatContentMainClass; ?>" 
                  id="chat-content-main" 
                  data-autoload-chat="<?php echo $hasPreloadedUser ? 'true' : 'false'; ?>">
