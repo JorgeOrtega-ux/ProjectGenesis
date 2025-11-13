@@ -20,6 +20,38 @@ if ($adminRole !== 'administrator' && $adminRole !== 'founder') {
     exit;
 }
 
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN AÑADIDA ▼▼▼ ---
+/**
+ * Genera un UUID v4 estándar.
+ * (Se añade aquí, pero idealmente debería estar en 'config/utilities.php' para evitar duplicación).
+ */
+function generateUuidV4() {
+    try {
+        // Generar 16 bytes (128 bits) de datos aleatorios
+        $data = random_bytes(16);
+
+        // Establecer la versión (4) en el séptimo byte
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40); 
+        
+        // Establecer la variante (10xx) en el noveno byte
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80); 
+
+        // Formatear como un string UUID de 36 caracteres
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    } catch (Exception $e) {
+        // Fallback (menos seguro) si random_bytes falla
+        return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0x0fff) | 0x4000,
+            mt_rand(0, 0x3fff) | 0x8000,
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+        );
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN AÑADIDA ▲▲▲ ---
+
+
 function generateDefaultAvatar($pdo, $userId, $username, $basePath)
 {
     try {
@@ -333,11 +365,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $passwordHash = password_hash($password, PASSWORD_BCRYPT);
             $authToken = bin2hex(random_bytes(32));
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR UUID) ▼▼▼ ---
+            $uuid = generateUuidV4(); // Generar el nuevo UUID
+
             $stmt_insert = $pdo->prepare(
-                "INSERT INTO users (email, username, password, role, is_2fa_enabled, auth_token, account_status) 
-                 VALUES (?, ?, ?, ?, ?, ?, 'active')"
+                "INSERT INTO users (uuid, email, username, password, role, is_2fa_enabled, auth_token, account_status) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 'active')"
             );
-            $stmt_insert->execute([$email, $username, $passwordHash, $role, $is_2fa_enabled, $authToken]);
+            $stmt_insert->execute([$uuid, $email, $username, $passwordHash, $role, $is_2fa_enabled, $authToken]);
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            
             $newUserId = $pdo->lastInsertId();
 
             $localAvatarUrl = generateDefaultAvatar($pdo, $newUserId, $username, $basePath);
@@ -1216,7 +1253,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             $accessCode = trim($_POST['access_code'] ?? ''); // Recibe XXXX-XXXX-XXXX
             $accessCodeDB = str_replace('-', '', $accessCode); // Almacena XXXXXXXXXXXX
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
             if (empty($communityId)) {
                 throw new Exception('js.api.invalidAction');

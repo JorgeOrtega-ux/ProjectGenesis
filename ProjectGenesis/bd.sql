@@ -11,6 +11,7 @@ SET FOREIGN_KEY_CHECKS=0;
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uuid` char(36) NOT NULL, -- <-- NUEVA LÍNEA
   `email` varchar(255) NOT NULL,
   `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
@@ -25,6 +26,7 @@ CREATE TABLE `users` (
   `last_seen` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uuid` (`uuid`), -- <-- NUEVA LÍNEA
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `username` (`username`),
   KEY `idx_is_online` (`is_online`)

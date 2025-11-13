@@ -1,6 +1,7 @@
 <?php
 // FILE: api/auth_handler.php
 // (MODIFICADO - Se eliminaron las llamadas redundantes a session_set_cookie_params)
+// (MODIFICADO - Añadida generación de UUID en la creación de usuario)
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -25,6 +26,36 @@ function generateVerificationCode() {
     }
     return substr($code, 0, 4) . '-' . substr($code, 4, 4) . '-' . substr($code, 8, 4);
 }
+
+// --- ▼▼▼ INICIO DE FUNCIÓN AÑADIDA ▼▼▼ ---
+/**
+ * Genera un UUID v4 estándar.
+ */
+function generateUuidV4() {
+    try {
+        // Generar 16 bytes (128 bits) de datos aleatorios
+        $data = random_bytes(16);
+
+        // Establecer la versión (4) en el séptimo byte
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40); 
+        
+        // Establecer la variante (10xx) en el noveno byte
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80); 
+
+        // Formatear como un string UUID de 36 caracteres
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    } catch (Exception $e) {
+        // Fallback (menos seguro) si random_bytes falla
+        return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0x0fff) | 0x4000,
+            mt_rand(0, 0x3fff) | 0x8000,
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+        );
+    }
+}
+// --- ▲▲▲ FIN DE FUNCIÓN AÑADIDA ▲▲▲ ---
 
 
 function logUserMetadata($pdo, $userId) {
@@ -54,9 +85,16 @@ function logUserMetadata($pdo, $userId) {
 
 function createUserAndLogin($pdo, $basePath, $email, $username, $passwordHash, $userIdFromVerification) {
     
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR UUID) ▼▼▼ ---
     $authToken = bin2hex(random_bytes(32)); 
-    $stmt = $pdo->prepare("INSERT INTO users (email, username, password, is_2fa_enabled, auth_token) VALUES (?, ?, ?, 0, ?)");
-    $stmt->execute([$email, $username, $passwordHash, $authToken]);
+    $uuid = generateUuidV4(); // Generar el nuevo UUID
+
+    // Añadir 'uuid' a la consulta INSERT
+    $stmt = $pdo->prepare("INSERT INTO users (uuid, email, username, password, is_2fa_enabled, auth_token) VALUES (?, ?, ?, ?, 0, ?)");
+    // Añadir $uuid al array de execute
+    $stmt->execute([$uuid, $email, $username, $passwordHash, $authToken]);
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
     $userId = $pdo->lastInsertId();
 
     $localAvatarUrl = null;
