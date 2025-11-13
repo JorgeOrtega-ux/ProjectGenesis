@@ -326,3 +326,31 @@ CREATE TABLE `publication_hashtags` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /* --- [HASTAGS] --- FIN DE NUEVAS TABLAS --- */
+
+-- Este script añade las tablas necesarias para el sistema de chat.
+-- Agrégalo a tu `bd.sql` o ejecútalo en tu base de datos.
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS=0;
+
+-- ----------------------------
+-- Table structure for chat_messages
+-- ----------------------------
+DROP TABLE IF EXISTS `chat_messages`;
+CREATE TABLE `chat_messages` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `sender_id` INT NOT NULL,
+  `receiver_id` INT NOT NULL,
+  `message_text` TEXT NOT NULL,
+  `is_read` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (`sender_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`receiver_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  
+  INDEX `idx_conversation_pair` (`sender_id`, `receiver_id`, `created_at`),
+  INDEX `idx_receiver_unread` (`receiver_id`, `is_read`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+SET FOREIGN_KEY_CHECKS=1;
