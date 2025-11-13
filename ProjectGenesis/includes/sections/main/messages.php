@@ -294,6 +294,112 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 @media (min-width: 769px) {
     .chat-back-button { display: none; }
 }
+
+/* --- ▼▼▼ INICIO DE ESTILOS FALTANTES (AÑADIR) ▼▼▼ --- */
+
+/* 1. Estilos para el CONTEXTO DE RESPUESTA (dentro de la burbuja) - DISEÑO MODIFICADO */
+.chat-reply-context {
+    position: relative; /* Para la barra lateral */
+    padding: 8px 12px 8px 16px; /* Espacio para la barra */
+    background-color: rgba(0, 0, 0, 0.05); /* Fondo gris claro */
+    border-radius: 8px; /* Totalmente redondeado */
+    max-width: 300px; /* Límite de ancho */
+}
+
+/* La barra vertical (como en la imagen) */
+.chat-reply-context::before {
+    content: '';
+    position: absolute;
+    left: 4px; /* Separación de la barra */
+    top: 4px;  /* Separación superior */
+    bottom: 4px; /* Separación inferior */
+    width: 4px;  /* Grosor de la barra */
+    background-color: #000; /* Color de la barra (recibida) */
+    border-radius: 2px;
+}
+
+.sent .chat-reply-context {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Color de la barra en mensajes enviados (blanca sobre fondo negro) */
+.sent .chat-reply-context::before {
+    background-color: #fff;
+}
+
+.chat-reply-context-user {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0056b3; 
+}
+.sent .chat-reply-context-user {
+    color: #aed6f1; /* Un azul más claro sobre fondo oscuro */
+}
+.chat-reply-context-text {
+    font-size: 14px;
+    color: inherit;
+    opacity: 0.8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 2. Estilos para la VISTA PREVIA (sobre el input) */
+.chat-reply-preview-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background-color: #f5f5fa; /* Color de fondo claro */
+    border-radius: 8px;
+    width: 100%;
+    border-left: 4px solid #0056b3; /* Línea azul para indicar respuesta */
+}
+
+.chat-reply-preview-content {
+    flex-grow: 1;
+    min-width: 0; /* Para que el text-overflow funcione */
+}
+
+.chat-reply-preview-user {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0056b3; /* Azul para el usuario */
+}
+
+.chat-reply-preview-text {
+    font-size: 14px;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-reply-preview-close {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 0;
+    margin-left: 8px;
+    transition: background-color 0.2s;
+}
+
+.chat-reply-preview-close:hover {
+    background-color: #e0e0e0;
+}
+
+.chat-reply-preview-close .material-symbols-rounded {
+    font-size: 18px;
+}
+/* --- ▲▲▲ FIN DE ESTILOS FALTANTES --- */
 </style>
 
 <?php
@@ -414,6 +520,8 @@ if ($hasPreloadedUser) {
                     <input type="file" id="chat-attachment-input" class="visually-hidden" 
                            accept="image/png, image/jpeg, image/gif, image/webp" 
                            multiple> 
+
+                    <div class="chat-reply-preview-container" id="chat-reply-preview-container" style="display: none;"></div>
                     <div class="chat-attachment-preview-container" id="chat-attachment-preview-container">
                         </div>
                     

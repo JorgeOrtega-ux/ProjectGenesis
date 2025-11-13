@@ -151,10 +151,7 @@ function initMainController() {
                 'toggleModuleAdminExport',
 
                 // --- ¡LÍNEAS AÑADIDAS! ---
-                'msg-reply',
-                'msg-copy',
-                'msg-delete',
-                'msg-info'
+          
                 // --- ¡FIN DE LÍNEAS AÑADIDAS! ---
             ];
             // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---

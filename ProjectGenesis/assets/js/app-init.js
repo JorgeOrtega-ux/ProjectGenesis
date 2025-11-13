@@ -14,8 +14,13 @@ import { initCommunityManager } from './modules/community-manager.js';
 import { setupPublicationListeners } from './modules/publication-manager.js';
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
-// --- ▼▼▼ INICIO DE IMPORTACIÓN MODIFICADA ▼▼▼ ---
-import { initChatManager, handleChatMessageReceived, handleTypingEvent } from './modules/chat-manager.js';
+// --- ▼▼▼ INICIO DE IMPORTACIÓN MODIFICADA (CORREGIDA) ▼▼▼ ---
+import { 
+    initChatManager, 
+    handleChatMessageReceived, 
+    handleTypingEvent, 
+    handleMessageDeleted // <--- ¡FUNCIÓN AÑADIDA!
+} from './modules/chat-manager.js';
 // --- ▲▲▲ FIN DE IMPORTACIÓN MODIFICADA ▲▲▲ ---
 
 import { initFriendManager, initFriendList } from './modules/friend-manager.js';
@@ -188,6 +193,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                             console.log("[WS] Mensaje de chat recibido");
                             handleChatMessageReceived(data.payload);
                         }
+                        // --- ▼▼▼ ¡INICIO DE BLOQUE AÑADIDO! (CORRECCIÓN) ▼▼▼ ---
+                        else if (data.type === 'message_deleted') {
+                            console.log("[WS] Notificación de 'message_deleted' recibida");
+                            handleMessageDeleted(data.payload);
+                        }
+                        // --- ▲▲▲ ¡FIN DE BLOQUE AÑADIDO! (CORRECCIÓN) ▲▲▲ ---
                         // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                         
                         // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE TYPING ▼▼▼ ---
