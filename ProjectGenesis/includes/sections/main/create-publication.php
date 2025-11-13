@@ -221,7 +221,9 @@ $currentPrivacyIcon = $privacyIconMap[$defaultPrivacy];
                 </div>
             </div>
             
-            <div id="post-content-area" class="<?php echo $isPostActive ? 'active' : 'disabled'; ?>">
+            <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (id -> class) ▼▼▼ --- ?>
+            <div class="post-content-area <?php echo $isPostActive ? 'active' : 'disabled'; ?>">
+            <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
                 
                 <div class="component-input-group">
                     <input type="text" id="publication-title" class="component-input" placeholder=" " maxlength="255">
@@ -243,7 +245,9 @@ $currentPrivacyIcon = $privacyIconMap[$defaultPrivacy];
                 </div>
             </div>
 
-            <div id="poll-content-area" class="<?php echo $isPollActive ? 'active' : 'disabled'; ?>">
+            <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (id -> class) ▼▼▼ --- ?>
+            <div class="poll-content-area <?php echo $isPollActive ? 'active' : 'disabled'; ?>">
+            <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
                 <div class="component-input-group">
                     <input type="text" id="poll-question" class="component-input" placeholder=" " maxlength="1000">
                     <label for="poll-question" data-i18n="create_publication.pollQuestionLabel">Escribe tu pregunta...</label>

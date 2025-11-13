@@ -4032,9 +4032,13 @@ a.profile-tab.active {
     line-height: normal;
 }
 
-#post-content-area {
-    flex-direction: column;
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN CSS ▼▼▼ --- */
+.post-content-area,
+.poll-content-area {
+    /* Ambos se convierten en 'display: flex' por la clase .active en styles.css */
+    flex-direction: column; /* Asegura que su contenido interno se apile verticalmente */
 }
+/* --- ▲▲▲ FIN DE MODIFICACIÓN CSS ▲▲▲ --- */
 
 /* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (PERFIL BIO/DETALLES) ▼▼▼ --- */
 

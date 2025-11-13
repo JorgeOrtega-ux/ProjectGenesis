@@ -496,8 +496,10 @@ export function setupPublicationListeners() {
             currentPostType = newType; 
             console.log(`🔵 [DEBUG] click-toggle: Cambiando a tipo: '${currentPostType}'`);
             
-            const postArea = document.getElementById('post-content-area');
-            const pollArea = document.getElementById('poll-content-area');
+            // --- ▼▼▼ INICIO DE CORRECCIÓN (querySelector) ▼▼▼ ---
+            const postArea = document.querySelector('.post-content-area');
+            const pollArea = document.querySelector('.poll-content-area');
+            // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
             const attachBtn = document.getElementById('attach-files-btn');
             const attachSpacer = document.getElementById('attach-files-spacer');
             const toggleContainer = document.getElementById('post-type-toggle');
@@ -702,23 +704,23 @@ export function initPublicationForm() {
         console.log("🔵 [DEBUG] initForm: Encontrado #create-post-form. Ejecutando resetForm().");
         resetForm();
 
-        // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
-        console.log("🔵 [DEBUG] initForm: Buscando #poll-content-area...");
-        const pollAreaOnLoad = document.getElementById('poll-content-area');
+        // --- ▼▼▼ INICIO DE CORRECCIÓN (querySelector) ▼▼▼ ---
+        console.log("🔵 [DEBUG] initForm: Buscando .poll-content-area...");
+        const pollAreaOnLoad = document.querySelector('.poll-content-area');
         
         if (pollAreaOnLoad) {
-            console.log("🔵 [DEBUG] initForm: Encontrado #poll-content-area.");
-            console.log("🔵 [DEBUG] initForm: Clases de #poll-content-area:", pollAreaOnLoad.classList);
+            console.log("🔵 [DEBUG] initForm: Encontrado .poll-content-area.");
+            console.log("🔵 [DEBUG] initForm: Clases de .poll-content-area:", pollAreaOnLoad.classList);
             
             if (pollAreaOnLoad.classList.contains('active')) {
-                console.log("🔵 [DEBUG] initForm: #poll-content-area TIENE la clase 'active'.");
+                console.log("🔵 [DEBUG] initForm: .poll-content-area TIENE la clase 'active'.");
                 currentPostType = 'poll';
             } else {
-                console.log("🔵 [DEBUG] initForm: #poll-content-area NO tiene la clase 'active'.");
+                console.log("🔵 [DEBUG] initForm: .poll-content-area NO tiene la clase 'active'.");
                 currentPostType = 'post';
             }
         } else {
-            console.error("🔴 [DEBUG] initForm: ERROR FATAL: No se encontró #poll-content-area. Asumiendo 'post'.");
+            console.error("🔴 [DEBUG] initForm: ERROR FATAL: No se encontró .poll-content-area. Asumiendo 'post'.");
             currentPostType = 'post';
         }
         
