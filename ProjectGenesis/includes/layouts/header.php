@@ -61,7 +61,10 @@ $userRole = $_SESSION['role'] ?? 'user';
     <div class="header-right">
         <div class="header-item">
 
-            <?php // --- ▼▼▼ INICIO DE BOTÓN MOVIDO ▼▼▼ --- ?>
+            <?php // --- ▼▼▼ EL BOTÓN PROBLEMÁTICO ▼▼▼ --- ?>
+            <?php // El atributo data-action="toggleSectionMessages" es correcto. ?>
+            <?php // El problema es que tu JS no escucha esta acción en el header. ?>
+            <?php // Debes modificar tu JS para que [data-action='toggleSectionMessages'] funcione globalmente. ?>
             <div class="header-button"
                 data-action="toggleSectionMessages"
                 data-tooltip="Mensajes">
@@ -132,7 +135,7 @@ $userRole = $_SESSION['role'] ?? 'user';
                 ?>
 
                 <div class="menu-link" data-action="toggleSectionSettingsProfile">
-                    <div class="menu-link-icon">
+                    <div class_name="menu-link-icon">
                         <span class="material-symbols-rounded">settings</span>
                     </div>
                     <div class="menu-link-text">

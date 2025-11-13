@@ -97,16 +97,9 @@
                                 <span data-i18n="sidebar.main.home"></span>
                             </div>
                         </div>
-                        <?php // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ --- ?>
-                        <div class="menu-link" data-action="toggleSectionMessages">
-                            <div class="menu-link-icon">
-                                <span class="material-symbols-rounded">chat</span>
-                            </div>
-                            <div class="menu-link-text">
-                                <span>Mensajes</span> <?php // <-- Puedes añadir una clave i18n si lo deseas ?>
-                            </div>
-                        </div>
-                        <?php // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ --- ?>
+                        
+                        <?php // --- BLOQUE DE MENSAJES ELIMINADO --- ?>
+
                         <div class="menu-link" data-action="toggleSectionExplorer">
                             <div class="menu-link-icon">
                                 <span class="material-symbols-rounded">groups</span>

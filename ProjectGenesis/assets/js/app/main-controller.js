@@ -1,5 +1,5 @@
 // FILE: assets/js/app/main-controller.js
-// (MODIFICADO - Añadidas acciones de chat a managedActions)
+// (MODIFICADO - Eliminado el bloque 'toggleSection' que bloqueaba la navegación)
 
 import { getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js'; 
@@ -112,6 +112,14 @@ function initMainController() {
             }
             return;
         
+        
+        // --- ▼▼▼ BLOQUE PROBLEMÁTICO ELIMINADO ▼▼▼ ---
+        // } else if (action.startsWith('toggleSection')) {
+        //     console.log('[MainController] Acción de navegación (toggleSection). Omitiendo.');
+        //     return;
+        // }
+        // --- ▲▲▲ BLOQUE PROBLEMÁTICO ELIMINADO ▲▲▲ ---
+        
 
         } else if (action.startsWith('toggleSection')) {
             console.log('[MainController] Acción de navegación (toggleSection). Omitiendo.');
@@ -126,7 +134,6 @@ function initMainController() {
 
         if (action.startsWith('toggle')) {
             
-            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Añadir acciones de chat) ▼▼▼ ---
             const managedActions = [
                 'toggleModulePageFilter',
                 'toggleModuleAdminRole',
@@ -149,12 +156,7 @@ function initMainController() {
                 'toggleFriendItemOptions',
                 
                 'toggleModuleAdminExport',
-
-                // --- ¡LÍNEAS AÑADIDAS! ---
-          
-                // --- ¡FIN DE LÍNEAS AÑADIDAS! ---
             ];
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
             if (managedActions.includes(action)) {
                 console.log(`[MainController] Acción ${action} es manejada por su propio módulo. Omitiendo.`);

@@ -312,7 +312,12 @@
       "employmentTitle": "Empleo",
       "employmentDesc": "Selecciona tu sector laboral actual.",
       "educationTitle": "Formación",
-      "educationDesc": "Selecciona tu institución educativa."
+      "educationDesc": "Selecciona tu institución educativa.",
+      "privacyTitle": "Privacidad de Mensajes",
+      "privacyDesc": "Elige quién puede enviarte mensajes directos.",
+      "privacyAll": "Todos",
+      "privacyFriends": "Solo Amigos",
+      "privacyNone": "Nadie"
     },
     "login": {
       "title": "Inicio de Sesión y Seguridad",
@@ -898,13 +903,16 @@
     },
     "postCount": "%count% publicaciones"
   },
-  
   "chat": {
     "title": "Mensajes",
     "searchPlaceholder": "Buscar amigos...",
     "selectConversation": "Selecciona una conversación para empezar",
     "messagePlaceholder": "Escribe tu mensaje...",
     "offline": "Desconectado",
-    "typing": "Escribiendo"
+    "typing": "Escribiendo",
+    "error": {
+      "friendsOnly": "Este usuario solo acepta mensajes de amigos.",
+      "none": "Este usuario no acepta mensajes privados."
+    }
   }
 }
