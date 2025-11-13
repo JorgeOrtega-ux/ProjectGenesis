@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     f.friend_id,
                     u.username, u.uuid, u.profile_image_url, u.role, u.last_seen,
                     (SELECT 
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            /* --- ▼▼▼ ¡LÍNEA CORREGIDA! El comentario de PHP fue eliminado de aquí. ▼▼▼ --- */
                          CASE 
                              WHEN (SELECT 1 FROM chat_message_attachments cma WHERE cma.message_id = cm.id LIMIT 1) IS NOT NULL AND cm.message_text = '' THEN '[Imagen]'
                              WHEN (SELECT 1 FROM chat_message_attachments cma WHERE cma.message_id = cm.id LIMIT 1) IS NOT NULL AND cm.message_text != '' THEN cm.message_text

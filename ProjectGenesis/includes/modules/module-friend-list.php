@@ -5,10 +5,10 @@
 ?>
 <div class="module-content module-surface body-title" id="friend-list-container">
     <div class="menu-content">
-        
+
         <div class="menu-layout">
             <div class="menu-layout__top">
-                
+
                 <div class="menu-header" data-i18n="friends.list.title" style="padding: 8px 12px 4px; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase;">
                     Amigos
                 </div>
@@ -26,22 +26,23 @@
             </div>
 
             <div class="menu-layout__bottom">
-                </div>
+            </div>
         </div>
 
     </div>
 
-    <div class="popover-module body-title disabled" 
-         data-module="friend-context-menu" 
-         id="friend-context-menu" 
-         style="width: 200px; /* Ancho fijo para el popover */">
+    <div class="popover-module body-title disabled"
+        data-module="friend-context-menu"
+        id="friend-context-menu"
+        style="width: 200px; /* Ancho fijo para el popover */">
         <div class="menu-content">
             <div class="menu-list">
-                
-                <a class="menu-link" 
-                   data-action="friend-menu-profile"
-                   data-nav-js="true" 
-                   href="#"> <div class="menu-link-icon">
+
+                <a class="menu-link"
+                    data-action="friend-menu-profile"
+                    data-nav-js="true"
+                    href="#">
+                    <div class="menu-link-icon">
                         <span class="material-symbols-rounded">person</span>
                     </div>
                     <div class="menu-link-text">
@@ -49,17 +50,17 @@
                     </div>
                 </a>
 
-                <div class="menu-link" 
-                     data-action="friend-menu-message"
-                     data-username=""> <div class="menu-link-icon">
+                <div class="menu-link"
+                    data-action="friend-menu-message"
+                    data-uuid="">
+                    <div class="menu-link-icon">
                         <span class="material-symbols-rounded">chat</span>
                     </div>
                     <div class="menu-link-text">
                         <span>Enviar Mensaje</span>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
-    </div>
+</div>

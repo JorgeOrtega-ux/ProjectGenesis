@@ -90,13 +90,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 logDatabaseError($e, 'friend_handler - (ws_get_online_fail)');
             }
             
-            // 2. Modificar SQL para incluir last_seen
+            // 2. Modificar SQL para incluir last_seen y u.uuid
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
+            // --- ▼▼▼ ¡LÍNEA MODIFICADA! Se añadió u.uuid a la consulta SELECT. ▼▼▼ ---
             $stmt_friends = $pdo->prepare(
                 "SELECT 
                     (CASE WHEN f.user_id_1 = ? THEN f.user_id_2 ELSE f.user_id_1 END) AS friend_id,
-                    u.username, u.profile_image_url, u.role, u.last_seen
+                    u.username, u.profile_image_url, u.role, u.last_seen, u.uuid
                 FROM friendships f
                 JOIN users u ON (CASE WHEN f.user_id_1 = ? THEN f.user_id_2 ELSE f.user_id_1 END) = u.id
                 WHERE (f.user_id_1 = ? OR f.user_id_2 = ?) AND f.status = 'accepted'
@@ -114,6 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Añadir los nuevos campos al array de respuesta
                 $friend['is_online'] = isset($onlineUserIds[$friend['friend_id']]);
                 $friend['last_seen'] = $friend['last_seen'];
+                // $friend['uuid'] ya está incluido por el SELECT
             }
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 

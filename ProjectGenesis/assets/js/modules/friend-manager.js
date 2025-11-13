@@ -40,12 +40,15 @@ function renderFriendList(friends) {
         // Se quita href y data-nav-js
         // Se añade data-action="toggle-friend-context-menu"
         // Se añaden data-username y data-profile-url para el popover
+        // --- ¡LÍNEA CLAVE AÑADIDA! ---
+        // Se añade data-uuid para la navegación de chat
         html += `
             <div class="menu-link friend-item" 
                data-action="toggle-friend-context-menu"
                data-friend-id="${friend.friend_id}"
                data-username="${friend.username}"
                data-profile-url="${profileUrl}"
+               data-uuid="${friend.uuid}" 
                title="${friend.username}">
                
                 <div class="menu-link-icon">
@@ -205,15 +208,17 @@ export function initFriendManager() {
             const popover = document.getElementById('friend-context-menu');
             if (!popover) return;
             
+            // --- ¡INICIO DE MODIFICACIÓN! ---
             // Rellenar los datos en el popover
             const profileUrl = friendItem.dataset.profileUrl;
-            const username = friendItem.dataset.username;
+            const userUuid = friendItem.dataset.uuid; // <-- Se lee el UUID
             
             const profileLink = popover.querySelector('[data-action="friend-menu-profile"]');
             const messageLink = popover.querySelector('[data-action="friend-menu-message"]');
             
             if (profileLink) profileLink.href = profileUrl;
-            if (messageLink) messageLink.dataset.username = username;
+            if (messageLink) messageLink.dataset.uuid = userUuid; // <-- Se guarda el UUID
+            // --- ¡FIN DE MODIFICACIÓN! ---
 
             // Posicionar y mostrar el popover
             popperInstance = createPopper(friendItem, popover, {
@@ -232,11 +237,14 @@ export function initFriendManager() {
         const messageButton = e.target.closest('[data-action="friend-menu-message"]');
         if (messageButton) {
             e.preventDefault();
-            const username = messageButton.dataset.username;
-            if (!username) return;
+            // --- ¡INICIO DE MODIFICACIÓN! ---
+            const uuid = messageButton.dataset.uuid; // <-- Se lee el UUID
+            if (!uuid) return;
 
             // Construir la nueva URL y navegar
-            const newPath = `${window.projectBasePath}/messages/${username}`;
+            const newPath = `${window.projectBasePath}/messages/${uuid}`; // <-- Se usa el UUID
+            // --- ¡FIN DE MODIFICACIÓN! ---
+            
             history.pushState(null, '', newPath);
             handleNavigation(); // Dejar que el url-manager maneje la carga
             
