@@ -2,6 +2,7 @@
 // (MODIFICADO PARA PAGINACIÓN, RESPUESTAS Y ELIMINAR)
 // (MODIFICADO OTRA VEZ PARA USAR UUID EN URLS)
 // (MODIFICADO DE NUEVO PARA ARREGLAR LA RECARGA DE LA LISTA DEL REMITENTE)
+// (MODIFICADO CON CONSOLE.LOGS PARA DEPURACIÓN)
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -54,14 +55,20 @@ function formatTime(dateString) {
  * @param {Array} conversations - La lista de conversaciones a renderizar.
  */
 function renderConversationList(conversations) {
+    console.log(`%c[RENDER] renderConversationList() -> Renderizando ${conversations.length} conversaciones.`, 'color: purple; font-weight: bold;');
+    
     const listContainer = document.getElementById('chat-conversation-list');
     const loader = document.getElementById('chat-list-loader');
     const emptyEl = document.getElementById('chat-list-empty');
-    if (!listContainer || !loader || !emptyEl) return;
+    if (!listContainer || !loader || !emptyEl) {
+        console.error("[RENDER] Faltan elementos clave del DOM (listContainer, loader, emptyEl).");
+        return;
+    }
     
     loader.style.display = 'none';
 
     if (!conversations || conversations.length === 0) {
+        console.log("[RENDER] No hay conversaciones para mostrar, mostrando 'emptyEl'.");
         emptyEl.style.display = 'flex';
         listContainer.innerHTML = ''; // Limpiar por si acaso
         return;
@@ -120,12 +127,15 @@ function renderConversationList(conversations) {
         // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     });
     listContainer.innerHTML = html;
+    console.log("[RENDER] Renderización completada.");
 }
 
 /**
  * Carga la lista de amigos/conversaciones inicial.
  */
 async function loadConversations() {
+    console.groupCollapsed("%c[LOAD CONVERSATIONS] 🔄 loadConversations() iniciada...", "color: blue; font-weight: bold;");
+    
     let onlineUserIds = {};
     try {
         const formData = new FormData();
@@ -139,50 +149,93 @@ async function loadConversations() {
             });
         }
     } catch (e) {
-        console.error("Error al obtener estado online de amigos:", e);
+        console.error("[LOAD CONVERSATIONS] Error al obtener estado online de amigos:", e);
     }
 
     try {
         const formData = new FormData();
         formData.append('action', 'get-conversations');
+        console.log("[LOAD CONVERSATIONS] Llamando a callChatApi('get-conversations')...");
         const result = await callChatApi(formData);
+        console.log("[LOAD CONVERSATIONS] Respuesta de 'get-conversations':", result);
 
         if (result.success) {
+            console.info(`[LOAD CONVERSATIONS] API Success. ${result.conversations.length} conversaciones recibidas.`);
+            
             result.conversations.forEach(convo => {
                 convo.is_online = !!onlineUserIds[convo.friend_id];
             });
             
             friendCache = result.conversations;
+            console.log("[LOAD CONVERSATIONS] friendCache actualizado:", friendCache);
             
             const searchInput = document.getElementById('chat-friend-search');
             const currentQuery = searchInput ? searchInput.value : '';
+            console.log(`[LOAD CONVERSATIONS] Query actual del input: "${currentQuery}"`);
             
+            console.log("[LOAD CONVERSATIONS] Llamando a filterConversationList...");
             filterConversationList(currentQuery);
             
         } else {
+            console.error("[LOAD CONVERSATIONS] La API reportó un fallo:", result.message);
             const listContainer = document.getElementById('chat-conversation-list');
             if (listContainer) listContainer.innerHTML = '<div class="chat-list-placeholder">Error al cargar.</div>';
         }
     } catch (e) {
-        console.error("Error al cargar conversaciones:", e);
+        console.error("[LOAD CONVERSATIONS] Error de red o excepción:", e);
     }
+    console.groupEnd();
 }
 
 /**
  * Filtra la lista de amigos en el panel izquierdo.
+ * (MODIFICADO según la especificación: la búsqueda SÓLO filtra chats existentes)
  */
 function filterConversationList(query) {
+    console.log(`%c[FILTER] filterConversationList() -> Query: "${query}"`, 'color: orange; font-weight: bold;');
+    
     query = query.toLowerCase().trim();
+    
+    // 1. La "lista de chats" base son SÓLO amigos con historial.
+    const conversationsWithHistory = friendCache.filter(convo => convo.last_message_time !== null);
+    console.log(`[FILTER] friendCache total: ${friendCache.length}. Chats con historial: ${conversationsWithHistory.length}`);
+    console.log("[FILTER] Chats con historial encontrados:", conversationsWithHistory.map(c => ({ user: c.username, time: c.last_message_time })));
+
+
+    let conversationsToShow = [];
+
     if (!query) {
-        const conversationsWithHistory = friendCache.filter(convo => convo.last_message_time !== null);
-        renderConversationList(conversationsWithHistory);
-        return;
+        // Si la búsqueda está vacía, mostramos todos los chats con historial.
+        conversationsToShow = conversationsWithHistory;
+        console.log("[FILTER] Query está vacía. Mostrando chats con historial.");
+    } else {
+        // Si hay búsqueda, filtramos SÓLO los chats con historial.
+        conversationsToShow = conversationsWithHistory.filter(friend => 
+            friend.username.toLowerCase().includes(query)
+        );
+        console.log(`[FILTER] Query no está vacía. Filtrando... ${conversationsToShow.length} chats coinciden.`);
     }
-    const filtered = friendCache.filter(friend => 
-        friend.username.toLowerCase().includes(query)
-    );
-    renderConversationList(filtered);
+    
+    // 2. Ordenamos la lista a mostrar por el mensaje más reciente
+    conversationsToShow.sort((a, b) => {
+        // Ya sabemos que last_message_time no es nulo por el filtro anterior
+        const timeA = new Date(a.last_message_time);
+        const timeB = new Date(b.last_message_time);
+        
+        // Comprobar si las fechas son válidas antes de restar
+        if (isNaN(timeA) || isNaN(timeB)) {
+            return 0; // No mover si una fecha es inválida
+        }
+        
+        return timeB - timeA; // El más reciente (mayor timestamp) primero
+    });
+    console.log(`[FILTER] Ordenación completada. Se mostrarán ${conversationsToShow.length} chats.`);
+
+    // 3. Renderizar la lista final
+    console.log("[FILTER] Llamando a renderConversationList...");
+    renderConversationList(conversationsToShow);
 }
+
 
 /**
  * Desplaza el contenedor de mensajes hasta el final.
@@ -627,13 +680,21 @@ function hideReplyPreview() {
  * Envía un mensaje de chat (texto y/o archivos).
  */
 async function sendMessage() {
+    console.log(`%c[SENDER] 🚀 sendMessage() iniciada...`, 'color: green; font-weight: bold;');
+    
     const input = document.getElementById('chat-message-input');
     const sendBtn = document.getElementById('chat-send-button');
     const receiverId = document.getElementById('chat-receiver-id').value;
     const messageText = input.value.trim();
 
-    if (!receiverId || sendBtn.disabled) return;
-    if (!messageText && selectedAttachments.length === 0) return;
+    if (!receiverId || sendBtn.disabled) {
+        console.warn("[SENDER] Envío cancelado: receiverId vacío o botón deshabilitado.");
+        return;
+    }
+    if (!messageText && selectedAttachments.length === 0) {
+        console.warn("[SENDER] Envío cancelado: Mensaje y adjuntos vacíos.");
+        return;
+    }
     
     sendBtn.disabled = true;
     input.disabled = true;
@@ -655,14 +716,20 @@ async function sendMessage() {
     }
 
     try {
+        console.log("[SENDER] Llamando a callChatApi('send-message')...");
         const result = await callChatApi(formData);
+        console.log("[SENDER] Respuesta de 'send-message':", result);
+
         if (result.success && result.message_sent) {
+            console.info("[SENDER] API Success. Mensaje enviado.");
             const bubbleHtml = createMessageBubbleHtml(result.message_sent, true);
             document.getElementById('chat-message-list').insertAdjacentHTML('beforeend', bubbleHtml);
             scrollToBottom();
             
             // --- ▼▼▼ ¡ESTA ES LA LÍNEA AÑADIDA! ▼▼▼ ---
+            console.log("%c[SENDER] Mensaje enviado. Llamando a loadConversations() para actualizar la lista...", "color: green; font-weight: bold;");
             await loadConversations();
+            console.log("%c[SENDER] loadConversations() completada.", "color: green; font-weight: bold;");
             // --- ▲▲▲ ¡FIN DE LA LÍNEA AÑADIDA! ▲▲▲ ---
             
             const friendItem = document.querySelector(`.chat-conversation-item[data-user-id="${receiverId}"]`);
@@ -681,14 +748,17 @@ async function sendMessage() {
             input.focus();
             
         } else {
+            console.error("[SENDER] La API reportó un fallo al enviar el mensaje:", result.message);
             showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
         }
     } catch (e) {
+        console.error("[SENDER] Error de red o excepción al enviar mensaje:", e);
         showAlert(getTranslation('js.api.errorConnection'), 'error');
     } finally {
         input.disabled = false;
         document.getElementById('chat-attach-button').disabled = false;
         validateSendButton(); 
+        console.log("[SENDER] Controles re-habilitados.");
     }
 }
 
@@ -696,18 +766,27 @@ async function sendMessage() {
  * Maneja un mensaje de chat entrante desde el WebSocket.
  */
 export function handleChatMessageReceived(message) {
-    if (!message || !message.sender_id) return;
+    console.log(`%c[WEBSOCKET] 📩 handleChatMessageReceived() -> Mensaje recibido:`, 'color: #00_80_80; font-weight: bold;', message);
+    
+    if (!message || !message.sender_id) {
+        console.warn("[WEBSOCKET] Mensaje inválido o sin sender_id, ignorando.");
+        return;
+    }
     
     const senderId = parseInt(message.sender_id, 10);
     
     // Actualizar la lista de conversaciones (siempre)
+    console.log("[WEBSOCKET] Llamando a loadConversations() para actualizar la lista del receptor...");
     loadConversations();
     
     // Si el chat está abierto, añade la burbuja
     if (senderId === currentChatUserId) {
+        console.log("[WEBSOCKET] El chat está abierto, añadiendo burbuja.");
         const bubbleHtml = createMessageBubbleHtml(message, false);
         document.getElementById('chat-message-list').insertAdjacentHTML('beforeend', bubbleHtml);
         scrollToBottom();
+    } else {
+        console.log("[WEBSOCKET] El chat con este usuario NO está abierto. La lista se actualizará en segundo plano.");
     }
     // (La lógica de notificación de insignia se maneja en loadConversations)
 }
@@ -735,6 +814,8 @@ function renderDeletedMessage(bubbleEl) {
  * @param {object} payload - El payload del evento ({ message_id: ... }).
  */
 export function handleMessageDeleted(payload) {
+    console.log(`%c[WEBSOCKET] 🗑️ handleMessageDeleted() -> Payload:`, 'color: #00_80_80; font-weight: bold;', payload);
+    
     if (!payload || !payload.message_id) return;
     
     const messageId = payload.message_id;
@@ -745,6 +826,7 @@ export function handleMessageDeleted(payload) {
     }
     
     // Actualizar la lista de conversaciones
+    console.log("[WEBSOCKET] Mensaje eliminado. Llamando a loadConversations() para actualizar snippet...");
     loadConversations();
 }
 // --- ▲▲▲ FIN DE NUEVAS FUNCIONES (Manejo de WS) ▲▲▲ ---
@@ -779,6 +861,8 @@ export function handleTypingEvent(senderId, isTyping) {
  */
 export function initChatManager() {
     
+    console.log("🏁 initChatManager() -> Inicializando listeners de chat.");
+    
     const sectionsContainer = document.querySelector('.main-sections');
     if (sectionsContainer) {
         const observer = new MutationObserver((mutations) => {
@@ -787,12 +871,14 @@ export function initChatManager() {
                     const messagesSection = document.querySelector('[data-section="messages"]');
                     if (messagesSection) {
                         
+                        console.log("👀 Observer: Detectada sección 'messages'.");
+                        console.log("[INIT] Llamando a loadConversations() por primera vez.");
                         loadConversations();
                         document.dispatchEvent(new CustomEvent('request-friend-list-presence-update'));
                         
                         const chatMain = messagesSection.querySelector('#chat-content-main[data-autoload-chat="true"]');
                         if (chatMain) {
-                            console.log("Detectado 'data-autoload-chat', abriendo chat...");
+                            console.log("...Detectado 'data-autoload-chat', abriendo chat...");
                             
                             const headerInfo = messagesSection.querySelector('#chat-header-info');
                             const avatarImg = messagesSection.querySelector('#chat-header-avatar');
@@ -837,6 +923,7 @@ export function initChatManager() {
             e.preventDefault();
             document.getElementById('chat-layout-container')?.classList.remove('show-chat');
             currentChatUserId = null;
+            console.log("[UI] Botón 'Atrás' presionado. Llamando a loadConversations().");
             loadConversations(); 
             return;
         }
@@ -949,6 +1036,7 @@ export function initChatManager() {
         
         const searchInput = e.target.closest('#chat-friend-search');
         if (searchInput) {
+            // ¡Importante! El listener de 'input' llama a filterConversationList
             filterConversationList(searchInput.value);
         }
     });
