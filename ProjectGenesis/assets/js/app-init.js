@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                             }
                         }
 
-                        // --- ▼▼▼ INICIO DEL BLOQUE CORREGIDO ▼▼▼ ---
+                        // --- ▼▼▼ INICIO DEL BLOQUE CORREGIDO (TU SUGERENCIA B) ▼▼▼ ---
                         // Estado del servicio de mensajería
                         else if (data.type === 'messaging_status_update') {
                             const newStatus = data.status; // "enabled" o "disabled"
@@ -192,16 +192,16 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 
                                 // Solo expulsar si NO es un admin
                                 if (!isPrivileged) {
-                                    console.log("[WS] Mensajería deshabilitada. Expulsando usuario de /messages...");
+                                    console.log("[WS] Mensajería deshabilitada. Expulsando usuario a /home...");
                                     window.showAlert(getTranslation('page.messaging_disabled.description'), 'error');
                                     
-                                    // Usar la función de navegación de url-manager
-                                    const newPath = `${window.projectBasePath}/messaging-disabled`;
+                                    // --- ¡ESTA ES TU SOLUCIÓN! ---
+                                    // 1. Reemplaza la URL actual (/messages o /messages/uuid) por /home
+                                    const newPath = `${window.projectBasePath}/`;
+                                    history.replaceState(null, '', newPath); 
                                     
-                                    // --- ¡ESTA ES LA LÍNEA CORREGIDA! ---
-                                    history.replaceState(null, '', newPath); // <--- REEMPLAZA el historial
-                                    
-                                    loadPage('messaging-disabled', 'toggleSectionMessagingDisabled', null, false);
+                                    // 2. Carga la página de /home
+                                    loadPage('home', 'toggleSectionHome', null, false);
                                 }
                             }
                         }

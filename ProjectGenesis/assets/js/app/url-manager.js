@@ -196,7 +196,7 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
 
             // --- ▼▼▼ INICIO DE BLOQUE ELIMINADO ▼▼▼ ---
             // La lógica de actualización de pestañas se movió a initRouter
-            // --- ▲▲▲ FIN DE BLOQUE ELIMINADO ▲▲▲ ---
+            // --- ▲▲▲ FIN DE BLOQUE ELIMINADO ▼▼▼ ---
 
         } catch (error) {
             console.error('Error al cargar la pestaña:', error);
@@ -443,15 +443,33 @@ export function handleNavigation() {
         loadPage('view-profile', action, { username: username, tab: tab });
         return;
 
-        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Manejo de /messages/uuid) ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Manejo de /messages/uuid) ▼▼▼ ---
     } else if (messagesRegex.test(path)) {
         action = 'toggleSectionMessages';
         page = 'messages'; // 2. Asignar 'page' (esto ahora es válido)
+        
+        // --- ▼▼▼ INICIO DEL BLOQUE DE SEGURIDAD AÑADIDO (EL FIX) ▼▼▼ ---
+        // Este es el FIX que soluciona tu problema
+        const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
+        const isMessagingEnabled = (window.isMessagingEnabled === true);
+
+        if (isMessagingEnabled === false && !isPrivileged) {
+            console.warn("handleNavigation (popstate): Navegación a 'messages/uuid' bloqueada.");
+            // 1. Reemplazamos la entrada actual del historial (/messages/uuid) con /messaging-disabled
+            const newPath = `${basePath}/messaging-disabled`;
+            history.replaceState(null, '', newPath); // ¡Esta es la clave!
+            
+            // 2. Cargamos la página de "deshabilitado"
+            loadPage('messaging-disabled', 'toggleSectionMessagingDisabled', null, false);
+            return; // ¡Importante! Salir para no llamar a loadPage('messages/uuid')
+        }
+        // --- ▲▲▲ FIN DEL BLOQUE DE SEGURIDAD AÑADIDO (EL FIX) ▲▲▲ ---
+        
         const matches = path.match(messagesRegex);
         const userUuid = matches[1]; // <-- CAMBIADO
         loadPage(page, action, { user_uuid: userUuid }); // <-- CAMBIADO
         return;
-        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
+    // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
 
     } else {
         if (path === '/settings') {
@@ -475,11 +493,11 @@ export function handleNavigation() {
     // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
     // 3. Cambiar 'const' por una simple asignación
     page = routes[action];
-    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▼▼▼ ---
 
     if (page) {
         
-        // --- ▼▼▼ INICIO DEL NUEVO BLOQUE DE VERIFICACIÓN (PARA POPSTATE) ▼▼▼ ---
+        // --- ▼▼▼ INICIO DEL BLOQUE DE VERIFICACIÓN (PARA /messages) ▼▼▼ ---
         if (page === 'messages') {
             const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
             const isMessagingEnabled = (window.isMessagingEnabled === true);
@@ -490,7 +508,6 @@ export function handleNavigation() {
                 console.log("handleNavigation (popstate): Navegación a 'messages' bloqueada.");
                 
                 // 1. Reemplazamos la entrada actual del historial (/messages) con /messaging-disabled
-                //    Esto evita el bucle de "atrás" que describiste.
                 const newPath = `${basePath}/messaging-disabled`;
                 history.replaceState(null, '', newPath); // ¡Esta es la clave!
                 
@@ -499,7 +516,7 @@ export function handleNavigation() {
                 return; // ¡Importante! Salir para no llamar a loadPage('messages')
             }
         }
-        // --- ▲▲▲ FIN DEL NUEVO BLOQUE DE VERIFICACIÓN ▲▲▲ ---
+        // --- ▲▲▲ FIN DEL BLOQUE DE VERIFICACIÓN ▲▲▲ ---
 
         loadPage(page, action);
     } else {
