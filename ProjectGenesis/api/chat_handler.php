@@ -9,6 +9,7 @@
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (FAVORITOS, FIJADOS Y ARCHIVADOS) ▼▼▼ ---
 // --- ▼▼▼ (TABLA RENOMBRADA A user_conversation_metadata) ▼▼▼ ---
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (SISTEMA DE CHAT DE COMUNIDAD) ▼▼▼ ---
+// --- ▼▼▼ INICIO DE CORRECCIÓN (PAYLOAD DE WEBSOCKET DE DM CON CONTEO) ▼▼▼ ---
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -703,7 +704,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 $stmt_unarchive->execute([':user1' => $currentUserId, ':user2' => $receiverId]);
                 
-                // 6. Notificar al usuario (DM)
+                // --- ▼▼▼ INICIO DE CORRECCIÓN (AÑADIR CONTEO DE NO LEÍDOS) ▼▼▼ ---
+                // 6. CALCULAR CONTEO NO LEÍDO PARA EL RECEPTOR
+                // (Usamos la consulta de 'get-total-unread-count' pero filtrando por el sender)
+                $stmt_count_unread = $pdo->prepare(
+                    "SELECT COUNT(cm.id) 
+                     FROM chat_messages cm
+                     LEFT JOIN user_conversation_metadata ucm ON cm.sender_id = ucm.conversation_user_id AND ucm.user_id = :receiver_id
+                     WHERE cm.receiver_id = :receiver_id 
+                       AND cm.sender_id = :current_user_id
+                       AND cm.is_read = 0 
+                       AND cm.status = 'active'
+                       AND cm.created_at > COALESCE(ucm.deleted_until, '1970-01-01')"
+                );
+                $stmt_count_unread->execute([
+                    ':receiver_id' => $receiverId,
+                    ':current_user_id' => $currentUserId
+                ]);
+                $newUnreadCount = (int)$stmt_count_unread->fetchColumn();
+                
+                // Añadir el conteo al payload
+                $newMessage['new_unread_count_for_receiver'] = $newUnreadCount;
+                // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
+
+                // 7. Notificar al usuario (DM)
                 $payload = [
                     'type' => 'new_chat_message',
                     'payload' => $newMessage
@@ -977,4 +1001,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 echo json_encode($response);
 exit;
+// --- ▲▲▲ FIN DE CORRECCIÓN (PAYLOAD DE WEBSOCKET DE DM CON CONTEO) ▲▲▲ ---
 ?>
