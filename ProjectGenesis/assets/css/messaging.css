@@ -560,28 +560,59 @@
     font-variation-settings: 'FILL' 1;
 }
 
+/* --- ▼▼▼ INICIO DE MODIFICACIÓN CSS ▼▼▼ --- */
+.chat-input-pill-wrapper {
+    display: flex;
+    flex-direction: column; /* Apila el textarea y la fila de botones */
+    gap: 8px; /* Espacio para el preview de adjuntos/respuesta */
+    padding: 8px 12px; /* Padding interno de la píldora */
+    background-color: #f5f5fa;
+    border: 1px solid #00000020;
+    border-radius: 24px; /* Píldora redondeada */
+    transition: border-color 0.2s, background-color 0.2s;
+    
+    /* ¡CLAVE! Eliminamos min-height y max-height del wrapper */
+    box-sizing: border-box; /* Incluir padding en la altura */
+}
+
+.chat-input-pill-wrapper:focus-within {
+    border-color: #000;
+    background-color: #ffffff;
+}
+
 .chat-input-main-row {
     display: flex;
     width: 100%;
-    align-items: center;
+    align-items: center; /* Centra los botones verticalmente en su fila */
+    justify-content: space-between; /* ¡CLAVE! Botones en extremos opuestos */
     gap: 12px;
+    flex-shrink: 0; /* ¡CLAVE! Evita que la fila de botones se encoja */
 }
 
 .chat-input-field {
-    flex-grow: 1;
-    height: 44px;
-    border: 1px solid #00000020;
-    background-color: #f5f5fa;
-    border-radius: 22px;
-    padding: 0 16px;
+    /* flex-grow: 1; */ /* <-- ¡CLAVE! ELIMINADO */
+    border: none;
+    background-color: transparent; /* Hereda el fondo de la píldora */
+    padding: 4px 0; /* Padding vertical ligero */
     font-size: 15px;
     outline: none;
-    transition: background-color 0.2s, border-color 0.2s;
+    resize: none; /* ¡CLAVE! Deshabilita el resize manual */
+    font-family: "Roboto Condensed", sans-serif;
+    line-height: 1.5; /* Altura de línea estándar */
+    
+    /* ¡CLAVE! Definimos la altura de 1 línea */
+    min-height: 24px; /* Aprox 1.5 * 15px */
+    
+    /* ¡CLAVE! Definimos la altura máxima ANTES del scroll */
+    max-height: 120px; /* Aprox 5 * 24px */
+    
+    overflow-y: hidden; /* ¡CLAVE! Oculto por defecto, el JS lo activa */
+    width: 100%; /* Asegura que ocupe todo el ancho */
 }
 
 .chat-input-field:focus {
-    background-color: #ffffff;
-    border-color: #000;
+    background-color: transparent; /* Hereda el fondo blanco del focus-within */
+    border-color: transparent; /* El borde está en el wrapper */
 }
 
 .chat-send-button {
@@ -598,11 +629,16 @@
     transition: background-color 0.2s;
     flex-shrink: 0;
 }
+/* --- ▲▲▲ FIN DE MODIFICACIÓN CSS ▲▲▲ --- */
 
 .chat-send-button:disabled {
     background-color: #f5f5fa;
     color: #adb5bd;
     cursor: not-allowed;
+}
+
+.chat-input-pill-wrapper:focus-within .chat-send-button:disabled {
+    background-color: #ffffff;
 }
 
 .chat-send-button:not(:disabled):hover {
@@ -624,12 +660,21 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, border-color 0.2s;
     flex-shrink: 0;
+}
+
+.chat-input-pill-wrapper:focus-within .chat-attach-button {
+    background-color: #ffffff;
+    border-color: #00000020;
 }
 
 .chat-attach-button:hover {
     background-color: #e9ecef;
+}
+
+.chat-input-pill-wrapper:focus-within .chat-attach-button:hover {
+    background-color: #f5f5fa;
 }
 
 @media (max-width: 768px) {
@@ -736,6 +781,10 @@
     border-radius: 8px;
     width: 100%;
     border-left: 4px solid #0056b3;
+}
+
+.chat-input-pill-wrapper:focus-within .chat-reply-preview-container {
+    background-color: #f5f5fa; /* Mantener el fondo gris del preview */
 }
 
 .chat-reply-preview-content {

@@ -1,5 +1,6 @@
 // FILE: assets/js/modules/chat-manager.js
 // (MODIFICADO PARA ELIMINAR CHATS DE COMUNIDAD)
+// (MODIFICADO PARA TEXTAREA AUTO-CRECIBLE CON LÍMITE)
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -439,6 +440,31 @@ function scrollToBottom() {
     }
 }
 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN JS ▼▼▼ ---
+// 1. RE-AÑADIR la función helper de auto-crecimiento
+/**
+ * Ajusta la altura de un textarea automáticamente.
+ * @param {HTMLTextAreaElement} el - El elemento textarea.
+ */
+function autoGrowTextarea(el) {
+    if (!el) return;
+    
+    // La altura máxima está definida en el CSS (.chat-input-field)
+    const maxHeight = parseInt(window.getComputedStyle(el).maxHeight, 10) || 120;
+    
+    el.style.height = 'auto'; // Resetea la altura para permitir que se encoja
+    
+    if (el.scrollHeight <= maxHeight) {
+        // Crece hasta el max-height
+        el.style.height = (el.scrollHeight) + 'px';
+        el.style.overflowY = 'hidden'; // Oculta el scroll si no se necesita
+    } else {
+        // Si pasa el max-height, fija la altura y muestra el scroll
+        el.style.height = maxHeight + 'px';
+        el.style.overflowY = 'auto'; // Muestra el scroll
+    }
+}
+
 function enableChatInput(allow, reason = null) {
     const input = document.getElementById('chat-message-input');
     const attachBtn = document.getElementById('chat-attach-button');
@@ -467,7 +493,11 @@ function enableChatInput(allow, reason = null) {
         if (fileInput) fileInput.value = '';
         hideReplyPreview();
     }
+    
+    // 2. AÑADIR la llamada a autoGrowTextarea
+    autoGrowTextarea(input);
 }
+// --- ▲▲▲ FIN DE MODIFICACIÓN JS ▲▲▲ ---
 
 function createMessageBubbleHtml(msg, isSent) {
     const myUserId = parseInt(window.userId, 10);
@@ -945,6 +975,11 @@ async function sendMessage() {
             document.getElementById('chat-attachment-input').value = '';
             hideReplyPreview();
             
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN JS ▼▼▼ ---
+            // 3. Resetear la altura del textarea después de enviar
+            autoGrowTextarea(input); 
+            // --- ▲▲▲ FIN DE MODIFICACIÓN JS ▲▲▲ ---
+
             enableChatInput(true);
             input.focus();
             
@@ -1504,10 +1539,14 @@ export function initChatManager() {
         }
     });
 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN JS ▼▼▼ ---
+    // 3. Modificar el listener de 'input'
     document.body.addEventListener('input', (e) => {
         const chatInput = e.target.closest('#chat-message-input');
         if (chatInput) {
             validateSendButton();
+            // 4. AÑADIR la llamada a autoGrowTextarea
+            autoGrowTextarea(chatInput); 
             
             // Lógica de "typing" (solo para DMs)
             if (currentChatUserId && window.ws && window.ws.readyState === WebSocket.OPEN) {
@@ -1536,6 +1575,19 @@ export function initChatManager() {
             filterConversationList(searchInput.value);
         }
     });
+
+    // 5. Modificar el listener de 'keydown' para que NO llame a autoGrow
+    document.body.addEventListener('keydown', (e) => {
+        const chatInput = e.target.closest('#chat-message-input');
+        if (chatInput && e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const sendBtn = document.getElementById('chat-send-button');
+            if (sendBtn && !sendBtn.disabled) {
+                sendMessage();
+            }
+        }
+    });
+    // --- ▲▲▲ FIN DE MODIFICACIÓN JS ▲▲▲ ---
     
     document.body.addEventListener('change', (e) => {
         const fileInput = e.target.closest('#chat-attachment-input');

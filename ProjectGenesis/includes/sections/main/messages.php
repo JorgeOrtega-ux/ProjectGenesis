@@ -197,17 +197,29 @@ if ($hasPreloadedUser) {
                         <div class="chat-attachment-preview-container" id="chat-attachment-preview-container">
                         </div>
 
+                        <?php // --- ▼▼▼ ESTA ES LA ESTRUCTURA HTML CORRECTA ▼▼▼ --- ?>
+                        
+                        <textarea 
+                            class="chat-input-field" 
+                            id="chat-message-input" 
+                            placeholder="Escribe tu mensaje..." 
+                            data-i18n-placeholder="chat.messagePlaceholder" 
+                            autocomplete="off" 
+                            rows="1"
+                            <?php echo ($hasPreloadedUser && !$hasChatError) ? '' : 'disabled'; ?>
+                        ></textarea>
+                    
                         <div class="chat-input-main-row">
                             <button type="button" class="chat-attach-button" id="chat-attach-button">
                                 <span class="material-symbols-rounded">add_photo_alternate</span>
                             </button>
-
-                            <input type="text" class="chat-input-field" id="chat-message-input" placeholder="Escribe tu mensaje..." data-i18n-placeholder="chat.messagePlaceholder" autocomplete="off" <?php echo ($hasPreloadedUser && !$hasChatError) ? '' : 'disabled'; ?>>
-
+                    
                             <button type="submit" class="chat-send-button" id="chat-send-button" disabled>
                                 <span class="material-symbols-rounded">send</span>
                             </button>
                         </div>
+                        
+                        <?php // --- ▲▲▲ FIN DE LA ESTRUCTURA HTML ▲▲▲ --- ?>
 
                     </div>
                 </form>
