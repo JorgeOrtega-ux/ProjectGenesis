@@ -1,7 +1,7 @@
 // FILE: assets/js/app/url-manager.js
 // (CORREGIDO - Error 'Cannot access 'page' before initialization')
 // (MODIFICADO OTRA VEZ - Cambiado /messages/username a /messages/uuid)
-// (CORREGIDO CON LÓGICA DE MENSAJERÍA DESHABILITADA)
+// (CORREGIDO CON LÓGICA DE MENSAJERÍA DESHABILITADA EN CLICK Y POPSTATE)
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
@@ -475,9 +475,32 @@ export function handleNavigation() {
     // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
     // 3. Cambiar 'const' por una simple asignación
     page = routes[action];
-    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▼▼▼ ---
+    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
     if (page) {
+        
+        // --- ▼▼▼ INICIO DEL NUEVO BLOQUE DE VERIFICACIÓN (PARA POPSTATE) ▼▼▼ ---
+        if (page === 'messages') {
+            const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
+            const isMessagingEnabled = (window.isMessagingEnabled === true);
+
+            // Si la mensajería está APAGADA y el usuario NO es un admin
+            if (isMessagingEnabled === false && !isPrivileged) {
+                
+                console.log("handleNavigation (popstate): Navegación a 'messages' bloqueada.");
+                
+                // 1. Reemplazamos la entrada actual del historial (/messages) con /messaging-disabled
+                //    Esto evita el bucle de "atrás" que describiste.
+                const newPath = `${basePath}/messaging-disabled`;
+                history.replaceState(null, '', newPath); // ¡Esta es la clave!
+                
+                // 2. Cargamos la página de "deshabilitado"
+                loadPage('messaging-disabled', 'toggleSectionMessagingDisabled', null, false);
+                return; // ¡Importante! Salir para no llamar a loadPage('messages')
+            }
+        }
+        // --- ▲▲▲ FIN DEL NUEVO BLOQUE DE VERIFICACIÓN ▲▲▲ ---
+
         loadPage(page, action);
     } else {
         loadPage('404', null);
@@ -537,6 +560,12 @@ function updateMenuState(currentAction) {
     if (currentAction === 'toggleSectionMessages') {
         menuAction = 'toggleSectionMessages'; // La acción de mensajes se resalta a sí misma
     }
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir página de status) ▼▼▼ ---
+    if (currentAction === 'toggleSectionMessagingDisabled') {
+        menuAction = 'toggleSectionMessages'; // Resaltar "Mensajes" aunque esté deshabilitado
+    }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {

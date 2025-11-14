@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                             }
                         }
 
-                        // --- ▼▼▼ INICIO DEL BLOQUE NUEVO ▼▼▼ ---
+                        // --- ▼▼▼ INICIO DEL BLOQUE CORREGIDO ▼▼▼ ---
                         // Estado del servicio de mensajería
                         else if (data.type === 'messaging_status_update') {
                             const newStatus = data.status; // "enabled" o "disabled"
@@ -197,12 +197,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     
                                     // Usar la función de navegación de url-manager
                                     const newPath = `${window.projectBasePath}/messaging-disabled`;
-                                    history.pushState(null, '', newPath);
+                                    
+                                    // --- ¡ESTA ES LA LÍNEA CORREGIDA! ---
+                                    history.replaceState(null, '', newPath); // <--- REEMPLAZA el historial
+                                    
                                     loadPage('messaging-disabled', 'toggleSectionMessagingDisabled', null, false);
                                 }
                             }
                         }
-                        // --- ▲▲▲ FIN DEL BLOQUE NUEVO ▲▲▲ ---
+                        // --- ▲▲▲ FIN DEL BLOQUE CORREGIDO ▲▲▲ ---
 
                         // Nuevo voto encuesta
                         else if (data.type === 'new_poll_vote' && data.payload) {
