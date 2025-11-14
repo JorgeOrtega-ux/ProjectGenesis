@@ -232,7 +232,6 @@
       "labelDate": "Fecha de creación",
       "labelSize": "Tamaño",
       "confirmCreate": "¿Estás seguro de que deseas crear una nueva copia de seguridad de la base de datos? Esto puede tardar unos segundos.",
-      "confirmRestore": "¡ACCIÓN IRREVERSIBLE!\n\n¿Estás seguro de que deseas restaurar la base de datos usando el archivo \"%filename%\"?\n\nTODOS los datos actuales (usuarios, publicaciones, etc.) serán eliminados y reemplazados por los datos de esta copia. Esta acción no se puede deshacer.",
       "confirmDelete": "¿Estás seguro de que deseas eliminar permanentemente el archivo de copia de seguridad \"%filename%\"? Esta acción no se puede deshacer.",
       "errorFileNotFound": "Error: El archivo de copia de seguridad seleccionado no se encontró en el servidor.",
       "errorExecCreate": "Error al ejecutar 'mysqldump'.",
@@ -761,6 +760,38 @@
       "friendRequestAlert": "{username} te ha enviado una solicitud de amistad."
     },
     "chat": {
+      "title": "Mensajes",
+      "searchPlaceholder": "Buscar amigos...",
+      "selectConversation": "Selecciona una conversación para empezar",
+      "messagePlaceholder": "Escribe tu mensaje...",
+      "offline": "Desconectado",
+      "online": "Online",
+      "typing": "Escribiendo",
+      "error": {
+        "friendsOnly": "Este usuario solo acepta mensajes de amigos.",
+        "none": "Este usuario no acepta mensajes privados."
+      },
+      "context": {
+        "pinChat": "Fijar chat",
+        "unpinChat": "Desfijar chat",
+        "addFavorite": "Añadir a favoritos",
+        "removeFavorite": "Quitar de favoritos",
+        "archiveChat": "Archivar chat",
+        "unarchiveChat": "Desarchivar chat",
+        "blockUser": "Bloquear",
+        "unblockUser": "Desbloquear",
+        "deleteChat": "Eliminar chat"
+      },
+      "filter": {
+        "all": "Todo",
+        "favorites": "Favoritos",
+        "unread": "No leídos",
+        "archived": "Archivados"
+      },
+      "snippet": {
+        "image": "[Imagen]",
+        "deleted": "[Mensaje eliminado]"
+      },
       "copied": "Mensaje copiado",
       "copyError": "Error al copiar",
       "replyToSelf": "a ti mismo",
@@ -784,7 +815,9 @@
       "pinned": "Chat fijado.",
       "unpinned": "Chat desfijado.",
       "favorited": "Añadido a favoritos.",
-      "unfavorited": "Eliminado de favoritos."
+      "unfavorited": "Eliminado de favoritos.",
+      "archived": "Chat archivado.",
+      "unarchived": "Chat desarchivado."
     }
   },
   "db": {
@@ -947,13 +980,46 @@
       "addFavorite": "Añadir a favoritos",
       "removeFavorite": "Quitar de favoritos",
       "archiveChat": "Archivar chat",
+      "unarchiveChat": "Desarchivar chat",
       "blockUser": "Bloquear",
       "unblockUser": "Desbloquear",
       "deleteChat": "Eliminar chat"
     },
+    "filter": {
+      "all": "Todo",
+      "favorites": "Favoritos",
+      "unread": "No leídos",
+      "archived": "Archivados"
+    },
     "snippet": {
       "image": "[Imagen]",
       "deleted": "[Mensaje eliminado]"
-    }
+    },
+    "copied": "Mensaje copiado",
+    "copyError": "Error al copiar",
+    "replyToSelf": "a ti mismo",
+    "confirmDelete": "¿Eliminar este mensaje? Esta acción no se puede deshacer.",
+    "successDeleted": "Mensaje eliminado.",
+    "errorNotOwner": "No puedes eliminar un mensaje que no es tuyo.",
+    "errorAlreadyDeleted": "Este mensaje ya fue eliminado.",
+    "errorDeleteTimeLimit": "Ya no puedes eliminar este mensaje.",
+    "messageDeleted": "Se eliminó este mensaje",
+    "errorBlocked": "No puedes enviar mensajes a este usuario (bloqueado).",
+    "errorPrivacyBlocked": "No puedes enviar mensajes a este usuario (privacidad).",
+    "errorPrivacySenderBlocked": "Tu configuración de privacidad no te permite enviar mensajes.",
+    "errorPrivacyMutualBlocked": "No se puede enviar el mensaje debido a la configuración de privacidad.",
+    "confirmBlock": "¿Estás seguro de que quieres bloquear a este usuario? No podrán enviarse mensajes.",
+    "userBlocked": "Usuario bloqueado.",
+    "confirmUnblock": "¿Desbloquear a este usuario?",
+    "userUnblocked": "Usuario desbloqueado.",
+    "confirmDeleteChat": "¿Eliminar historial? Esto solo eliminará tu copia de la conversación. La otra persona aún la verá.",
+    "chatDeleted": "Conversación eliminada.",
+    "pinLimitReached": "Límite de 3 chats fijados alcanzado.",
+    "pinned": "Chat fijado.",
+    "unpinned": "Chat desfijado.",
+    "favorited": "Añadido a favoritos.",
+    "unfavorited": "Eliminado de favoritos.",
+    "archived": "Chat archivado.",
+    "unarchived": "Chat desarchivado."
   }
 }

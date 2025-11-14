@@ -6,7 +6,7 @@
 // (CORREGIDO: SEPARADA LA LÓGICA DE VER HISTORIAL VS ENVIAR MENSAJES)
 // (CORREGIDO: "NADIE" AHORA BLOQUEA EL ENVÍO DE MENSAJES)
 // (CORREGIDO: LÓGICA DE PRIVACIDAD SIMÉTRICA PARA "AMIGOS")
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (FAVORITOS Y FIJADOS) ▼▼▼ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (FAVORITOS, FIJADOS Y ARCHIVADOS) ▼▼▼ ---
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -156,7 +156,7 @@ function checkMessagePrivacy($pdo, $currentUserId, $receiverId) {
     }
 
     // 3. Comprobar si el RECEPTOR podría responder al EMISOR (revisa las reglas del EMISOR)
-    $canReceiverReply = canSendMessage($pdo, $receiverId, $currentUserId);
+    $canReceiverReply = canSendMessage($pdo, $receiverId, $currentUserId); // Invertido
     if (!$canReceiverReply) {
         throw new Exception('js.chat.errorPrivacyMutualBlocked');
     }
@@ -183,9 +183,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL GET-CONVERSATIONS) ▼▼▼ ---
-            // 1. LEFT JOIN a chat_deletions (cd)
-            // 2. Añadido cd.is_favorite y cd.pinned_at al SELECT
-            // 3. Modificado el ORDER BY para priorizar por pinned_at
+            // 1. Añadido cd.is_archived al SELECT
+            // 2. Modificado el ORDER BY para que los archivados salgan al final (a menos que estén fijados)
             $stmt_friends = $pdo->prepare(
                 "SELECT 
                     f.friend_id,
@@ -221,6 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     (EXISTS(SELECT 1 FROM user_blocks WHERE blocker_user_id = :current_user_id AND blocked_user_id = f.friend_id)) AS is_blocked_by_me,
                     cd.is_favorite,
                     cd.pinned_at,
+                    cd.is_archived, -- <-- NUEVA LÍNEA
                     cd.deleted_until AS deleted_timestamp
                 FROM (
                     -- 1. Todos los amigos aceptados
@@ -238,7 +238,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 LEFT JOIN chat_deletions cd ON cd.user_id = :current_user_id AND cd.conversation_user_id = f.friend_id
                 WHERE f.friend_id != :current_user_id
                 HAVING last_message_time IS NOT NULL OR deleted_timestamp IS NULL
-                ORDER BY cd.pinned_at DESC, last_message_time DESC, u.username ASC"
+                ORDER BY cd.is_archived ASC, cd.pinned_at DESC, last_message_time DESC, u.username ASC"
             );
             // --- ▲▲▲ FIN DE MODIFICACIÓN (SQL GET-CONVERSATIONS) ▲▲▲ ---
             
@@ -254,6 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // --- ▼▼▼ INICIO DE LÍNEAS AÑADIDAS ▼▼▼ ---
                 $friend['is_favorite'] = (bool)($friend['is_favorite'] ?? false);
                 $friend['pinned_at'] = $friend['pinned_at'] ?? null;
+                $friend['is_archived'] = (bool)($friend['is_archived'] ?? false); // <-- NUEVA LÍNEA
                 // --- ▲▲▲ FIN DE LÍNEAS AÑADIDAS ▲▲▲ ---
             }
 
@@ -481,6 +482,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $stmt_get->execute([$newMessageId]);
             $newMessage = $stmt_get->fetch();
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (DESARCHIVAR AL ENVIAR) ▼▼▼ ---
+            // Si el chat estaba archivado, lo desarchivamos para ambos usuarios
+            $stmt_unarchive = $pdo->prepare(
+                "UPDATE chat_deletions 
+                 SET is_archived = 0 
+                 WHERE (user_id = :user1 AND conversation_user_id = :user2) 
+                    OR (user_id = :user2 AND conversation_user_id = :user1)"
+            );
+            $stmt_unarchive->execute([':user1' => $currentUserId, ':user2' => $receiverId]);
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
             $pdo->commit();
 
@@ -644,6 +657,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = 'js.chat.pinned';
                 $response['new_is_pinned'] = true;
             }
+            
+        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN (toggle-archive-chat) ▼▼▼ ---
+        } elseif ($action === 'toggle-archive-chat') {
+            $targetUserId = (int)($_POST['target_user_id'] ?? 0);
+            if ($targetUserId === 0) {
+                throw new Exception('js.api.invalidAction');
+            }
+
+            // Invierte el valor booleano de is_archived.
+            // Si se archiva, también se desfija.
+            $stmt_toggle = $pdo->prepare(
+                "INSERT INTO chat_deletions (user_id, conversation_user_id, is_archived, pinned_at)
+                 VALUES (:user_id, :conversation_user_id, 1, NULL)
+                 ON DUPLICATE KEY UPDATE 
+                    is_archived = NOT is_archived,
+                    pinned_at = CASE 
+                                    WHEN NOT is_archived = 1 THEN NULL -- Si se va a archivar (NOT is_archived es 1), desfijar
+                                    ELSE pinned_at -- Si se va a desarchivar, mantener el pin
+                                END"
+            );
+            $stmt_toggle->execute([
+                ':user_id' => $currentUserId,
+                ':conversation_user_id' => $targetUserId
+            ]);
+
+            // Devolver el nuevo estado
+            $stmt_get = $pdo->prepare("SELECT is_archived FROM chat_deletions WHERE user_id = ? AND conversation_user_id = ?");
+            $stmt_get->execute([$currentUserId, $targetUserId]);
+            $newIsArchived = (bool)$stmt_get->fetchColumn();
+
+            $response['success'] = true;
+            $response['message'] = $newIsArchived ? 'js.chat.archived' : 'js.chat.unarchived';
+            $response['new_is_archived'] = $newIsArchived;
+        // --- ▲▲▲ FIN DE NUEVA ACCIÓN (toggle-archive-chat) ▲▲▲ ---
+            
         // --- ▲▲▲ FIN DE NUEVAS ACCIONES ▲▲▲ ---
         
         }

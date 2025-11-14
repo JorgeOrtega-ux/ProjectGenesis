@@ -1,7 +1,7 @@
 <?php
 // FILE: includes/sections/main/messages.php
 // (MODIFICADO PARA MÚLTIPLES FOTOS)
-// (MODIFICADO PARA FAVORITOS Y PINEADOS)
+// (MODIFICADO PARA FAVORITOS, PINEADOS Y ARCHIVADOS)
 global $basePath;
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
@@ -23,7 +23,6 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    background-color: #ffffff;
 }
 /* ... (Estilos de .chat-sidebar-header, .chat-sidebar-search, .chat-sidebar-list, .chat-conversation-item, etc. sin cambios)... */
 .chat-sidebar-header { padding: 16px; border-bottom: 1px solid #00000020; flex-shrink: 0; }
@@ -469,6 +468,52 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 .chat-reply-preview-close .material-symbols-rounded {
     font-size: 18px;
 }
+
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (Filtros) ▼▼▼ --- */
+.chat-sidebar-filters {
+    padding: 8px 16px 16px 16px;
+    border-bottom: 1px solid #00000020;
+    flex-shrink: 0;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    /* Para móviles */
+    -ms-overflow-style: none;
+    /* IE y Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.chat-sidebar-filters::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari y Opera */
+}
+
+.chat-filter-badge {
+    padding: 6px 16px;
+    border-radius: 50px;
+    background-color: #f5f5fa;
+    border: 1px solid #00000020;
+    color: #1f2937;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.chat-filter-badge:hover {
+    background-color: #e9ecef;
+}
+
+.chat-filter-badge.active {
+    background-color: #000;
+    color: #ffffff;
+    border-color: #000;
+}
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS (Filtros) ▲▲▲ --- */
+
 /* --- ▲▲▲ FIN DE ESTILOS FALTANTES --- */
 </style>
 
@@ -535,10 +580,6 @@ if ($hasPreloadedUser) {
 // --- ▲▲▲ FIN DE NUEVA LÓGICA DE PRE-CARGA Y ERROR ▲▲▲ ---
 ?>
 
-<style>
-/* ... */
-</style>
-
 <div class="section-content <?php echo ($CURRENT_SECTION === 'messages') ? 'active' : 'disabled'; ?>" data-section="messages" style="overflow-y: hidden;">
     
     <div class="chat-layout-container <?php echo $chatLayoutClass; ?>" id="chat-layout-container">
@@ -550,9 +591,15 @@ if ($hasPreloadedUser) {
                     <span class="material-symbols-rounded search-icon">search</span>
                     
                     <input type="text" class="chat-sidebar-search-input" id="chat-friend-search" placeholder="Buscar conversación..." data-i18n-placeholder="chat.searchPlaceholder">
-                    </div>
+                </div>
             </div>
             
+            <div class="chat-sidebar-filters" id="chat-sidebar-filters">
+                <button type="button" class="chat-filter-badge active" data-filter="all" data-i18n="chat.filter.all">Todo</button>
+                <button type="button" class="chat-filter-badge" data-filter="favorites" data-i18n="chat.filter.favorites">Favoritos</button>
+                <button type="button" class="chat-filter-badge" data-filter="unread" data-i18n="chat.filter.unread">No leídos</button>
+                <button type="button" class="chat-filter-badge" data-filter="archived" data-i18n="chat.filter.archived">Archivados</button>
+            </div>
             <div class="chat-sidebar-list">
 
                 <div class="chat-list-placeholder" id="chat-list-loader">
@@ -669,6 +716,10 @@ if ($hasPreloadedUser) {
                     <div class="menu-link" data-action="archive-chat">
                         <div class="menu-link-icon"><span class="material-symbols-rounded">archive</span></div>
                         <div class="menu-link-text"><span data-i18n="chat.context.archiveChat">Archivar chat</span></div>
+                    </div>
+                    <div class="menu-link" data-action="unarchive-chat" style="display: none;">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">unarchive</span></div>
+                        <div class="menu-link-text"><span data-i18n="chat.context.unarchiveChat">Desarchivar chat</span></div>
                     </div>
                     
                     <div style="height: 1px; background-color: #00000020; margin: 4px 8px;"></div>

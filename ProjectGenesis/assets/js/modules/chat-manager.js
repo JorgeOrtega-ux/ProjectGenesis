@@ -9,7 +9,7 @@
 // (MODIFICADO: Añadido menú contextual de chat CON LÓGICA DE BLOQUEO/ELIMINAR)
 // (CORREGIDO: Usar e.stopImmediatePropagation() para prevenir colisión con url-manager)
 // (CORREGIDO: Limpiar la URL después de eliminar un chat activo)
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (FAVORITOS Y FIJADOS) ▼▼▼ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (FAVORITOS, FIJADOS Y ARCHIVADOS) ▼▼▼ ---
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -30,12 +30,13 @@ let isLoadingOlderMessages = false;
 let allMessagesLoaded = false;      
 const CHAT_PAGE_SIZE = 30;          
 
-// --- ▼▼▼ INICIO DE NUEVAS VARIABLES GLObales ▼▼▼ ---
+// --- ▼▼▼ INICIO DE NUEVAS VARIABLES GLOBALES ▼▼▼ ---
 let currentReplyMessageId = null; // Almacena el ID del mensaje al que se está respondiendo
 let typingTimer;
 let isTyping = false;
 let chatPopperInstance = null; // Instancia para el popover de contexto del chat
-// --- ▲▲▲ FIN DE NUEVAS VARIABLES GLObales ▲▲▲ ---
+let currentChatFilter = 'all'; // Estado del filtro: 'all', 'favorites', 'unread', 'archived'
+// --- ▲▲▲ FIN DE NUEVAS VARIABLES GLOBALES ▼▼▼ ---
 
 
 /**
@@ -114,6 +115,7 @@ function renderConversationList(conversations) {
 
         const isPinned = friend.pinned_at ? 'true' : 'false';
         const isFavorite = friend.is_favorite ? 'true' : 'false';
+        const isArchived = friend.is_archived ? 'true' : 'false'; // <-- NUEVA LÍNEA
 
         const indicatorsHtml = `
             <div class="chat-item-indicators">
@@ -139,7 +141,8 @@ function renderConversationList(conversations) {
                data-is-blocked-by-me="${friend.is_blocked_by_me}"
                data-is-blocked-globally="${friend.is_blocked_globally}"
                data-is-favorite="${isFavorite}"
-               data-pinned-at="${friend.pinned_at || ''}">
+               data-pinned-at="${friend.pinned_at || ''}"
+               data-is-archived="${isArchived}"> 
                 
                 <div class="chat-item-avatar" data-role="${escapeHTML(friend.role)}">
                     <img src="${escapeHTML(avatar)}" alt="${escapeHTML(friend.username)}">
@@ -170,17 +173,77 @@ function renderConversationList(conversations) {
 }
 // --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (renderConversationList) ---
 
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (filterConversationList) ▼▼▼ ---
+/**
+ * Filtra la lista de amigos en el panel izquierdo basado en la búsqueda Y el filtro de insignia.
+ */
+function filterConversationList(query) {
+    console.log(`%c[FILTER] filterConversationList() -> Query: "${query}", Filtro: "${currentChatFilter}"`, 'color: orange; font-weight: bold;');
+    
+    query = query.toLowerCase().trim();
+    
+    // 1. Filtrar por búsqueda primero
+    let filteredBySearch = [];
+    if (!query) {
+        filteredBySearch = [...friendCache]; // Usar copia si no hay búsqueda
+    } else {
+        filteredBySearch = friendCache.filter(friend => 
+            friend.username.toLowerCase().includes(query)
+        );
+    }
+    console.log(`[FILTER] ${filteredBySearch.length} chats después del filtro de búsqueda.`);
+
+    // 2. Filtrar por la insignia activa
+    const showArchived = (currentChatFilter === 'archived');
+    
+    let conversationsToShow = filteredBySearch.filter(convo => {
+        const isArchived = convo.is_archived === true;
+        
+        // Si el filtro es 'archived', solo mostrar archivados
+        if (showArchived) {
+            return isArchived;
+        }
+        
+        // Si es cualquier otro filtro ('all', 'favorites', 'unread'), OCULTAR archivados
+        if (isArchived) {
+            return false;
+        }
+
+        // Si no está archivado, aplicar los otros filtros
+        if (currentChatFilter === 'favorites') {
+            return convo.is_favorite === true;
+        }
+        if (currentChatFilter === 'unread') {
+            return parseInt(convo.unread_count, 10) > 0;
+        }
+        
+        // Si es 'all' (y no archivado), mostrarlo
+        return true; 
+    });
+    
+    console.log(`[FILTER] ${conversationsToShow.length} chats después del filtro de insignia.`);
+
+    // 3. Ordenar la lista resultante
+    // La API ya ordena por (is_archived ASC, pinned_at DESC, last_message_time DESC)
+    // El 'friendCache' ya está pre-ordenado. El filtrado mantiene ese orden.
+    // No es necesario re-ordenar aquí, a menos que la búsqueda deba re-ordenar.
+    // Por ahora, mantenemos el orden de la API.
+    
+    console.log(`[FILTER] Ordenación (por API) completada. Se mostrarán ${conversationsToShow.length} chats.`);
+
+    // 4. Renderizar la lista final
+    console.log("[FILTER] Llamando a renderConversationList...");
+    renderConversationList(conversationsToShow);
+}
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (filterConversationList) ---
+
+
 /**
  * Carga la lista de amigos/conversaciones inicial.
  */
 async function loadConversations() {
     console.groupCollapsed("%c[LOAD CONVERSATIONS] 🔄 loadConversations() iniciada...", "color: blue; font-weight: bold;");
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Llamada unificada) ▼▼▼ ---
-    // Ya no necesitamos la llamada separada a friend_handler.php
-    // La API 'get-conversations' ahora devuelve toda la información.
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ---
-
     try {
         const formData = new FormData();
         formData.append('action', 'get-conversations');
@@ -191,8 +254,6 @@ async function loadConversations() {
         if (result.success) {
             console.info(`[LOAD CONVERSATIONS] API Success. ${result.conversations.length} conversaciones recibidas.`);
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Obtener estado online por separado) ▼▼▼ ---
-            // Sigue siendo una buena idea obtener el estado "online" en tiempo real
             let onlineUserIds = {};
             try {
                 const presenceFormData = new FormData();
@@ -213,7 +274,6 @@ async function loadConversations() {
             result.conversations.forEach(convo => {
                 convo.is_online = !!onlineUserIds[convo.friend_id];
             });
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             friendCache = result.conversations;
             console.log("[LOAD CONVERSATIONS] friendCache actualizado:", friendCache);
@@ -222,8 +282,8 @@ async function loadConversations() {
             const currentQuery = searchInput ? searchInput.value : '';
             console.log(`[LOAD CONVERSATIONS] Query actual del input: "${currentQuery}"`);
             
-            console.log("[LOAD CONVERSATIONS] Llamando a filterConversationList...");
-            filterConversationList(currentQuery);
+            console.log("[LOAD CONVERSATIONS] Llamando a filterConversationList (usará el filtro global '${currentChatFilter}')...");
+            filterConversationList(currentQuery); // <-- Esta función ahora usa 'currentChatFilter'
             
         } else {
             console.error("[LOAD CONVERSATIONS] La API reportó un fallo:", result.message);
@@ -235,91 +295,6 @@ async function loadConversations() {
     }
     console.groupEnd();
 }
-
-// --- ▼▼▼ INICIO DE FUNCIÓN CORREGIDA (filterConversationList) ▼▼▼ ---
-/**
- * Filtra la lista de amigos en el panel izquierdo.
- * (MODIFICADO: Muestra a TODOS los amigos. Los chats con historial
- * aparecen primero, y el input busca en todos los amigos.)
- */
-function filterConversationList(query) {
-    console.log(`%c[FILTER] filterConversationList() -> Query: "${query}"`, 'color: orange; font-weight: bold;');
-    
-    query = query.toLowerCase().trim();
-    
-    let conversationsToShow = [];
-
-    if (!query) {
-        // 1. SIN BÚSQUEDA: Mostrar TODOS los amigos del cache
-        // Usamos [...friendCache] para crear una copia y no modificar el original
-        conversationsToShow = [...friendCache]; 
-        console.log(`[FILTER] Query vacía. Mostrando TODOS los ${conversationsToShow.length} amigos.`);
-        
-    } else {
-        // 2. CON BÚSQUEDA: Filtrar de TODOS los amigos del cache
-        conversationsToShow = friendCache.filter(friend => 
-            friend.username.toLowerCase().includes(query)
-        );
-        console.log(`[FILTER] Query presente. Filtrando de *TODOS* ${friendCache.length} amigos... ${conversationsToShow.length} coinciden.`);
-    }
-    
-    // 3. Ordenar la lista resultante (con o sin filtro)
-    // Lógica de ordenación:
-    //  - Amigos con mensajes (timeB) van antes que amigos sin mensajes (timeA == null)
-    //  - Amigos con mensajes se ordenan por el más reciente (timeB - timeA)
-    //  - Amigos sin mensajes se ordenan alfabéticamente (a.username.localeCompare(b.username))
-    
-    conversationsToShow.sort((a, b) => {
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (ORDENACIÓN POR PIN) ▼▼▼ ---
-        const pinA = a.pinned_at ? new Date(a.pinned_at) : null;
-        const pinB = b.pinned_at ? new Date(b.pinned_at) : null;
-
-        // Caso 1: Ambos están fijados. Ordenar por fecha de fijado (más reciente primero).
-        if (pinA && pinB) {
-            return pinB - pinA;
-        }
-        // Caso 2: B está fijado, A no. B va primero.
-        if (!pinA && pinB) {
-            return 1;
-        }
-        // Caso 3: A está fijado, B no. A va primero.
-        if (pinA && !pinB) {
-            return -1;
-        }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN (ORDENACIÓN POR PIN) ▲▲▲ ---
-
-        // Caso 4: Ninguno está fijado. Usar lógica de mensajes.
-        const timeA = a.last_message_time ? new Date(a.last_message_time) : null;
-        const timeB = b.last_message_time ? new Date(b.last_message_time) : null;
-
-        // Caso 4a: Ambos tienen historial. Ordenar por fecha de mensaje.
-        if (timeA && timeB) {
-            if (isNaN(timeA) || isNaN(timeB)) return 0;
-            return timeB - timeA; // El más reciente (B) primero
-        }
-        
-        // Caso 4b: B tiene historial, A no. B va primero.
-        if (!timeA && timeB) {
-            return 1;
-        }
-        
-        // Caso 4c: A tiene historial, B no. A va primero.
-        if (timeA && !timeB) {
-            return -1;
-        }
-        
-        // Caso 4d: Ninguno tiene historial. Ordenar alfabéticamente.
-        return a.username.localeCompare(b.username);
-    });
-
-    console.log(`[FILTER] Ordenación completada. Se mostrarán ${conversationsToShow.length} chats.`);
-
-    // 4. Renderizar la lista final
-    console.log("[FILTER] Llamando a renderConversationList...");
-    renderConversationList(conversationsToShow);
-}
-// --- ▲▲▲ FIN DE FUNCIÓN CORREGIDA (filterConversationList) ---
-
 
 /**
  * Desplaza el contenedor de mensajes hasta el final.
@@ -1108,7 +1083,7 @@ async function _executeChatContextMenuAction(action, userId) {
                 showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
             }
         
-        // --- ▼▼▼ NUEVA LÓGICA (PIN/FAVORITE) ▼▼▼ ---
+        // --- ▼▼▼ NUEVA LÓGICA (PIN/FAVORITE/ARCHIVE) ▼▼▼ ---
         } else if (action === 'pin-chat' || action === 'unpin-chat') {
             
             formData.append('action', 'toggle-pin-chat');
@@ -1137,6 +1112,18 @@ async function _executeChatContextMenuAction(action, userId) {
                         favIcon.style.display = result.new_is_favorite ? 'inline-block' : 'none';
                     }
                 }
+            } else {
+                showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+            }
+        
+        } else if (action === 'archive-chat' || action === 'unarchive-chat') {
+            
+            formData.append('action', 'toggle-archive-chat');
+            const result = await callChatApi(formData);
+            
+            if (result.success) {
+                showAlert(getTranslation(result.message), 'success');
+                await loadConversations(); // Recargar para aplicar filtros
             } else {
                 showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
             }
@@ -1241,6 +1228,30 @@ export function initChatManager() {
             return; // Salir, ya que el resto de la lógica es para DENTRO del chat
         }
         
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Filtros) ▼▼▼ ---
+        const filterBadge = e.target.closest('.chat-filter-badge[data-filter]');
+        if (filterBadge) {
+            e.preventDefault();
+            const newFilter = filterBadge.dataset.filter;
+            
+            if (newFilter === currentChatFilter) return; // Ya está activo
+            
+            console.log(`[FILTER] Clic en insignia. Nuevo filtro: '${newFilter}'`);
+            currentChatFilter = newFilter;
+            
+            // Actualizar UI de insignias
+            document.querySelectorAll('#chat-sidebar-filters .chat-filter-badge').forEach(badge => {
+                badge.classList.remove('active');
+            });
+            filterBadge.classList.add('active');
+            
+            // Volver a filtrar la lista
+            const searchInput = document.getElementById('chat-friend-search');
+            filterConversationList(searchInput ? searchInput.value : '');
+            return;
+        }
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA (Filtros) ▲▲▲ ---
+
         // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (Menú contextual) ▼▼▼ ---
         const contextBtn = e.target.closest('[data-action="toggle-chat-context-menu"]');
         if (contextBtn) {
@@ -1269,6 +1280,7 @@ export function initChatManager() {
             // --- ¡Nuevos datos! ---
             const isFavorite = friendItem.dataset.isFavorite === 'true';
             const isPinned = friendItem.dataset.pinnedAt.length > 0;
+            const isArchived = friendItem.dataset.isArchived === 'true'; // <-- NUEVA LÍNEA
             
             popover.dataset.currentUserId = userId;
             
@@ -1301,13 +1313,22 @@ export function initChatManager() {
             const favBtn = popover.querySelector('[data-action="add-favorites"]');
             const unFavBtn = popover.querySelector('[data-action="remove-favorites"]');
 
+            // --- Botones de Archivar (nueva lógica) ---
+            const archiveBtn = popover.querySelector('[data-action="archive-chat"]');
+            const unarchiveBtn = popover.querySelector('[data-action="unarchive-chat"]');
+
             if (pinBtn && unpinBtn) {
-                pinBtn.style.display = isPinned ? 'none' : 'flex';
-                unpinBtn.style.display = isPinned ? 'flex' : 'none';
+                // No puedes fijar un chat archivado
+                pinBtn.style.display = (isPinned || isArchived) ? 'none' : 'flex';
+                unpinBtn.style.display = (isPinned && !isArchived) ? 'flex' : 'none';
             }
             if (favBtn && unFavBtn) {
                 favBtn.style.display = isFavorite ? 'none' : 'flex';
                 unFavBtn.style.display = isFavorite ? 'flex' : 'none';
+            }
+            if (archiveBtn && unarchiveBtn) { // <-- NUEVO
+                archiveBtn.style.display = isArchived ? 'none' : 'flex';
+                unarchiveBtn.style.display = isArchived ? 'flex' : 'none';
             }
             // --- Fin nueva lógica ---
 

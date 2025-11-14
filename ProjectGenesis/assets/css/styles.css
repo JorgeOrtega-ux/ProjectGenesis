@@ -610,3 +610,52 @@ body {
     }
     /* --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ --- */
 }
+
+/* ====================================== */
+/* =           COMPONENTES DE CHAT (Nuevos Filtros) = */
+/* ====================================== */
+
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (Filtros) ▼▼▼ --- */
+.chat-sidebar-filters {
+    padding: 8px 16px 16px 16px;
+    border-bottom: 1px solid #00000020;
+    flex-shrink: 0;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    /* Para móviles */
+    -ms-overflow-style: none;
+    /* IE y Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.chat-sidebar-filters::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari y Opera */
+}
+
+.chat-filter-badge {
+    padding: 6px 16px;
+    border-radius: 50px;
+    background-color: #f5f5fa;
+    border: 1px solid #00000020;
+    color: #1f2937;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.chat-filter-badge:hover {
+    background-color: #e9ecef;
+}
+
+.chat-filter-badge.active {
+    background-color: #000;
+    color: #ffffff;
+    border-color: #000;
+}
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS (Filtros) ▲▲▲ --- */
