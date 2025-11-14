@@ -1,8 +1,7 @@
 <?php
 // FILE: includes/sections/main/messages.php
-// (MODIFICADO PARA MÚLTIPLES FOTOS)
-// (MODIFICADO PARA FAVORITOS, PINEADOS Y ARCHIVADOS)
-// (MODIFICADO PARA MOSTRAR ESTADO 'LAST_SEEN' DETALLADO)
+// (MODIFICADO - Ahora acepta un usuario pre-cargado desde el router)
+// (MODIFICADO OTRA VEZ - Para manejar $chatErrorType)
 // --- ▼▼▼ MODIFICACIÓN (ELIMINADO BOTÓN DE FILTRO "COMUNIDADES") ▼▼▼ ---
 global $basePath;
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
@@ -14,7 +13,8 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
  * @param string $dateTimeString El timestamp UTC de la BD
  * @return string
  */
-function getChatTimeAgo($dateTimeString) {
+function getChatTimeAgo($dateTimeString)
+{
     if (empty($dateTimeString)) {
         return 'Desconectado'; // Fallback
     }
@@ -24,13 +24,20 @@ function getChatTimeAgo($dateTimeString) {
         $interval = $currentTime->diff($lastSeenTime);
 
         $timeAgo = '';
-        if ($interval->y > 0) { $timeAgo = ($interval->y == 1) ? '1 año' : $interval->y . ' años'; }
-        elseif ($interval->m > 0) { $timeAgo = ($interval->m == 1) ? '1 mes' : $interval->m . ' meses'; }
-        elseif ($interval->d > 0) { $timeAgo = ($interval->d == 1) ? '1 día' : $interval->d . ' días'; }
-        elseif ($interval->h > 0) { $timeAgo = ($interval->h == 1) ? '1 h' : $interval->h . ' h'; }
-        elseif ($interval->i > 0) { $timeAgo = ($interval->i == 1) ? '1 min' : $interval->i . ' min'; }
-        else { $timeAgo = 'unos segundos'; }
-        
+        if ($interval->y > 0) {
+            $timeAgo = ($interval->y == 1) ? '1 año' : $interval->y . ' años';
+        } elseif ($interval->m > 0) {
+            $timeAgo = ($interval->m == 1) ? '1 mes' : $interval->m . ' meses';
+        } elseif ($interval->d > 0) {
+            $timeAgo = ($interval->d == 1) ? '1 día' : $interval->d . ' días';
+        } elseif ($interval->h > 0) {
+            $timeAgo = ($interval->h == 1) ? '1 h' : $interval->h . ' h';
+        } elseif ($interval->i > 0) {
+            $timeAgo = ($interval->i == 1) ? '1 min' : $interval->i . ' min';
+        } else {
+            $timeAgo = 'unos segundos';
+        }
+
         // Devolver el texto traducible (el JS se encargará de las claves i18n si esto falla)
         return ($timeAgo === 'unos segundos') ? 'Activo hace unos momentos' : "Activo hace $timeAgo";
     } catch (Exception $e) {
@@ -45,6 +52,8 @@ function getChatTimeAgo($dateTimeString) {
         display: flex;
         width: 100%;
         height: 100%;
+        padding: 12px;
+        gap: 12px;
         overflow: hidden;
     }
 
@@ -52,7 +61,8 @@ function getChatTimeAgo($dateTimeString) {
     .chat-sidebar-left {
         width: 360px;
         height: 100%;
-        border-right: 1px solid #00000020;
+        box-shadow: 0 4px 12px #00000020;
+        border-radius: 12px;
         display: flex;
         flex-direction: column;
         flex-shrink: 0;
@@ -313,6 +323,8 @@ function getChatTimeAgo($dateTimeString) {
         display: flex;
         flex-direction: column;
         background-color: #ffffff;
+           box-shadow: 0 4px 12px #00000020;
+        border-radius: 12px;
     }
 
     .chat-content-placeholder {
@@ -381,13 +393,13 @@ function getChatTimeAgo($dateTimeString) {
         color: #6b7280;
     }
 
- .chat-header-status.online {
-    color: #28a745;
-    width: max-content;
-    border-radius: 50px;
-    padding: 0 8px;
-    border: 1px solid #28a745;
-}
+    .chat-header-status.online {
+        color: #28a745;
+        width: max-content;
+        border-radius: 50px;
+        padding: 0 8px;
+        border: 1px solid #28a745;
+    }
 
     .chat-header-status-typing {
         display: none;
@@ -573,7 +585,6 @@ function getChatTimeAgo($dateTimeString) {
         flex-direction: column;
         /* Cambiado a columna para la previsualización */
         gap: 12px;
-        background-color: #ffffff;
         flex-shrink: 0;
     }
 
@@ -883,13 +894,17 @@ function getChatTimeAgo($dateTimeString) {
         flex-shrink: 0;
         display: flex;
         gap: 8px;
-        overflow-x: auto; /* <-- VUELTO A 'auto' */
-        -ms-overflow-style: none; /* <-- AÑADIDO (IE/Edge) */
-        scrollbar-width: none; /* <-- AÑADIDO (Firefox) */
+        overflow-x: auto;
+        /* <-- VUELTO A 'auto' */
+        -ms-overflow-style: none;
+        /* <-- AÑADIDO (IE/Edge) */
+        scrollbar-width: none;
+        /* <-- AÑADIDO (Firefox) */
     }
 
     .chat-sidebar-filters::-webkit-scrollbar {
-        display: none; /* <-- AÑADIDO (Chrome/Safari) */
+        display: none;
+        /* <-- AÑADIDO (Chrome/Safari) */
     }
 
     .chat-filter-badge {
@@ -901,9 +916,11 @@ function getChatTimeAgo($dateTimeString) {
         font-weight: 600;
         cursor: pointer;
         transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-        flex-shrink: 0; /* <-- VUELTO A '0' */
+        flex-shrink: 0;
+        /* <-- VUELTO A '0' */
         user-select: none;
     }
+
     /* --- ▲▲▲ FIN DE CORRECCIÓN (Filtros) ▲▲▲ --- */
 
     /* --- ▲▲▲ FIN DE ESTILOS FALTANTES --- */
@@ -953,8 +970,7 @@ if ($hasPreloadedUser) {
     if ($preloadedChatUser['role'] === 'community') {
         $preloadedStatusText = 'Chat Grupal'; // O una clave i18n
         $preloadedStatusClass = 'active'; // Visible, pero sin "online"
-    }
-    elseif ($is_actually_online) { // $is_actually_online solo se define para DMs
+    } elseif ($is_actually_online) { // $is_actually_online solo se define para DMs
         $preloadedStatusText = 'Online';
         $preloadedStatusClass = 'online active';
     } else {
@@ -985,7 +1001,7 @@ if ($hasPreloadedUser) {
 
             <div class="chat-sidebar-filters" id="chat-sidebar-filters">
                 <button type="button" class="chat-filter-badge active" data-filter="all" data-i18n="chat.filter.all">Todo</button>
-                
+
                 <button type="button" class="chat-filter-badge" data-filter="favorites" data-i18n="chat.filter.favorites">Favoritos</button>
                 <button type="button" class="chat-filter-badge" data-filter="unread" data-i18n="chat.filter.unread">No leídos</button>
                 <button type="button" class="chat-filter-badge" data-filter="archived" data-i18n="chat.filter.archived">Archivados</button>
@@ -1002,7 +1018,7 @@ if ($hasPreloadedUser) {
                     <span id="chat-list-empty-text" data-i1x8n="chat.empty.all">Inicia una conversación.</span>
                 </div>
                 <div id="chat-conversation-list">
-                    </div>
+                </div>
 
             </div>
         </div>
@@ -1048,32 +1064,37 @@ if ($hasPreloadedUser) {
                     </div>
                 </div>
 
-                <div class="chat-message-list" id="chat-message-list">
-                    </div>
+                <div class="chat-message-list overflow-y" id="chat-message-list">
+                </div>
 
                 <form class="chat-message-input-form" id="chat-message-input-form" action="#">
                     <?php outputCsrfInput(); ?>
                     <input type="hidden" id="chat-target-id" value="<?php echo $preloadedReceiverId; ?>">
-                    
+
                     <input type="hidden" id="chat-type" value="<?php echo $preloadedChatType; ?>">
                     <input type="file" id="chat-attachment-input" class="visually-hidden"
                         accept="image/png, image/jpeg, image/gif, image/webp"
                         multiple>
 
                     <div class="chat-reply-preview-container" id="chat-reply-preview-container" style="display: none;"></div>
-                    <div class="chat-attachment-preview-container" id="chat-attachment-preview-container">
+
+                    <div class="chat-input-pill-wrapper">
+
+                        <div class="chat-attachment-preview-container" id="chat-attachment-preview-container">
                         </div>
 
-                    <div class="chat-input-main-row">
-                        <button type="button" class="chat-attach-button" id="chat-attach-button">
-                            <span class="material-symbols-rounded">add_photo_alternate</span>
-                        </button>
+                        <div class="chat-input-main-row">
+                            <button type="button" class="chat-attach-button" id="chat-attach-button">
+                                <span class="material-symbols-rounded">add_photo_alternate</span>
+                            </button>
 
-                        <input type="text" class="chat-input-field" id="chat-message-input" placeholder="Escribe tu mensaje..." data-i18n-placeholder="chat.messagePlaceholder" autocomplete="off" <?php echo $hasPreloadedUser ? '' : 'disabled'; ?>>
+                            <input type="text" class="chat-input-field" id="chat-message-input" placeholder="Escribe tu mensaje..." data-i18n-placeholder="chat.messagePlaceholder" autocomplete="off" <?php echo ($hasPreloadedUser && !$hasChatError) ? '' : 'disabled'; ?>>
 
-                        <button type="submit" class="chat-send-button" id="chat-send-button" disabled>
-                            <span class="material-symbols-rounded">send</span>
-                        </button>
+                            <button type="submit" class="chat-send-button" id="chat-send-button" disabled>
+                                <span class="material-symbols-rounded">send</span>
+                            </button>
+                        </div>
+
                     </div>
                 </form>
             </div>
