@@ -4,6 +4,7 @@
 // (MODIFICADO OTRA VEZ PARA INCLUIR UUID EN CONVERSACIONES)
 // (MODIFICADO OTRA VEZ PARA PRIVACIDAD DE MENSAJES)
 // (CORREGIDO: SEPARADA LA LÓGICA DE VER HISTORIAL VS ENVIAR MENSAJES)
+// (CORREGIDO: "NADIE" AHORA BLOQUEA EL ENVÍO DE MENSAJES)
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -208,13 +209,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $targetUserId = (int)($_POST['target_user_id'] ?? 0);
             if ($targetUserId === 0) throw new Exception('js.api.invalidAction');
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD ▼▼▼ ---
-            // ¡Quitamos el bloqueo de aquí!
-            // checkMessagePrivacy($pdo, $currentUserId, $targetUserId);
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD (GET HISTORY) ▼▼▼ ---
             
-            // En su lugar, comprobamos si se puede enviar y lo notificamos al frontend
-            $canSendMessage = canSendMessage($pdo, $currentUserId, $targetUserId);
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            // 1. Comprobar la privacidad del RECEPTOR
+            $canSendToReceiver = canSendMessage($pdo, $currentUserId, $targetUserId);
+
+            // 2. Comprobar la privacidad del EMISOR (propia)
+            $stmt_sender_privacy = $pdo->prepare("SELECT message_privacy_level FROM user_preferences WHERE user_id = ?");
+            $stmt_sender_privacy->execute([$currentUserId]);
+            $senderPrivacy = $stmt_sender_privacy->fetchColumn();
+            
+            $canSenderSend = ($senderPrivacy !== 'none');
+
+            // 3. La decisión final es si AMBOS son verdaderos
+            $canSendMessage = ($canSendToReceiver && $canSenderSend);
+
+            // --- ▲▲▲ FIN DE MODIFICACIÓN DE PRIVACIDAD (GET HISTORY) ▲▲▲ ---
 
             $beforeMessageId = (int)($_POST['before_message_id'] ?? 0);
 
@@ -273,10 +283,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message_count'] = count($messages);
             $response['limit'] = CHAT_PAGE_SIZE;
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD ▼▼▼ ---
             // Añadimos el nuevo flag a la respuesta
             $response['can_send_message'] = $canSendMessage;
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         } elseif ($action === 'send-message') {
 
@@ -291,10 +299,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.api.invalidAction');
             }
             
-            // --- ▼▼▼ COMPROBACIÓN DE PRIVACIDAD ▼▼▼ ---
-            // Esta comprobación SÍ se queda aquí. No puedes ENVIAR si está bloqueado.
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD (SEND MESSAGE) ▼▼▼ ---
+            
+            // 1. Comprobar la configuración de privacidad del EMISOR ($currentUserId)
+            $stmt_sender_privacy = $pdo->prepare("SELECT message_privacy_level FROM user_preferences WHERE user_id = ?");
+            $stmt_sender_privacy->execute([$currentUserId]);
+            $senderPrivacy = $stmt_sender_privacy->fetchColumn();
+            
+            if ($senderPrivacy === 'none') {
+                // Si EL EMISOR tiene "nadie", no puede ENVIAR mensajes.
+                throw new Exception('js.chat.errorPrivacySenderBlocked'); 
+            }
+
+            // 2. Comprobación de privacidad del RECEPTOR (lógica existente)
             checkMessagePrivacy($pdo, $currentUserId, $receiverId);
-            // --- ▲▲▲ FIN DE COMPROBACIÓN ▲▲▲ ---
+            
+            // --- ▲▲▲ FIN DE MODIFICACIÓN DE PRIVACIDAD (SEND MESSAGE) ▲▲▲ ---
 
             if (empty($messageText) && (empty($uploadedFiles['name'][0]) || $uploadedFiles['error'][0] !== UPLOAD_ERR_OK)) {
                 throw new Exception('js.publication.errorEmpty'); // Mensaje vacío

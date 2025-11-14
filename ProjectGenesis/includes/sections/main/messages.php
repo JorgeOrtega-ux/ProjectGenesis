@@ -29,7 +29,7 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 .chat-sidebar-header .component-page-title { font-size: 24px; text-align: left; margin-bottom: 16px; }
 .chat-sidebar-search { position: relative; }
 .chat-sidebar-search .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6b7280; pointer-events: none; }
-.chat-sidebar-search-input { width: 100%; height: 40px; border-radius: 8px; border: 1px solid #00000020; background-color: #f5f5fa; padding: 0 12px 0 44px; font-size: 15px; font-family: "Roboto Condensed", sans-serif; font-weight: 500; color: #000; outline: none; }
+.chat-sidebar-search-input { width: 100%; height: 40px; border-radius: 50px; border: 1px solid #00000020; background-color: transparent; padding: 0 12px 0 44px; font-size: 15px; font-family: "Roboto Condensed", sans-serif; font-weight: 500; color: #000; outline: none; }
 .chat-sidebar-search-input:focus { background-color: #ffffff; border-color: #000; }
 .chat-sidebar-list { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 8px; }
 .chat-conversation-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; text-decoration: none; position: relative; }

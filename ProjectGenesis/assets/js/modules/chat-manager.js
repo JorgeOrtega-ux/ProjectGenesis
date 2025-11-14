@@ -4,6 +4,7 @@
 // (MODIFICADO DE NUEVO PARA ARREGLAR LA RECARGA DE LA LISTA DEL REMITENTE)
 // (MODIFICADO CON CONSOLE.LOGS PARA DEPURACIÓN)
 // (CORREGIDO: Lógica de filtrado de lista y bloqueo de input por privacidad)
+// (CORREGIDO: Bug de bloqueo de input en envío exitoso)
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -538,6 +539,7 @@ async function loadChatHistory(friendId, beforeId = null) {
                 
                 // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 // Leemos el nuevo flag 'can_send_message' de la API
+                // (Este flag ahora comprueba la privacidad del receptor Y del emisor)
                 if (result.can_send_message) {
                     enableChatInput(true); // Permitir escribir
                 } else {
@@ -791,6 +793,7 @@ async function sendMessage() {
         return;
     }
     
+    // 1. Deshabilitar controles temporalmente
     sendBtn.disabled = true;
     input.disabled = true;
     document.getElementById('chat-attach-button').disabled = true;
@@ -800,11 +803,9 @@ async function sendMessage() {
     formData.append('receiver_id', receiverId);
     formData.append('message_text', messageText);
     
-    // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Enviar reply_id) ▼▼▼ ---
     if (currentReplyMessageId) {
         formData.append('reply_to_message_id', currentReplyMessageId);
     }
-    // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
     
     for (const file of selectedAttachments) {
         formData.append('attachments[]', file, file.name);
@@ -821,11 +822,9 @@ async function sendMessage() {
             document.getElementById('chat-message-list').insertAdjacentHTML('beforeend', bubbleHtml);
             scrollToBottom();
             
-            // --- ▼▼▼ ¡ESTA ES LA LÍNEA AÑADIDA! ▼▼▼ ---
             console.log("%c[SENDER] Mensaje enviado. Llamando a loadConversations() para actualizar la lista...", "color: green; font-weight: bold;");
             await loadConversations();
             console.log("%c[SENDER] loadConversations() completada.", "color: green; font-weight: bold;");
-            // --- ▲▲▲ ¡FIN DE LA LÍNEA AÑADIDA! ▲▲▲ ---
             
             const friendItem = document.querySelector(`.chat-conversation-item[data-user-id="${receiverId}"]`);
             if (friendItem) {
@@ -837,36 +836,46 @@ async function sendMessage() {
             selectedAttachments = [];
             document.getElementById('chat-attachment-preview-container').innerHTML = '';
             document.getElementById('chat-attachment-input').value = '';
-            // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Limpiar reply) ▼▼▼ ---
             hideReplyPreview();
-            // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
+            
+            // --- ▼▼▼ INICIO DE CORRECCIÓN (Bug de bloqueo) ▼▼▼ ---
+            // Re-habilitar el input en caso de ÉXITO
+            enableChatInput(true);
             input.focus();
+            // --- ▲▲▲ FIN DE CORRECCIÓN (Bug de bloqueo) ▲▲▲ ---
             
         } else {
             console.error("[SENDER] La API reportó un fallo al enviar el mensaje:", result.message);
             showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-            // Si el error es por privacidad, bloquear el input
-            if (result.message === 'js.chat.errorPrivacyBlocked') {
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Nuevos errores de privacidad) ▼▼▼ ---
+            // Comprobar el error. Si es de privacidad (receptor O emisor), bloquear. Si no, re-habilitar.
+            if (result.message === 'js.chat.errorPrivacyBlocked' || result.message === 'js.chat.errorPrivacySenderBlocked') {
                 enableChatInput(false);
+                // Opcional: mostrar alerta específica si es error del emisor
+                if (result.message === 'js.chat.errorPrivacySenderBlocked') {
+                    showAlert(getTranslation('js.chat.errorPrivacySenderBlocked', 'No puedes enviar mensajes mientras tu privacidad esté configurada en "Nadie".'), 'error');
+                }
+            } else {
+                // Otro error de API (ej. "mensaje vacío"), re-habilitar
+                enableChatInput(true);
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN DE MODIFICACIÓN (Nuevos errores de privacidad) ▲▲▲ ---
         }
     } catch (e) {
         console.error("[SENDER] Error de red o excepción al enviar mensaje:", e);
         showAlert(getTranslation('js.api.errorConnection'), 'error');
+        
+        // --- ▼▼▼ INICIO DE CORRECCIÓN (Bug de bloqueo) ▼▼▼ ---
+        // Re-habilitar el input en caso de error de RED
+        enableChatInput(true);
+        // --- ▲▲▲ FIN DE CORRECCIÓN (Bug de bloqueo) ▲▲▲ ---
+        
     } finally {
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-        // Solo re-habilitar el input si no está bloqueado por privacidad
-        const currentInput = document.getElementById('chat-message-input');
-        if (currentInput && !currentInput.disabled) {
-             enableChatInput(true); // Re-habilita los 3 controles
-        } else if (currentInput) {
-             // Si está deshabilitado (por privacidad), asegurarse de que todo siga bloqueado
-             enableChatInput(false);
-        }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+        // --- ▼▼▼ INICIO DE CORRECCIÓN (Bug de bloqueo) ▼▼▼ ---
+        // El problemático bloque 'finally' se ha eliminado.
+        // La lógica se maneja en 'try' y 'catch' ahora.
+        // --- ▲▲▲ FIN DE CORRECCIÓN (Bug de bloqueo) ▲▲▲ ---
         console.log("[SENDER] Controles re-evaluados.");
     }
 }
