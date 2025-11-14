@@ -94,6 +94,10 @@ const paths = {
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Rutas de Mensajes) ▼▼▼ ---
     '/messages': 'toggleSectionMessages',
     '/messages/uuid-placeholder': 'toggleSectionMessages', // <-- Placeholder actualizado
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX) 1 DE 3 ▼▼▼ ---
+    // Se añade el placeholder para el chat de comunidad
+    '/messages/community-placeholder': 'toggleSectionMessages',
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX) 1 DE 3 ▲▲▲ ---
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     '/explorer': 'toggleSectionExplorer',
@@ -410,6 +414,7 @@ export function handleNavigation() {
     // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
     let page = null; // 1. Declarar 'page' aquí con 'let'
     // --- ▲▲▲ FIN DE LA CORRECCIÓN ▼▼▼ ---
+    let fetchParams = null; // <-- AÑADIDO PARA LOS NUEVOS BLOQUES
 
     const communityUuidRegex = /^\/c\/([a-fA-F0-9\-]{36})$/i;
     const postViewRegex = /^\/post\/(\d+)$/i;
@@ -417,12 +422,17 @@ export function handleNavigation() {
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Regex de Perfil y Mensajes) ▼▼▼ ---
     const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(posts|likes|bookmarks|info|amigos|fotos))?$/i;
     const messagesRegex = /^\/messages\/([a-fA-F0-9\-]{36})$/i; // <-- MODIFICADO
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX) 2 DE 3 ▼▼▼ ---
+    const communityMessagesRegex = /^\/messages\/community\/([a-fA-F0-9\-]{36})$/i; // <-- AÑADIDO
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX) 2 DE 3 ▲▲▲ ---
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
     if (path === '/') {
         action = 'toggleSectionHome';
     } else if (communityUuidRegex.test(path)) {
+        action = 'toggleSectionHome'; // <-- Corregido (ambos cargan 'home')
+        page = 'home'; // <-- AÑADIDO
         const matches = path.match(communityUuidRegex);
         const uuid = matches[1];
         loadPage('home', action, { community_uuid: uuid });
@@ -430,6 +440,7 @@ export function handleNavigation() {
 
     } else if (postViewRegex.test(path)) {
         action = 'toggleSectionPostView';
+        page = 'post-view'; // <-- AÑADIDO
         const matches = path.match(postViewRegex);
         const postId = matches[1];
         loadPage('post-view', action, { post_id: postId });
@@ -437,6 +448,7 @@ export function handleNavigation() {
 
     } else if (profileRegex.test(path)) {
         action = 'toggleSectionViewProfile';
+        page = 'view-profile'; // <-- AÑADIDO
         const matches = path.match(profileRegex);
         const username = matches[1];
         const tab = matches[2] || 'posts';
@@ -446,29 +458,47 @@ export function handleNavigation() {
     // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Manejo de /messages/uuid) ▼▼▼ ---
     } else if (messagesRegex.test(path)) {
         action = 'toggleSectionMessages';
-        page = 'messages'; // 2. Asignar 'page' (esto ahora es válido)
+        page = 'messages'; 
         
         // --- ▼▼▼ INICIO DEL BLOQUE DE SEGURIDAD AÑADIDO (EL FIX) ▼▼▼ ---
-        // Este es el FIX que soluciona tu problema
         const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
         const isMessagingEnabled = (window.isMessagingEnabled === true);
 
         if (isMessagingEnabled === false && !isPrivileged) {
             console.warn("handleNavigation (popstate): Navegación a 'messages/uuid' bloqueada.");
-            // 1. Reemplazamos la entrada actual del historial (/messages/uuid) con /messaging-disabled
             const newPath = `${basePath}/messaging-disabled`;
-            history.replaceState(null, '', newPath); // ¡Esta es la clave!
+            history.replaceState(null, '', newPath); 
             
-            // 2. Cargamos la página de "deshabilitado"
             loadPage('messaging-disabled', 'toggleSectionMessagingDisabled', null, false);
-            return; // ¡Importante! Salir para no llamar a loadPage('messages/uuid')
+            return; 
         }
         // --- ▲▲▲ FIN DEL BLOQUE DE SEGURIDAD AÑADIDO (EL FIX) ▲▲▲ ---
         
         const matches = path.match(messagesRegex);
-        const userUuid = matches[1]; // <-- CAMBIADO
-        loadPage(page, action, { user_uuid: userUuid }); // <-- CAMBIADO
+        const userUuid = matches[1]; 
+        loadPage(page, action, { user_uuid: userUuid }); 
         return;
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX) 3 DE 3 ▼▼▼ ---
+    } else if (communityMessagesRegex.test(path)) { 
+        action = 'toggleSectionMessages';
+        page = 'messages';
+        
+        const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
+        const isMessagingEnabled = (window.isMessagingEnabled === true);
+        if (isMessagingEnabled === false && !isPrivileged) {
+            console.warn("handleNavigation (popstate): Navegación a 'messages/community' bloqueada.");
+            const newPath = `${basePath}/messaging-disabled`;
+            history.replaceState(null, '', newPath); 
+            loadPage('messaging-disabled', 'toggleSectionMessagingDisabled', null, false);
+            return; 
+        }
+        
+        const matches = path.match(communityMessagesRegex);
+        const communityUuid = matches[1];
+        loadPage(page, action, { community_uuid: communityUuid }); // <-- Usar community_uuid
+        return;
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX) 3 DE 3 ▲▲▲ ---
     // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
 
     } else {
@@ -502,18 +532,15 @@ export function handleNavigation() {
             const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
             const isMessagingEnabled = (window.isMessagingEnabled === true);
 
-            // Si la mensajería está APAGADA y el usuario NO es un admin
             if (isMessagingEnabled === false && !isPrivileged) {
                 
                 console.log("handleNavigation (popstate): Navegación a 'messages' bloqueada.");
                 
-                // 1. Reemplazamos la entrada actual del historial (/messages) con /messaging-disabled
                 const newPath = `${basePath}/messaging-disabled`;
-                history.replaceState(null, '', newPath); // ¡Esta es la clave!
+                history.replaceState(null, '', newPath); 
                 
-                // 2. Cargamos la página de "deshabilitado"
                 loadPage('messaging-disabled', 'toggleSectionMessagingDisabled', null, false);
-                return; // ¡Importante! Salir para no llamar a loadPage('messages')
+                return; 
             }
         }
         // --- ▲▲▲ FIN DEL BLOQUE DE VERIFICACIÓN ▲▲▲ ---
@@ -709,6 +736,9 @@ export function initRouter() {
                 // --- ▼▼▼ INICIO DE MODIFICACIÓN (Nuevos Regex) ▼▼▼ ---
                 const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(posts|likes|bookmarks|info|amigos|fotos))?$/i;
                 const messagesRegex = /^\/messages\/([a-fA-F0-9\-]{36})$/i; // <-- MODIFICADO
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX) 3 DE 3 ▼▼▼ ---
+                const communityMessagesRegex = /^\/messages\/community\/([a-fA-F0-9\-]{36})$/i; // <-- AÑADIDO
+                // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX) 3 DE 3 ▲▲▲ ---
                 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 if (postViewRegex.test(newPath)) {
@@ -735,6 +765,13 @@ export function initRouter() {
                     page = 'messages';
                     const matches = newPath.match(messagesRegex);
                     fetchParams = { user_uuid: matches[1] }; // <-- CAMBIADO
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX) 3 DE 3 ▼▼▼ ---
+                } else if (communityMessagesRegex.test(newPath)) { // <-- AÑADIDO
+                    action = 'toggleSectionMessages';
+                    page = 'messages';
+                    const matches = newPath.match(communityMessagesRegex);
+                    fetchParams = { community_uuid: matches[1] }; // <-- AÑADIDO
+                // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX) 3 DE 3 ▲▲▲ ---
                     // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
 
                 } else {
