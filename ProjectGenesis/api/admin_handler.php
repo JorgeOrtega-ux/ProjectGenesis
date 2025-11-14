@@ -925,9 +925,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = $e->getMessage();
             }
         }
-    }
+    
+    // --- ▼▼▼ INICIO DE NUEVO BLOQUE ▼▼▼ ---
+    } elseif ($action === 'update-messaging-service') {
+        if ($adminRole !== 'founder') {
+            $response['message'] = 'js.admin.errorAdminTarget';
+            echo json_encode($response);
+            exit;
+        }
+        
+        try {
+            $newValue = $_POST['new_value'] ?? '0';
+            if ($newValue !== '0' && $newValue !== '1') {
+                throw new Exception('js.api.invalidAction');
+            }
+            
+            $stmt = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = 'messaging_service_enabled'");
+            $stmt->execute([$newValue]);
 
-    elseif ($action === 'admin-add-domain') {
+            $response['success'] = true;
+            $response['message'] = 'js.admin.messagingSuccess'; // Clave i18n nueva
+            $response['newValue'] = $newValue;
+
+        } catch (Exception $e) {
+            if ($e instanceof PDOException) {
+                logDatabaseError($e, 'admin_handler - update-messaging-service');
+                $response['message'] = 'js.api.errorDatabase';
+            } else {
+                $response['message'] = $e->getMessage();
+            }
+        }
+    // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
+
+    } elseif ($action === 'admin-add-domain') {
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
             echo json_encode($response);

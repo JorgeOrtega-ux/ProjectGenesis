@@ -362,8 +362,12 @@ export function initAdminServerSettingsManager() {
         } else {
             return;
         }
-
-        await handleSettingUpdate(input, action, newValue);
+        
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir 'update-messaging-service') ▼▼▼ ---
+        if (action === 'update-maintenance-mode' || action === 'update-registration-mode' || action === 'update-messaging-service') {
+            await handleSettingUpdate(input, action, newValue);
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     });
     
     document.body.addEventListener('blur', async (e) => {

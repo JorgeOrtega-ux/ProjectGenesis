@@ -149,6 +149,9 @@ INSERT INTO `site_settings` VALUES ('13', 'max_email_length', '255');
 INSERT INTO `site_settings` VALUES ('14', 'code_resend_cooldown_seconds', '60');
 INSERT INTO `site_settings` VALUES ('15', 'max_concurrent_users', '500');
 INSERT INTO `site_settings` VALUES ('16', 'max_post_length', '1000');
+-- --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+INSERT INTO `site_settings` VALUES (NULL, 'messaging_service_enabled', '1');
+-- --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
 -- ----------------------------
 -- Table structure for communities

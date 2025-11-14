@@ -1,6 +1,7 @@
 <?php
 // FILE: includes/sections/main/status-page.php
 // (Versión CORREGIDA del archivo unificado)
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIDO 'messaging-disabled') ▼▼▼ ---
 
 // (Se asume que $basePath y $CURRENT_SECTION se cargan desde bootstrapper.php y router.php)
 
@@ -33,10 +34,18 @@ switch ($CURRENT_SECTION) {
         $titleKey = 'page.status.deletedTitle';
         $descKey = 'page.status.deletedDesc';
         break;
+    
+    // --- ▼▼▼ INICIO DE NUEVO BLOQUE ▼▼▼ ---
+    case 'messaging-disabled':
+        $icon = 'chat_error';
+        $titleKey = 'page.messaging_disabled.title'; // Necesitarás añadir esta clave a es-mx.json
+        $descKey = 'page.messaging_disabled.description'; // Necesitarás añadir esta clave a es-mx.json
+        break;
+    // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
 }
 ?>
 
-<div class="section-content overflow-y <?php echo (strpos($CURRENT_SECTION, 'account-status-') === 0 || $CURRENT_SECTION === 'maintenance' || $CURRENT_SECTION === 'server-full') ? 'active' : 'disabled'; ?>" data-section="<?php echo htmlspecialchars($CURRENT_SECTION); ?>">
+<div class="section-content overflow-y <?php echo (strpos($CURRENT_SECTION, 'account-status-') === 0 || $CURRENT_SECTION === 'maintenance' || $CURRENT_SECTION === 'server-full' || $CURRENT_SECTION === 'messaging-disabled') ? 'active' : 'disabled'; ?>" data-section="<?php echo htmlspecialchars($CURRENT_SECTION); ?>">
 <div class="auth-container text-center">
         
         <div class="component-card__icon">

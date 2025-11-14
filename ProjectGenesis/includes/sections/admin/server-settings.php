@@ -13,6 +13,10 @@ $minUsernameLength = $GLOBALS['site_settings']['min_username_length'] ?? '6';
 $maxUsernameLength = $GLOBALS['site_settings']['max_username_length'] ?? '32';
 $maxEmailLength = $GLOBALS['site_settings']['max_email_length'] ?? '255';
 $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] ?? '60';
+
+// --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+$messagingServiceStatus = $GLOBALS['site_settings']['messaging_service_enabled'] ?? '1';
+// --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 ?>
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-server-settings') ? 'active' : 'disabled'; ?>" data-section="admin-server-settings">
     <div class="component-wrapper">
@@ -78,7 +82,25 @@ $codeResendCooldown = $GLOBALS['site_settings']['code_resend_cooldown_seconds'] 
                 </label>
             </div>
         </div>
-
+        
+        <div class="component-card component-card--edit-mode disabled">
+            <div class="component-card__content">
+                <div class="component-card__text">
+                    <h2 class="component-card__title" data-i18n="admin.server.messagingTitle">Servicio de Mensajería</h2>
+                    <p class="component-card__description" data-i18n="admin.server.messagingDesc">Activa o desactiva el sistema de chat y mensajería para los usuarios.</p>
+                </div>
+            </div>
+            <div class="component-card__actions">
+                <label class="component-toggle-switch">
+                    <input type="checkbox"
+                        id="toggle-messaging-service"
+                        data-action="update-messaging-service"
+                        <?php echo ($messagingServiceStatus == 1) ? 'checked' : ''; ?>
+                        <?php echo ($_SESSION['role'] !== 'founder') ? 'disabled' : ''; ?>>
+                    <span class="component-toggle-slider"></span>
+                </label>
+            </div>
+        </div>
         <div class="component-card component-card--edit-mode disabled">
             <div class="component-card__content">
                 <div class="component-card__text">

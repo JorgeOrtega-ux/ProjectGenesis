@@ -68,11 +68,19 @@ try {
     if (!isset($GLOBALS['site_settings']['allow_new_registrations'])) {
          $GLOBALS['site_settings']['allow_new_registrations'] = '1'; 
     }
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    if (!isset($GLOBALS['site_settings']['messaging_service_enabled'])) {
+         $GLOBALS['site_settings']['messaging_service_enabled'] = '1'; 
+    }
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
     
 } catch (PDOException $e) {
     logDatabaseError($e, 'config - load site_settings');
     $GLOBALS['site_settings']['maintenance_mode'] = '0'; 
     $GLOBALS['site_settings']['allow_new_registrations'] = '1'; 
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    $GLOBALS['site_settings']['messaging_service_enabled'] = '1'; 
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 }
 
 $basePath = '/ProjectGenesis';

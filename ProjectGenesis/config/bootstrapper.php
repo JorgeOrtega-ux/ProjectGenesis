@@ -2,6 +2,7 @@
 // FILE: config/bootstrapper.php
 // (MODIFICADO - Añadida nueva regla de enrutado para /messages/username)
 // (MODIFICADO OTRA VEZ - Cambiado /messages/username a /messages/uuid)
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIDA LÓGICA DE SERVICIO DE MENSAJERÍA) ▼▼▼ ---
 
 // Carga la configuración base (BD, sesiones, etc.)
 include 'config/config.php';
@@ -81,6 +82,12 @@ try {
     }
     // --- ▲▲▲ ¡FIN DE NUEVA CLAVE! ▲▲▲ ---
 
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA (FALLBACK) ▼▼▼ ---
+    if (!isset($GLOBALS['site_settings']['messaging_service_enabled'])) {
+         $GLOBALS['site_settings']['messaging_service_enabled'] = '1'; // Fallback
+    }
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA (FALLBACK) ▲▲▲ ---
+
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
 } catch (PDOException $e) {
@@ -114,6 +121,9 @@ try {
     $GLOBALS['site_settings']['max_post_length'] = '1000'; // Fallback seguro
     // --- ▲▲▲ ¡FIN DE NUEVA CLAVE! ▲▲▲ ---
 
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA (FALLBACK) ▼▼▼ ---
+    $GLOBALS['site_settings']['messaging_service_enabled'] = '1'; // Fallback seguro
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA (FALLBACK) ▲▲▲ ---
 
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
@@ -296,6 +306,19 @@ if ($maintenanceMode === '1') {
 }
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
+// --- ▼▼▼ INICIO DE NUEVO BLOQUE (DESACTIVAR MENSAJERÍA) ▼▼▼ ---
+$messagingServiceEnabled = $GLOBALS['site_settings']['messaging_service_enabled'] ?? '1';
+$isMessagingPage = (strpos($requestUri, '/messages') !== false);
+$isMessagingDisabledPage = (strpos($requestUri, '/messaging-disabled') !== false);
+
+// Si el servicio está desactivado, no es un admin, y está intentando entrar a /messages
+// Y no está ya en la página de "desactivado" o llamando a una API
+if ($messagingServiceEnabled === '0' && !$isPrivilegedUser && $isMessagingPage && !$isMessagingDisabledPage && !$isApiCall && !$isConfigCall) {
+    header('Location: ' . $basePath . '/messaging-disabled');
+    exit;
+}
+// --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
+
 
 // 1. Analizar la URL
 $requestPath = strtok($requestUri, '?'); 
@@ -415,6 +438,10 @@ $pathsToPages = [
     '/account-status/deleted'   => 'account-status-deleted',
     '/account-status/suspended' => 'account-status-suspended',
     
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    '/messaging-disabled'       => 'messaging-disabled',
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+    
     '/admin'                    => 'admin-dashboard',
     '/admin/dashboard'          => 'admin-dashboard',
     '/admin/manage-users'       => 'admin-manage-users', 
@@ -441,11 +468,14 @@ $currentPage = $pathsToPages[$path] ?? '404';
 
 // --- ▼▼▼ MODIFICACIÓN: Añadir 'search-results' a $authPages ▼▼▼ ---
 // (Corrección: 'search-results' NO debe estar en authPages, debe REQUERIR autenticación)
+// --- ▼▼▼ INICIO DE LÍNEA MODIFICADA (AÑADIR 'messaging-disabled') ▼▼▼ ---
 $authPages = ['login', 'maintenance', 'server-full']; 
 $isAuthPage = in_array($currentPage, $authPages) || 
               strpos($currentPage, 'register-') === 0 ||
               strpos($currentPage, 'reset-') === 0 ||
-              strpos($currentPage, 'account-status-') === 0; 
+              strpos($currentPage, 'account-status-') === 0 ||
+              $currentPage === 'messaging-disabled'; // <-- Nueva página de estado
+// --- ▲▲▲ FIN DE LÍNEA MODIFICADA ▲▲▲ ---
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 $isSettingsPage = strpos($currentPage, 'settings-') === 0;
@@ -475,8 +505,8 @@ if (!isset($_SESSION['user_id']) && !$isAuthPage) {
     exit;
 }
 // Redirigir a home si está logueado e intenta ir a auth
-// --- ▼▼▼ MODIFICACIÓN: Añadir 'server-full' a la exclusión ▼▼▼ ---
-if (isset($_SESSION['user_id']) && $isAuthPage && $currentPage !== 'maintenance' && $currentPage !== 'server-full') { 
+// --- ▼▼▼ MODIFICACIÓN: Añadir 'server-full' y 'messaging-disabled' a la exclusión ▼▼▼ ---
+if (isset($_SESSION['user_id']) && $isAuthPage && $currentPage !== 'maintenance' && $currentPage !== 'server-full' && $currentPage !== 'messaging-disabled') { 
     if ($maintenanceMode !== '1') {
          header('Location: ' . $basePath . '/');
          exit;
