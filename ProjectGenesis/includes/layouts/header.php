@@ -1,4 +1,7 @@
 <?php
+// FILE: includes/layouts/header.php
+// (CORREGIDO)
+
 // --- NUEVO BLOQUE PHP ---
 // Lógica para obtener la URL de la imagen de perfil
 
@@ -61,17 +64,17 @@ $userRole = $_SESSION['role'] ?? 'user';
     <div class="header-right">
         <div class="header-item">
 
-            <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- ?>
-            <div class="header-button"
+            <?php // --- ▼▼▼ INICIO DE LA CORRECCIÓN (Línea 40) ▼▼▼ --- ?>
+            <div class="header-button header-notification-btn"
                 data-action="toggleSectionMessages"
                 data-tooltip="Mensajes"
-                style="position: relative;"> <?php // <-- style añadido ?>
+                style="position: relative;">
                 <span class="material-symbols-rounded">chat</span>
                 
                 <?php // --- BADGE DE MENSAJES AÑADIDO --- ?>
                 <span class="notification-badge disabled" id="message-badge-count">0</span>
             </div>
-            <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
+            <?php // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ --- ?>
             
             <div class="header-button"
                 data-action="toggleModuleCreatePost" 
