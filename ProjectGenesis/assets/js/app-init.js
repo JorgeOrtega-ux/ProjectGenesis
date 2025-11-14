@@ -1,5 +1,6 @@
 // FILE: assets/js/app-init.js
 // (MODIFICADO - Añadida función para desbloquear audio en la primera interacción)
+// (MODIFICADO - Corregida la recepción de mensajes de comunidad en WebSocket)
 
 import { initMainController } from './app/main-controller.js';
 // --- ▼▼▼ MODIFICACIÓN: import loadPage ▼▼▼ ---
@@ -291,11 +292,21 @@ document.addEventListener('DOMContentLoaded', async function () {
                             handleNotificationPing();
                         }
 
-                        // Chat: nuevo mensaje
+                        // --- ▼▼▼ INICIO DE CORRECCIÓN (MENSAJES DE COMUNIDAD) ▼▼▼ ---
+                        
+                        // Chat: nuevo mensaje (DM)
                         else if (data.type === 'new_chat_message') {
-                            console.log("[WS] Mensaje de chat recibido");
-                            handleChatMessageReceived(data.payload);
+                            console.log("[WS] Mensaje de chat (DM) recibido");
+                            handleChatMessageReceived(data.payload, 'dm'); // Se añade 'dm'
                         }
+                        
+                        // Chat: nuevo mensaje (Comunidad)
+                        else if (data.type === 'new_community_message') {
+                            console.log("[WS] Mensaje de chat (Comunidad) recibido");
+                            handleChatMessageReceived(data.payload, 'community'); // Se añade este bloque
+                        }
+                        
+                        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
 
                         // Chat: mensaje eliminado
                         else if (data.type === 'message_deleted') {
