@@ -1,3 +1,4 @@
+// FILE: assets/js/services/i18n-manager.js
 let translations = {};
 
 async function loadTranslations(lang) {
@@ -9,7 +10,6 @@ async function loadTranslations(lang) {
         }
 
         translations = await response.json();
-        console.log(`Traducciones cargadas para: ${lang}`);
     } catch (error) {
         console.error('Error al cargar traducciones:', error);
         translations = {};

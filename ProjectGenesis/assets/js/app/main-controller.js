@@ -20,8 +20,6 @@ function initMainController() {
     let closeOnClickOutside = true;
     let closeOnEscape = true;
     
-    console.log('[MainController] Inicializando controlador principal...');
-
     document.body.addEventListener('click', async function (event) {
         
         const button = event.target.closest('[data-action]');
@@ -36,11 +34,9 @@ function initMainController() {
         }
 
         const action = button.getAttribute('data-action');
-        console.log(`[MainController] Clic detectado en: ${action}`);
 
         if (action === 'logout') {
             event.preventDefault();
-            console.log('[MainController] Acción de Logout iniciada...');
             const logoutButton = button;
 
             if (logoutButton.classList.contains('disabled-interactive')) {
@@ -62,10 +58,8 @@ function initMainController() {
                 return new Promise((resolve, reject) => {
                     setTimeout(() => {
                         if (navigator.onLine) {
-                            console.log('[MainController] Verificación de red: Conexión OK.');
                             resolve(true);
                         } else {
-                            console.log('[MainController] Verificación de red: Sin conexión.');
                             reject(new Error(getTranslation('js.main.errorNetwork')));
                         }
                     }, 800);
@@ -75,7 +69,6 @@ function initMainController() {
             const checkSession = () => {
                 return new Promise((resolve) => {
                     setTimeout(() => {
-                        console.log('[MainController] Verificación de sesión: Activa (simulado).');
                         resolve(true);
                     }, 500);
                 });
@@ -102,7 +95,6 @@ function initMainController() {
 
                 form.appendChild(tokenInput);
                 document.body.appendChild(form);
-                console.log('[MainController] Enviando formulario de Logout...');
                 form.submit();
 
             } catch (error) {
@@ -123,13 +115,11 @@ function initMainController() {
         
 
         } else if (action.startsWith('toggleSection')) {
-            console.log('[MainController] Acción de navegación (toggleSection). Omitiendo.');
             return;
         }
 
         const isSelectorLink = event.target.closest('[data-module="moduleTriggerSelect"] .menu-link');
         if (isSelectorLink) {
-            console.log('[MainController] Clic en item de un popover-selector. Omitiendo.');
             return;
         }
 
@@ -163,22 +153,18 @@ function initMainController() {
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             if (managedActions.includes(action)) {
-                console.log(`[MainController] Acción ${action} es manejada por su propio módulo. Omitiendo.`);
                 return; 
             }
 
-            console.log(`[MainController] Propagación detenida para: ${action}`);
             event.stopPropagation(); 
 
             let moduleName = action.substring(6);
             moduleName = moduleName.charAt(0).toLowerCase() + moduleName.slice(1);
 
-            console.log(`[MainController] Buscando módulo: [data-module="${moduleName}"]`);
             const module = document.querySelector(`[data-module="${moduleName}"]`);
 
             if (module) {
                 const isOpening = module.classList.contains('disabled');
-                console.log(`[MainController] Módulo encontrado. ${isOpening ? 'Abriendo' : 'Cerrando'}.`);
 
                 if (isOpening && !allowMultipleActiveModules) {
                     deactivateAllModules(module);
@@ -187,7 +173,6 @@ function initMainController() {
                 module.classList.toggle('disabled');
                 module.classList.toggle('active');
             } else {
-                console.warn(`[MainController] No se encontró el módulo para la acción: ${action}`);
             }
         }
     });
@@ -213,7 +198,6 @@ function initMainController() {
     if (closeOnEscape) {
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
-                console.log('[MainController] Tecla ESCAPE presionada. Cerrando popovers.');
                 deactivateAllModules();
             }
         });

@@ -41,11 +41,9 @@ function playNotificationSound() {
         if (playPromise !== undefined) {
             playPromise.catch(error => {
                 // Error común: El usuario no ha interactuado con la página todavía.
-                console.warn("No se pudo reproducir el sonido de notificación:", error);
             });
         }
     } else {
-        console.warn("Elemento de audio #chat-notification-sound no encontrado.");
     }
 }
 
@@ -95,7 +93,6 @@ function formatTimeAgo(dateTimeString) {
         const years = Math.round(days / 365.25); // Cuenta años bisiestos
 
         if (isNaN(seconds)) {
-            console.warn("formatTimeAgo recibió fecha inválida:", dateTimeString);
             return getTranslation('chat.offline', 'Desconectado');
         }
 
@@ -123,7 +120,6 @@ function formatTimeAgo(dateTimeString) {
         return `${getTranslation('settings.devices.timeAgoPrefix', 'Activo hace')} ${years} ${getTranslation(key, 'años')}`;
         
     } catch (e) {
-        console.error("Error en formatTimeAgo:", e);
         return getTranslation('chat.offline', 'Desconectado');
     }
 }
@@ -133,7 +129,6 @@ function formatTimeAgo(dateTimeString) {
  * @param {number} count - El número total de mensajes no leídos.
  */
 export function setUnreadMessageCount(count) {
-    console.log(`[ChatBadge] setUnreadMessageCount: Actualizando contador a ${count}`);
     currentUnreadMessageCount = count;
     const badge = document.getElementById('message-badge-count');
     if (!badge) return;
@@ -155,15 +150,12 @@ export function setUnreadMessageCount(count) {
  * Obtiene el conteo inicial de mensajes no leídos desde la API.
  */
 export async function fetchInitialUnreadCount() {
-    console.log("[ChatBadge] fetchInitialUnreadCount: Obteniendo conteo inicial...");
     const formData = new FormData();
     formData.append('action', 'get-total-unread-count'); 
     const result = await callChatApi(formData);
     if (result.success && result.total_unread_count !== undefined) {
-        console.log(`[ChatBadge] fetchInitialUnreadCount: Conteo inicial es ${result.total_unread_count}`);
         setUnreadMessageCount(result.total_unread_count);
     } else {
-        console.error("[ChatBadge] fetchInitialUnreadCount: No se pudo obtener el conteo inicial.");
     }
 }
 
@@ -173,21 +165,18 @@ export async function fetchInitialUnreadCount() {
  * @param {Array} conversations - La lista de conversaciones (DMs).
  */
 function renderConversationList(conversations) {
-    console.log(`%c[RENDER] renderConversationList() -> Renderizando ${conversations.length} conversaciones.`, 'color: purple; font-weight: bold;');
     
     const listContainer = document.getElementById('chat-conversation-list');
     const loader = document.getElementById('chat-list-loader');
     const emptyEl = document.getElementById('chat-list-empty'); 
     
     if (!listContainer || !loader || !emptyEl) {
-        console.error("[RENDER] Faltan elementos clave del DOM (listContainer, loader, emptyEl).");
         return;
     }
     
     loader.style.display = 'none';
 
     if (!conversations || conversations.length === 0) {
-        console.log("[RENDER] No hay conversaciones para mostrar, mostrando 'emptyEl' dinámico.");
         
         // --- INICIO DE LA NUEVA LÓGICA DINÁMICA ---
         const emptyIcon = document.getElementById('chat-list-empty-icon');
@@ -330,11 +319,9 @@ function renderConversationList(conversations) {
         `;
     });
     listContainer.innerHTML = html;
-    console.log("[RENDER] Renderización completada.");
 }
 
 function filterConversationList(query) {
-    console.log(`%c[FILTER] filterConversationList() -> Query: "${query}", Filtro: "${currentChatFilter}"`, 'color: orange; font-weight: bold;');
     
     query = query.toLowerCase().trim();
     
@@ -350,7 +337,6 @@ function filterConversationList(query) {
             item[nameProperty].toLowerCase().includes(query)
         );
     }
-    console.log(`[FILTER] ${filteredBySearch.length} chats después del filtro de búsqueda.`);
 
     const showArchived = (currentChatFilter === 'archived');
     
@@ -376,20 +362,13 @@ function filterConversationList(query) {
         return true; 
     });
     
-    console.log(`[FILTER] ${conversationsToShow.length} chats después del filtro de insignia.`);
-    
-    console.log(`[FILTER] Ordenación (por API) completada. Se mostrarán ${conversationsToShow.length} chats.`);
-
-    console.log("[FILTER] Llamando a renderConversationList...");
     renderConversationList(conversationsToShow, renderType);
 }
 
 async function loadConversations(filter = 'all') {
-    console.groupCollapsed(`%c[LOAD CONVERSATIONS] 🔄 loadConversations(filter: ${filter}) iniciada...`, "color: blue; font-weight: bold;");
     
     // Si el filtro es 'communities', simplemente cámbialo a 'all'.
     if (filter === 'communities') {
-        console.log("[LOAD CONVERSATIONS] Filtro 'communities' detectado, cambiando a 'all'.");
         filter = 'all';
     }
     
@@ -413,12 +392,9 @@ async function loadConversations(filter = 'all') {
     try {
         const formData = new FormData();
         formData.append('action', action);
-        console.log(`[LOAD CONVERSATIONS] Llamando a callChatApi('${action}')...`);
         const result = await callChatApi(formData);
-        console.log(`[LOAD CONVERSATIONS] Respuesta de '${action}':`, result);
 
         if (result.success) {
-            console.info(`[LOAD CONVERSATIONS] API Success. ${result.conversations.length} conversaciones recibidas.`);
             
             let conversations = result.conversations;
             
@@ -436,29 +412,22 @@ async function loadConversations(filter = 'all') {
                     });
                 }
             } catch (e) {
-                console.warn("[LOAD CONVERSATIONS] No se pudo obtener el estado online en tiempo real.", e);
             }
             conversations.forEach(convo => {
                 convo.is_online = !!onlineUserIds[convo.friend_id];
             });
             friendCache = conversations; // Guardar en caché de DMs
-            console.log("[LOAD CONVERSATIONS] friendCache actualizado:", friendCache);
             
             const searchInput = document.getElementById('chat-friend-search');
             const currentQuery = searchInput ? searchInput.value : '';
-            console.log(`[LOAD CONVERSATIONS] Query actual del input: "${currentQuery}"`);
             
-            console.log(`[LOAD CONVERSATIONS] Llamando a filterConversationList (usará el filtro global '${currentChatFilter}')...`);
             filterConversationList(currentQuery); // <-- Esta función ahora usa el 'currentChatFilter'
             
         } else {
-            console.error("[LOAD CONVERSATIONS] La API reportó un fallo:", result.message);
             if (listContainer) listContainer.innerHTML = '<div class="chat-list-placeholder">Error al cargar.</div>';
         }
     } catch (e) {
-        console.error("[LOAD CONVERSATIONS] Error de red o excepción:", e);
     }
-    console.groupEnd();
 }
 
 function scrollToBottom() {
@@ -922,18 +891,15 @@ function hideReplyPreview() {
 }
 
 async function sendMessage() {
-    console.log(`%c[SENDER] 🚀 sendMessage() iniciada... (ID: ${currentChatTargetId})`, 'color: green; font-weight: bold;');
     
     const input = document.getElementById('chat-message-input');
     const sendBtn = document.getElementById('chat-send-button');
     const messageText = input.value.trim();
 
     if (!currentChatTargetId || sendBtn.disabled) {
-        console.warn("[SENDER] Envío cancelado: targetId vacío o botón deshabilitado.");
         return;
     }
     if (!messageText && selectedAttachments.length === 0) {
-        console.warn("[SENDER] Envío cancelado: Mensaje y adjuntos vacíos.");
         return;
     }
     
@@ -955,19 +921,14 @@ async function sendMessage() {
     }
 
     try {
-        console.log("[SENDER] Llamando a callChatApi('send-message')...");
         const result = await callChatApi(formData);
-        console.log("[SENDER] Respuesta de 'send-message':", result);
 
         if (result.success && result.message_sent) {
-            console.info("[SENDER] API Success. Mensaje enviado.");
             const bubbleHtml = createMessageBubbleHtml(result.message_sent, true);
             document.getElementById('chat-message-list').insertAdjacentHTML('beforeend', bubbleHtml);
             scrollToBottom();
             
-            console.log("%c[SENDER] Mensaje enviado. Llamando a loadConversations(filter: ${currentChatFilter})...", "color: green; font-weight: bold;");
             await loadConversations(currentChatFilter); // Recargar la lista de DMs
-            console.log("%c[SENDER] loadConversations() completada.", "color: green; font-weight: bold;");
             
             // Re-seleccionar el item activo en la lista
             let selector = `.chat-conversation-item[data-type="dm"][data-target-id="${currentChatTargetId}"]`;
@@ -988,7 +949,6 @@ async function sendMessage() {
             input.focus();
             
         } else {
-            console.error("[SENDER] La API reportó un fallo al enviar el mensaje:", result.message);
             showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
             
             if (result.message === 'js.chat.errorBlocked' || 
@@ -1009,21 +969,17 @@ async function sendMessage() {
             }
         }
     } catch (e) {
-        console.error("[SENDER] Error de red o excepción al enviar mensaje:", e);
         showAlert(getTranslation('js.api.errorConnection'), 'error');
         
         enableChatInput(true);
         
     } finally {
-        console.log("[SENDER] Controles re-evaluados.");
     }
 }
 
 export function handleChatMessageReceived(message) {
-    console.log(`%c[WEBSOCKET] 📩 handleChatMessageReceived() -> Mensaje [dm] recibido:`, 'color: #00_80_80; font-weight: bold;', message);
     
     if (!message || !message.sender_id) {
-        console.warn("[WEBSOCKET] Mensaje inválido, ignorando.");
         return;
     }
 
@@ -1032,30 +988,24 @@ export function handleChatMessageReceived(message) {
     
     // Recargar la lista correspondiente
     if (currentChatFilter === listToReload || (currentChatFilter !== 'communities' && listToReload === 'all')) {
-         console.log(`[WEBSOCKET] Recargando lista visible (filtro: ${currentChatFilter})`);
          loadConversations(currentChatFilter);
     } else {
-         console.log(`[WEBSOCKET] Lista no visible (filtro: ${currentChatFilter}), no se recarga UI de lista.`);
          friendCache = []; // Invalidar caché
     }
     
     // Comprobar si el chat está abierto
     if (targetId === currentChatTargetId) {
-        console.log("[WEBSOCKET] El chat está abierto, añadiendo burbuja.");
         const bubbleHtml = createMessageBubbleHtml(message, false);
         document.getElementById('chat-message-list').insertAdjacentHTML('beforeend', bubbleHtml);
         scrollToBottom();
     } else {
-        console.log("[WEBSOCKET] El chat con este usuario NO está abierto. Incrementando contador global.");
         setUnreadMessageCount(currentUnreadMessageCount + 1);
         
         const isOnMessagesPage = window.location.pathname.startsWith(window.projectBasePath + '/messages');
         
         if (!isOnMessagesPage) {
-            console.log("[WEBSOCKET] No estamos en /messages, reproduciendo sonido.");
             playNotificationSound();
         } else {
-            console.log("[WEBSOCKET] Estamos en /messages, sonido silenciado.");
         }
     }
 }
@@ -1074,7 +1024,6 @@ function renderDeletedMessage(bubbleEl) {
 }
 
 export function handleMessageDeleted(payload) {
-    console.log(`%c[WEBSOCKET] 🗑️ handleMessageDeleted() -> Payload:`, 'color: #00_80_80; font-weight: bold;', payload);
     
     if (!payload || !payload.message_id) return;
     
@@ -1085,7 +1034,6 @@ export function handleMessageDeleted(payload) {
         renderDeletedMessage(bubble);
     }
     
-    console.log("[WEBSOCKET] Mensaje eliminado. Llamando a loadConversations() para actualizar snippet...");
     loadConversations();
 }
 
@@ -1234,7 +1182,6 @@ export function handleTypingEvent(senderId, isTyping) {
  */
 export function initChatManager() {
     
-    console.log("🏁 initChatManager() -> Inicializando listeners de chat.");
     
     const sectionsContainer = document.querySelector('.main-sections');
     if (sectionsContainer) {
@@ -1244,14 +1191,11 @@ export function initChatManager() {
                     const messagesSection = document.querySelector('[data-section="messages"]');
                     if (messagesSection) {
                         
-                        console.log("👀 Observer: Detectada sección 'messages'.");
-                        console.log("[INIT] Llamando a loadConversations('all') por primera vez.");
                         loadConversations('all'); // Cargar DMs por defecto
                         document.dispatchEvent(new CustomEvent('request-friend-list-presence-update'));
                         
                         const chatMain = messagesSection.querySelector('#chat-content-main[data-autoload-chat="true"]');
                         if (chatMain) {
-                            console.log("...Detectado 'data-autoload-chat', abriendo chat...");
                             
                             const headerInfo = messagesSection.querySelector('#chat-header-info');
                             const avatarImg = messagesSection.querySelector('#chat-header-avatar');
@@ -1320,13 +1264,11 @@ export function initChatManager() {
             const newFilter = filterBadge.dataset.filter;
             
             if (newFilter === 'communities') { // Filtro de comunidad ya no existe
-                console.log("[FILTER] Clic en filtro 'communities' (deshabilitado). Ignorando.");
                 return;
             }
             
             if (newFilter === currentChatFilter) return; 
             
-            console.log(`[FILTER] Clic en insignia. Nuevo filtro: '${newFilter}'`);
             
             // Llamar a loadConversations con el nuevo filtro
             loadConversations(newFilter); 
@@ -1480,7 +1422,6 @@ export function initChatManager() {
             document.getElementById('chat-layout-container')?.classList.remove('show-chat');
             currentChatUserId = null;
             currentChatTargetId = null;
-            console.log("[UI] Botón 'Atrás' presionado. Llamando a loadConversations(filter: ${currentChatFilter}).");
             loadConversations(currentChatFilter); // Recargar la lista actual
             return;
         }
@@ -1608,7 +1549,6 @@ export function initChatManager() {
         if (!msgList) return;
 
         if (msgList.scrollTop === 0 && !isLoadingOlderMessages && !allMessagesLoaded) {
-            console.log("Scroll en la parte superior, cargando mensajes antiguos...");
             
             const firstMessageEl = msgList.querySelector('.chat-bubble[data-message-id]');
             if (!firstMessageEl) return; 

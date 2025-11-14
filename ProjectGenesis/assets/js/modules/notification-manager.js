@@ -1,3 +1,5 @@
+// FILE: assets/js/modules/notification-manager.js
+
 import { callNotificationApi } from '../services/api-service.js';
 import { getTranslation, applyTranslations } from '../services/i18n-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js'; 
@@ -32,7 +34,6 @@ function formatTimeAgo(dateString) {
             });
         }
     } catch (e) {
-        console.error("Error al formatear fecha:", e);
         return dateString;
     }
 }
@@ -60,7 +61,6 @@ function getRelativeDateGroup(date) {
 
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (99+) ▼▼▼ ---
 export function setNotificationCount(count) {
-    console.log(`[Notify] setNotificationCount: Actualizando contador a ${count}`);
     currentNotificationCount = count;
     const badge = document.getElementById('notification-badge-count');
     if (!badge) return;
@@ -77,7 +77,7 @@ export function setNotificationCount(count) {
         badge.classList.add('disabled');
     }
 }
-// --- ▲▲▲ FIN DE MODIFICACIÓN (99+) ▲▲▲ ---
+// --- ▲▲▲ FIN DE MODIFICACIÓN (99+) ▼▼▼ ---
 
 function addNotificationToUI(notification) {
     const avatar = notification.actor_avatar || "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
@@ -196,16 +196,13 @@ function addNotificationToUI(notification) {
 export async function loadAllNotifications() {
     
     if (isLoading) {
-        console.log("%c[Notify] loadAllNotifications: Carga ya en progreso. Omitiendo fetch duplicado.", "color: #ff8c00;");
         return; 
     }
     isLoading = true; 
-    console.log("%c[Notify] loadAllNotifications: 'isLoading' = true. Iniciando fetch...", "color: #007bff;");
     
     const listContainer = document.getElementById('notification-list-items');
     
     if (!listContainer) {
-         console.error("[Notify] loadAllNotifications: No se encontró el CONTENEDOR DE LISTA (#notification-list-items). Abortando.");
          isLoading = false;
          return;
     }
@@ -213,7 +210,7 @@ export async function loadAllNotifications() {
     // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
     const markAllButton = document.getElementById('notification-mark-all-btn');
     if (markAllButton) markAllButton.disabled = true; 
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
     
     listContainer.innerHTML = `
         <div class="notification-placeholder" id="notification-placeholder">
@@ -229,7 +226,6 @@ export async function loadAllNotifications() {
 
     try {
         const result = await callNotificationApi(formData);
-        console.log("[Notify] loadAllNotifications: API respondió", result);
         
         listContainer.innerHTML = ''; 
         
@@ -237,7 +233,6 @@ export async function loadAllNotifications() {
             setNotificationCount(result.unread_count || 0);
             
             if (result.notifications.length === 0) {
-                console.log("[Notify] loadAllNotifications: No se encontraron notificaciones (vacío).");
                 listContainer.innerHTML = `
                     <div class="notification-placeholder" id="notification-placeholder">
                         <span class="material-symbols-rounded">notifications_off</span>
@@ -246,9 +241,8 @@ export async function loadAllNotifications() {
                 `;
                 // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 if (markAllButton) markAllButton.disabled = true;
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
             } else {
-                console.log(`[Notify] loadAllNotifications: Renderizando ${result.notifications.length} notificaciones.`);
                 
                 let lastDateGroup = null;
                 result.notifications.forEach(notification => {
@@ -272,19 +266,15 @@ export async function loadAllNotifications() {
                 // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 if (markAllButton) {
                     if (result.unread_count > 0) {
-                        console.log("[Notify] loadAllNotifications: Activando botón 'Marcar todas'.");
                         markAllButton.disabled = false;
                     } else {
-                        console.log("[Notify] loadAllNotifications: Desactivando botón 'Marcar todas' (no hay no leídas).");
                         markAllButton.disabled = true;
                     }
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
             }
             hasLoadedNotifications = true; 
-            console.log("%c[Notify] loadAllNotifications: 'hasLoadedNotifications' = true.", "color: #28a745;");
         } else {
-             console.error("[Notify] loadAllNotifications: La API falló (success=false).", result.message);
              listContainer.innerHTML = `
                 <div class="notification-placeholder" id="notification-placeholder">
                     <span class="material-symbols-rounded">error</span>
@@ -292,10 +282,8 @@ export async function loadAllNotifications() {
                 </div>
              `;
              hasLoadedNotifications = false; 
-             console.log("%c[Notify] loadAllNotifications: 'hasLoadedNotifications' = false (API falló).", "color: #c62828;");
         }
     } catch (e) {
-        console.error("[Notify] loadAllNotifications: Error de FETCH.", e);
          listContainer.innerHTML = `
             <div class="notification-placeholder" id="notification-placeholder">
                 <span class="material-symbols-rounded">error</span>
@@ -303,75 +291,58 @@ export async function loadAllNotifications() {
             </div>
          `;
          hasLoadedNotifications = false; 
-         console.log("%c[Notify] loadAllNotifications: 'hasLoadedNotifications' = false (FETCH falló).", "color: #c62828;");
     } finally {
         isLoading = false; 
-        console.log("%c[Notify] loadAllNotifications: 'isLoading' = false (finally).", "color: #007bff;");
     }
 }
 
 export async function fetchInitialCount() {
-    console.log("[Notify] fetchInitialCount: Obteniendo conteo inicial...");
     const formData = new FormData();
     formData.append('action', 'get-notifications'); 
     const result = await callNotificationApi(formData);
     if (result.success && result.unread_count !== undefined) {
-        console.log(`[Notify] fetchInitialCount: Conteo inicial es ${result.unread_count}`);
         setNotificationCount(result.unread_count);
     } else {
-        console.error("[Notify] fetchInitialCount: No se pudo obtener el conteo inicial.");
     }
 }
 
 export function handleNotificationPing() {
-    console.log("%c[Notify] handleNotificationPing: ¡PING RECIBIDO!", "color: #28a745; font-weight: bold;");
     
     setNotificationCount(currentNotificationCount + 1);
     
     hasLoadedNotifications = false;
-    console.log("[Notify] handleNotificationPing: 'hasLoadedNotifications' = false (invalidado).");
 
     const notificationPanel = document.querySelector('[data-module="moduleNotifications"]');
     if (notificationPanel && notificationPanel.classList.contains('active')) {
-        console.log("[Notify] handleNotificationPing: El panel está ABIERTO. Llamando a loadAllNotifications() para recarga en vivo...");
         loadAllNotifications(); 
     } else {
-        console.log("[Notify] handleNotificationPing: El panel está CERRADO. Solo se invalidó la data.");
     }
 }
 
 export function initNotificationManager() {
     
-    console.log("[Notify] initNotificationManager: Inicializando listeners...");
-
     const notificationButton = document.querySelector('[data-action="toggleModuleNotifications"]');
     if (notificationButton) {
         notificationButton.addEventListener('click', (e) => {
-            console.log('[Notify] Clic en el botón de la campana.');
             e.stopPropagation(); 
             
             const module = document.querySelector('[data-module="moduleNotifications"]');
             if (!module) {
-                console.error('[Notify] No se encontró el popover [data-module="moduleNotifications"]');
                 return;
             }
 
             const isOpening = module.classList.contains('disabled');
 
             if (isOpening) {
-                console.log('[Notify] El panel se está ABRIENDO.');
                 deactivateAllModules(module); 
                 module.classList.remove('disabled');
                 module.classList.add('active');
                 
                 if (!hasLoadedNotifications) { 
-                    console.log("[Notify] 'hasLoadedNotifications' es FALSO. Llamando a loadAllNotifications().");
                     loadAllNotifications();
                 } else {
-                    console.log("[Notify] 'hasLoadedNotifications' es VERDADERO. Mostrando datos cacheados.");
                 }
             } else {
-                console.log('[Notify] El panel se está CERRANDO.');
                 deactivateAllModules(); 
             }
         });
@@ -380,7 +351,6 @@ export function initNotificationManager() {
     const markAllButton = document.getElementById('notification-mark-all-btn');
     if (markAllButton) {
         markAllButton.addEventListener('click', async (e) => {
-            console.log("[Notify] Clic en 'Marcar todas como leídas'.");
             e.preventDefault();
             e.stopPropagation();
             
@@ -395,7 +365,6 @@ export function initNotificationManager() {
                 item.querySelector('.notification-unread-dot')?.remove();
             });
 
-            console.log("[Notify] Llamando a API 'mark-all-read' en segundo plano...");
             const formData = new FormData();
             formData.append('action', 'mark-all-read');
             await callNotificationApi(formData); 
@@ -407,14 +376,12 @@ export function initNotificationManager() {
         listContainer.addEventListener('click', (e) => {
             
             if (e.target.closest('.notification-action-button')) {
-                console.log("[Notify] Clic en un botón de acción (Aceptar/Rechazar). Omitiendo lectura.");
                 return;
             }
 
             const item = e.target.closest('.notification-item.is-unread');
             
             if (item) {
-                console.log(`[Notify] Clic en item no leído (ID: ${item.dataset.id}). Marcando como leído.`);
                 const notificationId = item.dataset.id;
                 const markAllButton = document.getElementById('notification-mark-all-btn');
                 if (!notificationId) return; 
@@ -431,14 +398,12 @@ export function initNotificationManager() {
                 }
                 // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
-                console.log("[Notify] Llamando a API 'mark-one-read' en segundo plano...");
                 const formData = new FormData();
                 formData.append('action', 'mark-one-read');
                 formData.append('notification_id', notificationId);
                 
                 callNotificationApi(formData).then(result => {
                     if (result.success) {
-                        console.log(`[Notify] API 'mark-one-read' OK. Nuevo conteo: ${result.new_unread_count}`);
                         setNotificationCount(result.new_unread_count); 
                         // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                         if (result.new_unread_count === 0 && markAllButton) {
@@ -446,11 +411,9 @@ export function initNotificationManager() {
                         }
                         // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
                     } else {
-                        console.error("[Notify] Error al sincronizar 'mark-one-read' con el backend.");
                     }
                 });
             } else {
-                console.log("[Notify] Clic en item ya leído. Dejando que el router navegue.");
             }
         });
     }
@@ -459,11 +422,9 @@ export function initNotificationManager() {
         const targetButton = e.target.closest('[data-action="friend-accept-request"], [data-action="friend-decline-request"]');
         
         if (targetButton && targetButton.closest('.notification-item')) {
-            console.log("[Notify] Clic en Aceptar/Rechazar Amistad dentro del panel.");
             const item = targetButton.closest('.notification-item');
             if (item) {
                 if (item.classList.contains('is-unread')) {
-                    console.log("[Notify] El item de amistad no estaba leído. Marcando como leído primero.");
                     item.classList.remove('is-unread');
                     item.classList.add('is-read');
                     item.querySelector('.notification-unread-dot')?.remove();
@@ -482,7 +443,6 @@ export function initNotificationManager() {
                     const listContainer = document.getElementById('notification-list-items');
                     const placeholder = listContainer ? listContainer.querySelector('.notification-placeholder') : null;
                     if (listContainer && listContainer.children.length === 0 && !placeholder) {
-                         console.log("[Notify] Último item de amistad eliminado. Recargando para mostrar placeholder 'vacío'.");
                          hasLoadedNotifications = false; 
                          loadAllNotifications(); 
                     }
