@@ -876,24 +876,20 @@ function getChatTimeAgo($dateTimeString) {
         font-size: 18px;
     }
 
-    /* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (Filtros) ▼▼▼ --- */
+    /* --- ▼▼▼ INICIO DE CORRECCIÓN (Filtros) ▼▼▼ --- */
     .chat-sidebar-filters {
         padding: 12px;
         border-bottom: 1px solid #00000020;
         flex-shrink: 0;
         display: flex;
         gap: 8px;
-        overflow-x: auto;
-        /* Para móviles */
-        -ms-overflow-style: none;
-        /* IE y Edge */
-        scrollbar-width: none;
-        /* Firefox */
+        overflow-x: auto; /* <-- VUELTO A 'auto' */
+        -ms-overflow-style: none; /* <-- AÑADIDO (IE/Edge) */
+        scrollbar-width: none; /* <-- AÑADIDO (Firefox) */
     }
 
     .chat-sidebar-filters::-webkit-scrollbar {
-        display: none;
-        /* Chrome, Safari y Opera */
+        display: none; /* <-- AÑADIDO (Chrome/Safari) */
     }
 
     .chat-filter-badge {
@@ -905,21 +901,10 @@ function getChatTimeAgo($dateTimeString) {
         font-weight: 600;
         cursor: pointer;
         transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-        flex-shrink: 0;
+        flex-shrink: 0; /* <-- VUELTO A '0' */
         user-select: none;
     }
-
-    .chat-filter-badge:hover {
-        background-color: #e9ecef;
-    }
-
-    .chat-filter-badge.active {
-        background-color: #000;
-        color: #ffffff;
-        border-color: #000;
-    }
-
-    /* --- ▲▲▲ FIN DE NUEVOS ESTILOS (Filtros) ▲▲▲ --- */
+    /* --- ▲▲▲ FIN DE CORRECCIÓN (Filtros) ▲▲▲ --- */
 
     /* --- ▲▲▲ FIN DE ESTILOS FALTANTES --- */
 </style>

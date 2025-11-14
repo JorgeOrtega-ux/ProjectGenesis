@@ -605,7 +605,7 @@
       "success2faEnabled": "Verificación de dos pasos activada.",
       "success2faDisabled": "Verificación de dos pasos desactivada.",
       "successLogoutAll": "Se han invalidado todas las demás sesiones.",
-      "errorNoSession": "Acceso denegado. No has iniciado sesión.",
+      "errorNoSession": "Acceso denigado. No has iniciado sesión.",
       "infoCodeSentCurrent": "Se ha enviado un código a tu correo actual.",
       "errorCodeRequest": "Error al solicitar el código.",
       "sending": "Enviando...",
@@ -969,6 +969,14 @@
     },
     "postCount": "%count% publicaciones"
   },
+  "friends": {
+    "list": {
+      "title": "Amigos",
+      "loading": "Cargando amigos...",
+      "noFriends": "No tienes amigos.",
+      "error": "Error al cargar."
+    }
+  },
   "chat": {
     "title": "Mensajes",
     "searchPlaceholder": "Buscar amigos...",
@@ -977,6 +985,13 @@
     "offline": "Desconectado",
     "online": "Online",
     "typing": "Escribiendo",
+    "empty": {
+      "all": "Inicia una conversación.",
+      "search": "No se encontraron chats que coincidan.",
+      "favorites": "No tienes chats en favoritos.",
+      "unread": "No tienes mensajes no leídos.",
+      "archived": "No tienes chats archivados."
+    },
     "error": {
       "friendsOnly": "Este usuario solo acepta mensajes de amigos.",
       "none": "Este usuario no acepta mensajes privados."
