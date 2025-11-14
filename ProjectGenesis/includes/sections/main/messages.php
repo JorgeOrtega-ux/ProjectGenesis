@@ -48,6 +48,47 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 .chat-item-unread-badge { background-color: #c62828; color: #ffffff; font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 50px; flex-shrink: 0; }
 .chat-list-placeholder { display: flex; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; color: #6b7280; gap: 16px; flex-direction: column; }
 
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (Context Menu) ▼▼▼ --- */
+.chat-item-actions {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none; /* Oculto por defecto */
+    z-index: 2;
+}
+/* Mostrar en hover sobre el item */
+.chat-conversation-item:hover .chat-item-actions {
+    display: block;
+}
+/* Ocultar si el popover está activo (para que no se superponga) */
+.chat-item-actions.popover-active {
+    display: none;
+}
+.chat-item-action-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5fa; /* Color del hover del item */
+    color: #1f2937;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.chat-item-action-btn:hover {
+    background-color: #e0e0e0; /* Un poco más oscuro */
+}
+/* Estilo para el popover (se usará el CSS de .popover-module de components.css) */
+#chat-context-menu {
+    width: 240px;
+    z-index: 1000;
+}
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS --- */
+
+
 /* --- Panel Derecho (Chat Activo) --- */
 .chat-content-right { flex-grow: 1; height: 100%; display: flex; flex-direction: column; background-color: #ffffff; }
 .chat-content-placeholder { flex-grow: 1; flex-direction: column; align-items: center; justify-content: center; color: #6b7280; gap: 16px; }
@@ -570,5 +611,37 @@ if ($hasPreloadedUser) {
                 </form>
             </div>
         </div>
-    </div>
+
+        <div class="popover-module body-title disabled"
+             data-module="moduleChatContext"
+             id="chat-context-menu">
+            <div class="menu-content">
+                <div class="menu-list">
+                    <div class="menu-link" data-action="pin-chat">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">push_pin</span></div>
+                        <div class="menu-link-text"><span>Fijar chat</span></div>
+                    </div>
+                    <div class="menu-link" data-action="archive-chat">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">archive</span></div>
+                        <div class="menu-link-text"><span>Archivar chat</span></div>
+                    </div>
+                    <div class="menu-link" data-action="add-favorites">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">star</span></div>
+                        <div class="menu-link-text"><span>Añadir a favoritos</span></div>
+                    </div>
+                    
+                    <div style="height: 1px; background-color: #00000020; margin: 4px 8px;"></div>
+                    
+                    <div class="menu-link" data-action="block-user">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">block</span></div>
+                        <div class="menu-link-text"><span>Bloquear</span></div>
+                    </div>
+                    <div class="menu-link" data-action="delete-chat">
+                        <div class="menu-link-icon" style="color: #c62828;"><span class="material-symbols-rounded">delete</span></div>
+                        <div class="menu-link-text"><span style="color: #c62828;">Eliminar chat</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
 </div>

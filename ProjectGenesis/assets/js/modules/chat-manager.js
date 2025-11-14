@@ -6,10 +6,16 @@
 // (CORREGIDO: Lógica de filtrado de lista y bloqueo de input por privacidad)
 // (CORREGIDO: Bug de bloqueo de input en envío exitoso)
 // (CORREGIDO: Lógica de privacidad simétrica para "Amigos")
+// (MODIFICADO: Añadido menú contextual de chat)
+// (CORREGIDO: Usar e.stopImmediatePropagation() para prevenir colisión con url-manager)
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
 import { showAlert } from '../services/alert-manager.js';
+// --- ▼▼▼ INICIO DE IMPORTACIONES AÑADIDAS ▼▼▼ ---
+import { createPopper } from 'https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/esm/popper.min.js';
+import { deactivateAllModules } from '../app/main-controller.js';
+// --- ▲▲▲ FIN DE IMPORTACIONES AÑADIDAS ▲▲▲ ---
 
 let currentChatUserId = null;
 let friendCache = [];
@@ -26,6 +32,7 @@ const CHAT_PAGE_SIZE = 30;
 let currentReplyMessageId = null; // Almacena el ID del mensaje al que se está respondiendo
 let typingTimer;
 let isTyping = false;
+let chatPopperInstance = null; // Instancia para el popover de contexto del chat
 // --- ▲▲▲ FIN DE NUEVAS VARIABLES GLObales ▲▲▲ ---
 
 
@@ -53,6 +60,7 @@ function formatTime(dateString) {
     } catch (e) { return ''; }
 }
 
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (renderConversationList) ▼▼▼ ---
 /**
  * Renderiza la lista de conversaciones en el panel izquierdo.
  * @param {Array} conversations - La lista de conversaciones a renderizar.
@@ -125,13 +133,20 @@ function renderConversationList(conversations) {
                         ${unreadBadge}
                     </div>
                 </div>
-            </a>
+
+                <div class="chat-item-actions">
+                    <button type="button" class="chat-item-action-btn" data-action="toggle-chat-context-menu" title="Más opciones">
+                        <span class="material-symbols-rounded">more_vert</span>
+                    </button>
+                </div>
+                </a>
         `;
         // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     });
     listContainer.innerHTML = html;
     console.log("[RENDER] Renderización completada.");
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (renderConversationList) ---
 
 /**
  * Carga la lista de amigos/conversaciones inicial.
@@ -546,7 +561,7 @@ async function loadChatHistory(friendId, beforeId = null) {
                 } else {
                     enableChatInput(false); // Bloquear
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
             }
             
         } else {
@@ -645,7 +660,7 @@ function validateSendButton() {
         sendBtn.disabled = true;
         return;
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
     
     const hasText = input.value.trim().length > 0;
     const hasFiles = selectedAttachments.length > 0;
@@ -739,7 +754,7 @@ function showReplyPreview(messageId, username, text) {
     if (input && input.disabled) {
         return;
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
     // Truncar texto si es muy largo
     const snippet = text.length > 100 ? text.substring(0, 100) + '...' : text;
@@ -982,6 +997,7 @@ export function handleTypingEvent(senderId, isTyping) {
     }
 }
 
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (initChatManager) ▼▼▼ ---
 /**
  * Inicializa todos los listeners para la página de chat.
  */
@@ -1034,7 +1050,104 @@ export function initChatManager() {
 
     document.body.addEventListener('click', async (e) => {
         const chatSection = e.target.closest('[data-section="messages"]');
-        if (!chatSection) return;
+        
+        // --- Lógica de Cierre de Popover (Click Afuera) ---
+        if (!chatSection) {
+            // Si el clic está fuera de la sección de chat, destruir el popover de chat
+            if (chatPopperInstance) {
+                chatPopperInstance.destroy();
+                chatPopperInstance = null;
+            }
+            // Limpiar la clase 'popover-active'
+            document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
+            return; // Salir, ya que el resto de la lógica es para DENTRO del chat
+        }
+        
+        // --- Lógica de Menú Contextual (Click en el botón de ...) ---
+        const contextBtn = e.target.closest('[data-action="toggle-chat-context-menu"]');
+        if (contextBtn) {
+            e.preventDefault();
+            // --- ▼▼▼ ¡ESTA ES LA CORRECCIÓN! ▼▼▼ ---
+            e.stopImmediatePropagation(); // Detiene este clic y CUALQUIER OTRO listener en document.body (como url-manager)
+            // --- ▲▲▲ ¡FIN DE LA CORRECCIÓN! ▲▲▲ ---
+
+            const friendItem = contextBtn.closest('.chat-conversation-item');
+            const popover = document.getElementById('chat-context-menu');
+            const actionsContainer = contextBtn.closest('.chat-item-actions');
+
+            if (!friendItem || !popover || !actionsContainer) return;
+
+            // Destruir el popover anterior si existe
+            if (chatPopperInstance) {
+                chatPopperInstance.destroy();
+                chatPopperInstance = null;
+            }
+            
+            // Limpiar cualquier otro botón activo
+            document.querySelectorAll('.chat-item-actions.popover-active').forEach(el => el.classList.remove('popover-active'));
+
+            // Poblar el popover
+            const userId = friendItem.dataset.userId;
+            popover.dataset.currentUserId = userId;
+            // ... (Aquí iría la lógica futura para rellenar los botones del popover con el userId) ...
+
+            // Crear y mostrar el nuevo popover
+            chatPopperInstance = createPopper(contextBtn, popover, {
+                placement: 'left-start',
+                modifiers: [{ name: 'offset', options: { offset: [0, 8] } }]
+            });
+
+            deactivateAllModules(popover); // Cierra otros popovers (como el de notificaciones)
+            popover.classList.toggle('disabled'); // Muestra/oculta este
+            popover.classList.toggle('active');
+            
+            // Ocultar el botón de flecha mientras el popover está abierto
+            if (popover.classList.contains('active')) {
+                actionsContainer.classList.add('popover-active');
+            } else {
+                actionsContainer.classList.remove('popover-active');
+            }
+            return;
+        }
+        
+        // --- Lógica de Menú Contextual (Click en una OPCIÓN del popover) ---
+        const popoverOption = e.target.closest('#chat-context-menu .menu-link');
+        if (popoverOption) {
+             e.preventDefault();
+             e.stopPropagation();
+             const action = popoverOption.dataset.action;
+             const userId = popoverOption.closest('#chat-context-menu').dataset.currentUserId;
+             
+             // Lógica futura
+             showAlert(`Acción: ${action} para UserID: ${userId} (No implementado)`, 'info');
+             
+             // Ocultar popover
+             deactivateAllModules();
+             if (chatPopperInstance) {
+                chatPopperInstance.destroy();
+                chatPopperInstance = null;
+             }
+             document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
+             return;
+        }
+
+        // --- Lógica de Cierre de Popover (Click DENTRO del chat pero FUERA del popover) ---
+        const clickedOnPopover = e.target.closest('#chat-context-menu.active');
+        if (!contextBtn && !clickedOnPopover) {
+             if (chatPopperInstance) {
+                chatPopperInstance.destroy();
+                chatPopperInstance = null;
+             }
+             // No llamamos a deactivateAllModules() aquí porque podríamos estar
+             // haciendo clic en el botón de notificaciones, etc.
+             // Solo limpiamos nuestro popover específico.
+             document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
+             
+             // Dejamos que el main-controller maneje deactivateAllModules() si el clic
+             // fue realmente en el body.
+        }
+        
+        // --- (Resto de los listeners de clic de chat-manager.js) ---
         
         // --- ▼▼▼ INICIO DE MODIFICACIÓN (Listener de Clic Eliminado) ▼▼▼ ---
         // El click en 'chat-conversation-item' ahora es manejado por el router
@@ -1209,3 +1322,4 @@ export function initChatManager() {
         }
     });
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (initChatManager) ---

@@ -1,5 +1,6 @@
 // FILE: assets/js/app/main-controller.js
 // (MODIFICADO - Eliminado el bloque 'toggleSection' que bloqueaba la navegación)
+// (MODIFICADO OTRA VEZ - Añadida 'toggle-chat-context-menu' a las acciones gestionadas)
 
 import { getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js'; 
@@ -134,6 +135,7 @@ function initMainController() {
 
         if (action.startsWith('toggle')) {
             
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             const managedActions = [
                 'toggleModulePageFilter',
                 'toggleModuleAdminRole',
@@ -156,7 +158,9 @@ function initMainController() {
                 'toggleFriendItemOptions',
                 
                 'toggleModuleAdminExport',
+                'toggle-chat-context-menu' // <-- ¡ACCIÓN AÑADIDA A LA LISTA DE EXCEPCIONES!
             ];
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             if (managedActions.includes(action)) {
                 console.log(`[MainController] Acción ${action} es manejada por su propio módulo. Omitiendo.`);
@@ -195,9 +199,14 @@ function initMainController() {
             const clickedOnCardItem = event.target.closest('.card-item');
             const clickedOnSearchInput = event.target.closest('#header-search-input'); 
             
-            if (!clickedOnModule && !clickedOnButton && !clickedOnCardItem && !clickedOnSearchInput) { 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+            // Añadir el botón de contexto de chat a las excepciones de "click-outside"
+            const clickedOnChatMenuButton = event.target.closest('[data-action="toggle-chat-context-menu"]');
+            
+            if (!clickedOnModule && !clickedOnButton && !clickedOnCardItem && !clickedOnSearchInput && !clickedOnChatMenuButton) { 
                 deactivateAllModules();
             }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         });
     }
 
