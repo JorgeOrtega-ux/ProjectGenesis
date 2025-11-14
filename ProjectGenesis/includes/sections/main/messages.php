@@ -2,9 +2,41 @@
 // FILE: includes/sections/main/messages.php
 // (MODIFICADO PARA MÚLTIPLES FOTOS)
 // (MODIFICADO PARA FAVORITOS, PINEADOS Y ARCHIVADOS)
+// (MODIFICADO PARA MOSTRAR ESTADO 'LAST_SEEN' DETALLADO)
 global $basePath;
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
+
+// --- ▼▼▼ INICIO DE FUNCIÓN HELPER AÑADIDA (LÓGICA DE 'view-profile.php') ▼▼▼ ---
+/**
+ * Genera el string "Activo hace X"
+ * @param string $dateTimeString El timestamp UTC de la BD
+ * @return string
+ */
+function getChatTimeAgo($dateTimeString) {
+    if (empty($dateTimeString)) {
+        return 'Desconectado'; // Fallback
+    }
+    try {
+        $lastSeenTime = new DateTime($dateTimeString, new DateTimeZone('UTC'));
+        $currentTime = new DateTime('now', new DateTimeZone('UTC'));
+        $interval = $currentTime->diff($lastSeenTime);
+
+        $timeAgo = '';
+        if ($interval->y > 0) { $timeAgo = ($interval->y == 1) ? '1 año' : $interval->y . ' años'; }
+        elseif ($interval->m > 0) { $timeAgo = ($interval->m == 1) ? '1 mes' : $interval->m . ' meses'; }
+        elseif ($interval->d > 0) { $timeAgo = ($interval->d == 1) ? '1 día' : $interval->d . ' días'; }
+        elseif ($interval->h > 0) { $timeAgo = ($interval->h == 1) ? '1 h' : $interval->h . ' h'; }
+        elseif ($interval->i > 0) { $timeAgo = ($interval->i == 1) ? '1 min' : $interval->i . ' min'; }
+        else { $timeAgo = 'unos segundos'; }
+        
+        // Devolver el texto traducible (el JS se encargará de las claves i18n si esto falla)
+        return ($timeAgo === 'unos segundos') ? 'Activo hace unos momentos' : "Activo hace $timeAgo";
+    } catch (Exception $e) {
+        return 'Desconectado'; // Fallback en caso de error
+    }
+}
+// --- ▲▲▲ FIN DE FUNCIÓN HELPER AÑADIDA ▲▲▲ ---
 ?>
 <style>
     /* Estilos específicos para el chat */
@@ -948,7 +980,10 @@ if ($hasPreloadedUser) {
         $preloadedStatusText = 'Online';
         $preloadedStatusClass = 'online active';
     } else {
-        $preloadedStatusText = 'Desconectado';
+        // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+        // ¡Usamos la nueva función helper!
+        $preloadedStatusText = getChatTimeAgo($preloadedChatUser['last_seen']);
+        // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
         $preloadedStatusClass = 'active'; // 'active' (visible), pero sin clase 'online'
     }
 }
