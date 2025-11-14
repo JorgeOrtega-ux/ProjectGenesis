@@ -11,6 +11,7 @@
 // (CORREGIDO: Limpiar la URL después de eliminar un chat activo)
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (FAVORITOS, FIJADOS Y ARCHIVADOS) ▼▼▼ ---
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (CORRECCIÓN DE 'LAST SEEN') ▼▼▼ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGE 99+) ▼▼▼ ---
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -37,6 +38,7 @@ let typingTimer;
 let isTyping = false;
 let chatPopperInstance = null; // Instancia para el popover de contexto del chat
 let currentChatFilter = 'all'; // Estado del filtro: 'all', 'favorites', 'unread', 'archived'
+let currentUnreadMessageCount = 0; // <-- AÑADIDO PARA EL BADGE
 // --- ▲▲▲ FIN DE NUEVAS VARIABLES GLOBALES ▼▼▼ ---
 
 
@@ -64,7 +66,7 @@ function formatTime(dateString) {
     } catch (e) { return ''; }
 }
 
-// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN AÑADIDA (Lógica de Time Ago) ▼▼▼ ---
+// --- ▼▼▼ INICIO DE FUNCIÓN AÑADIDA (Lógica de Time Ago) ▼▼▼ ---
 /**
  * Convierte un timestamp UTC en un string legible "Activo hace X".
  * @param {string} dateTimeString - El timestamp UTC de la BD.
@@ -119,6 +121,48 @@ function formatTimeAgo(dateTimeString) {
     }
 }
 // --- ▲▲▲ FIN DE NUEVA FUNCIÓN AÑADIDA ▲▲▲ ---
+
+// --- ▼▼▼ INICIO DE NUEVAS FUNCIONES (BADGE) ▼▼▼ ---
+
+/**
+ * Actualiza el badge de mensajes no leídos en el header.
+ * @param {number} count - El número total de mensajes no leídos.
+ */
+export function setUnreadMessageCount(count) {
+    console.log(`[ChatBadge] setUnreadMessageCount: Actualizando contador a ${count}`);
+    currentUnreadMessageCount = count;
+    const badge = document.getElementById('message-badge-count');
+    if (!badge) return;
+
+    if (count > 99) {
+        badge.textContent = '99+';
+    } else {
+        badge.textContent = count;
+    }
+    
+    if (count > 0) {
+        badge.classList.remove('disabled');
+    } else {
+        badge.classList.add('disabled');
+    }
+}
+
+/**
+ * Obtiene el conteo inicial de mensajes no leídos desde la API.
+ */
+export async function fetchInitialUnreadCount() {
+    console.log("[ChatBadge] fetchInitialUnreadCount: Obteniendo conteo inicial...");
+    const formData = new FormData();
+    formData.append('action', 'get-total-unread-count'); 
+    const result = await callChatApi(formData);
+    if (result.success && result.total_unread_count !== undefined) {
+        console.log(`[ChatBadge] fetchInitialUnreadCount: Conteo inicial es ${result.total_unread_count}`);
+        setUnreadMessageCount(result.total_unread_count);
+    } else {
+        console.error("[ChatBadge] fetchInitialUnreadCount: No se pudo obtener el conteo inicial.");
+    }
+}
+// --- ▲▲▲ FIN DE NUEVAS FUNCIONES (BADGE) ▲▲▲ ---
 
 
 // --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (renderConversationList) ▼▼▼ ---
@@ -544,7 +588,7 @@ function showHistoryLoader(show) {
     }
 }
 
-// --- (loadChatHistory sin cambios) ---
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (loadChatHistory) ▼▼▼ ---
 async function loadChatHistory(friendId, beforeId = null) {
     const msgList = document.getElementById('chat-message-list');
     const isPaginating = beforeId !== null;
@@ -587,6 +631,13 @@ async function loadChatHistory(friendId, beforeId = null) {
                 }
             }
             
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGE) ▼▼▼ ---
+            // Actualizar el conteo total si la API lo devuelve (sucede al abrir un chat)
+            if (result.new_total_unread_count !== undefined) {
+                setUnreadMessageCount(result.new_total_unread_count);
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN (BADGE) ▲▲▲ ---
+            
         } else {
             if (!isPaginating) {
                 msgList.innerHTML = `<div class="chat-list-placeholder">${getTranslation(result.message || 'js.api.errorServer')}</div>`;
@@ -609,6 +660,7 @@ async function loadChatHistory(friendId, beforeId = null) {
         }
     }
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (loadChatHistory) ---
 
 
 // --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (openChat) ▼▼▼ ---
@@ -886,7 +938,7 @@ async function sendMessage() {
     }
 }
 
-// --- (handleChatMessageReceived sin cambios) ---
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (handleChatMessageReceived) ▼▼▼ ---
 export function handleChatMessageReceived(message) {
     console.log(`%c[WEBSOCKET] 📩 handleChatMessageReceived() -> Mensaje recibido:`, 'color: #00_80_80; font-weight: bold;', message);
     
@@ -906,9 +958,14 @@ export function handleChatMessageReceived(message) {
         document.getElementById('chat-message-list').insertAdjacentHTML('beforeend', bubbleHtml);
         scrollToBottom();
     } else {
-        console.log("[WEBSOCKET] El chat con este usuario NO está abierto. La lista se actualizará en segundo plano.");
+        console.log("[WEBSOCKET] El chat con este usuario NO está abierto. Incrementando contador global.");
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGE) ▼▼▼ ---
+        // Incrementar el contador visualmente
+        setUnreadMessageCount(currentUnreadMessageCount + 1);
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (BADGE) ▲▲▲ ---
     }
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (handleChatMessageReceived) ---
 
 // --- (renderDeletedMessage sin cambios) ---
 function renderDeletedMessage(bubbleEl) {
@@ -1494,3 +1551,4 @@ export function initChatManager() {
 }
 // --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (initChatManager) ---
 // --- ▲▲▲ FIN DE MODIFICACIÓN (CORRECCIÓN DE 'LAST SEEN') ---
+// --- ▲▲▲ FIN DE MODIFICACIÓN (BADGE 99+) ---

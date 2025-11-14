@@ -61,21 +61,23 @@ $userRole = $_SESSION['role'] ?? 'user';
     <div class="header-right">
         <div class="header-item">
 
-            <?php // --- ▼▼▼ EL BOTÓN PROBLEMÁTICO ▼▼▼ --- ?>
-            <?php // El atributo data-action="toggleSectionMessages" es correcto. ?>
-            <?php // El problema es que tu JS no escucha esta acción en el header. ?>
-            <?php // Debes modificar tu JS para que [data-action='toggleSectionMessages'] funcione globalmente. ?>
+            <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- ?>
             <div class="header-button"
                 data-action="toggleSectionMessages"
-                data-tooltip="Mensajes">
+                data-tooltip="Mensajes"
+                style="position: relative;"> <?php // <-- style añadido ?>
                 <span class="material-symbols-rounded">chat</span>
+                
+                <?php // --- BADGE DE MENSAJES AÑADIDO --- ?>
+                <span class="notification-badge disabled" id="message-badge-count">0</span>
             </div>
+            <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
+            
             <div class="header-button"
                 data-action="toggleModuleCreatePost" 
                 data-tooltip="home.toolbar.createPost">
                 <span class="material-symbols-rounded">add</span>
             </div>
-            <?php // --- ▲▲▲ FIN DE BOTÓN MOVIDO ▲▲▲ --- ?>
 
             <div class="header-button header-notification-btn"
                 data-action="toggleModuleNotifications"

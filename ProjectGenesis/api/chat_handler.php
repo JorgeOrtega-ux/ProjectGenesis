@@ -273,6 +273,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $response['success'] = true;
             $response['conversations'] = $friends;
+        
+        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN ▼▼▼ ---
+        } elseif ($action === 'get-total-unread-count') {
+            
+            // Contar todos los mensajes no leídos dirigidos al usuario actual
+            // Respetando los chats que el usuario NO ha eliminado
+            $stmt_count = $pdo->prepare(
+                "SELECT COUNT(cm.id) 
+                 FROM chat_messages cm
+                 LEFT JOIN user_conversation_metadata ucm ON cm.sender_id = ucm.conversation_user_id AND ucm.user_id = :current_user_id
+                 WHERE cm.receiver_id = :current_user_id 
+                   AND cm.is_read = 0 
+                   AND cm.status = 'active'
+                   AND cm.created_at > COALESCE(ucm.deleted_until, '1970-01-01')"
+            );
+            $stmt_count->execute([':current_user_id' => $currentUserId]);
+            $totalUnread = (int)$stmt_count->fetchColumn();
+
+            $response['success'] = true;
+            $response['total_unread_count'] = $totalUnread;
+        // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
 
         } elseif ($action === 'get-chat-history') {
 
@@ -352,12 +373,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
             }
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (RECUENTO TOTAL) ▼▼▼ ---
+            // Recalcular el conteo total de mensajes no leídos
+            $stmt_total_count = $pdo->prepare(
+                "SELECT COUNT(cm.id) 
+                 FROM chat_messages cm
+                 LEFT JOIN user_conversation_metadata ucm ON cm.sender_id = ucm.conversation_user_id AND ucm.user_id = :current_user_id
+                 WHERE cm.receiver_id = :current_user_id 
+                   AND cm.is_read = 0 
+                   AND cm.status = 'active'
+                   AND cm.created_at > COALESCE(ucm.deleted_until, '1970-01-01')"
+            );
+            $stmt_total_count->execute([':current_user_id' => $currentUserId]);
+            $totalUnread = (int)$stmt_total_count->fetchColumn();
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             $response['success'] = true;
             $response['messages'] = $messages;
             $response['message_count'] = count($messages);
             $response['limit'] = CHAT_PAGE_SIZE;
-            
             $response['can_send_message'] = $canSendMessage;
+            $response['new_total_unread_count'] = $totalUnread; // <-- NUEVA LÍNEA
 
         } elseif ($action === 'send-message') {
 

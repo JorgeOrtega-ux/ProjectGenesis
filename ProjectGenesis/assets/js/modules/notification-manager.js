@@ -58,19 +58,26 @@ function getRelativeDateGroup(date) {
     });
 }
 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (99+) ▼▼▼ ---
 export function setNotificationCount(count) {
     console.log(`[Notify] setNotificationCount: Actualizando contador a ${count}`);
     currentNotificationCount = count;
     const badge = document.getElementById('notification-badge-count');
     if (!badge) return;
 
-    badge.textContent = count;
+    if (count > 99) {
+        badge.textContent = '99+';
+    } else {
+        badge.textContent = count;
+    }
+
     if (count > 0) {
         badge.classList.remove('disabled');
     } else {
         badge.classList.add('disabled');
     }
 }
+// --- ▲▲▲ FIN DE MODIFICACIÓN (99+) ▲▲▲ ---
 
 function addNotificationToUI(notification) {
     const avatar = notification.actor_avatar || "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
@@ -379,7 +386,7 @@ export function initNotificationManager() {
             
             // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
             markAllButton.disabled = true; 
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
             setNotificationCount(0); 
 
             document.querySelectorAll('#notification-list-items .notification-item.is-unread').forEach(item => {
@@ -422,7 +429,7 @@ export function initNotificationManager() {
                 if (newCount === 0 && markAllButton) {
                     markAllButton.disabled = true;
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
                 console.log("[Notify] Llamando a API 'mark-one-read' en segundo plano...");
                 const formData = new FormData();
@@ -437,7 +444,7 @@ export function initNotificationManager() {
                         if (result.new_unread_count === 0 && markAllButton) {
                             markAllButton.disabled = true;
                         }
-                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
                     } else {
                         console.error("[Notify] Error al sincronizar 'mark-one-read' con el backend.");
                     }

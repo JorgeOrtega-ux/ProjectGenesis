@@ -16,13 +16,15 @@ import { initCommunityManager } from './modules/community-manager.js';
 // --- IMPORTACIÓN MODIFICADA ---
 import { setupPublicationListeners } from './modules/publication-manager.js';
 
-// --- IMPORTACIÓN MODIFICADA (CORREGIDA) ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGE) ▼▼▼ ---
 import { 
     initChatManager,
     handleChatMessageReceived,
     handleTypingEvent,
-    handleMessageDeleted
+    handleMessageDeleted,
+    fetchInitialUnreadCount // <-- AÑADIDO
 } from './modules/chat-manager.js';
+// --- ▲▲▲ FIN DE MODIFICACIÓN (BADGE) ▲▲▲ ---
 
 // --- LÍNEA MODIFICADA (updateProfileActions) ---
 import { 
@@ -111,8 +113,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     if (window.isUserLoggedIn) {
 
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGE) ▼▼▼ ---
         // Notificaciones iniciales
         fetchInitialCount();
+        // Conteo inicial de mensajes
+        fetchInitialUnreadCount();
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (BADGE) ▲▲▲ ---
 
         let ws;
 

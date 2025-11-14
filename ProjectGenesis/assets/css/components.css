@@ -1996,7 +1996,7 @@ select.component-input:invalid {
     -webkit-mask-composite: destination-out;
     mask-composite: exclude;
 }
-/* --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- */
+/* --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▼▼▼ --- */
 
 .profile-role-badge .material-symbols-rounded {
     font-size: 16px;
