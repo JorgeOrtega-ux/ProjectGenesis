@@ -10,10 +10,8 @@
 // (CORREGIDO: Usar e.stopImmediatePropagation() para prevenir colisión con url-manager)
 // (CORREGIDO: Limpiar la URL después de eliminar un chat activo)
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (FAVORITOS, FIJADOS Y ARCHIVADOS) ▼▼▼ ---
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (CORRECCIÓN DE 'LAST SEEN') ▼▼▼ ---
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGE 99+) ▼▼▼ ---
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (PLACEHOLDER DINÁMICO) ▼▼▼ ---
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (CHAT DE COMUNIDAD) ▼▼▼ ---
+// --- ▼▼▼ (TABLA RENOMBRADA A user_conversation_metadata) ▼▼▼ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (SISTEMA DE CHAT DE COMUNIDAD) ▼▼▼ ---
 
 import { callChatApi, callFriendApi, callCommunityApi } from '../services/api-service.js'; // <-- callCommunityApi AÑADIDO
 import { getTranslation } from '../services/i18n-manager.js';
@@ -1406,17 +1404,23 @@ export function initChatManager() {
     
     console.log("🏁 initChatManager() -> Inicializando listeners de chat.");
     
-    // --- NUEVO: Obtener IDs de comunidad para el WebSocket ---
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    let communityIdsPromise = Promise.resolve(); // 1. Promesa por defecto
+
     if (window.isUserLoggedIn) {
         const formData = new FormData();
         formData.append('action', 'get-my-community-ids');
-        callCommunityApi(formData).then(result => {
+        
+        // 2. Asignar la llamada a la promesa
+        communityIdsPromise = callCommunityApi(formData).then(result => { 
             if (result.success) {
                 myCommunityIds = result.community_ids || [];
+                window.myCommunityIds = myCommunityIds; // 3. ASIGNAR A WINDOW
                 console.log(`[ChatInit] IDs de comunidad para WS:`, myCommunityIds);
             }
         });
     }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     const sectionsContainer = document.querySelector('.main-sections');
     if (sectionsContainer) {
@@ -1889,6 +1893,11 @@ export function initChatManager() {
         }
     `;
     document.head.appendChild(styleSheet);
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    // 4. Devolver la promesa
+    return communityIdsPromise;
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
 // --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (initChatManager) ---
 // --- ▲▲▲ FIN DE MODIFICACIÓN (CHAT DE COMUNIDAD) ▲▲▲ ---

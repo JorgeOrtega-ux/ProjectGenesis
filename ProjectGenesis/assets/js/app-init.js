@@ -131,7 +131,9 @@ function initAudioUnlock() {
 // --- ▲▲▲ ¡FIN DE NUEVA FUNCIÓN! ▲▲▲ ---
 
 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR ASYNC) ▼▼▼ ---
 document.addEventListener('DOMContentLoaded', async function () {
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     window.showAlert = showAlert;
 
@@ -158,7 +160,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     initNotificationManager();
     initSearchManager();
     initAdminCommunityManager();
-    initChatManager();
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR AWAIT) ▼▼▼ ---
+    // 1. Espera a que initChatManager termine (y obtenga los IDs de comunidad)
+    await initChatManager();
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     initRouter();
     initTooltipManager();
@@ -185,11 +191,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                 ws.onopen = () => {
                     console.log("[WS] Conectado al servidor en:", wsUrl);
 
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR community_ids) ▼▼▼ ---
                     const authMessage = {
                         type: "auth",
                         user_id: window.userId || 0,
-                        session_id: window.csrfToken || ""
+                        session_id: window.csrfToken || "",
+                        community_ids: window.myCommunityIds || [] // Enviar los IDs
                     };
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                    
                     ws.send(JSON.stringify(authMessage));
                 };
 
@@ -350,8 +360,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                 console.error("[WS] No se pudo crear WebSocket:", e);
             }
         }
-
+        
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (MOVER LLAMADA) ▼▼▼ ---
+        // 2. Mover la llamada a connectWebSocket() aquí, para que se ejecute
+        //    después de que 'await initChatManager()' haya terminado.
         connectWebSocket();
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         window.addEventListener('beforeunload', () => {
             if (ws && ws.readyState === WebSocket.OPEN) {
