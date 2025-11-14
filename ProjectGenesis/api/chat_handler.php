@@ -8,6 +8,7 @@
 // (CORREGIDO: LÓGICA DE PRIVACIDAD SIMÉTRICA PARA "AMIGOS")
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (FAVORITOS, FIJADOS Y ARCHIVADOS) ▼▼▼ ---
 // --- ▼▼▼ (TABLA RENOMBRADA A user_conversation_metadata) ▼▼▼ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (SISTEMA DE CHAT DE COMUNIDAD) ▼▼▼ ---
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -79,6 +80,38 @@ function notifyUser($targetUserId, $payload)
         logDatabaseError($e, 'chat_handler - (ws_notify_fail)');
     }
 }
+
+// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (NOTIFY COMMUNITY) ▼▼▼ ---
+/**
+ * Notifica al servidor WebSocket sobre un nuevo mensaje de COMUNIDAD.
+ */
+function notifyCommunity($communityId, $senderId, $payload)
+{
+    try {
+        $post_data = json_encode([
+            'community_id'   => (int)$communityId,
+            'sender_id'      => (int)$senderId,
+            'payload'        => $payload // El payload ya incluye el 'type'
+        ]);
+
+        // Asegúrate de añadir esta ruta en socket_server.py
+        $ch = curl_init('http://127.0.0.1:8766/notify-community');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($post_data)
+        ]);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
+        curl_exec($ch);
+        curl_close($ch);
+    } catch (Exception $e) {
+        logDatabaseError($e, 'chat_handler - (ws_notify_community_fail)');
+    }
+}
+// --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
 
 
 // --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD ▼▼▼ ---
@@ -193,6 +226,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $action = $_POST['action'] ?? '';
+    
+    // --- ▼▼▼ INICIO DE REESTRUCTURACIÓN (NUEVA VARIABLE) ▼▼▼ ---
+    $chat_type = $_POST['chat_type'] ?? 'dm'; // 'dm' o 'community'
+    // --- ▲▲▲ FIN DE REESTRUCTURACIÓN ▲▲▲ ---
 
     try {
         if ($action === 'get-conversations') {
@@ -274,7 +311,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
             $response['conversations'] = $friends;
         
-        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN ▼▼▼ ---
+        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN (get-community-conversations) ▼▼▼ ---
+        } elseif ($action === 'get-community-conversations') {
+            
+            $defaultIcon = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+
+            $stmt_communities = $pdo->prepare(
+                "SELECT 
+                    c.id, c.name, c.uuid, c.icon_url,
+                    meta.is_favorite,
+                    meta.pinned_at,
+                    meta.is_archived,
+                    (SELECT 
+                         CASE 
+                             WHEN (SELECT 1 FROM community_chat_message_attachments ccma WHERE ccma.message_id = cm.id LIMIT 1) IS NOT NULL AND cm.message_text = '' THEN '[Imagen]'
+                             WHEN (SELECT 1 FROM community_chat_message_attachments ccma WHERE ccma.message_id = cm.id LIMIT 1) IS NOT NULL AND cm.message_text != '' THEN cm.message_text
+                             ELSE cm.message_text 
+                         END
+                     FROM community_chat_messages cm
+                     WHERE cm.community_id = c.id
+                     AND cm.status = 'active'
+                     ORDER BY cm.created_at DESC LIMIT 1) AS last_message,
+                    (SELECT cm.created_at 
+                     FROM community_chat_messages cm
+                     WHERE cm.community_id = c.id
+                     AND cm.status = 'active'
+                     ORDER BY cm.created_at DESC LIMIT 1) AS last_message_time,
+                    (SELECT COUNT(*) 
+                     FROM community_chat_messages cm
+                     WHERE cm.community_id = c.id
+                       AND cm.status = 'active'
+                       AND cm.id > COALESCE(meta.last_read_message_id, 0)
+                       AND cm.sender_id != :current_user_id
+                     ) AS unread_count
+                FROM communities c
+                JOIN user_communities uc ON c.id = uc.community_id
+                LEFT JOIN user_community_chat_metadata meta ON c.id = meta.community_id AND meta.user_id = :current_user_id
+                WHERE uc.user_id = :current_user_id
+                GROUP BY c.id
+                ORDER BY meta.is_archived ASC, meta.pinned_at DESC, last_message_time DESC, c.name ASC"
+            );
+            
+            $stmt_communities->execute([':current_user_id' => $currentUserId]);
+            $communities = $stmt_communities->fetchAll();
+
+            foreach ($communities as &$community) {
+                if (empty($community['icon_url'])) {
+                    $community['icon_url'] = "https://ui-avatars.com/api/?name=" . urlencode($community['name']) . "&size=100&background=e0e0e0&color=ffffff";
+                }
+                $community['is_favorite'] = (bool)($community['is_favorite'] ?? false);
+                $community['pinned_at'] = $community['pinned_at'] ?? null;
+                $community['is_archived'] = (bool)($community['is_archived'] ?? false);
+                $community['unread_count'] = (int)($community['unread_count'] ?? 0);
+            }
+
+            $response['success'] = true;
+            $response['conversations'] = $communities; // Reutiliza el mismo nombre de array
+
+        // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
+
         } elseif ($action === 'get-total-unread-count') {
             
             // Contar todos los mensajes no leídos dirigidos al usuario actual
@@ -291,154 +386,222 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_count->execute([':current_user_id' => $currentUserId]);
             $totalUnread = (int)$stmt_count->fetchColumn();
 
+            // --- ▼▼▼ INICIO DE NUEVO BLOQUE (CONTAR GRUPOS) ▼▼▼ ---
+            $stmt_group_count = $pdo->prepare(
+                "SELECT c.id, COALESCE(meta.last_read_message_id, 0) as last_read_id
+                 FROM communities c
+                 JOIN user_communities uc ON c.id = uc.community_id
+                 LEFT JOIN user_community_chat_metadata meta ON c.id = meta.community_id AND meta.user_id = :current_user_id
+                 WHERE uc.user_id = :current_user_id AND (meta.is_archived IS NULL OR meta.is_archived = 0)"
+            );
+            $stmt_group_count->execute([':current_user_id' => $currentUserId]);
+            $communities = $stmt_group_count->fetchAll();
+            
+            if (!empty($communities)) {
+                $groupUnreadCount = 0;
+                $sql_count_msgs = "SELECT COUNT(*) FROM community_chat_messages 
+                                   WHERE community_id = ? AND status = 'active' AND id > ? AND sender_id != ?";
+                $stmt_count_msgs = $pdo->prepare($sql_count_msgs);
+                
+                foreach ($communities as $community) {
+                    $stmt_count_msgs->execute([$community['id'], $community['last_read_id'], $currentUserId]);
+                    $groupUnreadCount += (int)$stmt_count_msgs->fetchColumn();
+                }
+                $totalUnread += $groupUnreadCount;
+            }
+            // --- ▲▲▲ FIN DE NUEVO BLOQUE (CONTAR GRUPOS) ▲▲▲ ---
+
             $response['success'] = true;
             $response['total_unread_count'] = $totalUnread;
-        // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
 
         } elseif ($action === 'get-chat-history') {
 
-            $targetUserId = (int)($_POST['target_user_id'] ?? 0);
-            if ($targetUserId === 0) throw new Exception('js.api.invalidAction');
-
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD (GET HISTORY) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE REESTRUCTURACIÓN (get-chat-history) ▼▼▼ ---
             
-            // 1. Comprobar si el EMISOR ($currentUserId) tiene "Nadie".
-            $stmt_sender_privacy = $pdo->prepare("SELECT COALESCE(message_privacy_level, 'all') FROM user_preferences WHERE user_id = ?");
-            $stmt_sender_privacy->execute([$currentUserId]);
-            $senderPrivacy = $stmt_sender_privacy->fetchColumn();
-            $canSenderSend = ($senderPrivacy !== 'none');
-
-            // 2. Comprobar si el EMISOR puede enviar al RECEPTOR (revisa bloqueos y reglas del RECEPTOR)
-            $canSendToReceiver = canSendMessage($pdo, $currentUserId, $targetUserId);
-            
-            // 3. Comprobar si el RECEPTOR podría responder al EMISOR (revisa las reglas del EMISOR)
-            $canReceiverReply = canSendMessage($pdo, $targetUserId, $currentUserId); // Invertido
-
-            // 4. La decisión final
-            $canSendMessage = ($canSenderSend && $canSendToReceiver && $canReceiverReply);
-            
-            // --- ▲▲▲ FIN DE MODIFICACIÓN DE PRIVACIDAD (GET HISTORY) ▲▲▲ ---
-
             $beforeMessageId = (int)($_POST['before_message_id'] ?? 0);
+            $target_id = (int)($_POST['target_id'] ?? 0);
+            
+            if ($target_id === 0) throw new Exception('js.api.invalidAction');
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL GET-HISTORY) ▼▼▼ ---
-            $sql_select =
-                "SELECT 
-                    cm.*,
-                    (SELECT GROUP_CONCAT(cf.public_url SEPARATOR ',') 
-                     FROM chat_message_attachments cma
-                     JOIN chat_files cf ON cma.file_id = cf.id
-                     WHERE cma.message_id = cm.id
-                     ORDER BY cma.sort_order ASC
-                    ) AS attachment_urls,
-                    replied_msg.message_text AS replied_message_text,
-                    replied_user.username AS replied_message_user
-                 FROM chat_messages cm
-                 LEFT JOIN chat_messages AS replied_msg ON cm.reply_to_message_id = replied_msg.id
-                 LEFT JOIN users AS replied_user ON replied_msg.sender_id = replied_user.id
-                 WHERE ((cm.sender_id = :current_user_id AND cm.receiver_id = :target_user_id) 
-                    OR (cm.sender_id = :target_user_id AND cm.receiver_id = :current_user_id))
-                 AND cm.created_at > COALESCE((SELECT deleted_until FROM user_conversation_metadata WHERE user_id = :current_user_id AND conversation_user_id = :target_user_id), '1970-01-01')
-                 ";
-            // --- ▲▲▲ FIN DE MODIFICACIÓN (SQL GET-HISTORY) ▲▲▲ ---
+            if ($chat_type === 'dm') {
+                $targetUserId = $target_id;
+                
+                // 1. Comprobar privacidad de DM
+                $stmt_sender_privacy = $pdo->prepare("SELECT COALESCE(message_privacy_level, 'all') FROM user_preferences WHERE user_id = ?");
+                $stmt_sender_privacy->execute([$currentUserId]);
+                $senderPrivacy = $stmt_sender_privacy->fetchColumn();
+                $canSenderSend = ($senderPrivacy !== 'none');
 
-            if ($beforeMessageId > 0) {
-                $sql_select .= " AND cm.id < :before_message_id";
-            }
+                $canSendToReceiver = canSendMessage($pdo, $currentUserId, $targetUserId);
+                $canReceiverReply = canSendMessage($pdo, $targetUserId, $currentUserId); 
+                $canSendMessage = ($canSenderSend && $canSendToReceiver && $canReceiverReply);
+                
+                // 2. Obtener historial de DM
+                $sql_select =
+                    "SELECT 
+                        cm.*,
+                        (SELECT GROUP_CONCAT(cf.public_url SEPARATOR ',') 
+                         FROM chat_message_attachments cma
+                         JOIN chat_files cf ON cma.file_id = cf.id
+                         WHERE cma.message_id = cm.id
+                         ORDER BY cma.sort_order ASC
+                        ) AS attachment_urls,
+                        replied_msg.message_text AS replied_message_text,
+                        replied_user.username AS replied_message_user
+                     FROM chat_messages cm
+                     LEFT JOIN chat_messages AS replied_msg ON cm.reply_to_message_id = replied_msg.id
+                     LEFT JOIN users AS replied_user ON replied_msg.sender_id = replied_user.id
+                     WHERE ((cm.sender_id = :current_user_id AND cm.receiver_id = :target_user_id) 
+                        OR (cm.sender_id = :target_user_id AND cm.receiver_id = :current_user_id))
+                     AND cm.created_at > COALESCE((SELECT deleted_until FROM user_conversation_metadata WHERE user_id = :current_user_id AND conversation_user_id = :target_user_id), '1970-01-01')
+                     ";
 
-            $sql_select .= "
-                 GROUP BY cm.id
-                 ORDER BY cm.created_at DESC
-                 LIMIT " . CHAT_PAGE_SIZE;
+                if ($beforeMessageId > 0) {
+                    $sql_select .= " AND cm.id < :before_message_id";
+                }
 
-            $stmt_msg = $pdo->prepare($sql_select);
-            $stmt_msg->bindValue(':current_user_id', $currentUserId, PDO::PARAM_INT);
-            $stmt_msg->bindValue(':target_user_id', $targetUserId, PDO::PARAM_INT);
-            if ($beforeMessageId > 0) {
-                $stmt_msg->bindValue(':before_message_id', $beforeMessageId, PDO::PARAM_INT);
-            }
-            $stmt_msg->execute();
-            $messages = $stmt_msg->fetchAll();
+                $sql_select .= "
+                     GROUP BY cm.id
+                     ORDER BY cm.created_at DESC
+                     LIMIT " . CHAT_PAGE_SIZE;
 
-            if ($beforeMessageId === 0) {
-                $stmt_read = $pdo->prepare(
-                    "UPDATE chat_messages SET is_read = 1 
-                     WHERE sender_id = :target_user_id 
-                       AND receiver_id = :current_user_id 
-                       AND is_read = 0"
+                $stmt_msg = $pdo->prepare($sql_select);
+                $stmt_msg->bindValue(':current_user_id', $currentUserId, PDO::PARAM_INT);
+                $stmt_msg->bindValue(':target_user_id', $targetUserId, PDO::PARAM_INT);
+                if ($beforeMessageId > 0) {
+                    $stmt_msg->bindValue(':before_message_id', $beforeMessageId, PDO::PARAM_INT);
+                }
+                $stmt_msg->execute();
+                $messages = $stmt_msg->fetchAll();
+
+                // 3. Marcar como leídos (solo para DMs)
+                if ($beforeMessageId === 0) {
+                    $stmt_read = $pdo->prepare(
+                        "UPDATE chat_messages SET is_read = 1 
+                         WHERE sender_id = :target_user_id 
+                           AND receiver_id = :current_user_id 
+                           AND is_read = 0"
+                    );
+                    $stmt_read->execute([
+                        ':target_user_id' => $targetUserId,
+                        ':current_user_id' => $currentUserId
+                    ]);
+                }
+
+                // 4. Recalcular conteo de DMs (como antes)
+                $stmt_total_count = $pdo->prepare(
+                    "SELECT COUNT(cm.id) 
+                     FROM chat_messages cm
+                     LEFT JOIN user_conversation_metadata ucm ON cm.sender_id = ucm.conversation_user_id AND ucm.user_id = :current_user_id
+                     WHERE cm.receiver_id = :current_user_id 
+                       AND cm.is_read = 0 
+                       AND cm.status = 'active'
+                       AND cm.created_at > COALESCE(ucm.deleted_until, '1970-01-01')"
                 );
-                $stmt_read->execute([
-                    ':target_user_id' => $targetUserId,
-                    ':current_user_id' => $currentUserId
-                ]);
-            }
+                $stmt_total_count->execute([':current_user_id' => $currentUserId]);
+                $totalUnread = (int)$stmt_total_count->fetchColumn();
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (RECUENTO TOTAL) ▼▼▼ ---
-            // Recalcular el conteo total de mensajes no leídos
-            $stmt_total_count = $pdo->prepare(
-                "SELECT COUNT(cm.id) 
-                 FROM chat_messages cm
-                 LEFT JOIN user_conversation_metadata ucm ON cm.sender_id = ucm.conversation_user_id AND ucm.user_id = :current_user_id
-                 WHERE cm.receiver_id = :current_user_id 
-                   AND cm.is_read = 0 
-                   AND cm.status = 'active'
-                   AND cm.created_at > COALESCE(ucm.deleted_until, '1970-01-01')"
-            );
-            $stmt_total_count->execute([':current_user_id' => $currentUserId]);
-            $totalUnread = (int)$stmt_total_count->fetchColumn();
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                $response['can_send_message'] = $canSendMessage;
+                $response['new_total_unread_count'] = $totalUnread; 
+            
+            } elseif ($chat_type === 'community') {
+                $communityId = $target_id;
+
+                // 1. Comprobar si el usuario es miembro
+                $stmt_check_member = $pdo->prepare("SELECT 1 FROM user_communities WHERE user_id = ? AND community_id = ?");
+                $stmt_check_member->execute([$currentUserId, $communityId]);
+                if (!$stmt_check_member->fetch()) {
+                    throw new Exception('js.api.errorServer'); // No es miembro
+                }
+                $canSendMessage = true; // Si es miembro, puede enviar
+
+                // 2. Obtener historial de Comunidad
+                $sql_select =
+                    "SELECT 
+                        cm.*,
+                        u.username AS sender_username, -- Necesitamos el nombre del remitente
+                        u.profile_image_url AS sender_avatar, -- y su avatar
+                        u.role AS sender_role, -- y su rol
+                        (SELECT GROUP_CONCAT(cf.public_url SEPARATOR ',') 
+                         FROM community_chat_message_attachments cma -- Usar tabla de adjuntos de comunidad
+                         JOIN chat_files cf ON cma.file_id = cf.id
+                         WHERE cma.message_id = cm.id
+                         ORDER BY cma.sort_order ASC
+                        ) AS attachment_urls,
+                        replied_msg.message_text AS replied_message_text,
+                        replied_user.username AS replied_message_user
+                     FROM community_chat_messages cm -- Usar tabla de mensajes de comunidad
+                     JOIN users u ON cm.sender_id = u.id -- Unir con users para datos del remitente
+                     LEFT JOIN community_chat_messages AS replied_msg ON cm.reply_to_message_id = replied_msg.id
+                     LEFT JOIN users AS replied_user ON replied_msg.sender_id = replied_user.id
+                     WHERE cm.community_id = :community_id
+                     ";
+
+                if ($beforeMessageId > 0) {
+                    $sql_select .= " AND cm.id < :before_message_id";
+                }
+
+                $sql_select .= "
+                     GROUP BY cm.id
+                     ORDER BY cm.created_at DESC
+                     LIMIT " . CHAT_PAGE_SIZE;
+                
+                $stmt_msg = $pdo->prepare($sql_select);
+                $stmt_msg->bindValue(':community_id', $communityId, PDO::PARAM_INT);
+                if ($beforeMessageId > 0) {
+                    $stmt_msg->bindValue(':before_message_id', $beforeMessageId, PDO::PARAM_INT);
+                }
+                $stmt_msg->execute();
+                $messages = $stmt_msg->fetchAll();
+
+                // 3. Marcar como leído (para Comunidades)
+                if ($beforeMessageId === 0 && !empty($messages)) {
+                    $newestMessageId = $messages[0]['id']; // El primer mensaje (más reciente)
+                    
+                    $stmt_read = $pdo->prepare(
+                        "INSERT INTO user_community_chat_metadata (user_id, community_id, last_read_message_id) 
+                         VALUES (:user_id, :community_id, :last_id)
+                         ON DUPLICATE KEY UPDATE last_read_message_id = GREATEST(COALESCE(last_read_message_id, 0), :last_id)"
+                    );
+                    $stmt_read->execute([
+                        ':user_id' => $currentUserId,
+                        ':community_id' => $communityId,
+                        ':last_id' => $newestMessageId
+                    ]);
+                }
+                
+                // 4. Recalcular conteo (sin cambios, ya se hace en get-total-unread-count)
+                $response['can_send_message'] = $canSendMessage;
+            }
 
             $response['success'] = true;
             $response['messages'] = $messages;
             $response['message_count'] = count($messages);
             $response['limit'] = CHAT_PAGE_SIZE;
-            $response['can_send_message'] = $canSendMessage;
-            $response['new_total_unread_count'] = $totalUnread; // <-- NUEVA LÍNEA
+            
+            // --- ▲▲▲ FIN DE REESTRUCTURACIÓN (get-chat-history) ▲▲▲ ---
 
         } elseif ($action === 'send-message') {
 
-            $receiverId = (int)($_POST['receiver_id'] ?? 0);
+            // --- ▼▼▼ INICIO DE REESTRUCTURACIÓN (send-message) ▼▼▼ ---
+            
+            $target_id = (int)($_POST['target_id'] ?? 0);
             $messageText = trim($_POST['message_text'] ?? '');
             $replyToMessageId = (int)($_POST['reply_to_message_id'] ?? 0);
             $dbReplyToId = ($replyToMessageId > 0) ? $replyToMessageId : null;
             $uploadedFiles = $_FILES['attachments'] ?? [];
             $fileIds = [];
 
-            if ($receiverId === 0) {
+            if ($target_id === 0) {
                 throw new Exception('js.api.invalidAction');
             }
-            
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD (SEND-MESSAGE) ▼▼▼ ---
-            
-            // 1. Comprobar si el EMISOR ($currentUserId) tiene "Nadie".
-            $stmt_sender_privacy = $pdo->prepare("SELECT COALESCE(message_privacy_level, 'all') FROM user_preferences WHERE user_id = ?");
-            $stmt_sender_privacy->execute([$currentUserId]);
-            $senderPrivacy = $stmt_sender_privacy->fetchColumn();
-            
-            if ($senderPrivacy === 'none') {
-                throw new Exception('js.chat.errorPrivacySenderBlocked'); 
-            }
-
-            // 2. Comprobar si el EMISOR puede enviar al RECEPTOR (revisa bloqueos y reglas del RECEPTOR)
-            $canSenderSend = canSendMessage($pdo, $currentUserId, $receiverId);
-            if (!$canSenderSend) {
-                throw new Exception('js.chat.errorBlocked');
-            }
-
-            // 3. Comprobar si el RECEPTOR podría responder al EMISOR (revisa las reglas del EMISOR)
-            $canReceiverReply = canSendMessage($pdo, $receiverId, $currentUserId); // Invertido
-            if (!$canReceiverReply) {
-                throw new Exception('js.chat.errorPrivacyMutualBlocked');
-            }
-            
-            // --- ▲▲▲ FIN DE MODIFICACIÓN DE PRIVACIDAD (SEND-MESSAGE) ▲▲▲ ---
-
             if (empty($messageText) && (empty($uploadedFiles['name'][0]) || $uploadedFiles['error'][0] !== UPLOAD_ERR_OK)) {
                 throw new Exception('js.publication.errorEmpty'); // Mensaje vacío
             }
 
             $pdo->beginTransaction();
 
+            // Lógica de subida de archivos (común para ambos tipos de chat)
             if (!empty($uploadedFiles['name'][0]) && $uploadedFiles['error'][0] === UPLOAD_ERR_OK) {
                 $fileCount = count($uploadedFiles['name']);
                 if ($fileCount > $MAX_CHAT_FILES) {
@@ -451,6 +614,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception('js.api.errorServer');
                     }
                 }
+                // Reutilizamos la tabla chat_files para TODOS los adjuntos
                 $stmt_insert_file = $pdo->prepare(
                     "INSERT INTO chat_files (uploader_id, file_name_system, file_name_original, public_url, file_type, file_size)
                      VALUES (?, ?, ?, ?, ?, ?)"
@@ -477,79 +641,158 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception('js.settings.errorAvatarSave');
                     }
                     $stmt_insert_file->execute([
-                        $currentUserId,
-                        $systemName,
-                        $originalName,
-                        $attachmentUrl,
-                        $mimeType,
-                        $fileSize
+                        $currentUserId, $systemName, $originalName, $attachmentUrl, $mimeType, $fileSize
                     ]);
                     $fileIds[] = $pdo->lastInsertId();
                 }
             }
+            
+            // Lógica de inserción de mensaje
+            if ($chat_type === 'dm') {
+                $receiverId = $target_id;
 
-            $stmt_insert = $pdo->prepare(
-                "INSERT INTO chat_messages (sender_id, receiver_id, message_text, reply_to_message_id) 
-                 VALUES (?, ?, ?, ?)"
-            );
-            $stmt_insert->execute([$currentUserId, $receiverId, $messageText, $dbReplyToId]);
-            $newMessageId = $pdo->lastInsertId();
-
-            if (!empty($fileIds)) {
-                $stmt_link_file = $pdo->prepare(
-                    "INSERT INTO chat_message_attachments (message_id, file_id, sort_order)
-                     VALUES (?, ?, ?)"
+                // 1. Comprobar privacidad de DM
+                checkMessagePrivacy($pdo, $currentUserId, $receiverId);
+                
+                // 2. Insertar mensaje de DM
+                $stmt_insert = $pdo->prepare(
+                    "INSERT INTO chat_messages (sender_id, receiver_id, message_text, reply_to_message_id) 
+                     VALUES (?, ?, ?, ?)"
                 );
-                foreach ($fileIds as $index => $fileId) {
-                    $stmt_link_file->execute([$newMessageId, $fileId, $index]);
+                $stmt_insert->execute([$currentUserId, $receiverId, $messageText, $dbReplyToId]);
+                $newMessageId = $pdo->lastInsertId();
+
+                // 3. Vincular adjuntos de DM
+                if (!empty($fileIds)) {
+                    $stmt_link_file = $pdo->prepare(
+                        "INSERT INTO chat_message_attachments (message_id, file_id, sort_order)
+                         VALUES (?, ?, ?)"
+                    );
+                    foreach ($fileIds as $index => $fileId) {
+                        $stmt_link_file->execute([$newMessageId, $fileId, $index]);
+                    }
                 }
+                
+                // 4. Obtener el mensaje de DM creado
+                $stmt_get = $pdo->prepare(
+                    "SELECT 
+                        cm.*,
+                        (SELECT GROUP_CONCAT(cf.public_url SEPARATOR ',') 
+                         FROM chat_message_attachments cma
+                         JOIN chat_files cf ON cma.file_id = cf.id
+                         WHERE cma.message_id = cm.id
+                         ORDER BY cma.sort_order ASC
+                        ) AS attachment_urls,
+                        replied_msg.message_text AS replied_message_text,
+                        replied_user.username AS replied_message_user
+                     FROM chat_messages cm
+                     LEFT JOIN chat_messages AS replied_msg ON cm.reply_to_message_id = replied_msg.id
+                     LEFT JOIN users AS replied_user ON replied_msg.sender_id = replied_user.id
+                     WHERE cm.id = ?
+                     GROUP BY cm.id"
+                );
+                $stmt_get->execute([$newMessageId]);
+                $newMessage = $stmt_get->fetch();
+                
+                // 5. Desarchivar DM
+                $stmt_unarchive = $pdo->prepare(
+                    "UPDATE user_conversation_metadata 
+                     SET is_archived = 0 
+                     WHERE (user_id = :user1 AND conversation_user_id = :user2) 
+                        OR (user_id = :user2 AND conversation_user_id = :user1)"
+                );
+                $stmt_unarchive->execute([':user1' => $currentUserId, ':user2' => $receiverId]);
+                
+                // 6. Notificar al usuario (DM)
+                $payload = [
+                    'type' => 'new_chat_message',
+                    'payload' => $newMessage
+                ];
+                notifyUser($receiverId, $payload);
+            
+            } elseif ($chat_type === 'community') {
+                $communityId = $target_id;
+                
+                // 1. Comprobar si el usuario es miembro
+                $stmt_check_member = $pdo->prepare("SELECT 1 FROM user_communities WHERE user_id = ? AND community_id = ?");
+                $stmt_check_member->execute([$currentUserId, $communityId]);
+                if (!$stmt_check_member->fetch()) {
+                    throw new Exception('js.api.errorServer'); // No es miembro
+                }
+
+                // 2. Insertar mensaje de Comunidad
+                $stmt_insert = $pdo->prepare(
+                    "INSERT INTO community_chat_messages (community_id, sender_id, message_text, reply_to_message_id) 
+                     VALUES (?, ?, ?, ?)"
+                );
+                $stmt_insert->execute([$communityId, $currentUserId, $messageText, $dbReplyToId]);
+                $newMessageId = $pdo->lastInsertId();
+
+                // 3. Vincular adjuntos de Comunidad
+                if (!empty($fileIds)) {
+                    $stmt_link_file = $pdo->prepare(
+                        "INSERT INTO community_chat_message_attachments (message_id, file_id, sort_order)
+                         VALUES (?, ?, ?)"
+                    );
+                    foreach ($fileIds as $index => $fileId) {
+                        $stmt_link_file->execute([$newMessageId, $fileId, $index]);
+                    }
+                }
+                
+                // 4. Obtener el mensaje de Comunidad creado
+                $stmt_get = $pdo->prepare(
+                    "SELECT 
+                        cm.*,
+                        u.username AS sender_username,
+                        u.profile_image_url AS sender_avatar,
+                        u.role AS sender_role,
+                        (SELECT GROUP_CONCAT(cf.public_url SEPARATOR ',') 
+                         FROM community_chat_message_attachments cma
+                         JOIN chat_files cf ON cma.file_id = cf.id
+                         WHERE cma.message_id = cm.id
+                         ORDER BY cma.sort_order ASC
+                        ) AS attachment_urls,
+                        replied_msg.message_text AS replied_message_text,
+                        replied_user.username AS replied_message_user
+                     FROM community_chat_messages cm
+                     JOIN users u ON cm.sender_id = u.id
+                     LEFT JOIN community_chat_messages AS replied_msg ON cm.reply_to_message_id = replied_msg.id
+                     LEFT JOIN users AS replied_user ON replied_msg.sender_id = replied_user.id
+                     WHERE cm.id = ?
+                     GROUP BY cm.id"
+                );
+                $stmt_get->execute([$newMessageId]);
+                $newMessage = $stmt_get->fetch();
+                
+                // 5. Desarchivar chat de Comunidad
+                $stmt_unarchive = $pdo->prepare(
+                    "UPDATE user_community_chat_metadata 
+                     SET is_archived = 0 
+                     WHERE user_id = :user_id AND community_id = :community_id"
+                );
+                $stmt_unarchive->execute([':user_id' => $currentUserId, ':community_id' => $communityId]);
+                
+                // 6. Notificar a la comunidad
+                $payload = [
+                    'type' => 'new_community_message', // Nuevo tipo de payload
+                    'payload' => $newMessage
+                ];
+                notifyCommunity($communityId, $currentUserId, $payload);
             }
             
-            $stmt_get = $pdo->prepare(
-                "SELECT 
-                    cm.*,
-                    (SELECT GROUP_CONCAT(cf.public_url SEPARATOR ',') 
-                     FROM chat_message_attachments cma
-                     JOIN chat_files cf ON cma.file_id = cf.id
-                     WHERE cma.message_id = cm.id
-                     ORDER BY cma.sort_order ASC
-                    ) AS attachment_urls,
-                    replied_msg.message_text AS replied_message_text,
-                    replied_user.username AS replied_message_user
-                 FROM chat_messages cm
-                 LEFT JOIN chat_messages AS replied_msg ON cm.reply_to_message_id = replied_msg.id
-                 LEFT JOIN users AS replied_user ON replied_msg.sender_id = replied_user.id
-                 WHERE cm.id = ?
-                 GROUP BY cm.id"
-            );
-            $stmt_get->execute([$newMessageId]);
-            $newMessage = $stmt_get->fetch();
-            
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (DESARCHIVAR AL ENVIAR) ▼▼▼ ---
-            $stmt_unarchive = $pdo->prepare(
-                "UPDATE user_conversation_metadata 
-                 SET is_archived = 0 
-                 WHERE (user_id = :user1 AND conversation_user_id = :user2) 
-                    OR (user_id = :user2 AND conversation_user_id = :user1)"
-            );
-            $stmt_unarchive->execute([':user1' => $currentUserId, ':user2' => $receiverId]);
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
-
             $pdo->commit();
-
-            $payload = [
-                'type' => 'new_chat_message',
-                'payload' => $newMessage
-            ];
-
-            notifyUser($receiverId, $payload);
 
             $response['success'] = true;
             $response['message_sent'] = $newMessage;
+            
+            // --- ▲▲▲ FIN DE REESTRUCTURACIÓN (send-message) ▲▲▲ ---
 
         } elseif ($action === 'delete-message') {
-
+            
+            // Esta acción solo soporta DMs por ahora.
+            // Para soportar chats de comunidad, necesitarías otro 'chat_type'
+            // y buscar/actualizar en `community_chat_messages`.
+            
             $messageId = (int)($_POST['message_id'] ?? 0);
             if ($messageId === 0) {
                 throw new Exception('js.api.invalidAction');
@@ -591,7 +834,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
             $response['message'] = 'js.chat.successDeleted';
         
-        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN (delete-chat) ▼▼▼ ---
         } elseif ($action === 'delete-chat') {
             
             $targetUserId = (int)($_POST['target_user_id'] ?? 0);
@@ -611,10 +853,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $response['success'] = true;
             $response['message'] = 'js.chat.chatDeleted';
-        // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
         
-        // --- ▼▼▼ INICIO DE NUEVAS ACCIONES (FAVORITE Y PIN) ▼▼▼ ---
-
         } elseif ($action === 'toggle-favorite') {
             $targetUserId = (int)($_POST['target_user_id'] ?? 0);
             if ($targetUserId === 0) {
@@ -689,7 +928,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['new_is_pinned'] = true;
             }
             
-        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN (toggle-archive-chat) ▼▼▼ ---
         } elseif ($action === 'toggle-archive-chat') {
             $targetUserId = (int)($_POST['target_user_id'] ?? 0);
             if ($targetUserId === 0) {
@@ -718,9 +956,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
             $response['message'] = $newIsArchived ? 'js.chat.archived' : 'js.chat.unarchived';
             $response['new_is_archived'] = $newIsArchived;
-        // --- ▲▲▲ FIN DE NUEVA ACCIÓN (toggle-archive-chat) ▲▲▲ ---
-            
-        // --- ▲▲▲ FIN DE NUEVAS ACCIONES ▲▲▲ ---
         
         }
     } catch (Exception $e) {

@@ -13,8 +13,9 @@
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (CORRECCIÓN DE 'LAST SEEN') ▼▼▼ ---
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGE 99+) ▼▼▼ ---
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (PLACEHOLDER DINÁMICO) ▼▼▼ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (CHAT DE COMUNIDAD) ▼▼▼ ---
 
-import { callChatApi, callFriendApi } from '../services/api-service.js';
+import { callChatApi, callFriendApi, callCommunityApi } from '../services/api-service.js'; // <-- callCommunityApi AÑADIDO
 import { getTranslation } from '../services/i18n-manager.js';
 import { showAlert } from '../services/alert-manager.js';
 // --- ▼▼▼ INICIO DE IMPORTACIONES AÑADIDAS ▼▼▼ ---
@@ -23,7 +24,7 @@ import { deactivateAllModules } from '../app/main-controller.js';
 // --- ▲▲▲ FIN DE IMPORTACIONES AÑADIDAS ▼▼▼ ---
 
 let currentChatUserId = null;
-let friendCache = [];
+let friendCache = []; // <-- AHORA SOLO PARA DMs
 const defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
 let selectedAttachments = [];
@@ -38,8 +39,13 @@ let currentReplyMessageId = null; // Almacena el ID del mensaje al que se está 
 let typingTimer;
 let isTyping = false;
 let chatPopperInstance = null; // Instancia para el popover de contexto del chat
-let currentChatFilter = 'all'; // Estado del filtro: 'all', 'favorites', 'unread', 'archived'
+let currentChatFilter = 'all'; // Estado del filtro: 'all', 'favorites', 'unread', 'archived', 'communities'
 let currentUnreadMessageCount = 0; // <-- AÑADIDO PARA EL BADGE
+
+let communityCache = []; // <-- NUEVO CACHÉ PARA COMUNIDADES
+let currentChatTargetId = null; // ID (de usuario o comunidad)
+let currentChatType = 'dm'; // 'dm' o 'community'
+let myCommunityIds = []; // IDs de las comunidades del usuario (para el WebSocket)
 // --- ▲▲▲ FIN DE NUEVAS VARIABLES GLOBALES ▼▼▼ ---
 
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (SONIDO DE NOTIFICACIÓN) ▼▼▼ ---
@@ -192,10 +198,11 @@ export async function fetchInitialUnreadCount() {
 // --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (renderConversationList) ▼▼▼ ---
 /**
  * Renderiza la lista de conversaciones en el panel izquierdo.
- * @param {Array} conversations - La lista de conversaciones a renderizar.
+ * @param {Array} conversations - La lista de conversaciones (DMs o Comunidades).
+ * @param {string} type - 'dm' o 'community'.
  */
-function renderConversationList(conversations) {
-    console.log(`%c[RENDER] renderConversationList() -> Renderizando ${conversations.length} conversaciones.`, 'color: purple; font-weight: bold;');
+function renderConversationList(conversations, type = 'dm') {
+    console.log(`%c[RENDER] renderConversationList() -> Renderizando ${conversations.length} conversaciones de tipo [${type}].`, 'color: purple; font-weight: bold;');
     
     const listContainer = document.getElementById('chat-conversation-list');
     const loader = document.getElementById('chat-list-loader');
@@ -225,6 +232,7 @@ function renderConversationList(conversations) {
         } else if (currentChatFilter !== 'all') {
             // Causa: Filtro de insignia activo
             switch (currentChatFilter) {
+                // ... (casos 'favorites', 'unread', 'archived' sin cambios) ...
                 case 'favorites':
                     emptyIcon.textContent = 'star_outline';
                     emptyText.textContent = getTranslation('chat.empty.favorites', 'No tienes chats en favoritos.');
@@ -240,6 +248,13 @@ function renderConversationList(conversations) {
                     emptyText.textContent = getTranslation('chat.empty.archived', 'No tienes chats archivados.');
                     emptyText.dataset.i18n = 'chat.empty.archived';
                     break;
+                // --- ▼▼▼ NUEVO CASO AÑADIDO ▼▼▼ ---
+                case 'communities':
+                    emptyIcon.textContent = 'groups';
+                    emptyText.textContent = getTranslation('chat.empty.communities', 'No estás en ningún chat de comunidad.');
+                    emptyText.dataset.i18n = 'chat.empty.communities';
+                    break;
+                // --- ▲▲▲ FIN DE NUEVO CASO ▲▲▲ ---
                 default:
                     // Fallback por si acaso
                     emptyIcon.textContent = 'chat';
@@ -265,31 +280,28 @@ function renderConversationList(conversations) {
     listContainer.innerHTML = ''; // Limpiar
     let html = '';
 
-    conversations.forEach(friend => {
-        const avatar = friend.profile_image_url || defaultAvatar;
-        const statusClass = friend.is_online ? 'online' : 'offline';
-        const timestamp = friend.last_message_time ? formatTime(friend.last_message_time) : '';
+    conversations.forEach(convo => {
+        let name, avatar, role, statusClass, timestamp, snippet, unreadBadge, chatUrl, isBlockedClass, indicatorsHtml, dataAttributes;
         
-        let snippet = '...';
-        if (friend.last_message === '[Imagen]') {
+        const isPinned = convo.pinned_at ? 'true' : 'false';
+        const isFavorite = convo.is_favorite ? 'true' : 'false';
+        const isArchived = convo.is_archived ? 'true' : 'false';
+        
+        timestamp = convo.last_message_time ? formatTime(convo.last_message_time) : '';
+        const unreadCount = parseInt(convo.unread_count, 10);
+        unreadBadge = unreadCount > 0 ? `<span class="chat-item-unread-badge">${unreadCount}</span>` : '';
+
+        if (convo.last_message === '[Imagen]') {
             snippet = `<span data-i18n="chat.snippet.image">${getTranslation('chat.snippet.image', '[Imagen]')}</span>`;
-        } else if (friend.last_message === 'Se eliminó este mensaje') {
+        } else if (convo.last_message === 'Se eliminó este mensaje') {
             snippet = `<i data-i18n="chat.snippet.deleted">${getTranslation('chat.snippet.deleted', '[Mensaje eliminado]')}</i>`;
-        } else if (friend.last_message) {
-            snippet = escapeHTML(friend.last_message);
+        } else if (convo.last_message) {
+            snippet = escapeHTML(convo.last_message);
+        } else {
+            snippet = '...';
         }
         
-        const unreadCount = parseInt(friend.unread_count, 10);
-        const unreadBadge = unreadCount > 0 ? `<span class="chat-item-unread-badge">${unreadCount}</span>` : '';
-        
-        const chatUrl = `${window.projectBasePath}/messages/${friend.uuid}`; 
-        const isBlockedClass = friend.is_blocked_globally ? 'is-blocked' : '';
-
-        const isPinned = friend.pinned_at ? 'true' : 'false';
-        const isFavorite = friend.is_favorite ? 'true' : 'false';
-        const isArchived = friend.is_archived ? 'true' : 'false'; 
-
-        const indicatorsHtml = `
+        indicatorsHtml = `
             <div class="chat-item-indicators">
                 <span class="chat-item-indicator favorite" style="display: ${isFavorite === 'true' ? 'inline-block' : 'none'};">
                     <span class="material-symbols-rounded">star</span>
@@ -300,63 +312,130 @@ function renderConversationList(conversations) {
             </div>
         `;
 
-        html += `
-            <a class="chat-conversation-item ${isBlockedClass}" 
-               href="${chatUrl}"
-               data-nav-js="true"
-               data-user-id="${friend.friend_id}" 
-               data-username="${escapeHTML(friend.username)}" 
+        if (type === 'dm') {
+            name = convo.username;
+            avatar = convo.profile_image_url || defaultAvatar;
+            role = convo.role;
+            statusClass = convo.is_online ? 'online' : 'offline';
+            chatUrl = `${window.projectBasePath}/messages/${convo.uuid}`;
+            isBlockedClass = convo.is_blocked_globally ? 'is-blocked' : '';
+            
+            dataAttributes = `
+               data-type="dm"
+               data-target-id="${convo.friend_id}" 
+               data-username="${escapeHTML(name)}" 
                data-avatar="${escapeHTML(avatar)}" 
-               data-role="${escapeHTML(friend.role)}"
-               data-uuid="${friend.uuid}"
-               data-is-blocked-by-me="${friend.is_blocked_by_me}"
-               data-is-blocked-globally="${friend.is_blocked_globally}"
-               data-is-favorite="${isFavorite}"
-               data-pinned-at="${friend.pinned_at || ''}"
-               data-is-archived="${isArchived}"
-               data-last-seen="${friend.last_seen || ''}">
-               
-                <div class="chat-item-avatar" data-role="${escapeHTML(friend.role)}">
-                    <img src="${escapeHTML(avatar)}" alt="${escapeHTML(friend.username)}">
-                    <span class="chat-item-status ${statusClass}" id="chat-status-dot-${friend.friend_id}"></span>
-                </div>
-                <div class="chat-item-info">
-                    <div class="chat-item-info-header">
-                        <span class="chat-item-username">${escapeHTML(friend.username)}</span>
-                        <span class="chat-item-timestamp">${timestamp}</span>
+               data-role="${escapeHTML(role)}"
+               data-uuid="${convo.uuid}"
+               data-is-blocked-by-me="${convo.is_blocked_by_me}"
+               data-is-blocked-globally="${convo.is_blocked_globally}"
+               data-last-seen="${convo.last_seen || ''}"
+            `;
+            
+            html += `
+                <a class="chat-conversation-item ${isBlockedClass}" 
+                   href="${chatUrl}"
+                   data-nav-js="true"
+                   ${dataAttributes}
+                   data-is-favorite="${isFavorite}"
+                   data-pinned-at="${convo.pinned_at || ''}"
+                   data-is-archived="${isArchived}">
+                   
+                    <div class="chat-item-avatar" data-role="${escapeHTML(role)}">
+                        <img src="${escapeHTML(avatar)}" alt="${escapeHTML(name)}">
+                        <span class="chat-item-status ${statusClass}" id="chat-status-dot-${convo.friend_id}"></span>
                     </div>
-                    <div class="chat-item-snippet-wrapper">
-                        <span class="chat-item-snippet">${snippet}</span>
-                        ${indicatorsHtml}
-                        ${unreadBadge}
+                    <div class="chat-item-info">
+                        <div class="chat-item-info-header">
+                            <span class="chat-item-username">${escapeHTML(name)}</span>
+                            <span class="chat-item-timestamp">${timestamp}</span>
+                        </div>
+                        <div class="chat-item-snippet-wrapper">
+                            <span class="chat-item-snippet">${snippet}</span>
+                            ${indicatorsHtml}
+                            ${unreadBadge}
+                        </div>
                     </div>
-                </div>
 
-                <div class="chat-item-actions">
-                    <button type="button" class="chat-item-action-btn" data-action="toggle-chat-context-menu" title="Más opciones">
-                        <span class="material-symbols-rounded">more_vert</span>
-                    </button>
-                </div>
-            </a>
-        `;
+                    <div class="chat-item-actions">
+                        <button type="button" class="chat-item-action-btn" data-action="toggle-chat-context-menu" title="Más opciones">
+                            <span class="material-symbols-rounded">more_vert</span>
+                        </button>
+                    </div>
+                </a>
+            `;
+            
+        } else { // type === 'community'
+            name = convo.name;
+            avatar = convo.icon_url || defaultAvatar;
+            role = 'community'; // Rol especial para estilo
+            statusClass = 'online'; // Los grupos siempre están "online"
+            chatUrl = `${window.projectBasePath}/messages/community/${convo.uuid}`; // Nueva URL
+            isBlockedClass = ''; // Los grupos no se bloquean
+            
+            dataAttributes = `
+               data-type="community"
+               data-target-id="${convo.id}" 
+               data-name="${escapeHTML(name)}" 
+               data-avatar="${escapeHTML(avatar)}" 
+               data-role="${role}"
+               data-uuid="${convo.uuid}"
+            `;
+            
+            html += `
+                <a class="chat-conversation-item ${isBlockedClass}" 
+                   href="${chatUrl}"
+                   data-nav-js="true"
+                   ${dataAttributes}
+                   data-is-favorite="${isFavorite}"
+                   data-pinned-at="${convo.pinned_at || ''}"
+                   data-is-archived="${isArchived}">
+                   
+                    <div class="chat-item-avatar" data-role="${role}" style="border-radius: 8px;">
+                        <img src="${escapeHTML(avatar)}" alt="${escapeHTML(name)}" style="border-radius: 8px;">
+                    </div>
+                    <div class="chat-item-info">
+                        <div class="chat-item-info-header">
+                            <span class="chat-item-username">${escapeHTML(name)}</span>
+                            <span class="chat-item-timestamp">${timestamp}</span>
+                        </div>
+                        <div class="chat-item-snippet-wrapper">
+                            <span class="chat-item-snippet">${snippet}</span>
+                            ${indicatorsHtml}
+                            ${unreadBadge}
+                        </div>
+                    </div>
+
+                    <div class="chat-item-actions">
+                        <button type="button" class="chat-item-action-btn" data-action="toggle-chat-context-menu" title="Más opciones">
+                            <span class="material-symbols-rounded">more_vert</span>
+                        </button>
+                    </div>
+                </a>
+            `;
+        }
     });
     listContainer.innerHTML = html;
     console.log("[RENDER] Renderización completada.");
 }
 // --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (renderConversationList) ---
 
-// --- (filterConversationList sin cambios) ---
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (filterConversationList) ▼▼▼ ---
 function filterConversationList(query) {
     console.log(`%c[FILTER] filterConversationList() -> Query: "${query}", Filtro: "${currentChatFilter}"`, 'color: orange; font-weight: bold;');
     
     query = query.toLowerCase().trim();
     
+    let sourceCache = (currentChatFilter === 'communities') ? communityCache : friendCache;
+    let nameProperty = (currentChatFilter === 'communities') ? 'name' : 'username';
+    let renderType = (currentChatFilter === 'communities') ? 'community' : 'dm';
+
     let filteredBySearch = [];
     if (!query) {
-        filteredBySearch = [...friendCache]; 
+        filteredBySearch = [...sourceCache]; 
     } else {
-        filteredBySearch = friendCache.filter(friend => 
-            friend.username.toLowerCase().includes(query)
+        filteredBySearch = sourceCache.filter(item => 
+            item[nameProperty].toLowerCase().includes(query)
         );
     }
     console.log(`[FILTER] ${filteredBySearch.length} chats después del filtro de búsqueda.`);
@@ -373,7 +452,7 @@ function filterConversationList(query) {
         if (isArchived) {
             return false;
         }
-
+        
         if (currentChatFilter === 'favorites') {
             return convo.is_favorite === true;
         }
@@ -381,6 +460,7 @@ function filterConversationList(query) {
             return parseInt(convo.unread_count, 10) > 0;
         }
         
+        // Si el filtro es 'all' o 'communities', muestra todo lo que no esté archivado
         return true; 
     });
     
@@ -389,57 +469,86 @@ function filterConversationList(query) {
     console.log(`[FILTER] Ordenación (por API) completada. Se mostrarán ${conversationsToShow.length} chats.`);
 
     console.log("[FILTER] Llamando a renderConversationList...");
-    renderConversationList(conversationsToShow);
+    renderConversationList(conversationsToShow, renderType);
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (filterConversationList) ---
 
-// --- (loadConversations sin cambios) ---
-async function loadConversations() {
-    console.groupCollapsed("%c[LOAD CONVERSATIONS] 🔄 loadConversations() iniciada...", "color: blue; font-weight: bold;");
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (loadConversations) ▼▼▼ ---
+async function loadConversations(filter = 'all') {
+    console.groupCollapsed(`%c[LOAD CONVERSATIONS] 🔄 loadConversations(filter: ${filter}) iniciada...`, "color: blue; font-weight: bold;");
+    
+    // Guardar el filtro actual
+    currentChatFilter = filter;
+    
+    // Actualizar la UI de los filtros
+    document.querySelectorAll('#chat-sidebar-filters .chat-filter-badge').forEach(badge => {
+        badge.classList.toggle('active', badge.dataset.filter === filter);
+    });
+    
+    const listContainer = document.getElementById('chat-conversation-list');
+    const loader = document.getElementById('chat-list-loader');
+    const emptyEl = document.getElementById('chat-list-empty');
+    
+    if (loader) loader.style.display = 'flex';
+    if (emptyEl) emptyEl.style.display = 'none';
+    if (listContainer) listContainer.innerHTML = '';
+    
+    let action = 'get-conversations'; // DMs
+    let renderType = 'dm';
+    
+    if (filter === 'communities') {
+        action = 'get-community-conversations';
+        renderType = 'community';
+    }
     
     try {
         const formData = new FormData();
-        formData.append('action', 'get-conversations');
-        console.log("[LOAD CONVERSATIONS] Llamando a callChatApi('get-conversations')...");
+        formData.append('action', action);
+        console.log(`[LOAD CONVERSATIONS] Llamando a callChatApi('${action}')...`);
         const result = await callChatApi(formData);
-        console.log("[LOAD CONVERSATIONS] Respuesta de 'get-conversations':", result);
+        console.log(`[LOAD CONVERSATIONS] Respuesta de '${action}':`, result);
 
         if (result.success) {
             console.info(`[LOAD CONVERSATIONS] API Success. ${result.conversations.length} conversaciones recibidas.`);
             
-            let onlineUserIds = {};
-            try {
-                const presenceFormData = new FormData();
-                presenceFormData.append('action', 'get-friends-list');
-                const presenceResult = await callFriendApi(presenceFormData);
-                if (presenceResult.success) {
-                    presenceResult.friends.forEach(friend => {
-                        if (friend.is_online) {
-                            onlineUserIds[friend.friend_id] = true;
-                        }
-                    });
-                }
-
-            } catch (e) {
-                console.warn("[LOAD CONVERSATIONS] No se pudo obtener el estado online en tiempo real.", e);
-            }
-
-            result.conversations.forEach(convo => {
-                convo.is_online = !!onlineUserIds[convo.friend_id];
-            });
+            let conversations = result.conversations;
             
-            friendCache = result.conversations;
-            console.log("[LOAD CONVERSATIONS] friendCache actualizado:", friendCache);
+            if (renderType === 'dm') {
+                // Solo los DMs necesitan el estado en tiempo real de esta forma
+                let onlineUserIds = {};
+                try {
+                    const presenceFormData = new FormData();
+                    presenceFormData.append('action', 'get-friends-list');
+                    const presenceResult = await callFriendApi(presenceFormData);
+                    if (presenceResult.success) {
+                        presenceResult.friends.forEach(friend => {
+                            if (friend.is_online) {
+                                onlineUserIds[friend.friend_id] = true;
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.warn("[LOAD CONVERSATIONS] No se pudo obtener el estado online en tiempo real.", e);
+                }
+                conversations.forEach(convo => {
+                    convo.is_online = !!onlineUserIds[convo.friend_id];
+                });
+                friendCache = conversations; // Guardar en caché de DMs
+                console.log("[LOAD CONVERSATIONS] friendCache actualizado:", friendCache);
+            } else {
+                communityCache = conversations; // Guardar en caché de Comunidades
+                console.log("[LOAD CONVERSATIONS] communityCache actualizado:", communityCache);
+            }
             
             const searchInput = document.getElementById('chat-friend-search');
             const currentQuery = searchInput ? searchInput.value : '';
             console.log(`[LOAD CONVERSATIONS] Query actual del input: "${currentQuery}"`);
             
-            console.log("[LOAD CONVERSATIONS] Llamando a filterConversationList (usará el filtro global '${currentChatFilter}')...");
-            filterConversationList(currentQuery); // <-- Esta función ahora usa 'currentChatFilter'
+            console.log(`[LOAD CONVERSATIONS] Llamando a filterConversationList (usará el filtro global '${currentChatFilter}')...`);
+            filterConversationList(currentQuery); // <-- Esta función ahora usa el 'currentChatFilter'
             
         } else {
             console.error("[LOAD CONVERSATIONS] La API reportó un fallo:", result.message);
-            const listContainer = document.getElementById('chat-conversation-list');
             if (listContainer) listContainer.innerHTML = '<div class="chat-list-placeholder">Error al cargar.</div>';
         }
     } catch (e) {
@@ -447,6 +556,7 @@ async function loadConversations() {
     }
     console.groupEnd();
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (loadConversations) ---
 
 // --- (scrollToBottom sin cambios) ---
 function scrollToBottom() {
@@ -489,7 +599,7 @@ function enableChatInput(allow, reason = null) {
     }
 }
 
-// --- (createMessageBubbleHtml sin cambios) ---
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (createMessageBubbleHtml) ▼▼▼ ---
 function createMessageBubbleHtml(msg, isSent) {
     const myUserId = parseInt(window.userId, 10);
     const myAvatar = document.querySelector('.header-profile-image')?.src || defaultAvatar;
@@ -502,14 +612,31 @@ function createMessageBubbleHtml(msg, isSent) {
         avatar = myAvatar;
         role = myRole;
     } else {
-        const friendItem = document.querySelector(`.chat-conversation-item[data-user-id="${msg.sender_id}"]`);
-        if (friendItem) {
-            avatar = friendItem.dataset.avatar;
-            role = friendItem.dataset.role;
+        // --- INICIO DE LÓGICA DE COMUNIDAD ---
+        if (currentChatType === 'community') {
+            // En un chat de comunidad, msg.sender_id es el ID del remitente
+            // Necesitamos buscarlo en la caché de amigos (si está) o usar los datos del mensaje
+            const friend = friendCache.find(f => f.friend_id === msg.sender_id);
+            if (friend) {
+                avatar = friend.profile_image_url || defaultAvatar;
+                role = friend.role || 'user';
+            } else {
+                // Fallback a los datos del mensaje (si vienen)
+                avatar = msg.sender_avatar || defaultAvatar;
+                role = msg.sender_role || 'user';
+            }
         } else {
-            avatar = document.getElementById('chat-header-avatar').src;
-            role = 'user'; 
+            // Lógica de DM (sin cambios)
+            const friendItem = document.querySelector(`.chat-conversation-item[data-user-id="${msg.sender_id}"]`);
+            if (friendItem) {
+                avatar = friendItem.dataset.avatar;
+                role = friendItem.dataset.role;
+            } else {
+                avatar = document.getElementById('chat-header-avatar').src;
+                role = 'user'; 
+            }
         }
+        // --- FIN DE LÓGICA DE COMUNIDAD ---
     }
     
     let actionsMenuHtml = '';
@@ -579,6 +706,13 @@ function createMessageBubbleHtml(msg, isSent) {
         `;
     }
 
+    // --- ▼▼▼ INICIO DE LÓGICA DE NOMBRE DE COMUNIDAD ▼▼▼ ---
+    let senderNameHtml = '';
+    if (currentChatType === 'community' && !isSent) {
+        senderNameHtml = `<div class="chat-bubble-sender-name">${escapeHTML(msg.sender_username || 'Usuario')}</div>`;
+    }
+    // --- ▲▲▲ FIN DE LÓGICA DE NOMBRE DE COMUNIDAD ▲▲▲ ---
+
     const deletedClass = (msg.status === 'deleted') ? 'deleted' : '';
     const bubbleHtml = `
         <div class="chat-bubble ${bubbleClass} ${deletedClass}" data-message-id="${msg.id}" data-text-content="${escapeHTML(msg.message_text)}">
@@ -586,6 +720,7 @@ function createMessageBubbleHtml(msg, isSent) {
                 <img src="${escapeHTML(avatar)}" alt="Avatar">
             </div>
             <div class="chat-bubble-main-content">
+                ${senderNameHtml} 
                 ${replyContextHtml}
                 ${attachmentsHtml}
                 ${textHtml}
@@ -596,6 +731,7 @@ function createMessageBubbleHtml(msg, isSent) {
     
     return bubbleHtml;
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (createMessageBubbleHtml) ---
 
 // --- (renderChatHistory sin cambios) ---
 function renderChatHistory(messages) {
@@ -662,7 +798,7 @@ function showHistoryLoader(show) {
 }
 
 // --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (loadChatHistory) ▼▼▼ ---
-async function loadChatHistory(friendId, beforeId = null) {
+async function loadChatHistory(targetId, beforeId = null) {
     const msgList = document.getElementById('chat-message-list');
     const isPaginating = beforeId !== null;
 
@@ -677,7 +813,8 @@ async function loadChatHistory(friendId, beforeId = null) {
 
     const formData = new FormData();
     formData.append('action', 'get-chat-history');
-    formData.append('target_user_id', friendId);
+    formData.append('chat_type', currentChatType); // <-- AÑADIDO
+    formData.append('target_id', targetId); // <-- AÑADIDO (target_id en lugar de target_user_id)
     if (isPaginating) {
         formData.append('before_message_id', beforeId);
     }
@@ -738,9 +875,9 @@ async function loadChatHistory(friendId, beforeId = null) {
 
 // --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (openChat) ▼▼▼ ---
 /**
- * Carga el historial de chat con un amigo específico.
+ * Carga el historial de chat con un amigo o comunidad.
  */
-async function openChat(friendId, username, avatar, role, isOnline, lastSeen) { // <-- 1. lastSeen añadido
+async function openChat(targetId, name, avatar, role, isOnline, lastSeen) {
     const placeholder = document.getElementById('chat-content-placeholder');
     const chatMain = document.getElementById('chat-content-main');
     if (!chatMain || !placeholder) return; 
@@ -752,19 +889,26 @@ async function openChat(friendId, username, avatar, role, isOnline, lastSeen) { 
     chatMain.classList.remove('disabled');
     chatMain.classList.add('active');
     
+    // --- Lógica de Cabecera ---
     document.getElementById('chat-header-avatar').src = avatar;
-    document.getElementById('chat-header-username').textContent = username;
+    document.getElementById('chat-header-username').textContent = name;
     const statusEl = document.getElementById('chat-header-status');
+    const avatarEl = document.getElementById('chat-header-avatar').closest('.chat-header-avatar');
     
-    // --- 2. Lógica de estado actualizada ---
-    if (isOnline) {
-        statusEl.textContent = getTranslation('chat.online', 'Online');
-        statusEl.className = 'chat-header-status online active';
-    } else {
-        statusEl.textContent = formatTimeAgo(lastSeen); // <-- Usar la nueva función
+    if (role === 'community') {
+        avatarEl.style.borderRadius = '8px'; // Avatar cuadrado para comunidades
+        statusEl.textContent = getTranslation('chat.community', 'Chat Grupal'); // Texto para comunidad
         statusEl.className = 'chat-header-status active'; // Sin 'online'
+    } else {
+        avatarEl.style.borderRadius = '50%'; // Avatar redondo para DMs
+        if (isOnline) {
+            statusEl.textContent = getTranslation('chat.online', 'Online');
+            statusEl.className = 'chat-header-status online active';
+        } else {
+            statusEl.textContent = formatTimeAgo(lastSeen);
+            statusEl.className = 'chat-header-status active';
+        }
     }
-    // --- Fin de la lógica de estado ---
     
     const typingEl = document.getElementById('chat-header-typing');
     if (typingEl) typingEl.classList.add('disabled');
@@ -781,15 +925,25 @@ async function openChat(friendId, username, avatar, role, isOnline, lastSeen) { 
     selectedAttachments = [];
     document.getElementById('chat-attachment-input').value = ''; 
 
-    document.getElementById('chat-receiver-id').value = friendId;
-    currentChatUserId = parseInt(friendId, 10);
+    // --- Actualizar estado global ---
+    currentChatTargetId = parseInt(targetId, 10);
+    currentChatType = (role === 'community') ? 'community' : 'dm';
+    // Mantenemos currentChatUserId para la lógica de "typing" de DMs
+    currentChatUserId = (currentChatType === 'dm') ? currentChatTargetId : null; 
     
+    // --- Actualizar UI de la lista ---
     document.querySelectorAll('.chat-conversation-item').forEach(item => {
         item.classList.remove('active');
     });
-    document.querySelector(`.chat-conversation-item[data-user-id="${friendId}"]`)?.classList.add('active');
+    
+    let selector = (currentChatType === 'dm') 
+        ? `.chat-conversation-item[data-type="dm"][data-target-id="${targetId}"]`
+        : `.chat-conversation-item[data-type="community"][data-target-id="${targetId}"]`;
+        
+    document.querySelector(selector)?.classList.add('active');
 
-    await loadChatHistory(friendId, null);
+    // Cargar historial
+    await loadChatHistory(targetId, null);
 }
 // --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (openChat) ---
 
@@ -914,17 +1068,16 @@ function hideReplyPreview() {
     currentReplyMessageId = null;
 }
 
-// --- (sendMessage sin cambios) ---
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (sendMessage) ▼▼▼ ---
 async function sendMessage() {
-    console.log(`%c[SENDER] 🚀 sendMessage() iniciada...`, 'color: green; font-weight: bold;');
+    console.log(`%c[SENDER] 🚀 sendMessage() iniciada... (Tipo: ${currentChatType}, ID: ${currentChatTargetId})`, 'color: green; font-weight: bold;');
     
     const input = document.getElementById('chat-message-input');
     const sendBtn = document.getElementById('chat-send-button');
-    const receiverId = document.getElementById('chat-receiver-id').value;
     const messageText = input.value.trim();
 
-    if (!receiverId || sendBtn.disabled) {
-        console.warn("[SENDER] Envío cancelado: receiverId vacío o botón deshabilitado.");
+    if (!currentChatTargetId || sendBtn.disabled) {
+        console.warn("[SENDER] Envío cancelado: targetId vacío o botón deshabilitado.");
         return;
     }
     if (!messageText && selectedAttachments.length === 0) {
@@ -938,7 +1091,8 @@ async function sendMessage() {
 
     const formData = new FormData();
     formData.append('action', 'send-message');
-    formData.append('receiver_id', receiverId);
+    formData.append('chat_type', currentChatType); // <-- AÑADIDO
+    formData.append('target_id', currentChatTargetId); // <-- AÑADIDO
     formData.append('message_text', messageText);
     
     if (currentReplyMessageId) {
@@ -960,11 +1114,16 @@ async function sendMessage() {
             document.getElementById('chat-message-list').insertAdjacentHTML('beforeend', bubbleHtml);
             scrollToBottom();
             
-            console.log("%c[SENDER] Mensaje enviado. Llamando a loadConversations() para actualizar la lista...", "color: green; font-weight: bold;");
-            await loadConversations();
+            console.log("%c[SENDER] Mensaje enviado. Llamando a loadConversations(filter: ${currentChatFilter})...", "color: green; font-weight: bold;");
+            await loadConversations(currentChatFilter); // Recargar la lista actual (DM o Comunidad)
             console.log("%c[SENDER] loadConversations() completada.", "color: green; font-weight: bold;");
             
-            const friendItem = document.querySelector(`.chat-conversation-item[data-user-id="${receiverId}"]`);
+            // Re-seleccionar el item activo en la lista
+            let selector = (currentChatType === 'dm') 
+                ? `.chat-conversation-item[data-type="dm"][data-target-id="${currentChatTargetId}"]`
+                : `.chat-conversation-item[data-type="community"][data-target-id="${currentChatTargetId}"]`;
+            
+            const friendItem = document.querySelector(selector);
             if (friendItem) {
                 document.querySelectorAll('.chat-conversation-item').forEach(item => item.classList.remove('active'));
                 friendItem.classList.add('active');
@@ -1010,32 +1169,50 @@ async function sendMessage() {
         console.log("[SENDER] Controles re-evaluados.");
     }
 }
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (sendMessage) ---
 
 // --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (handleChatMessageReceived) ▼▼▼ ---
-export function handleChatMessageReceived(message) {
-    console.log(`%c[WEBSOCKET] 📩 handleChatMessageReceived() -> Mensaje recibido:`, 'color: #00_80_80; font-weight: bold;', message);
+export function handleChatMessageReceived(message, type = 'dm') {
+    console.log(`%c[WEBSOCKET] 📩 handleChatMessageReceived() -> Mensaje [${type}] recibido:`, 'color: #00_80_80; font-weight: bold;', message);
     
-    if (!message || !message.sender_id) {
-        console.warn("[WEBSOCKET] Mensaje inválido o sin sender_id, ignorando.");
+    if (!message) {
+        console.warn("[WEBSOCKET] Mensaje inválido, ignorando.");
         return;
     }
+
+    let targetId, listToReload;
     
-    const senderId = parseInt(message.sender_id, 10);
+    if (type === 'dm') {
+        if (!message.sender_id) return;
+        targetId = parseInt(message.sender_id, 10);
+        listToReload = 'all'; // Asumir que el filtro 'all' (DMs) debe recargarse
+    } else { // 'community'
+        if (!message.community_id) return;
+        targetId = parseInt(message.community_id, 10);
+        listToReload = 'communities'; // Recargar la lista de comunidades
+    }
     
-    console.log("[WEBSOCKET] Llamando a loadConversations() para actualizar la lista del receptor...");
-    loadConversations();
+    // Recargar la lista correspondiente
+    if (currentChatFilter === listToReload || (currentChatFilter !== 'communities' && listToReload === 'all')) {
+         console.log(`[WEBSOCKET] Recargando lista visible (filtro: ${currentChatFilter})`);
+         loadConversations(currentChatFilter);
+    } else {
+         console.log(`[WEBSOCKET] Lista no visible (filtro: ${currentChatFilter}), no se recarga UI de lista.`);
+         // Invalidar el caché para la próxima vez que se abra ese filtro
+         if (listToReload === 'all') friendCache = []; 
+         else communityCache = [];
+    }
     
-    if (senderId === currentChatUserId) {
+    // Comprobar si el chat está abierto
+    if (targetId === currentChatTargetId && type === currentChatType) {
         console.log("[WEBSOCKET] El chat está abierto, añadiendo burbuja.");
         const bubbleHtml = createMessageBubbleHtml(message, false);
         document.getElementById('chat-message-list').insertAdjacentHTML('beforeend', bubbleHtml);
         scrollToBottom();
     } else {
-        console.log("[WEBSOCKET] El chat con este usuario NO está abierto. Incrementando contador global.");
+        console.log("[WEBSOCKET] El chat con este usuario/comunidad NO está abierto. Incrementando contador global.");
         setUnreadMessageCount(currentUnreadMessageCount + 1);
         
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (SONIDO DE NOTIFICACIÓN) ▼▼▼ ---
-        // Comprobar si estamos en la página de /messages
         const isOnMessagesPage = window.location.pathname.startsWith(window.projectBasePath + '/messages');
         
         if (!isOnMessagesPage) {
@@ -1044,7 +1221,6 @@ export function handleChatMessageReceived(message) {
         } else {
             console.log("[WEBSOCKET] Estamos en /messages, sonido silenciado.");
         }
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     }
 }
 // --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (handleChatMessageReceived) ---
@@ -1230,6 +1406,18 @@ export function initChatManager() {
     
     console.log("🏁 initChatManager() -> Inicializando listeners de chat.");
     
+    // --- NUEVO: Obtener IDs de comunidad para el WebSocket ---
+    if (window.isUserLoggedIn) {
+        const formData = new FormData();
+        formData.append('action', 'get-my-community-ids');
+        callCommunityApi(formData).then(result => {
+            if (result.success) {
+                myCommunityIds = result.community_ids || [];
+                console.log(`[ChatInit] IDs de comunidad para WS:`, myCommunityIds);
+            }
+        });
+    }
+    
     const sectionsContainer = document.querySelector('.main-sections');
     if (sectionsContainer) {
         const observer = new MutationObserver((mutations) => {
@@ -1239,8 +1427,8 @@ export function initChatManager() {
                     if (messagesSection) {
                         
                         console.log("👀 Observer: Detectada sección 'messages'.");
-                        console.log("[INIT] Llamando a loadConversations() por primera vez.");
-                        loadConversations();
+                        console.log("[INIT] Llamando a loadConversations('all') por primera vez.");
+                        loadConversations('all'); // Cargar DMs por defecto
                         document.dispatchEvent(new CustomEvent('request-friend-list-presence-update'));
                         
                         const chatMain = messagesSection.querySelector('#chat-content-main[data-autoload-chat="true"]');
@@ -1249,37 +1437,30 @@ export function initChatManager() {
                             
                             const headerInfo = messagesSection.querySelector('#chat-header-info');
                             const avatarImg = messagesSection.querySelector('#chat-header-avatar');
-                            const receiverIdInput = messagesSection.querySelector('#chat-receiver-id');
-                            const statusEl = messagesSection.querySelector('#chat-header-status');
+                            const targetIdInput = messagesSection.querySelector('#chat-target-id'); // <-- Input oculto con ID
+                            const targetTypeInput = messagesSection.querySelector('#chat-type'); // <-- Input oculto con TIPO
                             
-                            if (headerInfo && avatarImg && receiverIdInput && statusEl) {
-                                const friendId = receiverIdInput.value;
-                                const username = headerInfo.querySelector('#chat-header-username').textContent;
-                                const avatar = avatarImg.src;
-                                const isOnline = statusEl.classList.contains('online');
-                                
-                                // --- 3. Leer el 'lastSeen' del HTML (viene de PHP) ---
-                                // (No podemos leerlo del HTML, ya que el PHP lo renderiza directamente)
-                                // (La lógica de PHP en messages.php ya maneja esto en la carga inicial)
-                                // (La función 'openChat' no se llama aquí, los datos se imprimen directo)
-                                
-                                // Esto es solo para la carga inicial de /messages/uuid
-                                // El JS no llama a openChat(), el PHP renderiza el estado.
+                            if (headerInfo && avatarImg && targetIdInput && targetTypeInput) {
+                                const targetId = targetIdInput.value;
+                                const chatType = targetTypeInput.value;
                                 
                                 document.getElementById('chat-layout-container')?.classList.add('show-chat');
                                 chatMain.dataset.autoloadChat = 'false';
                                 
-                                // Llamamos a loadChatHistory (que ahora maneja la privacidad)
-                                loadChatHistory(friendId, null);
-
-                                // !--- ESTA ES LA LÍNEA DE CORRECCIÓN ---!
-                                currentChatUserId = parseInt(friendId, 10);
-                                // !--- FIN DE LA LÍNEA DE CORRECCIÓN ---!
+                                // Actualizar estado global
+                                currentChatTargetId = parseInt(targetId, 10);
+                                currentChatType = chatType;
+                                currentChatUserId = (chatType === 'dm') ? currentChatTargetId : null;
+                                
+                                // Cargar historial
+                                loadChatHistory(targetId, null);
                             }
                         }
 
                     } else {
                         currentChatUserId = null; 
+                        currentChatTargetId = null; // <-- AÑADIDO
+                        currentChatType = 'dm'; // <-- AÑADIDO
                     }
                 }
             }
@@ -1289,22 +1470,24 @@ export function initChatManager() {
 
     document.body.addEventListener('click', async (e) => {
         
-        // --- 4. Listener de clic en la lista de amigos ---
-        const friendItem = e.target.closest('a.chat-conversation-item[data-nav-js="true"]');
-        if (friendItem) {
+        // --- 4. Listener de clic en la lista de conversaciones ---
+        const conversationItem = e.target.closest('a.chat-conversation-item[data-nav-js="true"]');
+        if (conversationItem) {
             e.preventDefault(); 
             
-            const friendId = friendItem.dataset.userId;
-            const username = friendItem.dataset.username;
-            const avatar = friendItem.dataset.avatar;
-            const role = friendItem.dataset.role;
-            const isOnline = friendItem.querySelector('.chat-item-status')?.classList.contains('online');
-            const lastSeen = friendItem.dataset.lastSeen || null; // <-- LEER EL DATO
+            const targetId = conversationItem.dataset.targetId;
+            const type = conversationItem.dataset.type;
+            const name = (type === 'dm') ? conversationItem.dataset.username : conversationItem.dataset.name;
+            const avatar = conversationItem.dataset.avatar;
+            const role = conversationItem.dataset.role;
+            
+            // Lógica de estado (solo para DMs)
+            const isOnline = (type === 'dm') ? conversationItem.querySelector('.chat-item-status')?.classList.contains('online') : false;
+            const lastSeen = (type === 'dm') ? conversationItem.dataset.lastSeen || null : null;
             
             document.getElementById('chat-layout-container')?.classList.add('show-chat');
             
-            // --- 5. Pasar 'lastSeen' a openChat ---
-            openChat(friendId, username, avatar, role, isOnline, lastSeen);
+            openChat(targetId, name, avatar, role, isOnline, lastSeen);
             
             return;
         }
@@ -1328,15 +1511,10 @@ export function initChatManager() {
             if (newFilter === currentChatFilter) return; 
             
             console.log(`[FILTER] Clic en insignia. Nuevo filtro: '${newFilter}'`);
-            currentChatFilter = newFilter;
             
-            document.querySelectorAll('#chat-sidebar-filters .chat-filter-badge').forEach(badge => {
-                badge.classList.remove('active');
-            });
-            filterBadge.classList.add('active');
+            // Llamar a loadConversations con el nuevo filtro
+            loadConversations(newFilter); 
             
-            const searchInput = document.getElementById('chat-friend-search');
-            filterConversationList(searchInput ? searchInput.value : '');
             return;
         }
 
@@ -1358,21 +1536,30 @@ export function initChatManager() {
             
             document.querySelectorAll('.chat-item-actions.popover-active').forEach(el => el.classList.remove('popover-active'));
 
-            const userId = friendItem.dataset.userId;
-            const isBlockedByMe = friendItem.dataset.isBlockedByMe === 'true';
-            const isBlockedGlobally = friendItem.dataset.isBlockedGlobally === 'true';
+            // --- Lógica de Popover Universal ---
+            const targetId = friendItem.dataset.targetId;
+            const type = friendItem.dataset.type;
+            
             const isFavorite = friendItem.dataset.isFavorite === 'true';
             const isPinned = friendItem.dataset.pinnedAt.length > 0;
             const isArchived = friendItem.dataset.isArchived === 'true'; 
             
-            popover.dataset.currentUserId = userId;
+            popover.dataset.currentTargetId = targetId;
+            popover.dataset.currentType = type;
             
             const blockBtn = popover.querySelector('[data-action="block-user"]');
             const unblockBtn = popover.querySelector('[data-action="unblock-user"]');
             const deleteBtn = popover.querySelector('[data-action="delete-chat"]');
-            
-            if (blockBtn && unblockBtn && deleteBtn) {
+            const profileBtn = popover.querySelector('[data-action="friend-menu-profile"]'); // <-- AÑADIDO
+
+            if (type === 'dm') {
+                const isBlockedByMe = friendItem.dataset.isBlockedByMe === 'true';
+                const isBlockedGlobally = friendItem.dataset.isBlockedGlobally === 'true';
+                
+                blockBtn.style.display = 'flex';
+                unblockBtn.style.display = 'flex';
                 deleteBtn.style.display = 'flex'; 
+                profileBtn.style.display = 'flex';
                 
                 if (isBlockedByMe) {
                     blockBtn.style.display = 'none';
@@ -1386,6 +1573,16 @@ export function initChatManager() {
                     blockBtn.style.display = 'none';
                     unblockBtn.style.display = 'none';
                 }
+                
+                // Actualizar enlaces del popover
+                profileBtn.href = `${window.projectBasePath}/profile/${friendItem.dataset.username}`;
+                
+            } else { // 'community'
+                // Ocultar acciones específicas de DM
+                blockBtn.style.display = 'none';
+                unblockBtn.style.display = 'none';
+                deleteBtn.style.display = 'none'; // O podrías implementar "Abandonar" aquí
+                profileBtn.style.display = 'none'; // No hay perfil para una comunidad
             }
 
             const pinBtn = popover.querySelector('[data-action="pin-chat"]');
@@ -1433,7 +1630,22 @@ export function initChatManager() {
              if (popoverOption.disabled) return; 
              
              const action = popoverOption.dataset.action;
-             const userId = popoverOption.closest('#chat-context-menu').dataset.currentUserId;
+             
+             // --- Lógica de navegación de perfil movida a url-manager.js ---
+             if (action === 'friend-menu-profile') {
+                 deactivateAllModules();
+                 if (chatPopperInstance) {
+                     chatPopperInstance.destroy();
+                     chatPopperInstance = null;
+                 }
+                 document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
+                 // Dejar que el router maneje el <a>
+                 return;
+             }
+             
+             const popover = popoverOption.closest('#chat-context-menu');
+             const targetId = popover.dataset.currentTargetId;
+             const type = popover.dataset.currentType;
              
              deactivateAllModules();
              if (chatPopperInstance) {
@@ -1442,7 +1654,8 @@ export function initChatManager() {
              }
              document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
              
-             _executeChatContextMenuAction(action, userId);
+             // --- Llamar a la función de acción (modificada) ---
+             _executeChatContextMenuAction(action, targetId, type);
              
              return;
         }
@@ -1461,8 +1674,10 @@ export function initChatManager() {
             e.preventDefault();
             document.getElementById('chat-layout-container')?.classList.remove('show-chat');
             currentChatUserId = null;
-            console.log("[UI] Botón 'Atrás' presionado. Llamando a loadConversations().");
-            loadConversations(); 
+            currentChatTargetId = null;
+            currentChatType = 'dm';
+            console.log("[UI] Botón 'Atrás' presionado. Llamando a loadConversations(filter: ${currentChatFilter}).");
+            loadConversations(currentChatFilter); // Recargar la lista actual
             return;
         }
 
@@ -1497,11 +1712,19 @@ export function initChatManager() {
             } 
             
             else if (action === 'msg-reply') {
-                const username = messageBubble.classList.contains('sent') 
-                    ? getTranslation('js.chat.replyToSelf', 'a ti mismo') 
-                    : document.getElementById('chat-header-username').textContent;
-                const textContent = messageBubble.dataset.textContent;
+                let username = 'Usuario';
+                if (messageBubble.classList.contains('sent')) {
+                    username = getTranslation('js.chat.replyToSelf', 'a ti mismo');
+                } else if (currentChatType === 'community') {
+                    // Buscar el nombre en la burbuja
+                    const nameEl = messageBubble.querySelector('.chat-bubble-sender-name');
+                    if (nameEl) username = nameEl.textContent;
+                } else {
+                    // DM
+                    username = document.getElementById('chat-header-username').textContent;
+                }
                 
+                const textContent = messageBubble.dataset.textContent;
                 showReplyPreview(messageId, username, textContent);
             } 
             
@@ -1514,6 +1737,7 @@ export function initChatManager() {
                 const formData = new FormData();
                 formData.append('action', 'delete-message');
                 formData.append('message_id', messageId);
+                formData.append('chat_type', currentChatType); // <-- AÑADIDO
                 
                 const result = await callChatApi(formData);
                 if (result.success) {
@@ -1545,13 +1769,13 @@ export function initChatManager() {
         if (chatInput) {
             validateSendButton();
             
-            const receiverId = document.getElementById('chat-receiver-id').value;
-            if (receiverId && window.ws && window.ws.readyState === WebSocket.OPEN) {
+            // Lógica de "typing" (solo para DMs)
+            if (currentChatType === 'dm' && currentChatUserId && window.ws && window.ws.readyState === WebSocket.OPEN) {
                 if (!isTyping) {
                     isTyping = true;
                     window.ws.send(JSON.stringify({
                         type: 'typing_start',
-                        recipient_id: parseInt(receiverId, 10)
+                        recipient_id: currentChatUserId
                     }));
                 }
                 clearTimeout(typingTimer);
@@ -1559,7 +1783,7 @@ export function initChatManager() {
                     if (window.ws && window.ws.readyState === WebSocket.OPEN) {
                         window.ws.send(JSON.stringify({
                             type: 'typing_stop',
-                            recipient_id: parseInt(receiverId, 10)
+                            recipient_id: currentChatUserId
                         }));
                     }
                     isTyping = false;
@@ -1591,10 +1815,9 @@ export function initChatManager() {
             if (!firstMessageEl) return; 
             
             const beforeId = firstMessageEl.dataset.messageId;
-            const friendId = document.getElementById('chat-receiver-id').value;
             
-            if (friendId && beforeId) {
-                loadChatHistory(friendId, beforeId);
+            if (currentChatTargetId && beforeId) {
+                loadChatHistory(currentChatTargetId, beforeId);
             }
         }
     }, true); 
@@ -1603,8 +1826,33 @@ export function initChatManager() {
     document.addEventListener('user-presence-changed', (e) => {
         const { userId, status } = e.detail; 
         
-        // Actualizar el header del chat si es el usuario activo
-        if (parseInt(userId, 10) === currentChatUserId) {
+        // 1. Actualizar la LISTA DE AMIGOS (el punto verde/gris)
+        const friendItem = document.querySelector(`.friend-item[data-friend-id="${userId}"]`);
+        if (friendItem) {
+            const dot = friendItem.querySelector('.friend-status-dot');
+            if (dot) {
+                dot.classList.remove('online', 'offline');
+                dot.classList.add(status); 
+            }
+        }
+
+        // 2. Actualizar la PÁGINA DE PERFIL (si está abierta)
+        const profileBadge = document.querySelector(`.profile-status-badge[data-user-id="${userId}"]`);
+        if (profileBadge) {
+            profileBadge.classList.remove('online', 'offline');
+            profileBadge.classList.add(status);
+            
+            if (status === 'online') {
+                profileBadge.innerHTML = `<span class="status-dot"></span>Activo ahora`;
+            } else {
+                // Actualizamos a un texto genérico "Offline"
+                // Tu lógica de "hace 5 min" se ejecutará la próxima vez que cargues la página.
+                profileBadge.innerHTML = `Activo hace un momento`; 
+            }
+        }
+        
+        // 3. Actualizar la CABECERA DE CHAT (si está abierta)
+        if (currentChatType === 'dm' && parseInt(userId, 10) === currentChatTargetId) {
             const statusEl = document.getElementById('chat-header-status');
             const typingEl = document.getElementById('chat-header-typing');
             
@@ -1632,10 +1880,15 @@ export function initChatManager() {
             opacity: 0.8;
             background-color: #f5f5fa; /* Mantener el hover normal */
         }
+        /* --- NUEVO CSS PARA NOMBRE DE REMITENTE EN GRUPO --- */
+        .chat-bubble.received .chat-bubble-sender-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0056b3; /* O un color de tu elección */
+            margin-bottom: -4px; /* Acercarlo a la burbuja */
+        }
     `;
     document.head.appendChild(styleSheet);
 }
 // --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (initChatManager) ---
-// --- ▲▲▲ FIN DE MODIFICACIÓN (CORRECCIÓN DE 'LAST SEEN') ---
-// --- ▲▲▲ FIN DE MODIFICACIÓN (BADGE 99+) ---
-// --- ▲▲▲ FIN DE MODIFICACIÓN (PLACEHOLDER DINÁMICO) ---
+// --- ▲▲▲ FIN DE MODIFICACIÓN (CHAT DE COMUNIDAD) ▲▲▲ ---

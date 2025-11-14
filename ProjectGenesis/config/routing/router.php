@@ -498,6 +498,7 @@ if (array_key_exists($page, $allowedPages)) {
                 case 'bookmarks':
                 case 'posts':
                 default:
+                    // 'posts', 'likes', 'bookmarks' usan el mismo layout de 2 columnas
                     $tabFile = $tabBasePath . 'view-profile-posts.php';
                     break;
             }
@@ -827,3 +828,4 @@ if (array_key_exists($page, $allowedPages)) {
     $CURRENT_SECTION = '404';
     include $allowedPages['404'];
 }
+?>
