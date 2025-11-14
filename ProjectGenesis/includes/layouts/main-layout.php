@@ -130,7 +130,7 @@
     <script type="module" src="<?php echo $basePath; ?>/assets/js/app-init.js"></script>
 
     <audio id="chat-notification-sound" 
-           src="<?php echo $basePath; ?>/assets/sounds/notification.mp4" 
+           src="<?php echo $basePath; ?>/assets/sounds/notification.mp3" 
            preload="auto">
     </audio>
     </body>
