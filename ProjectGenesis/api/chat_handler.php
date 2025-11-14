@@ -6,7 +6,7 @@
 // (CORREGIDO: SEPARADA LA LÓGICA DE VER HISTORIAL VS ENVIAR MENSAJES)
 // (CORREGIDO: "NADIE" AHORA BLOQUEA EL ENVÍO DE MENSAJES)
 // (CORREGIDO: LÓGICA DE PRIVACIDAD SIMÉTRICA PARA "AMIGOS")
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (CORRECCIÓN DE LÓGICA DE ELIMINACIÓN DE CHAT) ▼▼▼ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (FAVORITOS Y FIJADOS) ▼▼▼ ---
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -30,6 +30,8 @@ $MAX_CHAT_FILES = 4; // Límite de 4 fotos por mensaje
 define('CHAT_PAGE_SIZE', 30); // Número de mensajes a cargar por página
 // --- LÍMITE DE TIEMPO PARA ELIMINAR (72 horas) ---
 define('CHAT_DELETE_LIMIT_HOURS', 72);
+// --- ▼▼▼ NUEVA CONSTANTE ▼▼▼ ---
+define('MAX_PINNED_CHATS', 3); // Límite de chats fijados
 
 
 /**
@@ -181,10 +183,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL GET-CONVERSATIONS) ▼▼▼ ---
-            // 1. Añadido COALESCE para la tabla chat_deletions (se mantiene)
-            // 2. Añadido EXISTS para la tabla user_blocks (se mantiene)
-            // 3. ¡NUEVO! Se añade deleted_timestamp al SELECT principal
-            // 4. ¡NUEVO! Se añade la cláusula HAVING al final
+            // 1. LEFT JOIN a chat_deletions (cd)
+            // 2. Añadido cd.is_favorite y cd.pinned_at al SELECT
+            // 3. Modificado el ORDER BY para priorizar por pinned_at
             $stmt_friends = $pdo->prepare(
                 "SELECT 
                     f.friend_id,
@@ -218,7 +219,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        ) AS unread_count,
                     (EXISTS(SELECT 1 FROM user_blocks WHERE (blocker_user_id = :current_user_id AND blocked_user_id = f.friend_id) OR (blocker_user_id = f.friend_id AND blocked_user_id = :current_user_id))) AS is_blocked_globally,
                     (EXISTS(SELECT 1 FROM user_blocks WHERE blocker_user_id = :current_user_id AND blocked_user_id = f.friend_id)) AS is_blocked_by_me,
-                    (SELECT deleted_until FROM chat_deletions WHERE user_id = :current_user_id AND conversation_user_id = f.friend_id) AS deleted_timestamp
+                    cd.is_favorite,
+                    cd.pinned_at,
+                    cd.deleted_until AS deleted_timestamp
                 FROM (
                     -- 1. Todos los amigos aceptados
                     SELECT user_id_2 AS friend_id FROM friendships WHERE user_id_1 = :current_user_id AND status = 'accepted'
@@ -232,9 +235,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     SELECT sender_id AS friend_id FROM chat_messages WHERE receiver_id = :current_user_id
                 ) AS f
                 JOIN users u ON f.friend_id = u.id
+                LEFT JOIN chat_deletions cd ON cd.user_id = :current_user_id AND cd.conversation_user_id = f.friend_id
                 WHERE f.friend_id != :current_user_id
                 HAVING last_message_time IS NOT NULL OR deleted_timestamp IS NULL
-                ORDER BY last_message_time DESC, u.username ASC"
+                ORDER BY cd.pinned_at DESC, last_message_time DESC, u.username ASC"
             );
             // --- ▲▲▲ FIN DE MODIFICACIÓN (SQL GET-CONVERSATIONS) ▲▲▲ ---
             
@@ -247,6 +251,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $friend['is_blocked_by_me'] = (bool)$friend['is_blocked_by_me'];
                 $friend['is_blocked_globally'] = (bool)$friend['is_blocked_globally'];
+                // --- ▼▼▼ INICIO DE LÍNEAS AÑADIDAS ▼▼▼ ---
+                $friend['is_favorite'] = (bool)($friend['is_favorite'] ?? false);
+                $friend['pinned_at'] = $friend['pinned_at'] ?? null;
+                // --- ▲▲▲ FIN DE LÍNEAS AÑADIDAS ▲▲▲ ---
             }
 
             $response['success'] = true;
@@ -552,6 +560,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
             $response['message'] = 'js.chat.chatDeleted'; // Necesitarás esta clave i18n
         // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
+        
+        // --- ▼▼▼ INICIO DE NUEVAS ACCIONES (FAVORITE Y PIN) ▼▼▼ ---
+
+        } elseif ($action === 'toggle-favorite') {
+            $targetUserId = (int)($_POST['target_user_id'] ?? 0);
+            if ($targetUserId === 0) {
+                throw new Exception('js.api.invalidAction');
+            }
+
+            // Esta consulta crea la fila si no existe, o actualiza la existente.
+            // Invierte el valor booleano de is_favorite.
+            $stmt_toggle = $pdo->prepare(
+                "INSERT INTO chat_deletions (user_id, conversation_user_id, is_favorite)
+                 VALUES (:user_id, :conversation_user_id, 1)
+                 ON DUPLICATE KEY UPDATE is_favorite = NOT is_favorite"
+            );
+            $stmt_toggle->execute([
+                ':user_id' => $currentUserId,
+                ':conversation_user_id' => $targetUserId
+            ]);
+
+            // Devolver el nuevo estado
+            $stmt_get = $pdo->prepare("SELECT is_favorite FROM chat_deletions WHERE user_id = ? AND conversation_user_id = ?");
+            $stmt_get->execute([$currentUserId, $targetUserId]);
+            $newIsFavorite = (bool)$stmt_get->fetchColumn();
+
+            $response['success'] = true;
+            $response['message'] = $newIsFavorite ? 'js.chat.favorited' : 'js.chat.unfavorited';
+            $response['new_is_favorite'] = $newIsFavorite;
+
+        } elseif ($action === 'toggle-pin-chat') {
+            $targetUserId = (int)($_POST['target_user_id'] ?? 0);
+            if ($targetUserId === 0) {
+                throw new Exception('js.api.invalidAction');
+            }
+
+            $pdo->beginTransaction();
+
+            // 1. Comprobar el estado actual
+            $stmt_check = $pdo->prepare("SELECT pinned_at FROM chat_deletions WHERE user_id = ? AND conversation_user_id = ?");
+            $stmt_check->execute([$currentUserId, $targetUserId]);
+            $pinnedAt = $stmt_check->fetchColumn();
+            
+            $is_unpinning = ($pinnedAt !== null);
+
+            if ($is_unpinning) {
+                // 2.A. Acción: DESFIJAR
+                $stmt_pin = $pdo->prepare(
+                    "UPDATE chat_deletions SET pinned_at = NULL WHERE user_id = ? AND conversation_user_id = ?"
+                );
+                $stmt_pin->execute([$currentUserId, $targetUserId]);
+                
+                $pdo->commit();
+                $response['success'] = true;
+                $response['message'] = 'js.chat.unpinned';
+                $response['new_is_pinned'] = false;
+
+            } else {
+                // 2.B. Acción: FIJAR
+                // Comprobar el límite
+                $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM chat_deletions WHERE user_id = ? AND pinned_at IS NOT NULL");
+                $stmt_count->execute([$currentUserId]);
+                $pinCount = (int)$stmt_count->fetchColumn();
+
+                if ($pinCount >= MAX_PINNED_CHATS) {
+                    throw new Exception('js.chat.pinLimitReached'); // Error: Límite alcanzado
+                }
+
+                // Fijar el chat
+                $stmt_pin = $pdo->prepare(
+                    "INSERT INTO chat_deletions (user_id, conversation_user_id, pinned_at)
+                     VALUES (:user_id, :conversation_user_id, NOW())
+                     ON DUPLICATE KEY UPDATE pinned_at = NOW()"
+                );
+                $stmt_pin->execute([
+                    ':user_id' => $currentUserId,
+                    ':conversation_user_id' => $targetUserId
+                ]);
+                
+                $pdo->commit();
+                $response['success'] = true;
+                $response['message'] = 'js.chat.pinned';
+                $response['new_is_pinned'] = true;
+            }
+        // --- ▲▲▲ FIN DE NUEVAS ACCIONES ▲▲▲ ---
         
         }
     } catch (Exception $e) {

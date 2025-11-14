@@ -492,9 +492,12 @@ CREATE TABLE `chat_deletions` (
   `user_id` int(11) NOT NULL COMMENT 'El usuario que elimina la conversación',
   `conversation_user_id` int(11) NOT NULL COMMENT 'El otro usuario en el chat',
   `deleted_until` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'Ocultar mensajes hasta esta fecha',
+  `is_favorite` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Marcar la conversación como favorita',
+  `pinned_at` timestamp NULL DEFAULT NULL COMMENT 'Timestamp de cuándo se fijó, NULL si no está fijado',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_user_conversation` (`user_id`,`conversation_user_id`),
   KEY `idx_conversation_user` (`conversation_user_id`),
+  KEY `idx_user_pinned_order` (`user_id`,`pinned_at`),
   CONSTRAINT `chat_deletions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `chat_deletions_ibfk_2` FOREIGN KEY (`conversation_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

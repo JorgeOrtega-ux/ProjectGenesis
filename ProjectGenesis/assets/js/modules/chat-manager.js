@@ -9,6 +9,7 @@
 // (MODIFICADO: Añadido menú contextual de chat CON LÓGICA DE BLOQUEO/ELIMINAR)
 // (CORREGIDO: Usar e.stopImmediatePropagation() para prevenir colisión con url-manager)
 // (CORREGIDO: Limpiar la URL después de eliminar un chat activo)
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (FAVORITOS Y FIJADOS) ▼▼▼ ---
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -97,9 +98,9 @@ function renderConversationList(conversations) {
         
         let snippet = '...';
         if (friend.last_message === '[Imagen]') {
-            snippet = `<span data-i18n="chat.snippet.image">[Imagen]</span>`;
+            snippet = `<span data-i18n="chat.snippet.image">${getTranslation('chat.snippet.image', '[Imagen]')}</span>`;
         } else if (friend.last_message === 'Se eliminó este mensaje') {
-            snippet = `<i data-i18n="chat.snippet.deleted">[Mensaje eliminado]</i>`;
+            snippet = `<i data-i18n="chat.snippet.deleted">${getTranslation('chat.snippet.deleted', '[Mensaje eliminado]')}</i>`;
         } else if (friend.last_message) {
             snippet = escapeHTML(friend.last_message);
         }
@@ -107,9 +108,24 @@ function renderConversationList(conversations) {
         const unreadCount = parseInt(friend.unread_count, 10);
         const unreadBadge = unreadCount > 0 ? `<span class="chat-item-unread-badge">${unreadCount}</span>` : '';
         
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir flags y clase de bloqueo) ▼▼▼ ---
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir flags, clase de bloqueo, e indicadores) ▼▼▼ ---
         const chatUrl = `${window.projectBasePath}/messages/${friend.uuid}`; 
         const isBlockedClass = friend.is_blocked_globally ? 'is-blocked' : ''; // Clase para atenuar
+
+        const isPinned = friend.pinned_at ? 'true' : 'false';
+        const isFavorite = friend.is_favorite ? 'true' : 'false';
+
+        const indicatorsHtml = `
+            <div class="chat-item-indicators">
+                <span class="chat-item-indicator favorite" style="display: ${isFavorite === 'true' ? 'inline-block' : 'none'};">
+                    <span class="material-symbols-rounded">star</span>
+                </span>
+                <span class="chat-item-indicator pinned" style="display: ${isPinned === 'true' ? 'inline-block' : 'none'};">
+                    <span class="material-symbols-rounded">push_pin</span>
+                </span>
+            </div>
+        `;
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         html += `
             <a class="chat-conversation-item ${isBlockedClass}" 
@@ -121,7 +137,9 @@ function renderConversationList(conversations) {
                data-role="${escapeHTML(friend.role)}"
                data-uuid="${friend.uuid}"
                data-is-blocked-by-me="${friend.is_blocked_by_me}"
-               data-is-blocked-globally="${friend.is_blocked_globally}">
+               data-is-blocked-globally="${friend.is_blocked_globally}"
+               data-is-favorite="${isFavorite}"
+               data-pinned-at="${friend.pinned_at || ''}">
                 
                 <div class="chat-item-avatar" data-role="${escapeHTML(friend.role)}">
                     <img src="${escapeHTML(avatar)}" alt="${escapeHTML(friend.username)}">
@@ -134,6 +152,7 @@ function renderConversationList(conversations) {
                     </div>
                     <div class="chat-item-snippet-wrapper">
                         <span class="chat-item-snippet">${snippet}</span>
+                        ${indicatorsHtml}
                         ${unreadBadge}
                     </div>
                 </div>
@@ -145,7 +164,6 @@ function renderConversationList(conversations) {
                 </div>
             </a>
         `;
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     });
     listContainer.innerHTML = html;
     console.log("[RENDER] Renderización completada.");
@@ -252,26 +270,45 @@ function filterConversationList(query) {
     //  - Amigos sin mensajes se ordenan alfabéticamente (a.username.localeCompare(b.username))
     
     conversationsToShow.sort((a, b) => {
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (ORDENACIÓN POR PIN) ▼▼▼ ---
+        const pinA = a.pinned_at ? new Date(a.pinned_at) : null;
+        const pinB = b.pinned_at ? new Date(b.pinned_at) : null;
+
+        // Caso 1: Ambos están fijados. Ordenar por fecha de fijado (más reciente primero).
+        if (pinA && pinB) {
+            return pinB - pinA;
+        }
+        // Caso 2: B está fijado, A no. B va primero.
+        if (!pinA && pinB) {
+            return 1;
+        }
+        // Caso 3: A está fijado, B no. A va primero.
+        if (pinA && !pinB) {
+            return -1;
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (ORDENACIÓN POR PIN) ▲▲▲ ---
+
+        // Caso 4: Ninguno está fijado. Usar lógica de mensajes.
         const timeA = a.last_message_time ? new Date(a.last_message_time) : null;
         const timeB = b.last_message_time ? new Date(b.last_message_time) : null;
 
-        // Caso 1: Ambos tienen historial. Ordenar por fecha.
+        // Caso 4a: Ambos tienen historial. Ordenar por fecha de mensaje.
         if (timeA && timeB) {
             if (isNaN(timeA) || isNaN(timeB)) return 0;
             return timeB - timeA; // El más reciente (B) primero
         }
         
-        // Caso 2: B tiene historial, A no. B va primero.
+        // Caso 4b: B tiene historial, A no. B va primero.
         if (!timeA && timeB) {
             return 1;
         }
         
-        // Caso 3: A tiene historial, B no. A va primero.
+        // Caso 4c: A tiene historial, B no. A va primero.
         if (timeA && !timeB) {
             return -1;
         }
         
-        // Caso 4: Ninguno tiene historial. Ordenar alfabéticamente.
+        // Caso 4d: Ninguno tiene historial. Ordenar alfabéticamente.
         return a.username.localeCompare(b.username);
     });
 
@@ -991,19 +1028,12 @@ export function handleMessageDeleted(payload) {
 }
 
 /**
- * Maneja el clic en una opción del menú contextual del chat.
+ * Ejecuta la acción seleccionada en el menú contextual del chat.
  * @param {string} action - La acción (ej. 'block-user', 'delete-chat').
  * @param {string} userId - El ID del usuario afectado.
  */
-async function handleChatContextMenuAction(action, userId) {
+async function _executeChatContextMenuAction(action, userId) {
     if (!userId) return;
-
-    deactivateAllModules();
-    if (chatPopperInstance) {
-        chatPopperInstance.destroy();
-        chatPopperInstance = null;
-    }
-    document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
 
     const formData = new FormData();
     formData.append('target_user_id', userId);
@@ -1077,7 +1107,42 @@ async function handleChatContextMenuAction(action, userId) {
             } else {
                 showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
             }
+        
+        // --- ▼▼▼ NUEVA LÓGICA (PIN/FAVORITE) ▼▼▼ ---
+        } else if (action === 'pin-chat' || action === 'unpin-chat') {
+            
+            formData.append('action', 'toggle-pin-chat');
+            const result = await callChatApi(formData);
+            
+            if (result.success) {
+                showAlert(getTranslation(result.message), 'success');
+                await loadConversations(); // Recargar para re-ordenar
+            } else {
+                showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+            }
+        
+        } else if (action === 'add-favorites' || action === 'remove-favorites') {
+            
+            formData.append('action', 'toggle-favorite');
+            const result = await callChatApi(formData);
+
+            if (result.success) {
+                showAlert(getTranslation(result.message), 'success');
+                // Actualizar localmente para evitar recarga
+                const friendItem = document.querySelector(`.chat-conversation-item[data-user-id="${userId}"]`);
+                if (friendItem) {
+                    friendItem.dataset.isFavorite = result.new_is_favorite;
+                    const favIcon = friendItem.querySelector('.chat-item-indicator.favorite');
+                    if (favIcon) {
+                        favIcon.style.display = result.new_is_favorite ? 'inline-block' : 'none';
+                    }
+                }
+            } else {
+                showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+            }
         }
+        // --- ▲▲▲ FIN NUEVA LÓGICA ▲▲▲ ---
+
     } catch (e) {
         showAlert(getTranslation('js.api.errorConnection'), 'error');
     }
@@ -1201,36 +1266,50 @@ export function initChatManager() {
             const userId = friendItem.dataset.userId;
             const isBlockedByMe = friendItem.dataset.isBlockedByMe === 'true';
             const isBlockedGlobally = friendItem.dataset.isBlockedGlobally === 'true';
+            // --- ¡Nuevos datos! ---
+            const isFavorite = friendItem.dataset.isFavorite === 'true';
+            const isPinned = friendItem.dataset.pinnedAt.length > 0;
             
             popover.dataset.currentUserId = userId;
             
-            const blockBtn = popover.querySelector('[data-action="block-user"], [data-action="unblock-user"]');
+            // --- Botones de Bloqueo/Eliminar (lógica existente) ---
+            const blockBtn = popover.querySelector('[data-action="block-user"]');
+            const unblockBtn = popover.querySelector('[data-action="unblock-user"]');
             const deleteBtn = popover.querySelector('[data-action="delete-chat"]');
-            const blockBtnText = blockBtn.querySelector('.menu-link-text span');
-            const blockBtnIcon = blockBtn.querySelector('.menu-link-icon span');
-
-            if (blockBtn && deleteBtn && blockBtnText && blockBtnIcon) {
-                // Configurar el botón de eliminar (siempre habilitado)
-                deleteBtn.disabled = false;
+            
+            if (blockBtn && unblockBtn && deleteBtn) {
+                deleteBtn.style.display = 'flex'; // Siempre visible
                 
-                // Configurar el botón de bloquear/desbloquear
                 if (isBlockedByMe) {
-                    blockBtn.dataset.action = 'unblock-user';
-                    blockBtnText.textContent = getTranslation('chat.context.unblockUser', 'Desbloquear usuario');
-                    blockBtnIcon.textContent = 'lock_open';
+                    blockBtn.style.display = 'none';
+                    unblockBtn.style.display = 'flex';
                 } else {
-                    blockBtn.dataset.action = 'block-user';
-                    blockBtnText.textContent = getTranslation('chat.context.blockUser', 'Bloquear usuario');
-                    blockBtnIcon.textContent = 'block';
+                    blockBtn.style.display = 'flex';
+                    unblockBtn.style.display = 'none';
                 }
                 
-                // Si el usuario ME tiene bloqueado (y yo no a él), no puedo bloquearlo
                 if (isBlockedGlobally && !isBlockedByMe) {
-                    blockBtn.disabled = true;
-                } else {
-                    blockBtn.disabled = false;
+                    // Si me tienen bloqueado, no puedo bloquearlos (ni desbloquearlos)
+                    blockBtn.style.display = 'none';
+                    unblockBtn.style.display = 'none';
                 }
             }
+
+            // --- Botones de Fijar/Favorito (nueva lógica) ---
+            const pinBtn = popover.querySelector('[data-action="pin-chat"]');
+            const unpinBtn = popover.querySelector('[data-action="unpin-chat"]');
+            const favBtn = popover.querySelector('[data-action="add-favorites"]');
+            const unFavBtn = popover.querySelector('[data-action="remove-favorites"]');
+
+            if (pinBtn && unpinBtn) {
+                pinBtn.style.display = isPinned ? 'none' : 'flex';
+                unpinBtn.style.display = isPinned ? 'flex' : 'none';
+            }
+            if (favBtn && unFavBtn) {
+                favBtn.style.display = isFavorite ? 'none' : 'flex';
+                unFavBtn.style.display = isFavorite ? 'flex' : 'none';
+            }
+            // --- Fin nueva lógica ---
 
             // Crear y mostrar el nuevo popover
             chatPopperInstance = createPopper(contextBtn, popover, {
@@ -1261,8 +1340,16 @@ export function initChatManager() {
              const action = popoverOption.dataset.action;
              const userId = popoverOption.closest('#chat-context-menu').dataset.currentUserId;
              
-             // Llamar a la nueva función centralizada
-             handleChatContextMenuAction(action, userId);
+             // Desactivar el popover INMEDIATAMENTE
+             deactivateAllModules();
+             if (chatPopperInstance) {
+                 chatPopperInstance.destroy();
+                 chatPopperInstance = null;
+             }
+             document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
+             
+             // Llamar a la función que ejecuta la acción
+             _executeChatContextMenuAction(action, userId);
              
              return;
         }
@@ -1463,3 +1550,4 @@ export function initChatManager() {
     // --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ ---
 }
 // --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (initChatManager) ---
+// --- ▲▲▲ FIN DE MODIFICACIÓN (FAVORITOS Y FIJADOS) ▲▲▲ ---

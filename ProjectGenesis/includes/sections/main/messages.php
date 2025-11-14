@@ -1,6 +1,7 @@
 <?php
 // FILE: includes/sections/main/messages.php
 // (MODIFICADO PARA MÚLTIPLES FOTOS)
+// (MODIFICADO PARA FAVORITOS Y PINEADOS)
 global $basePath;
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
@@ -45,6 +46,34 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 .chat-item-timestamp { font-size: 12px; color: #6b7280; flex-shrink: 0; }
 .chat-item-snippet-wrapper { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
 .chat-item-snippet { font-size: 14px; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (Indicadores Pin/Fav) ▼▼▼ --- */
+.chat-item-indicators {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    /* Se alinea con el unread-badge gracias al flex-shrink: 0 */
+    flex-shrink: 0; 
+}
+.chat-item-indicator {
+    display: none; /* Oculto por defecto */
+    color: #6b7280;
+}
+.chat-item-indicator .material-symbols-rounded {
+    font-size: 16px;
+    font-variation-settings: 'FILL' 1;
+}
+/* El JS (chat-manager.js) añadirá 'data-is-pinned="true"' al 'chat-conversation-item' */
+.chat-conversation-item[data-is-pinned="true"] .chat-item-indicator.pinned {
+    display: inline-block;
+    color: #F57C00; /* Naranja para el pin */
+}
+.chat-conversation-item[data-is-favorite="true"] .chat-item-indicator.favorite {
+    display: inline-block;
+    color: #206BD3; /* Azul para el favorito */
+}
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS (Indicadores Pin/Fav) ▲▲▲ --- */
+
 .chat-item-unread-badge { background-color: #c62828; color: #ffffff; font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 50px; flex-shrink: 0; }
 .chat-list-placeholder { display: flex; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; color: #6b7280; gap: 16px; flex-direction: column; }
 
@@ -612,36 +641,55 @@ if ($hasPreloadedUser) {
             </div>
         </div>
 
+        <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (Menú Contextual) ▼▼▼ --- ?>
         <div class="popover-module body-title disabled"
              data-module="moduleChatContext"
              id="chat-context-menu">
             <div class="menu-content">
                 <div class="menu-list">
+                    
                     <div class="menu-link" data-action="pin-chat">
                         <div class="menu-link-icon"><span class="material-symbols-rounded">push_pin</span></div>
-                        <div class="menu-link-text"><span>Fijar chat</span></div>
+                        <div class="menu-link-text"><span data-i18n="chat.context.pinChat">Fijar chat</span></div>
                     </div>
+                    <div class="menu-link" data-action="unpin-chat" style="display: none;">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded" style="font-variation-settings: 'FILL' 0;">push_pin</span></div>
+                        <div class="menu-link-text"><span data-i18n="chat.context.unpinChat">Desfijar chat</span></div>
+                    </div>
+
+                    <div class="menu-link" data-action="add-favorites">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">star_outline</span></div>
+                        <div class="menu-link-text"><span data-i18n="chat.context.addFavorite">Añadir a favoritos</span></div>
+                    </div>
+                    <div class="menu-link" data-action="remove-favorites" style="display: none;">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded" style="color: #206BD3;">star</span></div>
+                        <div class="menu-link-text"><span data-i18n="chat.context.removeFavorite" style="color: #206BD3;">Quitar de favoritos</span></div>
+                    </div>
+
                     <div class="menu-link" data-action="archive-chat">
                         <div class="menu-link-icon"><span class="material-symbols-rounded">archive</span></div>
-                        <div class="menu-link-text"><span>Archivar chat</span></div>
-                    </div>
-                    <div class="menu-link" data-action="add-favorites">
-                        <div class="menu-link-icon"><span class="material-symbols-rounded">star</span></div>
-                        <div class="menu-link-text"><span>Añadir a favoritos</span></div>
+                        <div class="menu-link-text"><span data-i18n="chat.context.archiveChat">Archivar chat</span></div>
                     </div>
                     
                     <div style="height: 1px; background-color: #00000020; margin: 4px 8px;"></div>
                     
                     <div class="menu-link" data-action="block-user">
                         <div class="menu-link-icon"><span class="material-symbols-rounded">block</span></div>
-                        <div class="menu-link-text"><span>Bloquear</span></div>
+                        <div class="menu-link-text"><span data-i18n="chat.context.blockUser">Bloquear</span></div>
                     </div>
+                    <div class="menu-link" data-action="unblock-user" style="display: none;">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">lock_open</span></div>
+                        <div class="menu-link-text"><span data-i18n="chat.context.unblockUser">Desbloquear</span></div>
+                    </div>
+
                     <div class="menu-link" data-action="delete-chat">
                         <div class="menu-link-icon" style="color: #c62828;"><span class="material-symbols-rounded">delete</span></div>
-                        <div class="menu-link-text"><span style="color: #c62828;">Eliminar chat</span></div>
+                        <div class="menu-link-text"><span data-i18n="chat.context.deleteChat" style="color: #c62828;">Eliminar chat</span></div>
                     </div>
                 </div>
             </div>
         </div>
+        <?php // --- ▲▲▲ FIN DE MODIFICACIÓN (Menú Contextual) ▲▲▲ --- ?>
+        
         </div>
 </div>
