@@ -1,0 +1,16 @@
+[14-Nov-2025 00:49:26 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 100
+[14-Nov-2025 00:49:27 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 228
+[14-Nov-2025 00:49:27 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 243
+[14-Nov-2025 00:49:27 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 257
+[14-Nov-2025 00:49:27 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 294
+[14-Nov-2025 00:49:27 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 303
+[14-Nov-2025 00:49:27 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 339
+[14-Nov-2025 00:49:27 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 386
+[14-Nov-2025 00:49:27 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 100
+[14-Nov-2025 00:49:50 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 228
+[14-Nov-2025 00:49:50 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 243
+[14-Nov-2025 00:49:50 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 257
+[14-Nov-2025 00:49:50 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 294
+[14-Nov-2025 00:49:50 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 303
+[14-Nov-2025 00:49:50 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 339
+[14-Nov-2025 00:49:50 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 386

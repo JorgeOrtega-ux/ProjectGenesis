@@ -70,6 +70,8 @@ function renderFriendList(friends) {
 // --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (RENDER) ▼▼▼ ---
 
 
+// --- ¡MODIFICACIÓN! ---
+// Añadimos 'export' para que el Archivo 3 (app-init.js) pueda llamarla
 export async function initFriendList() {
     const container = document.getElementById('friend-list-container');
     if (!container) return; 
@@ -100,7 +102,9 @@ export async function initFriendList() {
     }
 }
 
-function updateProfileActions(userId, newStatus) {
+// --- ¡MODIFICACIÓN! ---
+// Añadimos 'export' para que el Archivo 3 (app-init.js) pueda llamarla
+export function updateProfileActions(userId, newStatus) {
     const actionsContainer = document.querySelector(`.profile-actions[data-user-id="${userId}"]`);
     if (!actionsContainer) return;
 

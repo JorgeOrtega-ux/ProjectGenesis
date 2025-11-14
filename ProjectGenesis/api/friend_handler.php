@@ -18,13 +18,14 @@ $currentUserId = (int)$_SESSION['user_id'];
  * Envía una notificación PING a un usuario a través del servidor WebSocket.
  *
  * @param int $targetUserId El ID del usuario a notificar.
+ * @param array $payload El payload a enviar.
  */
-function notifyUser($targetUserId) {
+function notifyUser($targetUserId, $payload) { // <-- Acepta un payload
     try {
         // --- ¡Payload simplificado! Solo un ping. ---
         $post_data = json_encode([
             'target_user_id' => (int)$targetUserId,
-            'payload'        => ['type' => 'new_notification_ping']
+            'payload'        => $payload // <-- Usa el payload
         ]);
 
         $ch = curl_init('http://127.0.0.1:8766/notify-user');
@@ -161,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $stmt_insert->execute([$userId1, $userId2, $currentUserId]);
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN: GUARDAR NOTIFICACIÓN ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN: GUARDAR NOTIFICACIÓN Y ENVIAR WS ▼▼▼ ---
             try {
                 // Insertar en la nueva tabla de notificaciones
                 $stmt_notify = $pdo->prepare(
@@ -171,8 +172,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Notificar a $targetUserId, el actor es $currentUserId, la referencia es el ID del actor
                 $stmt_notify->execute([$targetUserId, $currentUserId, $currentUserId]);
 
-                // Enviar un PING genérico al WebSocket
-                notifyUser($targetUserId);
+                // Enviar un payload específico al WebSocket
+                $payload = [
+                    'type'          => 'friend_status_update',
+                    'actor_user_id' => $currentUserId,
+                    'new_status'    => 'pending_received' // El estado que $targetUserId debe ver
+                ];
+                notifyUser($targetUserId, $payload);
                 
             } catch (Exception $e) {
                 logDatabaseError($e, 'friend_handler - send-request (ws_notify_fail)');
@@ -183,33 +189,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = 'js.friends.requestSent';
             $response['newStatus'] = 'pending_sent';
 
-        } elseif ($action === 'cancel-request' || $action === 'decline-request' || $action === 'remove-friend') {
+        // =================================================================
+        // --- ▼▼▼ INICIO DE LA CORRECCIÓN DEL BUG ▼▼▼ ---
+        // =================================================================
+
+        } elseif ($action === 'cancel-request' || $action === 'decline-request') {
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN: ELIMINAR NOTIFICACIÓN ▼▼▼ ---
             // Si cancelamos o rechazamos, también eliminamos la notificación pendiente
-            if ($action === 'cancel-request' || $action === 'decline-request') {
-                $stmt_delete_notify = $pdo->prepare(
-                    "DELETE FROM user_notifications 
-                     WHERE type = 'friend_request' 
-                     AND ((user_id = ? AND actor_user_id = ?) OR (user_id = ? AND actor_user_id = ?))"
-                );
-                $stmt_delete_notify->execute([$currentUserId, $targetUserId, $targetUserId, $currentUserId]);
-            }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            $stmt_delete_notify = $pdo->prepare(
+                "DELETE FROM user_notifications 
+                 WHERE type = 'friend_request' 
+                 AND ((user_id = ? AND actor_user_id = ?) OR (user_id = ? AND actor_user_id = ?))"
+            );
+            $stmt_delete_notify->execute([$currentUserId, $targetUserId, $targetUserId, $currentUserId]);
             
-            $stmt_delete = $pdo->prepare("DELETE FROM friendships WHERE user_id_1 = ? AND user_id_2 = ?");
+            // --- ¡FIX! ---
+            // Solo borramos la fila de 'friendships' si AÚN está PENDIENTE.
+            $stmt_delete = $pdo->prepare(
+                "DELETE FROM friendships 
+                 WHERE user_id_1 = ? AND user_id_2 = ? AND status = 'pending'" // <-- ¡Condición añadida!
+            );
             $stmt_delete->execute([$userId1, $userId2]);
             
             if ($stmt_delete->rowCount() > 0) {
                 $response['success'] = true;
-                if ($action === 'cancel-request') $response['message'] = 'js.friends.requestCanceled';
-                elseif ($action === 'remove-friend') $response['message'] = 'js.friends.friendRemoved';
-                else $response['message'] = 'js.friends.requestCanceled'; 
-                
+                $response['message'] = 'js.friends.requestCanceled';
                 $response['newStatus'] = 'not_friends';
+
+                // --- ¡AÑADIDO! ---
+                // Notificar al otro usuario que la solicitud fue cancelada/rechazada
+                $payload = [
+                    'type'          => 'friend_status_update',
+                    'actor_user_id' => $currentUserId,
+                    'new_status'    => 'not_friends'
+                ];
+                notifyUser($targetUserId, $payload);
+
             } else {
+                 // Si rowCount es 0, la solicitud ya no existía o ya había sido aceptada.
                  throw new Exception('js.friends.errorGeneric');
             }
+
+        } elseif ($action === 'remove-friend') {
+
+            // --- ¡FIX! ---
+            // Esta acción solo debe borrar si el estado es 'accepted'.
+            $stmt_delete = $pdo->prepare(
+                "DELETE FROM friendships 
+                 WHERE user_id_1 = ? AND user_id_2 = ? AND status = 'accepted'" // <-- ¡Condición añadida!
+            );
+            $stmt_delete->execute([$userId1, $userId2]);
+            
+            if ($stmt_delete->rowCount() > 0) {
+                $response['success'] = true;
+                $response['message'] = 'js.friends.friendRemoved';
+                $response['newStatus'] = 'not_friends';
+
+                // --- ¡AÑADIDO! ---
+                // Notificar al otro usuario que ha sido eliminado
+                $payload = [
+                    'type'          => 'friend_status_update',
+                    'actor_user_id' => $currentUserId,
+                    'new_status'    => 'not_friends'
+                ];
+                notifyUser($targetUserId, $payload); 
+
+            } else {
+                 // Si rowCount es 0, no eran amigos o la solicitud estaba pendiente.
+                 throw new Exception('js.friends.errorGeneric');
+            }
+
+        // =================================================================
+        // --- ▲▲▲ FIN DE LA CORRECCIÓN DEL BUG ▲▲▲ ---
+        // =================================================================
 
         } elseif ($action === 'accept-request') {
             $stmt_check = $pdo->prepare("SELECT status, action_user_id FROM friendships WHERE user_id_1 = ? AND user_id_2 = ?");
@@ -225,7 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_update = $pdo->prepare("UPDATE friendships SET status = 'accepted', action_user_id = ? WHERE user_id_1 = ? AND user_id_2 = ?");
             $stmt_update->execute([$currentUserId, $userId1, $userId2]);
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN: ACTUALIZAR/INSERTAR NOTIFICACIÓN ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN: ACTUALIZAR/INSERTAR NOTIFICACIÓN Y ENVIAR WS ▼▼▼ ---
             if ($originalSenderId !== $currentUserId) {
                 try {
                     // 1. Borrar la notificación de "friend_request" original
@@ -243,8 +295,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Notificar a $originalSenderId, el actor es $currentUserId
                     $stmt_notify_accept->execute([$originalSenderId, $currentUserId, $currentUserId]);
 
-                    // 3. Enviar un PING genérico al WebSocket
-                    notifyUser($originalSenderId);
+                    // 3. Enviar un payload específico al WebSocket
+                    $payload = [
+                        'type'          => 'friend_status_update',
+                        'actor_user_id' => $currentUserId,
+                        'new_status'    => 'friends'
+                    ];
+                    notifyUser($originalSenderId, $payload);
 
                 } catch (Exception $e) {
                     logDatabaseError($e, 'friend_handler - accept-request (ws_notify_fail)');

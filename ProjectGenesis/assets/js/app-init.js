@@ -10,41 +10,43 @@ import { initAdminEditUserManager } from './modules/admin-edit-user-manager.js';
 import { initAdminServerSettingsManager } from './modules/admin-server-settings-manager.js';
 import { initAdminBackupModule } from './modules/admin-backup-module.js'; 
 import { initCommunityManager } from './modules/community-manager.js';
-// --- ▼▼▼ IMPORTACIÓN MODIFICADA ▼▼▼ ---
+
+// --- IMPORTACIÓN MODIFICADA ---
 import { setupPublicationListeners } from './modules/publication-manager.js';
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
-// --- ▼▼▼ INICIO DE IMPORTACIÓN MODIFICADA (CORREGIDA) ▼▼▼ ---
+// --- IMPORTACIÓN MODIFICADA (CORREGIDA) ---
 import { 
-    initChatManager, 
-    handleChatMessageReceived, 
-    handleTypingEvent, 
-    handleMessageDeleted // <--- ¡FUNCIÓN AÑADIDA!
+    initChatManager,
+    handleChatMessageReceived,
+    handleTypingEvent,
+    handleMessageDeleted
 } from './modules/chat-manager.js';
-// --- ▲▲▲ FIN DE IMPORTACIÓN MODIFICADA ▲▲▲ ---
 
-import { initFriendManager, initFriendList } from './modules/friend-manager.js';
+// --- LÍNEA MODIFICADA (updateProfileActions) ---
+import { 
+    initFriendManager,
+    initFriendList,
+    updateProfileActions
+} from './modules/friend-manager.js';
+
 import { showAlert } from './services/alert-manager.js'; 
 import { initI18nManager, getTranslation } from './services/i18n-manager.js';
 import { initTooltipManager } from './services/tooltip-manager.js';
 import { initSearchManager } from './modules/search-manager.js';
 
-// --- ▼▼▼ IMPORTACIÓN MODIFICADA ▼▼▼ ---
+// --- IMPORTACIÓN MODIFICADA ---
 import { 
     initNotificationManager, 
     fetchInitialCount, 
     handleNotificationPing 
 } from './modules/notification-manager.js';
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
-// --- ▼▼▼ NUEVA LÍNEA AÑADIDA ▼▼▼ ---
+// --- NUEVA IMPORTACIÓN ---
 import { initAdminCommunityManager } from './modules/admin-community-manager.js';
-// --- ▲▲▲ FIN NUEVA LÍNEA ▲▲▲ ---
 
 
 const htmlEl = document.documentElement;
 const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
 window.lastKnownUserCount = null;
 
 function applyTheme(theme) {
@@ -54,7 +56,7 @@ function applyTheme(theme) {
     } else if (theme === 'dark') {
         htmlEl.classList.remove('light-theme');
         htmlEl.classList.add('dark-theme');
-    } else { 
+    } else {
         if (systemThemeQuery.matches) {
             htmlEl.classList.remove('light-theme');
             htmlEl.classList.add('dark-theme');
@@ -70,30 +72,21 @@ window.applyCurrentTheme = applyTheme;
 function initThemeManager() {
     applyTheme(window.userTheme || 'system');
 
-    systemThemeQuery.addEventListener('change', (e) => {
+    systemThemeQuery.addEventListener('change', () => {
         if ((window.userTheme || 'system') === 'system') {
             applyTheme('system');
         }
     });
 }
 
-// =============================================
-// ============ LÓGICA DE NOTIFICACIONES (MOVIDA) =
-// =============================================
-// ... El código ha sido MOVIDO a assets/js/modules/notification-manager.js
-// =============================================
+document.addEventListener('DOMContentLoaded', async function () {
 
-
-document.addEventListener('DOMContentLoaded', async function () { 
-    
     window.showAlert = showAlert;
 
     await initI18nManager();
-
     initThemeManager();
 
     initMainController();
-    
     initAuthManager();
     initSettingsManager();
     initAdminManager();
@@ -101,38 +94,29 @@ document.addEventListener('DOMContentLoaded', async function () {
     initAdminServerSettingsManager();
     initAdminBackupModule();
     initCommunityManager();
-    
-    // --- ▼▼▼ LLAMADA MODIFICADA ▼▼▼ ---
-    setupPublicationListeners(); // Llama a la función que existe
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-    
-    initFriendManager(); 
-    initNotificationManager(); // <-- Se mantiene la inicialización
+
+    // Publicaciones
+    setupPublicationListeners();
+
+    initFriendManager();
+    initNotificationManager();
     initSearchManager();
-    
-    // --- ▼▼▼ NUEVA LÍNEA AÑADIDA ▼▼▼ ---
     initAdminCommunityManager();
     initChatManager();
-    // --- ▲▲▲ FIN NUEVA LÍNEA ▲▲▲ ---
 
-    initRouter(); 
-    
-    initTooltipManager(); 
+    initRouter();
+    initTooltipManager();
 
     if (window.isUserLoggedIn) {
-        // initFriendList(); // (movido a url-manager.js)
 
-        // --- ▼▼▼ LLAMADA MODIFICADA ▼▼▼ ---
-        // Carga el conteo inicial de notificaciones
+        // Notificaciones iniciales
         fetchInitialCount();
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
 
         let ws;
-        
+
         const wsHost = window.wsHost || '127.0.0.1';
         const wsUrl = `ws://${wsHost}:8765`;
-        
+
         function connectWebSocket() {
             try {
                 ws = new WebSocket(wsUrl);
@@ -140,7 +124,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 ws.onopen = () => {
                     console.log("[WS] Conectado al servidor en:", wsUrl);
-                    
+
                     const authMessage = {
                         type: "auth",
                         user_id: window.userId || 0,
@@ -152,74 +136,80 @@ document.addEventListener('DOMContentLoaded', async function () {
                 ws.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
-                        
+
+                        // Conteo usuarios
                         if (data.type === 'user_count') {
-                            window.lastKnownUserCount = data.count; 
+                            window.lastKnownUserCount = data.count;
                             const display = document.getElementById('concurrent-users-display');
                             if (display) {
                                 display.textContent = data.count;
-                                display.setAttribute('data-i18n', ''); 
+                                display.setAttribute('data-i18n', '');
                             }
-                        } 
-                        else if (data.type === 'force_logout') {
-                            console.log("[WS] Recibida orden de desconexión forzada.");
-                            window.showAlert(getTranslation('js.logout.forced') || 'Tu sesión ha caducado, por favor inicia sesión de nuevo.', 'info', 5000);
-                            setTimeout(() => { window.location.reload(); }, 3000);
                         }
+
+                        // Logout forzado
+                        else if (data.type === 'force_logout') {
+                            console.log("[WS] Desconexión forzada recibida.");
+                            window.showAlert(getTranslation('js.logout.forced'), 'info', 5000);
+                            setTimeout(() => location.reload(), 3000);
+                        }
+
+                        // Estado de cuenta
                         else if (data.type === 'account_status_update') {
                             const newStatus = data.status;
+
                             if (newStatus === 'suspended' || newStatus === 'deleted') {
-                                const msgKey = (newStatus === 'suspended') ? 'js.auth.errorAccountSuspended' : 'js.auth.errorAccountDeleted';
+                                const msgKey =
+                                    newStatus === 'suspended'
+                                        ? 'js.auth.errorAccountSuspended'
+                                        : 'js.auth.errorAccountDeleted';
+
                                 window.showAlert(getTranslation(msgKey), 'error', 5000);
+
                                 setTimeout(() => {
                                     window.location.href = `${window.projectBasePath}/account-status/${newStatus}`;
                                 }, 3000);
                             }
                         }
-                        
-                         else if (data.type === 'new_poll_vote' && data.payload) {
+
+                        // Nuevo voto encuesta
+                        else if (data.type === 'new_poll_vote' && data.payload) {
                             console.log("[WS] Notificación de nuevo voto");
-                            showAlert(`📊 ${getTranslation('js.notifications.newPollVote').replace('{username}', data.payload.username)}`, 'info');
+                            showAlert(
+                                `📊 ${getTranslation('js.notifications.newPollVote')
+                                    .replace('{username}', data.payload.username)}`,
+                                'info'
+                            );
                         }
-                        
-                        // --- ▼▼▼ INICIO DE MODIFICACIÓN (LÓGICA DE PING) ▼▼▼ ---
+
+                        // Notificación de ping
                         else if (data.type === 'new_notification_ping') {
                             console.log("[WS] Ping de nueva notificación recibido");
-                            // Delegar al manager
                             handleNotificationPing();
                         }
 
+                        // Chat: nuevo mensaje
                         else if (data.type === 'new_chat_message') {
                             console.log("[WS] Mensaje de chat recibido");
                             handleChatMessageReceived(data.payload);
                         }
-                        // --- ▼▼▼ ¡INICIO DE BLOQUE AÑADIDO! (CORRECCIÓN) ▼▼▼ ---
+
+                        // Chat: mensaje eliminado
                         else if (data.type === 'message_deleted') {
-                            console.log("[WS] Notificación de 'message_deleted' recibida");
+                            console.log("[WS] Notificación message_deleted recibida");
                             handleMessageDeleted(data.payload);
                         }
-                        // --- ▲▲▲ ¡FIN DE BLOQUE AÑADIDO! (CORRECCIÓN) ▲▲▲ ---
-                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-                        
-                        // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE TYPING ▼▼▼ ---
+
+                        // Chat: typing
                         else if (data.type === 'typing_start') {
-                            console.log("[WS] 'typing_start' recibido de", data.sender_id);
-                            // Delegar al chat manager
-                            if (typeof handleTypingEvent === 'function') {
-                                handleTypingEvent(data.sender_id, true);
-                            }
+                            handleTypingEvent?.(data.sender_id, true);
                         }
                         else if (data.type === 'typing_stop') {
-                            console.log("[WS] 'typing_stop' recibido de", data.sender_id);
-                            // Delegar al chat manager
-                            if (typeof handleTypingEvent === 'function') {
-                                handleTypingEvent(data.sender_id, false);
-                            }
+                            handleTypingEvent?.(data.sender_id, false);
                         }
-                        // --- ▲▲▲ FIN DE NUEVA LÓGICA DE TYPING ▲▲▲ ---
 
+                        // Presencia
                         else if (data.type === 'presence_update') {
-                            console.log(`[WS] Actualización de estado: User ${data.user_id} está ${data.status}`);
                             document.dispatchEvent(new CustomEvent('user-presence-changed', {
                                 detail: {
                                     userId: data.user_id,
@@ -227,27 +217,44 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 }
                             }));
                         }
-                        
+
+                        // Estado de amistad
+                        else if (data.type === 'friend_status_update') {
+                            const actorUserId = data.actor_user_id;
+                            const newStatus = data.new_status;
+
+                            if (actorUserId && newStatus) {
+                                updateProfileActions(actorUserId, newStatus);
+
+                                if (newStatus === 'friends' || newStatus === 'not_friends') {
+                                    initFriendList();
+                                }
+                            } else {
+                                console.warn("[WS] friend_status_update sin payload.");
+                            }
+                        }
+
                     } catch (e) {
-                        console.error("[WS] Error al parsear mensaje:", e);
+                        console.error("[WS] Error al procesar mensaje:", e);
                     }
                 };
-                
+
                 ws.onclose = (event) => {
-                    console.log("[WS] Desconectado del servidor de conteo.", event.reason);
+                    console.log("[WS] Conexión cerrada:", event.reason);
+
                     const display = document.getElementById('concurrent-users-display');
                     if (display) {
                         display.textContent = '---';
-                        display.setAttribute('data-i18n', ''); 
+                        display.setAttribute('data-i18n', '');
                     }
                 };
 
                 ws.onerror = (error) => {
-                    console.error("[WS] Error de WebSocket:", error);
+                    console.error("[WS] Error en WebSocket:", error);
                 };
 
             } catch (e) {
-                console.error("[WS] No se pudo crear la conexión WebSocket:", e);
+                console.error("[WS] No se pudo crear WebSocket:", e);
             }
         }
 
@@ -255,7 +262,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         window.addEventListener('beforeunload', () => {
             if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.close(1000, "Navegación de usuario"); 
+                ws.close(1000, "Navegación de usuario");
             }
         });
     }
