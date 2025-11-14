@@ -37,3 +37,15 @@
 [14-Nov-2025 19:39:36 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 1052
 [14-Nov-2025 19:41:35 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 1051
 [14-Nov-2025 19:41:35 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 1052
+[14-Nov-2025 19:48:31 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 971
+[14-Nov-2025 19:55:23 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 971
+[14-Nov-2025 19:55:52 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 971
+[14-Nov-2025 19:55:57 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 1051
+[14-Nov-2025 19:56:00 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 1052
+[14-Nov-2025 19:56:00 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 1051
+[14-Nov-2025 19:56:00 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 1052
+[14-Nov-2025 19:56:08 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 1051
+[14-Nov-2025 19:56:08 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 1052
+[14-Nov-2025 19:56:32 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 971
+[14-Nov-2025 19:56:38 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 971
+[14-Nov-2025 19:56:49 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 971
