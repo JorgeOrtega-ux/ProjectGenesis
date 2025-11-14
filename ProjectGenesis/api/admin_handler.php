@@ -926,7 +926,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     
-    // --- ▼▼▼ INICIO DE NUEVO BLOQUE ▼▼▼ ---
+    // --- ▼▼▼ INICIO DEL BLOQUE MODIFICADO ▼▼▼ ---
     } elseif ($action === 'update-messaging-service') {
         if ($adminRole !== 'founder') {
             $response['message'] = 'js.admin.errorAdminTarget';
@@ -943,6 +943,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = 'messaging_service_enabled'");
             $stmt->execute([$newValue]);
 
+            // --- ¡NOTIFICAR AL WEBSOCKET SOBRE EL CAMBIO! ---
+            try {
+                $statusPayload = json_encode([
+                    'status' => ($newValue === '1') ? 'enabled' : 'disabled'
+                ]);
+                $ch = curl_init('http://127.0.0.1:8766/broadcast-messaging-status'); // <--- NUEVO ENDPOINT
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $statusPayload);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/json',
+                    'Content-Length: ' . strlen($statusPayload)
+                ]);
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
+                curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
+                curl_exec($ch);
+                curl_close($ch);
+            } catch (Exception $e) {
+                logDatabaseError($e, 'admin_handler - (ws_broadcast_messaging_fail)');
+            }
+            // --- FIN DE LA NOTIFICACIÓN AL WEBSOCKET ---
+
             $response['success'] = true;
             $response['message'] = 'js.admin.messagingSuccess'; // Clave i18n nueva
             $response['newValue'] = $newValue;
@@ -955,7 +977,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = $e->getMessage();
             }
         }
-    // --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ ---
+    // --- ▲▲▲ FIN DEL BLOQUE MODIFICADO ▲▲▲ ---
 
     } elseif ($action === 'admin-add-domain') {
         if ($adminRole !== 'founder') {

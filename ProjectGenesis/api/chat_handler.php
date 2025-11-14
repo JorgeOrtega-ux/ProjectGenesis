@@ -20,6 +20,22 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+// --- ▼▼▼ INICIO DE LA MODIFICACIÓN (BLOQUEO DE API) ▼▼▼ ---
+// OBTÉN EL ROL DEL USUARIO Y EL ESTADO DEL SERVICIO
+$messagingServiceEnabled = $GLOBALS['site_settings']['messaging_service_enabled'] ?? '1';
+$userRole = $_SESSION['role'] ?? 'user';
+$isPrivilegedUser = in_array($userRole, ['moderator', 'administrator', 'founder']);
+
+// SI el servicio está desactivado Y el usuario NO es un admin
+if ($messagingServiceEnabled === '0' && !$isPrivilegedUser) {
+    // Rechaza cualquier acción de este handler
+    $response['message'] = 'page.messaging_disabled.description'; // Usa la clave i18n
+    echo json_encode($response);
+    exit; 
+}
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN (BLOQUEO DE API) ▲▲▲ ---
+
+
 $currentUserId = (int)$_SESSION['user_id'];
 
 // --- Constantes de subida ---
@@ -675,7 +691,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
-
+        
         if ($e instanceof PDOException) {
             logDatabaseError($e, 'chat_handler - ' . $action);
             $response['message'] = 'js.api.errorDatabase';

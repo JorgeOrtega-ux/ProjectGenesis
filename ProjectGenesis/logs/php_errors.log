@@ -30,3 +30,4 @@
 [14-Nov-2025 01:59:06 UTC] PHP Warning:  Undefined variable $receiverId in E:\xampp\htdocs\ProjectGenesis\api\chat_handler.php on line 273
 [14-Nov-2025 01:59:16 UTC] PHP Warning:  Undefined variable $receiverId in E:\xampp\htdocs\ProjectGenesis\api\chat_handler.php on line 273
 [14-Nov-2025 02:00:52 UTC] PHP Warning:  Undefined variable $receiverId in E:\xampp\htdocs\ProjectGenesis\api\chat_handler.php on line 273
+[14-Nov-2025 04:53:44 UTC] PHP Warning:  Undefined variable $response in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 703

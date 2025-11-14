@@ -334,75 +334,55 @@ async def http_handler_update_status(request):
         logging.error(f"[HTTP-STATUS] Error al procesar actualización de estado: {e}")
         return web.json_response({"status": "error", "message": str(e)}, status=400)
 
-async def http_handler_notify_user(request):
+
+# --- ▼▼▼ INICIO DE MODIFICACIÓN (Nueva Función Broadcast) ▼▼▼ ---
+async def broadcast_messaging_status_update(status_payload_json):
+    """Notifica a TODOS los clientes conectados sobre un cambio de estado del chat."""
+    
+    # El payload ya debe ser {"type": "messaging_status_update", "status": "disabled"|"enabled"}
+    logging.info(f"[HTTP-BROADCAST] Retransmitiendo estado de mensajería a todos los clientes: {status_payload_json}")
+    
+    # Obtenemos todos los websockets de todas las sesiones
+    all_websockets = [ws for ws, uid in CLIENTS_BY_SESSION_ID.values()]
+    if all_websockets:
+        # Enviamos el mensaje a todos en paralelo
+        tasks = [ws.send(status_payload_json) for ws in all_websockets]
+        await asyncio.gather(*tasks, return_exceptions=True)
+# --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+
+# --- ▼▼▼ INICIO DE MODIFICACIÓN (Nuevo Endpoint HTTP) ▼▼▼ ---
+async def http_handler_broadcast_messaging_status(request):
     """
-    Recibe una notificación genérica (usada para amistad) y la reenvía
-    al target_user_id.
-    Espera JSON: {"target_user_id": 123, "payload": {...}}
+    Recibe una orden de PHP y la retransmite a todos los clientes.
+    Espera JSON: {"status": "enabled"|"disabled"}
     """
     if request.method != 'POST':
         return web.Response(status=405)
 
     try:
         data = await request.json()
-        target_user_id = int(data.get("target_user_id"))
-        payload = data.get("payload") # El payload es el JSON completo {type: ..., payload: ...}
-
-        if not target_user_id or not payload:
-            raise ValueError("Faltan target_user_id o payload")
+        status = data.get("status")
+        if status not in ("enabled", "disabled"):
+            raise ValueError("Estado no válido. Debe ser 'enabled' o 'disabled'.")
             
-        logging.info(f"[HTTP-NOTIFY] Recibida notificación para user_id={target_user_id}")
+        logging.info(f"[HTTP-BROADCAST] Recibida orden de estado de mensajería: {status}")
 
-        websockets_to_notify = CLIENTS_BY_USER_ID.get(target_user_id)
-        if not websockets_to_notify:
-            logging.info(f"[HTTP-NOTIFY] No se encontraron conexiones activas para user_id={target_user_id}.")
-            return web.json_response({"status": "ok", "notified": 0})
+        # Preparar el payload final para los clientes
+        payload_to_broadcast = json.dumps({
+            "type": "messaging_status_update",
+            "status": status
+        })
         
-        message_json = json.dumps(payload)
-        tasks = [ws.send(message_json) for ws in list(websockets_to_notify)]
-        notified_count = 0
-        
-        if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)
-            notified_count = len(tasks)
+        # Llamar a la función de retransmisión (no esperar a que termine)
+        asyncio.create_task(broadcast_messaging_status_update(payload_to_broadcast))
 
-        return web.json_response({"status": "ok", "notified": notified_count})
+        return web.json_response({"status": "ok", "message": "Broadcast iniciado"})
 
     except Exception as e:
-        logging.error(f"[HTTP-NOTIFY] Error al procesar notificación: {e}")
+        logging.error(f"[HTTP-BROADCAST] Error al procesar broadcast: {e}")
         return web.json_response({"status": "error", "message": str(e)}, status=400)
-# --- ▲▲▲ FIN DE MODIFICACIÓN: MANEJADOR DE HTTP ▼▼▼ ---
-
-
-# --- ▼▼▼ INICIO DE MODIFICACIÓN: INICIO DE SERVIDORES ▼▼▼ ---
-async def run_ws_server():
-    """Inicia y mantiene vivo el servidor WebSocket."""
-    logging.info(f"[WS] Iniciando servidor WebSocket en ws://0.0.0.0:8765")
-    async with websockets.serve(ws_handler, "0.0.0.0", 8765):
-        await asyncio.Event().wait() 
-
-async def run_http_server():
-    """Inicia y mantiene vivo el servidor HTTP."""
-    http_app = web.Application()
-    
-    http_app.router.add_get("/count", http_handler_count)
-    
-    # --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
-    # Esta es la ruta que tu friend_handler.php ya intenta consultar
-    http_app.router.add_get("/get-online-users", http_handler_get_online_users) 
-    # --- ▲▲▲ ¡FIN DE NUEVA LÍNEA! ▲▲▲ ---
-    
-    http_app.router.add_post("/kick", http_handler_kick) 
-    http_app.router.add_post("/update-status", http_handler_update_status) 
-    http_app.router.add_post("/kick-bulk", http_handler_kick_bulk)
-    http_app.router.add_post("/notify-user", http_handler_notify_user)
-    
-    http_runner = web.AppRunner(http_app)
-    await http_runner.setup()
-    http_site = web.TCPSite(http_runner, "0.0.0.0", 8766) # Escuchar en 0.0.0.0
-    logging.info(f"[HTTP] Iniciando servidor HTTP en http://0.0.0.0:8766")
-    await http_site.start()
-    await asyncio.Event().wait() 
+# --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
 async def http_handler_notify_user(request):
@@ -448,6 +428,44 @@ async def http_handler_notify_user(request):
         logging.error(f"[HTTP-NOTIFY] Error al procesar notificación: {e}")
         return web.json_response({"status": "error", "message": str(e)}, status=400)
     
+# --- ▲▲▲ FIN DE MODIFICACIÓN: MANEJADOR DE HTTP ▼▼▼ ---
+
+
+# --- ▼▼▼ INICIO DE MODIFICACIÓN: INICIO DE SERVIDORES ▼▼▼ ---
+async def run_ws_server():
+    """Inicia y mantiene vivo el servidor WebSocket."""
+    logging.info(f"[WS] Iniciando servidor WebSocket en ws://0.0.0.0:8765")
+    async with websockets.serve(ws_handler, "0.0.0.0", 8765):
+        await asyncio.Event().wait() 
+
+async def run_http_server():
+    """Inicia y mantiene vivo el servidor HTTP."""
+    http_app = web.Application()
+    
+    http_app.router.add_get("/count", http_handler_count)
+    
+    # --- ▼▼▼ ¡NUEVA LÍNEA AÑADIDA! ▼▼▼ ---
+    # Esta es la ruta que tu friend_handler.php ya intenta consultar
+    http_app.router.add_get("/get-online-users", http_handler_get_online_users) 
+    # --- ▲▲▲ ¡FIN DE NUEVA LÍNEA! ▲▲▲ ---
+    
+    http_app.router.add_post("/kick", http_handler_kick) 
+    http_app.router.add_post("/update-status", http_handler_update_status) 
+    http_app.router.add_post("/kick-bulk", http_handler_kick_bulk)
+    http_app.router.add_post("/notify-user", http_handler_notify_user)
+    
+    # --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR RUTA) ▼▼▼ ---
+    http_app.router.add_post("/broadcast-messaging-status", http_handler_broadcast_messaging_status)
+    # --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    
+    http_runner = web.AppRunner(http_app)
+    await http_runner.setup()
+    http_site = web.TCPSite(http_runner, "0.0.0.0", 8766) # Escuchar en 0.0.0.0
+    logging.info(f"[HTTP] Iniciando servidor HTTP en http://0.0.0.0:8766")
+    await http_site.start()
+    await asyncio.Event().wait() 
+
+
 async def start_servers():
     """Inicia ambos servidores (WS y HTTP) en paralelo."""
     ws_task = asyncio.create_task(run_ws_server())
