@@ -169,13 +169,14 @@ if ($hasPreloadedUser) {
                     <div class="chat-header-info" id="chat-header-info">
                         <div class="chat-header-username" id="chat-header-username"><?php echo $preloadedUsername; ?></div>
                         <div class="chat-header-status <?php echo $preloadedStatusClass; ?>" id="chat-header-status" data-i18n-offline="chat.offline"><?php echo $preloadedStatusText; ?></div>
+                        
                         <div class="chat-header-status-typing disabled" id="chat-header-typing">
                             <span class="typing-dot"></span>
                             <span class="typing-dot"></span>
                             <span class="typing-dot"></span>
-                            <span data-i18n="chat.typing">Escribiendo</span>
+                            <?php // Se eliminó el <span> de texto ?>
                         </div>
-                    </div>
+                        </div>
                 </div>
 
                 <div class="chat-message-list overflow-y" id="chat-message-list">

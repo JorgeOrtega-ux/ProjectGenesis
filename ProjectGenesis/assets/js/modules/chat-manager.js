@@ -255,6 +255,9 @@ function renderConversationList(conversations) {
             snippet = '...';
         }
         
+        // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (HTML) ▼▼▼ ---
+
+        // 1. Crear HTML para los indicadores (estrella, pin)
         let indicatorsHtml = `
             <div class="chat-item-indicators">
                 <span class="chat-item-indicator favorite" style="display: ${isFavorite === 'true' ? 'inline-block' : 'none'};">
@@ -266,7 +269,23 @@ function renderConversationList(conversations) {
             </div>
         `;
 
-        // --- Lógica de DM (única lógica ahora) ---
+        // 2. Crear HTML para el nuevo botón de menú
+        let menuBadgeHtml = `
+            <button type="button" class="chat-item-menu-badge" data-action="toggle-chat-context-menu" title="Más opciones">
+                <span class="material-symbols-rounded">keyboard_arrow_down</span>
+            </button>
+        `;
+
+        // 3. Agrupar todos los íconos de la derecha
+        let indicatorsRightHtml = `
+            <div class="chat-item-right-group">
+                ${indicatorsHtml}
+                ${unreadBadge}
+                ${menuBadgeHtml}
+            </div>
+        `;
+        
+        // --- (Lógica de DM) ---
         let name = convo.username;
         let avatar = convo.profile_image_url || defaultAvatar;
         let role = convo.role;
@@ -286,6 +305,7 @@ function renderConversationList(conversations) {
            data-last-seen="${convo.last_seen || ''}"
         `;
         
+        // 4. Construir el HTML final del item
         html += `
             <a class="chat-conversation-item ${isBlockedClass}" 
                href="${chatUrl}"
@@ -304,20 +324,16 @@ function renderConversationList(conversations) {
                         <span class="chat-item-username">${escapeHTML(name)}</span>
                         <span class="chat-item-timestamp">${timestamp}</span>
                     </div>
+                    
                     <div class="chat-item-snippet-wrapper">
                         <span class="chat-item-snippet">${snippet}</span>
-                        ${indicatorsHtml}
-                        ${unreadBadge}
+                        ${indicatorsRightHtml}
                     </div>
                 </div>
 
-                <div class="chat-item-actions">
-                    <button type="button" class="chat-item-action-btn" data-action="toggle-chat-context-menu" title="Más opciones">
-                        <span class="material-symbols-rounded">more_vert</span>
-                    </button>
-                </div>
-            </a>
+                </a>
         `;
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN (HTML) ▲▲▲ ---
     });
     listContainer.innerHTML = html;
 }
@@ -1317,7 +1333,9 @@ export function initChatManager() {
 
             const friendItem = contextBtn.closest('.chat-conversation-item');
             const popover = document.getElementById('chat-context-menu');
-            const actionsContainer = contextBtn.closest('.chat-item-actions');
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Obtener el nuevo botón) ▼▼▼
+            const actionsContainer = contextBtn.closest('.chat-item-menu-badge');
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
 
             if (!friendItem || !popover || !actionsContainer) return;
 
@@ -1327,6 +1345,9 @@ export function initChatManager() {
             }
             
             document.querySelectorAll('.chat-item-actions.popover-active').forEach(el => el.classList.remove('popover-active'));
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Nueva clase de popover) ▼▼▼
+            document.querySelectorAll('.chat-item-menu-badge.popover-active').forEach(el => el.classList.remove('popover-active'));
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
 
             // --- Lógica de Popover (solo DM) ---
             const targetId = friendItem.dataset.targetId;
@@ -1399,11 +1420,13 @@ export function initChatManager() {
             popover.classList.toggle('disabled'); 
             popover.classList.toggle('active');
             
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Nueva clase de popover) ▼▼▼
             if (popover.classList.contains('active')) {
                 actionsContainer.classList.add('popover-active');
             } else {
                 actionsContainer.classList.remove('popover-active');
             }
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
             return;
         }
         
@@ -1422,7 +1445,9 @@ export function initChatManager() {
                      chatPopperInstance.destroy();
                      chatPopperInstance = null;
                  }
-                 document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
+                 // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Nueva clase de popover) ▼▼▼
+                 document.querySelector('.chat-item-menu-badge.popover-active')?.classList.remove('popover-active');
+                 // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
                  return;
              }
              
@@ -1434,7 +1459,9 @@ export function initChatManager() {
                  chatPopperInstance.destroy();
                  chatPopperInstance = null;
              }
-             document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
+             // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Nueva clase de popover) ▼▼▼
+             document.querySelector('.chat-item-menu-badge.popover-active')?.classList.remove('popover-active');
+             // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
              
              _executeChatContextMenuAction(action, targetId);
              
@@ -1447,7 +1474,9 @@ export function initChatManager() {
                 chatPopperInstance.destroy();
                 chatPopperInstance = null;
              }
-             document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
+             // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Nueva clase de popover) ▼▼▼
+             document.querySelector('.chat-item-menu-badge.popover-active')?.classList.remove('popover-active');
+             // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
         }
         
         const backBtn = e.target.closest('#chat-back-button');
