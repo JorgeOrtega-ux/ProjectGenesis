@@ -6,8 +6,9 @@
 // (CORREGIDO: Lógica de filtrado de lista y bloqueo de input por privacidad)
 // (CORREGIDO: Bug de bloqueo de input en envío exitoso)
 // (CORREGIDO: Lógica de privacidad simétrica para "Amigos")
-// (MODIFICADO: Añadido menú contextual de chat)
+// (MODIFICADO: Añadido menú contextual de chat CON LÓGICA DE BLOQUEO/ELIMINAR)
 // (CORREGIDO: Usar e.stopImmediatePropagation() para prevenir colisión con url-manager)
+// (CORREGIDO: Limpiar la URL después de eliminar un chat activo)
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -106,18 +107,21 @@ function renderConversationList(conversations) {
         const unreadCount = parseInt(friend.unread_count, 10);
         const unreadBadge = unreadCount > 0 ? `<span class="chat-item-unread-badge">${unreadCount}</span>` : '';
         
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Convertir DIV a A) ▼▼▼ ---
-        // Asumiendo que friend.uuid ahora viene de la API
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir flags y clase de bloqueo) ▼▼▼ ---
         const chatUrl = `${window.projectBasePath}/messages/${friend.uuid}`; 
+        const isBlockedClass = friend.is_blocked_globally ? 'is-blocked' : ''; // Clase para atenuar
 
         html += `
-            <a class="chat-conversation-item" 
+            <a class="chat-conversation-item ${isBlockedClass}" 
                href="${chatUrl}"
                data-nav-js="true"
                data-user-id="${friend.friend_id}" 
                data-username="${escapeHTML(friend.username)}" 
                data-avatar="${escapeHTML(avatar)}" 
-               data-role="${escapeHTML(friend.role)}">
+               data-role="${escapeHTML(friend.role)}"
+               data-uuid="${friend.uuid}"
+               data-is-blocked-by-me="${friend.is_blocked_by_me}"
+               data-is-blocked-globally="${friend.is_blocked_globally}">
                 
                 <div class="chat-item-avatar" data-role="${escapeHTML(friend.role)}">
                     <img src="${escapeHTML(avatar)}" alt="${escapeHTML(friend.username)}">
@@ -139,7 +143,7 @@ function renderConversationList(conversations) {
                         <span class="material-symbols-rounded">more_vert</span>
                     </button>
                 </div>
-                </a>
+            </a>
         `;
         // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     });
@@ -154,21 +158,10 @@ function renderConversationList(conversations) {
 async function loadConversations() {
     console.groupCollapsed("%c[LOAD CONVERSATIONS] 🔄 loadConversations() iniciada...", "color: blue; font-weight: bold;");
     
-    let onlineUserIds = {};
-    try {
-        const formData = new FormData();
-        formData.append('action', 'get-friends-list');
-        const friendResult = await callFriendApi(formData);
-        if (friendResult.success) {
-            friendResult.friends.forEach(friend => {
-                if (friend.is_online) {
-                    onlineUserIds[friend.friend_id] = true;
-                }
-            });
-        }
-    } catch (e) {
-        console.error("[LOAD CONVERSATIONS] Error al obtener estado online de amigos:", e);
-    }
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Llamada unificada) ▼▼▼ ---
+    // Ya no necesitamos la llamada separada a friend_handler.php
+    // La API 'get-conversations' ahora devuelve toda la información.
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ---
 
     try {
         const formData = new FormData();
@@ -180,9 +173,29 @@ async function loadConversations() {
         if (result.success) {
             console.info(`[LOAD CONVERSATIONS] API Success. ${result.conversations.length} conversaciones recibidas.`);
             
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Obtener estado online por separado) ▼▼▼ ---
+            // Sigue siendo una buena idea obtener el estado "online" en tiempo real
+            let onlineUserIds = {};
+            try {
+                const presenceFormData = new FormData();
+                presenceFormData.append('action', 'get-friends-list');
+                const presenceResult = await callFriendApi(presenceFormData);
+                if (presenceResult.success) {
+                    presenceResult.friends.forEach(friend => {
+                        if (friend.is_online) {
+                            onlineUserIds[friend.friend_id] = true;
+                        }
+                    });
+                }
+
+            } catch (e) {
+                console.warn("[LOAD CONVERSATIONS] No se pudo obtener el estado online en tiempo real.", e);
+            }
+
             result.conversations.forEach(convo => {
                 convo.is_online = !!onlineUserIds[convo.friend_id];
             });
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             friendCache = result.conversations;
             console.log("[LOAD CONVERSATIONS] friendCache actualizado:", friendCache);
@@ -283,12 +296,13 @@ function scrollToBottom() {
     }
 }
 
-// --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (enableChatInput) ▼▼▼ ---
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (enableChatInput) ▼▼▼ ---
 /**
  * Habilita o deshabilita la barra de input del chat.
  * @param {boolean} allow - true para permitir, false para bloquear.
+ * @param {string} reason - Opcional. La razón del bloqueo (ej. 'js.chat.errorBlocked').
  */
-function enableChatInput(allow) {
+function enableChatInput(allow, reason = null) {
     const input = document.getElementById('chat-message-input');
     const attachBtn = document.getElementById('chat-attach-button');
     const sendBtn = document.getElementById('chat-send-button');
@@ -298,14 +312,17 @@ function enableChatInput(allow) {
     if (allow) {
         input.disabled = false;
         attachBtn.disabled = false;
-        input.placeholder = getTranslation('chat.placeholder', 'Escribe un mensaje...');
+        input.placeholder = getTranslation('chat.messagePlaceholder', 'Escribe tu mensaje...');
         validateSendButton(); // Re-validar el botón de envío
     } else {
         input.disabled = true;
         attachBtn.disabled = true;
         sendBtn.disabled = true; // Forzar deshabilitado
         input.value = ''; // Limpiar por si acaso
-        input.placeholder = getTranslation('chat.privacyBlocked', 'No puedes enviar mensajes a este usuario.');
+        
+        // Usar la razón si se provee, o un genérico
+        const placeholderKey = reason || 'js.chat.errorPrivacyBlocked';
+        input.placeholder = getTranslation(placeholderKey, 'No puedes enviar mensajes a este usuario.');
         
         // Limpiar adjuntos y previsualización de respuesta
         selectedAttachments = [];
@@ -316,7 +333,7 @@ function enableChatInput(allow) {
         hideReplyPreview();
     }
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN (enableChatInput) ---
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (enableChatInput) ---
 
 
 // --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (createMessageBubbleHtml) ▼▼▼ ---
@@ -394,7 +411,10 @@ function createMessageBubbleHtml(msg, isSent) {
     if (msg.status === 'deleted') {
         textHtml = `<div class="chat-bubble-content"><i>${escapeHTML(msg.message_text)}</i></div>`;
     } else {
-        textHtml = `<div class="chat-bubble-content">${escapeHTML(msg.message_text)}</div>`;
+        // Solo mostrar texto si existe
+        if (msg.message_text) {
+            textHtml = `<div class="chat-bubble-content">${escapeHTML(msg.message_text)}</div>`;
+        }
     }
 
     // 4. Crear parte de adjuntos (solo si el mensaje no está eliminado)
@@ -427,8 +447,8 @@ function createMessageBubbleHtml(msg, isSent) {
             </div>
             <div class="chat-bubble-main-content">
                 ${replyContextHtml}
-                ${textHtml}
                 ${attachmentsHtml}
+                ${textHtml}
             </div>
             ${actionsMenuHtml}
         </div>
@@ -555,21 +575,20 @@ async function loadChatHistory(friendId, beforeId = null) {
                 
                 // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
                 // Leemos el nuevo flag 'can_send_message' de la API
-                // (Este flag ahora comprueba la privacidad del receptor Y del emisor)
                 if (result.can_send_message) {
                     enableChatInput(true); // Permitir escribir
                 } else {
-                    enableChatInput(false); // Bloquear
+                    // La API (canSendMessage) ya comprobó bloqueos y privacidad.
+                    enableChatInput(false, 'js.chat.errorBlocked'); // Bloquear
                 }
                 // --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
             }
             
         } else {
             // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-            // Si la API falla (ej. por privacidad en un futuro), bloqueamos el input
             if (!isPaginating) {
                 msgList.innerHTML = `<div class="chat-list-placeholder">${getTranslation(result.message || 'js.api.errorServer')}</div>`;
-                enableChatInput(false); // Bloquear input en caso de error al cargar
+                enableChatInput(false, result.message); // Bloquear input en caso de error al cargar
             } else {
                 showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
             }
@@ -579,7 +598,7 @@ async function loadChatHistory(friendId, beforeId = null) {
         if (isPaginating) showHistoryLoader(false);
         if (!isPaginating) {
             msgList.innerHTML = '<div class="chat-list-placeholder">Error de conexión.</div>';
-            enableChatInput(false); // Bloquear input en caso de error de red
+            enableChatInput(false, 'js.api.errorConnection'); // Bloquear input en caso de error de red
         } else {
             showAlert(getTranslation('js.api.errorConnection'), 'error');
         }
@@ -626,7 +645,7 @@ async function openChat(friendId, username, avatar, role, isOnline) {
     // Resetear el placeholder por si el chat anterior estaba bloqueado
     const input = document.getElementById('chat-message-input');
     if (input) {
-        input.placeholder = getTranslation('chat.placeholder', 'Escribe un mensaje...');
+        input.placeholder = getTranslation('chat.messagePlaceholder', 'Escribe un mensaje...');
     }
     // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
@@ -858,25 +877,26 @@ async function sendMessage() {
             // Re-habilitar el input en caso de ÉXITO
             enableChatInput(true);
             input.focus();
-            // --- ▲▲▲ FIN DE CORRECCIÓN (Bug de bloqueo) ▲▲▲ ---
+            // --- ▲▲▲ FIN DE CORRECCIÓN (Bug de bloqueo) ▼▼▼ ---
             
         } else {
             console.error("[SENDER] La API reportó un fallo al enviar el mensaje:", result.message);
             showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
             
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (Nuevos errores de privacidad) ▼▼▼ ---
-            // Comprobar el error. Si es de privacidad (receptor, emisor O mutuo), bloquear. Si no, re-habilitar.
-            if (result.message === 'js.chat.errorPrivacyBlocked' || 
+            // Comprobar el error. Si es de privacidad/bloqueo, bloquear. Si no, re-habilitar.
+            if (result.message === 'js.chat.errorBlocked' || 
+                result.message === 'js.chat.errorPrivacyBlocked' || 
                 result.message === 'js.chat.errorPrivacySenderBlocked' ||
                 result.message === 'js.chat.errorPrivacyMutualBlocked') {
                 
-                enableChatInput(false);
+                enableChatInput(false, result.message); // Bloquear y mostrar la razón
                 
                 // Opcional: mostrar alertas específicas
                 if (result.message === 'js.chat.errorPrivacySenderBlocked') {
-                    showAlert(getTranslation('js.chat.errorPrivacySenderBlocked', 'No puedes enviar mensajes mientras tu privacidad esté configurada en "Nadie".'), 'error');
+                    showAlert(getTranslation('js.chat.errorPrivacySenderBlocked'), 'error');
                 } else if (result.message === 'js.chat.errorPrivacyMutualBlocked') {
-                    showAlert(getTranslation('js.chat.errorPrivacyMutualBlocked', 'No puedes enviar este mensaje. Tu configuración de privacidad de "Solo Amigos" impide que este usuario te responda.'), 'error');
+                    showAlert(getTranslation('js.chat.errorPrivacyMutualBlocked'), 'error');
                 }
 
             } else {
@@ -892,13 +912,12 @@ async function sendMessage() {
         // --- ▼▼▼ INICIO DE CORRECCIÓN (Bug de bloqueo) ▼▼▼ ---
         // Re-habilitar el input en caso de error de RED
         enableChatInput(true);
-        // --- ▲▲▲ FIN DE CORRECCIÓN (Bug de bloqueo) ▲▲▲ ---
+        // --- ▲▲▲ FIN DE CORRECCIÓN (Bug de bloqueo) ▼▼▼ ---
         
     } finally {
         // --- ▼▼▼ INICIO DE CORRECCIÓN (Bug de bloqueo) ▼▼▼ ---
-        // El problemático bloque 'finally' se ha eliminado.
         // La lógica se maneja en 'try' y 'catch' ahora.
-        // --- ▲▲▲ FIN DE CORRECCIÓN (Bug de bloqueo) ▲▲▲ ---
+        // --- ▲▲▲ FIN DE CORRECCIÓN (Bug de bloqueo) ▼▼▼ ---
         console.log("[SENDER] Controles re-evaluados.");
     }
 }
@@ -932,7 +951,7 @@ export function handleChatMessageReceived(message) {
     // (La lógica de notificación de insignia se maneja en loadConversations)
 }
 
-// --- ▼▼▼ INICIO DE NUEVAS FUNCIONES (Manejo de WS) ▼▼▼ ---
+// --- ▼▼▼ INICIO DE NUEVAS FUNCIONES (Manejo de WS y Context Menu) ▼▼▼ ---
 /**
  * Transforma una burbuja de chat existente al estado "eliminado".
  * @param {HTMLElement} bubbleEl - El elemento DOM de la burbuja.
@@ -943,7 +962,7 @@ function renderDeletedMessage(bubbleEl) {
     
     const mainContent = bubbleEl.querySelector('.chat-bubble-main-content');
     if (mainContent) {
-        mainContent.innerHTML = `<div class="chat-bubble-content"><i>${getTranslation('chat.messageDeleted', 'Se eliminó este mensaje')}</i></div>`;
+        mainContent.innerHTML = `<div class="chat-bubble-content"><i>${getTranslation('js.chat.messageDeleted', 'Se eliminó este mensaje')}</i></div>`;
     }
     
     const actions = bubbleEl.querySelector('.chat-bubble-actions');
@@ -970,7 +989,100 @@ export function handleMessageDeleted(payload) {
     console.log("[WEBSOCKET] Mensaje eliminado. Llamando a loadConversations() para actualizar snippet...");
     loadConversations();
 }
-// --- ▲▲▲ FIN DE NUEVAS FUNCIONES (Manejo de WS) ▲▲▲ ---
+
+/**
+ * Maneja el clic en una opción del menú contextual del chat.
+ * @param {string} action - La acción (ej. 'block-user', 'delete-chat').
+ * @param {string} userId - El ID del usuario afectado.
+ */
+async function handleChatContextMenuAction(action, userId) {
+    if (!userId) return;
+
+    deactivateAllModules();
+    if (chatPopperInstance) {
+        chatPopperInstance.destroy();
+        chatPopperInstance = null;
+    }
+    document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
+
+    const formData = new FormData();
+    formData.append('target_user_id', userId);
+
+    try {
+        if (action === 'block-user') {
+            if (!confirm(getTranslation('js.chat.confirmBlock', '¿Estás seguro de que quieres bloquear a este usuario? No podrán enviarse mensajes.'))) {
+                return;
+            }
+            formData.append('action', 'block-user');
+            const result = await callFriendApi(formData); // La API de Amigos maneja los bloqueos
+            
+            if (result.success) {
+                showAlert(getTranslation(result.message || 'js.chat.userBlocked'), 'success');
+                if (parseInt(userId, 10) === currentChatUserId) {
+                    enableChatInput(false, 'js.chat.errorBlocked'); // Bloquear el chat si está abierto
+                }
+                await loadConversations(); // Recargar la lista para mostrar el estado actualizado
+            } else {
+                showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+            }
+
+        } else if (action === 'unblock-user') {
+            if (!confirm(getTranslation('js.chat.confirmUnblock', '¿Desbloquear a este usuario?'))) {
+                return;
+            }
+            formData.append('action', 'unblock-user');
+            const result = await callFriendApi(formData); // La API de Amigos maneja los bloqueos
+            
+            if (result.success) {
+                showAlert(getTranslation(result.message || 'js.chat.userUnblocked'), 'success');
+                if (parseInt(userId, 10) === currentChatUserId) {
+                    // Volver a habilitar el input, PERO solo si la *otra* persona no nos tiene bloqueados
+                    // La forma más fácil es recargar el historial, que ya hace esta comprobación.
+                    await loadChatHistory(userId, null);
+                }
+                await loadConversations(); // Recargar la lista
+            } else {
+                showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+            }
+            
+        } else if (action === 'delete-chat') {
+            if (!confirm(getTranslation('js.chat.confirmDeleteChat', '¿Eliminar historial? Esto solo eliminará tu copia de la conversación. La otra persona aún la verá.'))) {
+                return;
+            }
+            formData.append('action', 'delete-chat');
+            const result = await callChatApi(formData); // La API de Chat maneja las eliminaciones
+            
+            if (result.success) {
+                showAlert(getTranslation(result.message || 'js.chat.chatDeleted'), 'success');
+                
+                // Si el chat eliminado estaba abierto, ciérralo
+                if (parseInt(userId, 10) === currentChatUserId) {
+                    const placeholder = document.getElementById('chat-content-placeholder');
+                    const chatMain = document.getElementById('chat-content-main');
+                    if (chatMain || placeholder) {
+                        placeholder.classList.add('active');
+                        placeholder.classList.remove('disabled');
+                        chatMain.classList.add('disabled');
+                        chatMain.classList.remove('active');
+                    }
+                    currentChatUserId = null;
+                    
+                    // --- ▼▼▼ ¡ESTA ES LA CORRECCIÓN! ▼▼▼ ---
+                    // Limpiamos la URL para que vuelva a /messages
+                    const newPath = `${window.projectBasePath}/messages`;
+                    history.pushState(null, '', newPath);
+                    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+                }
+                await loadConversations(); // Recargar la lista
+            } else {
+                showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
+            }
+        }
+    } catch (e) {
+        showAlert(getTranslation('js.api.errorConnection'), 'error');
+    }
+}
+// --- ▲▲▲ FIN DE NUEVAS FUNCIONES (Manejo de WS y Context Menu) ▲▲▲ ---
 
 
 /**
@@ -1005,6 +1117,7 @@ export function initChatManager() {
     
     console.log("🏁 initChatManager() -> Inicializando listeners de chat.");
     
+    // --- (Observer y Carga Inicial sin cambios) ---
     const sectionsContainer = document.querySelector('.main-sections');
     if (sectionsContainer) {
         const observer = new MutationObserver((mutations) => {
@@ -1063,13 +1176,11 @@ export function initChatManager() {
             return; // Salir, ya que el resto de la lógica es para DENTRO del chat
         }
         
-        // --- Lógica de Menú Contextual (Click en el botón de ...) ---
+        // --- ▼▼▼ INICIO DE LÓGICA MODIFICADA (Menú contextual) ▼▼▼ ---
         const contextBtn = e.target.closest('[data-action="toggle-chat-context-menu"]');
         if (contextBtn) {
             e.preventDefault();
-            // --- ▼▼▼ ¡ESTA ES LA CORRECCIÓN! ▼▼▼ ---
-            e.stopImmediatePropagation(); // Detiene este clic y CUALQUIER OTRO listener en document.body (como url-manager)
-            // --- ▲▲▲ ¡FIN DE LA CORRECCIÓN! ▲▲▲ ---
+            e.stopImmediatePropagation(); // Detiene este clic y CUALQUIER OTRO listener
 
             const friendItem = contextBtn.closest('.chat-conversation-item');
             const popover = document.getElementById('chat-context-menu');
@@ -1086,10 +1197,40 @@ export function initChatManager() {
             // Limpiar cualquier otro botón activo
             document.querySelectorAll('.chat-item-actions.popover-active').forEach(el => el.classList.remove('popover-active'));
 
-            // Poblar el popover
+            // --- Poblar el popover ---
             const userId = friendItem.dataset.userId;
+            const isBlockedByMe = friendItem.dataset.isBlockedByMe === 'true';
+            const isBlockedGlobally = friendItem.dataset.isBlockedGlobally === 'true';
+            
             popover.dataset.currentUserId = userId;
-            // ... (Aquí iría la lógica futura para rellenar los botones del popover con el userId) ...
+            
+            const blockBtn = popover.querySelector('[data-action="block-user"], [data-action="unblock-user"]');
+            const deleteBtn = popover.querySelector('[data-action="delete-chat"]');
+            const blockBtnText = blockBtn.querySelector('.menu-link-text span');
+            const blockBtnIcon = blockBtn.querySelector('.menu-link-icon span');
+
+            if (blockBtn && deleteBtn && blockBtnText && blockBtnIcon) {
+                // Configurar el botón de eliminar (siempre habilitado)
+                deleteBtn.disabled = false;
+                
+                // Configurar el botón de bloquear/desbloquear
+                if (isBlockedByMe) {
+                    blockBtn.dataset.action = 'unblock-user';
+                    blockBtnText.textContent = getTranslation('chat.context.unblockUser', 'Desbloquear usuario');
+                    blockBtnIcon.textContent = 'lock_open';
+                } else {
+                    blockBtn.dataset.action = 'block-user';
+                    blockBtnText.textContent = getTranslation('chat.context.blockUser', 'Bloquear usuario');
+                    blockBtnIcon.textContent = 'block';
+                }
+                
+                // Si el usuario ME tiene bloqueado (y yo no a él), no puedo bloquearlo
+                if (isBlockedGlobally && !isBlockedByMe) {
+                    blockBtn.disabled = true;
+                } else {
+                    blockBtn.disabled = false;
+                }
+            }
 
             // Crear y mostrar el nuevo popover
             chatPopperInstance = createPopper(contextBtn, popover, {
@@ -1097,11 +1238,10 @@ export function initChatManager() {
                 modifiers: [{ name: 'offset', options: { offset: [0, 8] } }]
             });
 
-            deactivateAllModules(popover); // Cierra otros popovers (como el de notificaciones)
+            deactivateAllModules(popover); // Cierra otros popovers
             popover.classList.toggle('disabled'); // Muestra/oculta este
             popover.classList.toggle('active');
             
-            // Ocultar el botón de flecha mientras el popover está abierto
             if (popover.classList.contains('active')) {
                 actionsContainer.classList.add('popover-active');
             } else {
@@ -1115,21 +1255,18 @@ export function initChatManager() {
         if (popoverOption) {
              e.preventDefault();
              e.stopPropagation();
+             
+             if (popoverOption.disabled) return; // No hacer nada si el botón (ej. bloquear) está deshabilitado
+             
              const action = popoverOption.dataset.action;
              const userId = popoverOption.closest('#chat-context-menu').dataset.currentUserId;
              
-             // Lógica futura
-             showAlert(`Acción: ${action} para UserID: ${userId} (No implementado)`, 'info');
+             // Llamar a la nueva función centralizada
+             handleChatContextMenuAction(action, userId);
              
-             // Ocultar popover
-             deactivateAllModules();
-             if (chatPopperInstance) {
-                chatPopperInstance.destroy();
-                chatPopperInstance = null;
-             }
-             document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
              return;
         }
+        // --- ▲▲▲ FIN DE LÓGICA MODIFICADA ▲▲▲ ---
 
         // --- Lógica de Cierre de Popover (Click DENTRO del chat pero FUERA del popover) ---
         const clickedOnPopover = e.target.closest('#chat-context-menu.active');
@@ -1138,21 +1275,10 @@ export function initChatManager() {
                 chatPopperInstance.destroy();
                 chatPopperInstance = null;
              }
-             // No llamamos a deactivateAllModules() aquí porque podríamos estar
-             // haciendo clic en el botón de notificaciones, etc.
-             // Solo limpiamos nuestro popover específico.
              document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
-             
-             // Dejamos que el main-controller maneje deactivateAllModules() si el clic
-             // fue realmente en el body.
         }
         
-        // --- (Resto de los listeners de clic de chat-manager.js) ---
-        
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Listener de Clic Eliminado) ▼▼▼ ---
-        // El click en 'chat-conversation-item' ahora es manejado por el router
-        // (data-nav-js="true")
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+        // --- (Resto de los listeners de clic de chat-manager.js sin cambios) ---
         
         const backBtn = e.target.closest('#chat-back-button');
         if (backBtn) {
@@ -1175,7 +1301,7 @@ export function initChatManager() {
             return;
         }
 
-        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Acciones de burbuja) ▼▼▼ ---
+        // --- (Listeners de acciones de burbuja sin cambios) ---
         const actionBtn = e.target.closest('.chat-action-btn[data-action]');
         if (actionBtn) {
             const action = actionBtn.dataset.action;
@@ -1217,7 +1343,6 @@ export function initChatManager() {
                 const result = await callChatApi(formData);
                 if (result.success) {
                     // El WebSocket se encargará de actualizar la UI
-                    // (Tanto para este cliente como para el receptor)
                     showAlert(getTranslation('js.chat.successDeleted', 'Mensaje eliminado'), 'info');
                 } else {
                     showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
@@ -1231,9 +1356,9 @@ export function initChatManager() {
             }
             return;
         }
-        // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
     });
     
+    // --- (Resto de listeners 'submit', 'input', 'change', 'scroll', 'user-presence-changed' sin cambios) ---
     document.body.addEventListener('submit', (e) => {
         const chatForm = e.target.closest('#chat-message-input-form');
         if (chatForm) {
@@ -1321,5 +1446,20 @@ export function initChatManager() {
             }
         }
     });
+    
+    // --- ▼▼▼ INICIO DE NUEVOS ESTILOS (Añadidos al <head>) ▼▼▼ ---
+    const styleSheet = document.createElement("style");
+    styleSheet.type = "text/css";
+    styleSheet.innerText = `
+        .chat-conversation-item.is-blocked {
+            opacity: 0.6;
+        }
+        .chat-conversation-item.is-blocked:hover {
+            opacity: 0.8;
+            background-color: #f5f5fa; /* Mantener el hover normal */
+        }
+    `;
+    document.head.appendChild(styleSheet);
+    // --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ ---
 }
 // --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (initChatManager) ---

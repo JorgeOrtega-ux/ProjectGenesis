@@ -61,11 +61,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $targetUserId = (int)($_POST['target_user_id'] ?? 0);
 
-    if ($action !== 'get-friends-list' && $action !== 'get-pending-requests' && ($targetUserId === 0 || $targetUserId === $currentUserId)) {
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir block/unblock a la excepción) ▼▼▼ ---
+    if ($action !== 'get-friends-list' && $action !== 'get-pending-requests' && $action !== 'block-user' && $action !== 'unblock-user' && ($targetUserId === 0 || $targetUserId === $currentUserId)) {
          $response['message'] = 'js.api.invalidAction';
          echo json_encode($response);
          exit;
     }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     $userId1 = min($currentUserId, $targetUserId);
     $userId2 = max($currentUserId, $targetUserId);
@@ -73,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         if ($action === 'get-friends-list') {
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (OBTENER ESTADO) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (OBTENER ESTADO Y BLOQUEO) ▼▼▼ ---
             
             $onlineUserIds = [];
             try {
@@ -91,20 +93,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 logDatabaseError($e, 'friend_handler - (ws_get_online_fail)');
             }
             
-            // 2. Modificar SQL para incluir last_seen y u.uuid
+            // 2. Modificar SQL para incluir last_seen, u.uuid y estado de bloqueo
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
-            // --- ▼▼▼ ¡LÍNEA MODIFICADA! Se añadió u.uuid a la consulta SELECT. ▼▼▼ ---
+            // --- ▼▼▼ ¡LÍNEA MODIFICADA! Se añadió u.uuid y el EXISTS de user_blocks. ▼▼▼ ---
             $stmt_friends = $pdo->prepare(
                 "SELECT 
                     (CASE WHEN f.user_id_1 = ? THEN f.user_id_2 ELSE f.user_id_1 END) AS friend_id,
-                    u.username, u.profile_image_url, u.role, u.last_seen, u.uuid
+                    u.username, u.profile_image_url, u.role, u.last_seen, u.uuid,
+                    (EXISTS(SELECT 1 FROM user_blocks WHERE blocker_user_id = ? AND blocked_user_id = u.id)) AS is_blocked_by_me
                 FROM friendships f
                 JOIN users u ON (CASE WHEN f.user_id_1 = ? THEN f.user_id_2 ELSE f.user_id_1 END) = u.id
                 WHERE (f.user_id_1 = ? OR f.user_id_2 = ?) AND f.status = 'accepted'
                 ORDER BY u.username ASC"
             );
-            $stmt_friends->execute([$currentUserId, $currentUserId, $currentUserId, $currentUserId]);
+            // --- ▲▲▲ FIN DE MODIFICACIÓN (SQL) ▲▲▲ ---
+            
+            $stmt_friends->execute([$currentUserId, $currentUserId, $currentUserId, $currentUserId, $currentUserId]);
             $friends = $stmt_friends->fetchAll();
             
             // 3. Combinar datos
@@ -116,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Añadir los nuevos campos al array de respuesta
                 $friend['is_online'] = isset($onlineUserIds[$friend['friend_id']]);
                 $friend['last_seen'] = $friend['last_seen'];
+                $friend['is_blocked_by_me'] = (bool)$friend['is_blocked_by_me']; // <-- Añadido
                 // $friend['uuid'] ya está incluido por el SELECT
             }
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
@@ -125,8 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         } elseif ($action === 'get-pending-requests') {
             
-            // Esta acción ahora es manejada por 'notification_handler.php', 
-            // pero la dejamos para no romper JS antiguos si los hubiera.
+            // ... (código sin cambios) ...
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
             $stmt_req = $pdo->prepare(
@@ -151,6 +156,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['requests'] = $requests;
         
         } elseif ($action === 'send-request') {
+            
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Comprobar bloqueo antes de enviar) ▼▼▼ ---
+            $stmt_block_check = $pdo->prepare("SELECT 1 FROM user_blocks WHERE (blocker_user_id = ? AND blocked_user_id = ?) OR (blocker_user_id = ? AND blocked_user_id = ?)");
+            $stmt_block_check->execute([$currentUserId, $targetUserId, $targetUserId, $currentUserId]);
+            if ($stmt_block_check->fetch()) {
+                throw new Exception('js.chat.errorBlocked'); // Reutilizamos el error de chat
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             $stmt_check = $pdo->prepare("SELECT status FROM friendships WHERE user_id_1 = ? AND user_id_2 = ?");
             $stmt_check->execute([$userId1, $userId2]);
             if ($stmt_check->fetch()) {
@@ -162,40 +176,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $stmt_insert->execute([$userId1, $userId2, $currentUserId]);
 
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN: GUARDAR NOTIFICACIÓN Y ENVIAR WS ▼▼▼ ---
+            // ... (código de notificación sin cambios) ...
             try {
-                // Insertar en la nueva tabla de notificaciones
                 $stmt_notify = $pdo->prepare(
                     "INSERT INTO user_notifications (user_id, actor_user_id, type, reference_id) 
                      VALUES (?, ?, 'friend_request', ?)"
                 );
-                // Notificar a $targetUserId, el actor es $currentUserId, la referencia es el ID del actor
                 $stmt_notify->execute([$targetUserId, $currentUserId, $currentUserId]);
 
-                // Enviar un payload específico al WebSocket
                 $payload = [
                     'type'          => 'friend_status_update',
                     'actor_user_id' => $currentUserId,
-                    'new_status'    => 'pending_received' // El estado que $targetUserId debe ver
+                    'new_status'    => 'pending_received'
                 ];
                 notifyUser($targetUserId, $payload);
                 
             } catch (Exception $e) {
                 logDatabaseError($e, 'friend_handler - send-request (ws_notify_fail)');
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             
             $response['success'] = true;
             $response['message'] = 'js.friends.requestSent';
             $response['newStatus'] = 'pending_sent';
 
-        // =================================================================
-        // --- ▼▼▼ INICIO DE LA CORRECCIÓN DEL BUG ▼▼▼ ---
-        // =================================================================
-
         } elseif ($action === 'cancel-request' || $action === 'decline-request') {
             
-            // Si cancelamos o rechazamos, también eliminamos la notificación pendiente
+            // ... (código sin cambios) ...
             $stmt_delete_notify = $pdo->prepare(
                 "DELETE FROM user_notifications 
                  WHERE type = 'friend_request' 
@@ -203,11 +209,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $stmt_delete_notify->execute([$currentUserId, $targetUserId, $targetUserId, $currentUserId]);
             
-            // --- ¡FIX! ---
-            // Solo borramos la fila de 'friendships' si AÚN está PENDIENTE.
             $stmt_delete = $pdo->prepare(
                 "DELETE FROM friendships 
-                 WHERE user_id_1 = ? AND user_id_2 = ? AND status = 'pending'" // <-- ¡Condición añadida!
+                 WHERE user_id_1 = ? AND user_id_2 = ? AND status = 'pending'"
             );
             $stmt_delete->execute([$userId1, $userId2]);
             
@@ -216,8 +220,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = 'js.friends.requestCanceled';
                 $response['newStatus'] = 'not_friends';
 
-                // --- ¡AÑADIDO! ---
-                // Notificar al otro usuario que la solicitud fue cancelada/rechazada
                 $payload = [
                     'type'          => 'friend_status_update',
                     'actor_user_id' => $currentUserId,
@@ -226,17 +228,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 notifyUser($targetUserId, $payload);
 
             } else {
-                 // Si rowCount es 0, la solicitud ya no existía o ya había sido aceptada.
                  throw new Exception('js.friends.errorGeneric');
             }
 
         } elseif ($action === 'remove-friend') {
 
-            // --- ¡FIX! ---
-            // Esta acción solo debe borrar si el estado es 'accepted'.
+            // ... (código sin cambios) ...
             $stmt_delete = $pdo->prepare(
                 "DELETE FROM friendships 
-                 WHERE user_id_1 = ? AND user_id_2 = ? AND status = 'accepted'" // <-- ¡Condición añadida!
+                 WHERE user_id_1 = ? AND user_id_2 = ? AND status = 'accepted'"
             );
             $stmt_delete->execute([$userId1, $userId2]);
             
@@ -245,8 +245,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = 'js.friends.friendRemoved';
                 $response['newStatus'] = 'not_friends';
 
-                // --- ¡AÑADIDO! ---
-                // Notificar al otro usuario que ha sido eliminado
                 $payload = [
                     'type'          => 'friend_status_update',
                     'actor_user_id' => $currentUserId,
@@ -255,15 +253,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 notifyUser($targetUserId, $payload); 
 
             } else {
-                 // Si rowCount es 0, no eran amigos o la solicitud estaba pendiente.
                  throw new Exception('js.friends.errorGeneric');
             }
 
-        // =================================================================
-        // --- ▲▲▲ FIN DE LA CORRECCIÓN DEL BUG ▲▲▲ ---
-        // =================================================================
-
         } elseif ($action === 'accept-request') {
+            
+            // ... (código sin cambios) ...
             $stmt_check = $pdo->prepare("SELECT status, action_user_id FROM friendships WHERE user_id_1 = ? AND user_id_2 = ?");
             $stmt_check->execute([$userId1, $userId2]);
             $friendship = $stmt_check->fetch();
@@ -277,25 +272,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_update = $pdo->prepare("UPDATE friendships SET status = 'accepted', action_user_id = ? WHERE user_id_1 = ? AND user_id_2 = ?");
             $stmt_update->execute([$currentUserId, $userId1, $userId2]);
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN: ACTUALIZAR/INSERTAR NOTIFICACIÓN Y ENVIAR WS ▼▼▼ ---
             if ($originalSenderId !== $currentUserId) {
                 try {
-                    // 1. Borrar la notificación de "friend_request" original
                     $stmt_delete_notify = $pdo->prepare(
                         "DELETE FROM user_notifications 
                          WHERE user_id = ? AND actor_user_id = ? AND type = 'friend_request'"
                     );
                     $stmt_delete_notify->execute([$currentUserId, $originalSenderId]);
                     
-                    // 2. Insertar una nueva notificación de "friend_accept" para el remitente original
                     $stmt_notify_accept = $pdo->prepare(
                         "INSERT INTO user_notifications (user_id, actor_user_id, type, reference_id)
                          VALUES (?, ?, 'friend_accept', ?)"
                     );
-                    // Notificar a $originalSenderId, el actor es $currentUserId
                     $stmt_notify_accept->execute([$originalSenderId, $currentUserId, $currentUserId]);
 
-                    // 3. Enviar un payload específico al WebSocket
                     $payload = [
                         'type'          => 'friend_status_update',
                         'actor_user_id' => $currentUserId,
@@ -307,12 +297,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     logDatabaseError($e, 'friend_handler - accept-request (ws_notify_fail)');
                 }
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             $response['success'] = true;
             $response['message'] = 'js.friends.requestAccepted';
             $response['newStatus'] = 'friends';
+        
+        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN (block-user) ▼▼▼ ---
+        } elseif ($action === 'block-user') {
+            $pdo->beginTransaction();
+            
+            // 1. Añadir el bloqueo
+            $stmt_block = $pdo->prepare("INSERT IGNORE INTO user_blocks (blocker_user_id, blocked_user_id) VALUES (?, ?)");
+            $stmt_block->execute([$currentUserId, $targetUserId]);
+            
+            // 2. Eliminar cualquier amistad o solicitud pendiente (en ambas direcciones)
+            $stmt_delete_friendship = $pdo->prepare(
+                "DELETE FROM friendships 
+                 WHERE (user_id_1 = ? AND user_id_2 = ?) OR (user_id_1 = ? AND user_id_2 = ?)"
+            );
+            $stmt_delete_friendship->execute([$currentUserId, $targetUserId, $targetUserId, $currentUserId]);
+
+            // 3. Eliminar notificaciones de amistad pendientes entre ellos
+            $stmt_delete_notify = $pdo->prepare(
+                "DELETE FROM user_notifications 
+                 WHERE type = 'friend_request' 
+                 AND ((user_id = ? AND actor_user_id = ?) OR (user_id = ? AND actor_user_id = ?))"
+            );
+            $stmt_delete_notify->execute([$currentUserId, $targetUserId, $targetUserId, $currentUserId]);
+            
+            $pdo->commit();
+            
+            // Notificar al otro usuario que su estado de amistad ha cambiado (a 'not_friends')
+            // No le decimos que ha sido bloqueado, solo que la amistad/solicitud ya no existe.
+            $payload = [
+                'type'          => 'friend_status_update',
+                'actor_user_id' => $currentUserId,
+                'new_status'    => 'not_friends'
+            ];
+            notifyUser($targetUserId, $payload);
+            
+            $response['success'] = true;
+            $response['message'] = 'js.chat.userBlocked'; // Necesitarás esta clave i18n
+        
+        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN (unblock-user) ▼▼▼ ---
+        } elseif ($action === 'unblock-user') {
+            
+            $stmt_unblock = $pdo->prepare("DELETE FROM user_blocks WHERE blocker_user_id = ? AND blocked_user_id = ?");
+            $stmt_unblock->execute([$currentUserId, $targetUserId]);
+            
+            if ($stmt_unblock->rowCount() > 0) {
+                $response['success'] = true;
+                $response['message'] = 'js.chat.userUnblocked'; // Necesitarás esta clave i18n
+            } else {
+                // No estaba bloqueado, pero igual es un éxito
+                $response['success'] = true; 
+                $response['message'] = 'js.chat.userUnblocked';
+            }
         }
+        // --- ▲▲▲ FIN DE NUEVAS ACCIONES ▲▲▲ ---
 
     } catch (Exception $e) {
         if ($e instanceof PDOException) {

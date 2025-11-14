@@ -6,6 +6,7 @@
 // (CORREGIDO: SEPARADA LA LÓGICA DE VER HISTORIAL VS ENVIAR MENSAJES)
 // (CORREGIDO: "NADIE" AHORA BLOQUEA EL ENVÍO DE MENSAJES)
 // (CORREGIDO: LÓGICA DE PRIVACIDAD SIMÉTRICA PARA "AMIGOS")
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (CORRECCIÓN DE LÓGICA DE ELIMINACIÓN DE CHAT) ▼▼▼ ---
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -78,6 +79,16 @@ function canSendMessage($pdo, $currentUserId, $receiverId) {
     if ($currentUserId == $receiverId) {
         return true;
     }
+    
+    // --- ▼▼▼ NUEVA COMPROBACIÓN DE BLOQUEO (BILATERAL) ▼▼▼ ---
+    // Si alguien ha bloqueado al otro, no se pueden enviar mensajes.
+    $stmt_block_check = $pdo->prepare("SELECT 1 FROM user_blocks WHERE (blocker_user_id = :user1 AND blocked_user_id = :user2) OR (blocker_user_id = :user2 AND blocked_user_id = :user1)");
+    $stmt_block_check->execute([':user1' => $currentUserId, ':user2' => $receiverId]);
+    if ($stmt_block_check->fetch()) {
+        return false; // Hay un bloqueo
+    }
+    // --- ▲▲▲ FIN DE COMPROBACIÓN DE BLOQUEO ▲▲▲ ---
+
 
     // Obtener la configuración de privacidad del RECEPTOR
     $stmt_privacy = $pdo->prepare("SELECT message_privacy_level FROM user_preferences WHERE user_id = ?");
@@ -115,7 +126,7 @@ function canSendMessage($pdo, $currentUserId, $receiverId) {
 
 /**
  * Lanza una Excepción si la mensajería está bloqueada.
- * (Ahora usa canSendMessage)
+ * (Ahora usa canSendMessage y comprueba al emisor)
  *
  * @param PDO $pdo
  * @param int $currentUserId
@@ -124,10 +135,31 @@ function canSendMessage($pdo, $currentUserId, $receiverId) {
  * @throws Exception
  */
 function checkMessagePrivacy($pdo, $currentUserId, $receiverId) {
-    if (!canSendMessage($pdo, $currentUserId, $receiverId)) {
-        throw new Exception('js.chat.errorPrivacyBlocked');
+    
+    // 1. Comprobar si el EMISOR ($currentUserId) tiene "Nadie".
+    $stmt_sender_privacy = $pdo->prepare("SELECT COALESCE(message_privacy_level, 'all') FROM user_preferences WHERE user_id = ?");
+    $stmt_sender_privacy->execute([$currentUserId]);
+    $senderPrivacy = $stmt_sender_privacy->fetchColumn();
+    
+    if ($senderPrivacy === 'none') {
+        // Si EL EMISOR tiene "nadie", no puede ENVIAR.
+        throw new Exception('js.chat.errorPrivacySenderBlocked'); 
     }
-    // Si está permitido, no hace nada.
+    
+    // 2. Comprobar si el EMISOR puede enviar al RECEPTOR (revisa bloqueos y reglas del RECEPTOR)
+    $canSenderSend = canSendMessage($pdo, $currentUserId, $receiverId);
+    if (!$canSenderSend) {
+        // canSendMessage ya incluye la lógica de bloqueo
+        throw new Exception('js.chat.errorBlocked'); // Usamos el nuevo error
+    }
+
+    // 3. Comprobar si el RECEPTOR podría responder al EMISOR (revisa las reglas del EMISOR)
+    $canReceiverReply = canSendMessage($pdo, $receiverId, $currentUserId);
+    if (!$canReceiverReply) {
+        throw new Exception('js.chat.errorPrivacyMutualBlocked');
+    }
+    
+    // Si todo está bien, no hace nada.
 }
 // --- ▲▲▲ FIN DE MODIFICACIÓN DE PRIVACIDAD ---
 
@@ -148,7 +180,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
-            // Consulta que obtiene amigos Y no-amigos con chat
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL GET-CONVERSATIONS) ▼▼▼ ---
+            // 1. Añadido COALESCE para la tabla chat_deletions (se mantiene)
+            // 2. Añadido EXISTS para la tabla user_blocks (se mantiene)
+            // 3. ¡NUEVO! Se añade deleted_timestamp al SELECT principal
+            // 4. ¡NUEVO! Se añade la cláusula HAVING al final
             $stmt_friends = $pdo->prepare(
                 "SELECT 
                     f.friend_id,
@@ -163,19 +199,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      WHERE ((cm.sender_id = :current_user_id AND cm.receiver_id = f.friend_id) 
                         OR (cm.sender_id = f.friend_id AND cm.receiver_id = :current_user_id))
                      AND cm.status = 'active'
+                     AND cm.created_at > COALESCE((SELECT deleted_until FROM chat_deletions WHERE user_id = :current_user_id AND conversation_user_id = f.friend_id), '1970-01-01')
                      ORDER BY cm.created_at DESC LIMIT 1) AS last_message,
                     (SELECT cm.created_at 
                      FROM chat_messages cm 
                      WHERE ((cm.sender_id = :current_user_id AND cm.receiver_id = f.friend_id) 
                         OR (cm.sender_id = f.friend_id AND cm.receiver_id = :current_user_id))
                      AND cm.status = 'active'
+                     AND cm.created_at > COALESCE((SELECT deleted_until FROM chat_deletions WHERE user_id = :current_user_id AND conversation_user_id = f.friend_id), '1970-01-01')
                      ORDER BY cm.created_at DESC LIMIT 1) AS last_message_time,
                     (SELECT COUNT(*) 
                      FROM chat_messages cm 
                      WHERE cm.sender_id = f.friend_id 
                        AND cm.receiver_id = :current_user_id 
                        AND cm.is_read = 0
-                       AND cm.status = 'active') AS unread_count
+                       AND cm.status = 'active'
+                       AND cm.created_at > COALESCE((SELECT deleted_until FROM chat_deletions WHERE user_id = :current_user_id AND conversation_user_id = f.friend_id), '1970-01-01')
+                       ) AS unread_count,
+                    (EXISTS(SELECT 1 FROM user_blocks WHERE (blocker_user_id = :current_user_id AND blocked_user_id = f.friend_id) OR (blocker_user_id = f.friend_id AND blocked_user_id = :current_user_id))) AS is_blocked_globally,
+                    (EXISTS(SELECT 1 FROM user_blocks WHERE blocker_user_id = :current_user_id AND blocked_user_id = f.friend_id)) AS is_blocked_by_me,
+                    (SELECT deleted_until FROM chat_deletions WHERE user_id = :current_user_id AND conversation_user_id = f.friend_id) AS deleted_timestamp
                 FROM (
                     -- 1. Todos los amigos aceptados
                     SELECT user_id_2 AS friend_id FROM friendships WHERE user_id_1 = :current_user_id AND status = 'accepted'
@@ -190,8 +233,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ) AS f
                 JOIN users u ON f.friend_id = u.id
                 WHERE f.friend_id != :current_user_id
+                HAVING last_message_time IS NOT NULL OR deleted_timestamp IS NULL
                 ORDER BY last_message_time DESC, u.username ASC"
             );
+            // --- ▲▲▲ FIN DE MODIFICACIÓN (SQL GET-CONVERSATIONS) ▲▲▲ ---
             
             $stmt_friends->execute([':current_user_id' => $currentUserId]);
             $friends = $stmt_friends->fetchAll();
@@ -200,6 +245,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($friend['profile_image_url'])) {
                     $friend['profile_image_url'] = "https://ui-avatars.com/api/?name=" . urlencode($friend['username']) . "&size=100&background=e0e0e0&color=ffffff";
                 }
+                $friend['is_blocked_by_me'] = (bool)$friend['is_blocked_by_me'];
+                $friend['is_blocked_globally'] = (bool)$friend['is_blocked_globally'];
             }
 
             $response['success'] = true;
@@ -212,24 +259,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD (GET HISTORY) ▼▼▼ ---
             
-            // 1. Comprobar la privacidad del RECEPTOR
-            $canSendToReceiver = canSendMessage($pdo, $currentUserId, $targetUserId);
-
-            // 2. Comprobar la privacidad del EMISOR (propia)
+            // 1. Comprobar si el EMISOR ($currentUserId) tiene "Nadie".
             $stmt_sender_privacy = $pdo->prepare("SELECT COALESCE(message_privacy_level, 'all') FROM user_preferences WHERE user_id = ?");
             $stmt_sender_privacy->execute([$currentUserId]);
             $senderPrivacy = $stmt_sender_privacy->fetchColumn();
-            
             $canSenderSend = ($senderPrivacy !== 'none');
 
-            // 3. La decisión final es si AMBOS son verdaderos
-            $canSendMessage = ($canSendToReceiver && $canSenderSend);
+            // 2. Comprobar si el EMISOR puede enviar al RECEPTOR (revisa bloqueos y reglas del RECEPTOR)
+            $canSendToReceiver = canSendMessage($pdo, $currentUserId, $targetUserId);
+            
+            // 3. Comprobar si el RECEPTOR podría responder al EMISOR (revisa las reglas del EMISOR)
+            $canReceiverReply = canSendMessage($pdo, $targetUserId, $currentUserId); // Invertido
 
+            // 4. La decisión final
+            $canSendMessage = ($canSenderSend && $canSendToReceiver && $canReceiverReply);
+            
             // --- ▲▲▲ FIN DE MODIFICACIÓN DE PRIVACIDAD (GET HISTORY) ▲▲▲ ---
 
             $beforeMessageId = (int)($_POST['before_message_id'] ?? 0);
 
-            // (El SQL para obtener mensajes no cambia)
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL GET-HISTORY) ▼▼▼ ---
+            // Añadido el filtro de chat_deletions
             $sql_select =
                 "SELECT 
                     cm.*,
@@ -245,7 +295,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  LEFT JOIN chat_messages AS replied_msg ON cm.reply_to_message_id = replied_msg.id
                  LEFT JOIN users AS replied_user ON replied_msg.sender_id = replied_user.id
                  WHERE ((cm.sender_id = :current_user_id AND cm.receiver_id = :target_user_id) 
-                    OR (cm.sender_id = :target_user_id AND cm.receiver_id = :current_user_id))";
+                    OR (cm.sender_id = :target_user_id AND cm.receiver_id = :current_user_id))
+                 AND cm.created_at > COALESCE((SELECT deleted_until FROM chat_deletions WHERE user_id = :current_user_id AND conversation_user_id = :target_user_id), '1970-01-01')
+                 ";
+            // --- ▲▲▲ FIN DE MODIFICACIÓN (SQL GET-HISTORY) ▲▲▲ ---
 
             if ($beforeMessageId > 0) {
                 $sql_select .= " AND cm.id < :before_message_id";
@@ -300,7 +353,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.api.invalidAction');
             }
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD (LÓGICA SIMÉTRICA) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD (SEND-MESSAGE) ▼▼▼ ---
             
             // 1. Comprobar si el EMISOR ($currentUserId) tiene "Nadie".
             $stmt_sender_privacy = $pdo->prepare("SELECT COALESCE(message_privacy_level, 'all') FROM user_preferences WHERE user_id = ?");
@@ -308,26 +361,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $senderPrivacy = $stmt_sender_privacy->fetchColumn();
             
             if ($senderPrivacy === 'none') {
-                // Si EL EMISOR tiene "nadie", no puede ENVIAR.
                 throw new Exception('js.chat.errorPrivacySenderBlocked'); 
             }
 
-            // 2. Comprobar si el EMISOR puede enviar al RECEPTOR (revisa las reglas del RECEPTOR)
+            // 2. Comprobar si el EMISOR puede enviar al RECEPTOR (revisa bloqueos y reglas del RECEPTOR)
             $canSenderSend = canSendMessage($pdo, $currentUserId, $receiverId);
             if (!$canSenderSend) {
-                // Caso: U1(Todos) -> U2(Amigos, no-amigo). U2 bloquea.
-                throw new Exception('js.chat.errorPrivacyBlocked');
+                // canSendMessage ya incluye la lógica de bloqueo
+                throw new Exception('js.chat.errorBlocked'); // Usamos el nuevo error
             }
 
             // 3. Comprobar si el RECEPTOR podría responder al EMISOR (revisa las reglas del EMISOR)
-            // Esto evita que U2(Amigos) envíe a U1(Todos) si no son amigos.
-            $canReceiverReply = canSendMessage($pdo, $receiverId, $currentUserId);
+            $canReceiverReply = canSendMessage($pdo, $receiverId, $currentUserId); // Invertido
             if (!$canReceiverReply) {
-                // Caso: U2(Amigos, no-amigo) -> U1(Todos). U2 bloquea la respuesta.
                 throw new Exception('js.chat.errorPrivacyMutualBlocked');
             }
             
-            // --- ▲▲▲ FIN DE MODIFICACIÓN DE PRIVACIDAD (LÓGICA SIMÉTRICA) ▲▲▲ ---
+            // --- ▲▲▲ FIN DE MODIFICACIÓN DE PRIVACIDAD (SEND-MESSAGE) ▲▲▲ ---
 
             if (empty($messageText) && (empty($uploadedFiles['name'][0]) || $uploadedFiles['error'][0] !== UPLOAD_ERR_OK)) {
                 throw new Exception('js.publication.errorEmpty'); // Mensaje vacío
@@ -479,6 +529,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             notifyUser($currentUserId, $payload);
             $response['success'] = true;
             $response['message'] = 'js.chat.successDeleted';
+        
+        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN (delete-chat) ▼▼▼ ---
+        } elseif ($action === 'delete-chat') {
+            
+            $targetUserId = (int)($_POST['target_user_id'] ?? 0);
+            if ($targetUserId === 0) {
+                throw new Exception('js.api.invalidAction');
+            }
+
+            // Inserta o actualiza el timestamp de eliminación para este usuario y esta conversación
+            $stmt_delete = $pdo->prepare(
+                "INSERT INTO chat_deletions (user_id, conversation_user_id, deleted_until) 
+                 VALUES (:user_id, :conversation_user_id, NOW())
+                 ON DUPLICATE KEY UPDATE deleted_until = NOW()"
+            );
+            $stmt_delete->execute([
+                ':user_id' => $currentUserId,
+                ':conversation_user_id' => $targetUserId
+            ]);
+            
+            $response['success'] = true;
+            $response['message'] = 'js.chat.chatDeleted'; // Necesitarás esta clave i18n
+        // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
+        
         }
     } catch (Exception $e) {
         if ($pdo->inTransaction()) {
@@ -499,3 +573,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 echo json_encode($response);
 exit;
+?>

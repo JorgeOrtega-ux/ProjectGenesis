@@ -463,4 +463,44 @@ CREATE TABLE `chat_message_attachments` (
   CONSTRAINT `chat_message_attachments_ibfk_2` FOREIGN KEY (`file_id`) REFERENCES `chat_files` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- ----------------------------
+-- --- ▼▼▼ INICIO DE TABLAS NUEVAS ▼▼▼ ---
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for user_blocks
+-- ----------------------------
+DROP TABLE IF EXISTS `user_blocks`;
+CREATE TABLE `user_blocks` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `blocker_user_id` int(11) NOT NULL COMMENT 'El usuario que inicia el bloqueo',
+  `blocked_user_id` int(11) NOT NULL COMMENT 'El usuario que es bloqueado',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_block_pair` (`blocker_user_id`,`blocked_user_id`),
+  KEY `idx_blocked_user` (`blocked_user_id`),
+  CONSTRAINT `user_blocks_ibfk_1` FOREIGN KEY (`blocker_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `user_blocks_ibfk_2` FOREIGN KEY (`blocked_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ----------------------------
+-- Table structure for chat_deletions
+-- ----------------------------
+DROP TABLE IF EXISTS `chat_deletions`;
+CREATE TABLE `chat_deletions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL COMMENT 'El usuario que elimina la conversación',
+  `conversation_user_id` int(11) NOT NULL COMMENT 'El otro usuario en el chat',
+  `deleted_until` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'Ocultar mensajes hasta esta fecha',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_conversation` (`user_id`,`conversation_user_id`),
+  KEY `idx_conversation_user` (`conversation_user_id`),
+  CONSTRAINT `chat_deletions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `chat_deletions_ibfk_2` FOREIGN KEY (`conversation_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ----------------------------
+-- --- ▲▲▲ FIN DE TABLAS NUEVAS ▲▲▲ ---
+-- ----------------------------
+
 SET FOREIGN_KEY_CHECKS=1;

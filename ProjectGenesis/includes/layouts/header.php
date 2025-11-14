@@ -135,7 +135,7 @@ $userRole = $_SESSION['role'] ?? 'user';
                 ?>
 
                 <div class="menu-link" data-action="toggleSectionSettingsProfile">
-                    <div class_name="menu-link-icon">
+                    <div class="menu-link-icon">
                         <span class="material-symbols-rounded">settings</span>
                     </div>
                     <div class="menu-link-text">
