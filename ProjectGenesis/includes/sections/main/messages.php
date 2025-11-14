@@ -1068,7 +1068,7 @@ if ($hasPreloadedUser) {
 
                 <form class="chat-message-input-form" id="chat-message-input-form" action="#">
                     <?php outputCsrfInput(); ?>
-                    <input type="hidden" id="chat-receiver-id" value="<?php echo $preloadedReceiverId; ?>">
+                    <input type="hidden" id="chat-target-id" value="<?php echo $preloadedReceiverId; ?>">
                     
                     <input type="hidden" id="chat-type" value="<?php echo $preloadedChatType; ?>">
                     <input type="file" id="chat-attachment-input" class="visually-hidden"
