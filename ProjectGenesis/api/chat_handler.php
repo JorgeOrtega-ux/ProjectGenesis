@@ -5,6 +5,7 @@
 // (MODIFICADO OTRA VEZ PARA PRIVACIDAD DE MENSAJES)
 // (CORREGIDO: SEPARADA LA LÓGICA DE VER HISTORIAL VS ENVIAR MENSAJES)
 // (CORREGIDO: "NADIE" AHORA BLOQUEA EL ENVÍO DE MENSAJES)
+// (CORREGIDO: LÓGICA DE PRIVACIDAD SIMÉTRICA PARA "AMIGOS")
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -215,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $canSendToReceiver = canSendMessage($pdo, $currentUserId, $targetUserId);
 
             // 2. Comprobar la privacidad del EMISOR (propia)
-            $stmt_sender_privacy = $pdo->prepare("SELECT message_privacy_level FROM user_preferences WHERE user_id = ?");
+            $stmt_sender_privacy = $pdo->prepare("SELECT COALESCE(message_privacy_level, 'all') FROM user_preferences WHERE user_id = ?");
             $stmt_sender_privacy->execute([$currentUserId]);
             $senderPrivacy = $stmt_sender_privacy->fetchColumn();
             
@@ -299,22 +300,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('js.api.invalidAction');
             }
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD (SEND MESSAGE) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN DE PRIVACIDAD (LÓGICA SIMÉTRICA) ▼▼▼ ---
             
-            // 1. Comprobar la configuración de privacidad del EMISOR ($currentUserId)
-            $stmt_sender_privacy = $pdo->prepare("SELECT message_privacy_level FROM user_preferences WHERE user_id = ?");
+            // 1. Comprobar si el EMISOR ($currentUserId) tiene "Nadie".
+            $stmt_sender_privacy = $pdo->prepare("SELECT COALESCE(message_privacy_level, 'all') FROM user_preferences WHERE user_id = ?");
             $stmt_sender_privacy->execute([$currentUserId]);
             $senderPrivacy = $stmt_sender_privacy->fetchColumn();
             
             if ($senderPrivacy === 'none') {
-                // Si EL EMISOR tiene "nadie", no puede ENVIAR mensajes.
+                // Si EL EMISOR tiene "nadie", no puede ENVIAR.
                 throw new Exception('js.chat.errorPrivacySenderBlocked'); 
             }
 
-            // 2. Comprobación de privacidad del RECEPTOR (lógica existente)
-            checkMessagePrivacy($pdo, $currentUserId, $receiverId);
+            // 2. Comprobar si el EMISOR puede enviar al RECEPTOR (revisa las reglas del RECEPTOR)
+            $canSenderSend = canSendMessage($pdo, $currentUserId, $receiverId);
+            if (!$canSenderSend) {
+                // Caso: U1(Todos) -> U2(Amigos, no-amigo). U2 bloquea.
+                throw new Exception('js.chat.errorPrivacyBlocked');
+            }
+
+            // 3. Comprobar si el RECEPTOR podría responder al EMISOR (revisa las reglas del EMISOR)
+            // Esto evita que U2(Amigos) envíe a U1(Todos) si no son amigos.
+            $canReceiverReply = canSendMessage($pdo, $receiverId, $currentUserId);
+            if (!$canReceiverReply) {
+                // Caso: U2(Amigos, no-amigo) -> U1(Todos). U2 bloquea la respuesta.
+                throw new Exception('js.chat.errorPrivacyMutualBlocked');
+            }
             
-            // --- ▲▲▲ FIN DE MODIFICACIÓN DE PRIVACIDAD (SEND MESSAGE) ▲▲▲ ---
+            // --- ▲▲▲ FIN DE MODIFICACIÓN DE PRIVACIDAD (LÓGICA SIMÉTRICA) ▲▲▲ ---
 
             if (empty($messageText) && (empty($uploadedFiles['name'][0]) || $uploadedFiles['error'][0] !== UPLOAD_ERR_OK)) {
                 throw new Exception('js.publication.errorEmpty'); // Mensaje vacío

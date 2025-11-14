@@ -5,6 +5,7 @@
 // (MODIFICADO CON CONSOLE.LOGS PARA DEPURACIÓN)
 // (CORREGIDO: Lógica de filtrado de lista y bloqueo de input por privacidad)
 // (CORREGIDO: Bug de bloqueo de input en envío exitoso)
+// (CORREGIDO: Lógica de privacidad simétrica para "Amigos")
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -849,13 +850,20 @@ async function sendMessage() {
             showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
             
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (Nuevos errores de privacidad) ▼▼▼ ---
-            // Comprobar el error. Si es de privacidad (receptor O emisor), bloquear. Si no, re-habilitar.
-            if (result.message === 'js.chat.errorPrivacyBlocked' || result.message === 'js.chat.errorPrivacySenderBlocked') {
+            // Comprobar el error. Si es de privacidad (receptor, emisor O mutuo), bloquear. Si no, re-habilitar.
+            if (result.message === 'js.chat.errorPrivacyBlocked' || 
+                result.message === 'js.chat.errorPrivacySenderBlocked' ||
+                result.message === 'js.chat.errorPrivacyMutualBlocked') {
+                
                 enableChatInput(false);
-                // Opcional: mostrar alerta específica si es error del emisor
+                
+                // Opcional: mostrar alertas específicas
                 if (result.message === 'js.chat.errorPrivacySenderBlocked') {
                     showAlert(getTranslation('js.chat.errorPrivacySenderBlocked', 'No puedes enviar mensajes mientras tu privacidad esté configurada en "Nadie".'), 'error');
+                } else if (result.message === 'js.chat.errorPrivacyMutualBlocked') {
+                    showAlert(getTranslation('js.chat.errorPrivacyMutualBlocked', 'No puedes enviar este mensaje. Tu configuración de privacidad de "Solo Amigos" impide que este usuario te responda.'), 'error');
                 }
+
             } else {
                 // Otro error de API (ej. "mensaje vacío"), re-habilitar
                 enableChatInput(true);
