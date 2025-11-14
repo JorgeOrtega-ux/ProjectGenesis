@@ -4,6 +4,7 @@
 // (MODIFICADO OTRA VEZ - Cambiado /messages/username a /messages/uuid)
 // (MODIFICADO DE NUEVO - Para mostrar error de privacidad en lugar de 404)
 // (CORREGIDO - Para comprobar el historial existente antes de mostrar el error de privacidad)
+// (CORREGIDO DE NUEVO - Añadida 'messaging-disabled' a $allowedPages)
 
 include '../config.php';
 
@@ -98,6 +99,10 @@ $allowedPages = [
     'server-full' => '../../includes/sections/main/status-page.php',
     'account-status-deleted' => '../../includes/sections/main/status-page.php',
     'account-status-suspended' => '../../includes/sections/main/status-page.php',
+    
+    // --- ▼▼▼ ¡ESTA ES LA LÍNEA QUE FALTABA! ▼▼▼ ---
+    'messaging-disabled' => '../../includes/sections/main/status-page.php',
+    // --- ▲▲▲ ¡FIN DE LA LÍNEA AÑADIDA! ▲▲▲ ---
 
     // --- ▼▼▼ RUTA ELIMINADA ▼▼▼ ---
     // 'join-group' => '../../includes/sections/main/join-group.php',

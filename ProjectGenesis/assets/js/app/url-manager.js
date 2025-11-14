@@ -1,6 +1,7 @@
 // FILE: assets/js/app/url-manager.js
 // (CORREGIDO - Error 'Cannot access 'page' before initialization')
 // (MODIFICADO OTRA VEZ - Cambiado /messages/username a /messages/uuid)
+// (CORREGIDO CON LÓGICA DE MENSAJERÍA DESHABILITADA)
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
@@ -63,6 +64,10 @@ const routes = {
 
     'toggleSectionAccountStatusDeleted': 'account-status-deleted',
     'toggleSectionAccountStatusSuspended': 'account-status-suspended',
+
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (RUTA AÑADIDA) ▼▼▼ ---
+    'toggleSectionMessagingDisabled': 'messaging-disabled',
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     'toggleSectionAdminDashboard': 'admin-dashboard',
     'toggleSectionAdminManageUsers': 'admin-manage-users',
@@ -129,6 +134,10 @@ const paths = {
 
     '/account-status/deleted': 'toggleSectionAccountStatusDeleted',
     '/account-status/suspended': 'toggleSectionAccountStatusSuspended',
+
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (RUTA AÑADIDA) ▼▼▼ ---
+    '/messaging-disabled': 'toggleSectionMessagingDisabled',
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     '/admin/dashboard': 'toggleSectionAdminDashboard',
     '/admin/manage-users': 'toggleSectionAdminManageUsers',
@@ -466,7 +475,7 @@ export function handleNavigation() {
     // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
     // 3. Cambiar 'const' por una simple asignación
     page = routes[action];
-    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+    // --- ▲▲▲ FIN DE LA CORRECCIÓN ▼▼▼ ---
 
     if (page) {
         loadPage(page, action);
@@ -712,6 +721,39 @@ export function initRouter() {
                 }
                 return;
             }
+
+            // --- ▼▼▼ INICIO DEL NUEVO BLOQUE DE VERIFICACIÓN (LÓGICA DE CHAT DESHABILITADO) ▼▼▼ ---
+            if (page === 'messages') {
+                // Estas variables globales vienen de main-layout.php
+                const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
+                const isMessagingEnabled = (window.isMessagingEnabled === true); // Asumir true si no se define
+
+                // Si la mensajería está APAGADA y el usuario NO es un admin
+                if (isMessagingEnabled === false && !isPrivileged) {
+                    
+                    console.log("Navegación de chat bloqueada por el router JS.");
+                    
+                    // Redirigir al cliente a la página de "deshabilitado"
+                    newPath = '/messaging-disabled';
+                    action = 'toggleSectionMessagingDisabled'; 
+                    page = 'messaging-disabled'; 
+                    
+                    fetchParams = null; // Limpiar cualquier parámetro (ej. /messages/uuid-...)
+                    
+                    const fullUrlPath = `${basePath}${newPath}`;
+                    
+                    // Comprobar si ya estamos allí
+                    const currentFullUrl = window.location.pathname + window.location.search;
+                    if (currentFullUrl !== fullUrlPath) {
+                        history.pushState(null, '', fullUrlPath);
+                        loadPage(page, action, fetchParams, false);
+                    }
+                    
+                    deactivateAllModules();
+                    return; // ¡Importante! Detener la navegación original a /messages
+                }
+            }
+            // --- ▲▲▲ FIN DEL NUEVO BLOQUE DE VERIFICACIÓN ▲▲▲ ---
 
             const queryString = (url && url.search) ? url.search : '';
             let fullUrlPath;

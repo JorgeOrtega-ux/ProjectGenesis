@@ -92,6 +92,10 @@
         window.isUserLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
         // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
+        // --- ▼▼▼ INICIO DE LÍNEA A AÑADIR (LÓGICA DE CHAT DESHABILITADO) ▼▼▼ ---
+        window.isMessagingEnabled = <?php echo ($GLOBALS['site_settings']['messaging_service_enabled'] ?? '1') === '1' ? 'true' : 'false'; ?>;
+        // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+
         window.userTheme = '<?php echo $_SESSION['theme'] ?? 'system'; ?>';
         window.userIncreaseMessageDuration = <?php echo $_SESSION['increase_message_duration'] ?? 0; ?>;
 

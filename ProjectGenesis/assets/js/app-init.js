@@ -2,7 +2,9 @@
 // (MODIFICADO)
 
 import { initMainController } from './app/main-controller.js';
+// --- ▼▼▼ MODIFICACIÓN: import loadPage ▼▼▼ ---
 import { initRouter, loadPage } from './app/url-manager.js';
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 import { initAuthManager } from './modules/auth-manager.js';
 import { initSettingsManager } from './modules/settings-manager.js';
 import { initAdminManager } from './modules/admin-manager.js';
@@ -171,6 +173,36 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 }, 3000);
                             }
                         }
+
+                        // --- ▼▼▼ INICIO DEL BLOQUE NUEVO ▼▼▼ ---
+                        // Estado del servicio de mensajería
+                        else if (data.type === 'messaging_status_update') {
+                            const newStatus = data.status; // "enabled" o "disabled"
+                            console.log(`[WS] Recibido estado de mensajería: ${newStatus}`);
+                            
+                            // 1. Actualizar la variable global INSTANTÁNEAMENTE
+                            window.isMessagingEnabled = (newStatus === 'enabled');
+
+                            // 2. Comprobar si el usuario está VIENDO la página de mensajes
+                            const currentSection = document.querySelector('.section-content.active')?.dataset.section;
+                            
+                            // 3. Si el servicio se deshabilitó y el usuario está en "messages", expulsarlo.
+                            if (newStatus === 'disabled' && currentSection === 'messages') {
+                                const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
+                                
+                                // Solo expulsar si NO es un admin
+                                if (!isPrivileged) {
+                                    console.log("[WS] Mensajería deshabilitada. Expulsando usuario de /messages...");
+                                    window.showAlert(getTranslation('page.messaging_disabled.description'), 'error');
+                                    
+                                    // Usar la función de navegación de url-manager
+                                    const newPath = `${window.projectBasePath}/messaging-disabled`;
+                                    history.pushState(null, '', newPath);
+                                    loadPage('messaging-disabled', 'toggleSectionMessagingDisabled', null, false);
+                                }
+                            }
+                        }
+                        // --- ▲▲▲ FIN DEL BLOQUE NUEVO ▲▲▲ ---
 
                         // Nuevo voto encuesta
                         else if (data.type === 'new_poll_vote' && data.payload) {

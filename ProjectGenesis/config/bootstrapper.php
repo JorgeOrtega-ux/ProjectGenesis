@@ -466,18 +466,25 @@ $pathsToPages = [
 // 3. Determinar la página actual y los tipos de página
 $currentPage = $pathsToPages[$path] ?? '404';
 
-// --- ▼▼▼ MODIFICACIÓN: Añadir 'search-results' a $authPages ▼▼▼ ---
-// (Corrección: 'search-results' NO debe estar en authPages, debe REQUERIR autenticación)
-// --- ▼▼▼ INICIO DE LÍNEA MODIFICADA (AÑADIR 'messaging-disabled') ▼▼▼ ---
-$authPages = ['login', 'maintenance', 'server-full']; 
-$isAuthPage = in_array($currentPage, $authPages) || 
-              strpos($currentPage, 'register-') === 0 ||
-              strpos($currentPage, 'reset-') === 0 ||
-              strpos($currentPage, 'account-status-') === 0 ||
-              $currentPage === 'messaging-disabled'; // <-- Nueva página de estado
-// --- ▲▲▲ FIN DE LÍNEA MODIFICADA ▲▲▲ ---
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+// --- ▼▼▼ INICIO DE LA MODIFICACIÓN (SEPARAR LÓGICA DE LAYOUT Y REDIRECCIÓN) ▼▼▼ ---
 
+// LÓGICA DE LAYOUT: Define qué páginas NO tienen header/sidebar.
+// Esta variable $isAuthPage es la que usará 'main-layout.php'.
+$authLayoutPages = ['login']; 
+$isAuthPage = in_array($currentPage, $authLayoutPages) || 
+              strpos($currentPage, 'register-') === 0 ||
+              strpos($currentPage, 'reset-') === 0;
+
+// LÓGICA DE REDIRECCIÓN: Define qué páginas puede ver un usuario no logueado.
+$statusPages = ['maintenance', 'server-full', 'account-status-deleted', 'account-status-suspended', 'messaging-disabled'];
+$isStatusPage = in_array($currentPage, $statusPages);
+
+$authAndStatusPagesForRedirect = array_merge($authLayoutPages, $statusPages);
+$isAuthPageForRedirect = in_array($currentPage, $authAndStatusPagesForRedirect) || 
+                         strpos($currentPage, 'register-') === 0 ||
+                         strpos($currentPage, 'reset-') === 0;
+
+// Definir las variables de tipo de página que usa main-layout.php
 $isSettingsPage = strpos($currentPage, 'settings-') === 0;
 $isAdminPage = strpos($currentPage, 'admin-') === 0;
 
@@ -487,32 +494,36 @@ if ($isAdminPage && isset($_SESSION['user_id'])) {
     if ($userRole !== 'administrator' && $userRole !== 'founder') {
         $isAdminPage = false; // No es un admin
         $currentPage = '404'; // Tratar la página como 404
+        $isAuthPage = false; // 404 tiene layout
     }
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (SEGURIDAD DE BACKUPS) ▼▼▼ ---
     // Solo los 'founder' pueden ver las páginas de backups y logs
     if (($currentPage === 'admin-manage-backups' || $currentPage === 'admin-restore-backup' || $currentPage === 'admin-manage-logs') && $userRole !== 'founder') {
         $isAdminPage = true; // Sigue siendo admin, pero...
         $currentPage = '404'; // No tiene permiso para esta página específica
+        $isAuthPage = false; // 404 tiene layout
     }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 }
 
-// Redirigir a login si no está logueado y no es página de auth
-if (!isset($_SESSION['user_id']) && !$isAuthPage) {
+// Redirigir a login si no está logueado Y NO está en una página de auth/status
+if (!isset($_SESSION['user_id']) && !$isAuthPageForRedirect) {
     header('Location: ' . $basePath . '/login');
     exit;
 }
-// Redirigir a home si está logueado e intenta ir a auth
-// --- ▼▼▼ MODIFICACIÓN: Añadir 'server-full' y 'messaging-disabled' a la exclusión ▼▼▼ ---
-if (isset($_SESSION['user_id']) && $isAuthPage && $currentPage !== 'maintenance' && $currentPage !== 'server-full' && $currentPage !== 'messaging-disabled') { 
+
+// Redirigir a home si ESTÁ logueado E INTENTA ir a una página de auth (no de estado)
+// (Ej. logueado y va a /login -> /)
+// (Ej. logueado y va a /maintenance -> se queda en /maintenance)
+if (isset($_SESSION['user_id']) && $isAuthPage && !$isStatusPage) { 
+    // Si el modo mantenimiento está APAGADO, redirigir a home
     if ($maintenanceMode !== '1') {
          header('Location: ' . $basePath . '/');
          exit;
     }
 }
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+// --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
+
 
 // Redirecciones de conveniencia
 if ($path === '/settings') {
