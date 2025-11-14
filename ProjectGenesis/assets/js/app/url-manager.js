@@ -2,6 +2,7 @@
 // (CORREGIDO - Error 'Cannot access 'page' before initialization')
 // (MODIFICADO OTRA VEZ - Cambiado /messages/username a /messages/uuid)
 // (CORREGIDO CON LÓGICA DE MENSAJERÍA DESHABILITADA EN CLICK Y POPSTATE)
+// --- ▼▼▼ MODIFICACIÓN (ELIMINADA LÓGICA DE CHAT DE COMUNIDAD) ▼▼▼ ---
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
@@ -91,12 +92,11 @@ const paths = {
 
     '/trends': 'toggleSectionTrends', // --- [HASTAGS] --- Nueva ruta
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Rutas de Mensajes) ▼▼▼ ---
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (RUTAS DE MENSAJES) ▼▼▼ ---
     '/messages': 'toggleSectionMessages',
     '/messages/uuid-placeholder': 'toggleSectionMessages', // <-- Placeholder actualizado
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX) 1 DE 3 ▼▼▼ ---
-    // Se añade el placeholder para el chat de comunidad
-    '/messages/community-placeholder': 'toggleSectionMessages',
+    // (Placeholder de chat de comunidad eliminado)
     // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX) 1 DE 3 ▲▲▲ ---
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
@@ -422,9 +422,9 @@ export function handleNavigation() {
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Regex de Perfil y Mensajes) ▼▼▼ ---
     const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(posts|likes|bookmarks|info|amigos|fotos))?$/i;
     const messagesRegex = /^\/messages\/([a-fA-F0-9\-]{36})$/i; // <-- MODIFICADO
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX) 2 DE 3 ▼▼▼ ---
-    const communityMessagesRegex = /^\/messages\/community\/([a-fA-F0-9\-]{36})$/i; // <-- AÑADIDO
-    // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX) 2 DE 3 ▲▲▲ ---
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Regex de chat de comunidad eliminada) ▼▼▼ ---
+    // const communityMessagesRegex = /^\/messages\/community\/([a-fA-F0-9\-]{36})$/i;
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
@@ -479,26 +479,11 @@ export function handleNavigation() {
         loadPage(page, action, { user_uuid: userUuid }); 
         return;
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX) 3 DE 3 ▼▼▼ ---
-    } else if (communityMessagesRegex.test(path)) { 
-        action = 'toggleSectionMessages';
-        page = 'messages';
-        
-        const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
-        const isMessagingEnabled = (window.isMessagingEnabled === true);
-        if (isMessagingEnabled === false && !isPrivileged) {
-            console.warn("handleNavigation (popstate): Navegación a 'messages/community' bloqueada.");
-            const newPath = `${basePath}/messaging-disabled`;
-            history.replaceState(null, '', newPath); 
-            loadPage('messaging-disabled', 'toggleSectionMessagingDisabled', null, false);
-            return; 
-        }
-        
-        const matches = path.match(communityMessagesRegex);
-        const communityUuid = matches[1];
-        loadPage(page, action, { community_uuid: communityUuid }); // <-- Usar community_uuid
-        return;
-    // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX) 3 DE 3 ▲▲▲ ---
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Bloque de chat de comunidad eliminado) ▼▼▼ ---
+    // } else if (communityMessagesRegex.test(path)) { 
+    //     ...
+    // }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
 
     } else {
@@ -530,7 +515,7 @@ export function handleNavigation() {
         // --- ▼▼▼ INICIO DEL BLOQUE DE VERIFICACIÓN (PARA /messages) ▼▼▼ ---
         if (page === 'messages') {
             const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
-            const isMessagingEnabled = (window.isMessagingEnabled === true);
+            const isMessagingEnabled = (window.isMessagingEnabled === true); // Asumir true si no se define
 
             if (isMessagingEnabled === false && !isPrivileged) {
                 
@@ -736,9 +721,9 @@ export function initRouter() {
                 // --- ▼▼▼ INICIO DE MODIFICACIÓN (Nuevos Regex) ▼▼▼ ---
                 const profileRegex = /^\/profile\/([a-zA-Z0-9_]+)(?:\/(posts|likes|bookmarks|info|amigos|fotos))?$/i;
                 const messagesRegex = /^\/messages\/([a-fA-F0-9\-]{36})$/i; // <-- MODIFICADO
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX) 3 DE 3 ▼▼▼ ---
-                const communityMessagesRegex = /^\/messages\/community\/([a-fA-F0-9\-]{36})$/i; // <-- AÑADIDO
-                // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX) 3 DE 3 ▲▲▲ ---
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Regex de chat de comunidad eliminada) ▼▼▼ ---
+                // const communityMessagesRegex = /^\/messages\/community\/([a-fA-F0-9\-]{36})$/i;
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                 if (postViewRegex.test(newPath)) {
@@ -759,20 +744,18 @@ export function initRouter() {
                     const matches = newPath.match(profileRegex);
                     fetchParams = { username: matches[1], tab: matches[2] || 'posts' };
 
-                    // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Manejo de URL de Mensajes) ▼▼▼ ---
+                // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO (Manejo de URL de Mensajes) ▼▼▼ ---
                 } else if (messagesRegex.test(newPath)) {
                     action = 'toggleSectionMessages';
                     page = 'messages';
                     const matches = newPath.match(messagesRegex);
                     fetchParams = { user_uuid: matches[1] }; // <-- CAMBIADO
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX) 3 DE 3 ▼▼▼ ---
-                } else if (communityMessagesRegex.test(newPath)) { // <-- AÑADIDO
-                    action = 'toggleSectionMessages';
-                    page = 'messages';
-                    const matches = newPath.match(communityMessagesRegex);
-                    fetchParams = { community_uuid: matches[1] }; // <-- AÑADIDO
-                // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX) 3 DE 3 ▲▲▲ ---
-                    // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Bloque de chat de comunidad eliminado) ▼▼▼ ---
+                // } else if (communityMessagesRegex.test(newPath)) { 
+                //    ...
+                // }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
 
                 } else {
                     if (newPath === '/settings') newPath = '/settings/your-profile';

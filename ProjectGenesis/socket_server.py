@@ -13,13 +13,11 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] %(
 #   Nos dice qué usuarios están conectados y con cuántos dispositivos.
 CLIENTS_BY_USER_ID = {} 
 
-# CLIENTS_BY_SESSION_ID: Mapea session_id -> (websocket, user_id, community_ids)
+# CLIENTS_BY_SESSION_ID: Mapea session_id -> (websocket, user_id)
 #   Nos permite encontrar y eliminar rápidamente un websocket específico.
 CLIENTS_BY_SESSION_ID = {}
 
-# CLIENTS_BY_COMMUNITY_ID: Mapea community_id -> set(websockets)
-#   Nos permite notificar a todos en un chat de grupo.
-CLIENTS_BY_COMMUNITY_ID = {}
+# (CLIENTS_BY_COMMUNITY_ID eliminado)
 # --- ▲▲▲ FIN DE MODIFICACIÓN ▼▼▼ ---
 
 
@@ -50,35 +48,30 @@ async def broadcast_presence_update(user_id, status):
     })
     
     # Obtenemos todos los websockets de todas las sesiones
-    all_websockets = [ws for ws, uid, cids in CLIENTS_BY_SESSION_ID.values()]
+    all_websockets = [ws for ws, uid in CLIENTS_BY_SESSION_ID.values()]
     if all_websockets:
         # Enviamos el mensaje a todos en paralelo
         tasks = [ws.send(message) for ws in all_websockets]
         await asyncio.gather(*tasks, return_exceptions=True)
 
 # --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (register_client) ▼▼▼ ---
-async def register_client(websocket, user_id, session_id, community_ids):
+async def register_client(websocket, user_id, session_id):
     """Añade un cliente a los diccionarios de seguimiento."""
     
     # 1. Comprobar si era la primera conexión de este usuario
     is_first_connection = user_id not in CLIENTS_BY_USER_ID or not CLIENTS_BY_USER_ID[user_id]
 
     # 2. Guardar por ID de sesión (para búsqueda rápida)
-    CLIENTS_BY_SESSION_ID[session_id] = (websocket, user_id, community_ids)
+    CLIENTS_BY_SESSION_ID[session_id] = (websocket, user_id)
     
     # 3. Guardar por ID de usuario (para expulsiones y estado)
     if user_id not in CLIENTS_BY_USER_ID:
         CLIENTS_BY_USER_ID[user_id] = set()
     CLIENTS_BY_USER_ID[user_id].add(websocket)
     
-    # 4. Suscribirse a los chats de comunidad
-    if community_ids:
-        for community_id in community_ids:
-            if community_id not in CLIENTS_BY_COMMUNITY_ID:
-                CLIENTS_BY_COMMUNITY_ID[community_id] = set()
-            CLIENTS_BY_COMMUNITY_ID[community_id].add(websocket)
+    # 4. (Lógica de comunidad eliminada)
     
-    logging.info(f"[WS] Cliente autenticado: user_id={user_id}, session_id={session_id[:5]}... Comunidades: {len(community_ids)}. Conexiones totales: {len(CLIENTS_BY_SESSION_ID)}")
+    logging.info(f"[WS] Cliente autenticado: user_id={user_id}, session_id={session_id[:5]}... Conexiones totales: {len(CLIENTS_BY_SESSION_ID)}")
     
     # 5. Si es la primera vez que se conecta, notificar a todos que está "online"
     if is_first_connection:
@@ -95,7 +88,7 @@ async def unregister_client(session_id):
     if not ws_tuple:
         return # Ya fue eliminado
 
-    websocket, user_id, community_ids = ws_tuple
+    websocket, user_id = ws_tuple
 
     # 2. Eliminar de la lista de ID de usuario
     if user_id in CLIENTS_BY_USER_ID:
@@ -111,13 +104,7 @@ async def unregister_client(session_id):
             # 5. Notificar al backend PHP para que actualice "last_seen"
             await notify_backend_of_offline(user_id)
             
-    # 6. Eliminar de las salas de comunidad
-    if community_ids:
-        for community_id in community_ids:
-            if community_id in CLIENTS_BY_COMMUNITY_ID:
-                CLIENTS_BY_COMMUNITY_ID[community_id].remove(websocket)
-                if not CLIENTS_BY_COMMUNITY_ID[community_id]:
-                    del CLIENTS_BY_COMMUNITY_ID[community_id]
+    # 6. (Lógica de comunidad eliminada)
             
     logging.info(f"[WS] Cliente desconectado: session_id={session_id[:5]}... Conexiones totales: {len(CLIENTS_BY_SESSION_ID)}")
 # --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (unregister_client) ▲▲▲ ---
@@ -127,7 +114,7 @@ async def ws_handler(websocket):
     """Manejador principal de conexiones WebSocket."""
     session_id = None
     user_id = 0
-    community_ids = []
+    # (community_ids eliminada)
     try:
         # --- Esperar mensaje de autenticación ---
         message_json = await websocket.recv()
@@ -136,15 +123,14 @@ async def ws_handler(websocket):
         # 1. Leer los nuevos campos de autenticación
         if (data.get("type") == "auth" and 
             data.get("user_id") and 
-            data.get("session_id") and 
-            data.get("community_ids") is not None):
+            data.get("session_id")):
             
             user_id = int(data["user_id"])
             session_id = data["session_id"]
-            community_ids = data["community_ids"] # Lista de IDs [1, 2, 3]
+            # (community_ids eliminada)
             
             if user_id > 0:
-                await register_client(websocket, user_id, session_id, community_ids)
+                await register_client(websocket, user_id, session_id)
             else:
                 raise Exception("ID de usuario no válido")
         else:
@@ -181,7 +167,7 @@ async def ws_handler(websocket):
         logging.error(f"[WS] Error en la conexión: {e}")
     finally:
         if session_id:
-            # unregister_client usará el session_id para encontrar el (ws, user_id, community_ids)
+            # unregister_client usará el session_id para encontrar el (ws, user_id)
             await unregister_client(session_id)
 # --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (ws_handler) ▲▲▲ ---
 
@@ -229,7 +215,7 @@ async def http_handler_kick(request):
         
         for ws in list(websockets_to_kick):
             current_session_id = None
-            for sid, (w, uid, cids) in CLIENTS_BY_SESSION_ID.items():
+            for sid, (w, uid) in CLIENTS_BY_SESSION_ID.items():
                 if w == ws:
                     current_session_id = sid
                     break
@@ -332,7 +318,7 @@ async def broadcast_messaging_status_update(status_payload_json):
     
     logging.info(f"[HTTP-BROADCAST] Retransmitiendo estado de mensajería a todos los clientes: {status_payload_json}")
     
-    all_websockets = [ws for ws, uid, cids in CLIENTS_BY_SESSION_ID.values()]
+    all_websockets = [ws for ws, uid in CLIENTS_BY_SESSION_ID.values()]
     if all_websockets:
         tasks = [ws.send(status_payload_json) for ws in all_websockets]
         await asyncio.gather(*tasks, return_exceptions=True)
@@ -398,56 +384,9 @@ async def http_handler_notify_user(request):
         logging.error(f"[HTTP-NOTIFY] Error al procesar notificación: {e}")
         return web.json_response({"status": "error", "message": str(e)}, status=400)
 
-# --- ▼▼▼ INICIO DE NUEVA FUNCIÓN (notify-community) ▼▼▼ ---
-async def http_handler_notify_community(request):
-    """
-    Recibe una notificación de chat de comunidad y la reenvía a todos los miembros.
-    Espera JSON: {"community_id": 123, "sender_id": 456, "payload": {...}}
-    """
-    if request.method != 'POST':
-        return web.Response(status=405)
-
-    try:
-        data = await request.json()
-        community_id = int(data.get("community_id"))
-        sender_id = int(data.get("sender_id"))
-        payload_data = data.get("payload") # El payload completo
-
-        if not community_id or not sender_id or not payload_data:
-            raise ValueError("Faltan community_id, sender_id o payload")
-            
-        logging.info(f"[HTTP-NOTIFY-COMM] Recibida notificación para community_id={community_id} (De: {sender_id})")
-
-        # 1. Obtener todos los sockets de la sala de comunidad
-        websockets_in_community = CLIENTS_BY_COMMUNITY_ID.get(community_id)
-        if not websockets_in_community:
-            logging.info(f"[HTTP-NOTIFY-COMM] No hay nadie en la sala community_id={community_id}.")
-            return web.json_response({"status": "ok", "notified": 0})
-        
-        # 2. Obtener los sockets del remitente (para no enviarle su propio mensaje)
-        sender_websockets = CLIENTS_BY_USER_ID.get(sender_id, set())
-        
-        # 3. Preparar el mensaje
-        message_json = json.dumps(payload_data)
-        tasks = []
-        
-        # 4. Enviar a todos en la sala EXCEPTO a los sockets del remitente
-        for ws in list(websockets_in_community):
-            if ws not in sender_websockets:
-                tasks.append(ws.send(message_json))
-
-        notified_count = 0
-        if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)
-            notified_count = len(tasks)
-
-        logging.info(f"[HTTP-NOTIFY-COMM] Notificación enviada a {notified_count} miembros de la comunidad.")
-        return web.json_response({"status": "ok", "notified": notified_count})
-
-    except Exception as e:
-        logging.error(f"[HTTP-NOTIFY-COMM] Error al procesar notificación de comunidad: {e}")
-        return web.json_response({"status": "error", "message": str(e)}, status=400)
-# --- ▲▲▲ FIN DE NUEVA FUNCIÓN ▲▲▲ ---
+# --- ▼▼▼ INICIO DE MODIFICACIÓN (Función eliminada) ▼▼▼ ---
+# (http_handler_notify_community eliminada)
+# --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
 async def run_ws_server():
@@ -470,7 +409,7 @@ async def run_http_server():
     
     # --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR RUTAS) ▼▼▼ ---
     http_app.router.add_post("/broadcast-messaging-status", http_handler_broadcast_messaging_status)
-    http_app.router.add_post("/notify-community", http_handler_notify_community)
+    # (Ruta /notify-community eliminada)
     # --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     http_runner = web.AppRunner(http_app)

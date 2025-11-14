@@ -1,11 +1,10 @@
 // FILE: assets/js/app-init.js
 // (MODIFICADO - Añadida función para desbloquear audio en la primera interacción)
 // (MODIFICADO - Corregida la recepción de mensajes de comunidad en WebSocket)
+// (MODIFICADO - Eliminada lógica de chat de comunidad)
 
 import { initMainController } from './app/main-controller.js';
-// --- ▼▼▼ MODIFICACIÓN: import loadPage ▼▼▼ ---
 import { initRouter, loadPage } from './app/url-manager.js';
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 import { initAuthManager } from './modules/auth-manager.js';
 import { initSettingsManager } from './modules/settings-manager.js';
 import { initAdminManager } from './modules/admin-manager.js';
@@ -14,20 +13,16 @@ import { initAdminServerSettingsManager } from './modules/admin-server-settings-
 import { initAdminBackupModule } from './modules/admin-backup-module.js'; 
 import { initCommunityManager } from './modules/community-manager.js';
 
-// --- IMPORTACIÓN MODIFICADA ---
 import { setupPublicationListeners } from './modules/publication-manager.js';
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGE) ▼▼▼ ---
 import { 
     initChatManager,
     handleChatMessageReceived,
     handleTypingEvent,
     handleMessageDeleted,
-    fetchInitialUnreadCount // <-- AÑADIDO
+    fetchInitialUnreadCount 
 } from './modules/chat-manager.js';
-// --- ▲▲▲ FIN DE MODIFICACIÓN (BADGE) ▲▲▲ ---
 
-// --- LÍNEA MODIFICADA (updateProfileActions) ---
 import { 
     initFriendManager,
     initFriendList,
@@ -39,14 +34,12 @@ import { initI18nManager, getTranslation } from './services/i18n-manager.js';
 import { initTooltipManager } from './services/tooltip-manager.js';
 import { initSearchManager } from './modules/search-manager.js';
 
-// --- IMPORTACIÓN MODIFICADA ---
 import { 
     initNotificationManager, 
     fetchInitialCount, 
     handleNotificationPing 
 } from './modules/notification-manager.js';
 
-// --- NUEVA IMPORTACIÓN ---
 import { initAdminCommunityManager } from './modules/admin-community-manager.js';
 
 
@@ -84,7 +77,6 @@ function initThemeManager() {
     });
 }
 
-// --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! (LA SOLUCIÓN) ▼▼▼ ---
 /**
  * Intenta desbloquear la reproducción automática de audio en la primera interacción del usuario.
  * Los navegadores modernos bloquean .play() si no es iniciado por el usuario.
@@ -129,21 +121,16 @@ function initAudioUnlock() {
     document.body.addEventListener('click', unlockAudio);
     document.body.addEventListener('keydown', unlockAudio);
 }
-// --- ▲▲▲ ¡FIN DE NUEVA FUNCIÓN! ▲▲▲ ---
 
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR ASYNC) ▼▼▼ ---
 document.addEventListener('DOMContentLoaded', async function () {
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     window.showAlert = showAlert;
 
     await initI18nManager();
     initThemeManager();
 
-    // --- ▼▼▼ ¡NUEVA LLAMADA A FUNCIÓN AÑADIDA! ▼▼▼ ---
     initAudioUnlock(); 
-    // --- ▲▲▲ ¡FIN DE NUEVA LLAMADA! ▲▲▲ ---
 
     initMainController();
     initAuthManager();
@@ -162,9 +149,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     initSearchManager();
     initAdminCommunityManager();
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR AWAIT) ▼▼▼ ---
-    // 1. Espera a que initChatManager termine (y obtenga los IDs de comunidad)
-    await initChatManager();
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (await eliminado) ▼▼▼ ---
+    // initChatManager ya no es async
+    initChatManager();
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     initRouter();
@@ -172,12 +159,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     if (window.isUserLoggedIn) {
 
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGE) ▼▼▼ ---
         // Notificaciones iniciales
         fetchInitialCount();
         // Conteo inicial de mensajes
         fetchInitialUnreadCount();
-        // --- ▲▲▲ FIN DE MODIFICACIÓN (BADGE) ▲▲▲ ---
 
         let ws;
 
@@ -192,12 +177,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                 ws.onopen = () => {
                     console.log("[WS] Conectado al servidor en:", wsUrl);
 
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR community_ids) ▼▼▼ ---
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (community_ids eliminada) ▼▼▼ ---
                     const authMessage = {
                         type: "auth",
                         user_id: window.userId || 0,
-                        session_id: window.csrfToken || "",
-                        community_ids: window.myCommunityIds || [] // Enviar los IDs
+                        session_id: window.csrfToken || ""
                     };
                     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     
@@ -243,38 +227,29 @@ document.addEventListener('DOMContentLoaded', async function () {
                             }
                         }
 
-                        // --- ▼▼▼ INICIO DEL BLOQUE CORREGIDO (TU SUGERENCIA B) ▼▼▼ ---
                         // Estado del servicio de mensajería
                         else if (data.type === 'messaging_status_update') {
                             const newStatus = data.status; // "enabled" o "disabled"
                             console.log(`[WS] Recibido estado de mensajería: ${newStatus}`);
                             
-                            // 1. Actualizar la variable global INSTANTÁNEAMENTE
                             window.isMessagingEnabled = (newStatus === 'enabled');
 
-                            // 2. Comprobar si el usuario está VIENDO la página de mensajes
                             const currentSection = document.querySelector('.section-content.active')?.dataset.section;
                             
-                            // 3. Si el servicio se deshabilitó y el usuario está en "messages", expulsarlo.
                             if (newStatus === 'disabled' && currentSection === 'messages') {
                                 const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
                                 
-                                // Solo expulsar si NO es un admin
                                 if (!isPrivileged) {
                                     console.log("[WS] Mensajería deshabilitada. Expulsando usuario a /home...");
                                     window.showAlert(getTranslation('page.messaging_disabled.description'), 'error');
                                     
-                                    // --- ¡ESTA ES TU SOLUCIÓN! ---
-                                    // 1. Reemplaza la URL actual (/messages o /messages/uuid) por /home
                                     const newPath = `${window.projectBasePath}/`;
                                     history.replaceState(null, '', newPath); 
                                     
-                                    // 2. Carga la página de /home
                                     loadPage('home', 'toggleSectionHome', null, false);
                                 }
                             }
                         }
-                        // --- ▲▲▲ FIN DEL BLOQUE CORREGIDO ▲▲▲ ---
 
                         // Nuevo voto encuesta
                         else if (data.type === 'new_poll_vote' && data.payload) {
@@ -292,21 +267,17 @@ document.addEventListener('DOMContentLoaded', async function () {
                             handleNotificationPing();
                         }
 
-                        // --- ▼▼▼ INICIO DE CORRECCIÓN (MENSAJES DE COMUNIDAD) ▼▼▼ ---
+                        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Eliminado 'new_community_message') ▼▼▼ ---
                         
                         // Chat: nuevo mensaje (DM)
                         else if (data.type === 'new_chat_message') {
                             console.log("[WS] Mensaje de chat (DM) recibido");
-                            handleChatMessageReceived(data.payload, 'dm'); // Se añade 'dm'
+                            handleChatMessageReceived(data.payload); // 'dm' ya no es necesario
                         }
                         
-                        // Chat: nuevo mensaje (Comunidad)
-                        else if (data.type === 'new_community_message') {
-                            console.log("[WS] Mensaje de chat (Comunidad) recibido");
-                            handleChatMessageReceived(data.payload, 'community'); // Se añade este bloque
-                        }
+                        // --- (Bloque 'new_community_message' eliminado) ---
                         
-                        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
                         // Chat: mensaje eliminado
                         else if (data.type === 'message_deleted') {
@@ -372,12 +343,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         }
         
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (MOVER LLAMADA) ▼▼▼ ---
-        // 2. Mover la llamada a connectWebSocket() aquí, para que se ejecute
-        //    después de que 'await initChatManager()' haya terminado.
         connectWebSocket();
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
+        
         window.addEventListener('beforeunload', () => {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.close(1000, "Navegación de usuario");

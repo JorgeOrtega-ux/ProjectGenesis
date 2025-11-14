@@ -1,28 +1,14 @@
 // FILE: assets/js/modules/chat-manager.js
-// (MODIFICADO PARA PAGINACIÓN, RESPUESTAS Y ELIMINAR)
-// (MODIFICADO OTRA VEZ PARA USAR UUID EN URLS)
-// (MODIFICADO DE NUEVO PARA ARREGLAR LA RECARGA DE LA LISTA DEL REMITENTE)
-// (MODIFICADO CON CONSOLE.LOGS PARA DEPURACIÓN)
-// (CORREGIDO: Lógica de filtrado de lista y bloqueo de input por privacidad)
-// (CORREGIDO: Bug de bloqueo de input en envío exitoso)
-// (CORREGIDO: Lógica de privacidad simétrica para "Amigos")
-// (MODIFICADO: Añadido menú contextual de chat CON LÓGICA DE BLOQUEO/ELIMINAR)
-// (CORREGIDO: Usar e.stopImmediatePropagation() para prevenir colisión con url-manager)
-// (CORREGIDO: Limpiar la URL después de eliminar un chat activo)
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (FAVORITOS, FIJADOS Y ARCHIVADOS) ▼▼▼ ---
-// --- ▼▼▼ (TABLA RENOMBRADA A user_conversation_metadata) ▼▼▼ ---
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (SISTEMA DE CHAT DE COMUNIDAD) ▼▼▼ ---
+// (MODIFICADO PARA ELIMINAR CHATS DE COMUNIDAD)
 
-import { callChatApi, callFriendApi, callCommunityApi } from '../services/api-service.js'; // <-- callCommunityApi AÑADIDO
+import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
 import { showAlert } from '../services/alert-manager.js';
-// --- ▼▼▼ INICIO DE IMPORTACIONES AÑADIDAS ▼▼▼ ---
 import { createPopper } from 'https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/esm/popper.min.js';
 import { deactivateAllModules } from '../app/main-controller.js';
-// --- ▲▲▲ FIN DE IMPORTACIONES AÑADIDAS ▼▼▼ ---
 
-let currentChatUserId = null;
-let friendCache = []; // <-- AHORA SOLO PARA DMs
+let currentChatUserId = null; // ID del amigo con el que se está chateando
+let friendCache = []; // Caché solo para DMs
 const defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 
 let selectedAttachments = [];
@@ -32,21 +18,16 @@ let isLoadingOlderMessages = false;
 let allMessagesLoaded = false;      
 const CHAT_PAGE_SIZE = 30;          
 
-// --- ▼▼▼ INICIO DE NUEVAS VARIABLES GLOBALES ▼▼▼ ---
-let currentReplyMessageId = null; // Almacena el ID del mensaje al que se está respondiendo
+let currentReplyMessageId = null; 
 let typingTimer;
 let isTyping = false;
-let chatPopperInstance = null; // Instancia para el popover de contexto del chat
-let currentChatFilter = 'all'; // Estado del filtro: 'all', 'favorites', 'unread', 'archived', 'communities'
-let currentUnreadMessageCount = 0; // <-- AÑADIDO PARA EL BADGE
+let chatPopperInstance = null; 
+let currentChatFilter = 'all'; // Estado del filtro: 'all', 'favorites', 'unread', 'archived'
+let currentUnreadMessageCount = 0; 
 
-let communityCache = []; // <-- NUEVO CACHÉ PARA COMUNIDADES
-let currentChatTargetId = null; // ID (de usuario o comunidad)
-let currentChatType = 'dm'; // 'dm' o 'community'
-let myCommunityIds = []; // IDs de las comunidades del usuario (para el WebSocket)
-// --- ▲▲▲ FIN DE NUEVAS VARIABLES GLOBALES ▼▼▼ ---
+let currentChatTargetId = null; // ID (de usuario)
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN (SONIDO DE NOTIFICACIÓN) ▼▼▼ ---
+
 /**
  * Intenta reproducir el sonido de notificación de chat.
  * Maneja los errores de autoplay del navegador.
@@ -54,7 +35,7 @@ let myCommunityIds = []; // IDs de las comunidades del usuario (para el WebSocke
 function playNotificationSound() {
     const audio = document.getElementById('chat-notification-sound');
     if (audio) {
-        audio.currentTime = 0; // Reiniciar por si se reciben muchos mensajes seguidos
+        audio.currentTime = 0; 
         const playPromise = audio.play();
         
         if (playPromise !== undefined) {
@@ -67,7 +48,6 @@ function playNotificationSound() {
         console.warn("Elemento de audio #chat-notification-sound no encontrado.");
     }
 }
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
 /**
@@ -94,7 +74,6 @@ function formatTime(dateString) {
     } catch (e) { return ''; }
 }
 
-// --- ▼▼▼ INICIO DE FUNCIÓN AÑADIDA (Lógica de Time Ago) ▼▼▼ ---
 /**
  * Convierte un timestamp UTC en un string legible "Activo hace X".
  * @param {string} dateTimeString - El timestamp UTC de la BD.
@@ -148,9 +127,6 @@ function formatTimeAgo(dateTimeString) {
         return getTranslation('chat.offline', 'Desconectado');
     }
 }
-// --- ▲▲▲ FIN DE NUEVA FUNCIÓN AÑADIDA ▲▲▲ ---
-
-// --- ▼▼▼ INICIO DE NUEVAS FUNCIONES (BADGE) ▼▼▼ ---
 
 /**
  * Actualiza el badge de mensajes no leídos en el header.
@@ -190,17 +166,14 @@ export async function fetchInitialUnreadCount() {
         console.error("[ChatBadge] fetchInitialUnreadCount: No se pudo obtener el conteo inicial.");
     }
 }
-// --- ▲▲▲ FIN DE NUEVAS FUNCIONES (BADGE) ▲▲▲ ---
 
 
-// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (renderConversationList) ▼▼▼ ---
 /**
  * Renderiza la lista de conversaciones en el panel izquierdo.
- * @param {Array} conversations - La lista de conversaciones (DMs o Comunidades).
- * @param {string} type - 'dm' o 'community'.
+ * @param {Array} conversations - La lista de conversaciones (DMs).
  */
-function renderConversationList(conversations, type = 'dm') {
-    console.log(`%c[RENDER] renderConversationList() -> Renderizando ${conversations.length} conversaciones de tipo [${type}].`, 'color: purple; font-weight: bold;');
+function renderConversationList(conversations) {
+    console.log(`%c[RENDER] renderConversationList() -> Renderizando ${conversations.length} conversaciones.`, 'color: purple; font-weight: bold;');
     
     const listContainer = document.getElementById('chat-conversation-list');
     const loader = document.getElementById('chat-list-loader');
@@ -230,7 +203,6 @@ function renderConversationList(conversations, type = 'dm') {
         } else if (currentChatFilter !== 'all') {
             // Causa: Filtro de insignia activo
             switch (currentChatFilter) {
-                // ... (casos 'favorites', 'unread', 'archived' sin cambios) ...
                 case 'favorites':
                     emptyIcon.textContent = 'star_outline';
                     emptyText.textContent = getTranslation('chat.empty.favorites', 'No tienes chats en favoritos.');
@@ -246,13 +218,7 @@ function renderConversationList(conversations, type = 'dm') {
                     emptyText.textContent = getTranslation('chat.empty.archived', 'No tienes chats archivados.');
                     emptyText.dataset.i18n = 'chat.empty.archived';
                     break;
-                // --- ▼▼▼ NUEVO CASO AÑADIDO ▼▼▼ ---
-                case 'communities':
-                    emptyIcon.textContent = 'groups';
-                    emptyText.textContent = getTranslation('chat.empty.communities', 'No estás en ningún chat de comunidad.');
-                    emptyText.dataset.i18n = 'chat.empty.communities';
-                    break;
-                // --- ▲▲▲ FIN DE NUEVO CASO ▲▲▲ ---
+                // (Caso 'communities' eliminado)
                 default:
                     // Fallback por si acaso
                     emptyIcon.textContent = 'chat';
@@ -279,16 +245,16 @@ function renderConversationList(conversations, type = 'dm') {
     let html = '';
 
     conversations.forEach(convo => {
-        let name, avatar, role, statusClass, timestamp, snippet, unreadBadge, chatUrl, isBlockedClass, indicatorsHtml, dataAttributes;
         
         const isPinned = convo.pinned_at ? 'true' : 'false';
         const isFavorite = convo.is_favorite ? 'true' : 'false';
         const isArchived = convo.is_archived ? 'true' : 'false';
         
-        timestamp = convo.last_message_time ? formatTime(convo.last_message_time) : '';
+        let timestamp = convo.last_message_time ? formatTime(convo.last_message_time) : '';
         const unreadCount = parseInt(convo.unread_count, 10);
-        unreadBadge = unreadCount > 0 ? `<span class="chat-item-unread-badge">${unreadCount}</span>` : '';
+        let unreadBadge = unreadCount > 0 ? `<span class="chat-item-unread-badge">${unreadCount}</span>` : '';
 
+        let snippet;
         if (convo.last_message === '[Imagen]') {
             snippet = `<span data-i18n="chat.snippet.image">${getTranslation('chat.snippet.image', '[Imagen]')}</span>`;
         } else if (convo.last_message === 'Se eliminó este mensaje') {
@@ -299,7 +265,7 @@ function renderConversationList(conversations, type = 'dm') {
             snippet = '...';
         }
         
-        indicatorsHtml = `
+        let indicatorsHtml = `
             <div class="chat-item-indicators">
                 <span class="chat-item-indicator favorite" style="display: ${isFavorite === 'true' ? 'inline-block' : 'none'};">
                     <span class="material-symbols-rounded">star</span>
@@ -310,123 +276,71 @@ function renderConversationList(conversations, type = 'dm') {
             </div>
         `;
 
-        if (type === 'dm') {
-            name = convo.username;
-            avatar = convo.profile_image_url || defaultAvatar;
-            role = convo.role;
-            statusClass = convo.is_online ? 'online' : 'offline';
-            chatUrl = `${window.projectBasePath}/messages/${convo.uuid}`;
-            isBlockedClass = convo.is_blocked_globally ? 'is-blocked' : '';
-            
-            dataAttributes = `
-               data-type="dm"
-               data-target-id="${convo.friend_id}" 
-               data-username="${escapeHTML(name)}" 
-               data-avatar="${escapeHTML(avatar)}" 
-               data-role="${escapeHTML(role)}"
-               data-uuid="${convo.uuid}"
-               data-is-blocked-by-me="${convo.is_blocked_by_me}"
-               data-is-blocked-globally="${convo.is_blocked_globally}"
-               data-last-seen="${convo.last_seen || ''}"
-            `;
-            
-            html += `
-                <a class="chat-conversation-item ${isBlockedClass}" 
-                   href="${chatUrl}"
-                   data-nav-js="true"
-                   ${dataAttributes}
-                   data-is-favorite="${isFavorite}"
-                   data-pinned-at="${convo.pinned_at || ''}"
-                   data-is-archived="${isArchived}">
-                   
-                    <div class="chat-item-avatar" data-role="${escapeHTML(role)}">
-                        <img src="${escapeHTML(avatar)}" alt="${escapeHTML(name)}">
-                        <span class="chat-item-status ${statusClass}" id="chat-status-dot-${convo.friend_id}"></span>
+        // --- Lógica de DM (única lógica ahora) ---
+        let name = convo.username;
+        let avatar = convo.profile_image_url || defaultAvatar;
+        let role = convo.role;
+        let statusClass = convo.is_online ? 'online' : 'offline';
+        let chatUrl = `${window.projectBasePath}/messages/${convo.uuid}`;
+        let isBlockedClass = convo.is_blocked_globally ? 'is-blocked' : '';
+        
+        let dataAttributes = `
+           data-type="dm"
+           data-target-id="${convo.friend_id}" 
+           data-username="${escapeHTML(name)}" 
+           data-avatar="${escapeHTML(avatar)}" 
+           data-role="${escapeHTML(role)}"
+           data-uuid="${convo.uuid}"
+           data-is-blocked-by-me="${convo.is_blocked_by_me}"
+           data-is-blocked-globally="${convo.is_blocked_globally}"
+           data-last-seen="${convo.last_seen || ''}"
+        `;
+        
+        html += `
+            <a class="chat-conversation-item ${isBlockedClass}" 
+               href="${chatUrl}"
+               data-nav-js="true"
+               ${dataAttributes}
+               data-is-favorite="${isFavorite}"
+               data-pinned-at="${convo.pinned_at || ''}"
+               data-is-archived="${isArchived}">
+               
+                <div class="chat-item-avatar" data-role="${escapeHTML(role)}">
+                    <img src="${escapeHTML(avatar)}" alt="${escapeHTML(name)}">
+                    <span class="chat-item-status ${statusClass}" id="chat-status-dot-${convo.friend_id}"></span>
+                </div>
+                <div class="chat-item-info">
+                    <div class="chat-item-info-header">
+                        <span class="chat-item-username">${escapeHTML(name)}</span>
+                        <span class="chat-item-timestamp">${timestamp}</span>
                     </div>
-                    <div class="chat-item-info">
-                        <div class="chat-item-info-header">
-                            <span class="chat-item-username">${escapeHTML(name)}</span>
-                            <span class="chat-item-timestamp">${timestamp}</span>
-                        </div>
-                        <div class="chat-item-snippet-wrapper">
-                            <span class="chat-item-snippet">${snippet}</span>
-                            ${indicatorsHtml}
-                            ${unreadBadge}
-                        </div>
+                    <div class="chat-item-snippet-wrapper">
+                        <span class="chat-item-snippet">${snippet}</span>
+                        ${indicatorsHtml}
+                        ${unreadBadge}
                     </div>
+                </div>
 
-                    <div class="chat-item-actions">
-                        <button type="button" class="chat-item-action-btn" data-action="toggle-chat-context-menu" title="Más opciones">
-                            <span class="material-symbols-rounded">more_vert</span>
-                        </button>
-                    </div>
-                </a>
-            `;
-            
-        } else { // type === 'community'
-            name = convo.name;
-            avatar = convo.icon_url || defaultAvatar;
-            role = 'community'; // Rol especial para estilo
-            statusClass = 'online'; // Los grupos siempre están "online"
-            chatUrl = `${window.projectBasePath}/messages/community/${convo.uuid}`; // Nueva URL
-            isBlockedClass = ''; // Los grupos no se bloquean
-            
-            dataAttributes = `
-               data-type="community"
-               data-target-id="${convo.id}" 
-               data-name="${escapeHTML(name)}" 
-               data-avatar="${escapeHTML(avatar)}" 
-               data-role="${role}"
-               data-uuid="${convo.uuid}"
-            `;
-            
-            html += `
-                <a class="chat-conversation-item ${isBlockedClass}" 
-                   href="${chatUrl}"
-                   data-nav-js="true"
-                   ${dataAttributes}
-                   data-is-favorite="${isFavorite}"
-                   data-pinned-at="${convo.pinned_at || ''}"
-                   data-is-archived="${isArchived}">
-                   
-                    <div class="chat-item-avatar" data-role="${role}" style="border-radius: 8px;">
-                        <img src="${escapeHTML(avatar)}" alt="${escapeHTML(name)}" style="border-radius: 8px;">
-                    </div>
-                    <div class="chat-item-info">
-                        <div class="chat-item-info-header">
-                            <span class="chat-item-username">${escapeHTML(name)}</span>
-                            <span class="chat-item-timestamp">${timestamp}</span>
-                        </div>
-                        <div class="chat-item-snippet-wrapper">
-                            <span class="chat-item-snippet">${snippet}</span>
-                            ${indicatorsHtml}
-                            ${unreadBadge}
-                        </div>
-                    </div>
-
-                    <div class="chat-item-actions">
-                        <button type="button" class="chat-item-action-btn" data-action="toggle-chat-context-menu" title="Más opciones">
-                            <span class="material-symbols-rounded">more_vert</span>
-                        </button>
-                    </div>
-                </a>
-            `;
-        }
+                <div class="chat-item-actions">
+                    <button type="button" class="chat-item-action-btn" data-action="toggle-chat-context-menu" title="Más opciones">
+                        <span class="material-symbols-rounded">more_vert</span>
+                    </button>
+                </div>
+            </a>
+        `;
     });
     listContainer.innerHTML = html;
     console.log("[RENDER] Renderización completada.");
 }
-// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (renderConversationList) ---
 
-// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (filterConversationList) ▼▼▼ ---
 function filterConversationList(query) {
     console.log(`%c[FILTER] filterConversationList() -> Query: "${query}", Filtro: "${currentChatFilter}"`, 'color: orange; font-weight: bold;');
     
     query = query.toLowerCase().trim();
     
-    let sourceCache = (currentChatFilter === 'communities') ? communityCache : friendCache;
-    let nameProperty = (currentChatFilter === 'communities') ? 'name' : 'username';
-    let renderType = (currentChatFilter === 'communities') ? 'community' : 'dm';
+    let sourceCache = friendCache;
+    let nameProperty = 'username';
+    let renderType = 'dm';
 
     let filteredBySearch = [];
     if (!query) {
@@ -458,7 +372,7 @@ function filterConversationList(query) {
             return parseInt(convo.unread_count, 10) > 0;
         }
         
-        // Si el filtro es 'all' o 'communities', muestra todo lo que no esté archivado
+        // Si el filtro es 'all', muestra todo lo que no esté archivado
         return true; 
     });
     
@@ -469,13 +383,16 @@ function filterConversationList(query) {
     console.log("[FILTER] Llamando a renderConversationList...");
     renderConversationList(conversationsToShow, renderType);
 }
-// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (filterConversationList) ---
 
-// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (loadConversations) ▼▼▼ ---
 async function loadConversations(filter = 'all') {
     console.groupCollapsed(`%c[LOAD CONVERSATIONS] 🔄 loadConversations(filter: ${filter}) iniciada...`, "color: blue; font-weight: bold;");
     
-    // Guardar el filtro actual
+    // Si el filtro es 'communities', simplemente cámbialo a 'all'.
+    if (filter === 'communities') {
+        console.log("[LOAD CONVERSATIONS] Filtro 'communities' detectado, cambiando a 'all'.");
+        filter = 'all';
+    }
+    
     currentChatFilter = filter;
     
     // Actualizar la UI de los filtros
@@ -491,13 +408,7 @@ async function loadConversations(filter = 'all') {
     if (emptyEl) emptyEl.style.display = 'none';
     if (listContainer) listContainer.innerHTML = '';
     
-    let action = 'get-conversations'; // DMs
-    let renderType = 'dm';
-    
-    if (filter === 'communities') {
-        action = 'get-community-conversations';
-        renderType = 'community';
-    }
+    let action = 'get-conversations'; // <-- Hardcoded
     
     try {
         const formData = new FormData();
@@ -511,32 +422,27 @@ async function loadConversations(filter = 'all') {
             
             let conversations = result.conversations;
             
-            if (renderType === 'dm') {
-                // Solo los DMs necesitan el estado en tiempo real de esta forma
-                let onlineUserIds = {};
-                try {
-                    const presenceFormData = new FormData();
-                    presenceFormData.append('action', 'get-friends-list');
-                    const presenceResult = await callFriendApi(presenceFormData);
-                    if (presenceResult.success) {
-                        presenceResult.friends.forEach(friend => {
-                            if (friend.is_online) {
-                                onlineUserIds[friend.friend_id] = true;
-                            }
-                        });
-                    }
-                } catch (e) {
-                    console.warn("[LOAD CONVERSATIONS] No se pudo obtener el estado online en tiempo real.", e);
+            // Lógica de DMs (ahora incondicional)
+            let onlineUserIds = {};
+            try {
+                const presenceFormData = new FormData();
+                presenceFormData.append('action', 'get-friends-list');
+                const presenceResult = await callFriendApi(presenceFormData);
+                if (presenceResult.success) {
+                    presenceResult.friends.forEach(friend => {
+                        if (friend.is_online) {
+                            onlineUserIds[friend.friend_id] = true;
+                        }
+                    });
                 }
-                conversations.forEach(convo => {
-                    convo.is_online = !!onlineUserIds[convo.friend_id];
-                });
-                friendCache = conversations; // Guardar en caché de DMs
-                console.log("[LOAD CONVERSATIONS] friendCache actualizado:", friendCache);
-            } else {
-                communityCache = conversations; // Guardar en caché de Comunidades
-                console.log("[LOAD CONVERSATIONS] communityCache actualizado:", communityCache);
+            } catch (e) {
+                console.warn("[LOAD CONVERSATIONS] No se pudo obtener el estado online en tiempo real.", e);
             }
+            conversations.forEach(convo => {
+                convo.is_online = !!onlineUserIds[convo.friend_id];
+            });
+            friendCache = conversations; // Guardar en caché de DMs
+            console.log("[LOAD CONVERSATIONS] friendCache actualizado:", friendCache);
             
             const searchInput = document.getElementById('chat-friend-search');
             const currentQuery = searchInput ? searchInput.value : '';
@@ -554,9 +460,7 @@ async function loadConversations(filter = 'all') {
     }
     console.groupEnd();
 }
-// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (loadConversations) ---
 
-// --- (scrollToBottom sin cambios) ---
 function scrollToBottom() {
     const msgList = document.getElementById('chat-message-list');
     if (msgList) {
@@ -566,7 +470,6 @@ function scrollToBottom() {
     }
 }
 
-// --- (enableChatInput sin cambios) ---
 function enableChatInput(allow, reason = null) {
     const input = document.getElementById('chat-message-input');
     const attachBtn = document.getElementById('chat-attach-button');
@@ -597,7 +500,6 @@ function enableChatInput(allow, reason = null) {
     }
 }
 
-// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (createMessageBubbleHtml) ▼▼▼ ---
 function createMessageBubbleHtml(msg, isSent) {
     const myUserId = parseInt(window.userId, 10);
     const myAvatar = document.querySelector('.header-profile-image')?.src || defaultAvatar;
@@ -610,31 +512,15 @@ function createMessageBubbleHtml(msg, isSent) {
         avatar = myAvatar;
         role = myRole;
     } else {
-        // --- INICIO DE LÓGICA DE COMUNIDAD ---
-        if (currentChatType === 'community') {
-            // En un chat de comunidad, msg.sender_id es el ID del remitente
-            // Necesitamos buscarlo en la caché de amigos (si está) o usar los datos del mensaje
-            const friend = friendCache.find(f => f.friend_id === msg.sender_id);
-            if (friend) {
-                avatar = friend.profile_image_url || defaultAvatar;
-                role = friend.role || 'user';
-            } else {
-                // Fallback a los datos del mensaje (si vienen)
-                avatar = msg.sender_avatar || defaultAvatar;
-                role = msg.sender_role || 'user';
-            }
+        // Lógica de DM
+        const friendItem = document.querySelector(`.chat-conversation-item[data-target-id="${msg.sender_id}"]`);
+        if (friendItem) {
+            avatar = friendItem.dataset.avatar;
+            role = friendItem.dataset.role;
         } else {
-            // Lógica de DM (sin cambios)
-            const friendItem = document.querySelector(`.chat-conversation-item[data-user-id="${msg.sender_id}"]`);
-            if (friendItem) {
-                avatar = friendItem.dataset.avatar;
-                role = friendItem.dataset.role;
-            } else {
-                avatar = document.getElementById('chat-header-avatar').src;
-                role = 'user'; 
-            }
+            avatar = document.getElementById('chat-header-avatar').src;
+            role = 'user'; // Fallback
         }
-        // --- FIN DE LÓGICA DE COMUNIDAD ---
     }
     
     let actionsMenuHtml = '';
@@ -704,12 +590,7 @@ function createMessageBubbleHtml(msg, isSent) {
         `;
     }
 
-    // --- ▼▼▼ INICIO DE LÓGICA DE NOMBRE DE COMUNIDAD ▼▼▼ ---
-    let senderNameHtml = '';
-    if (currentChatType === 'community' && !isSent) {
-        senderNameHtml = `<div class="chat-bubble-sender-name">${escapeHTML(msg.sender_username || 'Usuario')}</div>`;
-    }
-    // --- ▲▲▲ FIN DE LÓGICA DE NOMBRE DE COMUNIDAD ▲▲▲ ---
+    // (senderNameHtml eliminado)
 
     const deletedClass = (msg.status === 'deleted') ? 'deleted' : '';
     const bubbleHtml = `
@@ -718,7 +599,6 @@ function createMessageBubbleHtml(msg, isSent) {
                 <img src="${escapeHTML(avatar)}" alt="Avatar">
             </div>
             <div class="chat-bubble-main-content">
-                ${senderNameHtml} 
                 ${replyContextHtml}
                 ${attachmentsHtml}
                 ${textHtml}
@@ -729,9 +609,7 @@ function createMessageBubbleHtml(msg, isSent) {
     
     return bubbleHtml;
 }
-// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (createMessageBubbleHtml) ---
 
-// --- (renderChatHistory sin cambios) ---
 function renderChatHistory(messages) {
     const msgList = document.getElementById('chat-message-list');
     if (!msgList) return;
@@ -751,7 +629,6 @@ function renderChatHistory(messages) {
     scrollToBottom();
 }
 
-// --- (prependChatHistory sin cambios) ---
 function prependChatHistory(messages) {
     const msgList = document.getElementById('chat-message-list');
     if (!msgList || messages.length === 0) return;
@@ -774,7 +651,6 @@ function prependChatHistory(messages) {
     msgList.scrollTop = newScrollHeight - oldScrollHeight;
 }
 
-// --- (showHistoryLoader sin cambios) ---
 function showHistoryLoader(show) {
     const msgList = document.getElementById('chat-message-list');
     if (!msgList) return;
@@ -795,7 +671,6 @@ function showHistoryLoader(show) {
     }
 }
 
-// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (loadChatHistory) ▼▼▼ ---
 async function loadChatHistory(targetId, beforeId = null) {
     const msgList = document.getElementById('chat-message-list');
     const isPaginating = beforeId !== null;
@@ -811,8 +686,7 @@ async function loadChatHistory(targetId, beforeId = null) {
 
     const formData = new FormData();
     formData.append('action', 'get-chat-history');
-    formData.append('chat_type', currentChatType); // <-- AÑADIDO
-    formData.append('target_id', targetId); // <-- AÑADIDO (target_id en lugar de target_user_id)
+    formData.append('target_id', targetId); // <-- Modificado
     if (isPaginating) {
         formData.append('before_message_id', beforeId);
     }
@@ -839,12 +713,10 @@ async function loadChatHistory(targetId, beforeId = null) {
                 }
             }
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGE) ▼▼▼ ---
             // Actualizar el conteo total si la API lo devuelve (sucede al abrir un chat)
             if (result.new_total_unread_count !== undefined) {
                 setUnreadMessageCount(result.new_total_unread_count);
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN (BADGE) ▲▲▲ ---
             
         } else {
             if (!isPaginating) {
@@ -868,12 +740,10 @@ async function loadChatHistory(targetId, beforeId = null) {
         }
     }
 }
-// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (loadChatHistory) ---
 
 
-// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (openChat) ▼▼▼ ---
 /**
- * Carga el historial de chat con un amigo o comunidad.
+ * Carga el historial de chat con un amigo.
  */
 async function openChat(targetId, name, avatar, role, isOnline, lastSeen) {
     const placeholder = document.getElementById('chat-content-placeholder');
@@ -893,19 +763,14 @@ async function openChat(targetId, name, avatar, role, isOnline, lastSeen) {
     const statusEl = document.getElementById('chat-header-status');
     const avatarEl = document.getElementById('chat-header-avatar').closest('.chat-header-avatar');
     
-    if (role === 'community') {
-        avatarEl.style.borderRadius = '8px'; // Avatar cuadrado para comunidades
-        statusEl.textContent = getTranslation('chat.community', 'Chat Grupal'); // Texto para comunidad
-        statusEl.className = 'chat-header-status active'; // Sin 'online'
+    // --- Lógica de DM (única lógica ahora) ---
+    avatarEl.style.borderRadius = '50%'; // Avatar redondo para DMs
+    if (isOnline) {
+        statusEl.textContent = getTranslation('chat.online', 'Online');
+        statusEl.className = 'chat-header-status online active';
     } else {
-        avatarEl.style.borderRadius = '50%'; // Avatar redondo para DMs
-        if (isOnline) {
-            statusEl.textContent = getTranslation('chat.online', 'Online');
-            statusEl.className = 'chat-header-status online active';
-        } else {
-            statusEl.textContent = formatTimeAgo(lastSeen);
-            statusEl.className = 'chat-header-status active';
-        }
+        statusEl.textContent = formatTimeAgo(lastSeen);
+        statusEl.className = 'chat-header-status active';
     }
     
     const typingEl = document.getElementById('chat-header-typing');
@@ -925,27 +790,21 @@ async function openChat(targetId, name, avatar, role, isOnline, lastSeen) {
 
     // --- Actualizar estado global ---
     currentChatTargetId = parseInt(targetId, 10);
-    currentChatType = (role === 'community') ? 'community' : 'dm';
-    // Mantenemos currentChatUserId para la lógica de "typing" de DMs
-    currentChatUserId = (currentChatType === 'dm') ? currentChatTargetId : null; 
+    currentChatUserId = parseInt(targetId, 10); // Para "typing"
     
     // --- Actualizar UI de la lista ---
     document.querySelectorAll('.chat-conversation-item').forEach(item => {
         item.classList.remove('active');
     });
     
-    let selector = (currentChatType === 'dm') 
-        ? `.chat-conversation-item[data-type="dm"][data-target-id="${targetId}"]`
-        : `.chat-conversation-item[data-type="community"][data-target-id="${targetId}"]`;
+    let selector = `.chat-conversation-item[data-type="dm"][data-target-id="${targetId}"]`;
         
     document.querySelector(selector)?.classList.add('active');
 
     // Cargar historial
     await loadChatHistory(targetId, null);
 }
-// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (openChat) ---
 
-// --- (validateSendButton sin cambios) ---
 function validateSendButton() {
     const input = document.getElementById('chat-message-input');
     const sendBtn = document.getElementById('chat-send-button');
@@ -962,7 +821,6 @@ function validateSendButton() {
     sendBtn.disabled = !hasText && !hasFiles;
 }
 
-// --- (createAttachmentPreview sin cambios) ---
 function createAttachmentPreview(file) {
     const container = document.getElementById('chat-attachment-preview-container');
     if (!container) return;
@@ -991,7 +849,6 @@ function createAttachmentPreview(file) {
     container.appendChild(previewDiv);
 }
 
-// --- (handleAttachmentChange sin cambios) ---
 function handleAttachmentChange(e) {
     const files = e.target.files;
     if (!files) return;
@@ -1028,7 +885,6 @@ function handleAttachmentChange(e) {
     validateSendButton();
 }
 
-// --- (showReplyPreview sin cambios) ---
 function showReplyPreview(messageId, username, text) {
     const container = document.getElementById('chat-reply-preview-container');
     if (!container) return;
@@ -1056,7 +912,6 @@ function showReplyPreview(messageId, username, text) {
     document.getElementById('chat-message-input')?.focus();
 }
 
-// --- (hideReplyPreview sin cambios) ---
 function hideReplyPreview() {
     const container = document.getElementById('chat-reply-preview-container');
     if (container) {
@@ -1066,9 +921,8 @@ function hideReplyPreview() {
     currentReplyMessageId = null;
 }
 
-// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (sendMessage) ▼▼▼ ---
 async function sendMessage() {
-    console.log(`%c[SENDER] 🚀 sendMessage() iniciada... (Tipo: ${currentChatType}, ID: ${currentChatTargetId})`, 'color: green; font-weight: bold;');
+    console.log(`%c[SENDER] 🚀 sendMessage() iniciada... (ID: ${currentChatTargetId})`, 'color: green; font-weight: bold;');
     
     const input = document.getElementById('chat-message-input');
     const sendBtn = document.getElementById('chat-send-button');
@@ -1089,8 +943,7 @@ async function sendMessage() {
 
     const formData = new FormData();
     formData.append('action', 'send-message');
-    formData.append('chat_type', currentChatType); // <-- AÑADIDO
-    formData.append('target_id', currentChatTargetId); // <-- AÑADIDO
+    formData.append('target_id', currentChatTargetId); // Modificado
     formData.append('message_text', messageText);
     
     if (currentReplyMessageId) {
@@ -1113,13 +966,11 @@ async function sendMessage() {
             scrollToBottom();
             
             console.log("%c[SENDER] Mensaje enviado. Llamando a loadConversations(filter: ${currentChatFilter})...", "color: green; font-weight: bold;");
-            await loadConversations(currentChatFilter); // Recargar la lista actual (DM o Comunidad)
+            await loadConversations(currentChatFilter); // Recargar la lista de DMs
             console.log("%c[SENDER] loadConversations() completada.", "color: green; font-weight: bold;");
             
             // Re-seleccionar el item activo en la lista
-            let selector = (currentChatType === 'dm') 
-                ? `.chat-conversation-item[data-type="dm"][data-target-id="${currentChatTargetId}"]`
-                : `.chat-conversation-item[data-type="community"][data-target-id="${currentChatTargetId}"]`;
+            let selector = `.chat-conversation-item[data-type="dm"][data-target-id="${currentChatTargetId}"]`;
             
             const friendItem = document.querySelector(selector);
             if (friendItem) {
@@ -1167,28 +1018,17 @@ async function sendMessage() {
         console.log("[SENDER] Controles re-evaluados.");
     }
 }
-// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (sendMessage) ---
 
-// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (handleChatMessageReceived) ▼▼▼ ---
-export function handleChatMessageReceived(message, type = 'dm') {
-    console.log(`%c[WEBSOCKET] 📩 handleChatMessageReceived() -> Mensaje [${type}] recibido:`, 'color: #00_80_80; font-weight: bold;', message);
+export function handleChatMessageReceived(message) {
+    console.log(`%c[WEBSOCKET] 📩 handleChatMessageReceived() -> Mensaje [dm] recibido:`, 'color: #00_80_80; font-weight: bold;', message);
     
-    if (!message) {
+    if (!message || !message.sender_id) {
         console.warn("[WEBSOCKET] Mensaje inválido, ignorando.");
         return;
     }
 
-    let targetId, listToReload;
-    
-    if (type === 'dm') {
-        if (!message.sender_id) return;
-        targetId = parseInt(message.sender_id, 10);
-        listToReload = 'all'; // Asumir que el filtro 'all' (DMs) debe recargarse
-    } else { // 'community'
-        if (!message.community_id) return;
-        targetId = parseInt(message.community_id, 10);
-        listToReload = 'communities'; // Recargar la lista de comunidades
-    }
+    let targetId = parseInt(message.sender_id, 10);
+    let listToReload = 'all'; // Solo DMs
     
     // Recargar la lista correspondiente
     if (currentChatFilter === listToReload || (currentChatFilter !== 'communities' && listToReload === 'all')) {
@@ -1196,19 +1036,17 @@ export function handleChatMessageReceived(message, type = 'dm') {
          loadConversations(currentChatFilter);
     } else {
          console.log(`[WEBSOCKET] Lista no visible (filtro: ${currentChatFilter}), no se recarga UI de lista.`);
-         // Invalidar el caché para la próxima vez que se abra ese filtro
-         if (listToReload === 'all') friendCache = []; 
-         else communityCache = [];
+         friendCache = []; // Invalidar caché
     }
     
     // Comprobar si el chat está abierto
-    if (targetId === currentChatTargetId && type === currentChatType) {
+    if (targetId === currentChatTargetId) {
         console.log("[WEBSOCKET] El chat está abierto, añadiendo burbuja.");
         const bubbleHtml = createMessageBubbleHtml(message, false);
         document.getElementById('chat-message-list').insertAdjacentHTML('beforeend', bubbleHtml);
         scrollToBottom();
     } else {
-        console.log("[WEBSOCKET] El chat con este usuario/comunidad NO está abierto. Incrementando contador global.");
+        console.log("[WEBSOCKET] El chat con este usuario NO está abierto. Incrementando contador global.");
         setUnreadMessageCount(currentUnreadMessageCount + 1);
         
         const isOnMessagesPage = window.location.pathname.startsWith(window.projectBasePath + '/messages');
@@ -1221,9 +1059,7 @@ export function handleChatMessageReceived(message, type = 'dm') {
         }
     }
 }
-// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (handleChatMessageReceived) ---
 
-// --- (renderDeletedMessage sin cambios) ---
 function renderDeletedMessage(bubbleEl) {
     if (!bubbleEl) return;
     bubbleEl.classList.add('deleted');
@@ -1237,7 +1073,6 @@ function renderDeletedMessage(bubbleEl) {
     if (actions) actions.remove();
 }
 
-// --- (handleMessageDeleted sin cambios) ---
 export function handleMessageDeleted(payload) {
     console.log(`%c[WEBSOCKET] 🗑️ handleMessageDeleted() -> Payload:`, 'color: #00_80_80; font-weight: bold;', payload);
     
@@ -1254,7 +1089,6 @@ export function handleMessageDeleted(payload) {
     loadConversations();
 }
 
-// --- (_executeChatContextMenuAction sin cambios) ---
 async function _executeChatContextMenuAction(action, userId) {
     if (!userId) return;
 
@@ -1344,7 +1178,7 @@ async function _executeChatContextMenuAction(action, userId) {
 
             if (result.success) {
                 showAlert(getTranslation(result.message), 'success');
-                const friendItem = document.querySelector(`.chat-conversation-item[data-user-id="${userId}"]`);
+                const friendItem = document.querySelector(`.chat-conversation-item[data-target-id="${userId}"]`);
                 if (friendItem) {
                     friendItem.dataset.isFavorite = result.new_is_favorite;
                     const favIcon = friendItem.querySelector('.chat-item-indicator.favorite');
@@ -1374,7 +1208,6 @@ async function _executeChatContextMenuAction(action, userId) {
     }
 }
 
-// --- (handleTypingEvent sin cambios) ---
 export function handleTypingEvent(senderId, isTyping) {
     if (parseInt(senderId, 10) !== currentChatUserId) {
         return; 
@@ -1396,31 +1229,12 @@ export function handleTypingEvent(senderId, isTyping) {
     }
 }
 
-// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA (initChatManager) ▼▼▼ ---
 /**
  * Inicializa todos los listeners para la página de chat.
  */
 export function initChatManager() {
     
     console.log("🏁 initChatManager() -> Inicializando listeners de chat.");
-    
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-    let communityIdsPromise = Promise.resolve(); // 1. Promesa por defecto
-
-    if (window.isUserLoggedIn) {
-        const formData = new FormData();
-        formData.append('action', 'get-my-community-ids');
-        
-        // 2. Asignar la llamada a la promesa
-        communityIdsPromise = callCommunityApi(formData).then(result => { 
-            if (result.success) {
-                myCommunityIds = result.community_ids || [];
-                window.myCommunityIds = myCommunityIds; // 3. ASIGNAR A WINDOW
-                console.log(`[ChatInit] IDs de comunidad para WS:`, myCommunityIds);
-            }
-        });
-    }
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     const sectionsContainer = document.querySelector('.main-sections');
     if (sectionsContainer) {
@@ -1441,20 +1255,17 @@ export function initChatManager() {
                             
                             const headerInfo = messagesSection.querySelector('#chat-header-info');
                             const avatarImg = messagesSection.querySelector('#chat-header-avatar');
-                            const targetIdInput = messagesSection.querySelector('#chat-target-id'); // <-- Input oculto con ID
-                            const targetTypeInput = messagesSection.querySelector('#chat-type'); // <-- Input oculto con TIPO
+                            const targetIdInput = messagesSection.querySelector('#chat-target-id');
                             
-                            if (headerInfo && avatarImg && targetIdInput && targetTypeInput) {
+                            if (headerInfo && avatarImg && targetIdInput) {
                                 const targetId = targetIdInput.value;
-                                const chatType = targetTypeInput.value;
                                 
                                 document.getElementById('chat-layout-container')?.classList.add('show-chat');
                                 chatMain.dataset.autoloadChat = 'false';
                                 
                                 // Actualizar estado global
                                 currentChatTargetId = parseInt(targetId, 10);
-                                currentChatType = chatType;
-                                currentChatUserId = (chatType === 'dm') ? currentChatTargetId : null;
+                                currentChatUserId = currentChatTargetId;
                                 
                                 // Cargar historial
                                 loadChatHistory(targetId, null);
@@ -1463,8 +1274,7 @@ export function initChatManager() {
 
                     } else {
                         currentChatUserId = null; 
-                        currentChatTargetId = null; // <-- AÑADIDO
-                        currentChatType = 'dm'; // <-- AÑADIDO
+                        currentChatTargetId = null; 
                     }
                 }
             }
@@ -1480,14 +1290,11 @@ export function initChatManager() {
             e.preventDefault(); 
             
             const targetId = conversationItem.dataset.targetId;
-            const type = conversationItem.dataset.type;
-            const name = (type === 'dm') ? conversationItem.dataset.username : conversationItem.dataset.name;
+            const name = conversationItem.dataset.username;
             const avatar = conversationItem.dataset.avatar;
             const role = conversationItem.dataset.role;
-            
-            // Lógica de estado (solo para DMs)
-            const isOnline = (type === 'dm') ? conversationItem.querySelector('.chat-item-status')?.classList.contains('online') : false;
-            const lastSeen = (type === 'dm') ? conversationItem.dataset.lastSeen || null : null;
+            const isOnline = conversationItem.querySelector('.chat-item-status')?.classList.contains('online');
+            const lastSeen = conversationItem.dataset.lastSeen || null;
             
             document.getElementById('chat-layout-container')?.classList.add('show-chat');
             
@@ -1511,6 +1318,11 @@ export function initChatManager() {
         if (filterBadge) {
             e.preventDefault();
             const newFilter = filterBadge.dataset.filter;
+            
+            if (newFilter === 'communities') { // Filtro de comunidad ya no existe
+                console.log("[FILTER] Clic en filtro 'communities' (deshabilitado). Ignorando.");
+                return;
+            }
             
             if (newFilter === currentChatFilter) return; 
             
@@ -1540,9 +1352,9 @@ export function initChatManager() {
             
             document.querySelectorAll('.chat-item-actions.popover-active').forEach(el => el.classList.remove('popover-active'));
 
-            // --- Lógica de Popover Universal ---
+            // --- Lógica de Popover (solo DM) ---
             const targetId = friendItem.dataset.targetId;
-            const type = friendItem.dataset.type;
+            const type = friendItem.dataset.type; // Siempre será 'dm'
             
             const isFavorite = friendItem.dataset.isFavorite === 'true';
             const isPinned = friendItem.dataset.pinnedAt.length > 0;
@@ -1554,40 +1366,33 @@ export function initChatManager() {
             const blockBtn = popover.querySelector('[data-action="block-user"]');
             const unblockBtn = popover.querySelector('[data-action="unblock-user"]');
             const deleteBtn = popover.querySelector('[data-action="delete-chat"]');
-            const profileBtn = popover.querySelector('[data-action="friend-menu-profile"]'); // <-- AÑADIDO
+            const profileBtn = popover.querySelector('[data-action="friend-menu-profile"]');
 
-            if (type === 'dm') {
-                const isBlockedByMe = friendItem.dataset.isBlockedByMe === 'true';
-                const isBlockedGlobally = friendItem.dataset.isBlockedGlobally === 'true';
-                
-                blockBtn.style.display = 'flex';
+            // --- Lógica de DM (ahora incondicional) ---
+            const isBlockedByMe = friendItem.dataset.isBlockedByMe === 'true';
+            const isBlockedGlobally = friendItem.dataset.isBlockedGlobally === 'true';
+            
+            blockBtn.style.display = 'flex';
+            unblockBtn.style.display = 'flex';
+            deleteBtn.style.display = 'flex'; 
+            profileBtn.style.display = 'flex';
+            
+            if (isBlockedByMe) {
+                blockBtn.style.display = 'none';
                 unblockBtn.style.display = 'flex';
-                deleteBtn.style.display = 'flex'; 
-                profileBtn.style.display = 'flex';
-                
-                if (isBlockedByMe) {
-                    blockBtn.style.display = 'none';
-                    unblockBtn.style.display = 'flex';
-                } else {
-                    blockBtn.style.display = 'flex';
-                    unblockBtn.style.display = 'none';
-                }
-                
-                if (isBlockedGlobally && !isBlockedByMe) {
-                    blockBtn.style.display = 'none';
-                    unblockBtn.style.display = 'none';
-                }
-                
-                // Actualizar enlaces del popover
-                profileBtn.href = `${window.projectBasePath}/profile/${friendItem.dataset.username}`;
-                
-            } else { // 'community'
-                // Ocultar acciones específicas de DM
+            } else {
+                blockBtn.style.display = 'flex';
+                unblockBtn.style.display = 'none';
+            }
+            
+            if (isBlockedGlobally && !isBlockedByMe) {
                 blockBtn.style.display = 'none';
                 unblockBtn.style.display = 'none';
-                deleteBtn.style.display = 'none'; // O podrías implementar "Abandonar" aquí
-                profileBtn.style.display = 'none'; // No hay perfil para una comunidad
             }
+            
+            profileBtn.href = `${window.projectBasePath}/profile/${friendItem.dataset.username}`;
+
+            // --- (Fin Lógica de DM) ---
 
             const pinBtn = popover.querySelector('[data-action="pin-chat"]');
             const unpinBtn = popover.querySelector('[data-action="unpin-chat"]');
@@ -1635,7 +1440,6 @@ export function initChatManager() {
              
              const action = popoverOption.dataset.action;
              
-             // --- Lógica de navegación de perfil movida a url-manager.js ---
              if (action === 'friend-menu-profile') {
                  deactivateAllModules();
                  if (chatPopperInstance) {
@@ -1643,13 +1447,11 @@ export function initChatManager() {
                      chatPopperInstance = null;
                  }
                  document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
-                 // Dejar que el router maneje el <a>
                  return;
              }
              
              const popover = popoverOption.closest('#chat-context-menu');
              const targetId = popover.dataset.currentTargetId;
-             const type = popover.dataset.currentType;
              
              deactivateAllModules();
              if (chatPopperInstance) {
@@ -1658,8 +1460,7 @@ export function initChatManager() {
              }
              document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
              
-             // --- Llamar a la función de acción (modificada) ---
-             _executeChatContextMenuAction(action, targetId, type);
+             _executeChatContextMenuAction(action, targetId);
              
              return;
         }
@@ -1679,7 +1480,6 @@ export function initChatManager() {
             document.getElementById('chat-layout-container')?.classList.remove('show-chat');
             currentChatUserId = null;
             currentChatTargetId = null;
-            currentChatType = 'dm';
             console.log("[UI] Botón 'Atrás' presionado. Llamando a loadConversations(filter: ${currentChatFilter}).");
             loadConversations(currentChatFilter); // Recargar la lista actual
             return;
@@ -1719,10 +1519,6 @@ export function initChatManager() {
                 let username = 'Usuario';
                 if (messageBubble.classList.contains('sent')) {
                     username = getTranslation('js.chat.replyToSelf', 'a ti mismo');
-                } else if (currentChatType === 'community') {
-                    // Buscar el nombre en la burbuja
-                    const nameEl = messageBubble.querySelector('.chat-bubble-sender-name');
-                    if (nameEl) username = nameEl.textContent;
                 } else {
                     // DM
                     username = document.getElementById('chat-header-username').textContent;
@@ -1741,7 +1537,6 @@ export function initChatManager() {
                 const formData = new FormData();
                 formData.append('action', 'delete-message');
                 formData.append('message_id', messageId);
-                formData.append('chat_type', currentChatType); // <-- AÑADIDO
                 
                 const result = await callChatApi(formData);
                 if (result.success) {
@@ -1774,7 +1569,7 @@ export function initChatManager() {
             validateSendButton();
             
             // Lógica de "typing" (solo para DMs)
-            if (currentChatType === 'dm' && currentChatUserId && window.ws && window.ws.readyState === WebSocket.OPEN) {
+            if (currentChatUserId && window.ws && window.ws.readyState === WebSocket.OPEN) {
                 if (!isTyping) {
                     isTyping = true;
                     window.ws.send(JSON.stringify({
@@ -1856,7 +1651,7 @@ export function initChatManager() {
         }
         
         // 3. Actualizar la CABECERA DE CHAT (si está abierta)
-        if (currentChatType === 'dm' && parseInt(userId, 10) === currentChatTargetId) {
+        if (parseInt(userId, 10) === currentChatTargetId) {
             const statusEl = document.getElementById('chat-header-status');
             const typingEl = document.getElementById('chat-header-typing');
             
@@ -1884,20 +1679,8 @@ export function initChatManager() {
             opacity: 0.8;
             background-color: #f5f5fa; /* Mantener el hover normal */
         }
-        /* --- NUEVO CSS PARA NOMBRE DE REMITENTE EN GRUPO --- */
-        .chat-bubble.received .chat-bubble-sender-name {
-            font-size: 13px;
-            font-weight: 700;
-            color: #0056b3; /* O un color de tu elección */
-            margin-bottom: -4px; /* Acercarlo a la burbuja */
-        }
     `;
     document.head.appendChild(styleSheet);
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
-    // 4. Devolver la promesa
-    return communityIdsPromise;
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+    // (Promesa de communityIds eliminada)
 }
-// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (initChatManager) ---
-// --- ▲▲▲ FIN DE MODIFICACIÓN (CHAT DE COMUNIDAD) ▲▲▲ ---

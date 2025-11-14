@@ -3,6 +3,7 @@
 // (MODIFICADO PARA MÚLTIPLES FOTOS)
 // (MODIFICADO PARA FAVORITOS, PINEADOS Y ARCHIVADOS)
 // (MODIFICADO PARA MOSTRAR ESTADO 'LAST_SEEN' DETALLADO)
+// --- ▼▼▼ MODIFICACIÓN (ELIMINADO BOTÓN DE FILTRO "COMUNIDADES") ▼▼▼ ---
 global $basePath;
 $defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
 $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
@@ -1000,7 +1001,6 @@ if ($hasPreloadedUser) {
             <div class="chat-sidebar-filters" id="chat-sidebar-filters">
                 <button type="button" class="chat-filter-badge active" data-filter="all" data-i18n="chat.filter.all">Todo</button>
                 
-                <button type="button" class="chat-filter-badge" data-filter="communities" data-i18n="chat.filter.communities">Comunidades</button>
                 <button type="button" class="chat-filter-badge" data-filter="favorites" data-i18n="chat.filter.favorites">Favoritos</button>
                 <button type="button" class="chat-filter-badge" data-filter="unread" data-i18n="chat.filter.unread">No leídos</button>
                 <button type="button" class="chat-filter-badge" data-filter="archived" data-i18n="chat.filter.archived">Archivados</button>
@@ -1014,7 +1014,7 @@ if ($hasPreloadedUser) {
 
                 <div class="chat-list-placeholder" id="chat-list-empty" style="display: none;">
                     <span class="material-symbols-rounded" id="chat-list-empty-icon">chat</span>
-                    <span id="chat-list-empty-text" data-i18n="chat.empty.all">Inicia una conversación.</span>
+                    <span id="chat-list-empty-text" data-i1x8n="chat.empty.all">Inicia una conversación.</span>
                 </div>
                 <div id="chat-conversation-list">
                     </div>

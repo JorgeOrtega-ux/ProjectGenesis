@@ -3,6 +3,7 @@
 // (MODIFICADO - Añadida nueva regla de enrutado para /messages/username)
 // (MODIFICADO OTRA VEZ - Cambiado /messages/username a /messages/uuid)
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIDA LÓGICA DE SERVICIO DE MENSAJERÍA) ▼▼▼ ---
+// --- ▼▼▼ MODIFICACIÓN (ELIMINADA LÓGICA DE CHAT DE COMUNIDAD) ▼▼▼ ---
 
 // Carga la configuración base (BD, sesiones, etc.)
 include 'config/config.php';
@@ -388,12 +389,12 @@ if (preg_match('/^\/c\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
     $_GET['user_uuid'] = $userUuid; // Poner el UUID en $_GET para que router.php lo lea
     $path = '/messages/uuid-placeholder'; // Usar un placeholder para el mapeo
 
-// --- ▼▼▼ INICIO DE NUEVA RUTA (CHAT DE COMUNIDAD) ▼▼▼ ---
-} elseif (preg_match('/^\/messages\/community\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
-    $communityUuid = $matches[1];
-    $_GET['community_uuid'] = $communityUuid; // Poner el UUID de la comunidad en $_GET
-    $path = '/messages/community-placeholder'; // Nuevo placeholder
-// --- ▲▲▲ FIN DE NUEVA RUTA ▲▲▲ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (Ruta de chat de comunidad eliminada) ▼▼▼ ---
+// } elseif (preg_match('/^\/messages\/community\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
+//     $communityUuid = $matches[1];
+//     $_GET['community_uuid'] = $communityUuid; 
+//     $path = '/messages/community-placeholder'; 
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 } elseif ($path === '/messages') {
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
@@ -417,7 +418,7 @@ $pathsToPages = [
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (RUTAS DE MENSAJES) ▼▼▼ ---
     '/messages' => 'messages',
     '/messages/uuid-placeholder' => 'messages', // <-- Placeholder actualizado
-    '/messages/community-placeholder' => 'messages', // <-- ¡NUEVA LÍNEA AÑADIDA!
+    // '/messages/community-placeholder' => 'messages', // <-- ¡LÍNEA ELIMINADA!
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     '/explorer'   => 'explorer',

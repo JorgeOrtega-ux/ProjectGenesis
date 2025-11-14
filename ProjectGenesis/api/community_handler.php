@@ -138,16 +138,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['communityName'] = $community['name'] ?? 'Comunidad'; 
             $response['communityUuid'] = $community['uuid'] ?? ''; 
         
-        // --- ▼▼▼ INICIO DE NUEVA ACCIÓN ▼▼▼ ---
-        } elseif ($action === 'get-my-community-ids') {
-            // Esta acción es para que el WebSocket sepa a qué salas suscribirse
-            $stmt = $pdo->prepare("SELECT community_id FROM user_communities WHERE user_id = ?");
-            $stmt->execute([$userId]);
-            $communityIds = $stmt->fetchAll(PDO::FETCH_COLUMN, 0); // Obtiene solo los IDs
-            
-            $response['success'] = true;
-            $response['community_ids'] = $communityIds;
-        // --- ▲▲▲ FIN DE NUEVA ACCIÓN ▲▲▲ ---
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Acción 'get-my-community-ids' eliminada) ▼▼▼ ---
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         
         }
 
