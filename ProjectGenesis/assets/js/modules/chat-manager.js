@@ -84,7 +84,7 @@ function formatTimeAgo(dateTimeString) {
     }
     try {
         // Asegurarse de que la fecha se parsea como UTC
-        const date = new Date(dateTimeString.includes('Z') ? dateTimeString : dateTimeString + 'Z');
+        const date = new Date(dateTimeString.includes('Z') ? dateTimeString : dateString + 'Z');
         const now = new Date();
         const seconds = Math.round((now - date) / 1000);
         const minutes = Math.round(seconds / 60);
@@ -440,8 +440,7 @@ function scrollToBottom() {
     }
 }
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN JS ▼▼▼ ---
-// 1. RE-AÑADIR la función helper de auto-crecimiento
+// --- ▼▼▼ INICIO DE MODIFICACIÓN JS (Función `autoGrowTextarea` actualizada) ▼▼▼ ---
 /**
  * Ajusta la altura de un textarea automáticamente.
  * @param {HTMLTextAreaElement} el - El elemento textarea.
@@ -494,7 +493,7 @@ function enableChatInput(allow, reason = null) {
         hideReplyPreview();
     }
     
-    // 2. AÑADIR la llamada a autoGrowTextarea
+    // Llamar a autoGrow para resetear la altura a 1 línea si se deshabilita
     autoGrowTextarea(input);
 }
 // --- ▲▲▲ FIN DE MODIFICACIÓN JS ▲▲▲ ---
@@ -976,7 +975,7 @@ async function sendMessage() {
             hideReplyPreview();
             
             // --- ▼▼▼ INICIO DE MODIFICACIÓN JS ▼▼▼ ---
-            // 3. Resetear la altura del textarea después de enviar
+            // Resetear la altura del textarea después de enviar
             autoGrowTextarea(input); 
             // --- ▲▲▲ FIN DE MODIFICACIÓN JS ▲▲▲ ---
 
@@ -1539,13 +1538,12 @@ export function initChatManager() {
         }
     });
 
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN JS ▼▼▼ ---
-    // 3. Modificar el listener de 'input'
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN JS (Listeners de Input/Keydown) ▼▼▼ ---
     document.body.addEventListener('input', (e) => {
         const chatInput = e.target.closest('#chat-message-input');
         if (chatInput) {
             validateSendButton();
-            // 4. AÑADIR la llamada a autoGrowTextarea
+            // Llamar a la función de auto-crecimiento CADA VEZ que se escribe
             autoGrowTextarea(chatInput); 
             
             // Lógica de "typing" (solo para DMs)
@@ -1576,7 +1574,6 @@ export function initChatManager() {
         }
     });
 
-    // 5. Modificar el listener de 'keydown' para que NO llame a autoGrow
     document.body.addEventListener('keydown', (e) => {
         const chatInput = e.target.closest('#chat-message-input');
         if (chatInput && e.key === 'Enter' && !e.shiftKey) {
@@ -1586,6 +1583,7 @@ export function initChatManager() {
                 sendMessage();
             }
         }
+        // No llamamos a autoGrowTextarea aquí, 'input' ya lo maneja
     });
     // --- ▲▲▲ FIN DE MODIFICACIÓN JS ▲▲▲ ---
     

@@ -197,7 +197,7 @@ if ($hasPreloadedUser) {
                         <div class="chat-attachment-preview-container" id="chat-attachment-preview-container">
                         </div>
 
-                        <?php // --- ▼▼▼ ESTA ES LA ESTRUCTURA HTML CORRECTA ▼▼▼ --- ?>
+                        <?php // --- ▼▼▼ INICIO DE ESTRUCTURA HTML (Etapa 3) ▼▼▼ --- ?>
                         
                         <textarea 
                             class="chat-input-field" 
@@ -219,7 +219,7 @@ if ($hasPreloadedUser) {
                             </button>
                         </div>
                         
-                        <?php // --- ▲▲▲ FIN DE LA ESTRUCTURA HTML ▲▲▲ --- ?>
+                        <?php // --- ▲▲▲ FIN DE ESTRUCTURA HTML (Etapa 3) ▲▲▲ --- ?>
 
                     </div>
                 </form>
