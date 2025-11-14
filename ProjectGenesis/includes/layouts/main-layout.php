@@ -129,6 +129,10 @@
     </script>
     <script type="module" src="<?php echo $basePath; ?>/assets/js/app-init.js"></script>
 
-</body>
+    <audio id="chat-notification-sound" 
+           src="<?php echo $basePath; ?>/assets/sounds/notification.mp4" 
+           preload="auto">
+    </audio>
+    </body>
 
 </html>

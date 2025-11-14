@@ -42,6 +42,29 @@ let currentChatFilter = 'all'; // Estado del filtro: 'all', 'favorites', 'unread
 let currentUnreadMessageCount = 0; // <-- AÑADIDO PARA EL BADGE
 // --- ▲▲▲ FIN DE NUEVAS VARIABLES GLOBALES ▼▼▼ ---
 
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (SONIDO DE NOTIFICACIÓN) ▼▼▼ ---
+/**
+ * Intenta reproducir el sonido de notificación de chat.
+ * Maneja los errores de autoplay del navegador.
+ */
+function playNotificationSound() {
+    const audio = document.getElementById('chat-notification-sound');
+    if (audio) {
+        audio.currentTime = 0; // Reiniciar por si se reciben muchos mensajes seguidos
+        const playPromise = audio.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                // Error común: El usuario no ha interactuado con la página todavía.
+                console.warn("No se pudo reproducir el sonido de notificación:", error);
+            });
+        }
+    } else {
+        console.warn("Elemento de audio #chat-notification-sound no encontrado.");
+    }
+}
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
 
 /**
  * Escapa HTML simple para evitar XSS.
@@ -1009,10 +1032,19 @@ export function handleChatMessageReceived(message) {
         scrollToBottom();
     } else {
         console.log("[WEBSOCKET] El chat con este usuario NO está abierto. Incrementando contador global.");
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGE) ▼▼▼ ---
-        // Incrementar el contador visualmente
         setUnreadMessageCount(currentUnreadMessageCount + 1);
-        // --- ▲▲▲ FIN DE MODIFICACIÓN (BADGE) ▲▲▲ ---
+        
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (SONIDO DE NOTIFICACIÓN) ▼▼▼ ---
+        // Comprobar si estamos en la página de /messages
+        const isOnMessagesPage = window.location.pathname.startsWith(window.projectBasePath + '/messages');
+        
+        if (!isOnMessagesPage) {
+            console.log("[WEBSOCKET] No estamos en /messages, reproduciendo sonido.");
+            playNotificationSound();
+        } else {
+            console.log("[WEBSOCKET] Estamos en /messages, sonido silenciado.");
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     }
 }
 // --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (handleChatMessageReceived) ---
