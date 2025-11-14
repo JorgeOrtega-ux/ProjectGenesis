@@ -19,7 +19,7 @@ import { showAlert } from '../services/alert-manager.js';
 // --- ▼▼▼ INICIO DE IMPORTACIONES AÑADIDAS ▼▼▼ ---
 import { createPopper } from 'https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/esm/popper.min.js';
 import { deactivateAllModules } from '../app/main-controller.js';
-// --- ▲▲▲ FIN DE IMPORTACIONES AÑADIDAS ▲▲▲ ---
+// --- ▲▲▲ FIN DE IMPORTACIONES AÑADIDAS ▼▼▼ ---
 
 let currentChatUserId = null;
 let friendCache = [];
@@ -1189,6 +1189,10 @@ export function initChatManager() {
                                 
                                 // Llamamos a loadChatHistory (que ahora maneja la privacidad)
                                 loadChatHistory(friendId, null);
+
+                                // !--- ESTA ES LA LÍNEA DE CORRECCIÓN ---!
+                                currentChatUserId = parseInt(friendId, 10);
+                                // !--- FIN DE LA LÍNEA DE CORRECCIÓN ---!
                             }
                         }
 
