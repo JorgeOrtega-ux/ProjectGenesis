@@ -1,5 +1,5 @@
 // FILE: assets/js/app-init.js
-// (MODIFICADO)
+// (MODIFICADO - Añadida función para desbloquear audio en la primera interacción)
 
 import { initMainController } from './app/main-controller.js';
 // --- ▼▼▼ MODIFICACIÓN: import loadPage ▼▼▼ ---
@@ -83,12 +83,64 @@ function initThemeManager() {
     });
 }
 
+// --- ▼▼▼ ¡NUEVA FUNCIÓN AÑADIDA! (LA SOLUCIÓN) ▼▼▼ ---
+/**
+ * Intenta desbloquear la reproducción automática de audio en la primera interacción del usuario.
+ * Los navegadores modernos bloquean .play() si no es iniciado por el usuario.
+ */
+function initAudioUnlock() {
+    const unlockAudio = () => {
+        const audio = document.getElementById('chat-notification-sound');
+        if (audio && audio.muted) { // Solo si está silenciado (nuestro estado inicial)
+            // Reproducir en silencio, pausar y quitar silencio.
+            // Esto "prepara" el navegador para permitir futuros .play() no silenciados
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+                audio.muted = false; // ¡Importante! Quitar el silencio para futuros sonidos
+                console.log('[AudioUnlock] Autoplay de audio desbloqueado.');
+                // Remover los listeners para que solo ocurra una vez
+                document.body.removeEventListener('click', unlockAudio);
+                document.body.removeEventListener('keydown', unlockAudio);
+            }).catch(error => {
+                // Aún puede fallar (ej. si el audio no se cargó), pero lo hemos intentado.
+                audio.muted = false; // Asegurarse de quitar el silencio
+                console.warn('[AudioUnlock] Intento de desbloqueo fallido, pero se quitará el silencio:', error);
+                // Remover los listeners igualmente
+                document.body.removeEventListener('click', unlockAudio);
+                document.body.removeEventListener('keydown', unlockAudio);
+            });
+        } else if (audio && !audio.muted) {
+             // El audio ya fue desbloqueado o nunca estuvo silenciado.
+             console.log('[AudioUnlock] El audio ya estaba desbloqueado.');
+             document.body.removeEventListener('click', unlockAudio);
+             document.body.removeEventListener('keydown', unlockAudio);
+        }
+    };
+    
+    // Silenciar el audio al inicio, esperando la interacción del usuario
+    const audio = document.getElementById('chat-notification-sound');
+    if(audio) {
+        audio.muted = true;
+    }
+
+    // Añadir listeners para la *primera* interacción
+    document.body.addEventListener('click', unlockAudio);
+    document.body.addEventListener('keydown', unlockAudio);
+}
+// --- ▲▲▲ ¡FIN DE NUEVA FUNCIÓN! ▲▲▲ ---
+
+
 document.addEventListener('DOMContentLoaded', async function () {
 
     window.showAlert = showAlert;
 
     await initI18nManager();
     initThemeManager();
+
+    // --- ▼▼▼ ¡NUEVA LLAMADA A FUNCIÓN AÑADIDA! ▼▼▼ ---
+    initAudioUnlock(); 
+    // --- ▲▲▲ ¡FIN DE NUEVA LLAMADA! ▲▲▲ ---
 
     initMainController();
     initAuthManager();
