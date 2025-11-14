@@ -31,3 +31,7 @@
 [14-Nov-2025 01:59:16 UTC] PHP Warning:  Undefined variable $receiverId in E:\xampp\htdocs\ProjectGenesis\api\chat_handler.php on line 273
 [14-Nov-2025 02:00:52 UTC] PHP Warning:  Undefined variable $receiverId in E:\xampp\htdocs\ProjectGenesis\api\chat_handler.php on line 273
 [14-Nov-2025 04:53:44 UTC] PHP Warning:  Undefined variable $response in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 703
+[14-Nov-2025 19:39:29 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 1051
+[14-Nov-2025 19:39:29 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 1052
+[14-Nov-2025 19:39:36 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 1051
+[14-Nov-2025 19:39:36 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 1052

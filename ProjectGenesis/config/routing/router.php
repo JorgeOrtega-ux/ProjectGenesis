@@ -683,13 +683,16 @@ if (array_key_exists($page, $allowedPages)) {
     } elseif ($page === 'messages') {
         
         $preloadedChatUser = null;
-        $chatErrorType = null; // <-- Variable nueva para el tipo de error
+        $chatErrorType = null; 
         $targetUserUuid = $_GET['user_uuid'] ?? null;
+        $targetCommunityUuid = $_GET['community_uuid'] ?? null; // <-- NUEVA LÍNEA
         $currentUserId = $_SESSION['user_id'];
 
-        if ($targetUserUuid) { 
+        if ($targetUserUuid) { // Lógica existente para DMs
             try {
-                // 1. Buscar al usuario por UUID y OBTENER SU CONFIGURACIÓN DE PRIVACIDAD
+                // ... (toda la lógica existente para user_uuid... sin cambios) ...
+                
+                // --- (inicio de lógica existente) ---
                 $stmt_user = $pdo->prepare("
                     SELECT u.id, u.username, u.uuid, u.profile_image_url, u.role, u.last_seen, 
                            COALESCE(p.message_privacy_level, 'all') AS message_privacy_level 
@@ -706,26 +709,18 @@ if (array_key_exists($page, $allowedPages)) {
                     if ($targetUserId === $currentUserId) {
                          $preloadedChatUser = null;
                     } else {
-                        
-                        // 2. Comprobar si son amigos
                         $userId1 = min($currentUserId, $targetUserId);
                         $userId2 = max($currentUserId, $targetUserId);
                         
                         $stmt_friend = $pdo->prepare("SELECT status FROM friendships WHERE user_id_1 = ? AND user_id_2 = ? AND status = 'accepted'");
                         $stmt_friend->execute([$userId1, $userId2]);
                         $areFriends = $stmt_friend->fetch();
-
-                        // 3. Obtener la configuración de privacidad del *usuario de destino*
+                        
                         $messagePrivacySetting = $targetUser['message_privacy_level'];
 
-                        // 4. Decidir si se permite el chat
                         if ($areFriends || $messagePrivacySetting === 'all') {
-                            // 4a. Permitido: pre-cargar los datos
                             $preloadedChatUser = $targetUser;
                         } else {
-                            // 4b. No permitido: Comprobar si existe historial
-                            
-                            // --- ▼▼▼ INICIO DE LÓGICA CORREGIDA ▼▼▼ ---
                             $stmt_history_check = $pdo->prepare(
                                 "SELECT 1 FROM chat_messages 
                                  WHERE (sender_id = :user1 AND receiver_id = :user2) 
@@ -739,36 +734,67 @@ if (array_key_exists($page, $allowedPages)) {
                             $hasHistory = $stmt_history_check->fetch();
 
                             if ($hasHistory) {
-                                // SÍ hay historial. Carga el chat, el JS lo bloqueará.
                                 $preloadedChatUser = $targetUser;
-                                $chatErrorType = null; // No hay error de PHP
+                                $chatErrorType = null; 
                             } else {
-                                // NO hay historial. Muestra el error de PHP.
                                 $preloadedChatUser = null;
                                 if ($messagePrivacySetting === 'none') {
                                     $chatErrorType = 'none';
                                 } else {
-                                    $chatErrorType = 'friends_only'; // (para 'friends')
+                                    $chatErrorType = 'friends_only'; 
                                 }
                             }
-                            // --- ▲▲▲ FIN DE LÓGICA CORREGIDA ▲▲▲ ---
                         }
                     }
-
                 } else {
                     $page = '404';
                     $CURRENT_SECTION = '404';
                 }
+                // --- (fin de lógica existente) ---
 
             } catch (PDOException $e) {
                 logDatabaseError($e, 'router - messages - preload');
                 $preloadedChatUser = null;
                 $chatErrorType = null;
             }
-        }
         
-    // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
-    
+        // --- ▼▼▼ INICIO DE BLOQUE NUEVO A AÑADIR ▼▼▼ ---
+        } elseif ($targetCommunityUuid) { 
+            try {
+                // Es un chat de comunidad, buscar la comunidad por UUID
+                $stmt_comm = $pdo->prepare("
+                    SELECT c.id, c.name, c.uuid, c.icon_url 
+                    FROM communities c
+                    JOIN user_communities uc ON c.id = uc.community_id
+                    WHERE c.uuid = ? AND uc.user_id = ?
+                ");
+                $stmt_comm->execute([$targetCommunityUuid, $currentUserId]);
+                $targetCommunity = $stmt_comm->fetch();
+
+                if ($targetCommunity) {
+                    // Si se encuentra Y el usuario es miembro, pre-cargar los datos
+                    $preloadedChatUser = [
+                        'id' => $targetCommunity['id'],
+                        'username' => $targetCommunity['name'], // Reutilizar el campo username
+                        'uuid' => $targetCommunity['uuid'],
+                        'profile_image_url' => $targetCommunity['icon_url'],
+                        'role' => 'community', // Rol especial
+                        'last_seen' => null 
+                    ];
+                    $chatType = 'community'; // Pasar el tipo de chat al PHP de la vista
+                } else {
+                    // El usuario no es miembro o la comunidad no existe
+                    $page = '404';
+                    $CURRENT_SECTION = '404';
+                }
+
+            } catch (PDOException $e) {
+                logDatabaseError($e, 'router - messages (community) - preload');
+                $preloadedChatUser = null;
+            }
+        }
+        // --- ▲▲▲ FIN DE BLOQUE NUEVO ▲▲▲ ---
+        
     } elseif ($page === 'admin-manage-users') {
 
         $adminUsersData = getAdminUsersData($pdo, $_GET);

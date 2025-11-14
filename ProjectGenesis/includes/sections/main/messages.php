@@ -954,6 +954,7 @@ $preloadedAvatar = $defaultAvatar;
 $preloadedUsername = '...';
 $preloadedStatusText = 'Offline';
 $preloadedStatusClass = 'offline';
+$preloadedChatType = 'dm'; // <-- TIPO DE CHAT POR DEFECTO
 
 // Esta lógica solo se ejecuta si el chat se cargó con éxito
 if ($hasPreloadedUser) {
@@ -962,30 +963,22 @@ if ($hasPreloadedUser) {
     if (empty($preloadedAvatar)) $preloadedAvatar = "https://ui-avatars.com/api/?name=" . urlencode($preloadedChatUser['username']) . "&size=100&background=e0e0e0&color=ffffff";
     $preloadedUsername = htmlspecialchars($preloadedChatUser['username']);
 
-    // (Lógica de estado online/offline copiada de view-profile.php)
-    $is_actually_online = false;
-    try {
-        $context = stream_context_create(['http' => ['timeout' => 0.5]]);
-        $jsonResponse = @file_get_contents('http://127.0.0.1:8766/get-online-users', false, $context);
-        if ($jsonResponse !== false) {
-            $data = json_decode($jsonResponse, true);
-            if (isset($data['status']) && $data['status'] === 'ok' && isset($data['online_users'])) {
-                $is_actually_online = in_array($preloadedChatUser['id'], $data['online_users']);
-            }
-        }
-    } catch (Exception $e) { /* Fallo de WS, se asume offline */
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (LÓGICA DE ROL/ESTADO) ▼▼▼ ---
+    if ($preloadedChatUser['role'] === 'community') {
+        $preloadedStatusText = 'Chat Grupal'; // O una clave i18n
+        $preloadedStatusClass = 'active'; // Visible, pero sin "online"
     }
-
-    if ($is_actually_online) {
+    elseif ($is_actually_online) { // $is_actually_online solo se define para DMs
         $preloadedStatusText = 'Online';
         $preloadedStatusClass = 'online active';
     } else {
-        // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
-        // ¡Usamos la nueva función helper!
         $preloadedStatusText = getChatTimeAgo($preloadedChatUser['last_seen']);
-        // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
         $preloadedStatusClass = 'active'; // 'active' (visible), pero sin clase 'online'
     }
+
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (PASAR TIPO DE CHAT) ▼▼▼ ---
+    $preloadedChatType = $chatType ?? 'dm'; // $chatType es definido en router.php
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
 // --- ▲▲▲ FIN DE NUEVA LÓGICA DE PRE-CARGA Y ERROR ▲▲▲ ---
 ?>
@@ -1006,6 +999,8 @@ if ($hasPreloadedUser) {
 
             <div class="chat-sidebar-filters" id="chat-sidebar-filters">
                 <button type="button" class="chat-filter-badge active" data-filter="all" data-i18n="chat.filter.all">Todo</button>
+                
+                <button type="button" class="chat-filter-badge" data-filter="communities" data-i18n="chat.filter.communities">Comunidades</button>
                 <button type="button" class="chat-filter-badge" data-filter="favorites" data-i18n="chat.filter.favorites">Favoritos</button>
                 <button type="button" class="chat-filter-badge" data-filter="unread" data-i18n="chat.filter.unread">No leídos</button>
                 <button type="button" class="chat-filter-badge" data-filter="archived" data-i18n="chat.filter.archived">Archivados</button>
@@ -1053,8 +1048,8 @@ if ($hasPreloadedUser) {
                     <button type="button" class="chat-back-button" id="chat-back-button">
                         <span class="material-symbols-rounded">arrow_back</span>
                     </button>
-                    <div class="chat-header-avatar">
-                        <img src="<?php echo $preloadedAvatar; ?>" id="chat-header-avatar" alt="Avatar">
+                    <div class="chat-header-avatar" style="<?php echo ($preloadedChatUser['role'] === 'community') ? 'border-radius: 8px;' : ''; ?>">
+                        <img src="<?php echo $preloadedAvatar; ?>" id="chat-header-avatar" alt="Avatar" style="<?php echo ($preloadedChatUser['role'] === 'community') ? 'border-radius: 8px;' : ''; ?>">
                     </div>
                     <div class="chat-header-info" id="chat-header-info">
                         <div class="chat-header-username" id="chat-header-username"><?php echo $preloadedUsername; ?></div>
@@ -1074,7 +1069,8 @@ if ($hasPreloadedUser) {
                 <form class="chat-message-input-form" id="chat-message-input-form" action="#">
                     <?php outputCsrfInput(); ?>
                     <input type="hidden" id="chat-receiver-id" value="<?php echo $preloadedReceiverId; ?>">
-
+                    
+                    <input type="hidden" id="chat-type" value="<?php echo $preloadedChatType; ?>">
                     <input type="file" id="chat-attachment-input" class="visually-hidden"
                         accept="image/png, image/jpeg, image/gif, image/webp"
                         multiple>
@@ -1134,6 +1130,18 @@ if ($hasPreloadedUser) {
                     </div>
 
                     <div style="height: 1px; background-color: #00000020; margin: 4px 8px;"></div>
+
+                    <a class="menu-link"
+                        data-action="friend-menu-profile"
+                        data-nav-js="true"
+                        href="#">
+                        <div class="menu-link-icon">
+                            <span class="material-symbols-rounded">person</span>
+                        </div>
+                        <div class="menu-link-text">
+                            <span>Ver Perfil</span>
+                        </div>
+                    </a>
 
                     <div class="menu-link" data-action="block-user">
                         <div class="menu-link-icon"><span class="material-symbols-rounded">block</span></div>

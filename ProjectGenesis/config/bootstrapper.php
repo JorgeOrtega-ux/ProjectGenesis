@@ -387,6 +387,14 @@ if (preg_match('/^\/c\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
     $userUuid = $matches[1];
     $_GET['user_uuid'] = $userUuid; // Poner el UUID en $_GET para que router.php lo lea
     $path = '/messages/uuid-placeholder'; // Usar un placeholder para el mapeo
+
+// --- ▼▼▼ INICIO DE NUEVA RUTA (CHAT DE COMUNIDAD) ▼▼▼ ---
+} elseif (preg_match('/^\/messages\/community\/([a-fA-F0-9\-]{36})$/i', $path, $matches)) {
+    $communityUuid = $matches[1];
+    $_GET['community_uuid'] = $communityUuid; // Poner el UUID de la comunidad en $_GET
+    $path = '/messages/community-placeholder'; // Nuevo placeholder
+// --- ▲▲▲ FIN DE NUEVA RUTA ▲▲▲ ---
+
 } elseif ($path === '/messages') {
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     // La ruta base /messages se mantiene
@@ -409,6 +417,7 @@ $pathsToPages = [
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (RUTAS DE MENSAJES) ▼▼▼ ---
     '/messages' => 'messages',
     '/messages/uuid-placeholder' => 'messages', // <-- Placeholder actualizado
+    '/messages/community-placeholder' => 'messages', // <-- ¡NUEVA LÍNEA AÑADIDA!
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     '/explorer'   => 'explorer',
