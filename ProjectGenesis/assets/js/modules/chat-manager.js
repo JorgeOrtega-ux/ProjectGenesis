@@ -12,6 +12,7 @@
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (FAVORITOS, FIJADOS Y ARCHIVADOS) ▼▼▼ ---
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (CORRECCIÓN DE 'LAST SEEN') ▼▼▼ ---
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (BADGE 99+) ▼▼▼ ---
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (PLACEHOLDER DINÁMICO) ▼▼▼ ---
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -175,7 +176,8 @@ function renderConversationList(conversations) {
     
     const listContainer = document.getElementById('chat-conversation-list');
     const loader = document.getElementById('chat-list-loader');
-    const emptyEl = document.getElementById('chat-list-empty');
+    const emptyEl = document.getElementById('chat-list-empty'); 
+    
     if (!listContainer || !loader || !emptyEl) {
         console.error("[RENDER] Faltan elementos clave del DOM (listContainer, loader, emptyEl).");
         return;
@@ -184,12 +186,58 @@ function renderConversationList(conversations) {
     loader.style.display = 'none';
 
     if (!conversations || conversations.length === 0) {
-        console.log("[RENDER] No hay conversaciones para mostrar, mostrando 'emptyEl'.");
-        emptyEl.style.display = 'flex';
-        listContainer.innerHTML = ''; // Limpiar por si acaso
+        console.log("[RENDER] No hay conversaciones para mostrar, mostrando 'emptyEl' dinámico.");
+        
+        // --- INICIO DE LA NUEVA LÓGICA DINÁMICA ---
+        const emptyIcon = document.getElementById('chat-list-empty-icon');
+        const emptyText = document.getElementById('chat-list-empty-text');
+        const searchInput = document.getElementById('chat-friend-search');
+        const query = searchInput ? searchInput.value.trim() : '';
+
+        if (query.length > 0) {
+            // Causa: Búsqueda activa
+            emptyIcon.textContent = 'search_off';
+            emptyText.textContent = getTranslation('chat.empty.search', 'No se encontraron chats...');
+            emptyText.dataset.i18n = 'chat.empty.search';
+        } else if (currentChatFilter !== 'all') {
+            // Causa: Filtro de insignia activo
+            switch (currentChatFilter) {
+                case 'favorites':
+                    emptyIcon.textContent = 'star_outline';
+                    emptyText.textContent = getTranslation('chat.empty.favorites', 'No tienes chats en favoritos.');
+                    emptyText.dataset.i18n = 'chat.empty.favorites';
+                    break;
+                case 'unread':
+                    emptyIcon.textContent = 'mark_email_unread';
+                    emptyText.textContent = getTranslation('chat.empty.unread', 'No tienes mensajes no leídos.');
+                    emptyText.dataset.i18n = 'chat.empty.unread';
+                    break;
+                case 'archived':
+                    emptyIcon.textContent = 'archive';
+                    emptyText.textContent = getTranslation('chat.empty.archived', 'No tienes chats archivados.');
+                    emptyText.dataset.i18n = 'chat.empty.archived';
+                    break;
+                default:
+                    // Fallback por si acaso
+                    emptyIcon.textContent = 'chat';
+                    emptyText.textContent = getTranslation('chat.empty.all', 'Inicia una conversación.');
+                    emptyText.dataset.i18n = 'chat.empty.all';
+                    break;
+            }
+        } else {
+            // Causa: No hay chats de ningún tipo
+            emptyIcon.textContent = 'chat';
+            emptyText.textContent = getTranslation('chat.empty.all', 'Inicia una conversación.');
+            emptyText.dataset.i18n = 'chat.empty.all';
+        }
+        // --- FIN DE LA NUEVA LÓGICA DINÁMICA ---
+
+        emptyEl.style.display = 'flex'; 
+        listContainer.innerHTML = ''; // Limpiar la lista (ya debería estarlo)
         return;
     }
     
+    // Si llegamos aquí, SÍ hay conversaciones
     emptyEl.style.display = 'none';
     listContainer.innerHTML = ''; // Limpiar
     let html = '';
@@ -243,7 +291,9 @@ function renderConversationList(conversations) {
                data-is-favorite="${isFavorite}"
                data-pinned-at="${friend.pinned_at || ''}"
                data-is-archived="${isArchived}"
-               data-last-seen="${friend.last_seen || ''}">  <div class="chat-item-avatar" data-role="${escapeHTML(friend.role)}">
+               data-last-seen="${friend.last_seen || ''}">
+               
+                <div class="chat-item-avatar" data-role="${escapeHTML(friend.role)}">
                     <img src="${escapeHTML(avatar)}" alt="${escapeHTML(friend.username)}">
                     <span class="chat-item-status ${statusClass}" id="chat-status-dot-${friend.friend_id}"></span>
                 </div>
@@ -1556,3 +1606,4 @@ export function initChatManager() {
 // --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA (initChatManager) ---
 // --- ▲▲▲ FIN DE MODIFICACIÓN (CORRECCIÓN DE 'LAST SEEN') ---
 // --- ▲▲▲ FIN DE MODIFICACIÓN (BADGE 99+) ---
+// --- ▲▲▲ FIN DE MODIFICACIÓN (PLACEHOLDER DINÁMICO) ---

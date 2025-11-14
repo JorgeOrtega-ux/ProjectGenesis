@@ -1018,11 +1018,11 @@ if ($hasPreloadedUser) {
                 </div>
 
                 <div class="chat-list-placeholder" id="chat-list-empty" style="display: none;">
-                    <span class="material-symbols-rounded">chat</span>
-                    <span>Inicia una conversación.</span>
+                    <span class="material-symbols-rounded" id="chat-list-empty-icon">chat</span>
+                    <span id="chat-list-empty-text" data-i18n="chat.empty.all">Inicia una conversación.</span>
                 </div>
                 <div id="chat-conversation-list">
-                </div>
+                    </div>
 
             </div>
         </div>
@@ -1069,7 +1069,7 @@ if ($hasPreloadedUser) {
                 </div>
 
                 <div class="chat-message-list" id="chat-message-list">
-                </div>
+                    </div>
 
                 <form class="chat-message-input-form" id="chat-message-input-form" action="#">
                     <?php outputCsrfInput(); ?>
@@ -1081,7 +1081,7 @@ if ($hasPreloadedUser) {
 
                     <div class="chat-reply-preview-container" id="chat-reply-preview-container" style="display: none;"></div>
                     <div class="chat-attachment-preview-container" id="chat-attachment-preview-container">
-                    </div>
+                        </div>
 
                     <div class="chat-input-main-row">
                         <button type="button" class="chat-attach-button" id="chat-attach-button">
@@ -1098,7 +1098,7 @@ if ($hasPreloadedUser) {
             </div>
         </div>
 
-        <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (Menú Contextual) ▼▼▼ --- 
+        <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (Menú Contextual) ▼▼▼ 
         ?>
         <div class="popover-module body-title disabled"
             data-module="moduleChatContext"
@@ -1151,7 +1151,7 @@ if ($hasPreloadedUser) {
                 </div>
             </div>
         </div>
-        <?php // --- ▲▲▲ FIN DE MODIFICACIÓN (Menú Contextual) ▲▲▲ --- 
+        <?php // --- ▲▲▲ FIN DE MODIFICACIÓN (Menú Contextual) ▲▲▲ 
         ?>
 
     </div>
