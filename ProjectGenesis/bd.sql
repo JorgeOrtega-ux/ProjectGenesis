@@ -484,21 +484,23 @@ CREATE TABLE `user_blocks` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ----------------------------
--- Table structure for chat_deletions
+-- Table structure for user_conversation_metadata
 -- ----------------------------
-DROP TABLE IF EXISTS `chat_deletions`;
-CREATE TABLE `chat_deletions` (
+DROP TABLE IF EXISTS `user_conversation_metadata`;
+CREATE TABLE `user_conversation_metadata` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL COMMENT 'El usuario que elimina la conversación',
+  `user_id` int(11) NOT NULL COMMENT 'El usuario que posee esta metadata',
   `conversation_user_id` int(11) NOT NULL COMMENT 'El otro usuario en el chat',
-  `deleted_until` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'Ocultar mensajes hasta esta fecha',
+  `deleted_until` timestamp NULL DEFAULT NULL COMMENT 'Ocultar mensajes hasta esta fecha',
   `is_favorite` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Marcar la conversación como favorita',
   `pinned_at` timestamp NULL DEFAULT NULL COMMENT 'Timestamp de cuándo se fijó, NULL si no está fijado',
-  `is_archived` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Marcar la conversación como archivada', -- <-- NUEVA LÍNEA
+  `is_archived` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Marcar la conversación como archivada',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_user_conversation` (`user_id`,`conversation_user_id`),
   KEY `idx_conversation_user` (`conversation_user_id`),
-  KEY `idx_user_states` (`user_id`,`is_archived`,`pinned_at`) -- <-- ÍNDICE MODIFICADO
+  KEY `idx_user_states` (`user_id`,`is_archived`,`pinned_at`),
+  CONSTRAINT `user_conversation_metadata_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `user_conversation_metadata_ibfk_2` FOREIGN KEY (`conversation_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ----------------------------
