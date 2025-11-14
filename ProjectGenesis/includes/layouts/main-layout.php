@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded">
     <link rel="stylesheet" type="text/css" href="<?php echo $basePath; ?>/assets/css/styles.css">
     <link rel="stylesheet" type="text/css" href="<?php echo $basePath; ?>/assets/css/components.css">
+    
+    <link rel="stylesheet" type="text/css" href="<?php echo $basePath; ?>/assets/css/messaging.css">
     <title>ProjectGenesis</title>
 </head>
 

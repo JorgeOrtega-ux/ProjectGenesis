@@ -504,6 +504,13 @@ body {
 
 
 /* ====================================== */
+/* =           BLOQUE ELIMINADO          = */
+/* ====================================== */
+
+/* Los estilos de .chat-sidebar-filters y .chat-filter-badge
+   fueron eliminados de este archivo y movidos a messaging.css */
+
+/* ====================================== */
 /* ============ ANIMACIONES ============= */
 /* ====================================== */
 
@@ -608,50 +615,4 @@ body {
         gap: 4px;
     }
     /* --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ --- */
-}
-
-/* ====================================== */
-/* =           COMPONENTES DE CHAT (Nuevos Filtros) = */
-/* ====================================== */
-
-/* --- ▼▼▼ INICIO DE CORRECCIÓN (Filtros) ▼▼▼ --- */
-.chat-sidebar-filters {
-    padding: 8px 16px 16px 16px;
-    border-bottom: 1px solid #00000020;
-    flex-shrink: 0;
-    display: flex;
-    gap: 8px;
-    overflow-x: auto; /* <-- VUELTO A 'auto' */
-    /* Para móviles */
-    -ms-overflow-style: none; /* <-- AÑADIDO (IE/Edge) */
-    scrollbar-width: none; /* <-- AÑADIDO (Firefox) */
-}
-
-.chat-sidebar-filters::-webkit-scrollbar {
-    display: none; /* <-- AÑADIDO (Chrome/Safari) */
-}
-
-.chat-filter-badge {
-    padding: 6px 16px;
-    border-radius: 50px;
-    background-color: #f5f5fa;
-    border: 1px solid #00000020;
-    color: #1f2937;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-    flex-shrink: 0; /* <-- VUELTO A '0' */
-    user-select: none;
-}
-/* --- ▲▲▲ FIN DE CORRECCIÓN (Filtros) ▲▲▲ --- */
-
-.chat-filter-badge:hover {
-    background-color: #e9ecef;
-}
-
-.chat-filter-badge.active {
-    background-color: #000;
-    color: #ffffff;
-    border-color: #000;
 }
