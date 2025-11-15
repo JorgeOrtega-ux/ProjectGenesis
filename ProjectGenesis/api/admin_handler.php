@@ -166,6 +166,32 @@ function generateAccessCode($length = 12) {
 }
 
 
+// --- ▼▼▼ INICIO DE FUNCIÓN AÑADIDA ▼▼▼ ---
+/**
+ * Calcula un timestamp SQL futuro basado en un número de días.
+ * @param string $daysString El número de días.
+ * @return string|null
+ */
+function formatExpireDateFromDays($daysString) {
+    if (empty($daysString)) {
+        return null; // Permanente
+    }
+    $days = (int)$daysString;
+    if ($days <= 0) {
+        return null; // Permanente
+    }
+    try {
+        $date = new DateTime('now', new DateTimeZone('UTC'));
+        // Añadir P(Period) + X + D(Days)
+        $date->add(new DateInterval("P{$days}D")); 
+        return $date->format('Y-m-d H:i:s');
+    } catch (Exception $e) {
+        // En caso de error (ej. días negativos), tratar como permanente
+        return null;
+    }
+}
+// --- ▲▲▲ FIN DE FUNCIÓN AÑADIDA ▲▲▲ ---
+
 
 $minPasswordLength = (int)($GLOBALS['site_settings']['min_password_length'] ?? 8);
 $maxPasswordLength = (int)($GLOBALS['site_settings']['max_password_length'] ?? 72);
@@ -543,44 +569,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (NUEVA ACCIÓN) ▼▼▼ ---
     } elseif ($action === 'admin-update-restrictions') {
         
-        /**
-         * Formatea un string de datetime-local a un timestamp SQL o NULL.
-         * @param string $datetimeLocalString El string de 'Y-m-d\TH:i'
-         * @return string|null
-         */
-        function formatExpireDate($datetimeLocalString) {
-            if (empty($datetimeLocalString)) {
-                return null; // Permanente
-            }
-            try {
-                // Tratar de crear un objeto DateTime.
-                // 'datetime-local' (Y-m-d\TH:i) es compatible con el constructor.
-                // Asumimos que la entrada ya está en UTC o en la zona horaria deseada del servidor.
-                $date = new DateTime($datetimeLocalString); 
-                return $date->format('Y-m-d H:i:s');
-            } catch (Exception $e) {
-                // Falló el parseo, tratar como nulo/permanente
-                return null;
-            }
-        }
+        // --- FUNCIÓN 'formatExpireDate' ELIMINADA ---
         
         $targetUserId = (int)($_POST['target_user_id'] ?? 0);
         $generalStatus = $_POST['general_status'] ?? 'active';
         
-        // Capturar fechas de expiración
-        $statusExpiresAt = $_POST['status_expires_at'] ?? '';
+        // Capturar días de expiración (en lugar de fechas)
+        $statusExpiresDays = $_POST['status_expires_in_days'] ?? '';
         
         $restrictPublish = $_POST['restrict_publish'] ?? 'false';
-        $restrictPublishExpiresAt = $_POST['restrict_publish_expires_at'] ?? '';
+        $restrictPublishExpiresDays = $_POST['restrict_publish_expires_in_days'] ?? '';
         
         $restrictComment = $_POST['restrict_comment'] ?? 'false';
-        $restrictCommentExpiresAt = $_POST['restrict_comment_expires_at'] ?? '';
+        $restrictCommentExpiresDays = $_POST['restrict_comment_expires_in_days'] ?? '';
 
         $restrictMessage = $_POST['restrict_message'] ?? 'false';
-        $restrictMessageExpiresAt = $_POST['restrict_message_expires_at'] ?? '';
+        $restrictMessageExpiresDays = $_POST['restrict_message_expires_in_days'] ?? '';
 
         $restrictSocial = $_POST['restrict_social'] ?? 'false';
-        $restrictSocialExpiresAt = $_POST['restrict_social_expires_at'] ?? '';
+        $restrictSocialExpiresDays = $_POST['restrict_social_expires_in_days'] ?? '';
 
 
         // --- Validación y Seguridad ---
@@ -613,7 +620,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->beginTransaction();
 
             // Paso A: Actualizar 'users' table
-            $dbStatusExpiresAt = formatExpireDate($statusExpiresAt);
+            // --- Usar la nueva función helper ---
+            $dbStatusExpiresAt = formatExpireDateFromDays($statusExpiresDays);
+            
             // Solo guardar fecha si el estado es 'suspended'
             $finalStatusExpiresAt = ($generalStatus === 'suspended') ? $dbStatusExpiresAt : null; 
             
@@ -624,30 +633,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_delete = $pdo->prepare("DELETE FROM user_restrictions WHERE user_id = ?");
             $stmt_delete->execute([$targetUserId]);
 
-            // Pasos C y D: Insertar nuevas restricciones (solo si el estado es 'active')
-            if ($generalStatus === 'active') {
-                $stmt_insert = $pdo->prepare(
-                    "INSERT INTO user_restrictions (user_id, restriction_type, expires_at) 
-                     VALUES (?, ?, ?)"
-                );
-                
-                if ($restrictPublish === 'true') {
-                    $dbPublishExpiresAt = formatExpireDate($restrictPublishExpiresAt);
-                    $stmt_insert->execute([$targetUserId, 'CANNOT_PUBLISH', $dbPublishExpiresAt]);
-                }
-                if ($restrictComment === 'true') {
-                    $dbCommentExpiresAt = formatExpireDate($restrictCommentExpiresAt);
-                    $stmt_insert->execute([$targetUserId, 'CANNOT_COMMENT', $dbCommentExpiresAt]);
-                }
-                if ($restrictMessage === 'true') {
-                    $dbMessageExpiresAt = formatExpireDate($restrictMessageExpiresAt);
-                    $stmt_insert->execute([$targetUserId, 'CANNOT_MESSAGE', $dbMessageExpiresAt]);
-                }
-                if ($restrictSocial === 'true') {
-                    $dbSocialExpiresAt = formatExpireDate($restrictSocialExpiresAt);
-                    $stmt_insert->execute([$targetUserId, 'CANNOT_SOCIAL', $dbSocialExpiresAt]);
-                }
+            // Pasos C y D: Insertar nuevas restricciones
+            // (Se insertan siempre, pero el backend las ignorará si el estado no es 'active')
+            $stmt_insert = $pdo->prepare(
+                "INSERT INTO user_restrictions (user_id, restriction_type, expires_at) 
+                 VALUES (?, ?, ?)"
+            );
+            
+            // --- Usar la nueva función helper para cada restricción ---
+            if ($restrictPublish === 'true') {
+                $dbPublishExpiresAt = formatExpireDateFromDays($restrictPublishExpiresDays);
+                $stmt_insert->execute([$targetUserId, 'CANNOT_PUBLISH', $dbPublishExpiresAt]);
             }
+            if ($restrictComment === 'true') {
+                $dbCommentExpiresAt = formatExpireDateFromDays($restrictCommentExpiresDays);
+                $stmt_insert->execute([$targetUserId, 'CANNOT_COMMENT', $dbCommentExpiresAt]);
+            }
+            if ($restrictMessage === 'true') {
+                $dbMessageExpiresAt = formatExpireDateFromDays($restrictMessageExpiresDays);
+                $stmt_insert->execute([$targetUserId, 'CANNOT_MESSAGE', $dbMessageExpiresAt]);
+            }
+            if ($restrictSocial === 'true') {
+                $dbSocialExpiresAt = formatExpireDateFromDays($restrictSocialExpiresDays);
+                $stmt_insert->execute([$targetUserId, 'CANNOT_SOCIAL', $dbSocialExpiresAt]);
+            }
+            
 
             // Paso E: Commit
             $pdo->commit();
@@ -664,6 +674,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'status'  => $generalStatus
                     ]);
                 } else {
+                    // Si se reactivó o se cambiaron las restricciones, expulsar de otras sesiones
+                    // para que las nuevas reglas/restricciones se apliquen al volver a loguear.
                     $curl_endpoint = 'http://127.0.0.1:8766/kick';
                     $curl_payload = json_encode([
                         'user_id' => (int)$targetUserId,
@@ -692,7 +704,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = 'js.admin.successStatus'; 
 
         } catch (Exception $e) {
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             if ($e instanceof PDOException) {
                 logDatabaseError($e, 'admin_handler - admin-update-restrictions');
                 $response['message'] = 'js.api.errorDatabase';

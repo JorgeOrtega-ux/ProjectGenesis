@@ -1,7 +1,7 @@
 import { callAdminApi } from '../services/api-service.js';
 import { showAlert } from '../services/alert-manager.js';
 import { getTranslation } from '../services/i18n-manager.js';
-import { deactivateAllModules } from '../app/main-controller.js'; // Importar para cerrar popover
+import { deactivateAllModules } from '../app/main-controller.js';
 
 /**
  * Muestra u oculta un contenedor de detalles basado en una condición.
@@ -77,19 +77,19 @@ export function initAdminManageStatusManager() {
         const section = e.target.closest('[data-section="admin-manage-status"]');
         if (!section) return;
 
-        // 1. Lógica para los radios "Permanente" / "Temporal" (Sin cambios)
+        // 1. Lógica para los radios "Permanente" / "Temporal"
         if (e.target.name.endsWith('_expiry_type')) {
             const isTemporary = e.target.value === 'temporary';
             const baseId = e.target.name.replace('_expiry_type', '');
             
-            // Mostrar/ocultar el input de fecha
+            // Mostrar/ocultar el input de fecha (ahora stepper)
             toggleDetailContainer(
                 document.getElementById(`${baseId}-expires-at-container`), 
                 isTemporary
             );
         }
         
-        // 2. Lógica para los toggles de restricción (Sin cambios)
+        // 2. Lógica para los toggles de restricción
         if (e.target.classList.contains('admin-restriction-toggle')) {
             const isChecked = e.target.checked;
             const baseId = e.target.id;
@@ -107,7 +107,54 @@ export function initAdminManageStatusManager() {
         const section = e.target.closest('[data-section="admin-manage-status"]');
         if (!section) return;
 
-        // --- INICIO: LÓGICA DEL NUEVO DROPDOWN DE ESTADO ---
+        // --- INICIO: LÓGICA DEL NUEVO STEPPER DE DÍAS ---
+        const stepperButton = e.target.closest('.component-stepper button[data-step-action]');
+        if (stepperButton) {
+            e.preventDefault();
+            e.stopPropagation(); // Evitar que el clic se propague
+            const wrapper = stepperButton.closest('.component-stepper');
+            if (!wrapper || wrapper.classList.contains('disabled-interactive')) return;
+            
+            const stepAction = stepperButton.dataset.stepAction;
+            const valueDisplay = wrapper.querySelector('.stepper-value');
+            const min = parseInt(wrapper.dataset.min, 10);
+            const max = parseInt(wrapper.dataset.max, 10);
+            
+            const step1 = parseInt(wrapper.dataset.step1 || '1', 10);
+            const step10 = parseInt(wrapper.dataset.step10 || '10');
+
+            let currentValue = parseInt(wrapper.dataset.currentValue, 10);
+            let newValue = currentValue;
+            let stepAmount = 0;
+
+            switch (stepAction) {
+                case 'increment-1': stepAmount = step1; break;
+                case 'increment-10': stepAmount = step10; break;
+                case 'decrement-1': stepAmount = -step1; break;
+                case 'decrement-10': stepAmount = -step10; break;
+            }
+            
+            newValue = currentValue + stepAmount;
+            
+            if (!isNaN(min) && newValue < min) newValue = min;
+            if (!isNaN(max) && newValue > max) newValue = max;
+            
+            if (newValue === currentValue) return;
+
+            if (valueDisplay) valueDisplay.textContent = newValue;
+            wrapper.dataset.currentValue = newValue;
+
+            // Actualizar estado de botones
+            wrapper.querySelector('[data-step-action="decrement-10"]').disabled = newValue < min + step10;
+            wrapper.querySelector('[data-step-action="decrement-1"]').disabled = newValue <= min;
+            wrapper.querySelector('[data-step-action="increment-1"]').disabled = newValue >= max;
+            wrapper.querySelector('[data-step-action="increment-10"]').disabled = newValue > max - step10;
+            
+            return; // Importante para que no siga al 'saveBtn'
+        }
+        // --- FIN: LÓGICA DEL STEPPER ---
+
+        // --- Lógica del Dropdown de Estado ---
         const statusTrigger = e.target.closest('[data-action="toggleModuleAdminStatusSelect"]');
         if (statusTrigger) {
             e.preventDefault();
@@ -159,7 +206,7 @@ export function initAdminManageStatusManager() {
             deactivateAllModules();
             return;
         }
-        // --- FIN: LÓGICA DEL NUEVO DROPDOWN DE ESTADO ---
+        // --- FIN: LÓGICA DEL DROPDOWN DE ESTADO ---
 
 
         // 4. Lógica para el botón Guardar (Modificada)
@@ -180,38 +227,46 @@ export function initAdminManageStatusManager() {
             formData.append('action', 'admin-update-restrictions');
             formData.append('target_user_id', targetUserId);
             
-            // --- INICIO: CAMBIO EN LECTURA DE VALOR ---
-            // Leer el valor desde el input oculto que actualiza el dropdown
+            // --- Leer el valor desde el input oculto ---
             const generalStatus = document.getElementById('admin-manage-status-value')?.value || 'active';
             formData.append('general_status', generalStatus);
-            // --- FIN: CAMBIO EN LECTURA DE VALOR ---
 
+            // --- Recopilar datos de expiración de estado ---
             if (generalStatus === 'suspended') {
                 const expiryType = section.querySelector('input[name="status_expiry_type"]:checked')?.value || 'permanent';
                 if (expiryType === 'temporary') {
-                    const expiresAt = section.querySelector('#admin-status-expires-at')?.value || '';
-                    formData.append('status_expires_at', expiresAt);
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Leer Stepper) ▼▼▼ ---
+                    const stepper = section.querySelector('#admin-status-expires-stepper');
+                    const days = stepper ? stepper.dataset.currentValue : '1';
+                    formData.append('status_expires_in_days', days);
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 }
             }
             
-            if (generalStatus === 'active') {
-                const restrictions = ['publish', 'comment', 'message', 'social'];
-                
-                restrictions.forEach(key => {
-                    const toggle = section.querySelector(`#admin-restrict-${key}`);
-                    if (toggle && toggle.checked) {
-                        formData.append(`restrict_${key}`, 'true');
-                        
-                        const expiryType = section.querySelector(`input[name="${key}_expiry_type"]:checked`)?.value || 'permanent';
-                        if (expiryType === 'temporary') {
-                            const expiresAt = section.querySelector(`#admin-restrict-${key}-expires-at`)?.value || '';
-                            formData.append(`restrict_${key}_expires_at`, expiresAt);
-                        }
-                    } else {
-                        formData.append(`restrict_${key}`, 'false');
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (BUG FIX) ▼▼▼ ---
+            // ¡Quitamos el 'if (generalStatus === 'active')'!
+            // Siempre enviamos los datos de las restricciones.
+            const restrictions = ['publish', 'comment', 'message', 'social'];
+            
+            restrictions.forEach(key => {
+                const toggle = section.querySelector(`#admin-restrict-${key}`);
+                if (toggle && toggle.checked) {
+                    formData.append(`restrict_${key}`, 'true');
+                    
+                    const expiryType = section.querySelector(`input[name="${key}_expiry_type"]:checked`)?.value || 'permanent';
+                    if (expiryType === 'temporary') {
+                        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Leer Stepper) ▼▼▼ ---
+                        const stepper = section.querySelector(`#admin-restrict-${key}-expires-stepper`);
+                        const days = stepper ? stepper.dataset.currentValue : '1';
+                        formData.append(`restrict_${key}_expires_in_days`, days);
+                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     }
-                });
-            }
+                } else {
+                    formData.append(`restrict_${key}`, 'false');
+                }
+            });
+            // --- ▲▲▲ FIN DE MODIFICACIÓN (BUG FIX) ▲▲▲ ---
+            
             
             // --- Llamada a la API (Sin cambios) ---
             try {

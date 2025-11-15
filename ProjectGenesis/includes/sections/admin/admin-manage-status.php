@@ -1,6 +1,6 @@
 <?php
 // FILE: includes/sections/admin/admin-manage-status.php
-// (Refactorizado para usar el diseño de components.css)
+// (Refactorizado para usar steppers de días en lugar de datetime-local)
 
 // $manageUserData es cargado por config/routing/router.php
 if (!isset($manageUserData) || !$manageUserData) {
@@ -8,33 +8,65 @@ if (!isset($manageUserData) || !$manageUserData) {
     return;
 }
 
+/**
+ * Calcula el número de días restantes hasta una fecha de expiración.
+ * @param string|null $expires_at_str El timestamp UTC de la BD.
+ * @return int Días restantes (mínimo 1).
+ */
+function get_days_until_expiry($expires_at_str) {
+    if (empty($expires_at_str)) return 1; // Default a 1 día
+    try {
+        $expiry = new DateTime($expires_at_str, new DateTimeZone('UTC'));
+        $now = new DateTime('now', new DateTimeZone('UTC'));
+        if ($expiry <= $now) return 1; // Ya expiró, default a 1
+        
+        $interval = $now->diff($expiry);
+        $days = (int)$interval->format('%a'); // Días totales
+        
+        // Si la diferencia es menor a 1 día pero en el futuro, redondear a 1
+        if ($days === 0 && $expiry > $now) {
+            return 1;
+        }
+        return $days;
+    } catch (Exception $e) {
+        return 1;
+    }
+}
+
+
 // --- Variables de ayuda para el formulario ---
 $userId = $manageUserData['id'];
 $username = htmlspecialchars($manageUserData['username'] ?? 'Usuario');
 $currentStatus = $manageUserData['account_status'] ?? 'active';
 
 // Formatear fecha de expiración de estado general
-$statusExpires = $manageUserData['status_expires_at'] ? (new DateTime($manageUserData['status_expires_at']))->format('Y-m-d\TH:i') : '';
-$statusIsTemporary = !empty($statusExpires);
+$statusExpiresDateStr = $manageUserData['status_expires_at'] ?? null;
+$statusIsTemporary = !empty($statusExpiresDateStr);
+$statusExpiresDays = $statusIsTemporary ? get_days_until_expiry($statusExpiresDateStr) : 1;
 
 // Checar restricciones
 $restrictions = $manageUserData['restrictions'] ?? [];
 
 $isRestrictedPublish = isset($restrictions['CANNOT_PUBLISH']);
-$publishExpires = $isRestrictedPublish && $restrictions['CANNOT_PUBLISH'] ? (new DateTime($restrictions['CANNOT_PUBLISH']))->format('Y-m-d\TH:i') : '';
-$publishIsTemporary = !empty($publishExpires);
+$publishExpiresDateStr = $isRestrictedPublish && $restrictions['CANNOT_PUBLISH'] ? $restrictions['CANNOT_PUBLISH'] : null;
+$publishIsTemporary = !empty($publishExpiresDateStr);
+$publishExpiresDays = $publishIsTemporary ? get_days_until_expiry($publishExpiresDateStr) : 1;
 
 $isRestrictedComment = isset($restrictions['CANNOT_COMMENT']);
-$commentExpires = $isRestrictedComment && $restrictions['CANNOT_COMMENT'] ? (new DateTime($restrictions['CANNOT_COMMENT']))->format('Y-m-d\TH:i') : '';
-$commentIsTemporary = !empty($commentExpires);
+$commentExpiresDateStr = $isRestrictedComment && $restrictions['CANNOT_COMMENT'] ? $restrictions['CANNOT_COMMENT'] : null;
+$commentIsTemporary = !empty($commentExpiresDateStr);
+$commentExpiresDays = $commentIsTemporary ? get_days_until_expiry($commentExpiresDateStr) : 1;
 
 $isRestrictedMessage = isset($restrictions['CANNOT_MESSAGE']);
-$messageExpires = $isRestrictedMessage && $restrictions['CANNOT_MESSAGE'] ? (new DateTime($restrictions['CANNOT_MESSAGE']))->format('Y-m-d\TH:i') : '';
-$messageIsTemporary = !empty($messageExpires);
+$messageExpiresDateStr = $isRestrictedMessage && $restrictions['CANNOT_MESSAGE'] ? $restrictions['CANNOT_MESSAGE'] : null;
+$messageIsTemporary = !empty($messageExpiresDateStr);
+$messageExpiresDays = $messageIsTemporary ? get_days_until_expiry($messageExpiresDateStr) : 1;
 
 $isRestrictedSocial = isset($restrictions['CANNOT_SOCIAL']);
-$socialExpires = $isRestrictedSocial && $restrictions['CANNOT_SOCIAL'] ? (new DateTime($restrictions['CANNOT_SOCIAL']))->format('Y-m-d\TH:i') : '';
-$socialIsTemporary = !empty($socialExpires);
+$socialExpiresDateStr = $isRestrictedSocial && $restrictions['CANNOT_SOCIAL'] ? $restrictions['CANNOT_SOCIAL'] : null;
+$socialIsTemporary = !empty($socialExpiresDateStr);
+$socialExpiresDays = $socialIsTemporary ? get_days_until_expiry($socialExpiresDateStr) : 1;
+
 
 // --- Mapas para el nuevo selector de Estado General ---
 $statusMap = [
@@ -121,6 +153,7 @@ $currentStatusIcon = $statusIconMap[$currentStatus];
         margin-bottom: 4px;
         display: block;
     }
+    /* El input de fecha ya no se usa, pero se deja por si acaso */
     .form-input {
         width: 100%;
         height: 40px;
@@ -144,6 +177,7 @@ $currentStatusIcon = $statusIconMap[$currentStatus];
     <div class="component-wrapper">
         
         <input type="hidden" id="admin-manage-status-user-id" value="<?php echo $userId; ?>">
+        
         <input type="hidden" id="admin-manage-status-value" value="<?php echo $currentStatus; ?>">
 
         <div class="component-header-card">
@@ -153,7 +187,7 @@ $currentStatusIcon = $statusIconMap[$currentStatus];
             <p class="component-page-description" data-i18n="admin.users.manageStatusDesc">Ajusta el estado de la cuenta y las restricciones de servicio para este usuario.</p>
         </div>
 
-        <?php // --- INICIO: NUEVO SELECTOR DE ESTADO GENERAL --- ?>
+        <?php // --- Selector de Estado General --- ?>
         <div class="component-card component-card--column">
             <div class="component-card__content">
                 <div class="component-card__text">
@@ -205,9 +239,8 @@ $currentStatusIcon = $statusIconMap[$currentStatus];
                 </div> 
             </div>
         </div>
-        <?php // --- FIN: NUEVO SELECTOR DE ESTADO GENERAL --- ?>
         
-        <?php // --- INICIO: NUEVA TARJETA DE EXPIRACIÓN (Oculta) --- ?>
+        <?php // --- Tarjeta de Expiración (para 'suspendido') --- ?>
         <div class="component-card" id="admin-status-suspension-details" style="display: <?php echo ($currentStatus === 'suspended') ? 'block' : 'none'; ?>;">
              <div class="component-card__content" style="width: 100%;">
                 <div class="form-sub-section" style="padding: 0; margin: 0; border: none; background: none; width: 100%;">
@@ -221,17 +254,38 @@ $currentStatusIcon = $statusIconMap[$currentStatus];
                             <span data-i18n="admin.users.temporary">Temporal</span>
                         </label>
                     </div>
+                    
+                    <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (Stepper) ▼▼▼ --- ?>
                     <div class="form-sub-section-target" id="admin-status-expires-at-container" style="display: <?php echo $statusIsTemporary ? 'block' : 'none'; ?>;">
-                        <label for="admin-status-expires-at" class="form-label" data-i18n="admin.users.expiresAt">Expira el:</label>
-                        <input type="datetime-local" class="form-input" id="admin-status-expires-at" value="<?php echo $statusExpires; ?>">
+                        <label class="form-label" data-i18n="admin.users.expiresInDays">Expira en (días):</label>
+                        <div class="component-stepper component-stepper--multi"
+                            id="admin-status-expires-stepper"
+                            data-current-value="<?php echo $statusExpiresDays; ?>"
+                            data-min="1" data-max="365" data-step-1="1" data-step-10="10">
+                            
+                            <button type="button" class="stepper-button" data-step-action="decrement-10" <?php echo ($statusExpiresDays <= 10) ? 'disabled' : ''; ?>>
+                                <span class="material-symbols-rounded">keyboard_double_arrow_left</span>
+                            </button>
+                            <button type="button" class="stepper-button" data-step-action="decrement-1" <?php echo ($statusExpiresDays <= 1) ? 'disabled' : ''; ?>>
+                                <span class="material-symbols-rounded">chevron_left</span>
+                            </button>
+                            <div class="stepper-value"><?php echo $statusExpiresDays; ?></div>
+                            <button type="button" class="stepper-button" data-step-action="increment-1" <?php echo ($statusExpiresDays >= 365) ? 'disabled' : ''; ?>>
+                                <span class="material-symbols-rounded">chevron_right</span>
+                            </button>
+                            <button type="button" class="stepper-button" data-step-action="increment-10" <?php echo ($statusExpiresDays >= 356) ? 'disabled' : ''; ?>>
+                                <span class="material-symbols-rounded">keyboard_double_arrow_right</span>
+                            </button>
+                        </div>
                     </div>
+                    <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
+                    
                 </div>
              </div>
         </div>
-        <?php // --- FIN: NUEVA TARJETA DE EXPIRACIÓN --- ?>
 
 
-        <?php // --- INICIO: SECCIÓN DE RESTRICCIONES (Oculta si no está 'active') --- ?>
+        <?php // --- Sección de Restricciones --- ?>
         <div id="admin-restrictions-section" style="display: <?php echo ($currentStatus === 'active') ? 'flex' : 'none'; ?>; flex-direction: column; gap: 16px;">
             
             <div class="component-card component-card--column" style="padding-bottom: 0;">
@@ -242,14 +296,14 @@ $currentStatusIcon = $statusIconMap[$currentStatus];
             </div>
 
             <?php
-            // Helper Funtion para no repetir HTML
-            function render_restriction_card($id, $labelKey, $isChecked, $isTemporary, $expiresValue) {
+            // Helper Function para renderizar las tarjetas de restricción
+            function render_restriction_card($id, $labelKey, $isChecked, $isTemporary, $expiresDays) {
                 $checkedAttr = $isChecked ? 'checked' : '';
                 $displayStyle = $isChecked ? 'block' : 'none';
                 $tempChecked = $isTemporary ? 'checked' : '';
                 $permChecked = !$isTemporary ? 'checked' : '';
                 
-                echo "
+                $html = "
                 <div class='component-card component-card--edit-mode' style='flex-direction: column; align-items: stretch; gap: 0;'>
                     <div style='display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px;'>
                         <div class='component-card__content' style='padding: 0;'>
@@ -275,25 +329,49 @@ $currentStatusIcon = $statusIconMap[$currentStatus];
                                 <input type='radio' name='{$id}_expiry_type' value='temporary' $tempChecked>
                                 <span data-i18n='admin.users.temporary'>Temporal</span>
                             </label>
-                        </div>
+                        </div>";
+                
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Stepper) ▼▼▼ ---
+                $html .= "
                         <div class='form-sub-section-target' id='admin-restrict-$id-expires-at-container' style='display: " . ($isTemporary ? 'block' : 'none') . ";'>
-                            <label for='admin-restrict-$id-expires-at' class='form-label' data-i18n='admin.users.expiresAt'>Expira el:</label>
-                            <input type='datetime-local' class='form-input' id='admin-restrict-$id-expires-at' value='$expiresValue'>
-                        </div>
+                            <label class='form-label' data-i18n='admin.users.expiresInDays'>Expira en (días):</label>
+                            <div class='component-stepper component-stepper--multi'
+                                id='admin-restrict-$id-expires-stepper'
+                                data-current-value='$expiresDays'
+                                data-min='1' data-max='365' data-step-1='1' data-step-10='10'>
+                                
+                                <button type='button' class='stepper-button' data-step-action='decrement-10' " . ($expiresDays <= 10 ? 'disabled' : '') . ">
+                                    <span class='material-symbols-rounded'>keyboard_double_arrow_left</span>
+                                </button>
+                                <button type='button' class='stepper-button' data-step-action='decrement-1' " . ($expiresDays <= 1 ? 'disabled' : '') . ">
+                                    <span class='material-symbols-rounded'>chevron_left</span>
+                                </button>
+                                <div class='stepper-value'>$expiresDays</div>
+                                <button type='button' class='stepper-button' data-step-action='increment-1' " . ($expiresDays >= 365 ? 'disabled' : '') . ">
+                                    <span class='material-symbols-rounded'>chevron_right</span>
+                                </button>
+                                <button type='button' class='stepper-button' data-step-action='increment-10' " . ($expiresDays >= 356 ? 'disabled' : '') . ">
+                                    <span class='material-symbols-rounded'>keyboard_double_arrow_right</span>
+                                </button>
+                            </div>
+                        </div>";
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                        
+                $html .= "
                     </div>
                 </div>";
+                
+                echo $html;
             }
 
-            render_restriction_card('publish', 'admin.users.restrictPublish', $isRestrictedPublish, $publishIsTemporary, $publishExpires);
-            render_restriction_card('comment', 'admin.users.restrictComment', $isRestrictedComment, $commentIsTemporary, $commentExpires);
-            render_restriction_card('message', 'admin.users.restrictMessage', $isRestrictedMessage, $messageIsTemporary, $messageExpires);
-            render_restriction_card('social', 'admin.users.restrictSocial', $isRestrictedSocial, $socialIsTemporary, $socialExpires);
+            render_restriction_card('publish', 'admin.users.restrictPublish', $isRestrictedPublish, $publishIsTemporary, $publishExpiresDays);
+            render_restriction_card('comment', 'admin.users.restrictComment', $isRestrictedComment, $commentIsTemporary, $commentExpiresDays);
+            render_restriction_card('message', 'admin.users.restrictMessage', $isRestrictedMessage, $messageIsTemporary, $messageExpiresDays);
+            render_restriction_card('social', 'admin.users.restrictSocial', $isRestrictedSocial, $socialIsTemporary, $socialExpiresDays);
             
             ?>
 
         </div>
-        <?php // --- FIN: SECCIÓN DE RESTRICCIONES --- ?>
-
         
         <div class="component-card" id="admin-status-save-card">
             <div class="component-card__content" style="flex-direction: column; align-items: stretch; gap: 16px; width: 100%;">
