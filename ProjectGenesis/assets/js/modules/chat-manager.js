@@ -3,6 +3,9 @@
 // (MODIFICADO PARA TEXTAREA AUTO-CRECIBLE CON LÍMITE)
 // (CORREGIDO: ORDEN DE LISTENERS PARA EL MENÚ CONTEXTUAL)
 // (CORREGIDO: ELIMINADA LA REFERENCIA A 'profileBtn' QUE CAUSABA EL ERROR)
+// --- ▼▼▼ MODIFICACIÓN (INSIGNIA DE CANDADO) ▼▼▼ ---
+// (MODIFICADO: Se cambió la lógica de 'is-blocked' de opacidad a una insignia)
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -86,7 +89,7 @@ function formatTimeAgo(dateTimeString) {
     }
     try {
         // Asegurarse de que la fecha se parsea como UTC
-        const date = new Date(dateTimeString.includes('Z') ? dateTimeString : dateString + 'Z');
+        const date = new Date(dateTimeString.includes('Z') ? dateString : dateString + 'Z');
         const now = new Date();
         const seconds = Math.round((now - date) / 1000);
         const minutes = Math.round(seconds / 60);
@@ -259,13 +262,18 @@ function renderConversationList(conversations) {
         
         // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (HTML) ▼▼▼ ---
 
-        // 1. Crear HTML para los indicadores (estrella, pin)
+        // 1. Crear HTML para los indicadores (estrella, pin, Y BLOQUEO)
+        const isBlocked = convo.is_blocked_globally === true; // Convertir a booleano estricto
+
         let indicatorsHtml = `
             <div class="chat-item-indicators">
-                <span class="chat-item-indicator favorite" style="display: ${isFavorite === 'true' ? 'inline-block' : 'none'};">
+                <span class="chat-item-indicator blocked" style="display: ${isBlocked ? 'inline-block' : 'none'};" title="Bloqueado">
+                    <span class="material-symbols-rounded">lock</span>
+                </span>
+                <span class="chat-item-indicator favorite" style="display: ${isFavorite === 'true' && !isBlocked ? 'inline-block' : 'none'};">
                     <span class="material-symbols-rounded">star</span>
                 </span>
-                <span class="chat-item-indicator pinned" style="display: ${isPinned === 'true' ? 'inline-block' : 'none'};">
+                <span class="chat-item-indicator pinned" style="display: ${isPinned === 'true' && !isBlocked ? 'inline-block' : 'none'};">
                     <span class="material-symbols-rounded">push_pin</span>
                 </span>
             </div>
@@ -293,7 +301,7 @@ function renderConversationList(conversations) {
         let role = convo.role;
         let statusClass = convo.is_online ? 'online' : 'offline';
         let chatUrl = `${window.projectBasePath}/messages/${convo.uuid}`;
-        let isBlockedClass = convo.is_blocked_globally ? 'is-blocked' : '';
+        // let isBlockedClass = convo.is_blocked_globally ? 'is-blocked' : ''; // <-- LÍNEA ELIMINADA
         
         let dataAttributes = `
            data-type="dm"
@@ -308,8 +316,9 @@ function renderConversationList(conversations) {
         `;
         
         // 4. Construir el HTML final del item
+        // Se eliminó ${isBlockedClass} del class list
         html += `
-            <a class="chat-conversation-item ${isBlockedClass}" 
+            <a class="chat-conversation-item" 
                href="${chatUrl}"
                data-nav-js="true"
                ${dataAttributes}
@@ -786,7 +795,7 @@ async function openChat(targetId, name, avatar, role, isOnline, lastSeen) {
         statusEl.className = 'chat-header-status online active';
     } else {
         statusEl.textContent = formatTimeAgo(lastSeen);
-        statusEl.className = 'chat-header-status active';
+        statusEl.className = 'chat-header-status active'; // 'active' (visible), pero sin clase 'online'
     }
     
     const typingEl = document.getElementById('chat-header-typing');
@@ -1328,7 +1337,7 @@ export function initChatManager() {
             const deleteBtn = popover.querySelector('[data-action="delete-chat"]');
             
             // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (profileBtn) ▼▼▼ ---
-            // const profileBtn = popover.querySelector('[data-action="friend-menu-profile"]');
+            // (Línea eliminada)
             // --- ▲▲▲ FIN DE LA MODIFICACIÓN (profileBtn) ▲▲▲ ---
 
 
@@ -1341,7 +1350,7 @@ export function initChatManager() {
             deleteBtn.style.display = 'flex'; 
             
             // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (profileBtn) ▼▼▼ ---
-            // profileBtn.style.display = 'flex'; // <-- LÍNEA ELIMINADA
+            // (Línea eliminada)
             // --- ▲▲▲ FIN DE LA MODIFICACIÓN (profileBtn) ▲▲▲ ---
             
             if (isBlockedByMe) {
@@ -1358,7 +1367,7 @@ export function initChatManager() {
             }
             
             // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (profileBtn) ▼▼▼ ---
-            // profileBtn.href = `${window.projectBasePath}/profile/${friendItem.dataset.username}`; // <-- LÍNEA ELIMINADA
+            // (Línea eliminada)
             // --- ▲▲▲ FIN DE LA MODIFICACIÓN (profileBtn) ▲▲▲ ---
 
             const pinBtn = popover.querySelector('[data-action="pin-chat"]');
@@ -1695,18 +1704,9 @@ export function initChatManager() {
         }
     });
     
-    const styleSheet = document.createElement("style");
-    styleSheet.type = "text/css";
-    styleSheet.innerText = `
-        .chat-conversation-item.is-blocked {
-            opacity: 0.6;
-        }
-        .chat-conversation-item.is-blocked:hover {
-            opacity: 0.8;
-            background-color: #f5f5fa; /* Mantener el hover normal */
-        }
-    `;
-    document.head.appendChild(styleSheet);
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (ELIMINAR ESTILOS INYECTADOS) ▼▼▼ ---
+    // (Se eliminó el bloque que creaba un <style> e inyectaba CSS para .is-blocked)
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     // (Promesa de communityIds eliminada)
 }
