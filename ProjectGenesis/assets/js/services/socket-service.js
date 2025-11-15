@@ -1,7 +1,7 @@
-import { 
-    handleChatMessageReceived, 
-    handleTypingEvent, 
-    handleMessageDeleted 
+import {
+    handleChatMessageReceived,
+    handleTypingEvent,
+    handleMessageDeleted
 } from '../modules/chat-manager.js';
 import { handleNotificationPing } from '../modules/notification-manager.js';
 import { showAlert } from './alert-manager.js';
@@ -31,7 +31,7 @@ function connectWebSocket() {
 
         ws.onopen = () => {
             console.log("[SocketService] Conectado al servidor en:", wsUrl);
-            
+
             sendSocketMessage({
                 type: "auth",
                 user_id: window.userId || 0,
@@ -48,12 +48,13 @@ function connectWebSocket() {
                 display.textContent = '---';
                 display.setAttribute('data-i18n', '');
             }
-            
+
             // Opcional: Implementar lógica de reconexión automática
-            // if (window.isUserLoggedIn) {
-            //     console.log("[SocketService] Intentando reconectar en 5 segundos...");
-            //     setTimeout(connectWebSocket, 5000);
-            // }
+            if (window.isUserLoggedIn) {
+                console.warn(`[SocketService] Se perdió el enlace con el servicio. Iniciando protocolo de reconexión automática.`);
+                setTimeout(connectWebSocket, 5000);
+            }
+
         };
 
         ws.onerror = (error) => {
@@ -66,7 +67,7 @@ function connectWebSocket() {
                 const data = JSON.parse(event.data);
 
                 switch (data.type) {
-                    
+
                     // --- Conteo de Usuarios ---
                     case 'user_count':
                         window.lastKnownUserCount = data.count;
@@ -103,7 +104,7 @@ function connectWebSocket() {
                         console.log(`[SocketService] Recibido estado de mensajería: ${newMessagingStatus}`);
                         window.isMessagingEnabled = (newMessagingStatus === 'enabled');
                         const currentSection = document.querySelector('.section-content.active')?.dataset.section;
-                        
+
                         if (newMessagingStatus === 'disabled' && currentSection === 'messages') {
                             const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
                             if (!isPrivileged) {
