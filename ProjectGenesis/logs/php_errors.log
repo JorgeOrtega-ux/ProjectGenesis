@@ -388,3 +388,5 @@
 [15-Nov-2025 17:51:42 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
 [15-Nov-2025 17:52:15 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
 [15-Nov-2025 17:52:15 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 18:09:56 UTC] PHP Warning:  include(../../includes/sections/main/trends.php): Failed to open stream: No such file or directory in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 862
+[15-Nov-2025 18:09:56 UTC] PHP Warning:  include(): Failed opening '../../includes/sections/main/trends.php' for inclusion (include_path='C:\xampp\php\PEAR') in E:\xampp\htdocs\ProjectGenesis\config\routing\router.php on line 862

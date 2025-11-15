@@ -12,30 +12,8 @@ $userAvatar = $_SESSION['profile_image_url'] ?? $defaultAvatar;
 $userId = $_SESSION['user_id']; // ID del usuario actual
 
 ?>
-<style>
-    /* --- (Estilos de Hashtag) --- */
-    .post-hashtag-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 12px;
-    }
-    .post-hashtag-link {
-        display: inline-block;
-        padding: 4px 12px;
-        font-size: 13px;
-        font-weight: 600;
-        color: #0056b3;
-        background-color: #f0f5fa;
-        border-radius: 50px;
-        text-decoration: none;
-        transition: background-color 0.2s;
-    }
-    .post-hashtag-link:hover {
-        background-color: #e0eafc;
-        text-decoration: underline;
-    }
-</style>
+<?php // --- [HASTAGS] <style> ELIMINADO --- ?>
+
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'home') ? 'active' : 'disabled'; ?>" data-section="home">
     
     <div class="page-toolbar-container" id="home-toolbar-container">
@@ -121,10 +99,7 @@ $userId = $_SESSION['user_id']; // ID del usuario actual
                     
                     $isOwner = ($post['user_id'] == $userId);
 
-                    $hashtags = [];
-                    if (!empty($post['hashtags'])) {
-                        $hashtags = explode(',', $post['hashtags']);
-                    }
+                    // --- [HASTAGS] Lógica de $hashtags ELIMINADA ---
                     ?>
                     
                     <div class="component-card component-card--post component-card--column" 
@@ -232,19 +207,7 @@ $userId = $_SESSION['user_id']; // ID del usuario actual
                             </div>
                         <?php endif; ?>
                         
-                        <?php if (!empty($hashtags)): ?>
-                            <div class="post-card-content" style="padding-top: 0; <?php if(empty($post['text_content']) && empty($post['title'])) echo 'padding-top: 12px;'; ?>">
-                                <div class="post-hashtag-list">
-                                    <?php foreach ($hashtags as $tag): ?>
-                                        <a href="<?php echo $basePath . '/search?q=' . urlencode('#' . htmlspecialchars($tag)); ?>" 
-                                           class="post-hashtag-link" 
-                                           data-nav-js="true">
-                                            #<?php echo htmlspecialchars($tag); ?>
-                                        </a>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                        <?php endif; ?>
+                        <?php // --- [HASTAGS] Bloque de renderizado ELIMINADO --- ?>
 
                         <?php if ($isPoll && !empty($pollOptions)): ?>
                             <div class="poll-container" id="poll-<?php echo $post['id']; ?>" data-poll-id="<?php echo $post['id']; ?>">

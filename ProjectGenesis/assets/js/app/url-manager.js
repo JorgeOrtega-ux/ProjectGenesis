@@ -5,6 +5,7 @@
 // (CORREGIDO: EXCEPCIÓN PARA EVITAR NAVEGACIÓN AL CLICAR BOTÓN DE MENÚ)
 // --- ▼▼▼ MODIFICACIÓN (ELIMINADA LÓGICA DE CHAT DE COMUNIDAD) ▼▼▼ ---
 // --- ▼▼▼ MODIFICACIÓN (FIX DOBLE LOG) ▼▼▼ ---
+// --- ▼▼▼ MODIFICACIÓN (ELIMINADA LÓGICA DE TRENDS/HASHTAGS) ▼▼▼ ---
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
@@ -25,7 +26,7 @@ let currentMenuType = null;
 const routes = {
     'toggleSectionHome': 'home',
     'toggleSectionExplorer': 'explorer',
-    'toggleSectionTrends': 'trends', // --- [HASTAGS] --- Nueva ruta
+    // 'toggleSectionTrends': 'trends', // --- [HASTAGS] --- ELIMINADO
     'toggleSectionLogin': 'login',
     'toggleSectionMaintenance': 'maintenance',
     'toggleSectionServerFull': 'server-full',
@@ -100,7 +101,7 @@ const paths = {
 
     '/search': 'toggleSectionSearchResults',
 
-    '/trends': 'toggleSectionTrends', // --- [HASTAGS] --- Nueva ruta
+    // '/trends': 'toggleSectionTrends', // --- [HASTAGS] --- ELIMINADO
 
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (RUTAS DE MENSAJES) ▼▼▼ ---
     '/messages': 'toggleSectionMessages',
@@ -646,7 +647,7 @@ export function initRouter() {
        const link = e.target.closest(
   '.menu-link[data-action*="toggleSection"], ' +
   'a[href*="/login"], a[href*="/register"], a[href*="/reset-password"], a[href*="/admin"], a[href*="/post/"], ' +
-  'a[href*="/profile/"], a[href*="/search"], a[href*="/trends"], a[href*="/messages"], ' +
+  'a[href*="/profile/"], a[href*="/search"], a[href*="/messages"], ' + // 'a[href*="/trends"], ' ELIMINADO
   '.component-button[data-action*="toggleSection"], ' +
   '.header-button[data-action*="toggleSection"], ' + // --- <<< LÍNEA AÑADIDA ---
   '.page-toolbar-button[data-action*="toggleSection"], a[href*="/maintenance"], a[href*="/admin/manage-backups"], ' +
@@ -654,7 +655,7 @@ export function initRouter() {
   '[data-module="moduleProfileMore"] a.menu-link[data-nav-js="true"], ' +
   'div.profile-nav-button[data-nav-js="true"],' +
   '[data-module="moduleSelect"] .menu-link[data-nav-js="true"],' +
-  'a.post-hashtag-link[data-nav-js="true"],' +
+  // 'a.post-hashtag-link[data-nav-js="true"],' + // --- [HASTAGS] --- ELIMINADO
   '[data-module="friend-context-menu"] [data-nav-js="true"],' + // Clic en "Ver Perfil"
   'a.chat-conversation-item[data-nav-js="true"]' // Clic en conversación
 );

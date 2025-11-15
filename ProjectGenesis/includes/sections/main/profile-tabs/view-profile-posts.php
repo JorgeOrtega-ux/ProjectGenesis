@@ -98,124 +98,8 @@ $educationDisplay = $hasEducation ? $educationText : 'Sin formación establecida
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 ?>
 
-<style>
-    /* ... (Estilos de .post-hashtag-list y .post-hashtag-link se mantienen aquí) ... */
-    .post-hashtag-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 12px;
-    }
-    .post-hashtag-link {
-        display: inline-block;
-        padding: 4px 12px;
-        font-size: 13px;
-        font-weight: 600;
-        color: #0056b3; /* Color de enlace */
-        background-color: #f0f5fa; /* Fondo azul claro */
-        border-radius: 50px;
-        text-decoration: none;
-        transition: background-color 0.2s;
-    }
-    .post-hashtag-link:hover {
-        background-color: #e0eafc;
-        text-decoration: underline;
-    }
-    
-    /* --- ▼▼▼ INICIO DE NUEVOS ESTILOS (BIO/DETALLES) ▼▼▼ --- */
-    #profile-bio-card {
-        padding: 16px;
-        gap: 12px;
-    }
-    .profile-bio-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center; /* Alinea verticalmente el título y el botón */
-        width: 100%;
-        padding: 0 8px; 
-    }
-    .profile-bio-header .component-card__title {
-        font-size: 18px; 
-        font-weight: 700;
-        color: #1f2937;
-    }
-    .profile-bio-add-btn {
-        height: 32px; /* Botón más pequeño */
-        padding: 0 12px;
-        font-size: 14px;
-        font-weight: 600;
-        border: 1px solid #00000020;
-        background-color: transparent;
-        color: #1f2937;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-    .profile-bio-add-btn:hover {
-        background-color: #f5f5fa;
-    }
-    
-    /* Contenido (Vista) */
-    .profile-bio-content {
-        font-size: 14px;
-        color: #1f2937;
-        line-height: 1.5;
-        padding: 0 8px;
-        white-space: pre-wrap; /* Respeta saltos de línea */
-        word-break: break-word; /* Evita desbordamiento */
-    }
-    
-    /* Placeholder (Vista) */
-    .profile-bio-placeholder {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        color: #6b7280;
-        padding: 0 8px;
-    }
-    .profile-bio-placeholder .material-symbols-rounded {
-        font-size: 20px;
-    }
-    
-    /* Formulario (Edición) */
-    #profile-bio-edit-form {
-        display: none; /* Oculto por defecto */
-        flex-direction: column;
-        gap: 12px;
-        width: 100%;
-        padding: 0 8px 8px 8px;
-    }
-    #profile-bio-edit-form textarea {
-        width: 100%;
-        min-height: 100px; /* Altura mínima */
-        border: 1px solid #00000020;
-        border-radius: 8px;
-        padding: 12px;
-        font-size: 14px;
-        line-height: 1.5;
-        resize: vertical; /* Permite al usuario ajustar la altura */
-        outline: none;
-        transition: border-color 0.2s;
-    }
-    #profile-bio-edit-form textarea:focus {
-        border-color: #000;
-    }
-    
-    #profile-bio-edit-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-    }
-    #profile-bio-edit-actions .component-button {
-        height: 36px; /* Botones más pequeños */
-        padding: 0 12px;
-        font-size: 14px;
-    }
-    /* --- ▲▲▲ FIN DE NUEVOS ESTILOS ▲▲▲ --- */
+<?php // --- [HASTAGS] <style> ELIMINADO --- ?>
 
-</style>
 <div class="profile-main-content active" data-profile-tab-content="posts">
                 
     <div class="profile-left-column">
@@ -424,10 +308,7 @@ $educationDisplay = $hasEducation ? $educationText : 'Sin formación establecida
                     }
                     // $isOwner se hereda de la variable $profile
                     $isOwner = ($post['user_id'] == $userId);
-                    $hashtags = [];
-                    if (!empty($post['hashtags'])) {
-                        $hashtags = explode(',', $post['hashtags']);
-                    }
+                    // --- [HASTAGS] Lógica de $hashtags ELIMINADA ---
                     ?>
                     
                     <div class="component-card component-card--post component-card--column" 
@@ -559,19 +440,7 @@ $educationDisplay = $hasEducation ? $educationText : 'Sin formación establecida
                                 </div>
                         <?php endif; ?>
                         
-                        <?php if (!empty($hashtags)): ?>
-                            <div class="post-card-content" style="padding-top: 0; <?php if(empty($post['text_content'])) echo 'padding-top: 12px;'; ?>">
-                                <div class="post-hashtag-list">
-                                    <?php foreach ($hashtags as $tag): ?>
-                                        <a href="<?php echo $basePath . '/search?q=' . urlencode('#' . htmlspecialchars($tag)); ?>" 
-                                           class="post-hashtag-link" 
-                                           data-nav-js="true">
-                                            #<?php echo htmlspecialchars($tag); ?>
-                                        </a>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                        <?php endif; ?>
+                        <?php // --- [HASTAGS] Bloque de renderizado ELIMINADO --- ?>
 
                         <?php if ($isPoll && !empty($pollOptions)): ?>
                             <div class="poll-container" id="poll-<?php echo $post['id']; ?>" data-poll-id="<?php echo $post['id']; ?>">

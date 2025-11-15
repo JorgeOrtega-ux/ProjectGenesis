@@ -1,5 +1,6 @@
 <?php
 // FILE: jorgeortega-ux/projectgenesis/ProjectGenesis-98418948306e47bc505f1797114031c3351b5e33/ProjectGenesis/includes/modules/module-surface.php
+// --- ▼▼▼ MODIFICACIÓN (ELIMINADO 'Trends') ▼▼▼ ---
 ?>
 <div class="module-content module-surface body-title disabled" data-module="moduleSurface">
     <div class="menu-content">
@@ -120,14 +121,8 @@
                             </div>
                         </div>
                         
-                        <div class="menu-link" data-action="toggleSectionTrends">
-                            <div class="menu-link-icon">
-                                <span class="material-symbols-rounded">trending_up</span>
-                            </div>
-                            <div class="menu-link-text">
-                                <span data-i18n="sidebar.main.trends">Descubrir Tendencias</span>
-                            </div>
-                        </div>
+                        <?php // --- ▼▼▼ BLOQUE ELIMINADO ▼▼▼ --- ?>
+                        <?php // --- ▲▲▲ BLOQUE ELIMINADO ▲▲▲ --- ?>
                         <?php 
                     endif; 
                     ?>

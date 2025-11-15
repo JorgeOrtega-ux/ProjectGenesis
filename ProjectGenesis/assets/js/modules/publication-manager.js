@@ -1,4 +1,5 @@
 // FILE: assets/js/modules/publication-manager.js
+// --- ▼▼▼ MODIFICACIÓN (ELIMINADA LÓGICA DE HASHTAGS) ▼▼▼ ---
 
 import { callPublicationApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -7,7 +8,7 @@ import { deactivateAllModules } from '../app/main-controller.js';
 
 const MAX_FILES = 4;
 const MAX_POLL_OPTIONS = 6;
-const MAX_HASHTAGS = 5;
+// const MAX_HASHTAGS = 5; // <-- ELIMINADO
 let selectedFiles = []; 
 let selectedCommunityId = 'profile'; 
 let selectedPrivacyLevel = 'public'; 
@@ -66,43 +67,9 @@ function hideValidationError() {
         errorDiv.style.display = 'none';
     }
 }
-function getHashtags() {
-    const postHashtagInput = document.getElementById('publication-hashtags');
-    const pollHashtagInput = document.getElementById('poll-hashtags');
-    let hashtagInput = null;
-
-    if (currentPostType === 'post' && postHashtagInput) {
-        hashtagInput = postHashtagInput;
-    } else if (currentPostType === 'poll' && pollHashtagInput) {
-        hashtagInput = pollHashtagInput;
-    }
-
-    if (!hashtagInput) return { valid: true, tags: [] }; 
-
-    const rawValue = hashtagInput.value.trim();
-    if (rawValue.length === 0) {
-        return { valid: true, tags: [] }; 
-    }
-
-    const tags = rawValue.split(/[\s,]+/) 
-                         .map(tag => tag.startsWith('#') ? tag.substring(1) : tag) 
-                         .map(tag => tag.trim())
-                         .filter(tag => tag.length > 0) 
-                         .filter((value, index, self) => self.indexOf(value) === index); 
-
-    if (tags.length > MAX_HASHTAGS) {
-        return { valid: false, tags: [], error: 'js.publication.errorHashtagLimit' }; 
-    }
-    
-    const MAX_TAG_LENGTH = 50;
-    for (const tag of tags) {
-        if (tag.length > MAX_TAG_LENGTH) {
-            return { valid: false, tags: [], error: 'js.publication.errorHashtagLength' }; 
-        }
-    }
-
-    return { valid: true, tags: tags };
-}
+// --- ▼▼▼ FUNCIÓN ELIMINADA ▼▼▼ ---
+// function getHashtags() { ... }
+// --- ▲▲▲ FUNCIÓN ELIMINADA ▲▲▲ ---
 
 function validatePublicationState() {
     
@@ -116,7 +83,7 @@ function validatePublicationState() {
     const hasDestination = selectedCommunityId !== null && selectedCommunityId !== '';
     
     let isContentValid = false;
-    const hashtagValidation = getHashtags(); 
+    // const hashtagValidation = getHashtags(); // <-- ELIMINADO
 
 
     if (currentPostType === 'post') {
@@ -125,7 +92,7 @@ function validatePublicationState() {
         const hasText = textInput ? textInput.value.trim().length > 0 : false;
         const hasTitle = titleInput ? titleInput.value.trim().length > 0 : false; 
         const hasFiles = selectedFiles.length > 0;
-        isContentValid = hasText || hasFiles || hasTitle || (hashtagValidation.tags.length > 0); 
+        isContentValid = hasText || hasFiles || hasTitle; // <-- MODIFICADO
         
         
     } else { // Asume 'poll'
@@ -139,11 +106,13 @@ function validatePublicationState() {
 
     }
     
-    if (!hashtagValidation.valid) {
-        showValidationError(hashtagValidation.error);
-        publishButton.disabled = true;
-        return;
-    }
+    // --- ▼▼▼ BLOQUE ELIMINADO ▼▼▼ ---
+    // if (!hashtagValidation.valid) {
+    //     showValidationError(hashtagValidation.error);
+    //     publishButton.disabled = true;
+    //     return;
+    // }
+    // --- ▲▲▲ BLOQUE ELIMINADO ▲▲▲ ---
     
     publishButton.disabled = !isContentValid || !hasDestination;
 }
@@ -265,10 +234,12 @@ function resetForm() {
     if (pollQuestion) pollQuestion.value = '';
     const pollOptions = document.getElementById('poll-options-container');
     if (pollOptions) pollOptions.innerHTML = '';
-    const postHashtags = document.getElementById('publication-hashtags');
-    if (postHashtags) postHashtags.value = '';
-    const pollHashtags = document.getElementById('poll-hashtags');
-    if (pollHashtags) pollHashtags.value = '';
+    // --- ▼▼▼ LÍNEAS ELIMINADAS ▼▼▼ ---
+    // const postHashtags = document.getElementById('publication-hashtags');
+    // if (postHashtags) postHashtags.value = '';
+    // const pollHashtags = document.getElementById('poll-hashtags');
+    // if (pollHashtags) pollHashtags.value = '';
+    // --- ▲▲▲ LÍNEAS ELIMINADAS ▲▲▲ ---
     hideValidationError();
     selectedCommunityId = 'profile'; 
     const triggerText = document.getElementById('publication-community-text');
@@ -320,11 +291,13 @@ async function handlePublishSubmit() {
     const publishButton = document.getElementById('publish-post-btn');
     if (!publishButton) return;
 
-    const hashtagValidation = getHashtags();
-    if (!hashtagValidation.valid) {
-        showValidationError(hashtagValidation.error);
-        return;
-    }
+    // --- ▼▼▼ BLOQUE ELIMINADO ▼▼▼ ---
+    // const hashtagValidation = getHashtags();
+    // if (!hashtagValidation.valid) {
+    //     showValidationError(hashtagValidation.error);
+    //     return;
+    // }
+    // --- ▲▲▲ BLOQUE ELIMINADO ▲▲▲ ---
 
     let communityId = selectedCommunityId;
     if (communityId === 'profile') {
@@ -341,7 +314,7 @@ async function handlePublishSubmit() {
     formData.append('community_id', communityId); 
     formData.append('post_type', currentPostType); // <-- ¡¡VALOR CLAVE!!
     formData.append('privacy_level', selectedPrivacyLevel);
-    formData.append('hashtags', JSON.stringify(hashtagValidation.tags));
+    // formData.append('hashtags', JSON.stringify(hashtagValidation.tags)); // <-- ELIMINADO
 
 
     try {
@@ -350,7 +323,9 @@ async function handlePublishSubmit() {
             const title = document.getElementById('publication-title').value.trim();
             const textContent = document.getElementById('publication-text').value.trim();
             
-            if (!textContent && selectedFiles.length === 0 && !title && hashtagValidation.tags.length === 0) {
+            // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+            if (!textContent && selectedFiles.length === 0 && !title) {
+            // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
                 throw new Error('js.publication.errorEmpty');
             }
             
@@ -406,11 +381,9 @@ async function handlePublishSubmit() {
         }
 
     } catch (error) {
-        if (error.message === 'js.publication.errorHashtagLimit' || error.message === 'js.publication.errorHashtagLength') {
-            showValidationError(error.message);
-        } else {
-            showAlert(getTranslation(error.message || 'js.api.errorConnection'), 'error');
-        }
+        // --- ▼▼▼ BLOQUE MODIFICADO ▼▼▼ ---
+        showAlert(getTranslation(error.message || 'js.api.errorConnection'), 'error');
+        // --- ▲▲▲ BLOQUE MODIFICADO ▲▲▲ ---
         togglePublishSpinner(publishButton, false);
     }
 }
@@ -423,7 +396,7 @@ async function handleProfilePostSubmit(form) {
     togglePrimaryButtonSpinner(submitButton, true);
     const formData = new FormData(form);
     input.disabled = true;
-    formData.append('hashtags', JSON.stringify([])); 
+    // formData.append('hashtags', JSON.stringify([])); // <-- ELIMINADO
     try {
         const result = await callPublicationApi(formData);
         if (result.success) {
@@ -782,7 +755,9 @@ export function setupPublicationListeners() {
     document.body.addEventListener('input', (e) => {
         const createSection = e.target.closest('[data-section*="create-"]');
         if (createSection) {
-            if (e.target.id === 'publication-title' || e.target.id === 'publication-text' || e.target.id === 'poll-question' || e.target.closest('#poll-options-container') || e.target.id === 'publication-hashtags' || e.target.id === 'poll-hashtags') {
+            // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+            if (e.target.id === 'publication-title' || e.target.id === 'publication-text' || e.target.id === 'poll-question' || e.target.closest('#poll-options-container')) {
+            // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
                 validatePublicationState();
             }
             return;
@@ -865,4 +840,4 @@ export function initPublicationForm() {
     } else {
     }
 }
-// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+// --- ▲▲▲ FIN

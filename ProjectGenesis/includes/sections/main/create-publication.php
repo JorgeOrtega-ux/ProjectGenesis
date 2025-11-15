@@ -1,6 +1,7 @@
 <?php
 // FILE: includes/sections/main/create-publication.php
 // (VERSÍON CORREGIDA Y AMPLIADA PARA ENCUESTAS Y PRIVACIDAD)
+// --- ▼▼▼ MODIFICACIÓN (ELIMINADO 'Hashtags') ▼▼▼ ---
 
 // Determina qué pestaña está activa basada en la sección actual
 $isPollActive = ($CURRENT_SECTION === 'create-poll');
@@ -234,13 +235,8 @@ $currentPrivacyIcon = $privacyIconMap[$defaultPrivacy];
                     <label for="publication-text" data-i18n="create_publication.placeholder"></label>
                 </div>
                 
-                <div class="component-input-group">
-                    <input type="text" id="publication-hashtags" class="component-input" placeholder=" " maxlength="255">
-                    <label for="publication-hashtags" data-i18n="create_publication.hashtagsLabel">Hashtags (ej: #tag1 #tag2)</label>
-                </div>
-                <p class="component-card__description" data-i18n="create_publication.hashtagsDesc" style="font-size: 13px; margin-top: -12px; margin-bottom: 12px; padding-left: 4px;">
-                    Añade hasta 5 hashtags separados por espacios.
-                </p>
+                <?php // --- ▼▼▼ BLOQUE ELIMINADO ▼▼▼ --- ?>
+                <?php // --- ▲▲▲ BLOQUE ELIMINADO ▲▲▲ --- ?>
                 <div class="publication-preview-container" id="publication-preview-container">
                 </div>
             </div>
@@ -253,13 +249,8 @@ $currentPrivacyIcon = $privacyIconMap[$defaultPrivacy];
                     <label for="poll-question" data-i18n="create_publication.pollQuestionLabel">Escribe tu pregunta...</label>
                 </div>
                 
-                <div class="component-input-group">
-                    <input type="text" id="poll-hashtags" class="component-input" placeholder=" " maxlength="255">
-                    <label for="poll-hashtags" data-i18n="create_publication.hashtagsLabel">Hashtags (ej: #tag1 #tag2)</label>
-                </div>
-                <p class="component-card__description" data-i18n="create_publication.hashtagsDesc" style="font-size: 13px; margin-top: -12px; margin-bottom: 12px; padding-left: 4px;">
-                    Añade hasta 5 hashtags separados por espacios.
-                </p>
+                <?php // --- ▼▼▼ BLOQUE ELIMINADO ▼▼▼ --- ?>
+                <?php // --- ▲▲▲ BLOQUE ELIMINADO ▲▲▲ --- ?>
                 <div id="poll-options-container">
                     </div>
                 
