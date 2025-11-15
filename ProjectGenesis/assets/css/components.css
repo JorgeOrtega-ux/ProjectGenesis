@@ -4323,7 +4323,69 @@ a.profile-tab.active {
     font-weight: 500;
     color: #1f2937;
 }
+/* ... (Todo tu CSS existente va aquí arriba) ... */
 
+/* ====================================== */
+/* =       COMPONENTES DE ADMIN (NUEVOS)      = */
+/* ====================================== */
+
+/* Encabezado divisor (ej. "Restricciones de Servicio") */
+.component-divider-header {
+    width: 100%;
+    padding: 16px 24px;
+    border-bottom: 1px solid #00000020;
+    margin-bottom: 0; /* Los cards ya tienen gap */
+}
+
+.component-divider-header .component-card__title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.component-divider-header .component-card__description {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* Sub-sección anidada (para "Duración" y "Stepper") */
+.component-card-sub-section {
+    display: none; /* Oculto por defecto */
+    flex-direction: column;
+    gap: 16px;
+    
+    /* El borde divisor que pediste */
+    border-top: 1px solid #00000020;
+    
+    /* Espaciado interno */
+    padding-top: 16px;
+    margin-top: 16px;
+    
+    /* Asegura que no tenga fondo gris */
+    background-color: transparent;
+}
+
+.component-card-sub-section.active {
+    display: flex; /* Se muestra con JS */
+}
+
+/* Contenedor anidado para el Stepper (no tiene borde) */
+.component-card-sub-section-target {
+    display: none; /* Oculto por defecto */
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.component-card-sub-section-target.active {
+    display: flex; /* Se muestra con JS */
+}
+
+/* Ajustes para el stepper dentro de una sub-sección */
+.component-card-sub-section .component-stepper {
+    max-width: 100%; /* El stepper ocupa todo el ancho */
+}
 /*
    Nota: Las filas de los toggles de restricción
    usan estilos en línea ('padding: 0; border: none;') 

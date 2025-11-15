@@ -10,7 +10,15 @@ import { deactivateAllModules } from '../app/main-controller.js';
  */
 function toggleDetailContainer(container, show) {
     if (container) {
-        container.style.display = show ? 'block' : 'none';
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (style -> class) ▼▼▼ ---
+        if (show) {
+            container.classList.add('active');
+            container.classList.remove('disabled');
+        } else {
+            container.classList.add('disabled');
+            container.classList.remove('active');
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     }
 }
 
@@ -21,8 +29,15 @@ function toggleDetailContainer(container, show) {
 function toggleRestrictionsSection(show) {
     const restrictionsSection = document.getElementById('admin-restrictions-section');
     if (restrictionsSection) {
-        // Usamos flex porque el contenedor es un flex column
-        restrictionsSection.style.display = show ? 'flex' : 'none';
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (style -> class) ▼▼▼ ---
+        if (show) {
+            restrictionsSection.classList.add('active');
+            restrictionsSection.classList.remove('disabled');
+        } else {
+            restrictionsSection.classList.add('disabled');
+            restrictionsSection.classList.remove('active');
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     }
 }
 
@@ -31,12 +46,14 @@ function toggleRestrictionsSection(show) {
  * @param {string} messageKey La clave de traducción i18n
  */
 function showStatusError(messageKey) {
-    // Apuntar al div de error específico en la tarjeta de "Guardar"
     const errorDiv = document.getElementById('admin-manage-status-error');
     if (!errorDiv) return;
     
     errorDiv.textContent = getTranslation(messageKey);
-    errorDiv.style.display = 'block'; // Mostrarlo
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (style -> class) ▼▼▼ ---
+    errorDiv.classList.add('active');
+    errorDiv.classList.remove('disabled');
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 }
 
 /**
@@ -45,7 +62,10 @@ function showStatusError(messageKey) {
 function hideStatusErrors() {
     const errorDiv = document.getElementById('admin-manage-status-error');
     if (errorDiv) {
-        errorDiv.style.display = 'none'; // Ocultarlo
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (style -> class) ▼▼▼ ---
+        errorDiv.classList.add('disabled');
+        errorDiv.classList.remove('active');
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     }
 }
 
@@ -77,17 +97,7 @@ export function initAdminManageStatusManager() {
         const section = e.target.closest('[data-section="admin-manage-status"]');
         if (!section) return;
 
-        // 1. Lógica para los radios "Permanente" / "Temporal"
-        if (e.target.name.endsWith('_expiry_type')) {
-            const isTemporary = e.target.value === 'temporary';
-            const baseId = e.target.name.replace('_expiry_type', '');
-            
-            // Mostrar/ocultar el input de fecha (ahora stepper)
-            toggleDetailContainer(
-                document.getElementById(`${baseId}-expires-at-container`), 
-                isTemporary
-            );
-        }
+        // --- (Listener de radio/select eliminado, movido a 'click') ---
         
         // 2. Lógica para los toggles de restricción
         if (e.target.classList.contains('admin-restriction-toggle')) {
@@ -207,6 +217,68 @@ export function initAdminManageStatusManager() {
             return;
         }
         // --- FIN: LÓGICA DEL DROPDOWN DE ESTADO ---
+        
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA DE CLIC (POPOVERS DE EXPIRACIÓN) ▼▼▼ ---
+        const expiryTrigger = e.target.closest('[data-action^="toggleModule-"][data-action$="-expiry"]');
+        if (expiryTrigger) {
+            e.preventDefault();
+            e.stopPropagation();
+            const moduleName = expiryTrigger.dataset.action.replace('toggleModule-', 'module-');
+            const module = document.querySelector(`[data-module="${moduleName}"]`);
+            if (module) {
+                deactivateAllModules(module);
+                module.classList.toggle('disabled');
+                module.classList.toggle('active');
+            }
+            return;
+        }
+
+        const expiryLink = e.target.closest('[data-module$="-expiry"] .menu-link');
+        if (expiryLink) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const newValue = expiryLink.dataset.value; // 'permanent' o 'temporary'
+            const module = expiryLink.closest('[data-module$="-expiry"]');
+            const moduleName = module.dataset.module; // ej: 'module-status-expiry'
+            
+            // Encontrar el ID base (ej: 'status' o 'publish')
+            const baseId = moduleName.replace('module-', '').replace('-expiry', ''); // 'status' o 'publish'
+
+            // Actualizar el botón trigger
+            const trigger = document.querySelector(`[data-action="toggleModule-${baseId}-expiry"]`);
+            const newTextKey = expiryLink.querySelector('.menu-link-text span').dataset.i18n;
+            const newIconName = expiryLink.querySelector('.menu-link-icon span').textContent;
+            
+            if (trigger) {
+                trigger.querySelector('.trigger-select-icon span').textContent = newIconName;
+                const textEl = trigger.querySelector('.trigger-select-text span');
+                textEl.textContent = getTranslation(newTextKey);
+                textEl.dataset.i18n = newTextKey;
+            }
+
+            // Actualizar 'active' en el popover
+            expiryLink.closest('.menu-list').querySelectorAll('.menu-link').forEach(link => {
+                link.classList.remove('active');
+                link.querySelector('.menu-link-check-icon').innerHTML = '';
+            });
+            expiryLink.classList.add('active');
+            expiryLink.querySelector('.menu-link-check-icon').innerHTML = '<span class="material-symbols-rounded">check</span>';
+
+            // Mostrar/ocultar el stepper de días
+            const stepperContainerId = (baseId === 'status') 
+                ? `admin-status-expires-at-container` 
+                : `admin-restrict-${baseId}-expires-at-container`;
+            
+            toggleDetailContainer(
+                document.getElementById(stepperContainerId),
+                newValue === 'temporary'
+            );
+
+            deactivateAllModules();
+            return;
+        }
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA DE CLIC ---
 
 
         // 4. Lógica para el botón Guardar (Modificada)
@@ -233,19 +305,16 @@ export function initAdminManageStatusManager() {
 
             // --- Recopilar datos de expiración de estado ---
             if (generalStatus === 'suspended') {
-                const expiryType = section.querySelector('input[name="status_expiry_type"]:checked')?.value || 'permanent';
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Leer Popover) ▼▼▼ ---
+                const expiryType = section.querySelector('[data-module="module-status-expiry"] .menu-link.active')?.dataset.value || 'permanent';
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 if (expiryType === 'temporary') {
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Leer Stepper) ▼▼▼ ---
                     const stepper = section.querySelector('#admin-status-expires-stepper');
                     const days = stepper ? stepper.dataset.currentValue : '1';
                     formData.append('status_expires_in_days', days);
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 }
             }
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (BUG FIX) ▼▼▼ ---
-            // ¡Quitamos el 'if (generalStatus === 'active')'!
-            // Siempre enviamos los datos de las restricciones.
             const restrictions = ['publish', 'comment', 'message', 'social'];
             
             restrictions.forEach(key => {
@@ -253,19 +322,19 @@ export function initAdminManageStatusManager() {
                 if (toggle && toggle.checked) {
                     formData.append(`restrict_${key}`, 'true');
                     
-                    const expiryType = section.querySelector(`input[name="${key}_expiry_type"]:checked`)?.value || 'permanent';
+                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Leer Popover) ▼▼▼ ---
+                    const expiryType = section.querySelector(`[data-module="module-${key}-expiry"] .menu-link.active`)?.dataset.value || 'permanent';
+                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                    
                     if (expiryType === 'temporary') {
-                        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Leer Stepper) ▼▼▼ ---
                         const stepper = section.querySelector(`#admin-restrict-${key}-expires-stepper`);
                         const days = stepper ? stepper.dataset.currentValue : '1';
                         formData.append(`restrict_${key}_expires_in_days`, days);
-                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     }
                 } else {
                     formData.append(`restrict_${key}`, 'false');
                 }
             });
-            // --- ▲▲▲ FIN DE MODIFICACIÓN (BUG FIX) ▲▲▲ ---
             
             
             // --- Llamada a la API (Sin cambios) ---
