@@ -383,34 +383,6 @@ CREATE TABLE `user_notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ----------------------------
--- Table structure for hashtags
--- ----------------------------
-DROP TABLE IF EXISTS `hashtags`;
-CREATE TABLE `hashtags` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `tag` varchar(100) NOT NULL COMMENT 'El texto del hashtag, sin # y en minúsculas',
-  `use_count` bigint(20) NOT NULL DEFAULT 1 COMMENT 'Contador de cuántas veces se ha usado',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `tag` (`tag`),
-  KEY `idx_tag` (`tag`),
-  KEY `idx_use_count` (`use_count`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ----------------------------
--- Table structure for publication_hashtags
--- ----------------------------
-DROP TABLE IF EXISTS `publication_hashtags`;
-CREATE TABLE `publication_hashtags` (
-  `publication_id` int(11) NOT NULL,
-  `hashtag_id` int(11) NOT NULL,
-  PRIMARY KEY (`publication_id`,`hashtag_id`),
-  KEY `idx_hashtag_id` (`hashtag_id`),
-  CONSTRAINT `publication_hashtags_ibfk_1` FOREIGN KEY (`publication_id`) REFERENCES `community_publications` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `publication_hashtags_ibfk_2` FOREIGN KEY (`hashtag_id`) REFERENCES `hashtags` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ----------------------------
 -- Table structure for chat_files
 -- ----------------------------
 DROP TABLE IF EXISTS `chat_files`;

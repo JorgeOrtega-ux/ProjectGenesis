@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$userId = (int)$_SESSION['user_id']; 
+$userId = (int)$_SESSION['user_id'];
 
 $MAX_FILES = 4;
 $ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -19,14 +19,12 @@ $MAX_SIZE_MB = (int)($GLOBALS['site_settings']['avatar_max_size_mb'] ?? 2);
 $MAX_SIZE_BYTES = $MAX_SIZE_MB * 1024 * 1024;
 define('MAX_POST_LENGTH', (int)($GLOBALS['site_settings']['max_post_length'] ?? 1000));
 
-// --- [HASTAGS] --- INICIO DE NUEVAS CONSTANTES ---
-define('MAX_HASHTAGS_PER_POST', 5);
-define('MAX_HASHTAG_LENGTH', 50);
-// --- [HASTAGS] --- FIN DE NUEVAS CONSTANTES ---
+// --- [HASTAGS] --- BLOQUE ELIMINADO ---
 
 
 // --- (Función notifyUser sin cambios) ---
-function notifyUser($targetUserId) {
+function notifyUser($targetUserId)
+{
     try {
         $post_data = json_encode([
             'target_user_id' => (int)$targetUserId,
@@ -41,11 +39,10 @@ function notifyUser($targetUserId) {
             'Content-Type: application/json',
             'Content-Length: ' . strlen($post_data)
         ]);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); 
-        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        
-        curl_exec($ch); 
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500);
+        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);
+        curl_exec($ch);
         curl_close($ch);
-        
     } catch (Exception $e) {
         logDatabaseError($e, 'publication_handler - (ws_notify_fail)');
     }
@@ -65,9 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         if ($action === 'create-post') {
-            
+
             $pdo->beginTransaction();
-            
+
             // --- ▼▼▼ INICIO DE MODIFICACIÓN (community_id opcional) ▼▼▼ ---
             $communityId = $_POST['community_id'] ?? null;
             $dbCommunityId = null; // Por defecto es NULL (publicación de perfil)
@@ -75,57 +72,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Si se proporciona un ID de comunidad, validarlo
             if (!empty($communityId) && is_numeric($communityId)) {
                 $dbCommunityId = (int)$communityId;
-                
+
                 // Comprobar que el usuario es miembro de esa comunidad
                 $stmt_check_member = $pdo->prepare("SELECT id FROM user_communities WHERE user_id = ? AND community_id = ?");
                 $stmt_check_member->execute([$userId, $dbCommunityId]);
                 if (!$stmt_check_member->fetch()) {
-                     throw new Exception('js.api.errorServer'); // Error: Intento de publicar en un grupo al que no pertenece
+                    throw new Exception('js.api.errorServer'); // Error: Intento de publicar en un grupo al que no pertenece
                 }
             }
             // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-            
-            $postType = $_POST['post_type'] ?? 'post'; 
-            
+
+            $postType = $_POST['post_type'] ?? 'post';
+
             $privacyLevel = $_POST['privacy_level'] ?? 'public';
             $allowedPrivacy = ['public', 'friends', 'private'];
             if (!in_array($privacyLevel, $allowedPrivacy)) {
-                $privacyLevel = 'public'; 
+                $privacyLevel = 'public';
             }
-            
+
             $title = trim($_POST['title'] ?? '');
             if (empty($title)) {
                 $title = null;
             }
-            
-            $textContent = trim($_POST['text_content'] ?? ''); 
-            $pollQuestion = trim($_POST['poll_question'] ?? ''); 
-            $pollOptionsJSON = $_POST['poll_options'] ?? '[]'; 
-            
-            // --- [HASTAGS] --- INICIO DE RECEPCIÓN Y VALIDACIÓN ---
-            $hashtagsJSON = $_POST['hashtags'] ?? '[]';
-            $hashtags = json_decode($hashtagsJSON, true);
-            $processedHashtags = [];
 
-            if (is_array($hashtags) && !empty($hashtags)) {
-                if (count($hashtags) > MAX_HASHTAGS_PER_POST) {
-                    throw new Exception('js.publication.errorHashtagLimit'); // Error: Demasiados hashtags
-                }
-                foreach ($hashtags as $tag) {
-                    // Sanitizar: quitar todo excepto letras, números y guiones bajos (o lo que prefieras)
-                    // Convertir a minúsculas y asegurarse de que no esté vacío.
-                    $sanitizedTag = mb_strtolower(trim($tag, '# '));
-                    $sanitizedTag = preg_replace('/[^a-z0-9áéíóúñ_-]/u', '', $sanitizedTag); 
+            $textContent = trim($_POST['text_content'] ?? '');
+            $pollQuestion = trim($_POST['poll_question'] ?? '');
+            $pollOptionsJSON = $_POST['poll_options'] ?? '[]';
 
-                    if (mb_strlen($sanitizedTag, 'UTF-8') > MAX_HASHTAG_LENGTH) {
-                         throw new Exception('js.publication.errorHashtagLength'); // Error: Hashtag muy largo
-                    }
-                    if (!empty($sanitizedTag) && !in_array($sanitizedTag, $processedHashtags)) {
-                        $processedHashtags[] = $sanitizedTag;
-                    }
-                }
-            }
-            // --- [HASTAGS] --- FIN DE RECEPCIÓN Y VALIDACIÓN ---
+            // --- [HASTAGS] --- BLOQUE ELIMINADO ---
 
             $uploadedFiles = $_FILES['attachments'] ?? [];
             $fileIds = [];
@@ -136,23 +110,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($postType === 'poll') {
                 $pollOptions = json_decode($pollOptionsJSON, true);
                 if (empty($pollQuestion)) {
-                    throw new Exception('js.publication.errorPollQuestion'); 
+                    throw new Exception('js.publication.errorPollQuestion');
                 }
                 if (mb_strlen($pollQuestion, 'UTF-8') > MAX_POST_LENGTH) {
-                    throw new Exception('js.publication.errorPollTooLong'); 
+                    throw new Exception('js.publication.errorPollTooLong');
                 }
                 if (empty($pollOptions) || count($pollOptions) < 2) {
-                     throw new Exception('js.publication.errorPollOptions'); 
+                    throw new Exception('js.publication.errorPollOptions');
                 }
-                $textContent = $pollQuestion; 
-                $title = null; 
-
+                $textContent = $pollQuestion;
+                $title = null;
             } elseif ($postType === 'post') {
-                 if (mb_strlen($textContent, 'UTF-8') > MAX_POST_LENGTH) {
+                if (mb_strlen($textContent, 'UTF-8') > MAX_POST_LENGTH) {
                     throw new Exception('js.publication.errorPostTooLong');
-                 }
-                 // --- [HASTAGS] --- MODIFICACIÓN DE VALIDACIÓN DE VACÍO ---
-                 if (empty($textContent) && empty($uploadedFiles['name'][0]) && empty($title) && empty($processedHashtags)) { 
+                }
+                // --- [HASTAGS] --- MODIFICACIÓN DE VALIDACIÓN DE VACÍO ---
+                if (empty($textContent) && empty($uploadedFiles['name'][0]) && empty($title)) {
                     throw new Exception('js.publication.errorEmpty');
                 }
                 // --- [HASTAGS] --- FIN ---
@@ -165,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $uploadDir = dirname(__DIR__) . '/assets/uploads/publications';
                 if (!is_dir($uploadDir)) {
                     if (!@mkdir($uploadDir, 0755, true)) {
-                        throw new Exception('js.api.errorServer'); 
+                        throw new Exception('js.api.errorServer');
                     }
                 }
 
@@ -178,14 +151,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     "INSERT INTO publication_files (user_id, community_id, file_name_system, file_name_original, public_url, file_type, file_size)
                      VALUES (?, ?, ?, ?, ?, ?, ?)"
                 );
-                
+
                 foreach ($uploadedFiles['error'] as $key => $error) {
-                    if ($error !== UPLOAD_ERR_OK) continue; 
+                    if ($error !== UPLOAD_ERR_OK) continue;
 
                     $tmpName = $uploadedFiles['tmp_name'][$key];
                     $originalName = $uploadedFiles['name'][$key];
                     $fileSize = $uploadedFiles['size'][$key];
-                    
+
                     if ($fileSize > $MAX_SIZE_BYTES) {
                         $response['data'] = ['size' => $MAX_SIZE_MB];
                         throw new Exception('js.publication.errorFileSize');
@@ -204,15 +177,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $publicUrl = $basePath . '/assets/uploads/publications/' . $systemName;
 
                     if (!move_uploaded_file($tmpName, $filePath)) {
-                        throw new Exception('js.api.errorServer'); 
+                        throw new Exception('js.api.errorServer');
                     }
 
                     // --- ▼▼▼ INICIO DE MODIFICACIÓN (Pasa $dbCommunityId (que puede ser NULL)) ▼▼▼ ---
                     $stmt_insert_file->execute([
-                        $userId, $dbCommunityId, $systemName, $originalName, $publicUrl, $mimeType, $fileSize
+                        $userId,
+                        $dbCommunityId,
+                        $systemName,
+                        $originalName,
+                        $publicUrl,
+                        $mimeType,
+                        $fileSize
                     ]);
                     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-                    
+
                     $fileIds[] = $pdo->lastInsertId();
                 }
             }
@@ -224,7 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $stmt_insert_post->execute([$dbCommunityId, $userId, $title, $textContent, $postType, $privacyLevel]);
             // --- ▲▲▲ FIN DE MODIFICACIÓN (SQL INSERT) ▲▲▲ ---
-            
+
             $publicationId = $pdo->lastInsertId();
 
             if ($postType === 'post' && !empty($fileIds)) {
@@ -246,37 +225,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // --- [HASTAGS] --- INICIO DE LÓGICA DE INSERCIÓN ---
-            if (!empty($processedHashtags)) {
-                // Preparar consultas
-                $stmt_find_tag = $pdo->prepare("SELECT id FROM hashtags WHERE tag = ?");
-                $stmt_insert_tag = $pdo->prepare("INSERT INTO hashtags (tag, use_count) VALUES (?, 1) ON DUPLICATE KEY UPDATE use_count = use_count + 1");
-                $stmt_link_tag = $pdo->prepare("INSERT IGNORE INTO publication_hashtags (publication_id, hashtag_id) VALUES (?, ?)");
-                
-                foreach ($processedHashtags as $tag) {
-                    // Insertar o actualizar el hashtag
-                    $stmt_insert_tag->execute([$tag]);
-                    
-                    // Obtener el ID del hashtag
-                    $stmt_find_tag->execute([$tag]);
-                    $hashtagRow = $stmt_find_tag->fetch();
-                    $hashtagId = $hashtagRow['id'];
-                    
-                    // Vincular el post con el hashtag
-                    if ($hashtagId) {
-                        $stmt_link_tag->execute([$publicationId, $hashtagId]);
-                    }
-                }
-            }
-            // --- [HASTAGS] --- FIN DE LÓGICA DE INSERCIÓN ---
+            // --- [HASTAGS] --- BLOQUE ELIMINADO ---
 
             $pdo->commit();
-            
+
             $response['success'] = true;
             $response['message'] = 'js.publication.success';
-        
         } elseif ($action === 'vote-poll') {
-            
+
             // ... (código de 'vote-poll' sin cambios) ...
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             $optionId = (int)($_POST['poll_option_id'] ?? 0);
@@ -286,35 +242,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $pdo->beginTransaction();
-            
+
             try {
                 $stmt_check_poll = $pdo->prepare("SELECT post_type FROM community_publications WHERE id = ? AND post_status = 'active'");
                 $stmt_check_poll->execute([$publicationId]);
                 $postType = $stmt_check_poll->fetchColumn();
-                
+
                 if ($postType !== 'poll') {
-                    throw new Exception('js.api.invalidAction'); 
+                    throw new Exception('js.api.invalidAction');
                 }
 
                 $stmt_check_option = $pdo->prepare("SELECT id FROM poll_options WHERE id = ? AND publication_id = ?");
                 $stmt_check_option->execute([$optionId, $publicationId]);
                 if (!$stmt_check_option->fetch()) {
-                    throw new Exception('js.api.invalidAction'); 
+                    throw new Exception('js.api.invalidAction');
                 }
 
                 $stmt_check_vote = $pdo->prepare("SELECT id FROM poll_votes WHERE publication_id = ? AND user_id = ?");
                 $stmt_check_vote->execute([$publicationId, $userId]);
                 if ($stmt_check_vote->fetch()) {
-                    throw new Exception('js.publication.errorAlreadyVoted'); 
+                    throw new Exception('js.publication.errorAlreadyVoted');
                 }
-                
+
                 $stmt_insert_vote = $pdo->prepare("INSERT INTO poll_votes (publication_id, poll_option_id, user_id) VALUES (?, ?, ?)");
                 $stmt_insert_vote->execute([$publicationId, $optionId, $userId]);
-                
+
                 $pdo->commit();
 
                 $stmt_results = $pdo->prepare(
-                   "SELECT 
+                    "SELECT 
                         po.id, 
                         po.option_text, 
                         COUNT(pv.id) AS vote_count
@@ -326,32 +282,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 $stmt_results->execute([$publicationId]);
                 $results = $stmt_results->fetchAll();
-                
+
                 $response['success'] = true;
                 $response['results'] = $results;
                 $response['totalVotes'] = array_sum(array_column($results, 'vote_count'));
-
             } catch (Exception $e) {
                 $pdo->rollBack();
                 if ($e->getMessage() === 'js.publication.errorAlreadyVoted') {
-                     $response['message'] = $e->getMessage();
+                    $response['message'] = $e->getMessage();
                 } else {
-                    throw $e; 
+                    throw $e;
                 }
             }
-
         } elseif ($action === 'like-toggle') {
-            
+
             // ... (código de 'like-toggle' sin cambios) ...
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             if (empty($publicationId)) {
                 throw new Exception('js.api.invalidAction');
             }
-            
+
             $stmt_check = $pdo->prepare("SELECT id FROM publication_likes WHERE user_id = ? AND publication_id = ?");
             $stmt_check->execute([$userId, $publicationId]);
             $likeExists = $stmt_check->fetch();
-            
+
             if ($likeExists) {
                 $stmt_delete = $pdo->prepare("DELETE FROM publication_likes WHERE id = ?");
                 $stmt_delete->execute([$likeExists['id']]);
@@ -360,7 +314,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt_insert = $pdo->prepare("INSERT INTO publication_likes (user_id, publication_id) VALUES (?, ?)");
                 $stmt_insert->execute([$userId, $publicationId]);
                 $response['userHasLiked'] = true;
-                
+
                 $stmt_get_author = $pdo->prepare("SELECT user_id FROM community_publications WHERE id = ? AND post_status = 'active'");
                 $stmt_get_author->execute([$publicationId]);
                 $postAuthorId = (int)$stmt_get_author->fetchColumn();
@@ -374,24 +328,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     notifyUser($postAuthorId);
                 }
             }
-            
+
             $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM publication_likes WHERE publication_id = ?");
             $stmt_count->execute([$publicationId]);
             $response['newLikeCount'] = $stmt_count->fetchColumn();
             $response['success'] = true;
-
         } elseif ($action === 'bookmark-toggle') {
-            
+
             // ... (código de 'bookmark-toggle' sin cambios) ...
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             if (empty($publicationId)) {
                 throw new Exception('js.api.invalidAction');
             }
-            
+
             $stmt_check = $pdo->prepare("SELECT id FROM publication_bookmarks WHERE user_id = ? AND publication_id = ?");
             $stmt_check->execute([$userId, $publicationId]);
             $bookmarkExists = $stmt_check->fetch();
-            
+
             if ($bookmarkExists) {
                 $stmt_delete = $pdo->prepare("DELETE FROM publication_bookmarks WHERE id = ?");
                 $stmt_delete->execute([$bookmarkExists['id']]);
@@ -401,11 +354,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt_insert->execute([$userId, $publicationId]);
                 $response['userHasBookmarked'] = true;
             }
-            
-            $response['success'] = true;
 
+            $response['success'] = true;
         } elseif ($action === 'post-comment') {
-            
+
             // ... (código de 'post-comment' sin cambios) ...
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             $parentCommentId = !empty($_POST['parent_comment_id']) ? (int)$_POST['parent_comment_id'] : null;
@@ -414,7 +366,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($publicationId) || empty($commentText)) {
                 throw new Exception('js.publication.errorCommentEmpty');
             }
-            
+
             $targetUserId = 0;
             $notificationType = 'comment';
             $referenceId = $publicationId;
@@ -423,16 +375,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt_check_parent = $pdo->prepare("SELECT user_id, parent_comment_id FROM publication_comments WHERE id = ?");
                 $stmt_check_parent->execute([$parentCommentId]);
                 $parentComment = $stmt_check_parent->fetch();
-                
+
                 if (!$parentComment) {
-                    throw new Exception('js.api.errorServer'); 
+                    throw new Exception('js.api.errorServer');
                 }
                 if ($parentComment['parent_comment_id'] !== null) {
-                    throw new Exception('js.publication.errorMaxDepth'); 
+                    throw new Exception('js.publication.errorMaxDepth');
                 }
                 $targetUserId = (int)$parentComment['user_id'];
                 $notificationType = 'reply';
-                $referenceId = $publicationId; 
+                $referenceId = $publicationId;
             } else {
                 $stmt_get_author = $pdo->prepare("SELECT user_id FROM community_publications WHERE id = ? AND post_status = 'active'");
                 $stmt_get_author->execute([$publicationId]);
@@ -447,7 +399,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $stmt_insert->execute([$userId, $publicationId, $parentCommentId, $commentText]);
             $newCommentId = $pdo->lastInsertId();
-            
+
             $stmt_get = $pdo->prepare(
                 "SELECT c.*, u.username, u.profile_image_url, u.role 
                  FROM publication_comments c 
@@ -456,10 +408,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $stmt_get->execute([$newCommentId]);
             $newComment = $stmt_get->fetch();
-            
+
             $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM publication_comments WHERE publication_id = ?");
             $stmt_count->execute([$publicationId]);
-            
+
             if ($targetUserId > 0 && $targetUserId !== $userId) {
                 $stmt_notify = $pdo->prepare(
                     "INSERT INTO user_notifications (user_id, actor_user_id, type, reference_id)
@@ -472,9 +424,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
             $response['newComment'] = $newComment;
             $response['newCommentCount'] = $stmt_count->fetchColumn();
-
         } elseif ($action === 'get-comments') {
-            
+
             // ... (código de 'get-comments' sin cambios) ...
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             if (empty($publicationId)) {
@@ -492,16 +443,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  JOIN users u ON c.user_id = u.id 
                  WHERE c.publication_id = ? 
                  AND c.parent_comment_id IS NULL 
-                 ORDER BY c.created_at ASC" 
+                 ORDER BY c.created_at ASC"
             );
             $stmt_get_l1->execute([$publicationId]);
             $comments = $stmt_get_l1->fetchAll();
-            
+
             $response['success'] = true;
-            $response['comments'] = $comments; 
-        
+            $response['comments'] = $comments;
         } elseif ($action === 'get-replies') {
-            
+
             // ... (código de 'get-replies' sin cambios) ...
             $parentCommentId = (int)($_POST['parent_comment_id'] ?? 0);
             if (empty($parentCommentId)) {
@@ -517,38 +467,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $stmt_get_l2->execute([$parentCommentId]);
             $replies = $stmt_get_l2->fetchAll();
-            
+
             $response['success'] = true;
             $response['replies'] = $replies;
-
         } elseif ($action === 'delete-post') {
-            
+
             // ... (código de 'delete-post' sin cambios) ...
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             if (empty($publicationId)) {
                 throw new Exception('js.api.invalidAction');
             }
-            
+
             $stmt_delete = $pdo->prepare(
                 "UPDATE community_publications 
                  SET post_status = 'deleted' 
                  WHERE id = ? AND user_id = ?"
             );
             $stmt_delete->execute([$publicationId, $userId]);
-            
+
             if ($stmt_delete->rowCount() > 0) {
                 $response['success'] = true;
-                $response['message'] = 'js.publication.postDeleted'; 
+                $response['message'] = 'js.publication.postDeleted';
             } else {
-                throw new Exception('js.api.errorServer'); 
+                throw new Exception('js.api.errorServer');
             }
-        
         } elseif ($action === 'update-post-privacy') {
-            
+
             // ... (código de 'update-post-privacy' sin cambios) ...
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             $newPrivacy = $_POST['new_privacy_level'] ?? '';
-            
+
             if (empty($publicationId)) {
                 throw new Exception('js.api.invalidAction');
             }
@@ -564,44 +512,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  WHERE id = ? AND user_id = ?"
             );
             $stmt_update->execute([$newPrivacy, $publicationId, $userId]);
-            
+
             if ($stmt_update->rowCount() > 0) {
                 $response['success'] = true;
-                $response['message'] = 'js.publication.privacyUpdated'; 
+                $response['message'] = 'js.publication.privacyUpdated';
                 $response['newPrivacy'] = $newPrivacy;
             } else {
-                throw new Exception('js.api.errorServer'); 
+                throw new Exception('js.api.errorServer');
             }
         }
-
     } catch (Exception $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
-        
+
         if ($e instanceof PDOException) {
             logDatabaseError($e, 'publication_handler - ' . $action);
             $response['message'] = 'js.api.errorDatabase';
         } else {
             $response['message'] = $e->getMessage();
             if (!isset($response['data'])) {
-                $response['data'] = null; 
+                $response['data'] = null;
             }
             if ($response['message'] === 'js.publication.errorPostTooLong' || $response['message'] === 'js.publication.errorPollTooLong') {
                 $response['data'] = ['length' => MAX_POST_LENGTH];
             }
-            // --- [HASTAGS] --- Añadir propagación de errores de hashtag
-            if ($response['message'] === 'js.publication.errorHashtagLimit') {
-                $response['data'] = ['limit' => MAX_HASHTAGS_PER_POST];
-            }
-            if ($response['message'] === 'js.publication.errorHashtagLength') {
-                $response['data'] = ['length' => MAX_HASHTAG_LENGTH];
-            }
-            // --- [HASTAGS] --- Fin
+            // --- [HASTAGS] --- BLOQUE ELIMINADO ---
         }
     }
 }
-
 echo json_encode($response);
 exit;
-?>
