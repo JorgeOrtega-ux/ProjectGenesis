@@ -1,7 +1,5 @@
 // FILE: assets/js/app-init.js
-// (MODIFICADO - Añadida función para desbloquear audio en la primera interacción)
-// (MODIFICADO - Corregida la recepción de mensajes de comunidad en WebSocket)
-// (MODIFICADO - Eliminada lógica de chat de comunidad)
+// (MODIFICADO - Lógica de WebSocket movida a socket-service.js)
 
 import { initMainController } from './app/main-controller.js';
 import { initRouter, loadPage } from './app/url-manager.js';
@@ -15,18 +13,18 @@ import { initCommunityManager } from './modules/community-manager.js';
 
 import { setupPublicationListeners } from './modules/publication-manager.js';
 
+// --- ▼▼▼ IMPORTACIÓN MODIFICADA ▼▼▼ ---
+// Ya no importamos 'handleChatMessageReceived', etc. aquí
 import { 
     initChatManager,
-    handleChatMessageReceived,
-    handleTypingEvent,
-    handleMessageDeleted,
     fetchInitialUnreadCount 
 } from './modules/chat-manager.js';
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 import { 
     initFriendManager,
     initFriendList,
-    updateProfileActions
+    updateProfileActions // <--- Este import se queda, pero será usado por friend-manager.js
 } from './modules/friend-manager.js';
 
 import { showAlert } from './services/alert-manager.js'; 
@@ -37,10 +35,14 @@ import { initSearchManager } from './modules/search-manager.js';
 import { 
     initNotificationManager, 
     fetchInitialCount, 
-    handleNotificationPing 
+    handleNotificationPing // <--- Este import se queda, pero será usado por socket-service.js
 } from './modules/notification-manager.js';
 
 import { initAdminCommunityManager } from './modules/admin-community-manager.js';
+
+// --- ▼▼▼ ¡NUEVO IMPORT! ▼▼▼ ---
+import { initSocketService } from './services/socket-service.js';
+// --- ▲▲▲ ¡FIN DE NUEVO IMPORT! ▲▲▲ ---
 
 
 const htmlEl = document.documentElement;
@@ -149,14 +151,12 @@ document.addEventListener('DOMContentLoaded', async function () {
     initSearchManager();
     initAdminCommunityManager();
     
-    // --- ▼▼▼ INICIO DE MODIFICACIÓN (await eliminado) ▼▼▼ ---
-    // initChatManager ya no es async
     initChatManager();
-    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     initRouter();
     initTooltipManager();
 
+    // --- ▼▼▼ ¡BLOQUE DE WEBSOCKET MODIFICADO! ▼▼▼ ---
     if (window.isUserLoggedIn) {
 
         // Notificaciones iniciales
@@ -164,192 +164,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Conteo inicial de mensajes
         fetchInitialUnreadCount();
 
-        let ws;
+        // Inicializar el servicio de WebSocket
+        // Este servicio se encargará de conectar y manejar todos los mensajes.
+        initSocketService();
 
-        const wsHost = window.wsHost || '127.0.0.1';
-        const wsUrl = `ws://${wsHost}:8765`;
-
-        function connectWebSocket() {
-            try {
-                ws = new WebSocket(wsUrl);
-                window.ws = ws;
-
-                ws.onopen = () => {
-                    console.log("[WS] Conectado al servidor en:", wsUrl);
-
-                    // --- ▼▼▼ INICIO DE MODIFICACIÓN (community_ids eliminada) ▼▼▼ ---
-                    const authMessage = {
-                        type: "auth",
-                        user_id: window.userId || 0,
-                        session_id: window.csrfToken || ""
-                    };
-                    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-                    
-                    ws.send(JSON.stringify(authMessage));
-                };
-
-                ws.onmessage = (event) => {
-                    try {
-                        const data = JSON.parse(event.data);
-
-                        // Conteo usuarios
-                        if (data.type === 'user_count') {
-                            window.lastKnownUserCount = data.count;
-                            const display = document.getElementById('concurrent-users-display');
-                            if (display) {
-                                display.textContent = data.count;
-                                display.setAttribute('data-i18n', '');
-                            }
-                        }
-
-                        // Logout forzado
-                        else if (data.type === 'force_logout') {
-                            console.log("[WS] Desconexión forzada recibida.");
-                            window.showAlert(getTranslation('js.logout.forced'), 'info', 5000);
-                            setTimeout(() => location.reload(), 3000);
-                        }
-
-                        // Estado de cuenta
-                        else if (data.type === 'account_status_update') {
-                            const newStatus = data.status;
-
-                            if (newStatus === 'suspended' || newStatus === 'deleted') {
-                                const msgKey =
-                                    newStatus === 'suspended'
-                                        ? 'js.auth.errorAccountSuspended'
-                                        : 'js.auth.errorAccountDeleted';
-
-                                window.showAlert(getTranslation(msgKey), 'error', 5000);
-
-                                setTimeout(() => {
-                                    window.location.href = `${window.projectBasePath}/account-status/${newStatus}`;
-                                }, 3000);
-                            }
-                        }
-
-                        // Estado del servicio de mensajería
-                        else if (data.type === 'messaging_status_update') {
-                            const newStatus = data.status; // "enabled" o "disabled"
-                            console.log(`[WS] Recibido estado de mensajería: ${newStatus}`);
-                            
-                            window.isMessagingEnabled = (newStatus === 'enabled');
-
-                            const currentSection = document.querySelector('.section-content.active')?.dataset.section;
-                            
-                            if (newStatus === 'disabled' && currentSection === 'messages') {
-                                const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
-                                
-                                if (!isPrivileged) {
-                                    console.log("[WS] Mensajería deshabilitada. Expulsando usuario a /home...");
-                                    window.showAlert(getTranslation('page.messaging_disabled.description'), 'error');
-                                    
-                                    const newPath = `${window.projectBasePath}/`;
-                                    history.replaceState(null, '', newPath); 
-                                    
-                                    loadPage('home', 'toggleSectionHome', null, false);
-                                }
-                            }
-                        }
-
-                        // Nuevo voto encuesta
-                        else if (data.type === 'new_poll_vote' && data.payload) {
-                            console.log("[WS] Notificación de nuevo voto");
-                            showAlert(
-                                `📊 ${getTranslation('js.notifications.newPollVote')
-                                    .replace('{username}', data.payload.username)}`,
-                                'info'
-                            );
-                        }
-
-                        // Notificación de ping
-                        else if (data.type === 'new_notification_ping') {
-                            console.log("[WS] Ping de nueva notificación recibido");
-                            handleNotificationPing();
-                        }
-
-                        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Eliminado 'new_community_message') ▼▼▼ ---
-                        
-                        // Chat: nuevo mensaje (DM)
-                        else if (data.type === 'new_chat_message') {
-                            console.log("[WS] Mensaje de chat (DM) recibido");
-                            handleChatMessageReceived(data.payload); // 'dm' ya no es necesario
-                        }
-                        
-                        // --- (Bloque 'new_community_message' eliminado) ---
-                        
-                        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
-                        // Chat: mensaje eliminado
-                        else if (data.type === 'message_deleted') {
-                            console.log("[WS] Notificación message_deleted recibida");
-                            handleMessageDeleted(data.payload);
-                        }
-
-                        // Chat: typing
-                        else if (data.type === 'typing_start') {
-                            handleTypingEvent?.(data.sender_id, true);
-                        }
-                        else if (data.type === 'typing_stop') {
-                            handleTypingEvent?.(data.sender_id, false);
-                        }
-
-                        // Presencia
-                        else if (data.type === 'presence_update') {
-                            document.dispatchEvent(new CustomEvent('user-presence-changed', {
-                                detail: {
-                                    userId: data.user_id,
-                                    status: data.status
-                                }
-                            }));
-                        }
-
-                        // Estado de amistad
-                        else if (data.type === 'friend_status_update') {
-                            const actorUserId = data.actor_user_id;
-                            const newStatus = data.new_status;
-
-                            if (actorUserId && newStatus) {
-                                updateProfileActions(actorUserId, newStatus);
-
-                                if (newStatus === 'friends' || newStatus === 'not_friends') {
-                                    initFriendList();
-                                }
-                            } else {
-                                console.warn("[WS] friend_status_update sin payload.");
-                            }
-                        }
-
-                    } catch (e) {
-                        console.error("[WS] Error al procesar mensaje:", e);
-                    }
-                };
-
-                ws.onclose = (event) => {
-                    console.log("[WS] Conexión cerrada:", event.reason);
-
-                    const display = document.getElementById('concurrent-users-display');
-                    if (display) {
-                        display.textContent = '---';
-                        display.setAttribute('data-i18n', '');
-                    }
-                };
-
-                ws.onerror = (error) => {
-                    console.error("[WS] Error en WebSocket:", error);
-                };
-
-            } catch (e) {
-                console.error("[WS] No se pudo crear WebSocket:", e);
-            }
-        }
-        
-        connectWebSocket();
-        
-        window.addEventListener('beforeunload', () => {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.close(1000, "Navegación de usuario");
-            }
-        });
+        // El listener 'beforeunload' ahora está dentro de initSocketService.
     }
+    // --- ▲▲▲ ¡FIN DE BLOQUE MODIFICADO! ▲▲▲ ---
 
 });

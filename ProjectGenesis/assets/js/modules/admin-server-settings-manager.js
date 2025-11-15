@@ -1,6 +1,9 @@
 import { callAdminApi } from '../services/api-service.js';
 import { showAlert } from '../services/alert-manager.js';
 import { getTranslation } from '../services/i18n-manager.js';
+// --- ▼▼▼ IMPORTACIÓN AÑADIDA ▼▼▼ ---
+import { sendSocketMessage } from '../services/socket-service.js';
+// --- ▲▲▲ FIN DE IMPORTACIÓN ▲▲▲ ---
 
 function getCsrfTokenFromPage() {
     const csrfInput = document.querySelector('input[name="csrf_token"]');
@@ -31,6 +34,8 @@ function showInlineError(cardElement, messageKey, data = null) {
 }
 
 async function fetchAndUpdateUserCount() {
+    // ESTA FUNCIÓN (fetchAndUpdateUserCount) YA NO SE USA.
+    // SE MANTIENE POR SI ACASO, PERO LA LÓGICA AHORA ES POR WEBSOCKET.
     const display = document.getElementById('concurrent-users-display');
     const refreshBtn = document.getElementById('refresh-concurrent-users');
     if (!display || !refreshBtn) return;
@@ -185,16 +190,19 @@ export function initAdminServerSettingsManager() {
         const action = button.dataset.action;
         const stepAction = button.dataset.stepAction;
 
+        // --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ ---
         if (action === 'admin-refresh-user-count') {
-            if (window.ws && window.ws.readyState === WebSocket.OPEN) {
-                 console.log("Pidiendo actualización de conteo (función no implementada en servidor)");
-                 if (window.lastKnownUserCount !== null) {
-                    const display = document.getElementById('concurrent-users-display');
-                    if (display) display.textContent = window.lastKnownUserCount;
-                 }
+            // Poner el texto "Cargando..."
+            const display = document.getElementById('concurrent-users-display');
+            if (display) {
+                display.textContent = getTranslation('admin.server.concurrentUsersLoading');
+                display.setAttribute('data-i18n', 'admin.server.concurrentUsersLoading');
             }
+            // Enviar la solicitud de conteo al WebSocket
+            sendSocketMessage({ type: 'admin_get_count' });
             return;
         }
+        // --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ ---
         
         if (stepAction) {
             const wrapper = button.closest('.component-stepper');

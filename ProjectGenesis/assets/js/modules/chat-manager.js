@@ -5,6 +5,8 @@
 // (CORREGIDO: ELIMINADA LA REFERENCIA A 'profileBtn' QUE CAUSABA EL ERROR)
 // --- ▼▼▼ MODIFICACIÓN (INSIGNIA DE CANDADO) ▼▼▼ ---
 // (MODIFICADO: Se cambió la lógica de 'is-blocked' de opacidad a una insignia)
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (Refactor de WebSocket) ▼▼▼ ---
+// (MODIFICADO: Se usa sendSocketMessage en lugar de window.ws)
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
@@ -12,6 +14,9 @@ import { getTranslation } from '../services/i18n-manager.js';
 import { showAlert } from '../services/alert-manager.js';
 import { createPopper } from 'https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/esm/popper.min.js';
 import { deactivateAllModules } from '../app/main-controller.js';
+// --- ▼▼▼ IMPORTACIÓN AÑADIDA ▼▼▼ ---
+import { sendSocketMessage } from '../services/socket-service.js';
+// --- ▲▲▲ FIN DE IMPORTACIÓN ▲▲▲ ---
 
 let currentChatUserId = null; // ID del amigo con el que se está chateando
 let friendCache = []; // Caché solo para DMs
@@ -89,7 +94,7 @@ function formatTimeAgo(dateTimeString) {
     }
     try {
         // Asegurarse de que la fecha se parsea como UTC
-        const date = new Date(dateTimeString.includes('Z') ? dateString : dateString + 'Z');
+        const date = new Date(dateTimeString.includes('Z') ? dateTimeString : dateTimeString + 'Z');
         const now = new Date();
         const seconds = Math.round((now - date) / 1000);
         const minutes = Math.round(seconds / 60);
@@ -1591,26 +1596,27 @@ export function initChatManager() {
             // Llamar a la función de auto-crecimiento CADA VEZ que se escribe
             autoGrowTextarea(chatInput); 
             
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Usa sendSocketMessage) ▼▼▼ ---
             // Lógica de "typing" (solo para DMs)
-            if (currentChatUserId && window.ws && window.ws.readyState === WebSocket.OPEN) {
+            if (currentChatUserId) { // La comprobación de 'ws' la hace el servicio
                 if (!isTyping) {
                     isTyping = true;
-                    window.ws.send(JSON.stringify({
+                    sendSocketMessage({
                         type: 'typing_start',
                         recipient_id: currentChatUserId
-                    }));
+                    });
                 }
                 clearTimeout(typingTimer);
                 typingTimer = setTimeout(() => {
-                    if (window.ws && window.ws.readyState === WebSocket.OPEN) {
-                        window.ws.send(JSON.stringify({
-                            type: 'typing_stop',
-                            recipient_id: currentChatUserId
-                        }));
-                    }
+                    // El servicio de socket comprobará si la conexión sigue activa
+                    sendSocketMessage({
+                        type: 'typing_stop',
+                        recipient_id: currentChatUserId
+                    });
                     isTyping = false;
                 }, 2000); 
             }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         }
         
         const searchInput = e.target.closest('#chat-friend-search');

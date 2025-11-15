@@ -1,5 +1,6 @@
 // FILE: assets/js/modules/friend-manager.js
 // (MODIFICADO - Añadido menú contextual al hacer clic en amigo)
+// (MODIFICADO - Añadido listener para el evento 'friend-status-changed')
 
 import { getTranslation } from '../services/i18n-manager.js';
 import { showAlert } from '../services/alert-manager.js';
@@ -8,7 +9,7 @@ import { callFriendApi as callApi } from '../services/api-service.js';
 import { createPopper } from 'https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/esm/popper.min.js';
 import { deactivateAllModules } from '../app/main-controller.js';
 import { handleNavigation } from '../app/url-manager.js';
-// --- ▲▲▲ FIN DE IMPORTACIONES AÑADIDAS ▲▲▲ ---
+// --- ▲▲▲ FIN DE IMPORTACIONES AÑADIDAS ▼▼▼ ---
 
 let popperInstance = null; // Instancia para el popover de contexto
 
@@ -196,6 +197,24 @@ export function initFriendManager() {
     });
     // --- ▲▲▲ FIN DE NUEVO LISTENER ▲▲▲ ---
 
+    // --- ▼▼▼ INICIO DE NUEVO LISTENER (ESTADO DE AMISTAD) ▼▼▼ ---
+    // Este evento es disparado por socket-service.js
+    document.addEventListener('friend-status-changed', (e) => {
+        const { actorUserId, newStatus } = e.detail;
+
+        if (actorUserId && newStatus) {
+            // 1. Actualizar los botones en la página de perfil (si está abierta)
+            updateProfileActions(actorUserId, newStatus);
+
+            // 2. Recargar la lista de amigos si la relación cambió (no solo una solicitud)
+            // (Ej. aceptado, eliminado, cancelado, rechazado)
+            if (newStatus === 'friends' || newStatus === 'not_friends') {
+                initFriendList();
+            }
+        }
+    });
+    // --- ▲▲▲ FIN DE NUEVO LISTENER ▲▲▲ ---
+
     document.body.addEventListener('click', async (e) => {
         
         // --- ▼▼▼ INICIO DE NUEVA LÓGICA (Menú contextual de amigo) ▼▼▼ ---
@@ -264,7 +283,7 @@ export function initFriendManager() {
             e.preventDefault();
             
             // La URL está ahora en el dataset del botón en el que se hizo clic
-            const profileUrl = profileButton.dataset.profileUrl; 
+            let profileUrl = profileButton.dataset.profileUrl; 
             if (!profileUrl) {
                 // Fallback por si el popover no se ha rellenado (aunque no debería pasar)
                 const popover = profileButton.closest('#friend-context-menu');
@@ -292,7 +311,7 @@ export function initFriendManager() {
         // --- ▼▼▼ INICIO DE MODIFICACIÓN (EXCLUSIÓN) ▼▼▼ ---
         // Prevenir que el clic en "enviar mensaje" se propague
         // (Ya no necesitamos excluir "friend-menu-profile" porque se maneja arriba)
-        if (button.dataset.action === 'friend-menu-message') {
+        if (button.dataset.action === 'friend-menu-message' || button.dataset.action === 'friend-menu-profile') {
             return;
         }
         // --- ▲▲▲ FIN DE MODIFICACIÓN (EXCLUSIÓN) ▲▲▲ ---

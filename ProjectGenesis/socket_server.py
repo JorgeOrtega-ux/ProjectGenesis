@@ -158,6 +158,17 @@ async def ws_handler(websocket):
                         tasks = [ws.send(payload) for ws in websockets_to_notify]
                         await asyncio.gather(*tasks, return_exceptions=True)
                 
+                # --- ▼▼▼ INICIO DE BLOQUE AÑADIDO (admin_get_count) ▼▼▼ ---
+                elif data.get("type") == "admin_get_count":
+                    # Un admin (o cualquier cliente) solicita el conteo actual
+                    count = len(CLIENTS_BY_SESSION_ID)
+                    logging.info(f"[WS] Cliente user_id={user_id} solicitó conteo. Respondiendo: {count}")
+                    # Responder solo a este cliente con un mensaje 'user_count'
+                    # que socket-service.js ya sabe cómo manejar.
+                    payload = json.dumps({"type": "user_count", "count": count})
+                    await websocket.send(payload)
+                # --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
+
             except Exception as e:
                 logging.warning(f"[WS] Error al procesar mensaje de cliente (user_id={user_id}): {e}")
 
