@@ -1,0 +1,618 @@
+/* FILE: assets/css/styles.css */
+/* (Refactorizado para mover componentes a components.css) */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
+
+/* ====================================== */
+/* ============ GENERALES =============== */
+/* ====================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    font-family: "Roboto Condensed", sans-serif;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    background-color: #f5f5fa;
+}
+
+.body-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.0178571429em;
+}
+
+.page-wrapper {
+    width: 100%;
+    height: 100%;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    background-color: #f5f5fa;
+}
+
+.general-content {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #00000020;
+    min-width: 0;
+}
+
+.general-content-top {
+    width: 100%;
+    height: auto;
+    border-bottom: 1px solid #00000020;
+    z-index: 999;
+    transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    position: relative;
+}
+
+.general-content-top.shadow {
+    box-shadow: 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+    border: transparent;
+}
+
+.general-content-bottom {
+    position: relative;
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.general-content-scrolleable {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    overflow: auto;
+}
+
+/* ====================================== */
+/* ============== HEADER ================ */
+/* ====================================== */
+
+.header {
+    position: relative;
+    display: flex;
+    /* --- ▼▼▼ MODIFICACIÓN ▼▼▼ --- */
+    justify-content: space-between; /* Mantenemos space-between */
+    /* --- ▲▲▲ FIN MODIFICACIÓN ▲▲▲ --- */
+    align-items: center;
+    width: 100%;
+    height: auto;
+    padding: 8px;
+    gap: 8px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.header-left {
+    display: flex;
+    flex: 1; /* <-- MODIFICADO */
+    justify-content: flex-start; /* <-- AÑADIDO */
+}
+
+/* --- ▼▼▼ INICIO DE BLOQUE MODIFICADO ▼▼▼ --- */
+.header-center {
+    display: flex;
+    flex: 1 1 auto; /* <-- MODIFICADO (No crecer, solo encoger si es necesario) */
+    justify-content: center; /* Centra el contenedor de búsqueda */
+    min-width: 0; /* Permite que se encoja en móviles */
+    /* padding: 0 16px;  <-- ELIMINADO (los flex: 1 laterales ya dan el espacio) */
+}
+/* --- ▲▲▲ FIN DE BLOQUE MODIFICADO ▲▲▲ --- */
+
+.header-right {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1; /* <-- MODIFICADO */
+    justify-content: flex-end; /* <-- AÑADIDO */
+}
+
+.header-item {
+    display: flex;
+    flex-direction: row;
+    width: auto;
+    height: 100%;
+    gap: 8px;
+}
+
+/* ====================================== */
+/* ============= MODULOS ================ */
+/* ====================================== */
+
+.module-content.module-surface {
+    /* ▼▼▼ CORRECCIÓN: VUELTO A 'absolute' ▼▼▼ */
+    position: absolute;
+    height: 100%;
+    padding: 8px;
+    top: 0;
+    left: 0; /* El menú izquierdo se alinea a la izquierda */
+    z-index: 998; /* Asegura que esté sobre el scroll */
+    /* ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ */
+}
+
+.module-surface .menu-content {
+    width: 280px;
+    height: 100%;
+    background-color: #ffffff;
+    padding: 8px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #00000020;
+}
+
+/* ====================================== */
+/* ============= POPOVERS =============== */
+/* ====================================== */
+.popover-module {
+    position: absolute;
+    top: calc(100% + 5px);
+    z-index: 10;
+    display: none;
+}
+
+.popover-module.active {
+    display: block;
+}
+
+.popover-module .menu-content {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #00000020;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.popover-module--anchor-right {
+    left: auto;
+    right: 5px;
+    width: 325px;
+}
+
+.popover-module--anchor-right .menu-content {
+    width: 100%;
+}
+
+.popover-module--anchor-width {
+    left: 0;
+    right: 0;
+    width: 100%;
+}
+
+.popover-module--anchor-width .menu-content {
+    width: 100%;
+}
+
+/* ====================================== */
+/* ============= MENUS ================= */
+/* ====================================== */
+
+.menu-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    gap: 4px;
+    user-select: none;
+}
+
+.menu-layout {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.menu-layout__top {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.menu-layout__bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.menu-layout__bottom .menu-list:not(:empty) {
+    padding-top: 8px;
+    border-top: 1px solid #00000020;
+    margin-top: 4px;
+}
+
+.menu-link {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: row;
+    width: 100%;
+    height: 40px;
+    position: relative;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.menu-link-icon {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    align-items: center;
+    width: 45px;
+    height: 100%;
+}
+
+.menu-link-text {
+    display: block;
+    flex: 1 1 auto;
+    text-align: start;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    align-self: center;
+}
+
+.menu-link.active {
+    background-color: #f5f5fa;
+}
+
+.menu-link:hover {
+    background-color: #f5f5fa;
+}
+
+.menu-link-check-icon {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    align-items: center;
+    width: 45px;
+    height: 100%;
+    color: #000;
+}
+
+/* ====================================== */
+/* ============= SECCIONES ============== */
+/* ====================================== */
+
+.main-sections {
+    display: flex;
+    width: 100%;
+    height: inherit;
+}
+
+.section-content {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.section-content:has(.component-wrapper) {
+    align-items: flex-start;
+}
+
+/* ====================================== */
+/* ============ NOT FOUND (404) ========= */
+/* ====================================== */
+
+.not-found-container {
+    text-align: center;
+    padding: 40px 24px;
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+.not-found-badge {
+    display: inline-block;
+    background-color: transparent;
+    padding: 6px 16px;
+    border: 1px solid #00000020;
+    border-radius: 99px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+
+.not-found-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 16px;
+}
+
+.not-found-text {
+    font-size: 18px;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+/* ====================================== */
+/* ========= AUTENTICACION (AUTH) ======= */
+/* ====================================== */
+
+.auth-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 24px;
+    margin: 0 auto;
+}
+
+.auth-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.auth-form fieldset.auth-step {
+    border: none;
+    padding: 0;
+    margin: 0;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.auth-step:not(.active) {
+    display: none;
+}
+
+.auth-step-indicator {
+    font-size: 14px;
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.auth-verification-text {
+    font-size: 15px;
+    color: #1f2937;
+    text-align: center;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+/* ====================================== */
+/* ============ UTILIDADES ============== */
+/* ====================================== */
+
+.active {
+    display: flex;
+}
+
+.disabled {
+    display: none;
+}
+
+.disabled-interactive {
+    pointer-events: none !important;
+    opacity: 0.5 !important;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.mb-16 {
+    margin-bottom: 16px;
+}
+
+.mb-24 {
+    margin-bottom: 24px;
+}
+
+.overflow-y {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-color: #00000080 transparent;
+    scrollbar-width: thin;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* --- ▼▼▼ INICIO DE BLOQUE (LISTA DE AMIGOS) CORREGIDO ▼▼▼ --- */
+#friend-list-container {
+    /* Hereda .module-content.module-surface */
+    /* position: absolute; (heredado) */
+    /* top: 0; (heredado) */
+    /* height: 100%; (heredado) */
+    /* padding: 8px; (heredado) */
+    /* z-index: 999; (heredado) */
+    
+    /* ▼▼▼ ESTO ES LO NUEVO ▼▼▼ */
+    left: auto; /* Anula el 'left: 0' de la regla base */
+    right: 0;   /* Lo posiciona a la derecha */
+    /* ▲▲▲ FIN DE LO NUEVO ▲▲▲ */
+}
+
+/*
+ * El .menu-content dentro del módulo de amigos hereda
+ * todas las propiedades de .module-surface .menu-content
+ * (fondo blanco, sombra, border-radius, etc.)
+*/
+#friend-list-container .menu-content {
+    /* (Hereda los estilos) */
+    background-color: #ffffff; /* ¡ASEGURAMOS QUE SEA BLANCO! */
+}
+
+#friend-list-items .menu-link {
+    height: 48px; /* Un poco más alto para avatares */
+}
+
+#friend-list-items .menu-link-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: -10px; /* Ajuste para el layout del menu-link */
+}
+
+#friend-list-items .menu-link-text {
+    font-weight: 600;
+}
+
+/* Ocultar en pantallas medianas y pequeñas */
+@media (max-width: 1024px) {
+    #friend-list-container {
+        display: none;
+    }
+}
+/* --- ▲▲▲ FIN DE BLOQUE ▲▲▲ --- */
+
+
+/* ====================================== */
+/* =           BLOQUE ELIMINADO          = */
+/* ====================================== */
+
+/* Los estilos de .chat-sidebar-filters y .chat-filter-badge
+   fueron eliminados de este archivo y movidos a messaging.css */
+
+/* ====================================== */
+/* ============ ANIMACIONES ============= */
+/* ====================================== */
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes alertFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes alertFadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modalContentScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.component-card--edit-mode {
+    align-items: flex-end;
+    gap: 8px;
+}
+
+/* ====================================== */
+/* ============= MEDIA QUERIES =========== */
+/* ====================================== */
+
+@media (max-width: 468px) {
+    .module-content.module-surface {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+    }
+
+    .module-surface .menu-content {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        box-shadow: unset;
+        border: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        padding: 0;
+    }
+
+    .general-content {
+        border-radius: 0;
+    }
+
+    /* --- ▼▼▼ NUEVA REGLA (YA DEBERÍA ESTAR CUBIERTA, PERO POR SI ACASO) ▼▼▼ --- */
+    #friend-list-container {
+        display: none;
+    }
+    /* --- ▲▲▲ FIN NUEVA REGLA ▲▲▲ --- */
+    
+    /* --- ▼▼▼ INICIO DE NUEVO BLOQUE (MÓVIL HEADER) ▼▼▼ --- */
+    .header {
+        gap: 4px;
+    }
+    /* --- ▲▲▲ FIN DE NUEVO BLOQUE ▲▲▲ --- */
+}
