@@ -38,17 +38,17 @@
         <div class="menu-content">
             <div class="menu-list">
 
-                <a class="menu-link"
-                    data-action="friend-menu-profile"
-                    data-nav-js="true"
-                    href="#">
+                <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ --- ?>
+                <div class="menu-link"
+                    data-action="friend-menu-profile">
                     <div class="menu-link-icon">
                         <span class="material-symbols-rounded">person</span>
                     </div>
                     <div class="menu-link-text">
                         <span>Ver Perfil</span>
                     </div>
-                </a>
+                </div>
+                <?php // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ --- ?>
 
                 <div class="menu-link"
                     data-action="friend-menu-message"

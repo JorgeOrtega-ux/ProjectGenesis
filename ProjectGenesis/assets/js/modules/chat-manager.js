@@ -2,6 +2,7 @@
 // (MODIFICADO PARA ELIMINAR CHATS DE COMUNIDAD)
 // (MODIFICADO PARA TEXTAREA AUTO-CRECIBLE CON LÍMITE)
 // (CORREGIDO: ORDEN DE LISTENERS PARA EL MENÚ CONTEXTUAL)
+// (CORREGIDO: ELIMINADA LA REFERENCIA A 'profileBtn' QUE CAUSABA EL ERROR)
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -1325,7 +1326,11 @@ export function initChatManager() {
             const blockBtn = popover.querySelector('[data-action="block-user"]');
             const unblockBtn = popover.querySelector('[data-action="unblock-user"]');
             const deleteBtn = popover.querySelector('[data-action="delete-chat"]');
-            const profileBtn = popover.querySelector('[data-action="friend-menu-profile"]');
+            
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (profileBtn) ▼▼▼ ---
+            // const profileBtn = popover.querySelector('[data-action="friend-menu-profile"]');
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN (profileBtn) ▲▲▲ ---
+
 
             // Lógica de DM (ahora incondicional)
             const isBlockedByMe = friendItem.dataset.isBlockedByMe === 'true';
@@ -1334,7 +1339,10 @@ export function initChatManager() {
             blockBtn.style.display = 'flex';
             unblockBtn.style.display = 'flex';
             deleteBtn.style.display = 'flex'; 
-            profileBtn.style.display = 'flex';
+            
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (profileBtn) ▼▼▼ ---
+            // profileBtn.style.display = 'flex'; // <-- LÍNEA ELIMINADA
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN (profileBtn) ▲▲▲ ---
             
             if (isBlockedByMe) {
                 blockBtn.style.display = 'none';
@@ -1349,7 +1357,9 @@ export function initChatManager() {
                 unblockBtn.style.display = 'none';
             }
             
-            profileBtn.href = `${window.projectBasePath}/profile/${friendItem.dataset.username}`;
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (profileBtn) ▼▼▼ ---
+            // profileBtn.href = `${window.projectBasePath}/profile/${friendItem.dataset.username}`; // <-- LÍNEA ELIMINADA
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN (profileBtn) ▲▲▲ ---
 
             const pinBtn = popover.querySelector('[data-action="pin-chat"]');
             const unpinBtn = popover.querySelector('[data-action="unpin-chat"]');
@@ -1398,7 +1408,8 @@ export function initChatManager() {
              
              const action = popoverOption.dataset.action;
              
-             if (action === 'friend-menu-profile') {
+             // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (profileBtn) ▼▼▼ ---
+             if (action === 'friend-menu-profile') { // Esta acción ya no debería existir aquí, pero por si acaso
                  deactivateAllModules();
                  if (chatPopperInstance) {
                      chatPopperInstance.destroy();
@@ -1407,6 +1418,7 @@ export function initChatManager() {
                  document.querySelector('.chat-item-menu-badge.popover-active')?.classList.remove('popover-active');
                  // Dejar que el url-manager maneje la navegación (no hacer return)
              } else {
+             // --- ▲▲▲ FIN DE LA MODIFICACIÓN (profileBtn) ▲▲▲ ---
                  // Si fue otra acción (Bloquear, Eliminar, etc.), manejarla y DETENER
                  const popover = popoverOption.closest('#chat-context-menu');
                  const targetId = popover.dataset.currentTargetId;

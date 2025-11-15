@@ -220,7 +220,9 @@ export function initFriendManager() {
             const profileLink = popover.querySelector('[data-action="friend-menu-profile"]');
             const messageLink = popover.querySelector('[data-action="friend-menu-message"]');
             
-            if (profileLink) profileLink.href = profileUrl;
+            // --- ▼▼▼ LÍNEA MODIFICADA ▼▼▼ ---
+            if (profileLink) profileLink.dataset.profileUrl = profileUrl; // <-- Se guarda la URL en el dataset
+            // --- ▲▲▲ LÍNEA MODIFICADA ▲▲▲ ---
             if (messageLink) messageLink.dataset.uuid = userUuid; // <-- Se guarda el UUID
             // --- ¡FIN DE MODIFICACIÓN! ---
 
@@ -255,16 +257,45 @@ export function initFriendManager() {
             deactivateAllModules();
             return;
         }
+        
+        // --- ▼▼▼ INICIO DE LÓGICA AÑADIDA (Clic en "Ver Perfil") ▼▼▼ ---
+        const profileButton = e.target.closest('[data-action="friend-menu-profile"]');
+        if (profileButton) {
+            e.preventDefault();
+            
+            // La URL está ahora en el dataset del botón en el que se hizo clic
+            const profileUrl = profileButton.dataset.profileUrl; 
+            if (!profileUrl) {
+                // Fallback por si el popover no se ha rellenado (aunque no debería pasar)
+                const popover = profileButton.closest('#friend-context-menu');
+                if (!popover) return;
+                const link = popover.querySelector('[data-action="friend-menu-profile"]');
+                if (!link || !link.dataset.profileUrl) return;
+                profileUrl = link.dataset.profileUrl;
+            }
+
+            // Manually trigger navigation
+            history.pushState(null, '', profileUrl);
+            handleNavigation(); // Dejar que el url-manager maneje la carga
+            
+            deactivateAllModules();
+            return;
+        }
+        // --- ▲▲▲ FIN DE LÓGICA AÑADIDA ▲▲▲ ---
+        
         // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
 
 
         const button = e.target.closest('[data-action^="friend-"]');
         if (!button) return;
 
-        // Prevenir que el clic en "enviar mensaje" o "ver perfil" se propague
-        if (button.dataset.action === 'friend-menu-profile' || button.dataset.action === 'friend-menu-message') {
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (EXCLUSIÓN) ▼▼▼ ---
+        // Prevenir que el clic en "enviar mensaje" se propague
+        // (Ya no necesitamos excluir "friend-menu-profile" porque se maneja arriba)
+        if (button.dataset.action === 'friend-menu-message') {
             return;
         }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (EXCLUSIÓN) ▲▲▲ ---
 
         e.preventDefault();
         const actionStr = button.dataset.action;

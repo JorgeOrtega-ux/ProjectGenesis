@@ -262,6 +262,8 @@ if ($hasPreloadedUser) {
                         <div class="menu-link-text"><span data-i18n="chat.context.unarchiveChat">Desarchivar chat</span></div>
                     </div>
 
+                    <?php // --- ▼▼▼ BLOQUE ELIMINADO (Separador y Ver Perfil) ▼▼▼ --- ?>
+                    <?php /*
                     <div style="height: 1px; background-color: #00000020; margin: 4px 8px;"></div>
 
                     <a class="menu-link"
@@ -275,6 +277,10 @@ if ($hasPreloadedUser) {
                             <span>Ver Perfil</span>
                         </div>
                     </a>
+                    */ ?>
+                    <?php // --- ▲▲▲ FIN BLOQUE ELIMINADO ▲▲▲ --- ?>
+                    
+                    <div style="height: 1px; background-color: #00000020; margin: 4px 8px;"></div>
 
                     <div class="menu-link" data-action="block-user">
                         <div class="menu-link-icon"><span class="material-symbols-rounded">block</span></div>
