@@ -743,6 +743,36 @@ export function initAdminManager() {
             deactivateAllModules(); 
             return;
         }
+
+        // --- INICIO DEL CÓDIGO AÑADIDO (VERSIÓN 2 - CORREGIDA) ---
+        if (action === 'toggleSectionAdminManageStatus') {
+            if (!selectedAdminUserId) {
+                showAlert(getTranslation('js.admin.errorNoSelection'), 'error');
+                event.preventDefault(); 
+                event.stopImmediatePropagation(); // <-- Prevenir que url-manager lo robe
+                return;
+            }
+            
+            // Prevenir que otros listeners (url-manager) tomen este clic
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
+            // Construye la URL con el ID
+            const linkUrl = window.projectBasePath + '/admin/manage-status?id=' + selectedAdminUserId;
+            
+            // Simula la navegación de la misma manera que 'Editar Usuario'
+            const link = document.createElement('a');
+            link.href = linkUrl;
+            link.setAttribute('data-nav-js', 'true'); 
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            
+            clearAdminUserSelection(); 
+            deactivateAllModules(); 
+            return; // Fin
+        }
+        // --- FIN DEL CÓDIGO AÑADIDO ---
         
         if (action === 'admin-set-filter') {
             event.preventDefault();
