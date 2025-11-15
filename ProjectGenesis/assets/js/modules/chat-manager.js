@@ -10,6 +10,7 @@
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 // --- ▼▼▼ MODIFICACIÓN (Leer clave de error de privacidad específica) ▼▼▼ ---
 // --- ▼▼▼ MODIFICACIÓN (AÑADIDO VISOR DE FOTOS PARA CHAT) ▼▼▼ ---
+// --- ▼▼▼ MODIFICACIÓN (CORREGIDO ORDEN DE IMAGEN/TEXTO) ▼▼▼ ---
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -644,6 +645,8 @@ function createMessageBubbleHtml(msg, isSent) {
     // (senderNameHtml eliminado)
 
     const deletedClass = (msg.status === 'deleted') ? 'deleted' : '';
+    
+    // --- ▼▼▼ INICIO DE LA CORRECCIÓN (ORDEN) ▼▼▼ ---
     const bubbleHtml = `
         <div class="chat-bubble ${bubbleClass} ${deletedClass}" data-message-id="${msg.id}" data-text-content="${escapeHTML(msg.message_text)}">
             <div class="chat-bubble-avatar" data-role="${escapeHTML(role)}">
@@ -651,12 +654,13 @@ function createMessageBubbleHtml(msg, isSent) {
             </div>
             <div class="chat-bubble-main-content">
                 ${replyContextHtml}
-                ${attachmentsHtml}
-                ${textHtml}
+                ${textHtml}         
+                ${attachmentsHtml}  
             </div>
             ${actionsMenuHtml}
         </div>
     `;
+    // --- ▲▲▲ FIN DE LA CORRECCIÓN (ORDEN) ▲▲▲ ---
     
     return bubbleHtml;
 }

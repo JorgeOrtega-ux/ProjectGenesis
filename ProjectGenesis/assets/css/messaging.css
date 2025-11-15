@@ -412,7 +412,6 @@
     width: 32px;
     height: 32px;
     flex-shrink: 0;
-    margin-top: auto;
 }
 
 .chat-bubble-avatar img {
@@ -422,12 +421,14 @@
     object-fit: cover;
 }
 
+/* --- ▼▼▼ INICIO DE LA MODIFICACIÓN (min-width: 0;) ▼▼▼ --- */
 .chat-bubble-main-content {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    min-width: 0;
+    /* min-width: 0; <-- LÍNEA ELIMINADA */
 }
+/* --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ --- */
 
 .chat-bubble-content {
     background-color: #f5f5fa;
@@ -453,7 +454,7 @@
     gap: 4px;
     border-radius: 12px;
     overflow: hidden;
-    max-width: 300px;
+    width: 350px; 
 }
 
 .chat-attachments-container[data-count="1"] {

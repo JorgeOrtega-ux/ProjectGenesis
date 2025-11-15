@@ -124,7 +124,6 @@ if ($hasPreloadedUser) {
 
                 <div class="chat-list-placeholder" id="chat-list-loader">
                     <span class="logout-spinner" style="width: 32px; height: 32px; border-width: 3px;"></span>
-                    <span data-i18n="friends.list.loading">Cargando...</span>
                 </div>
 
                 <div class="chat-list-placeholder" id="chat-list-empty" style="display: none;">
