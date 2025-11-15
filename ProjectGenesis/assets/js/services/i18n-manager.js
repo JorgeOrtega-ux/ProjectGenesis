@@ -38,12 +38,29 @@ function applyTranslations(container = document) {
         let translatedText = getTranslation(key);
 
         if (translatedText) {
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA) ▼▼▼ ---
+            
+            // Reemplazo genérico para atributos data-i18n-*
+            const attributes = element.attributes;
+            for (let i = 0; i < attributes.length; i++) {
+                const attr = attributes[i];
+                if (attr.name.startsWith('data-i18n-')) {
+                    const placeholder = attr.name.substring(11); // Obtiene "date" de "data-i18n-date"
+                    const value = attr.value;
+                    // Crea un regex global para reemplazar todas las instancias, ej: /%date%/g
+                    const regex = new RegExp(`%${placeholder}%`, 'g');
+                    translatedText = translatedText.replace(regex, value);
+                }
+            }
+
+            // Lógica específica anterior (para %email%)
             if (translatedText.includes('%email%')) {
                 const regEmail = sessionStorage.getItem('regEmail');
                 if (regEmail) {
                     translatedText = translatedText.replace(/%email%/g, regEmail);
                 }
             }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
             element.innerHTML = translatedText;
         }

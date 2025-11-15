@@ -94,7 +94,7 @@ try {
 if (isset($_SESSION['user_id'])) {
     try {
         $stmt = $pdo->prepare("
-            SELECT u.username, u.email, u.profile_image_url, u.banner_url, u.role, u.auth_token, u.account_status, u.bio,
+            SELECT u.username, u.email, u.profile_image_url, u.banner_url, u.role, u.auth_token, u.account_status, u.status_expires_at, u.bio,
                    p.language, p.theme, p.usage_type, p.open_links_in_new_tab,
                    p.increase_message_duration, p.is_friend_list_private, p.is_email_public,
                    p.employment, p.education, p.message_privacy_level
@@ -110,6 +110,12 @@ if (isset($_SESSION['user_id'])) {
 
             $accountStatus = $freshUserData['account_status'];
             if ($accountStatus === 'deleted' || $accountStatus === 'suspended') {
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA) ▼▼▼ ---
+                if ($accountStatus === 'suspended' && !empty($freshUserData['status_expires_at'])) {
+                    $_SESSION['suspension_expires_at'] = $freshUserData['status_expires_at'];
+                }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
                 session_unset();
                 session_destroy();
 
@@ -189,19 +195,31 @@ if (isset($_SESSION['user_id'])) {
 
             try {
                 $stmt_restrictions = $pdo->prepare(
-                    "SELECT restriction_type 
+                    "SELECT restriction_type, expires_at -- <-- MODIFICADO
                      FROM user_restrictions 
                      WHERE user_id = ? 
                      AND (expires_at IS NULL OR expires_at > NOW())"
                 );
                 $stmt_restrictions->execute([$_SESSION['user_id']]);
-                $restrictionsList = $stmt_restrictions->fetchAll(PDO::FETCH_COLUMN);
                 
-                if (empty($restrictionsList)) {
-                    $_SESSION['restrictions'] = [];
-                } else {
-                    $_SESSION['restrictions'] = array_fill_keys($restrictionsList, true);
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA) ▼▼▼ ---
+                $_SESSION['restrictions'] = [];
+                // Limpiamos la variable de sesión anterior por si acaso
+                if(isset($_SESSION['restriction_expires_at'])) {
+                    unset($_SESSION['restriction_expires_at']);
                 }
+
+                while ($restriction = $stmt_restrictions->fetch()) {
+                    $type = $restriction['restriction_type'];
+                    $_SESSION['restrictions'][$type] = true;
+                    
+                    // Si esta es la restricción de mensajería, guardar su fecha de expiración
+                    if ($type === 'CANNOT_MESSAGE' && !empty($restriction['expires_at'])) {
+                        $_SESSION['restriction_expires_at'] = $restriction['expires_at'];
+                    }
+                    // (Se podría extender para otras restricciones si es necesario)
+                }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 
             } catch (PDOException $e) {
                 $_SESSION['restrictions'] = [];

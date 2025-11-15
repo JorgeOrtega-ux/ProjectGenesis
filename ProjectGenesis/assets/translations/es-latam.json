@@ -535,6 +535,10 @@
       "deletedDesc": "Esta cuenta ha sido eliminada permanentemente. Si crees que esto es un error, por favor contacta a soporte.",
       "suspendedTitle": "Cuenta Suspendida",
       "suspendedDesc": "Esta cuenta ha sido suspendida. No podrás acceder hasta que la suspensión sea levantada. Si crees que esto es un error, por favor contacta a soporte.",
+      "suspendedDescTemporary": "Esta cuenta ha sido suspendida temporalmente. Podrás acceder de nuevo el %date%.",
+      "restrictedTitle": "Servicio Restringido",
+      "restrictedDesc": "Tu cuenta tiene una restricción que te impide usar este servicio.",
+      "restrictedDescTemporary": "Tu restricción para usar este servicio terminará el %date%.",
       "backToLogin": "Volver a Inicio de Sesión"
     },
     "maintenance": {
