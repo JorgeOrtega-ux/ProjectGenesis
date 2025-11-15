@@ -13,6 +13,122 @@
     
     <link rel="stylesheet" type="text/css" href="<?php echo $basePath; ?>/assets/css/messaging.css">
     <title>ProjectGenesis</title>
+
+    <?php // --- INICIO DE CSS PARA EL VISOR DE FOTOS --- ?>
+    <style>
+        .photo-viewer-overlay {
+            display: none; /* Oculto por defecto */
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 2000; /* Por encima de todo lo demás */
+            flex-direction: column;
+            animation: modalFadeIn 0.2s ease-out forwards;
+        }
+
+        .photo-viewer-overlay.active {
+            display: flex;
+        }
+
+        .photo-viewer-header {
+            height: 50px;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 12px;
+            color: #ffffff;
+        }
+
+        .viewer-header-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0; /* Para que text-overflow funcione */
+        }
+
+        .viewer-user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .viewer-user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .viewer-user-name {
+            font-size: 16px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .viewer-header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .viewer-control-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .viewer-control-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .viewer-control-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .photo-viewer-content {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 16px;
+        }
+
+        .viewer-image-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #viewer-image {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 12px; /* Bordes redondos */
+        }
+    </style>
+    <?php // --- FIN DE CSS PARA EL VISOR DE FOTOS --- ?>
 </head>
 
 <body>
@@ -135,6 +251,36 @@
            src="<?php echo $basePath; ?>/assets/sounds/notification.mp3" 
            preload="auto">
     </audio>
-    </body>
+    
+    <?php // --- INICIO DE HTML PARA EL VISOR DE FOTOS --- ?>
+    <div class="photo-viewer-overlay" id="photo-viewer-modal">
+        <div class="photo-viewer-header">
+            <div class="viewer-header-user">
+                <div class="viewer-user-avatar">
+                    <img id="viewer-user-avatar" src="" alt="Avatar de usuario">
+                </div>
+                <span class="viewer-user-name" id="viewer-user-name">Usuario</span>
+            </div>
+            <div class="viewer-header-controls">
+                <button type="button" class="viewer-control-btn" id="viewer-btn-prev" title="Anterior">
+                    <span class="material-symbols-rounded">arrow_back_ios_new</span>
+                </button>
+                <button type="button" class="viewer-control-btn" id="viewer-btn-next" title="Siguiente">
+                    <span class="material-symbols-rounded">arrow_forward_ios</span>
+                </button>
+                <button type="button" class="viewer-control-btn" id="viewer-btn-close" title="Cerrar (Esc)">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+        </div>
+        <div class="photo-viewer-content">
+            <div class="viewer-image-wrapper">
+                <img src="" alt="Visor de imagen" id="viewer-image">
+            </div>
+        </div>
+    </div>
+    <?php // --- FIN DE HTML PARA EL VISOR DE FOTOS --- ?>
+    
+</body>
 
 </html>

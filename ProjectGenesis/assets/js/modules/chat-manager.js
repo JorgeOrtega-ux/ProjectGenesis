@@ -9,6 +9,7 @@
 // (MODIFICADO: Se usa sendSocketMessage en lugar de window.ws)
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 // --- ▼▼▼ MODIFICACIÓN (Leer clave de error de privacidad específica) ▼▼▼ ---
+// --- ▼▼▼ MODIFICACIÓN (AÑADIDO VISOR DE FOTOS PARA CHAT) ▼▼▼ ---
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -38,6 +39,20 @@ let currentChatFilter = 'all'; // Estado del filtro: 'all', 'favorites', 'unread
 let currentUnreadMessageCount = 0; 
 
 let currentChatTargetId = null; // ID (de usuario)
+
+// --- ▼▼▼ INICIO DE NUEVAS VARIABLES GLOBALES PARA EL VISOR ▼▼▼ ---
+let viewerModal = null;
+let viewerImage = null;
+let viewerAvatar = null;
+let viewerName = null;
+let viewerBtnPrev = null;
+let viewerBtnNext = null;
+let viewerBtnClose = null;
+
+let currentViewerImages = []; // Array de URLs de las imágenes en el post actual
+let currentViewerIndex = 0;   // Índice de la imagen que se está viendo
+let isViewerInitialized = false; // Flag para asegurar que los listeners se añaden solo una vez
+// --- ▲▲▲ FIN DE NUEVAS VARIABLES GLOBALES PARA EL VISOR ▲▲▲ ---
 
 
 /**
@@ -609,11 +624,14 @@ function createMessageBubbleHtml(msg, isSent) {
     if (attachments.length > 0) {
         let itemsHtml = '';
         attachments.forEach(url => {
+            // --- ▼▼▼ INICIO MODIFICACIÓN VISOR: Añadido <img> al contenedor <a> ---
+            // (El <a> se convierte en <div> ya que el JS maneja el clic)
             itemsHtml += `
                 <div class="chat-attachment-item">
                     <img src="${escapeHTML(url)}" alt="Adjunto de chat" loading="lazy">
                 </div>
             `;
+            // --- ▲▲▲ FIN MODIFICACIÓN VISOR ---
         });
         
         attachmentsHtml = `
@@ -1253,6 +1271,136 @@ export function handleTypingEvent(senderId, isTyping) {
     }
 }
 
+// --- ▼▼▼ INICIO DE NUEVAS FUNCIONES PARA EL VISOR (COPIADAS) ▼▼▼ ---
+
+/**
+ * Cierra el visor de fotos y resetea su estado.
+ */
+function closePhotoViewer() {
+    if (!viewerModal) return;
+    viewerModal.classList.remove('active');
+    viewerImage.src = ''; // Detiene la carga de la imagen
+    currentViewerImages = [];
+    currentViewerIndex = 0;
+}
+
+/**
+ * Muestra la imagen siguiente en el array 'currentViewerImages'.
+ */
+function showNextImage() {
+    if (currentViewerIndex < currentViewerImages.length - 1) {
+        currentViewerIndex++;
+        viewerImage.src = currentViewerImages[currentViewerIndex];
+        updateViewerControls();
+    }
+}
+
+/**
+ * Muestra la imagen anterior en el array 'currentViewerImages'.
+ */
+function showPrevImage() {
+    if (currentViewerIndex > 0) {
+        currentViewerIndex--;
+        viewerImage.src = currentViewerImages[currentViewerIndex];
+        updateViewerControls();
+    }
+}
+
+/**
+ * Habilita/deshabilita los botones de previo/siguiente según el índice.
+ */
+function updateViewerControls() {
+    if (!viewerBtnPrev || !viewerBtnNext) return;
+    viewerBtnPrev.disabled = (currentViewerIndex === 0);
+    viewerBtnNext.disabled = (currentViewerIndex >= currentViewerImages.length - 1);
+}
+
+/**
+ * Abre el visor de fotos con la información recopilada.
+ * @param {string[]} galleryArray - Un array de URLs de imágenes.
+ * @param {number} startIndex - El índice de la imagen a mostrar primero.
+ * @param {object} headerInfo - Un objeto { avatar: 'url', name: 'string' }.
+ */
+function openChatPhotoViewer(galleryArray, startIndex, headerInfo) {
+    if (!viewerModal) {
+        console.error("El visor de fotos no está inicializado.");
+        return;
+    }
+
+    // 1. Poblar el header del modal
+    viewerAvatar.src = headerInfo.avatar || defaultAvatar;
+    viewerName.textContent = headerInfo.name || 'Chat';
+    
+    // 2. Guardar el array y el índice
+    currentViewerImages = galleryArray;
+    currentViewerIndex = startIndex;
+
+    // 3. Mostrar la imagen clicada
+    if (currentViewerImages[currentViewerIndex]) {
+        viewerImage.src = currentViewerImages[currentViewerIndex];
+    }
+    
+    // 4. Actualizar botones
+    updateViewerControls();
+
+    // 5. Mostrar el modal
+    viewerModal.classList.add('active');
+}
+
+/**
+ * Inicializa el visor de fotos (se llama una vez).
+ * Busca los elementos del modal y añade los listeners de control.
+ */
+function initPhotoViewerListeners() {
+    // Asegurarse de que esto solo se ejecute una vez
+    if (isViewerInitialized) return;
+    
+    viewerModal = document.getElementById('photo-viewer-modal');
+    if (!viewerModal) {
+        console.warn("No se encontró #photo-viewer-modal. El visor de fotos de chat no funcionará.");
+        return; 
+    }
+
+    viewerImage = document.getElementById('viewer-image');
+    viewerAvatar = document.getElementById('viewer-user-avatar');
+    viewerName = document.getElementById('viewer-user-name');
+    viewerBtnPrev = document.getElementById('viewer-btn-prev');
+    viewerBtnNext = document.getElementById('viewer-btn-next');
+    viewerBtnClose = document.getElementById('viewer-btn-close');
+
+    // Listeners de control
+    viewerBtnClose?.addEventListener('click', closePhotoViewer);
+    viewerBtnNext?.addEventListener('click', showNextImage);
+    viewerBtnPrev?.addEventListener('click', showPrevImage);
+
+    // Clic en el fondo para cerrar
+    viewerModal.addEventListener('click', (e) => {
+        if (e.target === viewerModal) { // Solo si se hace clic en el fondo
+            closePhotoViewer();
+        }
+    });
+
+    // Listener de teclado (Escape)
+    document.addEventListener('keydown', (e) => {
+        if (!viewerModal.classList.contains('active')) return;
+        
+        if (e.key === 'Escape') {
+            closePhotoViewer();
+        }
+        if (e.key === 'ArrowRight') {
+            showNextImage();
+        }
+        if (e.key === 'ArrowLeft') {
+            showPrevImage();
+        }
+    });
+    
+    isViewerInitialized = true;
+    console.log("Photo Viewer listeners initialized by Chat Manager.");
+}
+// --- ▲▲▲ FIN DE NUEVAS FUNCIONES PARA EL VISOR (COPIADAS) ▲▲▲ ---
+
+
 /**
  * Inicializa todos los listeners para la página de chat.
  */
@@ -1303,6 +1451,45 @@ export function initChatManager() {
     }
 
     document.body.addEventListener('click', async (e) => {
+
+        // --- ▼▼▼ INICIO DE NUEVA LÓGICA (VISOR DE FOTOS) ▼▼▼ ---
+        // ¡Importante! Este listener debe ir ANTES que el listener
+        // de 'a.chat-conversation-item' para poder prevenirlo.
+        const chatImage = e.target.closest('.chat-attachment-item img');
+        if (chatImage) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const bubble = chatImage.closest('.chat-bubble');
+            const chatMain = chatImage.closest('#chat-content-main');
+            if (!bubble || !chatMain) return;
+
+            // 1. Recopilar información del Header
+            let headerInfo = {};
+            if (bubble.classList.contains('sent')) {
+                // Es un mensaje enviado (mío)
+                headerInfo.avatar = document.querySelector('.header-profile-image')?.src || defaultAvatar;
+                // Usamos la clave i18n para "a ti mismo" que ya usamos en las respuestas.
+                headerInfo.name = getTranslation('js.chat.replyToSelf') || 'Tú';
+            } else {
+                // Es un mensaje recibido (del otro usuario)
+                headerInfo.avatar = chatMain.querySelector('#chat-header-avatar')?.src || defaultAvatar;
+                headerInfo.name = chatMain.querySelector('#chat-header-username')?.textContent || 'Usuario';
+            }
+
+            // 2. Recopilar galería de imágenes (solo de esta burbuja)
+            const allImages = bubble.querySelectorAll('.chat-attachment-item img');
+            const imageUrls = Array.from(allImages).map(img => img.src);
+            
+            // 3. Encontrar el índice de la imagen clicada
+            const clickedIndex = imageUrls.indexOf(chatImage.src);
+            
+            // 4. Llamar a la función del visor (que ahora existe en este archivo)
+            openChatPhotoViewer(imageUrls, clickedIndex, headerInfo);
+            
+            return; // Detener el procesamiento del clic
+        }
+        // --- ▲▲▲ FIN DE NUEVA LÓGICA (VISOR DE FOTOS) ▲▲▲ ---
         
         // --- ▼▼▼ CORRECCIÓN: ORDEN DE LISTENERS ▼▼▼ ---
         // 1. Verificar si el clic fue en la sección de chat.
@@ -1725,4 +1912,9 @@ export function initChatManager() {
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     
     // (Promesa de communityIds eliminada)
+    
+    // --- ▼▼▼ INICIO DE NUEVA LÓGICA ▼▼▼ ---
+    // Inicializar los listeners del visor de fotos (se ejecuta una sola vez)
+    initPhotoViewerListeners();
+    // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
 }

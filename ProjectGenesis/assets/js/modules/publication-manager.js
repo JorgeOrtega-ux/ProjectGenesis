@@ -12,6 +12,21 @@ let selectedFiles = [];
 let selectedCommunityId = 'profile'; 
 let selectedPrivacyLevel = 'public'; 
 let currentPostType = 'post'; // Valor por defecto
+const defaultAvatar = "https://ui-avatars.com/api/?name=?&size=100&background=e0e0e0&color=ffffff";
+
+// --- ▼▼▼ INICIO DE NUEVAS VARIABLES GLOBALES PARA EL VISOR ▼▼▼ ---
+let viewerModal = null;
+let viewerImage = null;
+let viewerAvatar = null;
+let viewerName = null;
+let viewerBtnPrev = null;
+let viewerBtnNext = null;
+let viewerBtnClose = null;
+
+let currentViewerImages = []; // Array de URLs de las imágenes en el post actual
+let currentViewerIndex = 0;   // Índice de la imagen que se está viendo
+// --- ▲▲▲ FIN DE NUEVAS VARIABLES GLOBALES PARA EL VISOR ▲▲▲ ---
+
 
 // --- (FUNCIONES HELPER - SIN CAMBIOS) ---
 function togglePrimaryButtonSpinner(button, isLoading) {
@@ -459,14 +474,148 @@ function resetCommunityTrigger() {
     }
 }
 
+// --- ▼▼▼ INICIO DE NUEVAS FUNCIONES PARA EL VISOR ▼▼▼ ---
 
-// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+/**
+ * Cierra el visor de fotos y resetea su estado.
+ */
+function closePhotoViewer() {
+    if (!viewerModal) return;
+    viewerModal.classList.remove('active');
+    viewerImage.src = ''; // Detiene la carga de la imagen
+    currentViewerImages = [];
+    currentViewerIndex = 0;
+}
+
+/**
+ * Muestra la imagen siguiente en el array 'currentViewerImages'.
+ */
+function showNextImage() {
+    if (currentViewerIndex < currentViewerImages.length - 1) {
+        currentViewerIndex++;
+        viewerImage.src = currentViewerImages[currentViewerIndex];
+        updateViewerControls();
+    }
+}
+
+/**
+ * Muestra la imagen anterior en el array 'currentViewerImages'.
+ */
+function showPrevImage() {
+    if (currentViewerIndex > 0) {
+        currentViewerIndex--;
+        viewerImage.src = currentViewerImages[currentViewerIndex];
+        updateViewerControls();
+    }
+}
+
+/**
+ * Habilita/deshabilita los botones de previo/siguiente según el índice.
+ */
+function updateViewerControls() {
+    if (!viewerBtnPrev || !viewerBtnNext) return;
+    viewerBtnPrev.disabled = (currentViewerIndex === 0);
+    viewerBtnNext.disabled = (currentViewerIndex >= currentViewerImages.length - 1);
+}
+
+/**
+ * Abre el visor de fotos con la imagen clicada.
+ * @param {HTMLImageElement} clickedImageEl - El elemento <img> que fue clicado.
+ */
+function openPhotoViewer(clickedImageEl) {
+    if (!viewerModal) return;
+
+    // 1. Encontrar el post padre
+    const postCard = clickedImageEl.closest('.component-card--post');
+    if (!postCard) return;
+
+    // 2. Encontrar info del publicador
+    const avatarImg = postCard.querySelector('.post-card-header .component-card__avatar img');
+    const nameEl = postCard.querySelector('.post-card-header .component-card__title');
+
+    // 3. Poblar el header del modal
+    viewerAvatar.src = avatarImg ? avatarImg.src : defaultAvatar;
+    viewerName.textContent = nameEl ? nameEl.textContent : 'Publicación';
+    
+    // 4. Encontrar todas las imágenes del post
+    const allImages = postCard.querySelectorAll('.post-attachment-item img');
+    currentViewerImages = Array.from(allImages).map(img => img.src);
+    
+    // 5. Encontrar el índice de la imagen clicada
+    currentViewerIndex = currentViewerImages.indexOf(clickedImageEl.src);
+    if (currentViewerIndex === -1) currentViewerIndex = 0; // Fallback
+
+    // 6. Mostrar la imagen clicada
+    viewerImage.src = currentViewerImages[currentViewerIndex];
+    
+    // 7. Actualizar botones
+    updateViewerControls();
+
+    // 8. Mostrar el modal
+    viewerModal.classList.add('active');
+}
+
+/**
+ * Inicializa el visor de fotos (se llama una vez).
+ * Busca los elementos del modal y añade los listeners de control.
+ */
+function initPhotoViewer() {
+    viewerModal = document.getElementById('photo-viewer-modal');
+    if (!viewerModal) return; // Si el modal no existe, no hacer nada
+
+    viewerImage = document.getElementById('viewer-image');
+    viewerAvatar = document.getElementById('viewer-user-avatar');
+    viewerName = document.getElementById('viewer-user-name');
+    viewerBtnPrev = document.getElementById('viewer-btn-prev');
+    viewerBtnNext = document.getElementById('viewer-btn-next');
+    viewerBtnClose = document.getElementById('viewer-btn-close');
+
+    // Listeners de control
+    viewerBtnClose?.addEventListener('click', closePhotoViewer);
+    viewerBtnNext?.addEventListener('click', showNextImage);
+    viewerBtnPrev?.addEventListener('click', showPrevImage);
+
+    // Clic en el fondo para cerrar
+    viewerModal.addEventListener('click', (e) => {
+        if (e.target === viewerModal) { // Solo si se hace clic en el fondo
+            closePhotoViewer();
+        }
+    });
+
+    // Listener de teclado (Escape)
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && viewerModal.classList.contains('active')) {
+            closePhotoViewer();
+        }
+        if (e.key === 'ArrowRight' && viewerModal.classList.contains('active')) {
+            showNextImage();
+        }
+        if (e.key === 'ArrowLeft' && viewerModal.classList.contains('active')) {
+            showPrevImage();
+        }
+    });
+}
+// --- ▲▲▲ FIN DE NUEVAS FUNCIONES PARA EL VISOR ▲▲▲ ---
+
 
 // Esta función se llamará UNA SOLA VEZ desde app-init.js
 // Configura los listeners globales que siempre deben estar activos.
 export function setupPublicationListeners() {
     
     document.body.addEventListener('click', (e) => {
+        
+        // --- ▼▼▼ INICIO DE LÓGICA DEL VISOR DE FOTOS ▼▼▼ ---
+        // Detectar clic en una imagen de un post
+        const photoViewerImage = e.target.closest('.post-attachment-item img');
+        if (photoViewerImage) {
+            // Prevenir cualquier otra acción (como navegar al post, si el <a> es el padre)
+            e.preventDefault(); 
+            e.stopPropagation(); // Detener para que otros listeners no se activen
+            openPhotoViewer(photoViewerImage);
+            return; // Importante: Salir para no procesar otros clics
+        }
+        // --- ▲▲▲ FIN DE LÓGICA DEL VISOR DE FOTOS ▲▲▲ ---
+
         // --- (Listener de 'post-type-toggle' - CÓDIGO MUERTO) ---
         // Este código está aquí por si lo implementas en el futuro,
         // pero actualmente no hace nada porque tu PHP no tiene el toggle.
@@ -671,6 +820,11 @@ export function setupPublicationListeners() {
             handleFileSelection(e);
         }
     });
+
+    // --- ▼▼▼ INICIO DE NUEVA LÓGICA ▼▼▼ ---
+    // Inicializar el visor de fotos (buscar elementos y añadir listeners)
+    initPhotoViewer();
+    // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
 }
 
 // Esta función se llamará CADA VEZ que se cargue una página (desde url-manager.js)
