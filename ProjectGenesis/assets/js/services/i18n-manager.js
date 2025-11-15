@@ -38,7 +38,7 @@ function applyTranslations(container = document) {
         let translatedText = getTranslation(key);
 
         if (translatedText) {
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA) ▼▼▼ ---
+            // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
             
             // Reemplazo genérico para atributos data-i18n-*
             const attributes = element.attributes;
@@ -47,8 +47,13 @@ function applyTranslations(container = document) {
                 if (attr.name.startsWith('data-i18n-')) {
                     const placeholder = attr.name.substring(11); // Obtiene "date" de "data-i18n-date"
                     const value = attr.value;
-                    // Crea un regex global para reemplazar todas las instancias, ej: /%date%/g
-                    const regex = new RegExp(`%${placeholder}%`, 'g');
+                    
+                    // --- LA CORRECCIÓN ESTÁ AQUÍ ---
+                    // Se cambió de comillas simples (') a comillas invertidas (`)
+                    // para que ${placeholder} sea reemplazado por su valor (ej. "date").
+                    const regex = new RegExp(`%${placeholder}%`, 'g'); 
+                    // --- FIN DE LA CORRECCIÓN ---
+                    
                     translatedText = translatedText.replace(regex, value);
                 }
             }
@@ -60,7 +65,7 @@ function applyTranslations(container = document) {
                     translatedText = translatedText.replace(/%email%/g, regEmail);
                 }
             }
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
 
             element.innerHTML = translatedText;
         }

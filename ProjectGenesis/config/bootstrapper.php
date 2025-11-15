@@ -110,15 +110,27 @@ if (isset($_SESSION['user_id'])) {
 
             $accountStatus = $freshUserData['account_status'];
             if ($accountStatus === 'deleted' || $accountStatus === 'suspended') {
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA) ▼▼▼ ---
+                
+                // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
+                // 1. Guarda la fecha de expiración ANTES de destruir la sesión.
+                $suspension_date = null;
                 if ($accountStatus === 'suspended' && !empty($freshUserData['status_expires_at'])) {
-                    $_SESSION['suspension_expires_at'] = $freshUserData['status_expires_at'];
+                    $suspension_date = $freshUserData['status_expires_at'];
                 }
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
+                // 2. Destruye la sesión de inicio de sesión actual.
                 session_unset();
                 session_destroy();
 
+                // 3. Inicia una sesión nueva y limpia.
+                session_start(); // ¡IMPORTANTE! Iniciar nueva sesión
+                
+                // 4. Almacena SOLAMENTE la fecha en esta nueva sesión.
+                if ($suspension_date) {
+                    $_SESSION['suspension_expires_at'] = $suspension_date;
+                }
+                // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
+                
                 $statusPath = ($accountStatus === 'deleted') ? '/account-status/deleted' : '/account-status/suspended';
                 header('Location: ' . $basePath . $statusPath);
                 exit;
