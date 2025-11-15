@@ -303,14 +303,22 @@ $currentStatusIcon = $statusIconMap[$currentStatus];
                 $tempChecked = $isTemporary ? 'checked' : '';
                 $permChecked = !$isTemporary ? 'checked' : '';
                 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+                $descKey = $labelKey . 'Desc'; // Crear la clave de descripción
+                
                 $html = "
                 <div class='component-card component-card--edit-mode' style='flex-direction: column; align-items: stretch; gap: 0;'>
                     <div style='display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px;'>
                         <div class='component-card__content' style='padding: 0;'>
                             <div class='component-card__text'>
                                 <h2 class='component-card__title' data-i18n='$labelKey'></h2>
+                                <p class='component-card__description' data-i18n='$descKey'></p>
                             </div>
                         </div>
+                ";
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+                $html .= "
                         <div class='component-card__actions' style='padding: 0;'>
                             <label class='component-toggle-switch'>
                                 <input type='checkbox' class='admin-restriction-toggle' id='admin-restrict-$id' $checkedAttr>

@@ -106,9 +106,13 @@
       "restrictionsTitle": "Restricciones de Servicio",
       "restrictionsDesc": "Las restricciones solo se aplican si el estado general es \"Activo\".",
       "restrictPublish": "Restringir Publicaciones",
+      "restrictPublishDesc": "Impide que el usuario cree nuevas publicaciones o encuestas.",
       "restrictComment": "Restringir Comentarios",
+      "restrictCommentDesc": "Impide que el usuario comente en cualquier publicación.",
       "restrictMessage": "Restringir Mensajería",
+      "restrictMessageDesc": "Impide que el usuario envíe o reciba mensajes directos.",
       "restrictSocial": "Restringir Acciones Sociales (amistad)",
+      "restrictSocialDesc": "Impide que el usuario envíe, acepte o cancele solicitudes de amistad.",
       "cancelButton": "Cancelar",
       "saveChanges": "Guardar Cambios",
       "errorLoadingUser": "Error al cargar datos del usuario."
