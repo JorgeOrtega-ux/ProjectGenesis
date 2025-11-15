@@ -1,4 +1,3 @@
-
 import { getTranslation } from '../services/i18n-manager.js';
 import { hideTooltip } from '../services/tooltip-manager.js'; 
 
@@ -114,10 +113,13 @@ function initMainController() {
 
         if (action.startsWith('toggle')) {
             
+            // --- ▼▼▼ INICIO DE LA CORRECCIÓN ▼▼▼ ---
+            // Añadimos 'toggleModuleAdminStatusSelect' a la lista
+            // y eliminamos la antigua 'toggleModuleAdminStatus'.
             const managedActions = [
                 'toggleModulePageFilter',
                 'toggleModuleAdminRole',
-                'toggleModuleAdminStatus',
+                'toggleModuleAdminStatusSelect', // <-- ¡AQUÍ ESTÁ LA CORRECCIÓN!
                 'toggleModuleAdminCreateRole',
                 'toggleModuleAdminCommunityPrivacy',
                 'toggleModuleAdminCommunityType',
@@ -138,6 +140,7 @@ function initMainController() {
                 'toggleModuleAdminExport',
                 'toggle-chat-context-menu' 
             ];
+            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
 
             if (managedActions.includes(action)) {
                 return; 
