@@ -112,12 +112,9 @@ function getProfileData($pdo, $targetUsername, $currentTab, $currentUserId)
                          (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
                          (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = :current_user_id) AS user_has_liked,
                          (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = :current_user_id) AS user_has_bookmarked,
-                         (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count,
-                         (SELECT GROUP_CONCAT(h.tag SEPARATOR ',') 
-                          FROM publication_hashtags ph
-                          JOIN hashtags h ON ph.hashtag_id = h.id
-                          WHERE ph.publication_id = p.id
-                         ) AS hashtags";
+                         (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count";
+                         
+                         // EL BLOQUE DE HASHTAGS FUE ELIMINADO DE AQUÍ
 
                 $sql_from_base =
                     " FROM community_publications p
@@ -262,3 +259,4 @@ function getProfileData($pdo, $targetUsername, $currentTab, $currentUserId)
         return null;
     }
 }
+?>

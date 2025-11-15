@@ -413,13 +413,11 @@ if (array_key_exists($page, $allowedPages)) {
                            (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
                            (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
                            (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = ?) AS user_has_bookmarked,
-                           (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count,
-                           (SELECT GROUP_CONCAT(h.tag SEPARATOR ',') 
-                            FROM publication_hashtags ph
-                            JOIN hashtags h ON ph.hashtag_id = h.id
-                            WHERE ph.publication_id = p.id
-                           ) AS hashtags
-                         FROM community_publications p
+                           (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count";
+                           
+                           // EL BLOQUE DE HASHTAGS FUE ELIMINADO DE AQUÍ
+
+                $sql_post .= " FROM community_publications p
                          JOIN users u ON p.user_id = u.id
                          LEFT JOIN communities c ON p.community_id = c.id
                          WHERE p.id = ?";
@@ -515,160 +513,108 @@ if (array_key_exists($page, $allowedPages)) {
             $currentUserId = $_SESSION['user_id'];
 
             try {
-                if ($isHashtagSearch) {
-                    $searchTag = mb_strtolower(trim($searchQuery, '# '));
-                    $searchTag = preg_replace('/[^a-z0-9áéíóúñ_-]/u', '', $searchTag);
+                // EL BLOQUE "if ($isHashtagSearch)" FUE ELIMINADO
+                
+                // El 'else' ahora es el bloque principal
+                $searchParam = '%' . $searchQuery . '%';
 
-                    if (!empty($searchTag)) {
-                        $stmt_posts = $pdo->prepare(
-                            "SELECT 
-                               p.id, p.title, p.text_content, p.created_at,
-                               u.username, u.profile_image_url, u.role
-                             FROM community_publications p
-                             JOIN users u ON p.user_id = u.id
-                             LEFT JOIN communities c ON p.community_id = c.id
-                             JOIN publication_hashtags ph ON p.id = ph.publication_id
-                             JOIN hashtags h ON ph.hashtag_id = h.id
-                             WHERE 
-                               h.tag = :search_tag 
-                             AND p.post_status = 'active'
-                             AND (
-                                 p.privacy_level = 'public'
-                                 OR (p.privacy_level = 'friends' AND (
-                                     p.user_id = :current_user_id 
-                                     OR p.user_id IN (
-                                         (SELECT user_id_2 FROM friendships WHERE user_id_1 = :current_user_id AND status = 'accepted')
-                                         UNION
-                                         (SELECT user_id_1 FROM friendships WHERE user_id_2 = :current_user_id AND status = 'accepted')
-                                     )
-                                 ))
-                             )
-                             AND (
-                                p.community_id IS NULL 
-                                OR c.privacy = 'public' 
-                                OR p.community_id IN (SELECT community_id FROM user_communities WHERE user_id = :current_user_id) 
-                             )
-                             ORDER BY p.created_at DESC
-                             LIMIT 20"
-                        );
-                        $stmt_posts->execute([
-                            ':search_tag' => $searchTag,
-                            ':current_user_id' => $currentUserId
-                        ]);
-                        $postResults = $stmt_posts->fetchAll();
+                $stmt_users = $pdo->prepare(
+                    "SELECT id, username, profile_image_url, role 
+                        FROM users 
+                        WHERE username LIKE ? 
+                        AND account_status = 'active'
+                        LIMIT 20"
+                );
+                $stmt_users->execute([$searchParam]);
+                $users = $stmt_users->fetchAll();
+
+                foreach ($users as $user) {
+                    $avatar = $user['profile_image_url'] ?? $defaultAvatar;
+                    if (empty($avatar)) {
+                        $avatar = "https://ui-avatars.com/api/?name=" . urlencode($user['username']) . "&size=100&background=e0e0e0&color=ffffff";
                     }
-                } else {
-                    $searchParam = '%' . $searchQuery . '%';
-
-                    $stmt_users = $pdo->prepare(
-                        "SELECT id, username, profile_image_url, role 
-                           FROM users 
-                           WHERE username LIKE ? 
-                           AND account_status = 'active'
-                           LIMIT 20"
-                    );
-                    $stmt_users->execute([$searchParam]);
-                    $users = $stmt_users->fetchAll();
-
-                    foreach ($users as $user) {
-                        $avatar = $user['profile_image_url'] ?? $defaultAvatar;
-                        if (empty($avatar)) {
-                            $avatar = "https://ui-avatars.com/api/?name=" . urlencode($user['username']) . "&size=100&background=e0e0e0&color=ffffff";
-                        }
-                        $userResults[] = [
-                            'username' => htmlspecialchars($user['username']),
-                            'avatarUrl' => htmlspecialchars($avatar),
-                            'role' => htmlspecialchars($user['role'])
-                        ];
-                    }
-
-                    $stmt_posts = $pdo->prepare(
-                        "SELECT 
-                               p.id, 
-                               p.title, 
-                               p.text_content, 
-                               p.created_at,
-                               u.username,
-                               u.profile_image_url,
-                               u.role,
-                               p.privacy_level,
-                               c.name AS community_name
-                           FROM community_publications p
-                           JOIN users u ON p.user_id = u.id
-                           LEFT JOIN communities c ON p.community_id = c.id
-                           WHERE 
-                               (p.text_content LIKE ? OR p.title LIKE ?) 
-                           AND 
-                               (
-                                   p.community_id IS NULL 
-                                   OR 
-                                   c.privacy = 'public' 
-                                   OR 
-                                   p.community_id IN (SELECT community_id FROM user_communities WHERE user_id = ?) 
-                               )
-                           AND p.post_status = 'active'
-                           AND (
-                               p.privacy_level = 'public'
-                               OR (p.privacy_level = 'friends' AND (
-                                   p.user_id = ? 
-                                   OR p.user_id IN (
-                                       (SELECT user_id_2 FROM friendships WHERE user_id_1 = ? AND status = 'accepted')
-                                       UNION
-                                       (SELECT user_id_1 FROM friendships WHERE user_id_2 = ? AND status = 'accepted')
-                                   )
-                               ))
-                           )
-                           ORDER BY p.created_at DESC
-                           LIMIT 20"
-                    );
-                    $stmt_posts->execute([$searchParam, $searchParam, $currentUserId, $currentUserId, $currentUserId, $currentUserId]);
-                    $postResults = $stmt_posts->fetchAll();
-
-                    $stmt_comm = $pdo->prepare(
-                        "SELECT id, uuid, name, icon_url, 
-                          (SELECT COUNT(*) FROM user_communities uc WHERE uc.community_id = c.id) as member_count
-                           FROM communities c
-                           WHERE name LIKE ? 
-                           AND privacy = 'public'
-                           ORDER BY member_count DESC
-                           LIMIT 10"
-                    );
-                    $stmt_comm->execute([$searchParam]);
-                    $communities = $stmt_comm->fetchAll();
-
-                    foreach ($communities as $community) {
-                        $icon = $community['icon_url'] ?? $defaultAvatar;
-                        if (empty($icon)) {
-                            $icon = "https://ui-avatars.com/api/?name=" . urlencode($community['name']) . "&size=100&background=e0e0e0&color=ffffff";
-                        }
-                        $communityResults[] = [
-                            'id' => $community['id'],
-                            'uuid' => $community['uuid'],
-                            'name' => htmlspecialchars($community['name']),
-                            'icon_url' => htmlspecialchars($icon),
-                            'member_count' => (int) $community['member_count']
-                        ];
-                    }
+                    $userResults[] = [
+                        'username' => htmlspecialchars($user['username']),
+                        'avatarUrl' => htmlspecialchars($avatar),
+                        'role' => htmlspecialchars($user['role'])
+                    ];
                 }
+
+                $stmt_posts = $pdo->prepare(
+                    "SELECT 
+                            p.id, 
+                            p.title, 
+                            p.text_content, 
+                            p.created_at,
+                            u.username,
+                            u.profile_image_url,
+                            u.role,
+                            p.privacy_level,
+                            c.name AS community_name
+                        FROM community_publications p
+                        JOIN users u ON p.user_id = u.id
+                        LEFT JOIN communities c ON p.community_id = c.id
+                        WHERE 
+                            (p.text_content LIKE ? OR p.title LIKE ?) 
+                        AND 
+                            (
+                                p.community_id IS NULL 
+                                OR 
+                                c.privacy = 'public' 
+                                OR 
+                                p.community_id IN (SELECT community_id FROM user_communities WHERE user_id = ?) 
+                            )
+                        AND p.post_status = 'active'
+                        AND (
+                            p.privacy_level = 'public'
+                            OR (p.privacy_level = 'friends' AND (
+                                p.user_id = ? 
+                                OR p.user_id IN (
+                                    (SELECT user_id_2 FROM friendships WHERE user_id_1 = ? AND status = 'accepted')
+                                    UNION
+                                    (SELECT user_id_1 FROM friendships WHERE user_id_2 = ? AND status = 'accepted')
+                                )
+                            ))
+                        )
+                        ORDER BY p.created_at DESC
+                        LIMIT 20"
+                );
+                $stmt_posts->execute([$searchParam, $searchParam, $currentUserId, $currentUserId, $currentUserId, $currentUserId]);
+                $postResults = $stmt_posts->fetchAll();
+
+                $stmt_comm = $pdo->prepare(
+                    "SELECT id, uuid, name, icon_url, 
+                        (SELECT COUNT(*) FROM user_communities uc WHERE uc.community_id = c.id) as member_count
+                        FROM communities c
+                        WHERE name LIKE ? 
+                        AND privacy = 'public'
+                        ORDER BY member_count DESC
+                        LIMIT 10"
+                );
+                $stmt_comm->execute([$searchParam]);
+                $communities = $stmt_comm->fetchAll();
+
+                foreach ($communities as $community) {
+                    $icon = $community['icon_url'] ?? $defaultAvatar;
+                    if (empty($icon)) {
+                        $icon = "https://ui-avatars.com/api/?name=" . urlencode($community['name']) . "&size=100&background=e0e0e0&color=ffffff";
+                    }
+                    $communityResults[] = [
+                        'id' => $community['id'],
+                        'uuid' => $community['uuid'],
+                        'name' => htmlspecialchars($community['name']),
+                        'icon_url' => htmlspecialchars($icon),
+                        'member_count' => (int) $community['member_count']
+                    ];
+                }
+                
             } catch (PDOException $e) {
                 logDatabaseError($e, 'router - search-results');
             }
         }
     } elseif ($page === 'trends') {
         $trendingHashtags = [];
-        try {
-            $stmt_trends = $pdo->prepare(
-                "SELECT tag, use_count 
-                 FROM hashtags 
-                 ORDER BY use_count DESC, tag ASC
-                 LIMIT 10"
-            );
-            $stmt_trends->execute();
-            $trendingHashtags = $stmt_trends->fetchAll();
-        } catch (PDOException $e) {
-            logDatabaseError($e, 'router - trends');
-            $trendingHashtags = [];
-        }
+        // La consulta a la tabla `hashtags` fue eliminada
         
     } elseif ($page === 'messages') {
         

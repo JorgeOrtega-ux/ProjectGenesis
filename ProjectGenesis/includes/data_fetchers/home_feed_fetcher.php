@@ -37,12 +37,7 @@ function getHomeFeedData($pdo, $currentUserId, $communityUuid)
                         (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
                         (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = ?) AS user_has_liked,
                         (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = ?) AS user_has_bookmarked,
-                        (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count,
-                        (SELECT GROUP_CONCAT(h.tag SEPARATOR ',') 
-                         FROM publication_hashtags ph
-                         JOIN hashtags h ON ph.hashtag_id = h.id
-                         WHERE ph.publication_id = p.id
-                        ) AS hashtags
+                        (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count
                      FROM community_publications p
                      JOIN users u ON p.user_id = u.id
                      WHERE p.community_id = ?
@@ -91,12 +86,7 @@ function getHomeFeedData($pdo, $currentUserId, $communityUuid)
                     (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id) AS like_count,
                     (SELECT COUNT(*) FROM publication_likes pl WHERE pl.publication_id = p.id AND pl.user_id = :current_user_id) AS user_has_liked,
                     (SELECT COUNT(*) FROM publication_bookmarks pb WHERE pb.publication_id = p.id AND pb.user_id = :current_user_id) AS user_has_bookmarked,
-                    (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count,
-                    (SELECT GROUP_CONCAT(h.tag SEPARATOR ',') 
-                     FROM publication_hashtags ph
-                     JOIN hashtags h ON ph.hashtag_id = h.id
-                     WHERE ph.publication_id = p.id
-                    ) AS hashtags
+                    (SELECT COUNT(*) FROM publication_comments pc WHERE pc.publication_id = p.id) AS comment_count
                  FROM community_publications p
                  JOIN users u ON p.user_id = u.id
                  LEFT JOIN communities c ON p.community_id = c.id
