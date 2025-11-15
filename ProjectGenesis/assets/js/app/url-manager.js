@@ -57,7 +57,12 @@ const routes = {
 
     'toggleSectionSettingsProfile': 'settings-profile',
     'toggleSectionSettingsLogin': 'settings-login',
-    'toggleSectionSettingsAccess': 'accessibility',
+    
+    // --- ▼▼▼ ¡CORRECCIÓN #2! (Error de Lógica) ▼▼▼ ---
+    // El nombre de la página debe coincidir con $allowedPages en router.php
+    'toggleSectionSettingsAccess': 'settings-accessibility', // <-- ANTES ERA 'accessibility'
+    // --- ▲▲▲ FIN DE CORRECCIÓN #2 ▲▲▲ ---
+
     'toggleSectionSettingsDevices': 'settings-devices',
     // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
     'toggleSectionSettingsPrivacy': 'settings-privacy',

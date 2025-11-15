@@ -6,7 +6,10 @@
 // --- ▼▼▼ MODIFICACIÓN (ELIMINADA LÓGICA DE CHAT DE COMUNIDAD) ▼▼▼ ---
 
 // Carga la configuración base (BD, sesiones, etc.)
-include 'config/config.php';
+// --- ▼▼▼ ¡CORRECCIÓN #1! (LA CAUSA DEL 404) ▼▼▼ ---
+// La ruta era 'config/config.php', lo cual es incorrecto desde este archivo.
+include 'config.php';
+// --- ▲▲▲ FIN DE CORRECCIÓN #1 ▲▲▲ ---
 
 // Asegura que el token CSRF exista
 getCsrfToken(); 
@@ -134,9 +137,17 @@ try {
 // Refresca los datos del usuario desde la BD en cada carga de página
 if (isset($_SESSION['user_id'])) {
     try {
-        // --- ▼▼▼ INICIO DE MODIFICACIÓN (AÑADIR banner_url y bio) ▼▼▼ ---
-        $stmt = $pdo->prepare("SELECT username, email, profile_image_url, banner_url, role, auth_token, account_status, bio FROM users WHERE id = ?");
-        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+        // --- ▼▼▼ INICIO DE CORRECCIÓN #2 (SQL) ▼▼▼ ---
+        $stmt = $pdo->prepare("
+            SELECT u.username, u.email, u.profile_image_url, u.banner_url, u.role, u.auth_token, u.account_status, u.bio,
+                   p.language, p.theme, p.usage_type, p.open_links_in_new_tab,
+                   p.increase_message_duration, p.is_friend_list_private, p.is_email_public,
+                   p.employment, p.education, p.message_privacy_level
+            FROM users u
+            LEFT JOIN user_preferences p ON u.id = p.user_id
+            WHERE u.id = ?
+        ");
+        // --- ▲▲▲ FIN DE CORRECCIÓN #2 ▲▲▲ ---
         
         $stmt->execute([$_SESSION['user_id']]);
         $freshUserData = $stmt->fetch();
@@ -212,36 +223,32 @@ if (isset($_SESSION['user_id'])) {
             $_SESSION['role'] = $freshUserData['role']; 
             
             
-            // Refrescar las preferencias del usuario
-            $stmt_prefs = $pdo->prepare("SELECT * FROM user_preferences WHERE user_id = ?");
-            $stmt_prefs->execute([$_SESSION['user_id']]);
-            $prefs = $stmt_prefs->fetch();
-
-            if ($prefs) {
-                $_SESSION['language'] = $prefs['language'];
-                $_SESSION['theme'] = $prefs['theme'];
-                $_SESSION['usage_type'] = $prefs['usage_type'];
-                $_SESSION['open_links_in_new_tab'] = (int)$prefs['open_links_in_new_tab'];
-                $_SESSION['increase_message_duration'] = (int)$prefs['increase_message_duration'];
-                // --- [HASTAGS] --- (Aquí iría la carga de preferencias de hashtags si las hubiera)
-
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (CARGAR employment/education) ▼▼▼ ---
-                $_SESSION['employment'] = $prefs['employment'] ?? null;
-                $_SESSION['education'] = $prefs['education'] ?? null;
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
-
+            // --- ▼▼▼ INICIO DE CORRECCIÓN #3 (Carga de sesión) ▼▼▼ ---
+            // Refrescar las preferencias del usuario (ya obtenidas en la consulta JOIN)
+            if ($freshUserData['language'] !== null) {
+                $_SESSION['language'] = $freshUserData['language'];
+                $_SESSION['theme'] = $freshUserData['theme'];
+                $_SESSION['usage_type'] = $freshUserData['usage_type'];
+                $_SESSION['open_links_in_new_tab'] = (int)$freshUserData['open_links_in_new_tab'];
+                $_SESSION['increase_message_duration'] = (int)$freshUserData['increase_message_duration'];
+                $_SESSION['is_friend_list_private'] = (int)$freshUserData['is_friend_list_private'];
+                $_SESSION['is_email_public'] = (int)$freshUserData['is_email_public'];
+                $_SESSION['employment'] = $freshUserData['employment'] ?? 'none';
+                $_SESSION['education'] = $freshUserData['education'] ?? 'none';
+                $_SESSION['message_privacy_level'] = $freshUserData['message_privacy_level'] ?? 'all'; // <-- ¡Añadido!
             } else {
+            // --- ▲▲▲ FIN DE CORRECCIÓN #3 ▲▲▲ ---
                 // Valores por defecto si no hay preferencias
                 $_SESSION['language'] = 'en-us';
                 $_SESSION['theme'] = 'system';
                 $_SESSION['usage_type'] = 'personal';
                 $_SESSION['open_links_in_new_tab'] = 1;
                 $_SESSION['increase_message_duration'] = 0;
-                
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (FALLBACK employment/education) ▼▼▼ ---
-                $_SESSION['employment'] = null;
-                $_SESSION['education'] = null;
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+                $_SESSION['is_friend_list_private'] = 1;
+                $_SESSION['is_email_public'] = 0;
+                $_SESSION['employment'] = 'none';
+                $_SESSION['education'] = 'none';
+                $_SESSION['message_privacy_level'] = 'all'; // <-- ¡Añadido!
             }
 
         } else {
@@ -439,6 +446,10 @@ $pathsToPages = [
     '/settings/login-security'  => 'settings-login',
     '/settings/accessibility'   => 'settings-accessibility',
     '/settings/device-sessions' => 'settings-devices', 
+    
+    // --- ▼▼▼ ¡CORRECCIÓN #4! (Ruta faltante) ▼▼▼ ---
+    '/settings/privacy'         => 'settings-privacy',
+    // --- ▲▲▲ FIN DE CORRECCIÓN #4 ▲▲▲ ---
     
     '/settings/change-password' => 'settings-change-password',
     '/settings/change-email'    => 'settings-change-email',

@@ -135,9 +135,9 @@ $allowedPages = [
     'settings-login' => '../../includes/sections/settings/login-security.php',
     'settings-accessibility' => '../../includes/sections/settings/accessibility.php',
     'settings-devices' => '../../includes/sections/settings/device-sessions.php',
-    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    // --- ▼▼▼ ¡CORRECCIÓN #5! (Ruta faltante) ▼▼▼ ---
     'settings-privacy' => '../../includes/sections/settings/privacy.php',
-    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+    // --- ▲▲▲ FIN DE CORRECCIÓN #5 ▲▲▲ ---
 
     'settings-change-password' => '../../includes/sections/settings/actions/change-password.php',
     'settings-change-email' => '../../includes/sections/settings/actions/change-email.php',
@@ -298,7 +298,15 @@ if (array_key_exists($page, $allowedPages)) {
         }
     } elseif ($page === 'settings-accessibility') {
         $userTheme = $_SESSION['theme'] ?? 'system';
+        // --- ▼▼▼ ¡CORRECCIÓN #6! (Typo de variable) ▼▼▼ ---
         $increaseMessageDuration = (int) ($_SESSION['increase_message_duration'] ?? 0);
+        // --- ▲▲▲ FIN DE CORRECCIÓN #6 ▲▲▲ ---
+    // --- ▼▼▼ ¡CORRECCIÓN #7! (Bloque faltante) ▼▼▼ ---
+    } elseif ($page === 'settings-privacy') {
+        $userMessagePrivacy = $_SESSION['message_privacy_level'] ?? 'all';
+        $isFriendListPrivate = (int) ($_SESSION['is_friend_list_private'] ?? 1);
+        $isEmailPublic = (int) ($_SESSION['is_email_public'] ?? 0);
+    // --- ▲▲▲ FIN DE CORRECCIÓN #7 ▲▲▲ ---
     } elseif ($page === 'settings-change-email') {
         $userEmail = $_SESSION['email'] ?? 'correo@ejemplo.com';
         $initialEmailCooldown = 0;
