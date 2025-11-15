@@ -39,7 +39,7 @@ let isTyping = false;
 let chatPopperInstance = null; 
 // --- ▼▼▼ INICIO DE NUEVA VARIABLE GLOBAL ▼▼▼ ---
 let messagePopperInstance = null; // Popper para las opciones de un mensaje individual
-// --- ▲▲▲ FIN DE NUEVA VARIABLE GLOBAL ▲▲▲ ---
+// --- ▲▲▲ FIN DE NUEVA VARIABLE GLOBAL ▼▼▼ ---
 let currentChatFilter = 'all'; // Estado del filtro: 'all', 'favorites', 'unread', 'archived'
 let currentUnreadMessageCount = 0; 
 
@@ -1018,7 +1018,19 @@ async function sendMessage() {
             document.getElementById('chat-message-list').insertAdjacentHTML('beforeend', bubbleHtml);
             scrollToBottom();
             
-            await loadConversations(currentChatFilter); // Recargar la lista de DMs
+            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (sendMessage) ▼▼▼ ---
+            const listContainer = document.getElementById('chat-conversation-list');
+            const targetId = currentChatTargetId;
+            const existingItem = listContainer.querySelector(`.chat-conversation-item[data-target-id="${targetId}"]`);
+            
+            if (existingItem) {
+                // El chat ya está en la lista, solo actualízalo
+                updateConversationItem(existingItem, result.message_sent, 0); // 0 no leídos (lo acabamos de enviar)
+            } else {
+                // Este es un chat nuevo, recargar la lista completa para añadirlo
+                await loadConversations(currentChatFilter);
+            }
+            // --- ▲▲▲ FIN DE LA MODIFICACIÓN (sendMessage) ▲▲▲ ---
             
             // Re-seleccionar el item activo en la lista
             let selector = `.chat-conversation-item[data-type="dm"][data-target-id="${currentChatTargetId}"]`;
@@ -1081,22 +1093,38 @@ export function handleChatMessageReceived(message) {
         return;
     }
 
-    let targetId = parseInt(message.sender_id, 10);
-    let listToReload = 'all'; // Solo DMs
-    
-    // Recargar la lista correspondiente
-    if (currentChatFilter === listToReload || (currentChatFilter !== 'communities' && listToReload === 'all')) {
-         loadConversations(currentChatFilter);
+    // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (handleChatMessageReceived) ▼▼▼ ---
+
+    const listContainer = document.getElementById('chat-conversation-list');
+    const targetId = parseInt(message.sender_id, 10);
+    const existingItem = listContainer ? listContainer.querySelector(`.chat-conversation-item[data-target-id="${targetId}"]`) : null;
+
+    if (existingItem) {
+        // El chat ya existe, solo lo actualizamos
+        if (targetId === currentChatTargetId) {
+            // El chat está abierto, actualizamos y marcamos como 0 no leídos
+            updateConversationItem(existingItem, message, 0);
+        } else {
+            // El chat no está abierto, actualizamos y usamos el conteo del payload
+            const newUnreadCount = message.new_unread_count_for_receiver || 1; // Fallback por si acaso
+            updateConversationItem(existingItem, message, newUnreadCount);
+        }
     } else {
-         friendCache = []; // Invalidar caché
+        // Es un chat nuevo de alguien, recargamos la lista completa
+        // (Invalidamos el caché por si acaso, aunque loadConversations ya lo hace)
+        friendCache = []; 
+        loadConversations(currentChatFilter);
     }
     
-    // Comprobar si el chat está abierto
+    // --- ▲▲▲ FIN DE LA MODIFICACIÓN (handleChatMessageReceived) ▲▲▲ ---
+    
+    // Comprobar si el chat está abierto (esta lógica se mantiene)
     if (targetId === currentChatTargetId) {
         const bubbleHtml = createMessageBubbleHtml(message, false);
         document.getElementById('chat-message-list').insertAdjacentHTML('beforeend', bubbleHtml);
         scrollToBottom();
     } else {
+        // (Esta lógica se mantiene)
         setUnreadMessageCount(currentUnreadMessageCount + 1);
         
         const isOnMessagesPage = window.location.pathname.startsWith(window.projectBasePath + '/messages');
@@ -1104,6 +1132,7 @@ export function handleChatMessageReceived(message) {
         if (!isOnMessagesPage) {
             playNotificationSound();
         } else {
+            // El usuario está en la página de mensajes pero no en este chat
         }
     }
 }
@@ -1356,7 +1385,7 @@ function openChatPhotoViewer(galleryArray, startIndex, headerInfo) {
  * Busca los elementos del modal y añade los listeners de control.
  */
 function initPhotoViewerListeners() {
-    // Asegurarse de que esto solo se ejecute una vez
+    // Asegurarse de que esto solo se ejecute una sola vez
     if (isViewerInitialized) return;
     
     viewerModal = document.getElementById('photo-viewer-modal');
@@ -1461,37 +1490,11 @@ export function initChatManager() {
         // de 'a.chat-conversation-item' para poder prevenirlo.
         const chatImage = e.target.closest('.chat-attachment-item img');
         if (chatImage) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            const bubble = chatImage.closest('.chat-bubble');
-            const chatMain = chatImage.closest('#chat-content-main');
-            if (!bubble || !chatMain) return;
-
-            // 1. Recopilar información del Header
-            let headerInfo = {};
-            if (bubble.classList.contains('sent')) {
-                // Es un mensaje enviado (mío)
-                headerInfo.avatar = document.querySelector('.header-profile-image')?.src || defaultAvatar;
-                // Usamos la clave i18n para "a ti mismo" que ya usamos en las respuestas.
-                headerInfo.name = getTranslation('js.chat.replyToSelf') || 'Tú';
-            } else {
-                // Es un mensaje recibido (del otro usuario)
-                headerInfo.avatar = chatMain.querySelector('#chat-header-avatar')?.src || defaultAvatar;
-                headerInfo.name = chatMain.querySelector('#chat-header-username')?.textContent || 'Usuario';
-            }
-
-            // 2. Recopilar galería de imágenes (solo de esta burbuja)
-            const allImages = bubble.querySelectorAll('.chat-attachment-item img');
-            const imageUrls = Array.from(allImages).map(img => img.src);
-            
-            // 3. Encontrar el índice de la imagen clicada
-            const clickedIndex = imageUrls.indexOf(chatImage.src);
-            
-            // 4. Llamar a la función del visor (que ahora existe en este archivo)
-            openChatPhotoViewer(imageUrls, clickedIndex, headerInfo);
-            
-            return; // Detener el procesamiento del clic
+            // Prevenir cualquier otra acción (como navegar al post, si el <a> es el padre)
+            e.preventDefault(); 
+            e.stopPropagation(); // Detener para que otros listeners no se activen
+            openChatPhotoViewer(chatImage);
+            return; // Importante: Salir para no procesar otros clics
         }
         // --- ▲▲▲ FIN DE NUEVA LÓGICA (VISOR DE FOTOS) ▲▲▲ ---
         
@@ -2024,4 +2027,72 @@ export function initChatManager() {
     // Inicializar los listeners del visor de fotos (se ejecuta una sola vez)
     initPhotoViewerListeners();
     // --- ▲▲▲ FIN DE NUEVA LÓGICA ▲▲▲ ---
+}
+
+/**
+* Actualiza un item de conversación existente en la lista y lo mueve al principio.
+* @param {HTMLElement} item - El elemento DOM <a> de la conversación.
+* @param {object} message - El objeto de mensaje (de 'message_sent' o del payload de WS).
+* @param {number|null} newUnreadCount - El nuevo conteo de no leídos. Si es 0, se elimina el badge.
+*/
+function updateConversationItem(item, message, newUnreadCount = null) {
+    const listContainer = document.getElementById('chat-conversation-list');
+    if (!item || !message || !listContainer) return;
+
+    // 1. Actualizar Snippet
+    const snippetEl = item.querySelector('.chat-item-snippet');
+    if (snippetEl) {
+        let snippetHtml = '';
+        // Comprobar si hay adjuntos (el payload de 'message_sent' usa attachment_urls)
+        const hasAttachments = message.attachment_urls && message.attachment_urls.split(',').length > 0;
+        const messageText = message.message_text || '';
+
+        if (hasAttachments && !messageText) {
+            snippetHtml = `<span data-i18n="chat.snippet.image">${getTranslation('chat.snippet.image', '[Imagen]')}</span>`;
+        } else if (message.status === 'deleted') {
+            snippetHtml = `<i data-i18n="chat.snippet.deleted">${getTranslation('chat.snippet.deleted', '[Mensaje eliminado]')}</i>`;
+        } else {
+            snippetHtml = escapeHTML(messageText); // Usar la función escapeHTML existente
+        }
+        snippetEl.innerHTML = snippetHtml;
+    }
+
+    // 2. Actualizar Timestamp
+    const timestampEl = item.querySelector('.chat-item-timestamp');
+    if (timestampEl) {
+        timestampEl.textContent = formatTime(message.created_at); // Usar la función formatTime existente
+    }
+
+    // 3. Actualizar Conteo de No Leídos
+    const unreadBadge = item.querySelector('.chat-item-unread-badge');
+    
+    if (newUnreadCount !== null && newUnreadCount > 0) {
+        if (unreadBadge) {
+            unreadBadge.textContent = newUnreadCount;
+        } else {
+            // Crear el badge si no existía
+            const newBadge = document.createElement('span');
+            newBadge.className = 'chat-item-unread-badge';
+            newBadge.textContent = newUnreadCount;
+            // Insertarlo en el grupo derecho
+            const rightGroup = item.querySelector('.chat-item-right-group');
+            const menuButton = rightGroup ? rightGroup.querySelector('.chat-item-menu-badge') : null;
+            if (rightGroup && menuButton) {
+                rightGroup.insertBefore(newBadge, menuButton);
+            } else if (rightGroup) {
+                rightGroup.appendChild(newBadge); // Fallback
+            }
+        }
+    } else if (newUnreadCount === 0) {
+        // Si el conteo es 0, eliminar el badge
+        if (unreadBadge) {
+            unreadBadge.remove();
+        }
+    }
+
+    // 4. Mover al principio (solo si no está fijado)
+    const isPinned = item.dataset.pinnedAt && item.dataset.pinnedAt.length > 0;
+    if (!isPinned) {
+        listContainer.prepend(item);
+    }
 }

@@ -135,6 +135,9 @@ $allowedPages = [
     'settings-login' => '../../includes/sections/settings/login-security.php',
     'settings-accessibility' => '../../includes/sections/settings/accessibility.php',
     'settings-devices' => '../../includes/sections/settings/device-sessions.php',
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    'settings-privacy' => '../../includes/sections/settings/privacy.php',
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     'settings-change-password' => '../../includes/sections/settings/actions/change-password.php',
     'settings-change-email' => '../../includes/sections/settings/actions/change-email.php',

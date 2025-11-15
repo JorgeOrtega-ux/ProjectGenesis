@@ -21,3 +21,5 @@
 [2025-11-14 19:25:22 UTC] [chat_handler - get-total-unread-count] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'project_genesis.user_community_chat_metadata' doesn't exist (Archivo: E:\xampp\htdocs\ProjectGenesis\api\chat_handler.php, Línea: 397)
 [2025-11-14 19:25:26 UTC] [chat_handler - get-community-conversations] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'project_genesis.community_chat_message_attachments' doesn't exist (Archivo: E:\xampp\htdocs\ProjectGenesis\api\chat_handler.php, Línea: 355)
 [2025-11-14 19:25:48 UTC] [chat_handler - get-community-conversations] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'project_genesis.community_chat_message_attachments' doesn't exist (Archivo: E:\xampp\htdocs\ProjectGenesis\api\chat_handler.php, Línea: 355)
+[2025-11-15 15:24:59 UTC] [auth_handler - concurrent_users_check] No se pudo contactar al servidor de conteo en http://127.0.0.1:8766/count (Archivo: E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php, Línea: 539)
+[2025-11-15 15:24:59 UTC] [auth_handler - concurrent_users_check] js.api.errorServer (Archivo: E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php, Línea: 540)

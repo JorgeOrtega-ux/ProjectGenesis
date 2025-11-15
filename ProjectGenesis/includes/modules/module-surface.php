@@ -48,6 +48,17 @@
                             </div>
                         </div>
                         
+                        <?php // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ --- ?>
+                        <div class="menu-link" data-action="toggleSectionSettingsPrivacy">
+                            <div class="menu-link-icon">
+                                <span class="material-symbols-rounded">privacy_tip</span>
+                            </div>
+                            <div class="menu-link-text">
+                                <span data-i18n="sidebar.settings.privacy"></span>
+                            </div>
+                        </div>
+                        <?php // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ --- ?>
+                        
                     <?php 
                     elseif (isset($isAdminPage) && $isAdminPage): 
                     ?>

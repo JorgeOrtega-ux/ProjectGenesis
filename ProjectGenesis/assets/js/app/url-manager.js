@@ -59,6 +59,9 @@ const routes = {
     'toggleSectionSettingsLogin': 'settings-login',
     'toggleSectionSettingsAccess': 'accessibility',
     'toggleSectionSettingsDevices': 'settings-devices',
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    'toggleSectionSettingsPrivacy': 'settings-privacy',
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     'toggleSectionSettingsPassword': 'settings-change-password',
     'toggleSectionSettingsChangeEmail': 'settings-change-email',
@@ -133,6 +136,9 @@ const paths = {
     '/settings/login-security': 'toggleSectionSettingsLogin',
     '/settings/accessibility': 'toggleSectionSettingsAccess',
     '/settings/device-sessions': 'toggleSectionSettingsDevices',
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    '/settings/privacy': 'toggleSectionSettingsPrivacy',
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     '/settings/change-password': 'toggleSectionSettingsPassword',
     '/settings/change-email': 'toggleSectionSettingsChangeEmail',
@@ -559,6 +565,11 @@ function updateMenuState(currentAction) {
     if (currentAction === 'toggleSectionSettingsChangeEmail') {
         menuAction = 'toggleSectionSettingsProfile';
     }
+    // --- ▼▼▼ INICIO DE LÍNEA AÑADIDA ▼▼▼ ---
+    if (currentAction === 'toggleSectionSettingsPrivacy') {
+        menuAction = 'toggleSectionSettingsPrivacy';
+    }
+    // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
 
     if (currentAction === 'toggleSectionAdminManageUsers') {
         menuAction = 'toggleSectionAdminManageUsers';

@@ -32,7 +32,8 @@
       "backToHome": "Volver a Inicio",
       "yourProfile": "Tu Perfil",
       "loginSecurity": "Inicio de Sesión y Seguridad",
-      "accessibility": "Accesibilidad"
+      "accessibility": "Accesibilidad",
+      "privacy": "Controles de Privacidad"
     },
     "main": {
       "home": "Página principal",
@@ -431,6 +432,10 @@
       "browserFirefox": "Firefox",
       "logoutButton": "Cerrar sesión",
       "currentSession": "Esta sesión"
+    },
+    "privacyPage": {
+      "title": "Controles de Privacidad",
+      "description": "Gestiona quién puede ver tu información y cómo pueden contactarte."
     }
   },
   "page": {
@@ -774,6 +779,13 @@
       "offline": "Desconectado",
       "online": "Online",
       "typing": "Escribiendo",
+      "empty": {
+        "all": "Inicia una conversación.",
+        "search": "No se encontraron chats que coincidan.",
+        "favorites": "No tienes chats en favoritos.",
+        "unread": "No tienes mensajes no leídos.",
+        "archived": "No tienes chats archivados."
+      },
       "error": {
         "friendsOnly": "Este usuario solo acepta mensajes de amigos.",
         "none": "Este usuario no acepta mensajes privados."

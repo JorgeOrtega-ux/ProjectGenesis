@@ -358,3 +358,18 @@
 [15-Nov-2025 04:30:51 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
 [15-Nov-2025 04:31:43 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
 [15-Nov-2025 04:33:10 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 15:22:36 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 15:22:37 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 15:22:39 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 15:24:59 UTC] PHP Warning:  file_get_contents(http://127.0.0.1:8766/count): Failed to open stream: Se produjo un error durante el intento de conexión ya que la parte conectada no respondió adecuadamente tras un periodo de tiempo, o bien se produjo un error en la conexión establecida ya que el host conectado no ha podido responder in E:\xampp\htdocs\ProjectGenesis\api\auth_handler.php on line 536
+[15-Nov-2025 15:32:44 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 15:32:44 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 15:32:51 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 15:32:51 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 15:32:52 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 15:33:12 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 15:33:35 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 15:33:36 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 15:33:39 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 15:33:39 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 15:33:56 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
