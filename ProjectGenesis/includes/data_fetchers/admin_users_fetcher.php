@@ -59,13 +59,21 @@ function getAdminUsersData($pdo, $getParams)
 
         $offset = ($adminCurrentPage - 1) * $usersPerPage;
 
-        $sqlSelect = "SELECT id, username, email, profile_image_url, role, created_at, account_status 
-                      FROM users";
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (SQL) ▼▼▼ ---
+        $sqlSelect = "SELECT 
+                        u.id, u.username, u.email, u.profile_image_url, 
+                        u.role, u.created_at, u.account_status,
+                        GROUP_CONCAT(r.restriction_type) AS restrictions
+                      FROM users u
+                      LEFT JOIN user_restrictions r ON u.id = r.user_id AND (r.expires_at IS NULL OR r.expires_at > NOW())";
+        
         if ($isSearching) {
-            $sqlSelect .= " WHERE (username LIKE :query OR email LIKE :query)";
+            $sqlSelect .= " WHERE (u.username LIKE :query OR u.email LIKE :query)";
         }
         
+        $sqlSelect .= " GROUP BY u.id"; // <-- Agrupado por usuario
         $sqlSelect .= " ORDER BY $sort_by_sql $sort_order_sql LIMIT :limit OFFSET :offset";
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
         $stmt = $pdo->prepare($sqlSelect);
 

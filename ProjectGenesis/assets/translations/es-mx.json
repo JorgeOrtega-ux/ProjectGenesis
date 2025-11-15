@@ -656,7 +656,11 @@
       "invalidAction": "Acción no válida.",
       "errorDatabase": "Error en la base de datos.",
       "errorDatabaseEnum": "Error de BD: El tipo de acción no existe en la base de datos.",
-      "genericSpamError": "Algo no salió bien. Vuelve a intentarlo."
+      "genericSpamError": "Algo no salió bien. Vuelve a intentarlo.",
+      "errorNoMessagePermission": "Tu cuenta tiene restringido el envío de mensajes.",
+      "errorNoPublishPermission": "Tu cuenta tiene restringida la creación de publicaciones.",
+      "errorNoCommentPermission": "Tu cuenta tiene restringida la publicación de comentarios.",
+      "errorNoSocialPermission": "Tu cuenta tiene restringidas las acciones sociales (amistad)."
     },
     "main": {
       "errorNetwork": "No hay conexión a internet.",

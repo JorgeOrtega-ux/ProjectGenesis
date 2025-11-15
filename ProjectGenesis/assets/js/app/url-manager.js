@@ -1,4 +1,3 @@
-
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
 import { applyTranslations, getTranslation } from '../services/i18n-manager.js';
@@ -60,6 +59,10 @@ const routes = {
     'toggleSectionAccountStatusSuspended': 'account-status-suspended',
 
     'toggleSectionMessagingDisabled': 'messaging-disabled',
+    
+    // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
+    'toggleSectionMessagingRestricted': 'messaging-restricted',
+    // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
 
     'toggleSectionAdminDashboard': 'admin-dashboard',
     'toggleSectionAdminManageUsers': 'admin-manage-users',
@@ -123,6 +126,10 @@ const paths = {
     '/account-status/suspended': 'toggleSectionAccountStatusSuspended',
 
     '/messaging-disabled': 'toggleSectionMessagingDisabled',
+    
+    // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
+    '/messaging-restricted': 'toggleSectionMessagingRestricted',
+    // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
 
     '/admin/dashboard': 'toggleSectionAdminDashboard',
     '/admin/manage-users': 'toggleSectionAdminManageUsers',
@@ -420,15 +427,26 @@ export function handleNavigation() {
 
         const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
         const isMessagingEnabled = (window.isMessagingEnabled === true);
+        
+        // --- ▼▼▼ INICIO DE CORRECCIÓN (LÓGICA DE NAVEGACIÓN) ▼▼▼ ---
+        const isMessagingRestricted = (window.isMessagingRestricted === true);
 
         if (isMessagingEnabled === false && !isPrivileged) {
-            console.warn("handleNavigation (popstate): Navegación a 'messages/uuid' bloqueada.");
+            console.warn("handleNavigation (popstate): Navegación a 'messages/uuid' bloqueada por servicio.");
             const newPath = `${basePath}/messaging-disabled`;
             history.replaceState(null, '', newPath);
 
             loadPage('messaging-disabled', 'toggleSectionMessagingDisabled', null, false);
             return;
+        } else if (isMessagingRestricted && !isPrivileged) {
+            console.warn("handleNavigation (popstate): Navegación a 'messages/uuid' bloqueada por restricción.");
+            const newPath = `${basePath}/messaging-restricted`;
+            history.replaceState(null, '', newPath);
+
+            loadPage('messaging-restricted', 'toggleSectionMessagingRestricted', null, false);
+            return;
         }
+        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
 
         const matches = path.match(messagesRegex);
         const userUuid = matches[1];
@@ -462,17 +480,29 @@ export function handleNavigation() {
         if (page === 'messages') {
             const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
             const isMessagingEnabled = (window.isMessagingEnabled === true);
+            
+            // --- ▼▼▼ INICIO DE CORRECCIÓN (LÓGICA DE NAVEGACIÓN) ▼▼▼ ---
+            const isMessagingRestricted = (window.isMessagingRestricted === true);
 
             if (isMessagingEnabled === false && !isPrivileged) {
 
-                console.log("handleNavigation (popstate): Navegación a 'messages' bloqueada.");
+                console.log("handleNavigation (popstate): Navegación a 'messages' bloqueada por servicio.");
 
                 const newPath = `${basePath}/messaging-disabled`;
                 history.replaceState(null, '', newPath);
 
                 loadPage('messaging-disabled', 'toggleSectionMessagingDisabled', null, false);
                 return;
+            } else if (isMessagingRestricted && !isPrivileged) {
+                console.log("handleNavigation (popstate): Navegación a 'messages' bloqueada por restricción.");
+
+                const newPath = `${basePath}/messaging-restricted`;
+                history.replaceState(null, '', newPath);
+
+                loadPage('messaging-restricted', 'toggleSectionMessagingRestricted', null, false);
+                return;
             }
+            // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
         }
 
         loadPage(page, action);
@@ -540,6 +570,12 @@ function updateMenuState(currentAction) {
     if (currentAction === 'toggleSectionMessagingDisabled') {
         menuAction = 'toggleSectionMessages';
     }
+    
+    // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
+    if (currentAction === 'toggleSectionMessagingRestricted') {
+        menuAction = 'toggleSectionMessages';
+    }
+    // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
 
     document.querySelectorAll('.module-surface .menu-link').forEach(link => {
         const linkAction = link.getAttribute('data-action');
@@ -711,9 +747,11 @@ export function initRouter() {
                 return;
             }
 
+            // --- ▼▼▼ INICIO DE CORRECCIÓN (LÓGICA DE CLIC) ▼▼▼ ---
             if (page === 'messages') {
                 const isPrivileged = (window.userRole === 'administrator' || window.userRole === 'founder');
                 const isMessagingEnabled = (window.isMessagingEnabled === true);
+                const isMessagingRestricted = (window.isMessagingRestricted === true); // <-- NUEVA LÍNEA
 
                 if (isMessagingEnabled === false && !isPrivileged) {
 
@@ -722,7 +760,6 @@ export function initRouter() {
                     newPath = '/messaging-disabled';
                     action = 'toggleSectionMessagingDisabled';
                     page = 'messaging-disabled';
-
                     fetchParams = null;
 
                     const fullUrlPath = `${basePath}${newPath}`;
@@ -735,8 +772,23 @@ export function initRouter() {
 
                     deactivateAllModules();
                     return;
+                } else if (isMessagingRestricted && !isPrivileged) { // <-- NUEVO BLOQUE ELSE IF
+                    
+                    console.log("Navegación de chat bloqueada por restricción de usuario (router JS).");
+                    
+                    newPath = '/messaging-restricted';
+                    action = 'toggleSectionMessagingRestricted';
+                    page = 'messaging-restricted';
+                    fetchParams = null;
+                    
+                    const fullUrlPath_restricted = `${basePath}${newPath}`;
+                    history.pushState(null, '', fullUrlPath_restricted);
+                    loadPage(page, action, fetchParams, false);
+                    deactivateAllModules();
+                    return;
                 }
             }
+            // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
 
             const queryString = (url && url.search) ? url.search : '';
             let fullUrlPath;

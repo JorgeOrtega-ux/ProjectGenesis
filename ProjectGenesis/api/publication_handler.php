@@ -61,6 +61,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         if ($action === 'create-post') {
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA 4) ▼▼▼ ---
+            if (isset($_SESSION['restrictions']['CANNOT_PUBLISH'])) {
+                throw new Exception('js.api.errorNoPublishPermission'); // Clave de traducción para "No tienes permiso para publicar."
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             $pdo->beginTransaction();
 
             $communityId = $_POST['community_id'] ?? null;
@@ -339,6 +345,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = true;
         } elseif ($action === 'post-comment') {
 
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA 4) ▼▼▼ ---
+            if (isset($_SESSION['restrictions']['CANNOT_COMMENT'])) {
+                throw new Exception('js.api.errorNoCommentPermission'); // Clave de traducción para "No tienes permiso para comentar."
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             $publicationId = (int)($_POST['publication_id'] ?? 0);
             $parentCommentId = !empty($_POST['parent_comment_id']) ? (int)$_POST['parent_comment_id'] : null;
             $commentText = trim($_POST['comment_text'] ?? '');
@@ -518,3 +530,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 echo json_encode($response);
 exit;
+
+?>

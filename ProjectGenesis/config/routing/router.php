@@ -95,6 +95,9 @@ $allowedPages = [
     'account-status-suspended' => '../../includes/sections/main/status-page.php',
     
     'messaging-disabled' => '../../includes/sections/main/status-page.php',
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    'messaging-restricted' => '../../includes/sections/main/status-page.php', // <-- AÑADIR NUEVA PÁGINA
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     'join-group' => '../../includes/sections/main/join-group.php',
     
@@ -140,6 +143,10 @@ $allowedPages = [
 
     'admin-manage-communities' => '../../includes/sections/admin/manage-communities.php',
     'admin-edit-community' => '../../includes/sections/admin/edit-community.php',
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Acción 1) ▼▼▼ ---
+    'admin-manage-status' => '../../includes/sections/admin/admin-manage-status.php',
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 ];
 
 
@@ -767,7 +774,32 @@ if (array_key_exists($page, $allowedPages)) {
         $maintenanceModeStatus = $GLOBALS['site_settings']['maintenance_mode'] ?? '0';
         $allowRegistrationStatus = $GLOBALS['site_settings']['allow_new_registrations'] ?? '1';
     
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (Acción 3) ▼▼▼ ---
+    } elseif ($page === 'admin-manage-status') {
+        $targetUserId = (int) ($_GET['id'] ?? 0);
+        if ($targetUserId === 0) {
+            $page = '404'; $CURRENT_SECTION = '404';
+        } else {
+            // Query 1: Obtener datos del usuario
+            $stmt_user = $pdo->prepare("SELECT id, username, account_status, status_expires_at FROM users WHERE id = ?");
+            $stmt_user->execute([$targetUserId]);
+            $manageUserData = $stmt_user->fetch();
+
+            if (!$manageUserData) {
+                $page = '404'; $CURRENT_SECTION = '404';
+            } else {
+                // Query 2: Obtener restricciones
+                $stmt_restrictions = $pdo->prepare("SELECT restriction_type, expires_at FROM user_restrictions WHERE user_id = ?");
+                $stmt_restrictions->execute([$targetUserId]);
+                // Mapear restricciones a un array asociativo para fácil acceso
+                $manageUserData['restrictions'] = [];
+                while ($row = $stmt_restrictions->fetch()) {
+                    $manageUserData['restrictions'][$row['restriction_type']] = $row['expires_at'];
+                }
+            }
+        }
     }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 
     include $allowedPages[$page];

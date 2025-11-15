@@ -66,13 +66,28 @@ function canSendMessage($pdo, $currentUserId, $receiverId) {
         return 'allowed';
     }
     
+    // 1. Chequeo de bloqueo
     $stmt_block_check = $pdo->prepare("SELECT 1 FROM user_blocks WHERE (blocker_user_id = :user1 AND blocked_user_id = :user2) OR (blocker_user_id = :user2 AND blocked_user_id = :user1)");
     $stmt_block_check->execute([':user1' => $currentUserId, ':user2' => $receiverId]);
     if ($stmt_block_check->fetch()) {
         return 'blocked'; 
     }
 
+    // 2. Chequear si el *receptor* tiene una restricción de mensajería
+    $stmt_restriction = $pdo->prepare(
+        "SELECT 1 FROM user_restrictions 
+         WHERE user_id = ? 
+         AND restriction_type = 'CANNOT_MESSAGE'
+         AND (expires_at IS NULL OR expires_at > NOW())
+         LIMIT 1"
+    );
+    $stmt_restriction->execute([$receiverId]);
+    if ($stmt_restriction->fetch()) {
+        return 'restricted'; 
+    }
 
+
+    // 3. Chequeo de privacidad
     $stmt_privacy = $pdo->prepare("SELECT message_privacy_level FROM user_preferences WHERE user_id = ?");
     $stmt_privacy->execute([$receiverId]);
     $privacy = $stmt_privacy->fetchColumn();
@@ -102,6 +117,11 @@ function canSendMessage($pdo, $currentUserId, $receiverId) {
 
 function checkMessagePrivacy($pdo, $currentUserId, $receiverId) {
     
+    // Comprobación de restricción de sesión
+    if (isset($_SESSION['restrictions']['CANNOT_MESSAGE'])) {
+        throw new Exception('js.api.errorNoMessagePermission'); 
+    }
+
     $stmt_sender_privacy = $pdo->prepare("SELECT COALESCE(message_privacy_level, 'all') FROM user_preferences WHERE user_id = ?");
     $stmt_sender_privacy->execute([$currentUserId]);
     $senderPrivacy = $stmt_sender_privacy->fetchColumn();
@@ -115,6 +135,10 @@ function checkMessagePrivacy($pdo, $currentUserId, $receiverId) {
         switch ($canSenderSendStatus) {
             case 'blocked':
                 throw new Exception('js.chat.errorBlocked');
+            
+            case 'restricted': 
+                throw new Exception('js.chat.errorRestricted'); 
+
             case 'privacy_none':
                 throw new Exception('js.chat.errorPrivacyNone'); 
             case 'privacy_friends_only':
@@ -257,12 +281,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $canSendToReceiverStatus = canSendMessage($pdo, $currentUserId, $targetUserId);
             $canReceiverReplyStatus = canSendMessage($pdo, $targetUserId, $currentUserId); 
             
-            $canSendMessage = ($canSenderSend && $canSendToReceiverStatus === 'allowed' && $canReceiverReplyStatus === 'allowed');
+            $isRestricted = isset($_SESSION['restrictions']['CANNOT_MESSAGE']);
+            $canSendMessage = ($canSenderSend && $canSendToReceiverStatus === 'allowed' && $canReceiverReplyStatus === 'allowed' && !$isRestricted);
             $response['can_send_message'] = $canSendMessage;
 
             $response['send_message_error_key'] = null;
             if (!$canSendMessage) {
-                if (!$canSenderSend) {
+                if ($isRestricted) {
+                    $response['send_message_error_key'] = 'js.api.errorNoMessagePermission';
+                } elseif
+                (!$canSenderSend) {
                     $response['send_message_error_key'] = 'js.chat.errorPrivacySenderBlocked';
                 } elseif ($canReceiverReplyStatus !== 'allowed') {
                     $response['send_message_error_key'] = 'js.chat.errorPrivacyMutualBlocked';
@@ -270,6 +298,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     switch ($canSendToReceiverStatus) {
                         case 'blocked':
                             $response['send_message_error_key'] = 'js.chat.errorBlocked';
+                            break;
+                        case 'restricted': 
+                            $response['send_message_error_key'] = 'js.chat.errorRestricted'; 
                             break;
                         case 'privacy_none':
                             $response['send_message_error_key'] = 'js.chat.errorPrivacyNone';

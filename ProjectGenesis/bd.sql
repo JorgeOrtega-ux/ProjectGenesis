@@ -20,7 +20,11 @@ CREATE TABLE `users` (
   `role` enum('user','moderator','administrator','founder') NOT NULL DEFAULT 'user',
   `is_2fa_enabled` tinyint(1) NOT NULL DEFAULT 0,
   `auth_token` varchar(64) DEFAULT NULL,
+  
+  -- --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
   `account_status` enum('active','suspended','deleted') NOT NULL DEFAULT 'active',
+  -- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+  
   `bio` text DEFAULT NULL,
   `is_online` tinyint(1) NOT NULL DEFAULT 0,
   `last_seen` timestamp NULL DEFAULT NULL,
@@ -473,5 +477,33 @@ CREATE TABLE `user_conversation_metadata` (
   CONSTRAINT `user_conversation_metadata_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `user_conversation_metadata_ibfk_2` FOREIGN KEY (`conversation_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA 1) ▼▼▼ ---
+-- ----------------------------
+-- Table structure for user_restrictions
+-- ----------------------------
+DROP TABLE IF EXISTS `user_restrictions`;
+CREATE TABLE `user_restrictions` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL COMMENT 'El usuario que tiene la restricción',
+
+  `restriction_type` enum(
+      'CANNOT_PUBLISH',  /* No puede crear posts/encuestas */
+      'CANNOT_COMMENT',  /* No puede comentar */
+      'CANNOT_MESSAGE',  /* No puede usar el chat */
+      'CANNOT_SOCIAL'    /* No puede enviar/aceptar solicitudes de amistad */
+  ) NOT NULL COMMENT 'El servicio que se está restringiendo',
+
+  `expires_at` timestamp NULL DEFAULT NULL COMMENT 'Si es NULL, es permanente. Si tiene fecha, es una suspensión temporal.',
+
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_restriction` (`user_id`, `restriction_type`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_expires_at` (`expires_at`),
+
+  CONSTRAINT `fk_user_restrictions_user` FOREIGN KEY (`user_id`) 
+    REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
 SET FOREIGN_KEY_CHECKS=1;

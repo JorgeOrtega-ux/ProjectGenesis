@@ -135,47 +135,45 @@
     <div class="page-wrapper">
         <div class="main-content">
 
-            <div class="general-content">
+           <div class="general-content">
 
-                <?php if (!$isAuthPage): ?>
-                    <div class="general-content-top">
-                        <?php include 'includes/layouts/header.php'; ?>
-                    </div>
-                <?php endif; ?>
+    <?php if (!$isAuthPage && !$isStatusPage): ?> 
+        <div class="general-content-top">
+            <?php include 'includes/layouts/header.php'; ?>
+        </div>
+    <?php endif; ?>
 
-                <div class="general-content-bottom">
+    <div class="general-content-bottom">
 
-                    <?php if (!$isAuthPage): ?>
-                        <?php include 'includes/modules/module-surface.php'; ?>
-                    <?php endif; ?>
+        <?php if (!$isAuthPage && !$isStatusPage): ?> 
+            <?php include 'includes/modules/module-surface.php'; ?>
+        <?php endif; ?>
 
-                    <div class="general-content-scrolleable">
-
-                        <div class="page-loader" id="page-loader">
-                            <div class="spinner"></div>
-                        </div>
-                        <div class="main-sections">
-                            <?php ?>
-                        </div>
-
-                    </div>
-                    
-                    <?php
-                    if (!$isAuthPage):
-                    ?>
-                        <div id="friend-list-wrapper">
-                            <?php
-                            if ($currentPage === 'home'):
-                                include 'includes/modules/module-friend-list.php';
-                            endif;
-                            ?>
-                        </div>
-                    <?php endif; ?>
-                    
-                    </div>
-
-                <div id="alert-container"></div>
+        <div class="general-content-scrolleable">
+            <div class="page-loader" id="page-loader">
+                <div class="spinner"></div>
             </div>
+            <div class="main-sections">
+                <?php /* El contenido de router.php se carga aquí */ ?>
+            </div>
+        </div>
+        
+        <?php
+        if (!$isAuthPage && !$isStatusPage): // <--- También aplica la lógica aquí
+        ?>
+            <div id="friend-list-wrapper">
+                <?php
+                if ($currentPage === 'home'):
+                    include 'includes/modules/module-friend-list.php';
+                endif;
+                ?>
+            </div>
+        <?php endif; ?>
+        
+    </div>
+
+    <div id="alert-container"></div>
+</div>
             
             <?php
             ?>
@@ -205,6 +203,10 @@
         // --- ▼▼▼ INICIO DE LÍNEA A AÑADIR (LÓGICA DE CHAT DESHABILITADO) ▼▼▼ ---
         window.isMessagingEnabled = <?php echo ($GLOBALS['site_settings']['messaging_service_enabled'] ?? '1') === '1' ? 'true' : 'false'; ?>;
         // --- ▲▲▲ FIN DE LÍNEA AÑADIDA ▲▲▲ ---
+        
+        // --- ▼▼▼ INICIO DE NUEVA LÍNEA (BUG FIX) ▼▼▼ ---
+        window.isMessagingRestricted = <?php echo isset($_SESSION['restrictions']['CANNOT_MESSAGE']) ? 'true' : 'false'; ?>;
+        // --- ▲▲▲ FIN DE NUEVA LÍNEA (BUG FIX) ▲▲▲ ---
 
         window.userTheme = '<?php echo $_SESSION['theme'] ?? 'system'; ?>';
         window.userIncreaseMessageDuration = <?php echo $_SESSION['increase_message_duration'] ?? 0; ?>;

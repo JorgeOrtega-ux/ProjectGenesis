@@ -91,13 +91,14 @@
                         data-tooltip="admin.users.manageRole" disabled>
                         <span class="material-symbols-rounded">manage_accounts</span>
                     </button>
+                    
                     <button type="button"
                         class="page-toolbar-button"
-                        data-action="toggleModuleAdminStatus"
+                        data-action="toggleSectionAdminManageStatus"
                         data-tooltip="admin.users.manageStatus" disabled>
                         <span class="material-symbols-rounded">toggle_on</span>
                     </button>
-                </div>
+                    </div>
 
                 <div class="page-toolbar-right">
                     <button type="button"
@@ -214,30 +215,7 @@
             </div>
         </div>
         
-        <div class="popover-module body-title disabled" data-module="moduleAdminStatus">
-            <div class="menu-content">
-                <div class="menu-list">
-                    <div class="menu-header" data-i18n="admin.users.status">Estado</div>
-                    
-                    <div class="menu-link" data-action="admin-set-status" data-value="active">
-                        <div class="menu-link-icon"><span class="material-symbols-rounded">check_circle</span></div>
-                        <div class="menu-link-text"><span data-i18n="admin.users.statusActive"></span></div>
-                        <div class="menu-link-check-icon"></div>
-                    </div>
-                    <div class="menu-link" data-action="admin-set-status" data-value="suspended">
-                        <div class="menu-link-icon"><span class="material-symbols-rounded">pause_circle</span></div>
-                        <div class="menu-link-text"><span data-i18n="admin.users.statusSuspended"></span></div>
-                        <div class="menu-link-check-icon"></div>
-                    </div>
-                    <div class="menu-link" data-action="admin-set-status" data-value="deleted">
-                        <div class="menu-link-icon"><span class="material-symbols-rounded">remove_circle</span></div>
-                        <div class="menu-link-text"><span data-i18n="admin.users.statusDeleted"></span></div>
-                        <div class="menu-link-check-icon"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-               <div class="popover-module body-title disabled" data-module="moduleAdminExport">
+        <div class="popover-module body-title disabled" data-module="moduleAdminExport">
                         <div class="menu-content">
                             <div class="menu-list">
                                 <div class="menu-header" data-i18n="admin.users.exportAs">Exportar como...</div>
@@ -302,6 +280,7 @@
                          data-user-id="<?php echo $user['id']; ?>"
                          data-user-role="<?php echo htmlspecialchars($user['role']); ?>"
                          data-user-status="<?php echo htmlspecialchars($user['account_status']); ?>"
+                         data-restrictions="<?php echo htmlspecialchars($user['restrictions'] ?? ''); ?>"
                     >
                     <div class="component-card__avatar" style="width: 50px; height: 50px; flex-shrink: 0;" data-role="<?php echo htmlspecialchars($user['role']); ?>">
                             <img src="<?php echo htmlspecialchars($avatarUrl); ?>"

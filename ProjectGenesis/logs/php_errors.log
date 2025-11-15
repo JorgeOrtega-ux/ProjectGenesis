@@ -396,3 +396,124 @@
 [15-Nov-2025 18:30:03 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
 [15-Nov-2025 18:48:04 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
 [15-Nov-2025 18:48:05 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 19:34:37 UTC] PHP Warning:  Undefined variable $currentPage in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 390
+[15-Nov-2025 19:34:37 UTC] PHP Warning:  Undefined variable $authLayoutPages in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:37 UTC] PHP Fatal error:  Uncaught TypeError: array_merge(): Argument #1 must be of type array, null given in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php:392
+Stack trace:
+#0 E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php(392): array_merge(NULL, Array)
+#1 E:\xampp\htdocs\ProjectGenesis\index.php(3): include('E:\\xampp\\htdocs...')
+#2 {main}
+  thrown in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:40 UTC] PHP Warning:  Undefined variable $currentPage in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 390
+[15-Nov-2025 19:34:40 UTC] PHP Warning:  Undefined variable $authLayoutPages in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:40 UTC] PHP Fatal error:  Uncaught TypeError: array_merge(): Argument #1 must be of type array, null given in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php:392
+Stack trace:
+#0 E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php(392): array_merge(NULL, Array)
+#1 E:\xampp\htdocs\ProjectGenesis\index.php(3): include('E:\\xampp\\htdocs...')
+#2 {main}
+  thrown in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:41 UTC] PHP Warning:  Undefined variable $currentPage in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 390
+[15-Nov-2025 19:34:41 UTC] PHP Warning:  Undefined variable $authLayoutPages in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:41 UTC] PHP Fatal error:  Uncaught TypeError: array_merge(): Argument #1 must be of type array, null given in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php:392
+Stack trace:
+#0 E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php(392): array_merge(NULL, Array)
+#1 E:\xampp\htdocs\ProjectGenesis\index.php(3): include('E:\\xampp\\htdocs...')
+#2 {main}
+  thrown in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:41 UTC] PHP Warning:  Undefined variable $currentPage in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 390
+[15-Nov-2025 19:34:41 UTC] PHP Warning:  Undefined variable $authLayoutPages in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:41 UTC] PHP Fatal error:  Uncaught TypeError: array_merge(): Argument #1 must be of type array, null given in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php:392
+Stack trace:
+#0 E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php(392): array_merge(NULL, Array)
+#1 E:\xampp\htdocs\ProjectGenesis\index.php(3): include('E:\\xampp\\htdocs...')
+#2 {main}
+  thrown in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:42 UTC] PHP Warning:  Undefined variable $currentPage in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 390
+[15-Nov-2025 19:34:42 UTC] PHP Warning:  Undefined variable $authLayoutPages in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:42 UTC] PHP Fatal error:  Uncaught TypeError: array_merge(): Argument #1 must be of type array, null given in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php:392
+Stack trace:
+#0 E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php(392): array_merge(NULL, Array)
+#1 E:\xampp\htdocs\ProjectGenesis\index.php(3): include('E:\\xampp\\htdocs...')
+#2 {main}
+  thrown in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:43 UTC] PHP Warning:  Undefined variable $currentPage in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 390
+[15-Nov-2025 19:34:43 UTC] PHP Warning:  Undefined variable $authLayoutPages in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:43 UTC] PHP Fatal error:  Uncaught TypeError: array_merge(): Argument #1 must be of type array, null given in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php:392
+Stack trace:
+#0 E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php(392): array_merge(NULL, Array)
+#1 E:\xampp\htdocs\ProjectGenesis\index.php(3): include('E:\\xampp\\htdocs...')
+#2 {main}
+  thrown in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:44 UTC] PHP Warning:  Undefined variable $currentPage in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 390
+[15-Nov-2025 19:34:44 UTC] PHP Warning:  Undefined variable $authLayoutPages in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:44 UTC] PHP Fatal error:  Uncaught TypeError: array_merge(): Argument #1 must be of type array, null given in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php:392
+Stack trace:
+#0 E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php(392): array_merge(NULL, Array)
+#1 E:\xampp\htdocs\ProjectGenesis\index.php(3): include('E:\\xampp\\htdocs...')
+#2 {main}
+  thrown in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:59 UTC] PHP Warning:  Undefined variable $currentPage in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 390
+[15-Nov-2025 19:34:59 UTC] PHP Warning:  Undefined variable $authLayoutPages in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:34:59 UTC] PHP Fatal error:  Uncaught TypeError: array_merge(): Argument #1 must be of type array, null given in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php:392
+Stack trace:
+#0 E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php(392): array_merge(NULL, Array)
+#1 E:\xampp\htdocs\ProjectGenesis\index.php(3): include('E:\\xampp\\htdocs...')
+#2 {main}
+  thrown in E:\xampp\htdocs\ProjectGenesis\config\bootstrapper.php on line 392
+[15-Nov-2025 19:48:24 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 19:48:42 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 19:48:48 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 19:48:50 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 19:48:51 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 19:48:52 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 19:49:39 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 19:49:39 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 19:49:42 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 20:14:51 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 20:14:51 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 20:17:35 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 20:17:35 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 20:17:40 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 20:18:06 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 20:20:03 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 20:20:12 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 20:20:12 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 20:22:02 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 20:22:04 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 20:28:32 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 20:28:33 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 20:28:35 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 20:28:35 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 20:28:44 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 20:28:44 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 20:29:09 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 20:29:09 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 20:34:07 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 20:34:07 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 20:42:17 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 20:42:17 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 20:48:18 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 20:48:18 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 20:51:08 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 20:51:08 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 20:51:12 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 20:54:48 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 20:54:48 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 20:55:32 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 20:55:33 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 20:57:24 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 20:57:25 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 20:57:30 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 20:58:02 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[15-Nov-2025 21:05:13 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 21:05:13 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 21:09:14 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 21:09:16 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 21:13:13 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 21:13:13 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 21:13:25 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 21:13:25 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 21:17:44 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 21:17:44 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[15-Nov-2025 21:18:04 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[15-Nov-2025 21:18:05 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167

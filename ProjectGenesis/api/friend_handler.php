@@ -134,6 +134,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         } elseif ($action === 'send-request') {
             
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA 4) ▼▼▼ ---
+            if (isset($_SESSION['restrictions']['CANNOT_SOCIAL'])) {
+                throw new Exception('js.api.errorNoSocialPermission'); // Clave de traducción para "No tienes permiso para acciones sociales."
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             $stmt_block_check = $pdo->prepare("SELECT 1 FROM user_blocks WHERE (blocker_user_id = ? AND blocked_user_id = ?) OR (blocker_user_id = ? AND blocked_user_id = ?)");
             $stmt_block_check->execute([$currentUserId, $targetUserId, $targetUserId, $currentUserId]);
             if ($stmt_block_check->fetch()) {
@@ -230,6 +236,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         } elseif ($action === 'accept-request') {
             
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA 4) ▼▼▼ ---
+            if (isset($_SESSION['restrictions']['CANNOT_SOCIAL'])) {
+                throw new Exception('js.api.errorNoSocialPermission'); // Clave de traducción para "No tienes permiso para acciones sociales."
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
             $stmt_check = $pdo->prepare("SELECT status, action_user_id FROM friendships WHERE user_id_1 = ? AND user_id_2 = ?");
             $stmt_check->execute([$userId1, $userId2]);
             $friendship = $stmt_check->fetch();

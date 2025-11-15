@@ -473,7 +473,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  exit;
             }
             
-            $allowedStatus = ['active', 'suspended', 'deleted'];
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA 3) ▼▼▼ ---
+            // 'suspended' ya no es un estado válido para esta acción
+            $allowedStatus = ['active', 'deleted'];
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             if (!in_array($newValue, $allowedStatus)) {
                 throw new Exception('js.api.invalidAction');
             }
@@ -486,7 +489,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $curl_endpoint = '';
                 $curl_payload = [];
 
-                if ($newValue === 'suspended' || $newValue === 'deleted') {
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA 3) ▼▼▼ ---
+                // Se elimina la lógica para 'suspended'
+                if ($newValue === 'deleted') {
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     $curl_endpoint = 'http://127.0.0.1:8766/update-status';
                     $curl_payload = json_encode([
                         'user_id' => (int)$targetUserId,
@@ -533,9 +539,170 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Exception $e) {
             $response['message'] = $e->getMessage();
         }
-    }
+    
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (NUEVA ACCIÓN) ▼▼▼ ---
+    } elseif ($action === 'admin-update-restrictions') {
+        
+        /**
+         * Formatea un string de datetime-local a un timestamp SQL o NULL.
+         * @param string $datetimeLocalString El string de 'Y-m-d\TH:i'
+         * @return string|null
+         */
+        function formatExpireDate($datetimeLocalString) {
+            if (empty($datetimeLocalString)) {
+                return null; // Permanente
+            }
+            try {
+                // Tratar de crear un objeto DateTime.
+                // 'datetime-local' (Y-m-d\TH:i) es compatible con el constructor.
+                // Asumimos que la entrada ya está en UTC o en la zona horaria deseada del servidor.
+                $date = new DateTime($datetimeLocalString); 
+                return $date->format('Y-m-d H:i:s');
+            } catch (Exception $e) {
+                // Falló el parseo, tratar como nulo/permanente
+                return null;
+            }
+        }
+        
+        $targetUserId = (int)($_POST['target_user_id'] ?? 0);
+        $generalStatus = $_POST['general_status'] ?? 'active';
+        
+        // Capturar fechas de expiración
+        $statusExpiresAt = $_POST['status_expires_at'] ?? '';
+        
+        $restrictPublish = $_POST['restrict_publish'] ?? 'false';
+        $restrictPublishExpiresAt = $_POST['restrict_publish_expires_at'] ?? '';
+        
+        $restrictComment = $_POST['restrict_comment'] ?? 'false';
+        $restrictCommentExpiresAt = $_POST['restrict_comment_expires_at'] ?? '';
 
-    elseif ($action === 'admin-generate-password') {
+        $restrictMessage = $_POST['restrict_message'] ?? 'false';
+        $restrictMessageExpiresAt = $_POST['restrict_message_expires_at'] ?? '';
+
+        $restrictSocial = $_POST['restrict_social'] ?? 'false';
+        $restrictSocialExpiresAt = $_POST['restrict_social_expires_at'] ?? '';
+
+
+        // --- Validación y Seguridad ---
+        if (empty($targetUserId)) {
+            throw new Exception('js.auth.errorCompleteFields');
+        }
+        if ($targetUserId == $adminUserId) {
+            throw new Exception('js.admin.errorSelf');
+        }
+        if (!in_array($generalStatus, ['active', 'suspended', 'deleted'])) {
+            $generalStatus = 'active'; // Default a 'active' si es inválido
+        }
+
+        try {
+            // Comprobar si el admin puede modificar al objetivo
+            $stmt_target = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+            $stmt_target->execute([$targetUserId]);
+            $targetUser = $stmt_target->fetch();
+            if (!$targetUser) {
+                throw new Exception('js.auth.errorUserNotFound');
+            }
+            $targetRole = $targetUser['role'];
+            if (!canAdminModifyTarget($adminRole, $targetRole)) {
+                 $response['message'] = ($targetRole === 'founder') ? 'js.admin.errorFounderTarget' : 'js.admin.errorAdminTarget';
+                 echo json_encode($response);
+                 exit;
+            }
+
+            // --- Inicio de Transacción ---
+            $pdo->beginTransaction();
+
+            // Paso A: Actualizar 'users' table
+            $dbStatusExpiresAt = formatExpireDate($statusExpiresAt);
+            // Solo guardar fecha si el estado es 'suspended'
+            $finalStatusExpiresAt = ($generalStatus === 'suspended') ? $dbStatusExpiresAt : null; 
+            
+            $stmt_status = $pdo->prepare("UPDATE users SET account_status = ?, status_expires_at = ? WHERE id = ?");
+            $stmt_status->execute([$generalStatus, $finalStatusExpiresAt, $targetUserId]);
+
+            // Paso B: Borrar todas las restricciones antiguas
+            $stmt_delete = $pdo->prepare("DELETE FROM user_restrictions WHERE user_id = ?");
+            $stmt_delete->execute([$targetUserId]);
+
+            // Pasos C y D: Insertar nuevas restricciones (solo si el estado es 'active')
+            if ($generalStatus === 'active') {
+                $stmt_insert = $pdo->prepare(
+                    "INSERT INTO user_restrictions (user_id, restriction_type, expires_at) 
+                     VALUES (?, ?, ?)"
+                );
+                
+                if ($restrictPublish === 'true') {
+                    $dbPublishExpiresAt = formatExpireDate($restrictPublishExpiresAt);
+                    $stmt_insert->execute([$targetUserId, 'CANNOT_PUBLISH', $dbPublishExpiresAt]);
+                }
+                if ($restrictComment === 'true') {
+                    $dbCommentExpiresAt = formatExpireDate($restrictCommentExpiresAt);
+                    $stmt_insert->execute([$targetUserId, 'CANNOT_COMMENT', $dbCommentExpiresAt]);
+                }
+                if ($restrictMessage === 'true') {
+                    $dbMessageExpiresAt = formatExpireDate($restrictMessageExpiresAt);
+                    $stmt_insert->execute([$targetUserId, 'CANNOT_MESSAGE', $dbMessageExpiresAt]);
+                }
+                if ($restrictSocial === 'true') {
+                    $dbSocialExpiresAt = formatExpireDate($restrictSocialExpiresAt);
+                    $stmt_insert->execute([$targetUserId, 'CANNOT_SOCIAL', $dbSocialExpiresAt]);
+                }
+            }
+
+            // Paso E: Commit
+            $pdo->commit();
+
+            // --- Notificar al WebSocket (similar al antiguo 'set-status') ---
+            try {
+                $curl_endpoint = '';
+                $curl_payload = [];
+                
+                if ($generalStatus === 'deleted' || $generalStatus === 'suspended') {
+                    $curl_endpoint = 'http://127.0.0.1:8766/update-status';
+                    $curl_payload = json_encode([
+                        'user_id' => (int)$targetUserId,
+                        'status'  => $generalStatus
+                    ]);
+                } else {
+                    $curl_endpoint = 'http://127.0.0.1:8766/kick';
+                    $curl_payload = json_encode([
+                        'user_id' => (int)$targetUserId,
+                        'exclude_session_id' => 'admin_kick_restrictions_update' 
+                    ]);
+                }
+
+                $ch = curl_init($curl_endpoint);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $curl_payload);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/json',
+                    'Content-Length: ' . strlen($curl_payload)
+                ]);
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 500); 
+                curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        
+                curl_exec($ch); 
+                curl_close($ch);
+                
+            } catch (Exception $e) {
+                logDatabaseError($e, 'admin_handler - admin-update-restrictions (ws_notify_fail)');
+            }
+
+            $response['success'] = true;
+            $response['message'] = 'js.admin.successStatus'; 
+
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            if ($e instanceof PDOException) {
+                logDatabaseError($e, 'admin_handler - admin-update-restrictions');
+                $response['message'] = 'js.api.errorDatabase';
+            } else {
+                $response['message'] = $e->getMessage();
+            }
+        }
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+    } elseif ($action === 'admin-generate-password') {
         try {
             $newPassword = generateSecurePasswordPhp(16); 
             

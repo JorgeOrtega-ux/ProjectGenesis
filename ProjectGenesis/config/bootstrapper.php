@@ -109,11 +109,11 @@ if (isset($_SESSION['user_id'])) {
         if ($freshUserData) {
 
             $accountStatus = $freshUserData['account_status'];
-            if ($accountStatus === 'suspended' || $accountStatus === 'deleted') {
+            if ($accountStatus === 'deleted' || $accountStatus === 'suspended') {
                 session_unset();
                 session_destroy();
 
-                $statusPath = ($accountStatus === 'suspended') ? '/account-status/suspended' : '/account-status/deleted';
+                $statusPath = ($accountStatus === 'deleted') ? '/account-status/deleted' : '/account-status/suspended';
                 header('Location: ' . $basePath . $statusPath);
                 exit;
             }
@@ -186,6 +186,28 @@ if (isset($_SESSION['user_id'])) {
                 $_SESSION['education'] = 'none';
                 $_SESSION['message_privacy_level'] = 'all';
             }
+
+            try {
+                $stmt_restrictions = $pdo->prepare(
+                    "SELECT restriction_type 
+                     FROM user_restrictions 
+                     WHERE user_id = ? 
+                     AND (expires_at IS NULL OR expires_at > NOW())"
+                );
+                $stmt_restrictions->execute([$_SESSION['user_id']]);
+                $restrictionsList = $stmt_restrictions->fetchAll(PDO::FETCH_COLUMN);
+                
+                if (empty($restrictionsList)) {
+                    $_SESSION['restrictions'] = [];
+                } else {
+                    $_SESSION['restrictions'] = array_fill_keys($restrictionsList, true);
+                }
+                
+            } catch (PDOException $e) {
+                $_SESSION['restrictions'] = [];
+                logDatabaseError($e, 'bootstrapper - load user_restrictions');
+            }
+
         } else {
             session_unset();
             session_destroy();
@@ -232,11 +254,29 @@ $messagingServiceEnabled = $GLOBALS['site_settings']['messaging_service_enabled'
 $isMessagingPage = (strpos($requestUri, '/messages') !== false);
 $isMessagingDisabledPage = (strpos($requestUri, '/messaging-disabled') !== false);
 
-if ($messagingServiceEnabled === '0' && !$isPrivilegedUser && $isMessagingPage && !$isMessagingDisabledPage && !$isApiCall && !$isConfigCall) {
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+// Añadimos la nueva página a la lógica de exclusión
+$isMessagingRestrictedPage = (strpos($requestUri, '/messaging-restricted') !== false);
+
+if ($messagingServiceEnabled === '0' && !$isPrivilegedUser && $isMessagingPage && !$isMessagingDisabledPage && !$isMessagingRestrictedPage && !$isApiCall && !$isConfigCall) {
     header('Location: ' . $basePath . '/messaging-disabled');
     exit;
 }
 
+$isRestrictedFromMessaging = isset($_SESSION['restrictions']['CANNOT_MESSAGE']);
+
+if ($isRestrictedFromMessaging && !$isPrivilegedUser && $isMessagingPage && !$isMessagingDisabledPage && !$isMessagingRestrictedPage && !$isApiCall && !$isConfigCall) {
+    // Redirige a la NUEVA página de restricción
+    header('Location: ' . $basePath . '/messaging-restricted');
+    exit;
+}
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
+
+// ===================================================================
+// --- [INICIO DEL BLOQUE MOVIDO] ---
+// Esta lógica ahora se ejecuta ANTES de usar $currentPage y $authLayoutPages
+// ===================================================================
 
 $requestPath = strtok($requestUri, '?');
 
@@ -332,6 +372,9 @@ $pathsToPages = [
     '/account-status/suspended' => 'account-status-suspended',
 
     '/messaging-disabled'       => 'messaging-disabled',
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+    '/messaging-restricted'     => 'messaging-restricted', // <-- NUEVA RUTA
+    // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
     '/admin'                    => 'admin-dashboard',
     '/admin/dashboard'          => 'admin-dashboard',
@@ -349,15 +392,43 @@ $pathsToPages = [
 
 ];
 
-$currentPage = $pathsToPages[$path] ?? '404';
+// --- Definición de $currentPage y $authLayoutPages ---
+$isAuthPage = false;
+$authLayoutPages = []; // <-- INICIALIZAR COMO ARRAY
+
+if (array_key_exists($path, $pathsToPages)) {
+    $currentPage = $pathsToPages[$path];
+    $authLayoutPages = [
+        'login',
+        'register-step1',
+        'register-step2',
+        'register-step3',
+        'reset-step1',
+        'reset-step2',
+        'reset-step3'
+    ];
+    $isAuthPage = in_array($currentPage, $authLayoutPages) ||
+        strpos($currentPage, 'register-') === 0 ||
+        strpos($currentPage, 'reset-') === 0;
+} else {
+    $currentPage = '404';
+}
 
 
-$authLayoutPages = ['login'];
-$isAuthPage = in_array($currentPage, $authLayoutPages) ||
-    strpos($currentPage, 'register-') === 0 ||
-    strpos($currentPage, 'reset-') === 0;
+// ===================================================================
+// --- [FIN DEL BLOQUE MOVIDO] ---
+// ===================================================================
 
-$statusPages = ['maintenance', 'server-full', 'account-status-deleted', 'account-status-suspended', 'messaging-disabled'];
+
+// ===================================================================
+// --- [INICIO DEL BLOQUE QUE AHORA FUNCIONA] ---
+// (Originalmente líneas 389-406)
+// ===================================================================
+
+// --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+// Añadimos la nueva página a la lista de "páginas de estado"
+$statusPages = ['maintenance', 'server-full', 'account-status-deleted', 'account-status-suspended', 'messaging-disabled', 'messaging-restricted'];
+// --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 $isStatusPage = in_array($currentPage, $statusPages);
 
 $authAndStatusPagesForRedirect = array_merge($authLayoutPages, $statusPages);
@@ -367,6 +438,11 @@ $isAuthPageForRedirect = in_array($currentPage, $authAndStatusPagesForRedirect) 
 
 $isSettingsPage = strpos($currentPage, 'settings-') === 0;
 $isAdminPage = strpos($currentPage, 'admin-') === 0;
+
+// ===================================================================
+// --- [FIN DEL BLOQUE QUE AHORA FUNCIONA] ---
+// ===================================================================
+
 
 if ($isAdminPage && isset($_SESSION['user_id'])) {
     $userRole = $_SESSION['role'] ?? 'user';
@@ -405,3 +481,4 @@ if ($path === '/admin') {
     header('Location: ' . $basePath . '/admin/dashboard');
     exit;
 }
+?>

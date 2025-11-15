@@ -4282,4 +4282,53 @@ a.profile-tab.active {
     color: #c62828; /* Icono rojo */
 }
 
-/* --- ▲▲▲ FIN DE NUEVOS ESTILOS --- */
+/* --- ▲▲▲ FIN DE NUEVOS ESTILOS --- *//* --- INICIO DE MODIFICACIÓN (TAREA 5) --- */
+/* --- Estilos para el Popover de Estado de Administrador --- */
+
+/* Nota: El padding, gap, y estilos de .menu-header
+   se aplicaron en línea en 'manage-users.php' 
+   para esta implementación específica.
+*/
+
+/* Grupo de botones de radio */
+.admin-status-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Espacio entre las opciones 'Activo' y 'Eliminado' */
+}
+
+/* Etiquetas de los radio buttons (Activo, Eliminado) */
+.admin-status-radio-label {
+    /* Los estilos base (flex, gap, padding, etc.) 
+       están en línea en el .php */
+    transition: background-color 0.2s;
+}
+
+.admin-status-radio-label:hover {
+    background-color: #f5f5fa; /* Resaltado sutil al pasar el ratón */
+}
+
+/* Estilo del radio button nativo */
+.admin-status-radio-label input[type="radio"] {
+    margin: 0; /* Limpiar margen por defecto */
+    flex-shrink: 0;
+    accent-color: #000; /* Color del check (navegadores modernos) */
+    width: 18px;
+    height: 18px;
+}
+
+/* Texto del radio button ("Activo", "Eliminado") */
+.admin-status-radio-label span {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+/*
+   Nota: Las filas de los toggles de restricción
+   usan estilos en línea ('padding: 0; border: none;') 
+   para anular los estilos de .component-card--edit-mode
+   dentro de este popover.
+*/
+
+/* --- FIN DE MODIFICACIÓN (TAREA 5) --- */

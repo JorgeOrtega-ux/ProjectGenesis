@@ -1,4 +1,3 @@
-
 import { callAdminApi } from '../services/api-service.js';
 import { showAlert } from '../services/alert-manager.js';
 import { getTranslation, applyTranslations } from '../services/i18n-manager.js';
@@ -108,18 +107,56 @@ export function initAdminManager() {
                 }
             });
         }
+        
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        // Rellenar el popover de ESTATUS/RESTRICCIONES
         const statusModule = document.querySelector('[data-module="moduleAdminStatus"]');
         if (statusModule) {
-            statusModule.querySelectorAll('.menu-link').forEach(link => {
-                link.classList.remove('active');
-                const icon = link.querySelector('.menu-link-check-icon');
-                if (icon) icon.innerHTML = '';
-                if (link.dataset.value === selectedAdminUserStatus) {
-                    link.classList.add('active');
-                    if (icon) icon.innerHTML = '<span class="material-symbols-rounded">check</span>';
-                }
-            });
+            const selectedCard = document.querySelector('.card-item.selected[data-user-id]');
+            if (!selectedCard) return;
+
+            const restrictions = selectedCard.dataset.restrictions || '';
+            const status = selectedCard.dataset.userStatus || 'active';
+
+            // 1. Settear Radio Buttons
+            const activeRadio = document.getElementById('admin-status-active');
+            const suspendedRadio = document.getElementById('admin-status-suspended'); // <-- AÑADIDO
+            const deletedRadio = document.getElementById('admin-status-deleted');
+            const restrictionsContainer = document.getElementById('admin-restrictions-container');
+
+            if (status === 'deleted') {
+                if(activeRadio) activeRadio.checked = false;
+                if(suspendedRadio) suspendedRadio.checked = false; // <-- AÑADIDO
+                if(deletedRadio) deletedRadio.checked = true;
+                if(restrictionsContainer) restrictionsContainer.style.display = 'none';
+            } else if (status === 'suspended') { // <-- BLOQUE AÑADIDO
+                if(activeRadio) activeRadio.checked = false;
+                if(suspendedRadio) suspendedRadio.checked = true;
+                if(deletedRadio) deletedRadio.checked = false;
+                if(restrictionsContainer) restrictionsContainer.style.display = 'none';
+            } else { // 'active'
+                if(activeRadio) activeRadio.checked = true;
+                if(suspendedRadio) suspendedRadio.checked = false; // <-- AÑADIDO
+                if(deletedRadio) deletedRadio.checked = false;
+                if(restrictionsContainer) restrictionsContainer.style.display = 'block';
+            }
+
+            // 2. Settear Toggles
+            const restrictPublish = document.getElementById('admin-restrict-publish');
+            const restrictComment = document.getElementById('admin-restrict-comment');
+            const restrictMessage = document.getElementById('admin-restrict-message');
+            const restrictSocial = document.getElementById('admin-restrict-social');
+
+            if(restrictPublish) restrictPublish.checked = restrictions.includes('CANNOT_PUBLISH');
+            if(restrictComment) restrictComment.checked = restrictions.includes('CANNOT_COMMENT');
+            if(restrictMessage) restrictMessage.checked = restrictions.includes('CANNOT_MESSAGE');
+            if(restrictSocial) restrictSocial.checked = restrictions.includes('CANNOT_SOCIAL');
+            
+            // 3. Ocultar error
+            const errorDiv = document.getElementById('admin-status-error-div');
+            if (errorDiv) errorDiv.style.display = 'none';
         }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     }
 
     function setListLoadingState(isLoading) {
@@ -184,7 +221,8 @@ export function initAdminManager() {
                 <div class="card-item" 
                      data-user-id="${user.id}"
                      data-user-role="${user.role}"
-                     data-user-status="${user.status}">
+                     data-user-status="${user.status}"
+                     data-restrictions="${user.restrictions || ''}">
                     
                     <div class="component-card__avatar" style="width: 50px; height: 50px; flex-shrink: 0;" data-role="${user.role}">
                         <img src="${user.avatarUrl}" alt="${user.username}" class="component-card__avatar-image">
@@ -260,7 +298,10 @@ export function initAdminManager() {
         menuLinks.forEach(link => link.classList.add('disabled-interactive'));
 
         const formData = new FormData();
-        formData.append('action', actionType === 'admin-set-role' ? 'set-role' : 'set-status');
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA 5) ▼▼▼ ---
+        // 'set-status' ya no se usa aquí
+        formData.append('action', 'set-role');
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         formData.append('target_user_id', targetUserId);
         formData.append('new_value', newValue);
         
@@ -278,7 +319,10 @@ export function initAdminManager() {
             
             const selectedCard = document.querySelector('.card-item.selected');
             
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA 5) ▼▼▼ ---
+            // Se elimina el 'else' que manejaba 'set-status'
             if (actionType === 'admin-set-role') {
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                 selectedAdminUserRole = newValue;
                 if (selectedCard) {
                     selectedCard.dataset.userRole = newValue;
@@ -296,22 +340,6 @@ export function initAdminManager() {
                     
                     const avatar = selectedCard.querySelector('.component-card__avatar');
                     if(avatar) avatar.dataset.role = newValue;
-                }
-            } else { 
-                selectedAdminUserStatus = newValue;
-                if (selectedCard) {
-                    selectedCard.dataset.userStatus = newValue;
-                    
-                    const newStatusText = buttonEl.querySelector('.menu-link-text span').textContent;
-                    const labels = selectedCard.querySelectorAll('.card-detail-label');
-                    labels.forEach(label => {
-                        if (label.dataset.i18n === 'admin.users.labelStatus') { 
-                            const valueEl = label.nextElementSibling;
-                            if (valueEl && valueEl.classList.contains('card-detail-value')) {
-                                valueEl.textContent = newStatusText;
-                            }
-                        }
-                    });
                 }
             }
             
@@ -799,7 +827,10 @@ export function initAdminManager() {
             return;
         }
         
-        if (action === 'admin-set-role' || action === 'admin-set-status') {
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA 5) ▼▼▼ ---
+        // Se elimina 'admin-set-status' de esta condición
+        if (action === 'admin-set-role') {
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             event.preventDefault();
             hideTooltip();
             const newValue = button.dataset.value;
@@ -837,6 +868,106 @@ export function initAdminManager() {
             return;
         }
 
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN ▼▼▼ ---
+        if (action === 'admin-save-status-btn') {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const saveButton = document.getElementById('admin-save-status-btn');
+            const errorDiv = document.getElementById('admin-status-error-div');
+            
+            // --- LECTURA DE VALORES ---
+            const general_status = document.querySelector('input[name="general_status"]:checked')?.value || 'active';
+            
+            // Leemos el *único* toggle de "Publicar y Comentar"
+            const restrict_publish_and_comment_toggle = document.getElementById('admin-restrict-publish');
+            const restrict_publish_and_comment = restrict_publish_and_comment_toggle ? restrict_publish_and_comment_toggle.checked : false;
+            
+            // Leemos los otros toggles
+            const restrict_message_toggle = document.getElementById('admin-restrict-message');
+            const restrict_message = restrict_message_toggle ? restrict_message_toggle.checked : false;
+
+            const restrict_social_toggle = document.getElementById('admin-restrict-social');
+            const restrict_social = restrict_social_toggle ? restrict_social_toggle.checked : false;
+
+
+            if (errorDiv) errorDiv.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('action', 'admin-update-restrictions');
+            formData.append('target_user_id', selectedAdminUserId);
+            formData.append('general_status', general_status);
+            
+            // --- ENVÍO DE DATOS A LA API ---
+            // Asignamos el valor del único toggle a *ambos* campos que la API espera
+            formData.append('restrict_publish', restrict_publish_and_comment ? 'true' : 'false');
+            formData.append('restrict_comment', restrict_publish_and_comment ? 'true' : 'false');
+            
+            formData.append('restrict_message', restrict_message ? 'true' : 'false');
+            formData.append('restrict_social', restrict_social ? 'true' : 'false');
+            
+            const csrfInput = document.querySelector('input[name="csrf_token"]');
+            if (csrfInput) {
+                formData.append('csrf_token', csrfInput.value);
+            }
+
+            saveButton.disabled = true;
+            saveButton.dataset.originalText = saveButton.innerHTML;
+            saveButton.innerHTML = `<span class"logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: #ffffff; border-left-color: #ffffff20; border-bottom-color: #ffffff20; border-right-color: #ffffff20;"></span>`;
+
+
+            const result = await callAdminApi(formData);
+
+            if (result.success) {
+                showAlert(getTranslation(result.message || 'js.admin.successStatus'), 'success');
+                deactivateAllModules();
+
+                // Actualizar la tarjeta en la UI
+                const selectedCard = document.querySelector('.card-item.selected');
+                if (selectedCard) {
+                    selectedCard.dataset.userStatus = general_status;
+                    const statusLabel = selectedCard.querySelector('.card-detail-label[data-i18n="admin.users.labelStatus"] + .card-detail-value');
+                    if (statusLabel) {
+                        statusLabel.textContent = general_status.charAt(0).toUpperCase() + general_status.slice(1);
+                    }
+                    
+                    let newRestrictions = [];
+                    if(general_status === 'active') {
+                        // Basamos la restricción en el valor del toggle que sí existe
+                        if (restrict_publish_and_comment) {
+                            newRestrictions.push('CANNOT_PUBLISH');
+                            newRestrictions.push('CANNOT_COMMENT');
+                        }
+                        if (restrict_message) newRestrictions.push('CANNOT_MESSAGE');
+                        if (restrict_social) newRestrictions.push('CANNOT_SOCIAL');
+                    }
+                    selectedCard.dataset.restrictions = newRestrictions.join(',');
+                }
+
+            } else {
+                if (errorDiv) {
+                    errorDiv.textContent = getTranslation(result.message || 'js.auth.errorUnknown');
+                    errorDiv.style.display = 'block';
+                } else {
+                    showAlert(getTranslation(result.message || 'js.auth.errorUnknown'), 'error');
+                }
+            }
+
+            saveButton.disabled = false;
+            saveButton.innerHTML = saveButton.dataset.originalText;
+            
+            return;
+        }
+        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
+
+        if (action === 'admin-status-cancel') {
+             event.preventDefault();
+             event.stopPropagation();
+             deactivateAllModules();
+             return;
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+
         if (action === 'toggleModuleAdminRole' || 
             action === 'toggleModuleAdminStatus' ||
             action === 'toggleModuleAdminCreateRole') { 
@@ -851,7 +982,7 @@ export function initAdminManager() {
             } else if (action === 'toggleModuleAdminStatus'){ 
                 if (!selectedAdminUserId) return; 
                 moduleName = 'moduleAdminStatus';
-                updateAdminModals();
+                updateAdminModals(); // <-- Esta función ahora poblará los toggles
             } else if (action === 'toggleModuleAdminCreateRole') { 
                 moduleName = 'moduleAdminCreateRole';
             }
@@ -874,6 +1005,17 @@ export function initAdminManager() {
         if (input) {
             hideCreateUserError();
         }
+        
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA 5) ▼▼▼ ---
+        // Ocultar/mostrar restricciones según el estado general
+        const statusRadio = event.target.closest('input[name="general_status"]');
+        if (statusRadio) {
+            const restrictionsContainer = document.getElementById('admin-restrictions-container');
+            if (restrictionsContainer) {
+                restrictionsContainer.style.display = (statusRadio.value === 'active') ? 'block' : 'none';
+            }
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     });
 
     document.body.addEventListener('keydown', function(event) {

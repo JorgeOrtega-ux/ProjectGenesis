@@ -83,7 +83,29 @@ function connectWebSocket() {
                         console.log("[SocketService] Desconexión forzada recibida.");
                         ws.close(1000, "Logout forzado"); // Cerrar limpiamente
                         showAlert(getTranslation('js.logout.forced'), 'info', 5000);
-                        setTimeout(() => location.reload(), 3000);
+                        
+                        // --- ▼▼▼ INICIO DE CORRECCIÓN ▼▼▼ ---
+                        // Comportamiento diferenciado para el "kick"
+                        const currentSectionOnKick = document.querySelector('.section-content.active')?.dataset.section;
+                        if (currentSectionOnKick === 'messages') {
+                            // Si estamos en mensajes, el "kick" (por restricción) nos manda a Home.
+                            console.log("[SocketService] Kick en /messages. Redirigiendo a /home.");
+                            
+                            // ¡¡¡ ESTA ES LA LÍNEA CLAVE QUE FALTABA !!!
+                            // Actualizamos el estado del cliente ANTES de redirigir.
+                            window.isMessagingRestricted = true; 
+                            
+                            setTimeout(() => {
+                                const newPath = `${window.projectBasePath}/`;
+                                history.replaceState(null, '', newPath);
+                                loadPage('home', 'toggleSectionHome', null, false);
+                            }, 3000);
+                        } else {
+                            // Si es un kick en cualquier otra página (ej. cambio de contraseña), recargamos.
+                            console.log("[SocketService] Kick. Recargando página.");
+                            setTimeout(() => location.reload(), 3000);
+                        }
+                        // --- ▲▲▲ FIN DE CORRECCIÓN ▲▲▲ ---
                         break;
 
                     case 'account_status_update':
