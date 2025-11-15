@@ -8,6 +8,7 @@
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (Refactor de WebSocket) ▼▼▼ ---
 // (MODIFICADO: Se usa sendSocketMessage en lugar de window.ws)
 // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+// --- ▼▼▼ MODIFICACIÓN (Leer clave de error de privacidad específica) ▼▼▼ ---
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -349,7 +350,7 @@ function renderConversationList(conversations) {
 
                 </a>
         `;
-        // --- ▲▲▲ FIN DE LA MODIFICACIÓN (HTML) ▲▲▲ ---
+        // --- ▲▲▲ FIN DE LA MODIFICACIÓN (HTML) ▼▼▼ ---
     });
     listContainer.innerHTML = html;
 }
@@ -514,8 +515,10 @@ function enableChatInput(allow, reason = null) {
         sendBtn.disabled = true; 
         input.value = ''; 
         
-        const placeholderKey = reason || 'js.chat.errorPrivacyBlocked';
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Usar 'reason' como clave) ▼▼▼ ---
+        const placeholderKey = reason || 'js.chat.errorPrivacyBlocked'; // Fallback por si 'reason' es null
         input.placeholder = getTranslation(placeholderKey, 'No puedes enviar mensajes a este usuario.');
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
         
         selectedAttachments = [];
         const previewContainer = document.getElementById('chat-attachment-preview-container');
@@ -736,11 +739,15 @@ async function loadChatHistory(targetId, beforeId = null) {
             } else {
                 renderChatHistory(result.messages);
                 
+                // --- ▼▼▼ INICIO DE MODIFICACIÓN (Usar clave de error específica) ▼▼▼ ---
                 if (result.can_send_message) {
                     enableChatInput(true); 
                 } else {
-                    enableChatInput(false, 'js.chat.errorBlocked'); 
+                    // Usa la clave específica de la API, o un fallback si no se proporciona.
+                    const errorKey = result.send_message_error_key || 'js.chat.errorBlocked';
+                    enableChatInput(false, errorKey); 
                 }
+                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             }
             
             // Actualizar el conteo total si la API lo devuelve (sucede al abrir un chat)
@@ -1020,7 +1027,10 @@ async function sendMessage() {
             if (result.message === 'js.chat.errorBlocked' || 
                 result.message === 'js.chat.errorPrivacyBlocked' || 
                 result.message === 'js.chat.errorPrivacySenderBlocked' ||
-                result.message === 'js.chat.errorPrivacyMutualBlocked') {
+                result.message === 'js.chat.errorPrivacyMutualBlocked' ||
+                result.message === 'js.chat.errorPrivacyNone' || // <-- NUEVA CLAVE
+                result.message === 'js.chat.errorPrivacyFriendsOnly' // <-- NUEVA CLAVE
+               ) {
                 
                 enableChatInput(false, result.message); 
                 

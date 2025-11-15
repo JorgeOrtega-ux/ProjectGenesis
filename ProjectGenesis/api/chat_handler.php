@@ -11,6 +11,7 @@
 // --- ▼▼▼ INICIO DE MODIFICACIÓN (SISTEMA DE CHAT DE COMUNIDAD) ▼▼▼ ---
 // --- ▼▼▼ INICIO DE CORRECCIÓN (PAYLOAD DE WEBSOCKET DE DM CON CONTEO) ▼▼▼ ---
 // --- ▼▼▼ MODIFICACIÓN (ELIMINADA LÓGICA DE CHAT DE COMUNIDAD) ▼▼▼ ---
+// --- ▼▼▼ MODIFICACIÓN (PRIVACIDAD: DEVOLVER RAZÓN DE ERROR ESPECÍFICA) ▼▼▼ ---
 
 include '../config/config.php';
 header('Content-Type: application/json');
@@ -92,17 +93,17 @@ function notifyUser($targetUserId, $payload)
 /**
  * Comprueba si el usuario actual ($currentUserId) tiene permiso para
  * enviar mensajes al usuario receptor ($receiverId).
- * Devuelve true si está permitido, false si no.
+ * Devuelve un código de estado: 'allowed', 'blocked', 'privacy_none', 'privacy_friends_only'.
  *
  * @param PDO $pdo
  * @param int $currentUserId ID del usuario que inicia la acción
  * @param int $receiverId ID del usuario que recibe la acción
- * @return bool
+ * @return string
  */
 function canSendMessage($pdo, $currentUserId, $receiverId) {
     // No comprobar si se envían mensajes a sí mismo (guardados)
     if ($currentUserId == $receiverId) {
-        return true;
+        return 'allowed';
     }
     
     // --- ▼▼▼ NUEVA COMPROBACIÓN DE BLOQUEO (BILATERAL) ▼▼▼ ---
@@ -110,7 +111,7 @@ function canSendMessage($pdo, $currentUserId, $receiverId) {
     $stmt_block_check = $pdo->prepare("SELECT 1 FROM user_blocks WHERE (blocker_user_id = :user1 AND blocked_user_id = :user2) OR (blocker_user_id = :user2 AND blocked_user_id = :user1)");
     $stmt_block_check->execute([':user1' => $currentUserId, ':user2' => $receiverId]);
     if ($stmt_block_check->fetch()) {
-        return false; // Hay un bloqueo
+        return 'blocked'; // Hay un bloqueo
     }
     // --- ▲▲▲ FIN DE COMPROBACIÓN DE BLOQUEO ▲▲▲ ---
 
@@ -127,7 +128,7 @@ function canSendMessage($pdo, $currentUserId, $receiverId) {
 
     // Opción 1: El receptor no acepta mensajes de nadie.
     if ($privacy === 'none') {
-        return false;
+        return 'privacy_none';
     }
 
     // Opción 2: El receptor solo acepta mensajes de amigos.
@@ -141,12 +142,12 @@ function canSendMessage($pdo, $currentUserId, $receiverId) {
         
         if (!$stmt_friend->fetch()) {
             // No son amigos, bloquear.
-            return false;
+            return 'privacy_friends_only';
         }
     }
     
     // Opción 3: 'all'. Permitir.
-    return true;
+    return 'allowed';
 }
 
 /**
@@ -172,15 +173,25 @@ function checkMessagePrivacy($pdo, $currentUserId, $receiverId) {
     }
     
     // 2. Comprobar si el EMISOR puede enviar al RECEPTOR (revisa bloqueos y reglas del RECEPTOR)
-    $canSenderSend = canSendMessage($pdo, $currentUserId, $receiverId);
-    if (!$canSenderSend) {
-        // canSendMessage ya incluye la lógica de bloqueo
-        throw new Exception('js.chat.errorBlocked'); // Usamos el nuevo error
+    $canSenderSendStatus = canSendMessage($pdo, $currentUserId, $receiverId);
+    if ($canSenderSendStatus !== 'allowed') {
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (Lanzar error específico) ▼▼▼ ---
+        switch ($canSenderSendStatus) {
+            case 'blocked':
+                throw new Exception('js.chat.errorBlocked');
+            case 'privacy_none':
+                throw new Exception('js.chat.errorPrivacyNone'); // Nueva clave i18n
+            case 'privacy_friends_only':
+                throw new Exception('js.chat.errorPrivacyFriendsOnly'); // Nueva clave i18n
+            default:
+                throw new Exception('js.chat.errorBlocked'); // Fallback
+        }
+        // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
     }
 
     // 3. Comprobar si el RECEPTOR podría responder al EMISOR (revisa las reglas del EMISOR)
-    $canReceiverReply = canSendMessage($pdo, $receiverId, $currentUserId); // Invertido
-    if (!$canReceiverReply) {
+    $canReceiverReplyStatus = canSendMessage($pdo, $receiverId, $currentUserId); // Invertido
+    if ($canReceiverReplyStatus !== 'allowed') {
         throw new Exception('js.chat.errorPrivacyMutualBlocked');
     }
     
@@ -327,9 +338,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $senderPrivacy = $stmt_sender_privacy->fetchColumn();
             $canSenderSend = ($senderPrivacy !== 'none');
 
-            $canSendToReceiver = canSendMessage($pdo, $currentUserId, $targetUserId);
-            $canReceiverReply = canSendMessage($pdo, $targetUserId, $currentUserId); 
-            $canSendMessage = ($canSenderSend && $canSendToReceiver && $canReceiverReply);
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Obtener razón de error) ▼▼▼ ---
+            $canSendToReceiverStatus = canSendMessage($pdo, $currentUserId, $targetUserId);
+            $canReceiverReplyStatus = canSendMessage($pdo, $targetUserId, $currentUserId); 
+            
+            $canSendMessage = ($canSenderSend && $canSendToReceiverStatus === 'allowed' && $canReceiverReplyStatus === 'allowed');
+            $response['can_send_message'] = $canSendMessage;
+
+            $response['send_message_error_key'] = null;
+            if (!$canSendMessage) {
+                if (!$canSenderSend) {
+                    $response['send_message_error_key'] = 'js.chat.errorPrivacySenderBlocked';
+                } elseif ($canReceiverReplyStatus !== 'allowed') {
+                    $response['send_message_error_key'] = 'js.chat.errorPrivacyMutualBlocked';
+                } elseif ($canSendToReceiverStatus !== 'allowed') {
+                    // Este es el bloque principal
+                    switch ($canSendToReceiverStatus) {
+                        case 'blocked':
+                            $response['send_message_error_key'] = 'js.chat.errorBlocked';
+                            break;
+                        case 'privacy_none':
+                            $response['send_message_error_key'] = 'js.chat.errorPrivacyNone';
+                            break;
+                        case 'privacy_friends_only':
+                            $response['send_message_error_key'] = 'js.chat.errorPrivacyFriendsOnly';
+                            break;
+                        default:
+                            $response['send_message_error_key'] = 'js.chat.errorBlocked'; // Fallback
+                    }
+                } else {
+                    $response['send_message_error_key'] = 'js.chat.errorBlocked'; // Fallback general
+                }
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN (Obtener razón de error) ▲▲▲ ---
             
             // 2. Obtener historial de DM
             $sql_select =
@@ -396,7 +437,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_total_count->execute([':current_user_id' => $currentUserId]);
             $totalUnread = (int)$stmt_total_count->fetchColumn();
 
-            $response['can_send_message'] = $canSendMessage;
             $response['new_total_unread_count'] = $totalUnread; 
 
             // --- (Fin de la lógica de DM) ---
@@ -756,8 +796,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logDatabaseError($e, 'chat_handler - ' . $action);
             $response['message'] = 'js.api.errorDatabase';
         } else {
-            $response['message'] = $e->getMessage();
-            if (!isset($response['data'])) {
+            // --- ▼▼▼ INICIO DE MODIFICACIÓN (Añadir nuevas claves de error) ▼▼▼ ---
+            $msg = $e->getMessage();
+            $response['message'] = $msg;
+            if ($msg === 'js.chat.errorPrivacyNone' || $msg === 'js.chat.errorPrivacyFriendsOnly') {
+                // No hay 'data' adicional que enviar para estos errores
+            }
+            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
+            elseif (!isset($response['data'])) {
                 $response['data'] = null;
             }
         }
