@@ -1,5 +1,5 @@
 /* FILE: assets/css/messaging.css */
-/* Estilos centralizados para el módulo de Chat */
+/* Estilos centralizados para el módulo de Chat (CORREGIDOS PARA EL DISEÑO DE RESPUESTA) */
 
 .chat-layout-container {
     display: flex;
@@ -210,7 +210,6 @@
     flex-direction: column;
 }
 
-/* --- ▼▼▼ INICIO DE LA MODIFICACIÓN (ESTILOS DE BOTÓN) ▼▼▼ --- */
 .chat-item-right-group {
     display: flex;
     align-items: center;
@@ -219,7 +218,7 @@
 }
 
 .chat-item-menu-badge {
-    display: none; /* <-- 1. Ocultar por defecto */
+    display: none; 
     align-items: center;
     justify-content: center;
     width: 24px;
@@ -233,16 +232,13 @@
     margin-left: 4px; 
 }
 
-/* 2. Mostrar al pasar el mouse sobre CUALQUIER PARTE del item */
 .chat-conversation-item:hover .chat-item-menu-badge {
     display: flex;
 }
 
-/* 3. Ocultar si el popover está abierto (el JS añade esta clase) */
 .chat-item-menu-badge.popover-active {
     display: none;
 }
-/* --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ --- */
 
 .chat-item-menu-badge:hover {
     background-color: #e0e0e0;
@@ -421,42 +417,63 @@
     object-fit: cover;
 }
 
-/* --- ▼▼▼ INICIO DE LA MODIFICACIÓN (min-width: 0;) ▼▼▼ --- */
+
+/* --- ▼▼▼ INICIO DE LA CORRECCIÓN (BURBUJA PADRE) ▼▼▼ --- */
+/* Reemplaza esta regla */
 .chat-bubble-main-content {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    /* min-width: 0; <-- LÍNEA ELIMINADA */
-}
-/* --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ --- */
-
-.chat-bubble-content {
-    background-color: #f5f5fa;
+    gap: 0; 
+    background-color: #f5f5fa; 
     border-radius: 12px;
     padding: 12px;
+    overflow: hidden;
+    
+    /* --- LÍNEAS AÑADIDAS/MODIFICADAS --- */
+    min-width: 0; /* Permite que el flex-item se encoja */
+    max-width: 350px; /* Límite de ancho para coincidir con la imagen */
+    width: max-content; /* Se ajusta al contenido, hasta 350px */
+}
+
+/* Reemplaza también la regla .sent */
+.chat-bubble.sent .chat-bubble-main-content {
+    background-color: #000; 
+    color: #ffffff;
+}
+/* --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ --- */
+
+
+/* --- ▼▼▼ INICIO DE LA CORRECCIÓN (HIJO TRANSPARENTE) ▼▼▼ --- */
+/* Reemplaza esta regla */
+.chat-bubble-content {
+    background-color: transparent; 
+    border-radius: 0;          
+    padding: 0;                
     font-size: 15px;
     line-height: 1.5;
     color: #1f2937;
-    word-break: break-word;
+    overflow-wrap: break-word; /* <-- LÍNEA MODIFICADA (rompe palabras largas) */
+    word-break: break-word; /* Fallback para navegadores antiguos */
 }
-
 .chat-bubble-content:empty {
     display: none;
 }
 
 .chat-bubble.sent .chat-bubble-content {
-    background-color: #000;
-    color: #ffffff;
+    background-color: transparent; /* Se hace transparente */
+    color: #ffffff; /* Hereda el color del padre */
 }
+/* --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ --- */
 
+
+/* Reemplaza esta regla */
 .chat-attachments-container {
     display: grid;
     gap: 4px;
     border-radius: 12px;
     overflow: hidden;
-    width: 350px; 
+    width: 100%; /* <-- LÍNEA MODIFICADA (antes 350px) */
 }
-
 .chat-attachments-container[data-count="1"] {
     grid-template-columns: 1fr;
 }
@@ -567,18 +584,16 @@
     font-variation-settings: 'FILL' 1;
 }
 
-/* --- ▼▼▼ INICIO DE REVERSIÓN CSS (A la Etapa 3) ▼▼▼ --- */
 .chat-input-pill-wrapper {
     display: flex;
-    flex-direction: column; /* Apila el textarea y la fila de botones */
-    gap: 8px; /* Espacio para el preview de adjuntos/respuesta */
-    padding: 8px 12px; /* Padding interno de la píldora */
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 12px;
     background-color: #f5f5fa;
     border: 1px solid #00000020;
-    border-radius: 24px; /* Píldora redondeada */
+    border-radius: 24px;
     transition: border-color 0.2s, background-color 0.2s;
-    
-    box-sizing: border-box; /* Incluir padding en la altura */
+    box-sizing: border-box;
 }
 
 .chat-input-pill-wrapper:focus-within {
@@ -589,36 +604,30 @@
 .chat-input-main-row {
     display: flex;
     width: 100%;
-    align-items: center; /* Centra los botones verticalmente en su fila */
-    justify-content: space-between; /* Botones en extremos opuestos */
+    align-items: center;
+    justify-content: space-between;
     gap: 12px;
     flex-shrink: 0; 
 }
 
 .chat-input-field {
     border: none;
-    background-color: transparent; /* Hereda el fondo de la píldora */
-    padding: 4px 0; /* Padding vertical ligero */
+    background-color: transparent;
+    padding: 4px 0;
     font-size: 15px;
     outline: none;
-    resize: none; /* ¡CLAVE! Deshabilita el resize manual */
+    resize: none;
     font-family: "Roboto Condensed", sans-serif;
-    line-height: 1.5; /* Altura de línea estándar */
-    
-    /* ¡CLAVE! Definimos la altura de 1 línea */
-    min-height: 24px; /* Aprox 1.5 * 15px */
-    
-    /* ¡CLAVE! Definimos la altura máxima ANTES del scroll */
-    max-height: 120px; /* Aprox 5 * 24px */
-    
-    overflow-y: hidden; /* ¡CLAVE! Oculto por defecto, el JS lo activa */
-    width: 100%; /* Asegura que ocupe todo el ancho */
+    line-height: 1.5;
+    min-height: 24px;
+    max-height: 120px;
+    overflow-y: hidden;
+    width: 100%;
 }
-/* --- ▲▲▲ FIN DE REVERSIÓN CSS ▲▲▲ --- */
 
 .chat-input-field:focus {
-    background-color: transparent; /* Hereda el fondo blanco del focus-within */
-    border-color: transparent; /* El borde está en el wrapper */
+    background-color: transparent;
+    border-color: transparent;
 }
 
 .chat-send-button {
@@ -732,12 +741,14 @@
     }
 }
 
+/* --- ▼▼▼ INICIO DE LA CORRECCIÓN (ESTILOS DE RESPUESTA) ▼▼▼ --- */
 .chat-reply-context {
     position: relative;
     padding: 8px 12px 8px 16px;
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: rgba(0, 0, 0, 0.05); /* Gris claro */
     border-radius: 8px;
-    max-width: 300px;
+    max-width: 100%; /* Se ajusta al padre */
+    margin-bottom: 8px; /* Espacio entre contexto y respuesta */
 }
 
 .chat-reply-context::before {
@@ -747,36 +758,38 @@
     top: 4px;
     bottom: 4px;
     width: 4px;
-    background-color: #000;
+    background-color: #0056b3; /* Barra azul */
     border-radius: 2px;
 }
 
 .sent .chat-reply-context {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.1); /* Blanco transparente */
 }
 
 .sent .chat-reply-context::before {
-    background-color: #fff;
+    background-color: #aed6f1; /* Barra azul claro */
 }
 
 .chat-reply-context-user {
     font-size: 13px;
     font-weight: 700;
-    color: #0056b3;
+    color: #0056b3; /* Azul */
 }
 
 .sent .chat-reply-context-user {
-    color: #aed6f1;
+    color: #aed6f1; /* Azul claro */
 }
 
 .chat-reply-context-text {
     font-size: 14px;
-    color: inherit;
+    color: inherit; /* Hereda color (negro o blanco) del padre */
     opacity: 0.8;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
+/* --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ --- */
+
 
 .chat-reply-preview-container {
     display: flex;
@@ -790,7 +803,7 @@
 }
 
 .chat-input-pill-wrapper:focus-within .chat-reply-preview-container {
-    background-color: #f5f5fa; /* Mantener el fondo gris del preview */
+    background-color: #f5f5fa;
 }
 
 .chat-reply-preview-content {
@@ -877,15 +890,25 @@
 
 /* Estilos para el globo de chat eliminado */
 .chat-bubble.deleted .chat-bubble-content {
-    background-color: #f5f5fa;
+    background-color: transparent; /* CORREGIDO */
     color: #6b7280;
     font-style: italic;
 }
 .chat-bubble.sent.deleted .chat-bubble-content {
-    background-color: #f5f5fa;
+    background-color: transparent; /* CORREGIDO */
     color: #6b7280;
     font-style: italic;
 }
+/* Estilo para el CONTENEDOR del mensaje eliminado */
+.chat-bubble.deleted .chat-bubble-main-content {
+    background-color: #f5f5fa;
+    color: #6b7280;
+}
+.chat-bubble.sent.deleted .chat-bubble-main-content {
+    background-color: #f5f5fa;
+    color: #6b7280;
+}
+
 
 /* Estilos para las acciones del globo de chat (Responder, Copiar, Eliminar) */
 .chat-bubble-actions {
