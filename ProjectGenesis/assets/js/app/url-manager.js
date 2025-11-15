@@ -2,6 +2,7 @@
 // (CORREGIDO - Error 'Cannot access 'page' before initialization')
 // (MODIFICADO OTRA VEZ - Cambiado /messages/username a /messages/uuid)
 // (CORREGIDO CON LÓGICA DE MENSAJERÍA DESHABILITADA EN CLICK Y POPSTATE)
+// (CORREGIDO: EXCEPCIÓN PARA EVITAR NAVEGACIÓN AL CLICAR BOTÓN DE MENÚ)
 // --- ▼▼▼ MODIFICACIÓN (ELIMINADA LÓGICA DE CHAT DE COMUNIDAD) ▼▼▼ ---
 
 import { deactivateAllModules } from './main-controller.js';
@@ -637,6 +638,21 @@ export function initRouter() {
         // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲ ---
 
         if (link) {
+
+            // ---
+            // --- ▼▼▼ ESTA ES LA CORRECCIÓN PRINCIPAL ▼▼▼ ---
+            // ---
+            // Si el clic fue en un 'chat-conversation-item', 
+            // pero *específicamente* en el botón de menú,
+            // NO navegues. Deja que chat-manager.js lo maneje.
+            if (link.matches('a.chat-conversation-item[data-nav-js="true"]') && 
+                e.target.closest('[data-action="toggle-chat-context-menu"]')) {
+                e.preventDefault(); // Previene la navegación
+                return; // Detiene la ejecución de url-manager
+            }
+            // ---
+            // --- ▲▲▲ FIN DE LA CORRECCIÓN ▲▲▲ ---
+            // ---
 
             hideTooltip();
 

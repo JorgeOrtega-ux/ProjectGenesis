@@ -1,6 +1,7 @@
 // FILE: assets/js/modules/chat-manager.js
 // (MODIFICADO PARA ELIMINAR CHATS DE COMUNIDAD)
 // (MODIFICADO PARA TEXTAREA AUTO-CRECIBLE CON LÍMITE)
+// (CORREGIDO: ORDEN DE LISTENERS PARA EL MENÚ CONTEXTUAL)
 
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
@@ -1278,54 +1279,20 @@ export function initChatManager() {
 
     document.body.addEventListener('click', async (e) => {
         
-        // --- 4. Listener de clic en la lista de conversaciones ---
-        const conversationItem = e.target.closest('a.chat-conversation-item[data-nav-js="true"]');
-        if (conversationItem) {
-            e.preventDefault(); 
-            
-            const targetId = conversationItem.dataset.targetId;
-            const name = conversationItem.dataset.username;
-            const avatar = conversationItem.dataset.avatar;
-            const role = conversationItem.dataset.role;
-            const isOnline = conversationItem.querySelector('.chat-item-status')?.classList.contains('online');
-            const lastSeen = conversationItem.dataset.lastSeen || null;
-            
-            document.getElementById('chat-layout-container')?.classList.add('show-chat');
-            
-            openChat(targetId, name, avatar, role, isOnline, lastSeen);
-            
-            return;
-        }
-
+        // --- ▼▼▼ CORRECCIÓN: ORDEN DE LISTENERS ▼▼▼ ---
+        // 1. Verificar si el clic fue en la sección de chat.
         const chatSection = e.target.closest('[data-section="messages"]');
-        
         if (!chatSection) {
+            // Si el clic fue FUERA de la sección de chat, cerrar el popover si existe
             if (chatPopperInstance) {
                 chatPopperInstance.destroy();
                 chatPopperInstance = null;
             }
-            document.querySelector('.chat-item-actions.popover-active')?.classList.remove('popover-active');
-            return; 
+            document.querySelector('.chat-item-menu-badge.popover-active')?.classList.remove('popover-active');
+            return; // Salir, no hay más que hacer
         }
         
-        const filterBadge = e.target.closest('.chat-filter-badge[data-filter]');
-        if (filterBadge) {
-            e.preventDefault();
-            const newFilter = filterBadge.dataset.filter;
-            
-            if (newFilter === 'communities') { // Filtro de comunidad ya no existe
-                return;
-            }
-            
-            if (newFilter === currentChatFilter) return; 
-            
-            
-            // Llamar a loadConversations con el nuevo filtro
-            loadConversations(newFilter); 
-            
-            return;
-        }
-
+        // 2. Comprobar si se hizo clic en el BOTÓN DEL MENÚ CONTEXTUAL (Acción más específica)
         const contextBtn = e.target.closest('[data-action="toggle-chat-context-menu"]');
         if (contextBtn) {
             e.preventDefault();
@@ -1333,9 +1300,7 @@ export function initChatManager() {
 
             const friendItem = contextBtn.closest('.chat-conversation-item');
             const popover = document.getElementById('chat-context-menu');
-            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Obtener el nuevo botón) ▼▼▼
             const actionsContainer = contextBtn.closest('.chat-item-menu-badge');
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
 
             if (!friendItem || !popover || !actionsContainer) return;
 
@@ -1344,12 +1309,9 @@ export function initChatManager() {
                 chatPopperInstance = null;
             }
             
-            document.querySelectorAll('.chat-item-actions.popover-active').forEach(el => el.classList.remove('popover-active'));
-            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Nueva clase de popover) ▼▼▼
             document.querySelectorAll('.chat-item-menu-badge.popover-active').forEach(el => el.classList.remove('popover-active'));
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
 
-            // --- Lógica de Popover (solo DM) ---
+            // Lógica de Popover (solo DM)
             const targetId = friendItem.dataset.targetId;
             const type = friendItem.dataset.type; // Siempre será 'dm'
             
@@ -1365,7 +1327,7 @@ export function initChatManager() {
             const deleteBtn = popover.querySelector('[data-action="delete-chat"]');
             const profileBtn = popover.querySelector('[data-action="friend-menu-profile"]');
 
-            // --- Lógica de DM (ahora incondicional) ---
+            // Lógica de DM (ahora incondicional)
             const isBlockedByMe = friendItem.dataset.isBlockedByMe === 'true';
             const isBlockedGlobally = friendItem.dataset.isBlockedGlobally === 'true';
             
@@ -1388,8 +1350,6 @@ export function initChatManager() {
             }
             
             profileBtn.href = `${window.projectBasePath}/profile/${friendItem.dataset.username}`;
-
-            // --- (Fin Lógica de DM) ---
 
             const pinBtn = popover.querySelector('[data-action="pin-chat"]');
             const unpinBtn = popover.querySelector('[data-action="unpin-chat"]');
@@ -1420,16 +1380,15 @@ export function initChatManager() {
             popover.classList.toggle('disabled'); 
             popover.classList.toggle('active');
             
-            // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Nueva clase de popover) ▼▼▼
             if (popover.classList.contains('active')) {
                 actionsContainer.classList.add('popover-active');
             } else {
                 actionsContainer.classList.remove('popover-active');
             }
-            // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
             return;
         }
-        
+
+        // 3. Comprobar si se hizo clic DENTRO de un popover
         const popoverOption = e.target.closest('#chat-context-menu .menu-link');
         if (popoverOption) {
              e.preventDefault();
@@ -1445,38 +1404,74 @@ export function initChatManager() {
                      chatPopperInstance.destroy();
                      chatPopperInstance = null;
                  }
-                 // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Nueva clase de popover) ▼▼▼
                  document.querySelector('.chat-item-menu-badge.popover-active')?.classList.remove('popover-active');
-                 // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
-                 return;
+                 // Dejar que el url-manager maneje la navegación (no hacer return)
+             } else {
+                 // Si fue otra acción (Bloquear, Eliminar, etc.), manejarla y DETENER
+                 const popover = popoverOption.closest('#chat-context-menu');
+                 const targetId = popover.dataset.currentTargetId;
+                 
+                 deactivateAllModules();
+                 if (chatPopperInstance) {
+                     chatPopperInstance.destroy();
+                     chatPopperInstance = null;
+                 }
+                 document.querySelector('.chat-item-menu-badge.popover-active')?.classList.remove('popover-active');
+                 
+                 _executeChatContextMenuAction(action, targetId);
+                 
+                 return; // Detener aquí
              }
-             
-             const popover = popoverOption.closest('#chat-context-menu');
-             const targetId = popover.dataset.currentTargetId;
-             
-             deactivateAllModules();
-             if (chatPopperInstance) {
-                 chatPopperInstance.destroy();
-                 chatPopperInstance = null;
-             }
-             // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Nueva clase de popover) ▼▼▼
-             document.querySelector('.chat-item-menu-badge.popover-active')?.classList.remove('popover-active');
-             // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
-             
-             _executeChatContextMenuAction(action, targetId);
-             
-             return;
+        }
+        
+        // 4. Comprobar si se hizo clic en el ITEM DE CONVERSACIÓN (Navegación)
+        const conversationItem = e.target.closest('a.chat-conversation-item[data-nav-js="true"]');
+        if (conversationItem) {
+            e.preventDefault(); 
+            
+            const targetId = conversationItem.dataset.targetId;
+            const name = conversationItem.dataset.username;
+            const avatar = conversationItem.dataset.avatar;
+            const role = conversationItem.dataset.role;
+            const isOnline = conversationItem.querySelector('.chat-item-status')?.classList.contains('online');
+            const lastSeen = conversationItem.dataset.lastSeen || null;
+            
+            document.getElementById('chat-layout-container')?.classList.add('show-chat');
+            
+            openChat(targetId, name, avatar, role, isOnline, lastSeen);
+            
+            return;
         }
 
+        // 5. Clic FUERA de un popover (pero dentro de la sección de chat)
         const clickedOnPopover = e.target.closest('#chat-context-menu.active');
         if (!contextBtn && !clickedOnPopover) {
              if (chatPopperInstance) {
                 chatPopperInstance.destroy();
                 chatPopperInstance = null;
              }
-             // --- ▼▼▼ INICIO DE LA MODIFICACIÓN (Nueva clase de popover) ▼▼▼
              document.querySelector('.chat-item-menu-badge.popover-active')?.classList.remove('popover-active');
-             // --- ▲▲▲ FIN DE LA MODIFICACIÓN ▲▲▲
+        }
+        // --- ▲▲▲ FIN DE CORRECCIÓN: ORDEN DE LISTENERS ▲▲▲ ---
+
+
+        // (El resto de los listeners para filtros, back, attach, etc., permanecen igual)
+        const filterBadge = e.target.closest('.chat-filter-badge[data-filter]');
+        if (filterBadge) {
+            e.preventDefault();
+            const newFilter = filterBadge.dataset.filter;
+            
+            if (newFilter === 'communities') { // Filtro de comunidad ya no existe
+                return;
+            }
+            
+            if (newFilter === currentChatFilter) return; 
+            
+            
+            // Llamar a loadConversations con el nuevo filtro
+            loadConversations(newFilter); 
+            
+            return;
         }
         
         const backBtn = e.target.closest('#chat-back-button');
