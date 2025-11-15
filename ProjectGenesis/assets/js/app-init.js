@@ -1,4 +1,3 @@
-
 import { initMainController } from './app/main-controller.js';
 import { initRouter, loadPage } from './app/url-manager.js';
 import { initAuthManager } from './modules/auth-manager.js';
@@ -34,6 +33,10 @@ import {
 } from './modules/notification-manager.js';
 
 import { initAdminCommunityManager } from './modules/admin-community-manager.js';
+
+// --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+import { initAdminManageStatusManager } from './modules/admin-manage-status-manager.js';
+// --- ▲▲▲ LÍNEA AÑADIDA ▲▲▲ ---
 
 import { initSocketService } from './services/socket-service.js';
 
@@ -130,6 +133,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     initNotificationManager();
     initSearchManager();
     initAdminCommunityManager();
+    
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    initAdminManageStatusManager();
+    // --- ▲▲▲ LÍNEA AÑADIDA ▲▲▲ ---
     
     initChatManager();
 

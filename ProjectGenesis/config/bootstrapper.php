@@ -390,6 +390,9 @@ $pathsToPages = [
     '/admin/manage-communities' => 'admin-manage-communities',
     '/admin/edit-community'     => 'admin-edit-community',
 
+    // --- ▼▼▼ LÍNEA AÑADIDA ▼▼▼ ---
+    '/admin/manage-status'      => 'admin-manage-status',
+    // --- ▲▲▲ LÍNEA AÑADIDA ▲▲▲ ---
 ];
 
 // --- Definición de $currentPage y $authLayoutPages ---

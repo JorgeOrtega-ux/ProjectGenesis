@@ -74,6 +74,9 @@ const routes = {
 
     'toggleSectionAdminManageCommunities': 'admin-manage-communities',
     'toggleSectionAdminEditCommunity': 'admin-edit-community',
+    
+    // --- LÍNEA AÑADIDA ---
+    'toggleSectionAdminManageStatus': 'admin-manage-status',
 };
 
 const paths = {
@@ -142,6 +145,9 @@ const paths = {
 
     '/admin/manage-communities': 'toggleSectionAdminManageCommunities',
     '/admin/edit-community': 'toggleSectionAdminEditCommunity',
+
+    // --- LÍNEA AÑADIDA ---
+    '/admin/manage-status': 'toggleSectionAdminManageStatus',
 };
 
 const basePath = window.projectBasePath || '/ProjectGenesis';
@@ -535,7 +541,9 @@ function updateMenuState(currentAction) {
     if (currentAction === 'toggleSectionAdminCreateUser') {
         menuAction = 'toggleSectionAdminCreateUser';
     }
-    if (currentAction === 'toggleSectionAdminEditUser') {
+    // --- LÍNEA MODIFICADA ---
+    if (currentAction === 'toggleSectionAdminEditUser' || currentAction === 'toggleSectionAdminManageStatus') {
+    // --- FIN DE MODIFICACIÓN ---
         menuAction = 'toggleSectionAdminManageUsers';
     }
     if (currentAction === 'toggleSectionAdminServerSettings') {
