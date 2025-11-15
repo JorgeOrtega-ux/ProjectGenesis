@@ -1,4 +1,5 @@
 // FILE: assets/js/modules/notification-manager.js
+// (CORREGIDO PARA MOSTRAR CORRECTAMENTE LOS NOMBRES DE USUARIO)
 
 import { callNotificationApi } from '../services/api-service.js';
 import { getTranslation, applyTranslations } from '../services/i18n-manager.js';
@@ -131,7 +132,7 @@ function addNotificationToUI(notification) {
                     </div>
                     <div class="notification-content">
                         <div class="notification-text">
-                            <span data-i18n="${textKey}">${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
+                            <span>${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
                         </div>
                         <div class="notification-timestamp">${timeAgo} ${unreadDot}</div>
                         </div>
@@ -148,7 +149,7 @@ function addNotificationToUI(notification) {
                     </div>
                     <div class="notification-content">
                         <div class="notification-text">
-                            <span data-i18n="${textKey}">${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
+                            <span>${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
                         </div>
                         <div class="notification-timestamp">${timeAgo} ${unreadDot}</div>
                         </div>
@@ -165,7 +166,7 @@ function addNotificationToUI(notification) {
                     </div>
                     <div class="notification-content">
                         <div class="notification-text">
-                            <span data-i18n="${textKey}">${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
+                            <span>${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
                         </div>
                         <div class="notification-timestamp">${timeAgo} ${unreadDot}</div>
                         </div>
@@ -182,7 +183,7 @@ function addNotificationToUI(notification) {
                     </div>
                     <div class="notification-content">
                         <div class="notification-text">
-                            <span data-i18n="${textKey}">${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
+                            <span>${getTranslation(textKey).replace('{username}', notification.actor_username)}</span>
                         </div>
                         <div class="notification-timestamp">${timeAgo} ${unreadDot}</div>
                         </div>

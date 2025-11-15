@@ -4,6 +4,7 @@
 // (CORREGIDO CON LÓGICA DE MENSAJERÍA DESHABILITADA EN CLICK Y POPSTATE)
 // (CORREGIDO: EXCEPCIÓN PARA EVITAR NAVEGACIÓN AL CLICAR BOTÓN DE MENÚ)
 // --- ▼▼▼ MODIFICACIÓN (ELIMINADA LÓGICA DE CHAT DE COMUNIDAD) ▼▼▼ ---
+// --- ▼▼▼ MODIFICACIÓN (FIX DOBLE LOG) ▼▼▼ ---
 
 import { deactivateAllModules } from './main-controller.js';
 import { startResendTimer } from '../modules/auth-manager.js';
@@ -101,6 +102,7 @@ const paths = {
     // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX) 1 DE 3 ▲▲▲ ---
     // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
 
+
     '/explorer': 'toggleSectionExplorer',
     '/login': 'toggleSectionLogin',
     '/maintenance': 'toggleSectionMaintenance',
@@ -160,7 +162,9 @@ const paths = {
 const basePath = window.projectBasePath || '/ProjectGenesis';
 
 
-async function loadPage(page, action, fetchParams = null, isPartialLoad = false) {
+// --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX DOBLE LOG) 1 DE 2 ▼▼▼ ---
+async function loadPage(page, action, fetchParams = null, isPartialLoad = false, runPageInitLogic = true) {
+// --- ▲▲▲ FIN DE MODIFICACIÓN (FIX DOBLE LOG) 1 DE 2 ▲▲▲ ---
 
     if (!contentContainer) return;
 
@@ -368,28 +372,32 @@ async function loadPage(page, action, fetchParams = null, isPartialLoad = false)
             });
         }
 
-        if (page === 'home') {
-            loadSavedCommunity();
-        }
-
-        if (page === 'post-view') {
-
-            const commentsContainer = contentContainer.querySelector('.post-comments-container[data-post-id]');
-            const commentInputContainer = contentContainer.querySelector('.post-comment-input-container[data-action="post-comment"]');
-
-            if (commentsContainer && commentInputContainer) {
-                commentsContainer.classList.add('active');
-                commentInputContainer.classList.add('active');
-
-                loadCommentsForPost(commentsContainer.dataset.postId);
+        // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX DOBLE LOG) 2 DE 2 ▼▼▼ ---
+        if (runPageInitLogic) {
+            if (page === 'home') {
+                loadSavedCommunity();
             }
-        }
 
-        // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ ---
-        if (page === 'create-publication' || page === 'create-poll') {
-            initPublicationForm(); // ¡¡LA LLAMADA QUE FALTABA!!
+            if (page === 'post-view') {
+
+                const commentsContainer = contentContainer.querySelector('.post-comments-container[data-post-id]');
+                const commentInputContainer = contentContainer.querySelector('.post-comment-input-container[data-action="post-comment"]');
+
+                if (commentsContainer && commentInputContainer) {
+                    commentsContainer.classList.add('active');
+                    commentInputContainer.classList.add('active');
+
+                    loadCommentsForPost(commentsContainer.dataset.postId);
+                }
+            }
+
+            // --- ▼▼▼ INICIO DE BLOQUE AÑADIDO ▼▼▼ ---
+            if (page === 'create-publication' || page === 'create-poll') {
+                initPublicationForm(); // ¡¡LA LLAMADA QUE FALTABA!!
+            }
+            // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
         }
-        // --- ▲▲▲ FIN DE BLOQUE AÑADIDO ▲▲▲ ---
+        // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX DOBLE LOG) 2 DE 2 ▲▲▲ ---
 
 
     } catch (error) {
@@ -473,7 +481,7 @@ export function handleNavigation() {
             loadPage('messaging-disabled', 'toggleSectionMessagingDisabled', null, false);
             return; 
         }
-        // --- ▲▲▲ FIN DEL BLOQUE DE SEGURIDAD AÑADIDO (EL FIX) ▲▲▲ ---
+        // --- ▲▲▲ FIN DEL BLOQUE DE SEGURIDAD AÑADIDO (EL FIX) ▼▼▼ ---
         
         const matches = path.match(messagesRegex);
         const userUuid = matches[1]; 

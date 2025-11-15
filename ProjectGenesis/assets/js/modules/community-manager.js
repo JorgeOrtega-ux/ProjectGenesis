@@ -1,3 +1,6 @@
+// FILE: assets/js/modules/community-manager.js
+// (CORREGIDO PARA EL FIX DE DOBLE LOG)
+
 import { callCommunityApi, callPublicationApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
 import { deactivateAllModules } from '../app/main-controller.js';
@@ -110,17 +113,21 @@ function selectCommunity(communityId, communityName, communityUuid = null) {
         newPath = basePath + '/c/' + communityUuid;
     }
 
+    // --- ▼▼▼ INICIO DE MODIFICACIÓN (FIX DOBLE LOG) ▼▼▼ ---
+    // Este es el log que ves duplicado.
+    console.log(`Grupo seleccionado: ${communityName} (ID: ${communityId}, UUID: ${communityUuid})`);
+    
     if (window.location.pathname !== newPath) {
         history.pushState({ communityId: communityId }, '', newPath);
         
+        // Añadimos el 'false' al final para (isPartialLoad) y (runPageInitLogic)
         if (communityId === 'main_feed') {
-            loadPage('home', 'toggleSectionHome');
+            loadPage('home', 'toggleSectionHome', null, false, false);
         } else {
-            loadPage('home', 'toggleSectionHome', { community_uuid: communityUuid });
+            loadPage('home', 'toggleSectionHome', { community_uuid: communityUuid }, false, false);
         }
     }
-    
-    console.log(`Grupo seleccionado: ${communityName} (ID: ${communityId}, UUID: ${communityUuid})`);
+    // --- ▲▲▲ FIN DE MODIFICACIÓN (FIX DOBLE LOG) ▲▲▲ ---
     
     deactivateAllModules();
 }
