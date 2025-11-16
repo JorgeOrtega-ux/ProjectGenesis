@@ -913,15 +913,7 @@ async function sendMessage() {
             document.getElementById('chat-message-list').insertAdjacentHTML('beforeend', bubbleHtml);
             scrollToBottom();
             
-            const listContainer = document.getElementById('chat-conversation-list');
-            const targetId = currentChatTargetId;
-            const existingItem = listContainer.querySelector(`.chat-conversation-item[data-target-id="${targetId}"]`);
-            
-            if (existingItem) {
-                updateConversationItem(existingItem, result.message_sent, 0); 
-            } else {
-                await loadConversations(currentChatFilter);
-            }
+            await loadConversations(currentChatFilter); 
             
             let selector = `.chat-conversation-item[data-type="dm"][data-target-id="${currentChatTargetId}"]`;
             
@@ -980,23 +972,14 @@ export function handleChatMessageReceived(message) {
         return;
     }
 
-
-    const listContainer = document.getElementById('chat-conversation-list');
-    const targetId = parseInt(message.sender_id, 10);
-    const existingItem = listContainer ? listContainer.querySelector(`.chat-conversation-item[data-target-id="${targetId}"]`) : null;
-
-    if (existingItem) {
-        if (targetId === currentChatTargetId) {
-            updateConversationItem(existingItem, message, 0);
-        } else {
-            const newUnreadCount = message.new_unread_count_for_receiver || 1; 
-            updateConversationItem(existingItem, message, newUnreadCount);
-        }
-    } else {
-        friendCache = []; 
-        loadConversations(currentChatFilter);
-    }
+    let targetId = parseInt(message.sender_id, 10);
+    let listToReload = 'all'; 
     
+    if (currentChatFilter === listToReload || (currentChatFilter !== 'communities' && listToReload === 'all')) {
+         loadConversations(currentChatFilter);
+    } else {
+         friendCache = []; 
+    }
     
     if (targetId === currentChatTargetId) {
         const bubbleHtml = createMessageBubbleHtml(message, false);
@@ -1326,9 +1309,29 @@ export function initChatManager() {
 
         const chatImage = e.target.closest('.chat-attachment-item img');
         if (chatImage) {
-            e.preventDefault(); 
-            e.stopPropagation(); 
-            openChatPhotoViewer(chatImage);
+            e.preventDefault();
+            e.stopPropagation();
+
+            const bubble = chatImage.closest('.chat-bubble');
+            const chatMain = chatImage.closest('#chat-content-main');
+            if (!bubble || !chatMain) return;
+
+            let headerInfo = {};
+            if (bubble.classList.contains('sent')) {
+                headerInfo.avatar = document.querySelector('.header-profile-image')?.src || defaultAvatar;
+                headerInfo.name = getTranslation('js.chat.replyToSelf') || 'Tú';
+            } else {
+                headerInfo.avatar = chatMain.querySelector('#chat-header-avatar')?.src || defaultAvatar;
+                headerInfo.name = chatMain.querySelector('#chat-header-username')?.textContent || 'Usuario';
+            }
+
+            const allImages = bubble.querySelectorAll('.chat-attachment-item img');
+            const imageUrls = Array.from(allImages).map(img => img.src);
+            
+            const clickedIndex = imageUrls.indexOf(chatImage.src);
+            
+            openChatPhotoViewer(imageUrls, clickedIndex, headerInfo);
+            
             return; 
         }
         
@@ -1792,58 +1795,4 @@ export function initChatManager() {
     
     
     initPhotoViewerListeners();
-}
-
-function updateConversationItem(item, message, newUnreadCount = null) {
-    const listContainer = document.getElementById('chat-conversation-list');
-    if (!item || !message || !listContainer) return;
-
-    const snippetEl = item.querySelector('.chat-item-snippet');
-    if (snippetEl) {
-        let snippetHtml = '';
-        const hasAttachments = message.attachment_urls && message.attachment_urls.split(',').length > 0;
-        const messageText = message.message_text || '';
-
-        if (hasAttachments && !messageText) {
-            snippetHtml = `<span data-i18n="chat.snippet.image">${getTranslation('chat.snippet.image', '[Imagen]')}</span>`;
-        } else if (message.status === 'deleted') {
-            snippetHtml = `<i data-i18n="chat.snippet.deleted">${getTranslation('chat.snippet.deleted', '[Mensaje eliminado]')}</i>`;
-        } else {
-            snippetHtml = escapeHTML(messageText); 
-        }
-        snippetEl.innerHTML = snippetHtml;
-    }
-
-    const timestampEl = item.querySelector('.chat-item-timestamp');
-    if (timestampEl) {
-        timestampEl.textContent = formatTime(message.created_at); 
-    }
-
-    const unreadBadge = item.querySelector('.chat-item-unread-badge');
-    
-    if (newUnreadCount !== null && newUnreadCount > 0) {
-        if (unreadBadge) {
-            unreadBadge.textContent = newUnreadCount;
-        } else {
-            const newBadge = document.createElement('span');
-            newBadge.className = 'chat-item-unread-badge';
-            newBadge.textContent = newUnreadCount;
-            const rightGroup = item.querySelector('.chat-item-right-group');
-            const menuButton = rightGroup ? rightGroup.querySelector('.chat-item-menu-badge') : null;
-            if (rightGroup && menuButton) {
-                rightGroup.insertBefore(newBadge, menuButton);
-            } else if (rightGroup) {
-                rightGroup.appendChild(newBadge); 
-            }
-        }
-    } else if (newUnreadCount === 0) {
-        if (unreadBadge) {
-            unreadBadge.remove();
-        }
-    }
-
-    const isPinned = item.dataset.pinnedAt && item.dataset.pinnedAt.length > 0;
-    if (!isPinned) {
-        listContainer.prepend(item);
-    }
 }

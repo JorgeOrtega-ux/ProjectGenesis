@@ -214,7 +214,15 @@ if ($hasPreloadedUser) {
                             <button type="button" class="chat-attach-button" id="chat-attach-button">
                                 <span class="material-symbols-rounded">add_photo_alternate</span>
                             </button>
-                    
+                      <textarea 
+                            class="chat-input-field" 
+                            id="chat-message-input" 
+                            placeholder="Escribe tu mensaje..." 
+                            data-i18n-placeholder="chat.messagePlaceholder" 
+                            autocomplete="off" 
+                            rows="1"
+                            <?php echo ($hasPreloadedUser && !$hasChatError) ? '' : 'disabled'; ?>
+                        ></textarea>
                             <button type="submit" class="chat-send-button" id="chat-send-button" disabled>
                                 <span class="material-symbols-rounded">send</span>
                             </button>
