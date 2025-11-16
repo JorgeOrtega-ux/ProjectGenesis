@@ -169,14 +169,15 @@ if ($hasPreloadedUser) {
                     <div class="chat-header-info" id="chat-header-info">
                         <div class="chat-header-username" id="chat-header-username"><?php echo $preloadedUsername; ?></div>
                         <div class="chat-header-status <?php echo $preloadedStatusClass; ?>" id="chat-header-status" data-i18n-offline="chat.offline"><?php echo $preloadedStatusText; ?></div>
-                        
+
                         <div class="chat-header-status-typing disabled" id="chat-header-typing">
                             <span class="typing-dot"></span>
                             <span class="typing-dot"></span>
                             <span class="typing-dot"></span>
-                            <?php // Se eliminó el <span> de texto ?>
+                            <?php // Se eliminó el <span> de texto 
+                            ?>
                         </div>
-                        </div>
+                    </div>
                 </div>
 
                 <div class="chat-message-list overflow-y" id="chat-message-list">
@@ -198,45 +199,39 @@ if ($hasPreloadedUser) {
                         <div class="chat-attachment-preview-container" id="chat-attachment-preview-container">
                         </div>
 
-                        <?php // --- ▼▼▼ INICIO DE ESTRUCTURA HTML (Etapa 3) ▼▼▼ --- ?>
-                        
-                        <textarea 
-                            class="chat-input-field" 
-                            id="chat-message-input" 
-                            placeholder="Escribe tu mensaje..." 
-                            data-i18n-placeholder="chat.messagePlaceholder" 
-                            autocomplete="off" 
-                            rows="1"
-                            <?php echo ($hasPreloadedUser && !$hasChatError) ? '' : 'disabled'; ?>
-                        ></textarea>
-                    
+                        <div class="chat-input-main-column disabled">
+                            <textarea
+                                class="chat-input-field"
+                                id="chat-message-input"
+                                placeholder="Escribe tu mensaje..."
+                                data-i18n-placeholder="chat.messagePlaceholder"
+                                autocomplete="off"
+                                rows="1"
+                                <?php echo ($hasPreloadedUser && !$hasChatError) ? '' : 'disabled'; ?>></textarea>
+                        </div>
+
                         <div class="chat-input-main-row">
                             <button type="button" class="chat-attach-button" id="chat-attach-button">
                                 <span class="material-symbols-rounded">add_photo_alternate</span>
                             </button>
-                      <textarea 
-                            class="chat-input-field" 
-                            id="chat-message-input" 
-                            placeholder="Escribe tu mensaje..." 
-                            data-i18n-placeholder="chat.messagePlaceholder" 
-                            autocomplete="off" 
-                            rows="1"
-                            <?php echo ($hasPreloadedUser && !$hasChatError) ? '' : 'disabled'; ?>
-                        ></textarea>
+                            <textarea
+                                class="chat-input-field"
+                                id="chat-message-input"
+                                placeholder="Escribe tu mensaje..."
+                                data-i18n-placeholder="chat.messagePlaceholder"
+                                autocomplete="off"
+                                rows="1"
+                                <?php echo ($hasPreloadedUser && !$hasChatError) ? '' : 'disabled'; ?>></textarea>
                             <button type="submit" class="chat-send-button" id="chat-send-button" disabled>
                                 <span class="material-symbols-rounded">send</span>
                             </button>
                         </div>
-                        
-                        <?php // --- ▲▲▲ FIN DE ESTRUCTURA HTML (Etapa 3) ▲▲▲ --- ?>
 
                     </div>
                 </form>
             </div>
         </div>
 
-        <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (Menú Contextual) ▼▼▼ 
-        ?>
         <div class="popover-module body-title disabled"
             data-module="moduleChatContext"
             id="chat-context-menu">
@@ -270,7 +265,8 @@ if ($hasPreloadedUser) {
                         <div class="menu-link-text"><span data-i18n="chat.context.unarchiveChat">Desarchivar chat</span></div>
                     </div>
 
-                    <?php // --- ▼▼▼ BLOQUE ELIMINADO (Separador y Ver Perfil) ▼▼▼ --- ?>
+                    <?php // --- ▼▼▼ BLOQUE ELIMINADO (Separador y Ver Perfil) ▼▼▼ --- 
+                    ?>
                     <?php /*
                     <div style="height: 1px; background-color: #00000020; margin: 4px 8px;"></div>
 
@@ -286,8 +282,9 @@ if ($hasPreloadedUser) {
                         </div>
                     </a>
                     */ ?>
-                    <?php // --- ▲▲▲ FIN BLOQUE ELIMINADO ▲▲▲ --- ?>
-                    
+                    <?php // --- ▲▲▲ FIN BLOQUE ELIMINADO ▲▲▲ --- 
+                    ?>
+
                     <div style="height: 1px; background-color: #00000020; margin: 4px 8px;"></div>
 
                     <div class="menu-link" data-action="block-user">
@@ -308,35 +305,38 @@ if ($hasPreloadedUser) {
         </div>
         <?php // --- ▲▲▲ FIN DE MODIFICACIÓN (Menú Contextual) ▲▲▲ 
         ?>
-        
-        <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (POPOVER DE MENSAJE AÑADIDO) ▼▼▼ ?>
+
+        <?php // --- ▼▼▼ INICIO DE MODIFICACIÓN (POPOVER DE MENSAJE AÑADIDO) ▼▼▼ 
+        ?>
         <div class="popover-module body-title disabled"
             data-module="moduleMessageContext"
             id="message-context-menu">
             <div class="menu-content">
                 <div class="menu-list">
-                    
+
                     <div class="menu-link" data-action="msg-reply">
                         <div class="menu-link-icon"><span class="material-symbols-rounded">reply</span></div>
                         <div class="menu-link-text"><span data-i18n="chat.context.reply">Responder</span></div>
                     </div>
-                    
+
                     <div class="menu-link" data-action="msg-copy">
                         <div class="menu-link-icon"><span class="material-symbols-rounded">content_copy</span></div>
                         <div class="menu-link-text"><span data-i18n="chat.context.copy">Copiar texto</span></div>
                     </div>
 
                     <div style="height: 1px; background-color: #00000020; margin: 4px 8px;"></div>
-                    
-                    <div class="menu-link" data-action="msg-delete" style="display: none;"> <?php // El JS lo mostrará si es 'sent' ?>
+
+                    <div class="menu-link" data-action="msg-delete" style="display: none;"> <?php // El JS lo mostrará si es 'sent' 
+                                                                                            ?>
                         <div class="menu-link-icon"><span class="material-symbols-rounded">delete</span></div>
                         <div class="menu-link-text"><span data-i18n="chat.context.delete">Eliminar mensaje</span></div>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
-        <?php // --- ▲▲▲ FIN DE MODIFICACIÓN (POPOVER DE MENSAJE AÑADIDO) ▲▲▲ ?>
+        <?php // --- ▲▲▲ FIN DE MODIFICACIÓN (POPOVER DE MENSAJE AÑADIDO) ▲▲▲ 
+        ?>
 
 
     </div>
