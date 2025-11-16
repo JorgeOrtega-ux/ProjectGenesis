@@ -555,3 +555,23 @@ Stack trace:
 [16-Nov-2025 00:46:57 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
 [16-Nov-2025 00:47:30 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
 [16-Nov-2025 00:49:15 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[16-Nov-2025 00:50:52 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[16-Nov-2025 00:52:25 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-information.php on line 100
+[16-Nov-2025 00:52:30 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 112
+[16-Nov-2025 00:52:31 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 127
+[16-Nov-2025 00:52:32 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 141
+[16-Nov-2025 00:52:32 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 178
+[16-Nov-2025 00:52:32 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 187
+[16-Nov-2025 00:52:32 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 223
+[16-Nov-2025 00:52:32 UTC] PHP Warning:  Undefined variable $isOwnProfile in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\profile-tabs\view-profile-posts.php on line 270
+[16-Nov-2025 00:54:30 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 166
+[16-Nov-2025 00:54:31 UTC] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 167
+[16-Nov-2025 00:54:31 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[16-Nov-2025 00:57:38 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[16-Nov-2025 00:58:12 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[16-Nov-2025 00:58:59 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[16-Nov-2025 00:59:34 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[16-Nov-2025 01:00:06 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[16-Nov-2025 01:01:26 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[16-Nov-2025 01:05:30 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88
+[16-Nov-2025 01:08:13 UTC] PHP Warning:  Undefined variable $is_actually_online in E:\xampp\htdocs\ProjectGenesis\includes\sections\main\messages.php on line 88

@@ -1,4 +1,3 @@
-
 import { callChatApi, callFriendApi } from '../services/api-service.js';
 import { getTranslation } from '../services/i18n-manager.js';
 import { showAlert } from '../services/alert-manager.js';
@@ -423,42 +422,153 @@ function scrollToBottom() {
     }
 }
 
+// --- ▼▼▼ INICIO DE FUNCIÓN CORREGIDA (autoGrowTextarea) ▼▼▼ ---
 function autoGrowTextarea(el) {
     if (!el) return;
-    
-    const maxHeight = parseInt(window.getComputedStyle(el).maxHeight, 10) || 120;
-    
-    el.style.height = 'auto'; 
-    
-    if (el.scrollHeight <= maxHeight) {
+
+    const pillWrapper = el.closest('.chat-input-pill-wrapper');
+    if (!pillWrapper) {
+        // Fallback
+        el.style.height = 'auto';
         el.style.height = (el.scrollHeight) + 'px';
-        el.style.overflowY = 'hidden'; 
-    } else {
-        el.style.height = maxHeight + 'px';
-        el.style.overflowY = 'auto'; 
+        return;
+    }
+    
+    const expandedWrapper = pillWrapper.querySelector('.chat-input-main-column');
+    const inlineWrapper = pillWrapper.querySelector('.chat-input-main-row'); // DIV con botones
+    const expandedTextarea = pillWrapper.querySelector('#chat-message-input-expanded');
+    const inlineTextarea = pillWrapper.querySelector('#chat-message-input-inline'); // Textarea de abajo
+
+    if (!expandedWrapper || !inlineWrapper || !expandedTextarea || !inlineTextarea) {
+        // Failsafe
+        el.style.height = 'auto';
+        el.style.height = (el.scrollHeight) + 'px';
+        return;
+    }
+
+    const maxHeight = parseInt(window.getComputedStyle(el).maxHeight, 10) || 120;
+    const singleLineHeight = 32; 
+    const currentText = el.value;
+
+    // Reseteo temporal para calcular la altura real
+    el.style.height = 'auto';
+    const scrollHeight = el.scrollHeight;
+
+    if (el.id === 'chat-message-input-inline') {
+        // --- Escribiendo en el textarea EN LÍNEA ---
+
+        // Si la altura del scroll es mayor que la de una línea
+        if (scrollHeight > singleLineHeight + 10) { 
+            // --- CAMBIAR A EXPANDIDO ---
+            expandedTextarea.value = currentText; // Transferir texto
+            
+            // --- LÓGICA CORREGIDA ---
+            // 1. Mostrar el 'div' de arriba
+            expandedWrapper.classList.remove('disabled');
+            expandedWrapper.classList.add('active');
+            // 2. Ocultar SÓLO el 'textarea' de abajo
+            inlineTextarea.classList.add('disabled');
+            inlineTextarea.classList.remove('active');
+            inlineTextarea.style.display = 'none'; // Ser explícito
+            // 3. El 'inlineWrapper' (la fila de botones) NO SE TOCA
+            
+            // Ajustar altura del nuevo textarea (sin recursión)
+            const newEl = expandedTextarea;
+            newEl.style.height = 'auto'; // Reset
+            const newScrollHeight = newEl.scrollHeight;
+            
+            if (newScrollHeight <= maxHeight) {
+                newEl.style.height = (newScrollHeight) + 'px';
+                newEl.style.overflowY = 'hidden';
+            } else {
+                newEl.style.height = maxHeight + 'px';
+                newEl.style.overflowY = 'auto';
+            }
+            
+            // Enfocar y mover cursor al final
+            newEl.focus();
+            try {
+                newEl.setSelectionRange(currentText.length, currentText.length);
+            } catch(e) {}
+
+        } else {
+            // --- Mantenerse en línea ---
+            el.style.height = (scrollHeight) + 'px';
+            el.style.overflowY = 'hidden';
+        }
+
+    } else if (el.id === 'chat-message-input-expanded') {
+        // --- Escribiendo en el textarea EXPANDIDO ---
+
+        // Solo cambiar de vuelta a 'inline' si está VACÍO
+        if (currentText === '') { 
+            // --- CAMBIAR A EN LÍNEA ---
+            inlineTextarea.value = currentText; // Transferir texto
+            
+            // --- LÓGICA CORREGIDA ---
+            // 1. Ocultar el 'div' de arriba
+            expandedWrapper.classList.add('disabled');
+            expandedWrapper.classList.remove('active');
+            // 2. Mostrar SÓLO el 'textarea' de abajo
+            inlineTextarea.classList.remove('disabled');
+            inlineTextarea.classList.add('active');
+            inlineTextarea.style.display = ''; // Reset
+            // 3. El 'inlineWrapper' (la fila de botones) NO SE TOCA
+
+            // Ajustar altura del nuevo textarea (sin recursión)
+            const newEl = inlineTextarea;
+            newEl.style.height = 'auto'; // Reset
+            const newScrollHeight = newEl.scrollHeight;
+            newEl.style.height = (newScrollHeight) + 'px'; // Ajustar
+            newEl.style.overflowY = 'hidden';
+
+            // Enfocar y mover cursor al final
+            newEl.focus();
+            try {
+                newEl.setSelectionRange(currentText.length, currentText.length);
+            } catch(e) {}
+
+        } else {
+            // --- Mantenerse expandido, lógica de crecimiento normal ---
+            if (scrollHeight <= maxHeight) {
+                el.style.height = (scrollHeight) + 'px';
+                el.style.overflowY = 'hidden';
+            } else {
+                el.style.height = maxHeight + 'px';
+                el.style.overflowY = 'auto';
+            }
+        }
     }
 }
+// --- ▲▲▲ FIN DE FUNCIÓN CORREGIDA (autoGrowTextarea) ▲▲▲ ---
 
+
+// --- ▼▼▼ INICIO DE FUNCIÓN CORREGIDA (enableChatInput) ▼▼▼ ---
 function enableChatInput(allow, reason = null) {
-    const input = document.getElementById('chat-message-input');
+    const inlineInput = document.getElementById('chat-message-input-inline');
+    const expandedInput = document.getElementById('chat-message-input-expanded');
     const attachBtn = document.getElementById('chat-attach-button');
     const sendBtn = document.getElementById('chat-send-button');
     
-    if (!input || !attachBtn || !sendBtn) return;
+    if (!inlineInput || !expandedInput || !attachBtn || !sendBtn) return;
+
+    const placeholderText = allow
+        ? getTranslation('chat.messagePlaceholder', 'Escribe tu mensaje...')
+        : getTranslation(reason || 'js.chat.errorPrivacyBlocked', 'No puedes enviar mensajes a este usuario.');
+
+    inlineInput.disabled = !allow;
+    expandedInput.disabled = !allow;
+    attachBtn.disabled = !allow;
+
+    inlineInput.placeholder = placeholderText;
+    expandedInput.placeholder = placeholderText;
 
     if (allow) {
-        input.disabled = false;
-        attachBtn.disabled = false;
-        input.placeholder = getTranslation('chat.messagePlaceholder', 'Escribe tu mensaje...');
         validateSendButton(); 
     } else {
-        input.disabled = true;
-        attachBtn.disabled = true;
         sendBtn.disabled = true; 
-        input.value = ''; 
-        
-        const placeholderKey = reason || 'js.chat.errorPrivacyBlocked'; 
-        input.placeholder = getTranslation(placeholderKey, 'No puedes enviar mensajes a este usuario.');
+        inlineInput.value = ''; 
+        expandedInput.value = ''; 
         
         selectedAttachments = [];
         const previewContainer = document.getElementById('chat-attachment-preview-container');
@@ -468,8 +578,29 @@ function enableChatInput(allow, reason = null) {
         hideReplyPreview();
     }
     
-    autoGrowTextarea(input);
+    // Si se deshabilita, forzar el regreso a la vista en línea
+    if (!allow) {
+        // --- LÓGICA DE RESET CORREGIDA ---
+        const expandedWrapper = document.querySelector('.chat-input-main-column');
+        
+        if (expandedWrapper && inlineInput && expandedWrapper.classList.contains('active')) {
+            // Ocultar el wrapper de arriba
+            expandedWrapper.classList.add('disabled');
+            expandedWrapper.classList.remove('active');
+            
+            // Mostrar el textarea de abajo
+            inlineInput.classList.remove('disabled'); // Aunque esté !allow, la mostramos (ya está disabled por la lógica de arriba)
+            inlineInput.classList.add('active');
+            inlineInput.style.display = ''; // Reset
+        }
+        // --- FIN DE LÓGICA ---
+    }
+    
+    autoGrowTextarea(inlineInput);
+    autoGrowTextarea(expandedInput);
 }
+// --- ▲▲▲ FIN DE FUNCIÓN CORREGIDA (enableChatInput) ▲▲▲ ---
+
 
 function createMessageBubbleHtml(msg, isSent) {
     const myUserId = parseInt(window.userId, 10);
@@ -733,13 +864,20 @@ async function openChat(targetId, name, avatar, role, isOnline, lastSeen) {
     const typingEl = document.getElementById('chat-header-typing');
     if (typingEl) typingEl.classList.add('disabled');
     
-    document.getElementById('chat-message-input').disabled = true;
-    document.getElementById('chat-send-button').disabled = true;
-
-    const input = document.getElementById('chat-message-input');
-    if (input) {
-        input.placeholder = getTranslation('chat.messagePlaceholder', 'Escribe un mensaje...');
+    // Referenciar ambos textareas
+    const inlineInput = document.getElementById('chat-message-input-inline');
+    const expandedInput = document.getElementById('chat-message-input-expanded');
+    
+    if (inlineInput) {
+        inlineInput.disabled = true;
+        inlineInput.placeholder = getTranslation('chat.messagePlaceholder', 'Escribe un mensaje...');
     }
+    if (expandedInput) {
+        expandedInput.disabled = true;
+        expandedInput.placeholder = getTranslation('chat.messagePlaceholder', 'Escribe un mensaje...');
+    }
+    
+    document.getElementById('chat-send-button').disabled = true;
 
     document.getElementById('chat-attachment-preview-container').innerHTML = '';
     selectedAttachments = [];
@@ -760,16 +898,23 @@ async function openChat(targetId, name, avatar, role, isOnline, lastSeen) {
 }
 
 function validateSendButton() {
-    const input = document.getElementById('chat-message-input');
+    const inlineInput = document.getElementById('chat-message-input-inline');
+    const expandedInput = document.getElementById('chat-message-input-expanded');
     const sendBtn = document.getElementById('chat-send-button');
-    if (!input || !sendBtn) return;
+    if (!sendBtn || !inlineInput || !expandedInput) return;
 
-    if (input.disabled) {
+    // Comprobar si los inputs están deshabilitados
+    if (inlineInput.disabled || expandedInput.disabled) {
         sendBtn.disabled = true;
         return;
     }
     
-    const hasText = input.value.trim().length > 0;
+    // Obtener el texto del textarea que esté activo
+    const expandedWrapper = document.querySelector('.chat-input-main-column');
+    const hasText = (expandedWrapper && expandedWrapper.classList.contains('active'))
+        ? expandedInput.value.trim().length > 0
+        : inlineInput.value.trim().length > 0;
+
     const hasFiles = selectedAttachments.length > 0;
     
     sendBtn.disabled = !hasText && !hasFiles;
@@ -843,8 +988,9 @@ function showReplyPreview(messageId, username, text) {
     const container = document.getElementById('chat-reply-preview-container');
     if (!container) return;
     
-    const input = document.getElementById('chat-message-input');
-    if (input && input.disabled) {
+    // Comprobar si el input está deshabilitado
+    const inlineInput = document.getElementById('chat-message-input-inline');
+    if (inlineInput && inlineInput.disabled) {
         return;
     }
 
@@ -863,7 +1009,12 @@ function showReplyPreview(messageId, username, text) {
     currentReplyMessageId = messageId;
     
     document.getElementById('chat-reply-preview-close').addEventListener('click', hideReplyPreview);
-    document.getElementById('chat-message-input')?.focus();
+    
+    // Enfocar el input que esté visible
+    const visibleInput = document.querySelector('.chat-input-main-column.active textarea, .chat-input-main-row.active textarea');
+    if (visibleInput) {
+        visibleInput.focus();
+    }
 }
 
 function hideReplyPreview() {
@@ -875,21 +1026,30 @@ function hideReplyPreview() {
     currentReplyMessageId = null;
 }
 
+// --- ▼▼▼ INICIO DE FUNCIÓN CORREGIDA (sendMessage) ▼▼▼ ---
 async function sendMessage() {
     
-    const input = document.getElementById('chat-message-input');
+    const inlineInput = document.getElementById('chat-message-input-inline');
+    const expandedInput = document.getElementById('chat-message-input-expanded');
+    const expandedWrapper = document.querySelector('.chat-input-main-column');
     const sendBtn = document.getElementById('chat-send-button');
-    const messageText = input.value.trim();
 
-    if (!currentChatTargetId || sendBtn.disabled) {
+    if (!currentChatTargetId || !sendBtn || sendBtn.disabled || !inlineInput || !expandedInput || !expandedWrapper) {
         return;
     }
+
+    // Obtener el texto del textarea que esté activo
+    const messageText = expandedWrapper.classList.contains('active')
+        ? expandedInput.value.trim()
+        : inlineInput.value.trim();
+
     if (!messageText && selectedAttachments.length === 0) {
         return;
     }
     
     sendBtn.disabled = true;
-    input.disabled = true;
+    inlineInput.disabled = true;
+    expandedInput.disabled = true;
     document.getElementById('chat-attach-button').disabled = true;
 
     const formData = new FormData();
@@ -923,16 +1083,32 @@ async function sendMessage() {
                 friendItem.classList.add('active');
             }
             
-            input.value = '';
+            // Limpiar ambos textareas
+            inlineInput.value = '';
+            expandedInput.value = '';
+            
             selectedAttachments = [];
             document.getElementById('chat-attachment-preview-container').innerHTML = '';
             document.getElementById('chat-attachment-input').value = '';
             hideReplyPreview();
             
-            autoGrowTextarea(input); 
+            // --- Forzar el regreso al estado inline (LÓGICA CORREGIDA) ---
+            if (expandedWrapper.classList.contains('active')) {
+                // Ocultar el wrapper de arriba
+                expandedWrapper.classList.add('disabled');
+                expandedWrapper.classList.remove('active');
+                
+                // Mostrar el textarea de abajo
+                inlineInput.classList.remove('disabled'); // El enableChatInput lo re-habilitará
+                inlineInput.classList.add('active');
+                inlineInput.style.display = ''; // Reset
+            }
+            // Ajustar la altura del textarea inline (ahora vacío)
+            autoGrowTextarea(inlineInput); 
+            // --- FIN ---
 
             enableChatInput(true);
-            input.focus();
+            inlineInput.focus(); // Enfocar el inline
             
         } else {
             showAlert(getTranslation(result.message || 'js.api.errorServer'), 'error');
@@ -959,12 +1135,13 @@ async function sendMessage() {
         }
     } catch (e) {
         showAlert(getTranslation('js.api.errorConnection'), 'error');
-        
         enableChatInput(true);
-        
     } finally {
+        // El spinner se quita dentro de enableChatInput/validateSendButton
     }
 }
+// --- ▲▲▲ FIN DE FUNCIÓN CORREGIDA (sendMessage) ▲▲▲ ---
+
 
 export function handleChatMessageReceived(message) {
     
@@ -1621,6 +1798,18 @@ export function initChatManager() {
         }
 
 
+        const replyPreview = e.target.closest('#chat-reply-preview-container');
+        if (replyPreview) {
+            if (!e.target.closest('#chat-reply-preview-close')) {
+                const visibleInput = document.querySelector('.chat-input-main-column.active textarea, .chat-input-main-row.active textarea');
+                if (visibleInput) {
+                    visibleInput.focus();
+                }
+            }
+            return;
+        }
+
+
         const filterBadge = e.target.closest('.chat-filter-badge[data-filter]');
         if (filterBadge) {
             e.preventDefault();
@@ -1687,7 +1876,8 @@ export function initChatManager() {
     });
 
     document.body.addEventListener('input', (e) => {
-        const chatInput = e.target.closest('#chat-message-input');
+        // Escuchar eventos de input en AMBOS textareas
+        const chatInput = e.target.closest('#chat-message-input-inline, #chat-message-input-expanded');
         if (chatInput) {
             validateSendButton();
             autoGrowTextarea(chatInput); 
@@ -1718,7 +1908,8 @@ export function initChatManager() {
     });
 
     document.body.addEventListener('keydown', (e) => {
-        const chatInput = e.target.closest('#chat-message-input');
+        // Escuchar eventos de keydown en AMBOS textareas
+        const chatInput = e.target.closest('#chat-message-input-inline, #chat-message-input-expanded');
         if (chatInput && e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             const sendBtn = document.getElementById('chat-send-button');

@@ -202,22 +202,20 @@ if ($hasPreloadedUser) {
                         <div class="chat-input-main-column disabled">
                             <textarea
                                 class="chat-input-field"
-                                id="chat-message-input"
-                                placeholder="Escribe tu mensaje..."
+                                id="chat-message-input-expanded" placeholder="Escribe tu mensaje..."
                                 data-i18n-placeholder="chat.messagePlaceholder"
                                 autocomplete="off"
                                 rows="1"
                                 <?php echo ($hasPreloadedUser && !$hasChatError) ? '' : 'disabled'; ?>></textarea>
                         </div>
 
-                        <div class="chat-input-main-row">
+                        <div class="chat-input-main-row active">
                             <button type="button" class="chat-attach-button" id="chat-attach-button">
                                 <span class="material-symbols-rounded">add_photo_alternate</span>
                             </button>
                             <textarea
                                 class="chat-input-field"
-                                id="chat-message-input"
-                                placeholder="Escribe tu mensaje..."
+                                id="chat-message-input-inline" placeholder="Escribe tu mensaje..."
                                 data-i18n-placeholder="chat.messagePlaceholder"
                                 autocomplete="off"
                                 rows="1"
@@ -226,8 +224,8 @@ if ($hasPreloadedUser) {
                                 <span class="material-symbols-rounded">send</span>
                             </button>
                         </div>
-
-                    </div>
+                        
+                        </div>
                 </form>
             </div>
         </div>
