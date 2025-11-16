@@ -166,9 +166,10 @@ function generateAccessCode($length = 12) {
 }
 
 
-// --- ▼▼▼ INICIO DE FUNCIÓN AÑADIDA ▼▼▼ ---
+// --- ▼▼▼ INICIO DE FUNCIÓN MODIFICADA ▼▼▼ ---
 /**
  * Calcula un timestamp SQL futuro basado en un número de días.
+ * (Función ya no es necesaria para la lógica simplificada, pero se deja por si acaso)
  * @param string $daysString El número de días.
  * @return string|null
  */
@@ -190,7 +191,7 @@ function formatExpireDateFromDays($daysString) {
         return null;
     }
 }
-// --- ▲▲▲ FIN DE FUNCIÓN AÑADIDA ▲▲▲ ---
+// --- ▲▲▲ FIN DE FUNCIÓN MODIFICADA ▲▲▲ ---
 
 
 $minPasswordLength = (int)($GLOBALS['site_settings']['min_password_length'] ?? 8);
@@ -499,10 +500,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  exit;
             }
             
-            // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA 3) ▼▼▼ ---
-            // 'suspended' ya no es un estado válido para esta acción
             $allowedStatus = ['active', 'deleted'];
-            // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
             if (!in_array($newValue, $allowedStatus)) {
                 throw new Exception('js.api.invalidAction');
             }
@@ -515,10 +513,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $curl_endpoint = '';
                 $curl_payload = [];
 
-                // --- ▼▼▼ INICIO DE MODIFICACIÓN (TAREA 3) ▼▼▼ ---
-                // Se elimina la lógica para 'suspended'
                 if ($newValue === 'deleted') {
-                // --- ▲▲▲ FIN DE MODIFICACIÓN ▲▲▲ ---
                     $curl_endpoint = 'http://127.0.0.1:8766/update-status';
                     $curl_payload = json_encode([
                         'user_id' => (int)$targetUserId,
@@ -569,25 +564,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // --- ▼▼▼ INICIO DE MODIFICACIÓN (NUEVA ACCIÓN) ▼▼▼ ---
     } elseif ($action === 'admin-update-restrictions') {
         
-        // --- FUNCIÓN 'formatExpireDate' ELIMINADA ---
-        
         $targetUserId = (int)($_POST['target_user_id'] ?? 0);
         $generalStatus = $_POST['general_status'] ?? 'active';
         
-        // Capturar días de expiración (en lugar de fechas)
-        $statusExpiresDays = $_POST['status_expires_in_days'] ?? '';
+        // --- Variables de días eliminadas ---
         
         $restrictPublish = $_POST['restrict_publish'] ?? 'false';
-        $restrictPublishExpiresDays = $_POST['restrict_publish_expires_in_days'] ?? '';
-        
         $restrictComment = $_POST['restrict_comment'] ?? 'false';
-        $restrictCommentExpiresDays = $_POST['restrict_comment_expires_in_days'] ?? '';
-
         $restrictMessage = $_POST['restrict_message'] ?? 'false';
-        $restrictMessageExpiresDays = $_POST['restrict_message_expires_in_days'] ?? '';
-
         $restrictSocial = $_POST['restrict_social'] ?? 'false';
-        $restrictSocialExpiresDays = $_POST['restrict_social_expires_in_days'] ?? '';
 
 
         // --- Validación y Seguridad ---
@@ -620,11 +605,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->beginTransaction();
 
             // Paso A: Actualizar 'users' table
-            // --- Usar la nueva función helper ---
-            $dbStatusExpiresAt = formatExpireDateFromDays($statusExpiresDays);
-            
-            // Solo guardar fecha si el estado es 'suspended'
-            $finalStatusExpiresAt = ($generalStatus === 'suspended') ? $dbStatusExpiresAt : null; 
+            // --- Forzar fecha de expiración a NULL (permanente) ---
+            $finalStatusExpiresAt = ($generalStatus === 'suspended') ? null : null; 
             
             $stmt_status = $pdo->prepare("UPDATE users SET account_status = ?, status_expires_at = ? WHERE id = ?");
             $stmt_status->execute([$generalStatus, $finalStatusExpiresAt, $targetUserId]);
@@ -634,28 +616,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_delete->execute([$targetUserId]);
 
             // Pasos C y D: Insertar nuevas restricciones
-            // (Se insertan siempre, pero el backend las ignorará si el estado no es 'active')
             $stmt_insert = $pdo->prepare(
                 "INSERT INTO user_restrictions (user_id, restriction_type, expires_at) 
                  VALUES (?, ?, ?)"
             );
             
-            // --- Usar la nueva función helper para cada restricción ---
+            // --- Usar la lógica 'true'/'false' y forzar NULL ---
             if ($restrictPublish === 'true') {
-                $dbPublishExpiresAt = formatExpireDateFromDays($restrictPublishExpiresDays);
-                $stmt_insert->execute([$targetUserId, 'CANNOT_PUBLISH', $dbPublishExpiresAt]);
+                $stmt_insert->execute([$targetUserId, 'CANNOT_PUBLISH', null]);
             }
             if ($restrictComment === 'true') {
-                $dbCommentExpiresAt = formatExpireDateFromDays($restrictCommentExpiresDays);
-                $stmt_insert->execute([$targetUserId, 'CANNOT_COMMENT', $dbCommentExpiresAt]);
+                $stmt_insert->execute([$targetUserId, 'CANNOT_COMMENT', null]);
             }
             if ($restrictMessage === 'true') {
-                $dbMessageExpiresAt = formatExpireDateFromDays($restrictMessageExpiresDays);
-                $stmt_insert->execute([$targetUserId, 'CANNOT_MESSAGE', $dbMessageExpiresAt]);
+                $stmt_insert->execute([$targetUserId, 'CANNOT_MESSAGE', null]);
             }
             if ($restrictSocial === 'true') {
-                $dbSocialExpiresAt = formatExpireDateFromDays($restrictSocialExpiresDays);
-                $stmt_insert->execute([$targetUserId, 'CANNOT_SOCIAL', $dbSocialExpiresAt]);
+                $stmt_insert->execute([$targetUserId, 'CANNOT_SOCIAL', null]);
             }
             
 
@@ -674,8 +651,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'status'  => $generalStatus
                     ]);
                 } else {
-                    // Si se reactivó o se cambiaron las restricciones, expulsar de otras sesiones
-                    // para que las nuevas reglas/restricciones se apliquen al volver a loguear.
                     $curl_endpoint = 'http://127.0.0.1:8766/kick';
                     $curl_payload = json_encode([
                         'user_id' => (int)$targetUserId,
