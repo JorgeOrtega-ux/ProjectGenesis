@@ -66,18 +66,29 @@ function hideStatusErrors() {
  * @param {HTMLElement} button El elemento del botón.
  * @param {boolean} isLoading `true` para mostrar spinner, `false` para restaurar.
  */
-function toggleSpinner(button, isLoading) {
+// --- ▼▼▼ FUNCIÓN REEMPLAZADA ▼▼▼ ---
+/**
+ * Muestra/oculta el spinner en un BOTÓN DE BARRA DE HERRAMIENTAS (icono).
+ * @param {HTMLElement} button El elemento del botón.
+ * @param {boolean} isLoading `true` para mostrar spinner, `false` para restaurar.
+ */
+function toggleToolbarSpinner(button, isLoading) {
     if (!button) return;
-    button.disabled = isLoading;
+    const iconSpan = button.querySelector('.material-symbols-rounded');
+    if (!iconSpan) return;
+
     if (isLoading) {
-        button.dataset.originalHtml = button.innerHTML;
-        button.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: #ffffff;"></span>`;
+        button.disabled = true;
+        button.dataset.originalIcon = iconSpan.textContent;
+        iconSpan.innerHTML = `<span class="logout-spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto; border-top-color: inherit;"></span>`;
     } else {
-        if (button.dataset.originalHtml) {
-            button.innerHTML = button.dataset.originalHtml;
+        button.disabled = false;
+        if (button.dataset.originalIcon) {
+            iconSpan.innerHTML = button.dataset.originalIcon;
         }
     }
 }
+// --- ▲▲▲ FUNCIÓN REEMPLAZADA ▲▲▲ ---
 
 /**
  * Inicializa los listeners para la página de gestión de estado.
@@ -163,12 +174,16 @@ export function initAdminManageStatusManager() {
         if (saveBtn) {
             
             hideStatusErrors();
-            toggleSpinner(saveBtn, true);
+            // --- ▼▼▼ LLAMADA A FUNCIÓN MODIFICADA ▼▼▼ ---
+            toggleToolbarSpinner(saveBtn, true);
+            // --- ▲▲▲ LLAMADA A FUNCIÓN MODIFICADA ▲▲▲ ---
 
             const targetUserId = document.getElementById('admin-manage-status-user-id')?.value;
             if (!targetUserId) {
                 showAlert(getTranslation('js.admin.errorNoSelection'), 'error');
-                toggleSpinner(saveBtn, false);
+                // --- ▼▼▼ LLAMADA A FUNCIÓN MODIFICADA ▼▼▼ ---
+                toggleToolbarSpinner(saveBtn, false);
+                // --- ▲▲▲ LLAMADA A FUNCIÓN MODIFICADA ▲▲▲ ---
                 return;
             }
 
@@ -214,7 +229,9 @@ export function initAdminManageStatusManager() {
                 console.error('Error al guardar estado:', error);
                 showStatusError('js.api.errorConnection');
             } finally {
-                toggleSpinner(saveBtn, false);
+                // --- ▼▼▼ LLAMADA A FUNCIÓN MODIFICADA ▼▼▼ ---
+                toggleToolbarSpinner(saveBtn, false);
+                // --- ▲▲▲ LLAMADA A FUNCIÓN MODIFICADA ▲▲▲ ---
             }
         }
     });

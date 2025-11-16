@@ -65,6 +65,29 @@ $currentStatusIcon = $statusIconMap[$currentStatus];
 ?>
 
 <div class="section-content overflow-y <?php echo ($CURRENT_SECTION === 'admin-manage-status') ? 'active' : 'disabled'; ?>" data-section="admin-manage-status">
+    
+    <div class="page-toolbar-container" id="admin-status-toolbar-container">
+        <div class="page-toolbar-floating">
+            <div class="toolbar-action-default">
+                <div class="page-toolbar-left">
+                    <button type="button"
+                        class="page-toolbar-button"
+                        data-action="toggleSectionAdminManageUsers" 
+                        data-tooltip="admin.users.cancelButton">
+                        <span class="material-symbols-rounded">arrow_back</span>
+                    </button>
+                </div>
+                <div class="page-toolbar-right">
+                    <button type="button"
+                        class="page-toolbar-button"
+                        id="admin-save-status-btn"
+                        data-tooltip="admin.users.saveChanges">
+                        <span class="material-symbols-rounded">save</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="component-wrapper">
         
         <input type="hidden" id="admin-manage-status-user-id" value="<?php echo $userId; ?>">
@@ -77,7 +100,8 @@ $currentStatusIcon = $statusIconMap[$currentStatus];
             </h1>
             <p class="component-page-description" data-i18n="admin.users.manageStatusDesc">Ajusta el estado de la cuenta y las restricciones de servicio para este usuario.</p>
         </div>
-
+        
+        <div class="component-card__error disabled" id="admin-manage-status-error" style="width: 100%; margin: -8px 0 16px 0;"></div>
         <?php // --- Selector de Estado General (REUTILIZADO) --- ?>
         <div class="component-card component-card--column">
             <div class="component-card__content">
@@ -178,17 +202,13 @@ $currentStatusIcon = $statusIconMap[$currentStatus];
 
         </div>
         
+        <?php // --- TARJETA DE GUARDADO ELIMINADA ▼▼▼ --- ?>
+        <?php /*
         <div class="component-card" id="admin-status-save-card">
-            <div class="component-card__content">
-                
-                <div id="admin-manage-status-error" class="component-card__error disabled"></div>
-
-                <div class="modal__footer modal__footer--small-buttons">
-                    <button type="button" class="modal__button-small modal__button-small--secondary" data-action="toggleSectionAdminManageUsers" data-i18n="admin.users.cancelButton">Cancelar</button>
-                    <button type="button" class="modal__button-small modal__button-small--primary" id="admin-save-status-btn" data-i18n="admin.users.saveChanges">Guardar Cambios</button>
-                </div>
-            </div>
+            ... (CONTENIDO ELIMINADO) ...
         </div>
+        */ ?>
+        <?php // --- TARJETA DE GUARDADO ELIMINADA ▲▲▲ --- ?>
 
     </div>
 </div>
